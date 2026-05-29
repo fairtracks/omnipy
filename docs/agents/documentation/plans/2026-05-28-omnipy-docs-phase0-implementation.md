@@ -323,7 +323,7 @@ git commit -m "docs: add maturity labels and stub includes"
 
 ---
 
-## Task 2.3: Create FULL IA stub pages required by nav (deferred content)
+## Task 2.3: Create FULL IA stub pages required by nav (deferred content, split by directory)
 
 **Files:**
 - Create: `docs/start/concepts.md`
@@ -367,359 +367,104 @@ git commit -m "docs: add maturity labels and stub includes"
 - Create: `docs/reference_nonapi/faq-troubleshooting.md`
 - Create: `docs/contributing/documentation.md`
 
-Create each stub file with:
-
-1) A correct H1 title
-2) A shared maturity label block (`--8<-- "_includes/maturity_labels.md"`)
-3) A status block (`stub_now.md`, `stub_preview.md`, or `stub_planned.md`) appropriate for the spec
-
-Use the exact content below.
-
-### Start here stubs
-
-`docs/start/concepts.md`
-
-```markdown
-# Concepts (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-### Tutorial stubs (Tutorials 4–8 are deferred; keep stub pages in Phase 0)
-
-`docs/tutorials/04-build-a-dataflow.md`
-
-```markdown
-# Tutorial 4: Build a dataflow (Task → Flow → Engine) (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-
-This tutorial is **Planned** for Phase 1.
-```
-
-`docs/tutorials/05-domain-tabular-formats.md`
-
-```markdown
-# Tutorial 5: Domain tabular formats via model specs (BED/GFF) (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-
-This tutorial is **Planned** for Phase 1.
-```
-
-`docs/tutorials/06-resilient-api-fetching.md`
-
-```markdown
-# Tutorial 6: Resilient API fetching (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-
-This tutorial is **Planned** for Phase 1.
-```
-
-`docs/tutorials/07-ai-safe-boundaries.md`
-
-```markdown
-# Tutorial 7: AI-safe boundaries (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-
-This tutorial is **Planned** for Phase 2.
-```
-
-`docs/tutorials/08-prefect-orchestration.md`
-
-```markdown
-# Tutorial 8: Orchestrate with Prefect (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-
-This tutorial is **Planned** for Phase 2.
-```
-
-### How-to stubs (Models)
-
-Create each file with the same pattern (title + includes):
-
-`docs/howto/models/define-models.md`
-
-```markdown
-# Define Models (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/models/pydantic-compatibility.md`
-
-```markdown
-# Pydantic compatibility (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/models/parse-strategies.md`
-
-```markdown
-# Parse strategies (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/models/conversions-to.md`
-
-```markdown
-# Conversions with `.to()` (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/models/chainx-recipes.md`
-
-```markdown
-# ChainX recipes (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/models/parametrized-models.md`
-
-```markdown
-# Parametrized models (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/models/display-visualization.md`
-
-```markdown
-# Display/visualization (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-### How-to stubs (Datasets)
-
-`docs/howto/datasets/working-with-datasets.md`
-
-```markdown
-# Working with Datasets (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/datasets/hierarchies-blueprints.md`
-
-```markdown
-# Hierarchies & blueprints (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-### How-to stubs (Dataflows / Compute)
-
-`docs/howto/compute/tasks.md`
-
-```markdown
-# Tasks (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/compute/flows.md`
-
-```markdown
-# Flows (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/compute/modifiers.md`
-
-```markdown
-# Modifiers (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/compute/engines.md`
-
-```markdown
-# Engines (Local vs Prefect) (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/howto/compute/mapping-over-datasets.md`
-
-```markdown
-# Mapping Tasks/Flows over Datasets (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-### How-to stubs (File & format parsing)
-
-`docs/howto/formats/domain-tabular-formats.md`
-
-```markdown
-# Domain tabular formats (row-based parsing) (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_now.md"
-```
-
-`docs/howto/formats/column-based-tabular.md`
-
-```markdown
-# Column-based tabular parsing/validation (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_preview.md"
-```
-
-`docs/howto/formats/planned-format-support.md`
-
-```markdown
-# Planned format support (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-### How-to stub (Serialization)
-
-`docs/howto/serialization-persistence.md`
-
-```markdown
-# Serialization & persistence (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-### Feature overview stubs
-
-Use **Preview** only where the spec calls it out.
-
-`docs/features/tabular-schemas-vs-pandera.md`
-
-```markdown
-# Tabular schemas: Omnipy vs Pandera (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_preview.md"
-```
-
-All other feature stubs in Phase 0 use `stub_planned.md`:
-
-- `docs/features/continuous-validation.md`
-- `docs/features/snapshots-rollbacks.md`
-- `docs/features/conversions.md`
-- `docs/features/datasets.md`
-- `docs/features/compute-dataflows.md`
-- `docs/features/display.md`
-- `docs/features/components-catalog.md`
-- `docs/features/engines.md`
-
-Each file content:
-
-```markdown
-# <TITLE> (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-Use these exact titles:
-
-- `Continuous validation & type mimicking`
-- `Snapshots & rollbacks`
-- `Declarative conversions (.to())`
-- `Dataset batch + hierarchies`
-- `Dataflows (Compute): Tasks/Flows/Modifiers`
-- `Display & visualization`
-- `Components catalog`
-- `Engines & orchestration`
-
-### Learn stubs
-
-`docs/learn/python-typing.md`
-
-```markdown
-# Python typing (stub)
-
---8<-- "_includes/maturity_labels.md"
-
---8<-- "_includes/stub_planned.md"
-```
-
-`docs/learn/omnipy-mental-model.md` and `docs/learn/positioning-comparisons.md` follow the same **Planned** stub pattern.
-
-### Reference (non-API) stubs
-
-`docs/reference_nonapi/configuration.md`, `docs/reference_nonapi/glossary.md`, `docs/reference_nonapi/faq-troubleshooting.md` follow the **Planned** stub pattern.
-
-### Contributing stub
-
-`docs/contributing/documentation.md` follows the **Planned** stub pattern.
-
-- [ ] **Step 2.3.1: Create FULL IA stub pages**
-
-Create all files above with the exact content blocks.
-
-- [ ] **Step 2.3.2: Verify MkDocs build (nav paths resolve)**
+For **every** stub file in this task:
+
+1) Use the exact H1 title listed below (no template placeholders).
+2) Include shared maturity labels: `--8<-- "_includes/maturity_labels.md"`.
+3) Include exactly one status include: `_includes/stub_now.md`, `_includes/stub_preview.md`, or `_includes/stub_planned.md`.
+
+- [ ] **Step 2.3.1: Create `start/` stubs**
+
+| File | H1 title | Status include |
+|---|---|---|
+| `docs/start/concepts.md` | `Concepts (stub)` | `stub_planned.md` |
+
+- [ ] **Step 2.3.2: Create `tutorials/` stubs (Tutorials 4–8, deferred)**
+
+| File | H1 title | Status include | Extra line |
+|---|---|---|---|
+| `docs/tutorials/04-build-a-dataflow.md` | `Tutorial 4: Build a dataflow (Task → Flow → Engine) (stub)` | `stub_planned.md` | `This tutorial is **Planned** for Phase 1.` |
+| `docs/tutorials/05-domain-tabular-formats.md` | `Tutorial 5: Domain tabular formats via model specs (BED/GFF) (stub)` | `stub_planned.md` | `This tutorial is **Planned** for Phase 1.` |
+| `docs/tutorials/06-resilient-api-fetching.md` | `Tutorial 6: Resilient API fetching (stub)` | `stub_planned.md` | `This tutorial is **Planned** for Phase 1.` |
+| `docs/tutorials/07-ai-safe-boundaries.md` | `Tutorial 7: AI-safe boundaries (stub)` | `stub_planned.md` | `This tutorial is **Planned** for Phase 2.` |
+| `docs/tutorials/08-prefect-orchestration.md` | `Tutorial 8: Orchestrate with Prefect (stub)` | `stub_planned.md` | `This tutorial is **Planned** for Phase 2.` |
+
+- [ ] **Step 2.3.3: Create `howto/models/` stubs**
+
+| File | H1 title | Status include |
+|---|---|---|
+| `docs/howto/models/define-models.md` | `Define Models (stub)` | `stub_planned.md` |
+| `docs/howto/models/pydantic-compatibility.md` | `Pydantic compatibility (stub)` | `stub_planned.md` |
+| `docs/howto/models/parse-strategies.md` | `Parse strategies (stub)` | `stub_planned.md` |
+| `docs/howto/models/conversions-to.md` | `Conversions with .to() (stub)` | `stub_planned.md` |
+| `docs/howto/models/chainx-recipes.md` | `ChainX recipes (stub)` | `stub_planned.md` |
+| `docs/howto/models/parametrized-models.md` | `Parametrized models (stub)` | `stub_planned.md` |
+| `docs/howto/models/display-visualization.md` | `Display/visualization (stub)` | `stub_planned.md` |
+
+- [ ] **Step 2.3.4: Create `howto/datasets/` stubs**
+
+| File | H1 title | Status include |
+|---|---|---|
+| `docs/howto/datasets/working-with-datasets.md` | `Working with Datasets (stub)` | `stub_planned.md` |
+| `docs/howto/datasets/hierarchies-blueprints.md` | `Hierarchies & blueprints (stub)` | `stub_planned.md` |
+
+- [ ] **Step 2.3.5: Create `howto/dataflows` stubs (implemented under `docs/howto/compute/`)**
+
+| File | H1 title | Status include |
+|---|---|---|
+| `docs/howto/compute/tasks.md` | `Tasks (stub)` | `stub_planned.md` |
+| `docs/howto/compute/flows.md` | `Flows (stub)` | `stub_planned.md` |
+| `docs/howto/compute/modifiers.md` | `Modifiers (stub)` | `stub_planned.md` |
+| `docs/howto/compute/engines.md` | `Engines (Local vs Prefect) (stub)` | `stub_planned.md` |
+| `docs/howto/compute/mapping-over-datasets.md` | `Mapping Tasks/Flows over Datasets (stub)` | `stub_planned.md` |
+
+- [ ] **Step 2.3.6: Create `howto/components`-oriented stubs (formats + serialization + feature overview)**
+
+| File | H1 title | Status include |
+|---|---|---|
+| `docs/howto/formats/domain-tabular-formats.md` | `Domain tabular formats (row-based parsing) (stub)` | `stub_now.md` |
+| `docs/howto/formats/column-based-tabular.md` | `Column-based tabular parsing/validation (stub)` | `stub_preview.md` |
+| `docs/howto/formats/planned-format-support.md` | `Planned format support (stub)` | `stub_planned.md` |
+| `docs/howto/serialization-persistence.md` | `Serialization & persistence (stub)` | `stub_planned.md` |
+| `docs/features/continuous-validation.md` | `Continuous validation & type mimicking (stub)` | `stub_planned.md` |
+| `docs/features/snapshots-rollbacks.md` | `Snapshots & rollbacks (stub)` | `stub_planned.md` |
+| `docs/features/conversions.md` | `Declarative conversions (.to()) (stub)` | `stub_planned.md` |
+| `docs/features/datasets.md` | `Dataset batch + hierarchies (stub)` | `stub_planned.md` |
+| `docs/features/compute-dataflows.md` | `Dataflows (Compute): Tasks/Flows/Modifiers (stub)` | `stub_planned.md` |
+| `docs/features/display.md` | `Display & visualization (stub)` | `stub_planned.md` |
+| `docs/features/components-catalog.md` | `Components catalog (stub)` | `stub_planned.md` |
+| `docs/features/engines.md` | `Engines & orchestration (stub)` | `stub_planned.md` |
+| `docs/features/tabular-schemas-vs-pandera.md` | `Tabular schemas: Omnipy vs Pandera (stub)` | `stub_preview.md` |
+
+- [ ] **Step 2.3.7: Create `learn/` stubs**
+
+| File | H1 title | Status include |
+|---|---|---|
+| `docs/learn/omnipy-mental-model.md` | `Omnipy mental model (stub)` | `stub_planned.md` |
+| `docs/learn/python-typing.md` | `Python typing (stub)` | `stub_planned.md` |
+| `docs/learn/positioning-comparisons.md` | `Positioning & comparisons (stub)` | `stub_planned.md` |
+
+- [ ] **Step 2.3.8: Create `reference/` stubs (implemented under `docs/reference_nonapi/`)**
+
+| File | H1 title | Status include |
+|---|---|---|
+| `docs/reference_nonapi/configuration.md` | `Configuration (stub)` | `stub_planned.md` |
+| `docs/reference_nonapi/glossary.md` | `Glossary (stub)` | `stub_planned.md` |
+| `docs/reference_nonapi/faq-troubleshooting.md` | `FAQ / Troubleshooting (stub)` | `stub_planned.md` |
+
+- [ ] **Step 2.3.9: Create `contributing/` stubs**
+
+| File | H1 title | Status include |
+|---|---|---|
+| `docs/contributing/documentation.md` | `Documentation contribution (stub)` | `stub_planned.md` |
+
+- [ ] **Step 2.3.10: Verify MkDocs build (nav paths resolve)**
 
 Run: `uv run --all-groups mkdocs build`
 
 Expected: exit code 0.
 
-- [ ] **Step 2.3.3: Commit**
+- [ ] **Step 2.3.11: Commit**
 
 ```bash
 git add docs/start/concepts.md \
@@ -734,7 +479,7 @@ git commit -m "docs: add IA stub pages for deferred sections"
 
 ---
 
-## Task 2.5: Add the Phase 0 “story mode” stub page
+## Task 2.4: Add the Phase 0 “story mode” stub page
 
 **Files:**
 - Create: `docs/story_mode.md`
@@ -751,17 +496,17 @@ support learning.
 - v1 content stays technical and neutral.
 ```
 
-- [ ] **Step 2.5.1: Create `docs/story_mode.md`**
+- [ ] **Step 2.4.1: Create `docs/story_mode.md`**
 
 Add the file exactly as above.
 
-- [ ] **Step 2.5.2: Verify MkDocs build**
+- [ ] **Step 2.4.2: Verify MkDocs build**
 
 Run: `uv run --all-groups mkdocs build`
 
 Expected: exit code 0.
 
-- [ ] **Step 2.5.3: Commit**
+- [ ] **Step 2.4.3: Commit**
 
 ```bash
 git add docs/story_mode.md
@@ -1044,14 +789,22 @@ Create `docs/tutorials/01-interactive-safety.md` with this complete content:
 ```markdown
 # Tutorial 1: Interactive safety (continuous validation + rollback)
 
-This tutorial demonstrates Omnipy’s “interactive safety net”: models continuously validate and
-automatically roll back after invalid edits when interactive mode is enabled.
+This tutorial demonstrates Omnipy’s “interactive safety net”: models continuously validate and,
+with interactive mode enabled, automatically roll back after invalid edits.
+
+Useful mental model:
+
+> A Pydantic model is a use-once-then-discard validator; an Omnipy model is a continuous
+> static-type repairman in a dynamic environment.
+
+After parsing, the Omnipy model also **type-mimics** the underlying Python type. In this tutorial,
+`Model[list[int]]` behaves like a list while continuously enforcing integer semantics.
 
 ## What you’ll build
 
-- A typed model that behaves like a Python container
-- An intentional mistake that triggers an error
-- Automatic rollback to the last valid snapshot
+- A typed model that behaves like a Python list
+- An intentional mistake that triggers an immediate error
+- A comparison of interactive mode ON vs OFF
 
 ## Setup (silence logs + avoid output persistence)
 
@@ -1061,29 +814,28 @@ automatically roll back after invalid edits when interactive mode is enabled.
 >>> runtime.config.root_log.log_to_stderr = False
 >>> runtime.config.root_log.log_to_file = False
 >>> runtime.config.job.output_storage.persist_outputs = 'disabled'
->>> runtime.config.data.model.interactive = True
+>>> runtime.config.data.model.interactive = True  # default
 ```
 
 !!! note "Execution"
     This tutorial is **Now** and must execute during `mkdocs build` via `markdown-exec`.
 
-## 1) Parse messy input
+## 1) Parse messy input (fun scenario: arcade ticket counts)
 
 ```pycon exec="1" session="t1" source="console"
->>> data = (123, '234', 345.0)
->>> ints = Model[list[int]](data)
->>> ints
+>>> ticket_counts = Model[list[int]]((120, '135', 142.0))
+>>> ticket_counts
 ```
 
 ```pycon exec="1" session="t1" result="console" html="true"
->>> print(ints._docs())
+>>> print(ticket_counts._docs())
 ```
 
 ## 2) Make a mistake (and recover automatically)
 
 ```pycon exec="1" session="t1" source="console"
 >>> try:
-...     ints.append('not-an-int')
+...     ticket_counts.append('bonus')
 ... except Exception as err:
 ...     print(type(err).__name__)
 ```
@@ -1091,49 +843,56 @@ automatically roll back after invalid edits when interactive mode is enabled.
 The model is still valid after the error:
 
 ```pycon exec="1" session="t1" source="console"
->>> ints
+>>> ticket_counts
 ```
 
 ```pycon exec="1" session="t1" result="console" html="true"
->>> print(ints._docs())
+>>> print(ticket_counts._docs())
 ```
 
 ## 3) Continue working without re-parsing
 
 ```pycon exec="1" session="t1" source="console"
->>> ints.append('456')
->>> ints
+>>> ticket_counts.append('150')
+>>> ticket_counts
 ```
 
 ```pycon exec="1" session="t1" result="console" html="true"
->>> print(ints._docs())
+>>> print(ticket_counts._docs())
 ```
 
 ## 4) Turning interactive rollback off
 
-Interactive rollback is a feature (great for notebooks), but you can turn it off.
+Interactive mode controls snapshot + rollback behavior:
+
+- **Interactive = True (default)**: automatic snapshots and rollbacks on validation errors.
+- **Interactive = False**: skip snapshot overhead (lower memory footprint, often faster writes),
+  but lose automatic recoverability.
+
+Both modes still raise validation errors immediately (**fail fast**).
 
 ```pycon exec="1" session="t1" source="console"
 >>> runtime.config.data.model.interactive = False
->>> ints2 = Model[list[int]]([1, 2, 3])
+>>> ticket_counts_fast = Model[list[int]]([10, 20, 30])
 >>> try:
-...     ints2.append('x')
+...     ticket_counts_fast.append('VIP')
 ... except Exception as err:
 ...     print(type(err).__name__)
->>> ints2
+>>> ticket_counts_fast
 ```
 
-Notice: with interactive mode disabled, invalid operations can leave the model in an invalid state.
-That’s often what you want in non-interactive contexts where you prefer failing fast.
+Interactive mode is not only for notebooks — it is useful in any context where recoverability and
+inspection of the pre-error state are valuable.
 
 ## What you learned
 
-- Omnipy models parse data into a typed shape and keep enforcing it
-- With `runtime.config.data.model.interactive = True`, invalid edits roll back automatically
+- Omnipy models parse data into a typed shape, then keep enforcing it continuously
+- Omnipy models type-mimic the underlying Python type while adding continuous validation
+- `runtime.config.data.model.interactive` chooses between recoverability and lower overhead
 
 ## Common pitfalls
 
-- Confusing the config name: the correct setting is `model.interactive` (not `interactive_mode`).
+- Confusing the config path: use `runtime.config.data.model.interactive` (not `interactive_mode`).
 
 ## Next steps
 
@@ -1216,11 +975,14 @@ It also documents the current boundaries of automatic flattening.
 >>> sorted(flat.to_data().keys())
 ```
 
-The result is a JSON dataset with multiple “tables”:
+The result is a JSON dataset with multiple related “tables”:
 
 - `items` (scalar columns)
 - `items.meta` (nested object expanded)
 - `items.tags` (nested list expanded)
+
+Think of this output as a small **relational table set**. The relationships are encoded by dataset
+naming (`items`, `items.meta`, `items.tags`, etc.), which makes parent/child structure explicit.
 
 ```pycon exec="1" session="t2" source="console"
 >>> flat
@@ -1232,7 +994,7 @@ The result is a JSON dataset with multiple “tables”:
 
 ## 3) Convert to pandas where it fits
 
-If a dataset is already table-shaped, convert it directly:
+If a dataset is already table-shaped, convert it directly to `PandasDataset`:
 
 ```pycon exec="1" session="t2" source="console"
 >>> from omnipy import PandasDataset
@@ -1244,11 +1006,35 @@ If a dataset is already table-shaped, convert it directly:
 >>> print(pandas._docs())
 ```
 
-## Current boundaries (what can be hard)
+You can also convert a single table-shaped model to `PandasModel`:
 
-- Deeply irregular structures (records with different nesting at different levels)
-- Keys that collide when flattened
-- Mixed lists (sometimes dicts, sometimes scalars)
+```pycon exec="1" session="t2" source="console"
+>>> from omnipy import JsonListOfDictsModel, PandasModel
+>>> one_table = JsonListOfDictsModel([{'id': 'a', 'x': 1}, {'id': 'b', 'x': 3}])
+>>> one_table_pd = one_table.to(PandasModel)
+>>> one_table_pd
+```
+
+## Current boundaries
+
+Supported top-level structures for JSON-to-table conversion include:
+
+- A clean **list of dicts**
+- A **dict of dicts** (via `transpose_dict_of_dicts_2_list_of_dicts`)
+- A **dict of lists** (via table transformations)
+
+Not supported:
+
+- Mixed containers or scalars at level 2
+- Single-level lists
+- Single-level dicts
+- Single scalars
+
+Strengths:
+
+- Flattening handles many deeply nested structures where regular flattening approaches (for
+  example `pandas.json_normalize`) often fail.
+- The output is a set of related relational tables, not necessarily one flat table.
 
 When flattening doesn’t produce what you want, treat it as a **parsing problem**: define a clearer
 target shape and parse/transform toward it.
@@ -1258,7 +1044,7 @@ For background, see: [Parse, don't validate](../parse_dont_validate.md)
 ## What you learned
 
 - How to flatten nested JSON into related datasets with `flatten_nested_json.run(...)`
-- How to convert table-like JSON datasets to pandas with `.to(PandasDataset)`
+- How to convert table-like JSON datasets to pandas with `.to(PandasDataset)` and `.to(PandasModel)`
 
 ## Common pitfalls
 
@@ -1299,8 +1085,8 @@ Create `docs/tutorials/03-dataset-batch.md` with this complete content:
 ```markdown
 # Tutorial 3: Batch processing with Dataset (no for-loops)
 
-This tutorial shows how `Dataset` lets you apply a transformation across many items without writing
-loops, while keeping typed guarantees.
+This tutorial starts with the primary batch operation in Omnipy: **batch parsing with
+`Dataset[Model[...]]`**. It then extends to task-based batch transformations.
 
 ## Setup (silence logs + avoid output persistence)
 
@@ -1315,17 +1101,19 @@ loops, while keeping typed guarantees.
 !!! note "Execution"
     This tutorial is **Now** and must execute during `mkdocs build` via `markdown-exec`.
 
-## 1) A dataset is a mapping from names → typed models
+## 1) Batch-parse many values at once (primary pattern)
 
 ```pycon exec="1" session="t3" source="console"
 >>> from omnipy import Dataset, Model
->>> numbers = Dataset[Model[int]]({'a': 1, 'b': 2, 'c': 10})
+>>> numbers = Dataset[Model[int]]({'a': '1', 'b': 2.0, 'c': 10})
 >>> numbers
 ```
 
 ```pycon exec="1" session="t3" result="console" html="true"
 >>> print(numbers._docs())
 ```
+
+`Dataset[Model[int]](...)` parses each value and gives you a typed batch container in one step.
 
 ## 2) Map a task over all items (one line)
 
@@ -1363,7 +1151,7 @@ using `Dataset.do(...)` as a convenient mapping helper.
 
 ## What you learned
 
-- A `Dataset` is a typed mapping of many items
+- `Dataset[Model[T]]` is the default way to batch-parse many items into a typed shape
 - `TaskTemplate(iterate_over_data_files=True)` maps a task across all items without loops
 - `Dataset` can be hierarchical, and you can map across groups with `.do(...)`
 
@@ -1488,11 +1276,54 @@ git commit -m "docs: add redirect stubs for moved pages"
 
 ---
 
-## Task 10: Plan self-review (against spec)
+## Task 10: Enforce docs build in CI
+
+**Files:**
+- Modify: `.github/workflows/run_tests.yaml` (existing test workflow)
+
+- [ ] **Step 10.1: Confirm CI workflow location**
+
+Check `.github/workflows/` for a test workflow. In this repo, use
+`.github/workflows/run_tests.yaml`.
+
+- [ ] **Step 10.2: Add MkDocs build step to test workflow**
+
+In `.github/workflows/run_tests.yaml`, add a step in the existing `run-tests` job:
+
+```yaml
+      - name: Build docs with MkDocs
+        run: |
+          uv sync --all-groups
+          uv run mkdocs build
+```
+
+Place it after dependency installation and before/after pytest as preferred; keep existing tests.
+
+- [ ] **Step 10.3: Verify workflow YAML is valid + run docs build locally**
+
+Run:
+
+```bash
+uv sync --all-groups
+uv run mkdocs build
+```
+
+Expected: exit code 0.
+
+- [ ] **Step 10.4: Commit**
+
+```bash
+git add .github/workflows/run_tests.yaml
+git commit -m "ci: enforce mkdocs build in test workflow"
+```
+
+---
+
+## Task 11: Plan self-review (against spec)
 
 Run this self-review before handing off for execution.
 
-- [ ] **Step 10.1: Spec coverage check (Phase 0)**
+- [ ] **Step 11.1: Spec coverage check (Phase 0)**
 
 Confirm the plan includes:
 
@@ -1504,8 +1335,9 @@ Confirm the plan includes:
 - Maturity labels are defined and used consistently as **Now / Preview / Planned**.
 - Tutorial execution is enforced by `markdown-exec` (tutorial code runs during `mkdocs build`).
 - Redirect stubs follow the manual notice format: “This page has moved to <new page>” + link.
+- CI enforces docs build by running `uv sync --all-groups` and `uv run mkdocs build` in workflow.
 
-- [ ] **Step 10.2: Placeholder scan**
+- [ ] **Step 11.2: Placeholder scan**
 
 Search the plan-created docs for placeholders:
 
@@ -1513,7 +1345,7 @@ Run: `rg -n "\b(TBD|TODO|coming soon)\b" docs/start docs/tutorials docs/index.md
 
 Expected: no unlabelled roadmap claims.
 
-- [ ] **Step 10.3: Final verification build**
+- [ ] **Step 11.3: Final verification build**
 
 Run: `uv run --all-groups mkdocs build`
 
