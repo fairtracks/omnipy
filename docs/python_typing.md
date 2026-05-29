@@ -1,3 +1,5 @@
+This page has moved. See [Learn/Python typing](../learn/python-typing.md) and [How-to models](../howto/models/define-models.md) respectively.
+
 ## The Duck Test
 
 The concept of "duck-typing" is a central concept in Python. The name comes from the 

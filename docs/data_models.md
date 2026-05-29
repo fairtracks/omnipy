@@ -1,3 +1,5 @@
+This page has moved. See [Learn/Python typing](../learn/python-typing.md) and [How-to models](../howto/models/define-models.md) respectively.
+
 ## Models parse and operate on structured data
 
 The Model class is the most basic building block of the Omnipy library. It is a generic class that
