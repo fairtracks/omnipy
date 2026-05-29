@@ -437,17 +437,8 @@ class Model(  # type: ignore[misc]
 
         @overload
         def __new__(
-            cls: 'type[Model[_ModelT]]',
+            cls: 'type[_ModelT]',
             *args: Any,
-            **kwargs: Any,
-        ) -> '_ModelT':
-            ...
-
-        @overload
-        def __new__(
-            cls,
-            *args: Any,
-            is_list: Literal[False] = False,
             **kwargs: Any,
         ) -> '_ModelT':
             ...
@@ -455,7 +446,6 @@ class Model(  # type: ignore[misc]
         def __new__(
             cls,
             *args: Any,
-            is_list: bool = False,
             **kwargs: Any,
         ) -> 'Model | _ModelT':
             ...
@@ -1170,7 +1160,7 @@ class Model(  # type: ignore[misc]
                 if has_radd_method:
                     return content.__radd__(other_content)  # type: ignore[attr-defined]
                 else:
-                    return other_content.__add__(content)  # type: ignore[attr-defined]
+                    return other_content.__add__(content)  # type: ignore[operator]
 
             method = _radd
             model_converted_other_method = _radd_model_converted_other
