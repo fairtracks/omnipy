@@ -101,6 +101,31 @@ Docs should **not** pitch Omnipy as “nicer loops”; they should pitch Omnipy 
 - **heavy-duty hierarchical harmonizer** for complex standards and nested metadata, and
 - **interactive safety net** that keeps data valid throughout manipulation.
 
+### Trust-builder: “Pydantic model language + Omnipy extensions”
+
+Omnipy should explicitly acknowledge that it inherits much of its modelling ergonomics from
+**Pydantic** (including many familiar patterns and “bells and whistles”), and then describe what it
+adds on top:
+
+- continuous validation via type mimicking and safe interactive rollback,
+- dataflow abstractions (Tasks/Flows/Modifiers) and batch semantics (Datasets),
+- convenience patterns like **ChainX** for chained model transformations.
+
+Docs should *not* attempt to re-document Pydantic itself (DRY risk). The goal is to lower adoption
+fear by saying “if you know Pydantic, you can be productive quickly,” while keeping Omnipy’s unique
+story in the foreground.
+
+### Application framing: AI-safe boundaries (without pretending to be an AI framework)
+
+Omnipy can be positioned as a typed **data boundary layer** around AI calls:
+
+- validate/parse LLM outputs into strict Models,
+- batch-clean and transform results into analysis-ready structures,
+- protect downstream pipelines from schema drift / hallucinated keys.
+
+Guardrail: Omnipy orchestrates **data**, not “agent reasoning.” Docs should not imply it replaces
+Instructor/Marvin/PydanticAI; instead, it complements them.
+
 ### What to de-emphasize (or qualify)
 
 - Avoid overselling aspirational features (e.g. future converter registration APIs) as present.
@@ -129,28 +154,50 @@ Docs should **not** pitch Omnipy as “nicer loops”; they should pitch Omnipy 
    - Tutorial 1: Continuous validation & rollback (interactive safety)
    - Tutorial 2: JSON → tables (nested → analysis-ready)
    - Tutorial 3: Batch processing with Dataset (no for-loops)
-   - Tutorial 4: Resilient API fetching (retries/backoff, HTTP status handling, rate-limiting
+   - Tutorial 4: Build a dataflow (Task → Flow → Engine)
+   - Tutorial 5: Domain tabular formats (e.g. BED/GFF) via model specs
+   - Tutorial 6: Resilient API fetching (retries/backoff, HTTP status handling, rate-limiting
      session wiring; pagination planned/user-land loop)
-   - Tutorial 5: Orchestrate with Prefect (scale-up path)
+   - Tutorial 7: AI-safe boundaries (clean LLM outputs into typed Models + tables)
+   - Tutorial 8: Orchestrate with Prefect (scale-up path)
 3. **How-to guides** (goal-oriented, reference-lite)
-   - Define Models
-   - Parse strategies (“parse, don’t validate” in practice)
-   - Conversions with `.to()`
-   - Working with Datasets (hierarchies, blueprints)
+   - **Models**
+     - Define Models
+     - Pydantic compatibility (what carries over; where Omnipy differs)
+     - Parse strategies (“parse, don’t validate” in practice)
+     - Conversions with `.to()`
+     - ChainX recipes (chained model transformations)
+     - Parametrized models (patterns + limitations)
+     - Display/visualization (peek/full/json/browse/_docs() output)
+   - **Datasets**
+     - Working with Datasets (mapping, indexing)
+     - Hierarchies & blueprints
+   - **Dataflows (Compute)**
+     - Tasks
+     - Flows (Linear vs DAG vs Func)
+     - Modifiers (task/flow/job modifiers)
+     - Engines (Local vs Prefect) and running flows
+     - Mapping Tasks/Flows over Datasets (bridge patterns)
+   - **File & format parsing**
+     - Domain tabular formats (row-based parsing): solid
+     - Column-based tabular parsing/validation: **Maturing**
+     - Notes on planned format support (Excel/Parquet/Polars/etc.)
    - Serialization & persistence (what exists today)
-   - Display/visualization (peek/full/json/browse/_docs() output)
 4. **Feature overview** (short pages, each with “why + example + output”)
    - Continuous validation & type mimicking
    - Snapshots & rollbacks
    - Declarative conversions (`.to()`)
    - Dataset batch + hierarchies
-   - Components catalog (JSON/Tables/Remote/etc.)
+   - Dataflows: Tasks/Flows/Modifiers (architectural overview)
+   - Components catalog (General/JSON/Remote/Tables/etc.)
    - Engines (local + Prefect integration)
+   - Tabular schemas: Omnipy vs Pandera (capabilities + limits; **Maturing**)
 5. **Learn (Background)**
-   - Python typing (shortened; link out)
-   - Parse, don’t validate (philosophy)
    - Omnipy mental model (Model/Dataset/Task/Flow)
+   - Parse, don’t validate (philosophy)
+   - Python typing (shortened; link out)
    - Positioning & comparisons (optional, careful tone)
+   - Visual metaphors and story mode (planned)
 6. **Reference (non-API)**
    - Configuration (runtime config variants, interactive flag)
    - Glossary
@@ -264,7 +311,20 @@ introducing the superhero voice into v1.
    - Demonstrates: Dataset creation, mapping a task, hierarchical datasets concept.
    - Must show: “one line replaces loop” while keeping type guarantees.
 
-4. **Tutorial: Resilient API retrieval**
+4. **Tutorial: Build a dataflow (Task → Flow → Engine)**
+   - Story: you have a transformation pipeline; you want it to be modular and runnable.
+   - Demonstrates: Tasks, at least one Flow type (Linear as default), modifiers as a modular
+     extension mechanism, and running on the local engine.
+   - Must show: composing multiple tasks into a flow, then running it.
+   - Bridge requirement: include a short “batch it” section mapping a Task or Flow over a Dataset.
+
+5. **Tutorial: Domain tabular formats via model specs (BED/GFF)**
+   - Story: life science formats are custom and plentiful; you want a robust parsing language.
+   - Demonstrates: domain-specific tabular parsing using Model specs + row-based parsing.
+   - Must show: a minimal BED- or GFF-like example and a typed output that can be transformed.
+   - Performance note: acknowledge row-based parsing is solid but can be slightly slow.
+
+6. **Tutorial: Resilient API retrieval**
    - Story: intermittent failures + retry/backoff + status handling under realistic API usage.
    - Demonstrates: Remote component retry semantics as implemented today (`retry_attempts`,
      `retry_http_statuses`, `retry_backoff_strategy`), and how to pass a rate-limiting session
@@ -273,7 +333,15 @@ introducing the superhero voice into v1.
    - Pagination: explicitly out of current built-ins; document as either **Planned** or a
      user-land loop pattern.
 
-5. **Tutorial: Scale-up path with Prefect (optional v1, can be v1.1)**
+7. **Tutorial: AI-safe boundaries (clean LLM outputs into typed Models + tables)**
+   - Story: LLM outputs are useful but untrusted; enforce schema at the boundary.
+   - Demonstrates: parsing/validating LLM-like JSON into Models, then batch-cleaning and
+     converting into analysis-ready formats.
+   - Guardrail: state explicitly that Omnipy is the data layer around AI calls, not an agent
+     framework.
+   - Must show: one example of rejecting/repairing a hallucinated key/type mismatch.
+
+8. **Tutorial: Scale-up path with Prefect (optional v1, can be v1.1)**
    - Story: you have a working interactive pipeline; now run at scale.
    - Demonstrates: what Omnipy means by engines, and the minimal steps to run with Prefect.
    - Must be honest about current maturity and prerequisites.
@@ -311,9 +379,18 @@ Each feature page should follow a consistent template to stay skimmable and avoi
 - Snapshots & rollback (interactive)
 - Declarative conversions (`.to()`)
 - Dataset batch processing + hierarchies
+- Dataflows (Compute): Tasks/Flows/Modifiers
 - Visualization/display primitives (peek/full/json/browse/_docs())
 - Components catalog (high-level)
 - Engines & orchestration (high-level, honest)
+
+Recommended (v1) feature pages (not all required for Phase 0):
+
+- Pydantic compatibility and Omnipy extensions (trust-builder)
+- ChainX: chained model transformations (recipe-driven)
+- Domain tabular parsing (row-based): solid
+- Column-based tabular parsing/validation: **Maturing**
+- Tabular schemas: Omnipy vs Pandera: **Maturing**
 
 Components catalog scope rule:
 
@@ -341,6 +418,12 @@ documentation. The plan is to keep v1 neutral and optionally layer narrative ele
    - Visor → display/visualization
 3. **Use metaphors as mnemonics** only where they reduce cognitive load.
 4. **Tone control:** the primary explanation stays technical; the narrative is a layer.
+
+Future narrative emphasis note:
+
+- The poster narrative strongly emphasizes **AI-related risk** (hallucinated keys/schemas) and
+  Omnipy as a boundary/firewall. The v2 story layer should preserve that emphasis even if v1 docs
+  only introduce AI-safe boundaries in a neutral, practical way.
 
 ### How to prepare v1 to enable v2 later
 
@@ -384,7 +467,7 @@ documentation. The plan is to keep v1 neutral and optionally layer narrative ele
    - Content: navigation reflects Phase 0 IA and links to new Start/Tutorial pages.
    - Minimum acceptance: local build succeeds and nav paths resolve.
 8. Deferred explicitly in Phase 0:
-   - Tutorials 4–5,
+   - Tutorials 4–8,
    - Feature overview pages,
    - How-to guides,
    - Learn pages.
@@ -393,6 +476,9 @@ documentation. The plan is to keep v1 neutral and optionally layer narrative ele
 
 - Add Feature overview pages using the template.
 - Add How-to guides for Models, `.to()`, Datasets, display.
+- Add Dataflows (Compute) docs: Tasks/Flows/Modifiers + local engine runnable path.
+- Add domain formats tutorial (BED/GFF) and file/format parsing guide.
+- Add Pydantic compatibility trust-builder page and ChainX/parametrized model recipes.
 - Add “Compare / When Omnipy vs alternatives” page (careful, factual tone).
 
 ### Phase 2 (scale and ecosystem)
@@ -400,6 +486,8 @@ documentation. The plan is to keep v1 neutral and optionally layer narrative ele
 - Prefect tutorial and orchestration overview.
 - Components catalog expansion.
 - Troubleshooting/FAQ.
+- AI-safe boundaries tutorial and template-style guide (if not done in Phase 1).
+- Column-based tabular parsing/validation docs (**Maturing**) and a factual Omnipy vs Pandera page.
 
 ### Phase 3 (v2 doc experience)
 
@@ -431,7 +519,24 @@ Based on current docs and roadmap framing, these areas appear under-documented f
      - `runtime.config.data.model.interactive = False`
    - Existing docs using `interactive_mode` are incorrect and should be cleaned up.
 8. **Components catalog discoverability**
-   - a user-facing index: what components exist and what problem each solves.
+    - a user-facing index: what components exist and what problem each solves.
+
+9. **Tasks/Flows/Modifiers (Compute layer)**
+   - Tasks, the three Flow types (Linear/DAG/Func), and modifier patterns as modular extension.
+
+10. **Domain-specific formats & tabular parsing**
+   - BED/GFF style parsers as first-audience, ELIXIR-relevant examples.
+
+11. **Column-based tabular parsing/validation (Pandera-like)** — **Maturing**
+   - Clarify what exists, what is experimental, and what it enables (including transformation
+     patterns that are awkward in pure “validation-only” libraries).
+
+12. **Model ergonomics beyond basics**
+   - ChainX and parametrized models: when to use, patterns, and limitations.
+
+13. **AI-safe boundaries**
+   - A short, honest guide showing how Models can guard LLM outputs, without claiming a dedicated AI
+     framework.
 
 
 ## 10. Roadmap alignment rules
@@ -441,6 +546,8 @@ Based on current docs and roadmap framing, these areas appear under-documented f
 - **Now:** Document current public APIs and behaviors with runnable examples.
 - **Next (Planned):** Mention roadmap items only as “Planned” callouts and describe user value,
   not speculative signatures.
+- **Maturing:** For features that exist and are useful but still under active refinement, label
+  them **Maturing** and include explicit scope and limits.
 
 ### Roadmap-aware caution flags (from v1 roadmap)
 
@@ -450,6 +557,11 @@ Based on current docs and roadmap framing, these areas appear under-documented f
   “Known limitations” section.
 - Better table visualization is a roadmap must-have, but if not yet shipped it must be labeled
   **Planned** in docs while emphasizing current display capabilities.
+
+Pydantic v2 transition note:
+
+- Assume Pydantic v2 support is a target and in active progress. Docs should avoid locking into
+  version-specific details that are likely to change during the transition.
 
 
 ## 11. Implementation notes for the doc overhaul (non-binding)
