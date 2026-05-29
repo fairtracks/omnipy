@@ -8,6 +8,14 @@
 
 **Tech Stack:** MkDocs Material; `markdown-exec`; `pymdownx` extensions already configured; `uv` for running `mkdocs build`.
 
+**Maturity labels (required):**
+
+- **Now**: stable, supported, runnable examples — APIs are settled.
+- **Preview**: implemented and usable today, but still under active refinement — docs must state scope/limits, APIs may shift.
+- **Planned**: not yet implemented or publicly usable — describe user value only, no speculative signatures.
+
+Docs content must use **Now / Preview / Planned** consistently (no ad-hoc labels).
+
 ---
 
 ## File structure (create/modify map)
@@ -15,16 +23,61 @@
 **Create:**
 - `docs/start/install.md` — installation guide extracted from existing `docs/readme.md`
 - `docs/start/quickstart.md` — 10-minute end-to-end quickstart
+- `docs/start/concepts.md` — Start-here concepts page (stub)
 - `docs/tutorials/01-interactive-safety.md` — tutorial 1
 - `docs/tutorials/02-json-to-tables.md` — tutorial 2
 - `docs/tutorials/03-dataset-batch.md` — tutorial 3
-- `docs/story_mode.md` — neutral v2 placeholder page linked from landing
+- `docs/tutorials/04-build-a-dataflow.md` — tutorial 4 (stub; Phase 1)
+- `docs/tutorials/05-domain-tabular-formats.md` — tutorial 5 (stub; Phase 1)
+- `docs/tutorials/06-resilient-api-fetching.md` — tutorial 6 (stub; Phase 1)
+- `docs/tutorials/07-ai-safe-boundaries.md` — tutorial 7 (stub; Phase 2)
+- `docs/tutorials/08-prefect-orchestration.md` — tutorial 8 (stub; Phase 2)
+- `docs/howto/models/define-models.md` — How-to Models: Define Models (stub)
+- `docs/howto/models/pydantic-compatibility.md` — How-to Models: Pydantic compatibility (stub)
+- `docs/howto/models/parse-strategies.md` — How-to Models: Parse strategies (stub)
+- `docs/howto/models/conversions-to.md` — How-to Models: Conversions with `.to()` (stub)
+- `docs/howto/models/chainx-recipes.md` — How-to Models: ChainX recipes (stub)
+- `docs/howto/models/parametrized-models.md` — How-to Models: Parametrized models (stub)
+- `docs/howto/models/display-visualization.md` — How-to Models: Display/visualization (stub)
+- `docs/howto/datasets/working-with-datasets.md` — How-to Datasets: Working with Datasets (stub)
+- `docs/howto/datasets/hierarchies-blueprints.md` — How-to Datasets: Hierarchies & blueprints (stub)
+- `docs/howto/compute/tasks.md` — How-to Compute: Tasks (stub)
+- `docs/howto/compute/flows.md` — How-to Compute: Flows (stub)
+- `docs/howto/compute/modifiers.md` — How-to Compute: Modifiers (stub)
+- `docs/howto/compute/engines.md` — How-to Compute: Engines (stub)
+- `docs/howto/compute/mapping-over-datasets.md` — How-to Compute: Mapping over Datasets (stub)
+- `docs/howto/formats/domain-tabular-formats.md` — How-to Formats: Domain tabular formats (stub)
+- `docs/howto/formats/column-based-tabular.md` — How-to Formats: Column-based parsing/validation (stub)
+- `docs/howto/formats/planned-format-support.md` — How-to Formats: Planned format support (stub)
+- `docs/howto/serialization-persistence.md` — How-to: Serialization & persistence (stub)
+- `docs/features/continuous-validation.md` — Feature overview: continuous validation (stub)
+- `docs/features/snapshots-rollbacks.md` — Feature overview: snapshots & rollbacks (stub)
+- `docs/features/conversions.md` — Feature overview: conversions (stub)
+- `docs/features/datasets.md` — Feature overview: datasets (stub)
+- `docs/features/compute-dataflows.md` — Feature overview: dataflows/compute (stub)
+- `docs/features/display.md` — Feature overview: display/visualization (stub)
+- `docs/features/components-catalog.md` — Feature overview: components catalog (stub)
+- `docs/features/engines.md` — Feature overview: engines (stub)
+- `docs/features/tabular-schemas-vs-pandera.md` — Feature overview: tabular schemas vs Pandera (stub)
+- `docs/learn/omnipy-mental-model.md` — Learn: mental model (stub)
+- `docs/learn/python-typing.md` — Learn: Python typing (stub)
+- `docs/learn/positioning-comparisons.md` — Learn: positioning & comparisons (stub)
+- `docs/story_mode.md` — Learn: visual metaphors & story mode (stub)
+- `docs/reference_nonapi/configuration.md` — Reference: configuration (stub)
+- `docs/reference_nonapi/glossary.md` — Reference: glossary (stub)
+- `docs/reference_nonapi/faq-troubleshooting.md` — Reference: FAQ/troubleshooting (stub)
+- `docs/contributing/documentation.md` — Contributing: documentation contribution (stub)
+- `docs/_includes/maturity_labels.md` — shared maturity label definitions
+- `docs/_includes/stub_now.md` — stub include (Now)
+- `docs/_includes/stub_preview.md` — stub include (Preview)
+- `docs/_includes/stub_planned.md` — stub include (Planned)
 
 **Modify:**
 - `docs/index.md` — replace readme-include wrapper with purpose-built landing page
-- `mkdocs.yml` — nav reorganized to Phase 0 IA
+- `mkdocs.yml` — wire FULL IA nav (with stub pages) per updated spec
 - `docs/data_models.md` — thin redirect stub to new tutorial(s)/start
 - `docs/python_typing.md` — thin redirect stub to “Learn” (Phase 1+) while linking to Start/Tutorials now
+- `docs/parse_dont_validate.md` — (optional) manual moved notice to Learn section (Phase 1+ target is `docs/learn/parse-dont-validate.md`)
 
 **Preserve (no content rewrite in Phase 0, but ensure reachable):**
 - `docs/parse_dont_validate.md` — must remain and be linked from Tutorial 2
@@ -109,7 +162,9 @@ git commit -m "docs: add Phase 0 start/tutorial directories"
 **Files:**
 - Modify: `mkdocs.yml`
 
-Replace the current `nav:` block with the following (keep the rest of the file unchanged):
+Replace the current `nav:` block with the following (keep the rest of the file unchanged).
+
+This wires the **full IA** from the updated spec and uses stub pages for deferred sections.
 
 ```yaml
 nav:
@@ -117,19 +172,64 @@ nav:
       - Home: index.md
       - Install: start/install.md
       - 10-minute Quickstart: start/quickstart.md
+      - Concepts (stub): start/concepts.md
   - Tutorials:
       - '01. Interactive safety': tutorials/01-interactive-safety.md
       - '02. Nested JSON to tables': tutorials/02-json-to-tables.md
       - '03. Batch processing with Dataset': tutorials/03-dataset-batch.md
+      - '04. Build a dataflow (Task → Flow → Engine) (stub)': tutorials/04-build-a-dataflow.md
+      - '05. Domain tabular formats (BED/GFF) (stub)': tutorials/05-domain-tabular-formats.md
+      - '06. Resilient API fetching (stub)': tutorials/06-resilient-api-fetching.md
+      - '07. AI-safe boundaries (stub)': tutorials/07-ai-safe-boundaries.md
+      - '08. Orchestrate with Prefect (stub)': tutorials/08-prefect-orchestration.md
+  - How-to guides:
+      - Models:
+          - Define Models (stub): howto/models/define-models.md
+          - Pydantic compatibility (stub): howto/models/pydantic-compatibility.md
+          - Parse strategies (stub): howto/models/parse-strategies.md
+          - Conversions with .to() (stub): howto/models/conversions-to.md
+          - ChainX recipes (stub): howto/models/chainx-recipes.md
+          - Parametrized models (stub): howto/models/parametrized-models.md
+          - Display/visualization (stub): howto/models/display-visualization.md
+      - Datasets:
+          - Working with Datasets (stub): howto/datasets/working-with-datasets.md
+          - Hierarchies & blueprints (stub): howto/datasets/hierarchies-blueprints.md
+      - Dataflows (Compute):
+          - Tasks (stub): howto/compute/tasks.md
+          - Flows (stub): howto/compute/flows.md
+          - Modifiers (stub): howto/compute/modifiers.md
+          - Engines (Local vs Prefect) (stub): howto/compute/engines.md
+          - Mapping over Datasets (stub): howto/compute/mapping-over-datasets.md
+      - File & format parsing:
+          - Domain tabular formats (Now) (stub): howto/formats/domain-tabular-formats.md
+          - Column-based parsing/validation (Preview) (stub): howto/formats/column-based-tabular.md
+          - Planned format support (stub): howto/formats/planned-format-support.md
+      - Serialization & persistence (stub): howto/serialization-persistence.md
+  - Feature overview:
+      - Continuous validation (stub): features/continuous-validation.md
+      - Snapshots & rollbacks (stub): features/snapshots-rollbacks.md
+      - Conversions (.to) (stub): features/conversions.md
+      - Dataset batch + hierarchies (stub): features/datasets.md
+      - Dataflows (Compute) (stub): features/compute-dataflows.md
+      - Display/visualization (stub): features/display.md
+      - Components catalog (stub): features/components-catalog.md
+      - Engines (stub): features/engines.md
+      - Tabular schemas vs Pandera (Preview) (stub): features/tabular-schemas-vs-pandera.md
   - Learn:
+      - Omnipy mental model (stub): learn/omnipy-mental-model.md
       - Parse, don't validate: parse_dont_validate.md
-      - Visual metaphors and story mode (planned): story_mode.md
-      - Python typing (stub): python_typing.md
-  - Reference:
-      - Data models (stub): data_models.md
+      - Python typing (stub): learn/python-typing.md
+      - Positioning & comparisons (stub): learn/positioning-comparisons.md
+      - Visual metaphors and story mode (Planned): story_mode.md
+  - Reference (non-API):
+      - Configuration (stub): reference_nonapi/configuration.md
+      - Glossary (stub): reference_nonapi/glossary.md
+      - FAQ / Troubleshooting (stub): reference_nonapi/faq-troubleshooting.md
+  - Contributing:
       - Contributing: contributing.md
-      - Release notes: release_notes.md
-      - Code Reference: reference/
+      - Documentation contribution (stub): contributing/documentation.md
+  - Release notes: release_notes.md
+  - Code Reference: reference/
 ```
 
 - [ ] **Step 2.1: Edit `mkdocs.yml` nav**
@@ -151,6 +251,489 @@ git commit -m "docs: reorganize nav for Phase 0 start and tutorials"
 
 ---
 
+## Task 2.2: Add shared maturity labels + stub includes (for FULL IA placeholders)
+
+**Files:**
+- Create: `docs/_includes/maturity_labels.md`
+- Create: `docs/_includes/stub_now.md`
+- Create: `docs/_includes/stub_preview.md`
+- Create: `docs/_includes/stub_planned.md`
+
+Create these files with the exact content below.
+
+### `docs/_includes/maturity_labels.md`
+
+```markdown
+> [!NOTE]
+> **Maturity labels**
+> - **Now**: stable, supported, runnable examples — APIs are settled.
+> - **Preview**: implemented and usable today, but still under active refinement — docs must state scope/limits, APIs may shift.
+> - **Planned**: not yet implemented or publicly usable — describe user value only, no speculative signatures.
+```
+
+### `docs/_includes/stub_now.md`
+
+```markdown
+> [!NOTE]
+> **Status: Now**
+>
+> This page exists to wire the documentation navigation.
+> It will be expanded in a later phase.
+```
+
+### `docs/_includes/stub_preview.md`
+
+```markdown
+> [!NOTE]
+> **Status: Preview**
+>
+> This page exists to wire the documentation navigation.
+> It will be expanded in a later phase.
+```
+
+### `docs/_includes/stub_planned.md`
+
+```markdown
+> [!NOTE]
+> **Status: Planned**
+>
+> This page exists to wire the documentation navigation.
+> It will be expanded in a later phase.
+```
+
+- [ ] **Step 2.2.1: Create shared includes**
+
+Create the four files exactly as above.
+
+- [ ] **Step 2.2.2: Verify MkDocs build**
+
+Run: `uv run --all-groups mkdocs build`
+
+Expected: exit code 0.
+
+- [ ] **Step 2.2.3: Commit**
+
+```bash
+git add docs/_includes/maturity_labels.md \
+  docs/_includes/stub_now.md \
+  docs/_includes/stub_preview.md \
+  docs/_includes/stub_planned.md
+git commit -m "docs: add maturity labels and stub includes"
+```
+
+---
+
+## Task 2.3: Create FULL IA stub pages required by nav (deferred content)
+
+**Files:**
+- Create: `docs/start/concepts.md`
+- Create: `docs/tutorials/04-build-a-dataflow.md`
+- Create: `docs/tutorials/05-domain-tabular-formats.md`
+- Create: `docs/tutorials/06-resilient-api-fetching.md`
+- Create: `docs/tutorials/07-ai-safe-boundaries.md`
+- Create: `docs/tutorials/08-prefect-orchestration.md`
+- Create: `docs/howto/models/define-models.md`
+- Create: `docs/howto/models/pydantic-compatibility.md`
+- Create: `docs/howto/models/parse-strategies.md`
+- Create: `docs/howto/models/conversions-to.md`
+- Create: `docs/howto/models/chainx-recipes.md`
+- Create: `docs/howto/models/parametrized-models.md`
+- Create: `docs/howto/models/display-visualization.md`
+- Create: `docs/howto/datasets/working-with-datasets.md`
+- Create: `docs/howto/datasets/hierarchies-blueprints.md`
+- Create: `docs/howto/compute/tasks.md`
+- Create: `docs/howto/compute/flows.md`
+- Create: `docs/howto/compute/modifiers.md`
+- Create: `docs/howto/compute/engines.md`
+- Create: `docs/howto/compute/mapping-over-datasets.md`
+- Create: `docs/howto/formats/domain-tabular-formats.md`
+- Create: `docs/howto/formats/column-based-tabular.md`
+- Create: `docs/howto/formats/planned-format-support.md`
+- Create: `docs/howto/serialization-persistence.md`
+- Create: `docs/features/continuous-validation.md`
+- Create: `docs/features/snapshots-rollbacks.md`
+- Create: `docs/features/conversions.md`
+- Create: `docs/features/datasets.md`
+- Create: `docs/features/compute-dataflows.md`
+- Create: `docs/features/display.md`
+- Create: `docs/features/components-catalog.md`
+- Create: `docs/features/engines.md`
+- Create: `docs/features/tabular-schemas-vs-pandera.md`
+- Create: `docs/learn/omnipy-mental-model.md`
+- Create: `docs/learn/python-typing.md`
+- Create: `docs/learn/positioning-comparisons.md`
+- Create: `docs/reference_nonapi/configuration.md`
+- Create: `docs/reference_nonapi/glossary.md`
+- Create: `docs/reference_nonapi/faq-troubleshooting.md`
+- Create: `docs/contributing/documentation.md`
+
+Create each stub file with:
+
+1) A correct H1 title
+2) A shared maturity label block (`--8<-- "_includes/maturity_labels.md"`)
+3) A status block (`stub_now.md`, `stub_preview.md`, or `stub_planned.md`) appropriate for the spec
+
+Use the exact content below.
+
+### Start here stubs
+
+`docs/start/concepts.md`
+
+```markdown
+# Concepts (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+### Tutorial stubs (Tutorials 4–8 are deferred; keep stub pages in Phase 0)
+
+`docs/tutorials/04-build-a-dataflow.md`
+
+```markdown
+# Tutorial 4: Build a dataflow (Task → Flow → Engine) (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+
+This tutorial is **Planned** for Phase 1.
+```
+
+`docs/tutorials/05-domain-tabular-formats.md`
+
+```markdown
+# Tutorial 5: Domain tabular formats via model specs (BED/GFF) (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+
+This tutorial is **Planned** for Phase 1.
+```
+
+`docs/tutorials/06-resilient-api-fetching.md`
+
+```markdown
+# Tutorial 6: Resilient API fetching (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+
+This tutorial is **Planned** for Phase 1.
+```
+
+`docs/tutorials/07-ai-safe-boundaries.md`
+
+```markdown
+# Tutorial 7: AI-safe boundaries (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+
+This tutorial is **Planned** for Phase 2.
+```
+
+`docs/tutorials/08-prefect-orchestration.md`
+
+```markdown
+# Tutorial 8: Orchestrate with Prefect (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+
+This tutorial is **Planned** for Phase 2.
+```
+
+### How-to stubs (Models)
+
+Create each file with the same pattern (title + includes):
+
+`docs/howto/models/define-models.md`
+
+```markdown
+# Define Models (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/models/pydantic-compatibility.md`
+
+```markdown
+# Pydantic compatibility (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/models/parse-strategies.md`
+
+```markdown
+# Parse strategies (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/models/conversions-to.md`
+
+```markdown
+# Conversions with `.to()` (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/models/chainx-recipes.md`
+
+```markdown
+# ChainX recipes (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/models/parametrized-models.md`
+
+```markdown
+# Parametrized models (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/models/display-visualization.md`
+
+```markdown
+# Display/visualization (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+### How-to stubs (Datasets)
+
+`docs/howto/datasets/working-with-datasets.md`
+
+```markdown
+# Working with Datasets (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/datasets/hierarchies-blueprints.md`
+
+```markdown
+# Hierarchies & blueprints (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+### How-to stubs (Dataflows / Compute)
+
+`docs/howto/compute/tasks.md`
+
+```markdown
+# Tasks (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/compute/flows.md`
+
+```markdown
+# Flows (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/compute/modifiers.md`
+
+```markdown
+# Modifiers (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/compute/engines.md`
+
+```markdown
+# Engines (Local vs Prefect) (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/howto/compute/mapping-over-datasets.md`
+
+```markdown
+# Mapping Tasks/Flows over Datasets (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+### How-to stubs (File & format parsing)
+
+`docs/howto/formats/domain-tabular-formats.md`
+
+```markdown
+# Domain tabular formats (row-based parsing) (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_now.md"
+```
+
+`docs/howto/formats/column-based-tabular.md`
+
+```markdown
+# Column-based tabular parsing/validation (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_preview.md"
+```
+
+`docs/howto/formats/planned-format-support.md`
+
+```markdown
+# Planned format support (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+### How-to stub (Serialization)
+
+`docs/howto/serialization-persistence.md`
+
+```markdown
+# Serialization & persistence (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+### Feature overview stubs
+
+Use **Preview** only where the spec calls it out.
+
+`docs/features/tabular-schemas-vs-pandera.md`
+
+```markdown
+# Tabular schemas: Omnipy vs Pandera (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_preview.md"
+```
+
+All other feature stubs in Phase 0 use `stub_planned.md`:
+
+- `docs/features/continuous-validation.md`
+- `docs/features/snapshots-rollbacks.md`
+- `docs/features/conversions.md`
+- `docs/features/datasets.md`
+- `docs/features/compute-dataflows.md`
+- `docs/features/display.md`
+- `docs/features/components-catalog.md`
+- `docs/features/engines.md`
+
+Each file content:
+
+```markdown
+# <TITLE> (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+Use these exact titles:
+
+- `Continuous validation & type mimicking`
+- `Snapshots & rollbacks`
+- `Declarative conversions (.to())`
+- `Dataset batch + hierarchies`
+- `Dataflows (Compute): Tasks/Flows/Modifiers`
+- `Display & visualization`
+- `Components catalog`
+- `Engines & orchestration`
+
+### Learn stubs
+
+`docs/learn/python-typing.md`
+
+```markdown
+# Python typing (stub)
+
+--8<-- "_includes/maturity_labels.md"
+
+--8<-- "_includes/stub_planned.md"
+```
+
+`docs/learn/omnipy-mental-model.md` and `docs/learn/positioning-comparisons.md` follow the same **Planned** stub pattern.
+
+### Reference (non-API) stubs
+
+`docs/reference_nonapi/configuration.md`, `docs/reference_nonapi/glossary.md`, `docs/reference_nonapi/faq-troubleshooting.md` follow the **Planned** stub pattern.
+
+### Contributing stub
+
+`docs/contributing/documentation.md` follows the **Planned** stub pattern.
+
+- [ ] **Step 2.3.1: Create FULL IA stub pages**
+
+Create all files above with the exact content blocks.
+
+- [ ] **Step 2.3.2: Verify MkDocs build (nav paths resolve)**
+
+Run: `uv run --all-groups mkdocs build`
+
+Expected: exit code 0.
+
+- [ ] **Step 2.3.3: Commit**
+
+```bash
+git add docs/start/concepts.md \
+  docs/tutorials/04-build-a-dataflow.md \
+  docs/tutorials/05-domain-tabular-formats.md \
+  docs/tutorials/06-resilient-api-fetching.md \
+  docs/tutorials/07-ai-safe-boundaries.md \
+  docs/tutorials/08-prefect-orchestration.md \
+  docs/howto docs/features docs/learn docs/reference_nonapi docs/contributing
+git commit -m "docs: add IA stub pages for deferred sections"
+```
+
+---
+
 ## Task 2.5: Add the Phase 0 “story mode” stub page
 
 **Files:**
@@ -159,12 +742,12 @@ git commit -m "docs: reorganize nav for Phase 0 start and tutorials"
 Create `docs/story_mode.md` with this complete content:
 
 ```markdown
-# Visual metaphors and story mode (planned)
+# Visual metaphors and story mode (Planned)
 
 Later versions of the documentation may add an optional “story mode” layer and visual metaphors to
 support learning.
 
-- This is **not** part of v1 documentation.
+- This is **Planned** (not part of v1 documentation).
 - v1 content stays technical and neutral.
 ```
 
@@ -182,7 +765,7 @@ Expected: exit code 0.
 
 ```bash
 git add docs/story_mode.md
-git commit -m "docs: add planned story mode stub"
+git commit -m "docs: add Planned story mode stub"
 ```
 
 ---
@@ -251,10 +834,10 @@ Omnipy pays off when you need **continuous safety** while transforming data, **r
 between structured formats, and **batch semantics** over collections without rewriting notebook code
 into loops.
 
-## Visual metaphors and story mode (planned)
+## Visual metaphors and story mode (Planned)
 
 Later versions may add optional visual metaphors and a “story mode” layer for learning. Not in v1.
-See: [Visual metaphors and story mode (planned)](story_mode.md)
+See: [Visual metaphors and story mode (Planned)](story_mode.md)
 ```
 
 - [ ] **Step 3.1: Replace `docs/index.md` content**
@@ -387,9 +970,9 @@ Follow: [Install](install.md)
 >>> print(ints._docs())
 ```
 
-## 4) Convert nested JSON to tables (preview)
+## 4) Convert nested JSON to tables (Preview)
 
-This is a preview; the full story is in Tutorial 2.
+This is **Preview**; the full story is in Tutorial 2.
 
 ```pycon exec="1" session="quickstart" source="console"
 >>> from omnipy import JsonListOfDictsDataset, PandasDataset
@@ -480,6 +1063,9 @@ automatically roll back after invalid edits when interactive mode is enabled.
 >>> runtime.config.job.output_storage.persist_outputs = 'disabled'
 >>> runtime.config.data.model.interactive = True
 ```
+
+!!! note "Execution"
+    This tutorial is **Now** and must execute during `mkdocs build` via `markdown-exec`.
 
 ## 1) Parse messy input
 
@@ -602,6 +1188,9 @@ It also documents the current boundaries of automatic flattening.
 >>> runtime.config.job.output_storage.persist_outputs = 'disabled'
 ```
 
+!!! note "Execution"
+    This tutorial is **Now** and must execute during `mkdocs build` via `markdown-exec`.
+
 ## 1) Start with nested JSON
 
 ```pycon exec="1" session="t2" source="console"
@@ -723,6 +1312,9 @@ loops, while keeping typed guarantees.
 >>> runtime.config.job.output_storage.persist_outputs = 'disabled'
 ```
 
+!!! note "Execution"
+    This tutorial is **Now** and must execute during `mkdocs build` via `markdown-exec`.
+
 ## 1) A dataset is a mapping from names → typed models
 
 ```pycon exec="1" session="t3" source="console"
@@ -811,6 +1403,33 @@ git commit -m "docs: add tutorial 3 on dataset batch processing"
 - Modify: `docs/data_models.md`
 - Modify: `docs/python_typing.md`
 
+### Optional moved notice: `docs/parse_dont_validate.md`
+
+The updated spec places this page under **Learn**. Phase 0 does not require moving it, but if you
+choose to align URLs early, preserve the old page as a manual moved notice.
+
+If doing this in Phase 0, add:
+
+- Create: `docs/learn/parse-dont-validate.md` (new home)
+- Modify: `docs/parse_dont_validate.md` (moved notice)
+- Update `mkdocs.yml` Learn entry to point to `learn/parse-dont-validate.md`
+
+`docs/learn/parse-dont-validate.md` content:
+
+```markdown
+# Parse, don't validate
+
+--8<-- "parse_dont_validate.md"
+```
+
+`docs/parse_dont_validate.md` moved notice content:
+
+```markdown
+# Parse, don't validate (moved)
+
+This page has moved to: [Parse, don't validate](learn/parse-dont-validate.md)
+```
+
 ### Redirect stub: `docs/data_models.md`
 
 Replace the entire file with:
@@ -818,7 +1437,7 @@ Replace the entire file with:
 ```markdown
 # Data models (moved)
 
-This page has been reorganized as part of the Phase 0 docs overhaul.
+This page has moved to: [How-to: Define Models](howto/models/define-models.md)
 
 Start here:
 
@@ -837,7 +1456,7 @@ Replace the entire file with:
 ```markdown
 # Python typing (moved)
 
-This page will be reintroduced under **Learn** in a later phase.
+This page has moved to: [Learn: Python typing](learn/python-typing.md)
 
 For now, start here:
 
@@ -879,10 +1498,12 @@ Confirm the plan includes:
 
 - Landing page: value prop, 3 bullets, code snippet with visible output, CTAs, compare strip, JSON→tables caveat link, and a neutral v2 placeholder.
 - Install page extracted/updated from readme (Python version constraint, install command, next link).
-- Quickstart: install → model parse → interactive safety → conversion preview → dataset mapping.
+- Quickstart: install → model parse → interactive safety → conversion Preview → dataset mapping.
 - Tutorials 1–3: runnable, each shows `_docs()` output; Tutorial 2 links to `parse_dont_validate.md`; Tutorials are neutral tone.
-- Nav updated in `mkdocs.yml` to “Start here” + “Tutorials”; `parse_dont_validate.md` preserved and linked.
-- Redirect stubs for moved `data_models.md` and `python_typing.md`.
+- Nav updated in `mkdocs.yml` to the FULL IA (with stub/placeholder pages) and **Dataflows (Compute)** as a top-level peer within How-to.
+- Maturity labels are defined and used consistently as **Now / Preview / Planned**.
+- Tutorial execution is enforced by `markdown-exec` (tutorial code runs during `mkdocs build`).
+- Redirect stubs follow the manual notice format: “This page has moved to <new page>” + link.
 
 - [ ] **Step 10.2: Placeholder scan**
 
