@@ -288,14 +288,16 @@ class HttpRequestsConfig(ConfigBase):
 
 class HttpConfig(ConfigBase):
     defaults: IsHttpRequestsConfig = pyd.Field(default_factory=HttpRequestsConfig)
-    for_host: defaultdict[str, IsHttpRequestsConfig] = pyd.Field(
+    for_host: defaultdict[str, HttpRequestsConfig] = pyd.Field(
         default_factory=lambda: defaultdict(HttpRequestsConfig))
 
-    @pyd.validator('for_host', always=True)
+    @pyd.field_validator('for_host', mode='before')
+    @classmethod
     def update_http_defaults(cls,
-                             _for_host: defaultdict[str, HttpRequestsConfig],
-                             values: dict[str, Any]) -> defaultdict[str, HttpRequestsConfig]:
-        return defaultdict(lambda: values['defaults'].copy())
+                             _for_host: defaultdict[str,
+                                                    HttpRequestsConfig]) -> defaultdict[str,
+                                                                                           HttpRequestsConfig]:
+        return defaultdict(lambda: cls.model_fields['defaults'].default_factory().copy())
 
 
 class DataConfig(ConfigBase):
