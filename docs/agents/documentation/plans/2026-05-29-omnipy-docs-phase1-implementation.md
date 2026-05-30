@@ -638,6 +638,7 @@ You usually start from a *source shape* (what you have) and convert into a *targ
 
 - **General**: basic models/tasks used across components
 - **JSON**: JSON models/datasets + utilities like flattening
+- **Nested**: nested-list / nested-dict model utilities for hierarchical content
 - **Raw**: bytes/strings and splitting/joining primitives
 - **Tables**: row/column table models + TSV/CSV parsers
 - **Remote**: typed URL/query models + remote tasks
@@ -674,7 +675,7 @@ Don’t overfit to components when:
 
 ## Links
 
-- How-to: [Components catalog](../howto/components/catalog.md)
+- How-to: Components catalog (separate catalog how-to page)
 - Feature: [Declarative conversions](conversions.md)
 - Tutorial: [Nested JSON to tables](../tutorials/02-json-to-tables.md)
 ```
@@ -853,7 +854,7 @@ Consider orchestration when:
 
 - How-to: [Engines overview](../howto/dataflows/engines-overview.md)
 - How-to: [Running flows (local engine)](../howto/dataflows/running-flows.md)
-- Tutorial: [Build a dataflow](../tutorials/04-compute-dataflow.md)
+- Tutorial: Build a dataflow (Tutorial 4)
 ```
 
 - [ ] **Step 9.2: Verify MkDocs build**
@@ -2026,6 +2027,9 @@ git commit -m "docs: write tutorial 5 on domain tabular formats"
 
 --8<-- "_includes/maturity_labels.md"
 
+> [!NOTE]
+> **Status: Now**
+
 This page is factual and examples-first. It doesn’t “win arguments”; it helps you choose.
 
 ## When `pydantic + pandas + requests` is enough
@@ -2213,5 +2217,15 @@ rg -n "\b(coming soon|TBD|TODO)\b" docs/features docs/howto docs/tutorials/05-do
 ```
 
 Expected: no matches.
+
+- [ ] **Step 28.4: Link validation sweep (strict build)**
+
+Run:
+
+```bash
+uv run --all-groups mkdocs build --strict
+```
+
+Expected: exit code 0 (no unresolved-link warnings).
 
 No commit for this task.
