@@ -581,7 +581,7 @@ class Model(  # type: ignore[misc]
         if is_model_instance(value):
             return True, value.to_data()
         elif is_non_omnipy_pydantic_model(value):
-            return True, cast(pyd.BaseModel, value).dict(by_alias=True)
+            return True, cast(pyd.BaseModel, value).model_dump(by_alias=True)
         return False, value
 
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
@@ -623,7 +623,8 @@ class Model(  # type: ignore[misc]
                         '\tclass MyNumberList(Model[list[int]]): ...\n\n')
 
     def _set_standard_field_description(self) -> None:
-        self.model_fields[ROOT_KEY].description = self._get_standard_field_description()
+        self.model_fields[self._get_pydantic_root_key()].description = \
+            self._get_standard_field_description()
 
     @classmethod
     def _get_standard_field_description(cls) -> str:
@@ -1017,7 +1018,7 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def _get_root_field(cls) -> pyd.ModelField:
-        return cast(pyd.ModelField, cls.model_fields.get(ROOT_KEY))
+        return cast(pyd.ModelField, cls.model_fields.get(cls._get_pydantic_root_key()))
 
     @classmethod
     @functools.cache
