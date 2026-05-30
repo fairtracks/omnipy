@@ -4,7 +4,7 @@
 
 **Goal:** Complete Phase 1 of the Omnipy online docs overhaul by replacing stub pages with content that tells the “core story”: why Omnipy exists, how to use Models/Datasets/`.to()`/Display/Compute, and how to parse domain tabular formats.
 
-**Architecture:** Keep the existing MkDocs Material site + IA intact; replace Phase 0 “coming soon” stubs with concise, example-first pages. Prefer runnable docs examples via `markdown-exec` (`pycon exec="1"`) but avoid executing UI-heavy methods (`browse()`) during `mkdocs build`.
+**Architecture:** Keep the existing MkDocs Material site + IA intact; replace Phase 0 “coming soon” stubs with concise, example-first pages. Prefer runnable docs examples via `markdown-exec` (`python`) but avoid executing UI-heavy methods (`browse()`) during `mkdocs build`.
 
 **Tech Stack:** MkDocs Material; `markdown-exec`; `pymdownx.snippets` (already enabled) for shared includes; `uv` for running `mkdocs build`.
 
@@ -12,7 +12,7 @@
 
 - Maturity labels: **Now**, **Preview**, **Planned** (use consistently).
 - Correct config path: `runtime.config.data.model.interactive` (NOT `interactive_mode`).
-- Use `markdown-exec` (`pycon exec="1"`) for runnable examples.
+- Use `markdown-exec` (`python`) for runnable examples.
 - No superhero theme.
 - Feature overview pages must follow template: (1) What it solves, (2) The idea, (3) Example, (4) Output/display, (5) When to use/when not, (6) Gotchas, (7) Links.
 - Preserve these legacy docs pages as-is (do not edit):
@@ -195,7 +195,7 @@ invalid state.
 
 ## Example
 
-```pycon exec="1" session="feature_cont_validation" source="console"
+```python session="feature_cont_validation" source="console"
 >>> from omnipy import Model
 --8<-- "_includes/pycon_setup.md"
 >>> readings = Model[list[int]]((120, '135', 142.0))
@@ -204,7 +204,7 @@ invalid state.
 
 ## Output / display
 
-```pycon exec="1" session="feature_cont_validation" result="console" html="true"
+```python session="feature_cont_validation" result="console" html="true"
 >>> print(readings._docs())
 ```
 
@@ -283,7 +283,7 @@ The switch is:
 
 ## Example
 
-```pycon exec="1" session="feature_rollbacks" source="console"
+```python session="feature_rollbacks" source="console"
 >>> from omnipy import Model
 --8<-- "_includes/pycon_setup.md"
 >>> from omnipy import runtime
@@ -302,7 +302,7 @@ True
 
 ## Output / display
 
-```pycon exec="1" session="feature_rollbacks" result="console" html="true"
+```python session="feature_rollbacks" result="console" html="true"
 >>> print(xs._docs())
 ```
 
@@ -381,7 +381,7 @@ Conversions work when the target type knows how to parse the source.
 
 ## Example
 
-```pycon exec="1" session="feature_to" source="console"
+```python session="feature_to" source="console"
 >>> from omnipy import JsonListOfDictsDataset, PandasDataset
 --8<-- "_includes/pycon_setup.md"
 >>> records = JsonListOfDictsDataset({'rows': [{'id': 'a', 'value': '1'}, {'id': 'b', 'value': 2}]})
@@ -391,7 +391,7 @@ Conversions work when the target type knows how to parse the source.
 
 ## Output / display
 
-```pycon exec="1" session="feature_to" result="console" html="true"
+```python session="feature_to" result="console" html="true"
 >>> print(records_pd._docs())
 ```
 
@@ -463,21 +463,21 @@ structure.
 
 ## Example
 
-```pycon exec="1" session="feature_datasets" source="console"
+```python session="feature_datasets" source="console"
 >>> from omnipy import Dataset, Model
 --8<-- "_includes/pycon_setup.md"
 >>> xs = Dataset[Model[int]]({'a': '1', 'b': 2.0, 'c': 10})
 >>> xs
 ```
 
-```pycon exec="1" session="feature_datasets" source="console"
+```python session="feature_datasets" source="console"
 >>> ys = xs.do(lambda x: int(x) + 1)
 >>> ys.to_data()
 ```
 
 ## Output / display
 
-```pycon exec="1" session="feature_datasets" result="console" html="true"
+```python session="feature_datasets" result="console" html="true"
 >>> print(xs._docs())
 ```
 
@@ -556,7 +556,7 @@ Models and Datasets implement a consistent display surface:
 
 ## Example
 
-```pycon exec="1" session="feature_display" source="console"
+```python session="feature_display" source="console"
 >>> from omnipy import Model
 --8<-- "_includes/pycon_setup.md"
 >>> m = Model[list[int]]((1, '2', 3.0))
@@ -565,7 +565,7 @@ Models and Datasets implement a consistent display surface:
 
 ## Output / display
 
-```pycon exec="1" session="feature_display" result="console" html="true"
+```python session="feature_display" result="console" html="true"
 >>> print(m._docs())
 ```
 
@@ -645,7 +645,7 @@ You usually start from a *source shape* (what you have) and convert into a *targ
 
 ## Example
 
-```pycon exec="1" session="feature_components" source="console"
+```python session="feature_components" source="console"
 >>> from omnipy import JsonListOfDictsDataset
 --8<-- "_includes/pycon_setup.md"
 >>> data = JsonListOfDictsDataset({'rows': [{'id': 'a', 'x': 1}, {'id': 'b', 'x': 2}]})
@@ -654,7 +654,7 @@ You usually start from a *source shape* (what you have) and convert into a *targ
 
 ## Output / display
 
-```pycon exec="1" session="feature_components" result="console" html="true"
+```python session="feature_components" result="console" html="true"
 >>> print(data._docs())
 ```
 
@@ -727,7 +727,7 @@ You want pipeline-like composition without giving up:
 
 ## Example
 
-```pycon exec="1" session="feature_compute" source="console"
+```python session="feature_compute" source="console"
 >>> from omnipy import TaskTemplate, LinearFlowTemplate
 --8<-- "_includes/pycon_setup.md"
 >>> @TaskTemplate()
@@ -819,7 +819,7 @@ The default engine choice is local.
 
 ## Example
 
-```pycon exec="1" session="feature_engines" source="console"
+```python session="feature_engines" source="console"
 >>> from omnipy import TaskTemplate, runtime
 --8<-- "_includes/pycon_setup.md"
 >>> runtime.config.engine.choice
@@ -891,14 +891,14 @@ This page shows quick, practical patterns for defining Omnipy models.
 
 ## Pattern 1: One-off models with `Model[T]`
 
-```pycon exec="1" session="howto_define_models" source="console"
+```python session="howto_define_models" source="console"
 >>> from omnipy import Model
 --8<-- "_includes/pycon_setup.md"
 >>> ints = Model[list[int]]((1, '2', 3.0))
 >>> ints
 ```
 
-```pycon exec="1" session="howto_define_models" result="console" html="true"
+```python session="howto_define_models" result="console" html="true"
 >>> print(ints._docs())
 ```
 
@@ -906,7 +906,7 @@ This page shows quick, practical patterns for defining Omnipy models.
 
 When you want a reusable type, create a subclass:
 
-```pycon exec="1" session="howto_define_models" source="console"
+```python session="howto_define_models" source="console"
 >>> from omnipy import Model
 >>> class Ints(Model[list[int]]):
 ...     ...
@@ -918,7 +918,7 @@ When you want a reusable type, create a subclass:
 
 Override `_parse_data` to accept messy input and produce a clean typed output.
 
-```pycon exec="1" session="howto_define_models" source="console"
+```python session="howto_define_models" source="console"
 >>> class PosInts(Model[list[int]]):
 ...     @classmethod
 ...     def _parse_data(cls, data: list[int]) -> list[int]:
@@ -972,7 +972,7 @@ This page shows practical strategies for turning messy inputs into stable, typed
 
 ## Strategy A: Let `Model[T]` do the basic coercions
 
-```pycon exec="1" session="howto_parse_strategies" source="console"
+```python session="howto_parse_strategies" source="console"
 >>> from omnipy import Model
 --8<-- "_includes/pycon_setup.md"
 >>> Model[list[int]]((1, '2', 3.0)).to_data()
@@ -984,7 +984,7 @@ This page shows practical strategies for turning messy inputs into stable, typed
 Use `_parse_data` to normalize inputs into a cleaner intermediate shape, then let the type handle
 the rest.
 
-```pycon exec="1" session="howto_parse_strategies" source="console"
+```python session="howto_parse_strategies" source="console"
 >>> class IntListFromAnything(Model[list[int]]):
 ...     @classmethod
 ...     def _parse_data(cls, data):
@@ -1042,7 +1042,7 @@ This page shows the practical `.to(Target)` conversion workflow.
 
 ## Convert a dataset to another dataset type
 
-```pycon exec="1" session="howto_to" source="console"
+```python session="howto_to" source="console"
 >>> from omnipy import JsonListOfDictsDataset, PandasDataset
 --8<-- "_includes/pycon_setup.md"
 >>> records = JsonListOfDictsDataset({'rows': [{'id': 'a', 'value': '1'}, {'id': 'b', 'value': 2}]})
@@ -1053,7 +1053,7 @@ This page shows the practical `.to(Target)` conversion workflow.
 
 ## Convert a single model to another model type
 
-```pycon exec="1" session="howto_to" source="console"
+```python session="howto_to" source="console"
 >>> from omnipy import JsonListOfDictsModel, PandasModel
 >>> one_table = JsonListOfDictsModel([{'id': 'a', 'x': 1}, {'id': 'b', 'x': 3}])
 >>> one_table_pd = one_table.to(PandasModel)
@@ -1105,14 +1105,14 @@ This page explains how to inspect Models and Datasets effectively.
 
 ## `_docs()` — docs-friendly rendering
 
-```pycon exec="1" session="howto_display" source="console"
+```python session="howto_display" source="console"
 >>> from omnipy import Model
 --8<-- "_includes/pycon_setup.md"
 >>> m = Model[dict[str, list[int]]]({'a': [1, 2], 'b': [3, 4]})
 >>> m
 ```
 
-```pycon exec="1" session="howto_display" result="console" html="true"
+```python session="howto_display" result="console" html="true"
 >>> print(m._docs())
 ```
 
@@ -1173,7 +1173,7 @@ Chain models let you build small, repeatable transformation pipelines.
 
 Omnipy includes ready-made chain-friendly building blocks for table parsing.
 
-```pycon exec="1" session="howto_chainx" source="console"
+```python session="howto_chainx" source="console"
 >>> from omnipy import TsvTableModel
 --8<-- "_includes/pycon_setup.md"
 >>> tsv = "a\tb\n1\t2\n3\t4\n"
@@ -1186,7 +1186,7 @@ Omnipy includes ready-made chain-friendly building blocks for table parsing.
 
 When a step doesn’t exist as a built-in chain model, use a normal model parse step:
 
-```pycon exec="1" session="howto_chainx" source="console"
+```python session="howto_chainx" source="console"
 >>> from omnipy import Model
 >>> ints = Model[list[int]](['1', '2', 3.0])
 >>> ints.to_data()
@@ -1242,7 +1242,7 @@ types.
 
 The most common “generic” pattern in Omnipy is: `Dataset[Model[T]]`.
 
-```pycon exec="1" session="howto_param_models" source="console"
+```python session="howto_param_models" source="console"
 >>> from omnipy import Dataset, Model
 --8<-- "_includes/pycon_setup.md"
 >>> ints = Dataset[Model[int]]({'a': '1', 'b': 2, 'c': 3.0})
@@ -1252,7 +1252,7 @@ The most common “generic” pattern in Omnipy is: `Dataset[Model[T]]`.
 
 ## Pattern: reuse a shape with a different inner type
 
-```pycon exec="1" session="howto_param_models" source="console"
+```python session="howto_param_models" source="console"
 >>> from omnipy import Model
 >>> Model[list[str]]([1, '2', 3]).to_data()
 ['1', '2', '3']
@@ -1321,7 +1321,7 @@ Omnipy models:
 
 ## Example: Pydantic model inside an Omnipy model
 
-```pycon exec="1" session="howto_pyd_compat" source="console"
+```python session="howto_pyd_compat" source="console"
 >>> from omnipy import Model
 --8<-- "_includes/pycon_setup.md"
 >>> from omnipy.util import pydantic as pyd
@@ -1383,7 +1383,7 @@ Datasets are typed collections: `Dataset[Model[T]]`.
 
 ## Create a dataset
 
-```pycon exec="1" session="howto_datasets" source="console"
+```python session="howto_datasets" source="console"
 >>> from omnipy import Dataset, Model
 --8<-- "_includes/pycon_setup.md"
 >>> ds = Dataset[Model[int]]({'a': '1', 'b': 2.0})
@@ -1393,7 +1393,7 @@ Datasets are typed collections: `Dataset[Model[T]]`.
 
 ## Index and iterate
 
-```pycon exec="1" session="howto_datasets" source="console"
+```python session="howto_datasets" source="console"
 >>> sorted(ds.keys())
 ['a', 'b']
 >>> ds['a']
@@ -1401,7 +1401,7 @@ Datasets are typed collections: `Dataset[Model[T]]`.
 
 ## Map over items
 
-```pycon exec="1" session="howto_datasets" source="console"
+```python session="howto_datasets" source="console"
 >>> ds2 = ds.do(lambda x: int(x) + 10)
 >>> ds2.to_data()
 {'a': 11, 'b': 12}
@@ -1448,7 +1448,7 @@ files).
 
 ## Hierarchical dataset example
 
-```pycon exec="1" session="howto_ds_hier" source="console"
+```python session="howto_ds_hier" source="console"
 >>> from omnipy import Dataset, Model
 --8<-- "_includes/pycon_setup.md"
 >>> Inner = Dataset[Model[int]]
@@ -1460,7 +1460,7 @@ files).
 
 ## Map across groups
 
-```pycon exec="1" session="howto_ds_hier" source="console"
+```python session="howto_ds_hier" source="console"
 >>> out = grouped.do(lambda ds: ds.do(lambda x: int(x) + 1))
 >>> out.to_data()
 {'group1': {'a': 2, 'b': 3}, 'group2': {'a': 11}}
@@ -1511,7 +1511,7 @@ Tasks are typed transformation units built from Python functions.
 
 ## Define a task
 
-```pycon exec="1" session="howto_tasks" source="console"
+```python session="howto_tasks" source="console"
 >>> from omnipy import TaskTemplate
 --8<-- "_includes/pycon_setup.md"
 >>> @TaskTemplate()
@@ -1525,7 +1525,7 @@ Tasks are typed transformation units built from Python functions.
 
 Use `.refine(...)` to adapt a template without rewriting the function:
 
-```pycon exec="1" session="howto_tasks" source="console"
+```python session="howto_tasks" source="console"
 >>> @TaskTemplate()
 ... def plus_other(number: int, other: int) -> int:
 ...     return number + other
@@ -1577,7 +1577,7 @@ Flows compose tasks into runnable pipelines.
 
 Linear flows run tasks in a fixed sequence.
 
-```pycon exec="1" session="howto_flows" source="console"
+```python session="howto_flows" source="console"
 >>> from omnipy import TaskTemplate, LinearFlowTemplate
 --8<-- "_includes/pycon_setup.md"
 >>> @TaskTemplate()
@@ -1594,7 +1594,7 @@ Linear flows run tasks in a fixed sequence.
 
 DAG flows connect tasks by matching keys in dictionaries.
 
-```pycon exec="1" session="howto_flows" source="console"
+```python session="howto_flows" source="console"
 >>> from omnipy import DagFlowTemplate
 >>> @TaskTemplate()
 ... def make_inputs() -> dict[str, int]:
@@ -1613,7 +1613,7 @@ DAG flows connect tasks by matching keys in dictionaries.
 
 Func flows are useful when you want to write control flow explicitly.
 
-```pycon exec="1" session="howto_flows" source="console"
+```python session="howto_flows" source="console"
 >>> from omnipy import FuncFlowTemplate
 >>> @FuncFlowTemplate()
 ... def repeat_plus_one(number: int, n: int) -> int:
@@ -1666,7 +1666,7 @@ This page shows the “runnable path” for flows using the local engine.
 
 Flow templates run via `.run(...)`.
 
-```pycon exec="1" session="howto_run_flows" source="console"
+```python session="howto_run_flows" source="console"
 >>> from omnipy import TaskTemplate, LinearFlowTemplate
 --8<-- "_includes/pycon_setup.md"
 >>> @TaskTemplate()
@@ -1683,7 +1683,7 @@ Flow templates run via `.run(...)`.
 
 `.apply()` returns a runnable job object.
 
-```pycon exec="1" session="howto_run_flows" source="console"
+```python session="howto_run_flows" source="console"
 >>> flow = plus_three.apply()
 >>> flow(10)
 13
@@ -1737,7 +1737,7 @@ Common modifier patterns:
 
 ## Example: rename parameters with `param_key_map`
 
-```pycon exec="1" session="howto_modifiers" source="console"
+```python session="howto_modifiers" source="console"
 >>> from omnipy import TaskTemplate
 --8<-- "_includes/pycon_setup.md"
 >>> @TaskTemplate()
@@ -1750,7 +1750,7 @@ Common modifier patterns:
 
 ## Example: make a task return a dict (DAG-friendly)
 
-```pycon exec="1" session="howto_modifiers" source="console"
+```python session="howto_modifiers" source="console"
 >>> plus_one_dict = (plus_other.refine(name='plus_one', fixed_params={'other': 1})
 ...                           .refine(result_key='number'))
 >>> plus_one_dict.run(number=10)
@@ -1800,7 +1800,7 @@ This page shows two mapping styles:
 
 ## Map with `Dataset.do(...)`
 
-```pycon exec="1" session="howto_map" source="console"
+```python session="howto_map" source="console"
 >>> from omnipy import Dataset, Model
 --8<-- "_includes/pycon_setup.md"
 >>> xs = Dataset[Model[int]]({'a': '1', 'b': 2.0})
@@ -1810,7 +1810,7 @@ This page shows two mapping styles:
 
 ## Map with `iterate_over_data_files=True`
 
-```pycon exec="1" session="howto_map" source="console"
+```python session="howto_map" source="console"
 >>> from omnipy import TaskTemplate
 >>> @TaskTemplate(iterate_over_data_files=True)
 ... def inc(x: int) -> int:
@@ -1868,7 +1868,7 @@ The runtime has two engine objects wired in:
 
 and an engine choice:
 
-```pycon exec="1" session="howto_engines" source="console"
+```python session="howto_engines" source="console"
 >>> from omnipy import runtime
 --8<-- "_includes/pycon_setup.md"
 >>> runtime.config.engine.choice
@@ -1935,20 +1935,20 @@ The goal is to build a robust parsing boundary that turns rows into typed record
 
 ## Setup
 
-```pycon exec="1" session="tutorial5" source="console"
+```python session="tutorial5" source="console"
 --8<-- "_includes/pycon_setup.md"
 ```
 
 ## 1) Start with a BED-like file
 
-```pycon exec="1" session="tutorial5" source="console"
+```python session="tutorial5" source="console"
 >>> bed = "chrom\tstart\tend\tname\nchr1\t10\t20\tgeneA\nchr2\t5\t9\tgeneB\n"
 >>> bed
 ```
 
 ## 2) Parse to a table model
 
-```pycon exec="1" session="tutorial5" source="console"
+```python session="tutorial5" source="console"
 >>> from omnipy import TsvTableModel
 >>> table = TsvTableModel(bed)
 >>> table.to_data()
@@ -1958,7 +1958,7 @@ The goal is to build a robust parsing boundary that turns rows into typed record
 
 Use a Pydantic-style record model as the row spec.
 
-```pycon exec="1" session="tutorial5" source="console"
+```python session="tutorial5" source="console"
 >>> from omnipy.util import pydantic as pyd
 >>> class BedRow(pyd.BaseModel):
 ...     chrom: str
@@ -1969,7 +1969,7 @@ Use a Pydantic-style record model as the row spec.
 
 ## 4) Parse rows into typed records
 
-```pycon exec="1" session="tutorial5" source="console"
+```python session="tutorial5" source="console"
 >>> from omnipy import Model
 >>> rows = Model[list[BedRow]](table.to_data())
 >>> rows.to_data()
@@ -1977,7 +1977,7 @@ Use a Pydantic-style record model as the row spec.
 
 ## 5) Convert to a pandas-friendly table (optional)
 
-```pycon exec="1" session="tutorial5" source="console"
+```python session="tutorial5" source="console"
 >>> from omnipy import RowWiseTableWithColNamesModel, PandasModel
 >>> as_table = RowWiseTableWithColNamesModel(rows.to_data())
 >>> df = as_table.to(PandasModel)
@@ -2051,7 +2051,7 @@ Omnipy is most useful when you need **all** of the following in one place:
 
 ## Example 1: continuous safety while editing
 
-```pycon exec="1" session="compare" source="console"
+```python session="compare" source="console"
 >>> from omnipy import Model
 --8<-- "_includes/pycon_setup.md"
 >>> xs = Model[list[int]]([1, 2, 3])
@@ -2065,7 +2065,7 @@ Omnipy is most useful when you need **all** of the following in one place:
 
 ## Example 2: nested JSON → related tables
 
-```pycon exec="1" session="compare" source="console"
+```python session="compare" source="console"
 >>> from omnipy import JsonListOfDictsDataset
 >>> from omnipy.components.json.flows import flatten_nested_json
 >>> nested = JsonListOfDictsDataset({'items': [{'id': 'a', 'meta': {'x': 1}}, {'id': 'b', 'meta': {'x': 2}}]})
@@ -2076,7 +2076,7 @@ Omnipy is most useful when you need **all** of the following in one place:
 
 ## Example 3: batch semantics without writing loops
 
-```pycon exec="1" session="compare" source="console"
+```python session="compare" source="console"
 >>> from omnipy import Dataset, Model
 >>> ds = Dataset[Model[int]]({'a': '1', 'b': 2.0})
 >>> ds.do(lambda x: int(x) + 100).to_data()
@@ -2140,7 +2140,7 @@ This guide explains how model-based tabular parsing works for custom, domain-spe
 
 ## Start from a TSV-like parser
 
-```pycon exec="1" session="domain_formats" source="console"
+```python session="domain_formats" source="console"
 --8<-- "_includes/pycon_setup.md"
 >>> from omnipy import TsvTableModel
 >>> text = "a\tb\n1\t2\n"
@@ -2150,7 +2150,7 @@ This guide explains how model-based tabular parsing works for custom, domain-spe
 
 ## Add a typed row spec
 
-```pycon exec="1" session="domain_formats" source="console"
+```python session="domain_formats" source="console"
 >>> from omnipy.util import pydantic as pyd
 >>> class Row(pyd.BaseModel):
 ...     a: int
