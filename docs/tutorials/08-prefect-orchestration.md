@@ -12,13 +12,13 @@ engine configuration, CLI usage with `--engine prefect`, and opening the Prefect
 
 ## Step 1: Install dependencies
 
-Use your preferred install path for Omnipy + Prefect:
+Install Omnipy:
 
 ```bash
-pip install "omnipy[prefect]"
-# or similar in environments without extras support:
-pip install omnipy prefect
+pip install omnipy
 ```
+
+Prefect is already included in Omnipy's base dependencies.
 
 If you want to run the example CLI workflows, also install `omnipy-examples`:
 

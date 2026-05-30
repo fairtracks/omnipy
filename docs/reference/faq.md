@@ -52,7 +52,7 @@ For deeper nesting patterns, start with the JSON tutorial path and flatten in st
 
 ## How do I run flows with Prefect?
 
-1. Install dependencies, for example `pip install "omnipy[prefect]"`.
+1. Install dependencies with `pip install omnipy` (Prefect is included).
 2. Set `runtime.config.engine.choice = 'prefect'`.
 3. Run your flow with `.run(...)` as usual.
 4. Optionally run CLI examples with `--engine prefect`.
