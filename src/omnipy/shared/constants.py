@@ -2,7 +2,7 @@ import omnipy.util.pydantic as pyd
 
 # Data - General
 
-ROOT_KEY = '__root__'
+ROOT_KEY = 'root'
 DATA_KEY = 'data'
 UNTITLED_KEY = '_untitled'
 ASYNC_LOAD_SLEEP_TIME = 0.05

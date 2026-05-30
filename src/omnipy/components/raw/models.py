@@ -1,4 +1,4 @@
-from typing import Callable, cast, Generic, Protocol, TypeAlias
+from typing import Callable, cast, ClassVar, Generic, Protocol, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -19,6 +19,9 @@ class _EncodingParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
         encoding: str = 'utf-8'
+    Params: ClassVar[type[ParamsBase]]
+    __class_vars__ = {'Params'}
+
 
 
 if TYPE_CHECKING:
@@ -60,6 +63,7 @@ if TYPE_CHECKING:
 else:
 
     class _StrModel(Model[str | bytes], _EncodingParamsMixin):
+        Params: ClassVar[type[ParamsBase]]
         Params = _EncodingParamsMixin.Params
 
         @classmethod
@@ -125,18 +129,24 @@ class _SplitByCommaParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
         delimiter: str = ','
+    Params: ClassVar[type[ParamsBase]]
+    __class_vars__ = {'Params'}
 
 
 class _SplitByTabParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
         delimiter: str = '\t'
+    Params: ClassVar[type[ParamsBase]]
+    __class_vars__ = {'Params'}
 
 
 class _SplitByNewlineParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
         delimiter: str = '\n'
+    Params: ClassVar[type[ParamsBase]]
+    __class_vars__ = {'Params'}
 
 
 # Split models
@@ -241,18 +251,24 @@ class _JoinByCommaParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
         delimiter: str = ','
+    Params: ClassVar[type[ParamsBase]]
+    __class_vars__ = {'Params'}
 
 
 class _JoinByTabParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
         delimiter: str = '\t'
+    Params: ClassVar[type[ParamsBase]]
+    __class_vars__ = {'Params'}
 
 
 class _JoinByNewlineParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
         delimiter: str = '\n'
+    Params: ClassVar[type[ParamsBase]]
+    __class_vars__ = {'Params'}
 
 
 # Join models
@@ -352,18 +368,19 @@ class NestedListsOfStrModel(Model[NestedListsOfStr]):
 
 ListOfNestedListsOfStrModel.update_forward_refs()
 
-ListOfNestedPlainListsOfStr: TypeAlias = list['NestedPlainListsOfStr']
+ListOfNestedPlainListsOfStr: TypeAlias = list["NestedPlainListsOfStr"]
 NestedPlainListsOfStr: TypeAlias = str | ListOfNestedPlainListsOfStr
 
-# Hack to support recursive types in Pydantic v1.10.x. Should not be needed in Pydantic v2.
-_NestedPlainListsOfStrT = TypeVar(
-    '_NestedPlainListsOfStrT', default=str | list[NestedPlainListsOfStr])
-
+# In Pydantic v2, TypeVar without default resolves to Any, avoiding the
+# RecursionError caused by the v1 recursive TypeVar default hack.
+_NestedPlainListsOfStrT = TypeVar("_NestedPlainListsOfStrT")
 
 class _NestedItemsParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
         delimiters: tuple[str, ...] = ()
+    Params: ClassVar[type[ParamsBase]]
+    __class_vars__ = {'Params'}
 
     @classmethod
     def _split_data_according_to_delimiters(
@@ -511,6 +528,8 @@ class _MatchItemsParamsMixin:
         match_functions: tuple[Callable[[str], bool], ...] = ()
         invert_matches: bool = False
         match_all: bool = True
+    Params: ClassVar[type[ParamsBase]]
+    __class_vars__ = {'Params'}
 
 
 if TYPE_CHECKING:
