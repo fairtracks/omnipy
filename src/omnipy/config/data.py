@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from pathlib import Path
 import shutil
-from typing import Any, TypedDict
+from typing import Annotated, Any, TypedDict
 
 from typing_extensions import override
 
@@ -288,16 +288,22 @@ class HttpRequestsConfig(ConfigBase):
 
 class HttpConfig(ConfigBase):
     defaults: IsHttpRequestsConfig = pyd.Field(default_factory=HttpRequestsConfig)
-    for_host: defaultdict[str, HttpRequestsConfig] = pyd.Field(
-        default_factory=lambda: defaultdict(HttpRequestsConfig))
+    for_host: defaultdict[str, Annotated[HttpRequestsConfig,
+                                         pyd.Field(default_factory=HttpRequestsConfig)]] = pyd.Field(
+                                             default_factory=lambda: defaultdict(HttpRequestsConfig))
 
-    @pyd.field_validator('for_host', mode='before')
+    @pyd.model_validator(mode='before')
     @classmethod
-    def update_http_defaults(cls,
-                             _for_host: defaultdict[str,
-                                                    HttpRequestsConfig]) -> defaultdict[str,
-                                                                                           HttpRequestsConfig]:
-        return defaultdict(lambda: cls.model_fields['defaults'].default_factory().copy())
+    def update_http_defaults(cls, data: dict[str, Any]) -> dict[str, Any]:
+        defaults = data.get('defaults', HttpRequestsConfig())
+
+        if isinstance(defaults, dict):
+            defaults = HttpRequestsConfig(**defaults)
+
+        data['defaults'] = defaults
+        data['for_host'] = defaultdict(lambda: defaults.copy(), data.get('for_host', {}))
+
+        return data
 
 
 class DataConfig(ConfigBase):

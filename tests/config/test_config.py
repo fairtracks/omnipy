@@ -1,4 +1,5 @@
 from omnipy.config import ConfigBase
+from omnipy.config.data import HttpConfig
 from omnipy.data.model import is_model_instance
 
 
@@ -15,3 +16,9 @@ def test_config_as_model() -> None:
     assert isinstance(model, JsonDictModel)
     assert model['param1'] == 20
     assert model['param2'] == 'custom'
+
+
+def test_http_config_schema_generation_for_defaultdict() -> None:
+    schema = HttpConfig.model_json_schema()
+
+    assert 'for_host' in schema['properties']
