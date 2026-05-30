@@ -32,7 +32,14 @@ This tutorial shows BED/GFF-style row parsing using typed model specs.
 ## Step 3: Parse into typed records
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
+>>> from omnipy import Model, TsvTableModel
+>>> from omnipy.util import pydantic as pyd
+>>> class BedRow(pyd.BaseModel):
+...     chrom: str
+...     start: int
+...     end: int
+...     name: str | None = None
+>>> rows = TsvTableModel("chrom\tstart\tend\tname\nchr1\t10\t20\tgeneA\n")
 >>> typed_rows = Model[list[BedRow]](rows.to_data())
 >>> typed_rows.to_data()
 ```
@@ -40,6 +47,14 @@ This tutorial shows BED/GFF-style row parsing using typed model specs.
 ## Optional: convert for table tooling
 
 ```pycon exec="1" source="console"
->>> from omnipy import RowWiseTableWithColNamesModel, PandasModel
+>>> from omnipy import Model, RowWiseTableWithColNamesModel, PandasModel, TsvTableModel
+>>> from omnipy.util import pydantic as pyd
+>>> class BedRow(pyd.BaseModel):
+...     chrom: str
+...     start: int
+...     end: int
+...     name: str | None = None
+>>> rows = TsvTableModel("chrom\tstart\tend\tname\nchr1\t10\t20\tgeneA\n")
+>>> typed_rows = Model[list[BedRow]](rows.to_data())
 >>> RowWiseTableWithColNamesModel(typed_rows.to_data()).to(PandasModel).to_data()
 ```
