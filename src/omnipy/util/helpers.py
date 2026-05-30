@@ -478,10 +478,15 @@ def max_or_none(*args: NumberT | None) -> NumberT | None:
     return max(filtered_args) if filtered_args else None
 
 
-def generate_job_slug(job_cls_name: str, job_name: str):
-    import coolname
+def get_job_slug_base(job_cls_name: str, job_name: str):
     import inflection
 
     job_cls_name_slug = inflection.underscore(job_cls_name).replace('_', '-')
     job_name_slug = inflection.underscore(job_name).replace('_', '-')
-    return f'{job_cls_name_slug}-{job_name_slug}-{coolname.generate_slug(3)}'
+    return f'{job_cls_name_slug}-{job_name_slug}'
+
+
+def generate_job_slug(job_cls_name: str, job_name: str):
+    import coolname
+
+    return f'{get_job_slug_base(job_cls_name, job_name)}-{coolname.generate_slug(3)}'

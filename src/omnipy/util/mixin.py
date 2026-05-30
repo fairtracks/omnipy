@@ -10,6 +10,13 @@ from omnipy.util.helpers import generic_aware_issubclass_ignore_args, transfer_g
 WITH_MIXINS_CLS_SUFFIX = 'WithMixins'
 
 
+def strip_mixins_suffix(cls_name: str) -> str:
+    if cls_name.endswith(WITH_MIXINS_CLS_SUFFIX):
+        return cls_name[:-len(WITH_MIXINS_CLS_SUFFIX)]
+
+    return cls_name
+
+
 class DynamicMixinAcceptor:
     # Declarations needed by mypy
     _orig_class: Type

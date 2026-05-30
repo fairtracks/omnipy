@@ -1,7 +1,7 @@
 from typing import Callable, cast
 
 from omnipy.util.helpers import generate_job_slug
-from omnipy.util.mixin import WITH_MIXINS_CLS_SUFFIX
+from omnipy.util.mixin import strip_mixins_suffix
 
 
 class NameJobBaseMixin:
@@ -35,10 +35,7 @@ class NameJobBaseMixin:
         if self._name is None:
             return None
 
-        job_cls_name = self.__class__.__name__
-        if job_cls_name.endswith(WITH_MIXINS_CLS_SUFFIX):
-            job_cls_name = job_cls_name[:-len(WITH_MIXINS_CLS_SUFFIX)]
-
+        job_cls_name = strip_mixins_suffix(self.__class__.__name__)
         return generate_job_slug(job_cls_name, self._name)
 
     def _regenerate_unique_name(self) -> None:
