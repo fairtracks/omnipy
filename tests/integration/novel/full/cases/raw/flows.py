@@ -1,6 +1,6 @@
-from omnipy import MultiModelDataset
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate
 from omnipy.data.dataset import Dataset
+from omnipy.data.multi import MultiModelDataset
 
 from ...helpers.models import GeneralTable, RecordSchemaDef
 from .tasks import (apply_models_to_dataset,

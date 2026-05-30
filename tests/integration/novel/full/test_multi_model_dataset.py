@@ -6,8 +6,8 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy import MultiModelDataset
 from omnipy.data.dataset import Dataset
+from omnipy.data.multi import MultiModelDataset
 from omnipy.shared.enums.job import RunState
 from omnipy.util.pydantic import ValidationError
 
