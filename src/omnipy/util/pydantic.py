@@ -1,35 +1,19 @@
 # flake8: noqa
 
-from typing import TYPE_CHECKING
+from collections import deque
+from dataclasses import dataclass as std_dataclass
+from types import GeneratorType, NoneType, UnionType
+import re
+from typing import Any, Generic, Literal, TypeVar, get_args, get_origin
 
 import pydantic
+from pydantic.deprecated.parse import Protocol
+from pydantic.fields import FieldInfo
+from pydantic_core import PydanticUndefined as Undefined
+from pydantic_core import PydanticUndefinedType as UndefinedType
 from pydantic_core import Url
 
-PYDANTIC_V2 = pydantic.__version__.startswith('2')
-
-if TYPE_CHECKING or PYDANTIC_V2:
-    import pydantic.v1
-    pyd = pydantic.v1
-
-    import pydantic.v1.error_wrappers as pyd_error_wrappers
-    import pydantic.v1.errors as pyd_errors
-    import pydantic.v1.fields as pyd_fields
-    import pydantic.v1.generics as pyd_generics
-    import pydantic.v1.main as pyd_main
-    import pydantic.v1.schema as pyd_schema
-    import pydantic.v1.typing as pyd_typing
-    import pydantic.v1.utils as pyd_utils
-else:
-    pyd = pydantic
-
-    import pydantic.error_wrappers as pyd_error_wrappers
-    import pydantic.errors as pyd_errors
-    import pydantic.fields as pyd_fields
-    import pydantic.generics as pyd_generics
-    import pydantic.main as pyd_main
-    import pydantic.schema as pyd_schema
-    import pydantic.typing as pyd_typing
-    import pydantic.utils as pyd_utils
+pyd = pydantic
 
 BaseConfig = pyd.BaseConfig
 BaseModel = pyd.BaseModel
@@ -44,63 +28,229 @@ NonNegativeFloat = pyd.NonNegativeFloat
 NonNegativeInt = pyd.NonNegativeInt
 PositiveInt = pyd.PositiveInt
 PrivateAttr = pyd.PrivateAttr
-Protocol = pyd.Protocol
-root_validator = pyd.root_validator
 StrictBytes = pyd.StrictBytes
 StrictInt = pyd.StrictInt
 StrictStr = pyd.StrictStr
-validate_arguments = pyd.validate_arguments
-ValidationError = pyd.ValidationError
-validator = pyd.validator
 dataclass = pyd.dataclasses.dataclass
-ErrorWrapper = pyd_error_wrappers.ErrorWrapper
-ConfigError = pyd_errors.ConfigError
-NoneIsNotAllowedError = pyd_errors.NoneIsNotAllowedError
-ModelField = pyd_fields.ModelField
-Undefined = pyd_fields.Undefined
-UndefinedType = pyd_fields.UndefinedType
-GenericModel = pyd_generics.GenericModel
-ModelMetaclass = pyd_main.ModelMetaclass
-validate_model = pyd_main.validate_model
-normalize_name = pyd_schema.normalize_name
-display_as_type = pyd_typing.display_as_type
-is_none_type = pyd_typing.is_none_type
-lenient_isinstance = pyd_utils.lenient_isinstance
-lenient_issubclass = pyd_utils.lenient_issubclass
-sequence_like = pyd_utils.sequence_like
+field_validator = pyd.field_validator
+model_validator = pyd.model_validator
+validate_call = pyd.validate_call
+ValidationError = pyd.ValidationError
 
 
-def pydantic_v1_hack():
-    """
-    Pydantic v1 needed to redefine typing.get_origin and typing.get_args
-    for earlier Python versions not supported by Omnipy. This cause issues
-    for Omnipy models like: `Model[type | typing.GenericAlias](list[int])`
-
-    TODO: Remove pydantic_v1_hack for Pydantic v2
-    """
-
-    import typing
-
-    if TYPE_CHECKING or PYDANTIC_V2:
-
-        import pydantic.v1.fields
-        import pydantic.v1.generics
-        import pydantic.v1.typing
-
-        pydantic.v1.fields.get_origin = typing.get_origin  # pyright: ignore
-        pydantic.v1.generics.get_args = typing.get_args  # pyright: ignore
-        pydantic.v1.typing.get_args = typing.get_args  # pyright: ignore
-    else:
-        import pydantic.fields
-        import pydantic.generics
-        import pydantic.typing
-
-        pydantic.fields.get_origin = typing.get_origin  # pyright: ignore
-        pydantic.generics.get_args = typing.get_args  # pyright: ignore
-        pydantic.typing.get_args = typing.get_args  # pyright: ignore
+def root_validator(*args, **kwargs):
+    if 'skip_on_failure' not in kwargs and not kwargs.get('pre', False):
+        kwargs['skip_on_failure'] = True
+    return pyd.root_validator(*args, **kwargs)
 
 
-pydantic_v1_hack()
+def validator(*args, **kwargs):
+    return pyd.validator(*args, **kwargs)
+
+
+def validate_arguments(func=None, *, config=None):
+    return pyd.validate_call(func, config=config)
+
+
+@std_dataclass(frozen=True)
+class ErrorWrapper:
+    exc: BaseException
+    loc: str | int | tuple[str | int, ...]
+
+
+class ConfigError(RuntimeError):
+    pass
+
+
+class NoneIsNotAllowedError(TypeError):
+    msg_template = 'none is not an allowed value'
+
+
+ModelField = FieldInfo
+_RootT = TypeVar('_RootT')
+_BaseModelMetaclass = type(BaseModel)
+
+
+class _GenericModelCompatMeta(_BaseModelMetaclass):
+    def __new__(mcls, name, bases, namespace, **kwargs):
+        namespace_dict = dict(namespace)
+        annotations = dict(namespace_dict.get('__annotations__', {}))
+
+        has_root_alias = '__root__' in annotations or '__root__' in namespace_dict
+        if '__root__' in annotations:
+            annotations['root'] = annotations.pop('__root__')
+            namespace_dict['__annotations__'] = annotations
+        if '__root__' in namespace_dict:
+            namespace_dict['root'] = namespace_dict.pop('__root__')
+
+        cls = super().__new__(mcls, name, bases, namespace_dict, **kwargs)
+
+        if has_root_alias and '__root__' not in cls.__dict__:
+
+            def _get(self):
+                return self.root
+
+            def _set(self, value):
+                self.root = value
+
+            cls.__root__ = property(_get, _set)
+
+        return cls
+
+
+class GenericModel(pyd.RootModel[_RootT], Generic[_RootT], metaclass=_GenericModelCompatMeta):
+    pass
+
+
+ModelMetaclass = _BaseModelMetaclass
+
+
+def validate_model(
+    model: type[BaseModel],
+    input_data: dict[str, Any],
+    cls: type[Any] | None = None,
+) -> tuple[dict[str, Any], set[str], ValidationError | None]:
+    del cls
+
+    try:
+        validation_input = _to_v2_validation_input(model=model, input_data=input_data)
+        validated_obj = model.model_validate(validation_input)
+    except ValidationError as exc:
+        values = _as_v1_style_input_values(model=model, input_data=input_data)
+        fields_set = _as_v1_style_input_fields_set(model=model, input_data=input_data)
+        return values, fields_set, exc
+
+    values = _as_v1_style_values(model=model, validated_obj=validated_obj)
+    fields_set = _as_v1_style_fields_set(model=model, validated_obj=validated_obj)
+    return values, fields_set, None
+
+
+def validation_error_from_wrappers(
+    errors: list[ErrorWrapper],
+    model: type[BaseModel] | str,
+) -> ValidationError:
+    title = model if isinstance(model, str) else model.__name__
+    line_errors: list[dict[str, Any]] = []
+
+    for wrapper in errors:
+        loc = wrapper.loc if isinstance(wrapper.loc, tuple) else (wrapper.loc,)
+        line_errors.extend(_exception_to_line_errors(exc=wrapper.exc, loc_prefix=loc))
+
+    return ValidationError.from_exception_data(title, line_errors)
+
+
+def normalize_name(name: str) -> str:
+    return re.sub(r'[^a-zA-Z0-9.\-_]', '_', name)
+
+
+def display_as_type(type_: Any) -> str:
+    return str(type_)
+
+
+def is_none_type(type_: Any) -> bool:
+    if type_ in (None, NoneType, type(None)):
+        return True
+
+    if get_origin(type_) is Literal:
+        literal_args = get_args(type_)
+        return len(literal_args) == 1 and literal_args[0] is None
+
+    return False
+
+
+def lenient_isinstance(o: Any, class_or_tuple: Any) -> bool:
+    try:
+        return isinstance(o, class_or_tuple)
+    except TypeError:
+        return False
+
+
+def lenient_issubclass(cls: Any, class_or_tuple: Any) -> bool:
+    try:
+        return isinstance(cls, type) and issubclass(cls, class_or_tuple)
+    except TypeError:
+        return False
+
+
+def sequence_like(v: Any) -> bool:
+    return isinstance(v, (list, tuple, set, frozenset, GeneratorType, deque))
+
+
+def _is_root_model_cls(model: type[BaseModel]) -> bool:
+    return bool(getattr(model, '__pydantic_root_model__', False))
+
+
+def _as_v1_style_input_values(model: type[BaseModel], input_data: dict[str, Any]) -> dict[str, Any]:
+    if _is_root_model_cls(model):
+        if 'root' in input_data:
+            return {'__root__': input_data['root']}
+        if '__root__' in input_data:
+            return {'__root__': input_data['__root__']}
+    return dict(input_data)
+
+
+def _as_v1_style_input_fields_set(model: type[BaseModel], input_data: dict[str, Any]) -> set[str]:
+    if _is_root_model_cls(model):
+        if '__root__' in input_data or 'root' in input_data:
+            return {'__root__'}
+        return set()
+    return set(input_data.keys())
+
+
+def _as_v1_style_values(model: type[BaseModel], validated_obj: BaseModel) -> dict[str, Any]:
+    if _is_root_model_cls(model):
+        return {'__root__': validated_obj.model_dump()}
+    return validated_obj.model_dump()
+
+
+def _to_v2_validation_input(model: type[BaseModel], input_data: dict[str, Any]) -> Any:
+    if _is_root_model_cls(model):
+        if '__root__' in input_data:
+            return input_data['__root__']
+        if 'root' in input_data:
+            return input_data['root']
+    return input_data
+
+
+def _as_v1_style_fields_set(model: type[BaseModel], validated_obj: BaseModel) -> set[str]:
+    fields_set = set(getattr(validated_obj, '__pydantic_fields_set__', set()))
+    if _is_root_model_cls(model):
+        if 'root' in fields_set:
+            fields_set.remove('root')
+            fields_set.add('__root__')
+    return fields_set
+
+
+def _exception_to_line_errors(
+    exc: BaseException,
+    loc_prefix: tuple[str | int, ...],
+) -> list[dict[str, Any]]:
+    if isinstance(exc, ValidationError):
+        nested_errors: list[dict[str, Any]] = []
+        for error in exc.errors(include_url=False):
+            nested_error = dict(error)
+            nested_error['loc'] = loc_prefix + tuple(error.get('loc', ()))
+            nested_errors.append(nested_error)
+        return nested_errors
+
+    if isinstance(exc, NoneIsNotAllowedError):
+        return [{
+            'type': 'none_required',
+            'loc': loc_prefix,
+            'msg': str(exc) or '[Omnipy] none is not an allowed value',
+            'input': None,
+        }]
+
+    error = exc if isinstance(exc, ValueError) else ValueError(str(exc))
+    return [{
+        'type': 'value_error',
+        'loc': loc_prefix,
+        'msg': f'Value error, {error}',
+        'input': None,
+        'ctx': {
+            'error': error,
+        },
+    }]
 
 __all__ = [
     'BaseConfig',
@@ -120,14 +270,18 @@ __all__ = [
     'PrivateAttr',
     'Protocol',
     'root_validator',
+    'field_validator',
+    'model_validator',
     'StrictBytes',
     'StrictInt',
     'StrictStr',
     'validate_arguments',
+    'validate_call',
     'ValidationError',
     'validator',
     'dataclass',
     'ErrorWrapper',
+    'validation_error_from_wrappers',
     'ModelField',
     'Undefined',
     'UndefinedType',
