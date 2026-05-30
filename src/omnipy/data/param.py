@@ -14,44 +14,64 @@ _ParamsP = ParamSpec('_ParamsP')
 
 
 class _ParamsMeta(pyd.ModelMetaclass):
-    def __init__(cls, name: str, bases: tuple[type, ...], namespace: dict[str, object]) -> None:
-        super().__init__(name, bases, namespace)
+    def __init__(cls, name: str, bases: tuple[type, ...], namespace: dict[str, object], **kwargs: object) -> None:
+        super().__init__(name, bases, namespace, **kwargs)
 
         model_cls = cast(type[pyd.BaseModel], cls)
         default_vals = {}
-        for field in model_cls.__fields__.values():
+        for field_name, field in model_cls.model_fields.items():
             if field.default_factory is not None:
                 raise ValueError('Default factory is not supported for Params classes')
 
-            default_vals[field.name] = field.get_default()
-            if default_vals[field.name] is None and not field.allow_none:
-                raise ValueError(f'{model_cls.__name__}.{field.name} must have a default value')
+            default_vals[field_name] = field.default if field.default is not pyd.Undefined else None
+            if default_vals[field_name] is None and not cls._field_allow_none(field):
+                raise ValueError(f'{model_cls.__name__}.{field_name} must have a default value')
 
-        values, fields_set, validation_error = \
-            pyd.validate_model(model_cls, input_data={k: v for k, v in default_vals.items()})
+        try:
+            values, fields_set, validation_error = \
+                pyd.validate_model(model_cls, input_data={k: v for k, v in default_vals.items()})
+        except RuntimeError:
+            # ParamsBase.__new__ prevents instantiation, which pydantic v2
+            # model_validate needs. Fall back to direct default extraction.
+            values = default_vals
+            validation_error = None
 
         if validation_error:
             raise validation_error
 
         for key, value in values.items():
-            model_cls.__fields__[key].default = value
+            model_cls.model_fields[key].default = value
+
+    @staticmethod
+    def _field_allow_none(field: pyd.FieldInfo) -> bool:
+        from omnipy.util.pydantic import is_none_type
+        from typing import get_args
+        ann = field.annotation
+        if ann is None:
+            return False
+        return any(is_none_type(a) for a in get_args(ann))
 
     def __getattr__(cls, attr: str) -> object:
         model_cls = cast(type[pyd.BaseModel], cls)
-        if attr in model_cls.__fields__:
-            return cls._get_param_value(attr, model_cls)
+        # Access __pydantic_fields__ via cls.__dict__ to avoid recursion:
+        # model_fields property calls getattr(cls, '__pydantic_fields__', {}),
+        # which triggers __getattr__ again -> infinite loop.
+        pydantic_fields: dict = model_cls.__dict__.get('__pydantic_fields__', {})
+        if attr in pydantic_fields:
+            return cls._get_param_value(attr, pydantic_fields)
         raise AttributeError(f'{model_cls.__name__}.{attr} is not defined')
 
-    @functools.cache
-    def _get_param_value(cls, attr, model_cls):
-        if model_cls.__fields__[attr].default_factory is not None:
-            return model_cls.__fields__[attr].default_factory()
+    def _get_param_value(cls, attr, pydantic_fields):
+        finfo = pydantic_fields[attr]
+        if finfo.default_factory is not None:
+            return finfo.default_factory()
         else:
-            return model_cls.__fields__[attr].default
+            return finfo.default
 
     def __setattr__(cls, attr: str, value: object) -> None:
         model_cls = cast(type[pyd.BaseModel], cls)
-        if attr in model_cls.__fields__:
+        pydantic_fields: dict = model_cls.__dict__.get('__pydantic_fields__', {})
+        if attr in pydantic_fields:
             raise AttributeError(f'{model_cls.__name__}.{attr} is read-only')
         elif not attr.startswith('_'):
             raise AttributeError(f'{model_cls.__name__}.{attr} is not defined')
@@ -61,24 +81,20 @@ class _ParamsMeta(pyd.ModelMetaclass):
 class ParamsBase(pyd.BaseModel, metaclass=_ParamsMeta):
     class Config:
         arbitrary_types_allowed = True
-        smart_union = True
 
     def __new__(cls, *args: object, **kwargs: object) -> None:  # type: ignore[misc]
         raise RuntimeError(f'{cls.__name__} cannot be instantiated')
 
     @classmethod
     def copy_and_adjust(cls, model_name: str, **kwargs: object) -> type['ParamsBase']:
-        all_field_infos = {
-            field_name: deepcopy(field.field_info) for field_name, field in cls.__fields__.items()
+        field_definitions: dict[str, Any] = {
+            field_name: (cls.model_fields[field_name].annotation, deepcopy(cls.model_fields[field_name]))
+            for field_name in cls.model_fields
         }
 
         for key, value in kwargs.items():
-            all_field_infos[key].default = value
+            field_definitions[key] = (field_definitions[key][0], pyd.Field(default=value))
 
-        field_definitions: dict[str, Any] = {
-            field_name: (cls.__fields__[field_name].outer_type_, field_info)
-            for field_name, field_info in all_field_infos.items()
-        }
         return pyd.create_model(  # type: ignore[call-overload]
             model_name, __base__=ParamsBase, **field_definitions)
 

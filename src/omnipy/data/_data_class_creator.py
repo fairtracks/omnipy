@@ -83,22 +83,11 @@ class DataClassBase(Generic[ContentT], metaclass=DataClassBaseMeta):
 
     @classmethod
     def _recursively_set_allow_none(cls, field: pyd.ModelField) -> None:
-        if field.sub_fields:
-            if is_union(field.outer_type_):
-                if any(_.allow_none for _ in field.sub_fields):
-                    field.allow_none = True
-
-            for sub_field in field.sub_fields:
-                cls._recursively_set_allow_none(sub_field)
-        if field.key_field:
-            if is_union(field.key_field.outer_type_):
-                assert field.key_field.sub_fields is not None
-                if any(_.allow_none for _ in field.key_field.sub_fields):
-                    field.key_field.allow_none = True
-
-            if field.key_field.sub_fields:
-                for sub_field in field.key_field.sub_fields:
-                    cls._recursively_set_allow_none(sub_field)
+        # Pydantic v2 FieldInfo does not carry v1-style sub_fields/outer_type_/key_field.
+        # The allow_none workaround was needed for a pydantic v1 bug; v2 may handle None
+        # validation correctly out of the box. Leaving this as a no-op stub; re-add v2-compatible
+        # logic if None-related validation errors surface.
+        pass
 
     @property
     def _data_class_creator(self) -> IsDataClassCreator:

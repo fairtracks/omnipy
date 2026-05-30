@@ -144,3 +144,9 @@ html
 # IPython / Jupyter
 
 .ipynb_checkpoints
+# Core dumps
+core
+
+# User-specific direnv overrides
+.envrc
+.envrc.local

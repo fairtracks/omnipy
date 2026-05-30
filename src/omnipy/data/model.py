@@ -106,7 +106,6 @@ class Model(  # type: ignore[misc]
         ModelDisplayMixin,
         DataClassBase[_RootT],
         pyd.GenericModel,
-        Generic[_RootT],
         metaclass=ModelMetaclass,
 ):
     """A data model containing a value parsed according to the model.
@@ -158,11 +157,7 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def _get_pydantic_root_key(cls) -> str:
-        if ROOT_KEY in cls.model_fields:
-            return ROOT_KEY
-        if cls._PYDANTIC_ROOT_KEY in cls.model_fields:
-            return cls._PYDANTIC_ROOT_KEY
-        return ROOT_KEY
+        return 'root'
 
     @classmethod
     def _supports_v1_field_attrs(cls, field: pyd.ModelField | None) -> bool:
@@ -293,11 +288,14 @@ class Model(  # type: ignore[misc]
         # the actual type. The following issue in mypy seems relevant:
         # https://github.com/python/mypy/issues/3737 (as well as linked issues)
 
+        # Use pydantic's BaseModel.__class_getitem__ unbound function directly since
+        # super() may resolve to Generic.__class_getitem__ (which returns a _GenericAlias)
+        # when DataClassBase/Generic appears before GenericModel in the MRO.
+        from pydantic import BaseModel as _PydBaseModel
         created_model = cast(
             type[Model],
-            super().__class_getitem__(model if cls is Model else params),  # type: ignore
+            _PydBaseModel.__class_getitem__.__func__(cls, model if cls is Model else params),  # type: ignore
         )
-
         pydantic_root_key = created_model._get_pydantic_root_key()
         created_model.model_fields[pydantic_root_key] = deepcopy(
             created_model.model_fields[pydantic_root_key])
@@ -329,7 +327,10 @@ class Model(  # type: ignore[misc]
             for orig_base in get_original_bases(cls):
                 if isinstance(orig_base, ModelMetaclass):
                     model_base = cast(type[Model], orig_base)
-                    if model_base.__concrete__:
+                    # In pydantic v2, a concrete parametrized model has non-empty
+                    # __pydantic_generic_metadata__['args'] (resolved TypeVars).
+                    meta = getattr(model_base, '__pydantic_generic_metadata__', {})
+                    if meta.get('args') and meta.get('origin') is not None:
                         model_base._inherit_first_orig_model_in_bases_if_missing()
                         orig_model = model_base.get_orig_model()
                         if orig_model is not Undefined:
@@ -531,6 +532,17 @@ class Model(  # type: ignore[misc]
             self._get_root_field().default_factory = self._get_default_factory()
 
         dataset_or_model_as_input = False
+        
+        # In pydantic v2, the compiled validator must always receive a root value.
+        # If none is provided, generate a default here instead of relying on the
+        # undefined_default_factory (which returns PydanticUndefined and causes
+        # a hang/crash in pydantic-core when validate_default=True).
+        if ROOT_KEY not in super_kwargs:
+            try:
+                super_kwargs[ROOT_KEY] = self._get_default_value()
+            except (ValidationError, TypeError, ValueError):
+                super_kwargs[ROOT_KEY] = self._get_default_value()
+
         if ROOT_KEY in super_kwargs:
             try:
                 dataset_or_model_as_input, value = \
@@ -681,21 +693,28 @@ class Model(  # type: ignore[misc]
         own_module_ns, globalns = \
             build_own_module_and_global_namespace_for_forward_refs(cls, calling_module, **localns)
 
-        prev_outer_type = cls._get_root_field().outer_type_
-        prev_type = cls._get_root_field().type_
+        root_field = cls._get_root_field()
+        prev_annotation = root_field.annotation
+        prev_orig_model = cls.get_orig_model()
 
-        super().model_rebuild(**globalns)
+        # model_rebuild resolves forward refs in field annotations
+        # Use _types_namespace to pass the namespace for forward ref resolution
+        super().model_rebuild(_types_namespace=globalns)
 
-        cls._get_root_field().outer_type_ = evaluate_any_forward_refs_if_possible(
-            prev_outer_type, **globalns)
-        cls._get_root_field().type_ = evaluate_any_forward_refs_if_possible(prev_type, **globalns)
-        cls.set_orig_model(evaluate_any_forward_refs_if_possible(cls.get_orig_model(), **globalns))
-        cls.__annotations__[ROOT_KEY] = evaluate_any_forward_refs_if_possible(
-            cls.__annotations__[ROOT_KEY], **globalns)
+        # Re-evaluate field annotation and orig_model after rebuild
+        root_field = cls._get_root_field()
+        new_annotation = evaluate_any_forward_refs_if_possible(
+            prev_annotation, **globalns)
+        if new_annotation is not prev_annotation:
+            root_field.annotation = new_annotation
+
+        cls.set_orig_model(evaluate_any_forward_refs_if_possible(prev_orig_model, **globalns))
+        pydantic_root_key = cls._get_pydantic_root_key()
+        if pydantic_root_key in cls.__annotations__:
+            cls.__annotations__[pydantic_root_key] = evaluate_any_forward_refs_if_possible(
+                cls.__annotations__[pydantic_root_key], **globalns)
 
         cls._clean_type_caches()
-
-        cls._recursively_set_allow_none(cls._get_root_field())
 
         if get_original_bases(cls) == (Model,):
             cls._prepare_cls_members_to_mimic_model(cls)
@@ -913,7 +932,8 @@ class Model(  # type: ignore[misc]
 
     @pyd.model_validator(mode='before')
     def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
-        assert ROOT_KEY in root_obj
+        if ROOT_KEY not in root_obj:
+            return root_obj
         value = root_obj[ROOT_KEY]
         value = parse_none_according_to_model(value, root_model=cls)
 
@@ -1024,7 +1044,7 @@ class Model(  # type: ignore[misc]
     @functools.cache
     def _get_root_type(cls, outer: bool, with_args: bool) -> TypeForm:
         root_field = cls._get_root_field()
-        root_type = root_field.outer_type_ if outer else root_field.type_
+        root_type = root_field.annotation
 
         orig_model = cls.get_orig_model()
         if orig_model != Undefined:
@@ -1032,7 +1052,7 @@ class Model(  # type: ignore[misc]
                 if outer:
                     root_type = Optional[root_type]
                 else:
-                    root_type = Optional[root_field.outer_type_]
+                    root_type = Optional[root_type]
 
         return root_type if with_args else ensure_plain_type(root_type)
 
@@ -1518,6 +1538,12 @@ def is_model_instance(__obj: object) -> 'TypeIs[Model]':
 
 @functools.cache
 def is_model_subclass(__cls: TypeForm) -> 'TypeIs[type[Model]]':
+    if not isinstance(__cls, type):
+        _origin = get_origin(__cls)
+        if _origin is not None:
+            return is_model_subclass(_origin)
+        # Some non-type forms (e.g. pydantic aliases) may not have an origin
+        return False
     return lenient_issubclass(__cls, Model) \
         and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
 

@@ -352,10 +352,15 @@ class Dataset(
         :return: The concrete type (Model or Dataset class) used for all
                  data files in the dataset.
         """
-        # Part of pydantic v1 hack to stop coercing of e.g.
-        # [{'a': 'b', 'c': 'd'}] to {'a': 'c'}
-        return cls._clean_type(cls._get_data_field().sub_fields[1].type_)  # type: ignore[index]
-        # return cls._clean_type(cls._get_data_field().type_)
+        # Pydantic v2: FieldInfo has no sub_fields. Extract dict value type from annotation.
+        from typing import get_args as _get_args
+        field_annotation = cls._get_data_field().annotation
+        if field_annotation is not None:
+            field_args = _get_args(field_annotation)
+            value_type = field_args[1] if len(field_args) >= 2 else field_annotation
+        else:
+            value_type = cls._get_data_field().annotation
+        return cls._clean_type(value_type)
 
     @classmethod
     def _clean_type_caches(cls):
@@ -727,11 +732,11 @@ class Dataset(
         own_module_ns, globalns = \
             build_own_module_and_global_namespace_for_forward_refs(cls, calling_module, **localns)
 
-        prev_type = cls._get_data_field().type_
+        prev_type = cls._get_data_field().annotation
 
-        super().update_forward_refs(**globalns)
+        super().model_rebuild(_types_namespace=globalns)
 
-        cls._get_data_field().type_ = evaluate_any_forward_refs_if_possible(prev_type, **globalns)
+        cls._get_data_field().annotation = evaluate_any_forward_refs_if_possible(prev_type, **globalns)
         cls.__annotations__[DATA_KEY] = evaluate_any_forward_refs_if_possible(
             cls.__annotations__[DATA_KEY], **globalns)
 

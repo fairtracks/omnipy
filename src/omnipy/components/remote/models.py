@@ -3,6 +3,7 @@ from typing import Any, cast, TypeGuard
 from urllib.parse import quote, unquote
 
 from omnipy.data.model import Model
+from omnipy.util import pydantic as pyd
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 import omnipy.util.pydantic as pyd
@@ -243,8 +244,7 @@ class ResponseContentPydModel(pyd.BaseModel):
 
 class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel | StrictStrModel
                                      | JsonListOrDictModel]):
-    class Config(Model.Config):
-        smart_union = False
+    model_config = pyd.ConfigDict()
 
     @classmethod
     def _parse_data(  # type: ignore[override]

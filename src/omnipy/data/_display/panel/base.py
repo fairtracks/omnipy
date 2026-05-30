@@ -70,7 +70,8 @@ class Panel(Generic[FrameT]):
         object.__setattr__(self, 'constraints', constraints or Constraints())
         object.__setattr__(self, 'config', config or OutputConfig())
 
-    @pyd.validator('frame')
+    @pyd.field_validator('frame')
+    @classmethod
     def _copy_frame(cls, frame: Frame) -> Frame:
         return Frame(
             dims=frame.dims,
@@ -78,13 +79,15 @@ class Panel(Generic[FrameT]):
             fixed_height=frame.fixed_height,
         )
 
-    @pyd.validator('constraints')
+    @pyd.field_validator('constraints')
+    @classmethod
     def _copy_constraints(cls, constraints: Constraints) -> Constraints:
         return Constraints(**asdict(constraints))
 
-    @pyd.validator('config')
-    def _copy_config(cls, config: OutputConfig) -> OutputConfig:
-        return OutputConfig(**asdict(config))
+    @pyd.field_validator('config')
+    @classmethod
+    def _copy_config(cls, output_config: OutputConfig) -> OutputConfig:
+        return OutputConfig(**asdict(output_config))
 
     @abstractmethod
     def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT] | FullyRenderedPanel[FrameT]':

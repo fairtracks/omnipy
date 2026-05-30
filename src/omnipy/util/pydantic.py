@@ -4,8 +4,9 @@ from collections import deque
 from dataclasses import dataclass as std_dataclass
 from enum import Enum
 from types import GeneratorType, NoneType
+from abc import ABCMeta
 import re
-from typing import Any, Generic, Literal, TypeVar, get_args, get_origin
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, get_args, get_origin
 
 import pydantic
 from pydantic.fields import FieldInfo
@@ -44,9 +45,13 @@ class Protocol(str, Enum):
 
 
 def root_validator(*args, **kwargs):
+    # v2's deprecated root_validator ignores kwargs on bare decorator (@root_validator),
+    # so we must call with explicit kwargs first, then apply to function.
     if 'skip_on_failure' not in kwargs and not kwargs.get('pre', False):
         kwargs['skip_on_failure'] = True
-    return pyd.root_validator(*args, **kwargs)
+    if args:
+        return pyd.root_validator(**kwargs)(args[0])
+    return pyd.root_validator(**kwargs)
 
 
 def validator(*args, **kwargs):
@@ -91,6 +96,39 @@ class _GenericModelCompatMeta(_BaseModelMetaclass):
         if '__root__' in namespace_dict:
             namespace_dict['root'] = namespace_dict.pop('__root__')
 
+        # Suppress pydantic v2's strict "All parameters must be present on typing.Generic"
+        # error. This fires when a parent (e.g. Model[_V | _U]) has TypeVars that aren't
+        # all re-declared on the current class's Generic[...]. Python replaces parametrized
+        # Generic bases with the raw Generic class in __bases__, so we extract the actual
+        # TypeVars from __orig_bases__ in the namespace.
+        if '__pydantic_generic_metadata__' not in kwargs:
+            # Compute parent parameters from the closest base that has generic metadata
+            parent_params = ()
+            for base in bases:
+                base_meta = getattr(base, '__pydantic_generic_metadata__', None)
+                if base_meta:
+                    parent_params = base_meta.get('parameters', ())
+                    break
+
+            if parent_params:
+                # Extract the class's own TypeVars from __orig_bases__.
+                # Python puts __orig_bases__ in the namespace only when the class uses
+                # parametrized Generic/other special forms in its bases.
+                own_params: set[object] = set()
+                if '__orig_bases__' in namespace_dict:
+                    from typing import _GenericAlias as _TyGenericAlias
+                    for ob in namespace_dict['__orig_bases__']:
+                        if isinstance(ob, _TyGenericAlias):
+                            ob_params = getattr(ob, '__parameters__', ())
+                            own_params.update(ob_params)
+
+                if own_params and parent_params and not all(
+                    p in own_params for p in parent_params
+                ):
+                    kwargs['__pydantic_generic_metadata__'] = {
+                        'origin': None, 'args': (), 'parameters': tuple(own_params)
+                    }
+
         cls = super().__new__(mcls, name, bases, namespace_dict, **kwargs)
 
         if has_root_alias and '__root__' not in cls.__dict__:
@@ -106,11 +144,11 @@ class _GenericModelCompatMeta(_BaseModelMetaclass):
         return cls
 
 
-class GenericModel(pyd.RootModel[_RootT], Generic[_RootT], metaclass=_GenericModelCompatMeta):
-    pass
+class GenericModel(BaseModel, metaclass=_GenericModelCompatMeta):
+    model_config = pyd.ConfigDict(arbitrary_types_allowed=True)
 
 
-ModelMetaclass = _BaseModelMetaclass
+ModelMetaclass = _GenericModelCompatMeta
 
 
 def validate_model(
