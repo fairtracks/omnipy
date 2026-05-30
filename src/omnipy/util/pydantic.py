@@ -2,12 +2,12 @@
 
 from collections import deque
 from dataclasses import dataclass as std_dataclass
-from types import GeneratorType, NoneType, UnionType
+from enum import Enum
+from types import GeneratorType, NoneType
 import re
 from typing import Any, Generic, Literal, TypeVar, get_args, get_origin
 
 import pydantic
-from pydantic.deprecated.parse import Protocol
 from pydantic.fields import FieldInfo
 from pydantic_core import PydanticUndefined as Undefined
 from pydantic_core import PydanticUndefinedType as UndefinedType
@@ -38,6 +38,11 @@ validate_call = pyd.validate_call
 ValidationError = pyd.ValidationError
 
 
+class Protocol(str, Enum):
+    json = 'json'
+    pickle = 'pickle'
+
+
 def root_validator(*args, **kwargs):
     if 'skip_on_failure' not in kwargs and not kwargs.get('pre', False):
         kwargs['skip_on_failure'] = True
@@ -66,6 +71,9 @@ class NoneIsNotAllowedError(TypeError):
     msg_template = 'none is not an allowed value'
 
 
+# v2 no longer exposes a v1-style ModelField runtime object.
+# Keep this alias for typing/backward imports; callers needing v1-only attributes
+# must use compatibility paths.
 ModelField = FieldInfo
 _RootT = TypeVar('_RootT')
 _BaseModelMetaclass = type(BaseModel)
