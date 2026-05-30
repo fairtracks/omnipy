@@ -3,11 +3,6 @@
 Typed dataflows for messy real-world data — continuous validation, safe interactive manipulation,
 and one-line conversions from nested JSON to tables.
 
-!!! note "JSON → tables caveat"
-    Deep JSON flattening works well for many common shapes, but it still has limits (for example,
-    deeply irregular hierarchies and mixed structures). See
-    [Tutorial 2: Nested JSON to tables](tutorials/02-json-to-tables.md) for current boundaries.
-
 ## Why you care
 
 - **Continuous validation** while editing keeps model state valid after failed operations.
@@ -47,6 +42,6 @@ and one-line conversions from nested JSON to tables.
 - **When Omnipy pays off:** continuous typed safety during editing, nested-to-tabular conversion
   paths, and dataset-level batch semantics.
 
-## Visual metaphors and story mode (Planned)
+## Visual metaphors and story mode (coming later)
 
-Later versions may add optional visual metaphors and a story-mode learning layer.
+Visual metaphors and story mode (coming later).
