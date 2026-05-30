@@ -145,16 +145,28 @@ class Model(  # type: ignore[misc]
 
     __root__: _RootT = pyd.Field(default_factory=undefined_default_factory)
 
+    _PYDANTIC_ROOT_KEY = 'root'
+
     # TODO: Pydantic v2, see if slots=True can be used for Model and Dataset to reduce memory usage
 
-    class Config:
-        arbitrary_types_allowed = True
-        validate_all = True
-        # validate_assignment = True
-        smart_union = True
-        # json_loads = orjson.loads
-        # json_dumps = orjson_dumps
-        use_enum_values = True
+    model_config = pyd.ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_default=True,
+        union_mode='smart',
+        use_enum_values=True,
+    )
+
+    @classmethod
+    def _get_pydantic_root_key(cls) -> str:
+        if ROOT_KEY in cls.model_fields:
+            return ROOT_KEY
+        if cls._PYDANTIC_ROOT_KEY in cls.model_fields:
+            return cls._PYDANTIC_ROOT_KEY
+        return ROOT_KEY
+
+    @classmethod
+    def _supports_v1_field_attrs(cls, field: pyd.ModelField | None) -> bool:
+        return field is not None and hasattr(field, 'sub_fields') and hasattr(field, 'outer_type_')
 
     def _get_default_factory(self) -> Callable[[], _RootT]:
         try:
@@ -286,15 +298,18 @@ class Model(  # type: ignore[misc]
             super().__class_getitem__(model if cls is Model else params),  # type: ignore
         )
 
-        created_model._get_root_field().field_info = deepcopy(
-            created_model._get_root_field().field_info)
+        pydantic_root_key = created_model._get_pydantic_root_key()
+        created_model.model_fields[pydantic_root_key] = deepcopy(
+            created_model.model_fields[pydantic_root_key])
 
         if cls is Model and orig_model is not _RootT:  # type: ignore[misc]
-            created_model._get_root_field().field_info.extra = {'orig_model': orig_model}
+            root_field = created_model.model_fields[pydantic_root_key]
+            root_field.json_schema_extra = {'orig_model': orig_model}
 
         created_model._inherit_first_orig_model_in_bases_if_missing()
 
-        cls._recursively_set_allow_none(created_model._get_root_field())
+        if cls._supports_v1_field_attrs(created_model._get_root_field()):
+            cls._recursively_set_allow_none(created_model._get_root_field())
 
         # As long as models are not created concurrently, setting the class members temporarily
         # should not have averse effects
@@ -466,7 +481,8 @@ class Model(  # type: ignore[misc]
                 *args: Any,
                 **kwargs: Any,
         ) -> Self:
-            model_not_specified = ROOT_KEY not in cls.__fields__
+            pydantic_root_key = cls._get_pydantic_root_key()
+            model_not_specified = pydantic_root_key not in cls.model_fields
             if model_not_specified:
                 cls._raise_no_model_exception()
 
@@ -474,13 +490,17 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def get_orig_model(cls) -> type[_RootT] | UndefinedType:
-        if cls.__fields__[ROOT_KEY].field_info and cls.__fields__[ROOT_KEY].field_info.extra:
-            return cls.__fields__[ROOT_KEY].field_info.extra.get('orig_model', Undefined)
+        root_field = cls.model_fields.get(cls._get_pydantic_root_key())
+        if root_field and root_field.json_schema_extra:
+            return root_field.json_schema_extra.get('orig_model', Undefined)
         return Undefined
 
     @classmethod
     def set_orig_model(cls, orig_model: TypeForm) -> None:
-        cls.__fields__[ROOT_KEY].field_info.extra['orig_model'] = orig_model
+        root_field = cls.model_fields[cls._get_pydantic_root_key()]
+        if root_field.json_schema_extra is None:
+            root_field.json_schema_extra = {}
+        root_field.json_schema_extra['orig_model'] = orig_model
 
     def __init__(  # noqa: C901
         self,
@@ -517,9 +537,13 @@ class Model(  # type: ignore[misc]
                     self._prepare_value_for_validation_if_dataset_or_model(super_kwargs[ROOT_KEY])
             except Exception as exc:
                 val_exc = ValueError(f'Failed to prepare value for validation: {exc}')
-                raise ValidationError(
-                    [pyd.ErrorWrapper(exc, loc=ROOT_KEY), pyd.ErrorWrapper(val_exc, loc=ROOT_KEY)],
-                    self.__class__)
+                raise pyd.validation_error_from_wrappers(
+                    [
+                        pyd.ErrorWrapper(exc, loc=ROOT_KEY),
+                        pyd.ErrorWrapper(val_exc, loc=ROOT_KEY),
+                    ],
+                    self.__class__,
+                )
             if dataset_or_model_as_input:
                 super_kwargs[ROOT_KEY] = cast(_RootT, value)
 
@@ -577,7 +601,7 @@ class Model(  # type: ignore[misc]
             ...
 
     def copy(self, *, deep: bool = False, **kwargs) -> Self:
-        pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
+        pydantic_copy = self.model_copy(deep=deep, **kwargs)
         if not deep:
             # Shallow copying of the model should not share the same
             # content, as this can lead to unintentional side effects when
@@ -599,7 +623,7 @@ class Model(  # type: ignore[misc]
                         '\tclass MyNumberList(Model[list[int]]): ...\n\n')
 
     def _set_standard_field_description(self) -> None:
-        self.__fields__[ROOT_KEY].field_info.description = self._get_standard_field_description()
+        self.model_fields[ROOT_KEY].description = self._get_standard_field_description()
 
     @classmethod
     def _get_standard_field_description(cls) -> str:
@@ -629,9 +653,9 @@ class Model(  # type: ignore[misc]
                     value.__class__.__iter__ = prev_iter  # type: ignore[method-assign]
 
             with temporary_set_value_iter_to_pydantic_method():
-                return super().validate(value)
+                return super().model_validate(value)
         else:
-            return super().validate(value)
+            return super().model_validate(value)
 
     @classmethod
     def update_forward_refs(
@@ -659,7 +683,7 @@ class Model(  # type: ignore[misc]
         prev_outer_type = cls._get_root_field().outer_type_
         prev_type = cls._get_root_field().type_
 
-        super().update_forward_refs(**globalns)
+        super().model_rebuild(**globalns)
 
         cls._get_root_field().outer_type_ = evaluate_any_forward_refs_if_possible(
             prev_outer_type, **globalns)
@@ -871,7 +895,7 @@ class Model(  # type: ignore[misc]
 
     # TODO: See if it is possible to support general mappings similarly to iterables (in Model)
     #       (note: this is an old TODO, it is unclear what exactly is not supported...)
-    @pyd.root_validator(pre=True)
+    @pyd.model_validator(mode='before')
     def _generous_iterable_support(cls, root_obj: dict[str, _RootT | None]) -> Any:
         if ROOT_KEY in root_obj:
             value = root_obj[ROOT_KEY]
@@ -886,7 +910,7 @@ class Model(  # type: ignore[misc]
                 return {ROOT_KEY: (_ for _ in value)}
         return root_obj
 
-    @pyd.root_validator
+    @pyd.model_validator(mode='before')
     def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
@@ -932,7 +956,7 @@ class Model(  # type: ignore[misc]
     #          ...
     #       ```
     def to_data(self) -> object:
-        return super().dict(by_alias=True)[ROOT_KEY]
+        return super().model_dump(by_alias=True)[ROOT_KEY]
 
     def _empty_from_data(self, value: object) -> None:
         @contextmanager
@@ -953,14 +977,14 @@ class Model(  # type: ignore[misc]
         self.from_data(other.to_data())
 
     def to_json(self, pretty=True) -> str:
-        json_content = pyd.BaseModel.json(self)
+        json_content = self.model_dump_json()
         if pretty:
             return self._pretty_print_json(json.loads(json_content))
         else:
             return json_content
 
     def from_json(self, json_content: str) -> None:
-        new_model = self.parse_raw(json_content, proto=pyd.Protocol.json)
+        new_model = self.model_validate_json(json_content)
         self.content = new_model.content
 
     @classmethod
@@ -993,7 +1017,7 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def _get_root_field(cls) -> pyd.ModelField:
-        return cast(pyd.ModelField, cls.__fields__.get(ROOT_KEY))
+        return cast(pyd.ModelField, cls.model_fields.get(ROOT_KEY))
 
     @classmethod
     @functools.cache
@@ -1025,7 +1049,7 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def to_json_schema(cls, pretty=True) -> str:
-        schema = cls.schema()
+        schema = cls.model_json_schema()
         if 'orig_model' in schema:
             del schema['orig_model']
 
