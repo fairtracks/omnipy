@@ -22,10 +22,13 @@ flow definitions.
 >>> from omnipy import TaskTemplate, runtime
 >>> runtime.config.engine.choice
 'local'
+>>> runtime.config.engine.choice = 'prefect'
 >>> @TaskTemplate()
 ... def double(x: int) -> int:
 ...     return x * 2
 >>> double.run(21)
+42
+>>> runtime.config.engine.choice = 'local'
 ```
 
 ## 4) Output / display
@@ -42,8 +45,10 @@ Use orchestration when scheduling/retry/caching/operational controls matter.
 
 - Keep docs runnable without external services by default.
 - Engine-specific operational semantics can differ.
+- For CLI-driven runs, use `omnipy-examples --engine prefect ...`.
 
 ## 7) Links
 
 - How-to: [Engines overview](../howto/dataflows/engines-overview.md)
 - How-to: [Running flows](../howto/dataflows/running-flows.md)
+- Tutorial: [Prefect orchestration](../tutorials/08-prefect-orchestration.md)
