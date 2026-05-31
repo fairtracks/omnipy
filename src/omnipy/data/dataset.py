@@ -93,6 +93,19 @@ dict_t = dict
 
 
 class _DatasetMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
+    """Combine Omnipy and Pydantic metaclass behavior for datasets.
+
+    This metaclass lets :class:`Dataset` participate in both Omnipy's data-class creation hooks
+    and Pydantic's generic-model machinery when specialized dataset subclasses are created.
+
+    Args:
+        None: This metaclass is used implicitly by class creation rather than instantiated
+            directly in ordinary code.
+
+    Attributes:
+        None: This metaclass defines no public attributes beyond those inherited from its bases.
+    """
+
     ...
 
 
@@ -118,9 +131,34 @@ class Dataset(
     Item access supports both ordinary dictionary-style keys and dataset-specific selectors such as
     integer positions, slices, and iterables of keys or positions. Singular selection returns one
     validated item; plural selection returns a new dataset of the same specialized class.
+
+    Args:
+        None: Specialize the class first and provide instance initialization data through
+            :meth:`__init__`.
+
+    Attributes:
+        data: Mapping from data-file names to validated model or nested dataset instances.
+
+    Example:
+        >>> from omnipy.data.model import Model
+        >>> Numbers = Dataset[Model[int]]
+        >>> Numbers({'one': 1}).to_data()
+        {'one': 1}
     """
     class Config:
-        """Pydantic model configuration: validates on assignment and allows arbitrary types."""
+        """Configure Pydantic behavior for dataset instances.
+
+        The nested config enables assignment-time validation and permits arbitrary runtime types
+        needed by Omnipy's dataset internals.
+
+        Args:
+            None: This nested config class is consumed by Pydantic rather than instantiated
+                directly.
+
+        Attributes:
+            validate_assignment: Re-validate fields whenever attributes are reassigned.
+            arbitrary_types_allowed: Permit non-Pydantic helper types in the model definition.
+        """
         validate_assignment = True
         arbitrary_types_allowed = True
 
@@ -187,6 +225,17 @@ class Dataset(
     @call_super_if_available(call_super_before_method=True)
     @classmethod
     def _clean_type(cls, _type: TypeForm) -> TypeForm:
+        """Normalize a dataset item type before it is cached or exposed.
+
+        Subclasses can override this hook to rewrite forward references or other type forms before
+        the dataset stores them as its effective item type.
+
+        Args:
+            _type: Candidate model or dataset type form.
+
+        Returns:
+            The normalized type form.
+        """
         return _type
 
     def __init__(  # noqa: C901
@@ -239,6 +288,16 @@ class Dataset(
 
         def _validate_any_models_or_datasets(
                 iterable_data: Iterable[tuple[str, object]]) -> tuple[dict, bool]:
+            """Validate model or dataset instances found in iterable input data.
+
+            Args:
+                iterable_data: Iterable of ``(key, value)`` pairs supplied to dataset
+                    initialization.
+
+            Returns:
+                A tuple containing the prepared mapping and a flag indicating whether any input
+                values were already model or dataset instances.
+            """
 
             prepared_data = {}
             _model_or_dataset_as_input: bool = False
@@ -292,14 +351,48 @@ class Dataset(
             self._set_standard_field_description()
 
     def _primary_validation(self, super_kwargs):
+        """Run the primary Pydantic validation pass for dataset initialization.
+
+        Args:
+            super_kwargs: Keyword arguments prepared for ``pydantic.GenericModel.__init__()``.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            ValidationError: If the prepared dataset payload does not validate.
+        """
         # Pydantic validation of super_kwargs
         super().__init__(**super_kwargs)
 
     def _secondary_validation_from_data(self, super_kwargs):
+        """Retry initialization by parsing the prepared payload via ``from_data()``.
+
+        Args:
+            super_kwargs: Keyword arguments containing the prepared dataset payload.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            ValidationError: If parsing the prepared payload still fails validation.
+        """
         super().__init__()
         self.from_data(super_kwargs[DATA_KEY])
 
     def _init(self, super_kwargs: dict_t[str, Any], **kwargs: Any) -> None:
+        """Provide a subclass hook that runs before dataset validation.
+
+        The base implementation is intentionally empty. Specialized datasets can override this hook
+        to adjust initialization arguments before the primary validation pass runs.
+
+        Args:
+            super_kwargs: Keyword arguments prepared for the base Pydantic initializer.
+            **kwargs: Remaining keyword arguments passed to dataset construction.
+
+        Returns:
+            ``None``.
+        """
         ...
 
     # TODO: Revise with pydantic v2: __deepcopy__ is not defined for Dataset and Model, as it is not
@@ -311,8 +404,22 @@ class Dataset(
     def __copy__(self):
         """Return a shallow copy of the dataset.
 
+        The copied dataset receives a new top-level mapping while reusing the same validated item
+        objects.
+
+        Args:
+            self: Dataset instance to copy.
+
         Returns:
             A new dataset instance with a shallow copy of the backing mapping.
+
+        Example:
+            >>> from copy import copy
+            >>> from omnipy.data.model import Model
+            >>> Numbers = Dataset[Model[int]]
+            >>> copied = copy(Numbers({'one': 1}))
+            >>> copied.to_data()
+            {'one': 1}
         """
         return self.copy(deep=False)
 
@@ -356,6 +463,14 @@ class Dataset(
 
     @classmethod
     def _get_data_field(cls) -> pyd.ModelField:
+        """Return the Pydantic field object that stores dataset contents.
+
+        Args:
+            cls: Specialized dataset class.
+
+        Returns:
+            The Pydantic model field representing the ``data`` attribute.
+        """
         return cast(pyd.ModelField, cls.__fields__.get(DATA_KEY))
 
     @classmethod
@@ -363,8 +478,16 @@ class Dataset(
     def get_type(cls) -> type[_ModelOrDatasetT]:
         """Return the concrete item type stored by this dataset class.
 
+        Args:
+            cls: Specialized dataset class.
+
         Returns:
             The specialized model or nested dataset class used for every item in the dataset.
+
+        Example:
+            >>> from omnipy.data.model import Model
+            >>> Dataset[Model[int]].get_type().__name__
+            'Model[int]'
         """
         # Part of pydantic v1 hack to stop coercing of e.g.
         # [{'a': 'b', 'c': 'd'}] to {'a': 'c'}
@@ -373,10 +496,29 @@ class Dataset(
 
     @classmethod
     def _clean_type_caches(cls):
+        """Clear cached type metadata for this dataset class.
+
+        Args:
+            cls: Dataset class whose cached type information should be invalidated.
+
+        Returns:
+            ``None``.
+        """
         cls.get_type.cache_clear()
 
     @staticmethod
     def _raise_type_exception(prefix_msg: str = '') -> None:
+        """Raise the standard error for unspecialized dataset classes.
+
+        Args:
+            prefix_msg: Optional message prepended before the standard guidance text.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            TypeError: Always raised to explain how a dataset must be specialized.
+        """
         msg = dedent("""\
             The Dataset class requires a concrete type (e.g. a Model class
             or a subclass) to be specified as a type hierarchy within
@@ -410,10 +552,26 @@ class Dataset(
         raise TypeError(msg)
 
     def _set_standard_field_description(self) -> None:
+        """Populate the ``data`` field description with the standard dataset text.
+
+        Args:
+            self: Dataset instance whose field metadata should be updated.
+
+        Returns:
+            ``None``.
+        """
         self.__fields__[DATA_KEY].field_info.description = self._get_standard_field_description()
 
     @classmethod
     def _get_standard_field_description(cls) -> str:
+        """Return the default description text used for the dataset ``data`` field.
+
+        Args:
+            cls: Dataset class requesting the field description.
+
+        Returns:
+            The standard descriptive text for the dataset backing field.
+        """
         return ('This class represents a dataset in the `omnipy` Python package and contains '
                 'a set of named data items that follows the same data model. '
                 'It is a statically typed specialization of the Dataset class according to a '
@@ -436,6 +594,14 @@ class Dataset(
             self: 'Dataset[Model[float]]',
             selector: str | int,
         ) -> Model_float:
+            """Describe float-model item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[float]`` item.
+            """
             ...
 
         @overload
@@ -443,6 +609,14 @@ class Dataset(
             self: 'Dataset[Model[int]]',
             selector: str | int,
         ) -> Model_int:
+            """Describe int-model item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[int]`` item.
+            """
             ...
 
         @overload
@@ -450,6 +624,14 @@ class Dataset(
             self: 'Dataset[Model[bool]]',
             selector: str | int,
         ) -> Model_bool:
+            """Describe bool-model item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[bool]`` item.
+            """
             ...
 
         @overload
@@ -457,6 +639,14 @@ class Dataset(
             self: 'Dataset[Model[str]]',
             selector: str | int,
         ) -> Model_str:
+            """Describe string-model item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[str]`` item.
+            """
             ...
 
         @overload
@@ -464,6 +654,14 @@ class Dataset(
             self: 'Dataset[Model[bytes]]',
             selector: str | int,
         ) -> Model_bytes:
+            """Describe bytes-model item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[bytes]`` item.
+            """
             ...
 
         @overload
@@ -471,6 +669,14 @@ class Dataset(
             self: 'Dataset[Model[set[_ValT]]]',
             selector: str | int,
         ) -> Model_set[_ValT]:
+            """Describe set-model item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[set[_ValT]]`` item.
+            """
             ...
 
         @overload
@@ -478,6 +684,14 @@ class Dataset(
             self: 'Dataset[Model[list[_ValT]]]',
             selector: str | int,
         ) -> Model_list[_ValT]:
+            """Describe list-model item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[list[_ValT]]`` item.
+            """
             ...
 
         @overload
@@ -485,6 +699,14 @@ class Dataset(
             self: 'Dataset[Model[tuple[_ValT, ...]]]',
             selector: str | int,
         ) -> Model_tuple_same_type[_ValT]:
+            """Describe homogeneous-tuple item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[tuple[_ValT, ...]]`` item.
+            """
             ...
 
         @overload
@@ -492,6 +714,14 @@ class Dataset(
             self: 'Dataset[Model[tuple[_ValT, _ValT2]]]',
             selector: str | int,
         ) -> Model_tuple_pair[_ValT, _ValT2]:
+            """Describe pair-tuple item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[tuple[_ValT, _ValT2]]`` item.
+            """
             ...
 
         @overload
@@ -499,6 +729,14 @@ class Dataset(
             self: 'Dataset[Model[dict_t[_KeyT, _ValT]]]',
             selector: str | int,
         ) -> Model_dict[_KeyT, _ValT]:
+            """Describe dict-model item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected ``Model[dict[_KeyT, _ValT]]`` item.
+            """
             ...
 
         # For better typing of NestedDataset and similar. Will always type
@@ -515,6 +753,14 @@ class Dataset(
             self: 'Dataset[Model[Dataset[_ModelT]]]',
             selector: str | int,
         ) -> Model_Dataset[_ModelT]:
+            """Describe nested-dataset model access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected nested dataset model item.
+            """
             ...
 
         @overload
@@ -522,6 +768,14 @@ class Dataset(
             self: 'Dataset[_DatasetT | _ModelT ]',
             selector: str | int,
         ) -> _DatasetT:
+            """Describe union item access that narrows to a nested dataset.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected nested dataset instance.
+            """
             ...
 
         @overload
@@ -529,6 +783,14 @@ class Dataset(
             self: 'Dataset[_DatasetT | _ModelT | _Model2T]',
             selector: str | int,
         ) -> _DatasetT:
+            """Describe three-way union item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected nested dataset instance.
+            """
             ...
 
         @overload
@@ -536,6 +798,14 @@ class Dataset(
             self: 'Dataset[_DatasetT | _ModelT | _Model2T | _Model3T]',
             selector: str | int,
         ) -> _DatasetT:
+            """Describe four-way union item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected nested dataset instance.
+            """
             ...
 
         @overload
@@ -543,6 +813,14 @@ class Dataset(
             self: 'Dataset[_DatasetT | _ModelT | _Model2T | _Model3T | _Model4T]',
             selector: str | int,
         ) -> _DatasetT:
+            """Describe five-way union item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected nested dataset instance.
+            """
             ...
 
         # Even though these two overloads overlap, they are needed in this
@@ -553,6 +831,14 @@ class Dataset(
             self: 'Dataset[_ModelOrDatasetT]',
             selector: str | int,
         ) -> _ModelOrDatasetT:
+            """Describe general singular item access for static type checkers.
+
+            Args:
+                selector: Data-file key or positional index selecting one item.
+
+            Returns:
+                The selected validated dataset item.
+            """
             ...
 
         # The only thing that should really be needed – if Python type hints would have able to
@@ -566,6 +852,14 @@ class Dataset(
 
         @overload
         def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
+            """Describe plural item selection for static type checkers.
+
+            Args:
+                selector: Slice or iterable selecting multiple items.
+
+            Returns:
+                A dataset of the same specialized class containing the selected items.
+            """
             ...
 
     def __getitem__(
@@ -593,6 +887,17 @@ class Dataset(
 
     @call_super_if_available(call_super_before_method=True)
     def _check_value(self, value: Any) -> Any:
+        """Post-process a selected value before returning it.
+
+        Subclasses can override this hook to unwrap or adapt validated values returned from the
+        dataset API.
+
+        Args:
+            value: Selected validated item or dataset subset.
+
+        Returns:
+            The value to expose to the caller.
+        """
         return value
 
     def __delitem__(self, selector: str | int | slice | Iterable[str | int]) -> None:
@@ -618,12 +923,30 @@ class Dataset(
 
     @overload
     def __setitem__(self, selector: str | int, data_obj: object) -> None:
+        """Describe singular assignment for static type checkers.
+
+        Args:
+            selector: Data-file key or positional index selecting one item.
+            data_obj: Single value assigned to the selected item.
+
+        Returns:
+            ``None``.
+        """
         ...
 
     @overload
     def __setitem__(self,
                     selector: slice | Iterable[str | int],
                     data_obj: Mapping[str, object] | Iterable[object]) -> None:
+        """Describe plural assignment for static type checkers.
+
+        Args:
+            selector: Slice or iterable selecting multiple items.
+            data_obj: Mapping or iterable providing replacement values.
+
+        Returns:
+            ``None``.
+        """
         ...
 
     def __setitem__(
@@ -677,6 +1000,18 @@ class Dataset(
         key_2_data_item: Key2DataItemType[object],
         index_2_data_item: Index2DataItemsType[object],
     ) -> None:
+        """Apply prepared replacement values to the currently selected dataset items.
+
+        Args:
+            key_2_data_item: Replacement values keyed directly by data-file name.
+            index_2_data_item: Replacement values keyed by positional index.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            ValidationError: If the updated dataset contents fail validation.
+        """
 
         updated_mapping = create_updated_mapping(
             cast(MutableMapping[str, object], self.data), key_2_data_item,
@@ -684,6 +1019,17 @@ class Dataset(
         self._replace_data_with_mapping(updated_mapping)
 
     def _replace_data_with_mapping(self, updated_mapping: MutableMapping[str, object]) -> None:
+        """Replace the dataset contents atomically using a prepared mapping.
+
+        Args:
+            updated_mapping: Candidate full mapping to validate and install.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            ValidationError: If the replacement mapping does not validate for this dataset type.
+        """
         prev_data = self.data
         try:
             self.absorb_and_replace(self.__class__(updated_mapping))
@@ -692,6 +1038,18 @@ class Dataset(
             raise
 
     def _set_data_file_and_validate(self, key: str, val: _ModelOrDatasetT) -> None:
+        """Assign one dataset item and roll back if validation fails.
+
+        Args:
+            key: Data-file name to insert or replace.
+            val: Candidate validated or raw item value.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            ValidationError: If the inserted value does not validate for this dataset type.
+        """
         has_prev_value = key in self.data
         if has_prev_value:
             prev_value = self.data[key]
@@ -708,12 +1066,34 @@ class Dataset(
 
     @classmethod
     def _check_iterable(cls, iterable: Iterable[Any]) -> Iterable[Any]:
+        """Normalize iterable input into an iterator of ``(key, value)`` pairs.
+
+        Args:
+            iterable: Candidate outer iterable supplied as dataset input.
+
+        Returns:
+            An iterator yielding normalized ``(key, value)`` pairs.
+
+        Raises:
+            TypeError: If the iterable shape is incompatible with dataset initialization.
+        """
         if isinstance(iterable, (str, bytes)):
             raise TypeError(
                 'Outer data iterables cannot be strings or, '
                 'bytes, got: {type(value)}', cls)
 
         def check_iterable_elements(iterable: Iterable) -> Iterator:
+            """Validate and normalize each element of an outer dataset iterable.
+
+            Args:
+                iterable: Iterable whose elements should each describe one ``(key, value)`` pair.
+
+            Returns:
+                An iterator over normalized ``(key, value)`` pairs.
+
+            Raises:
+                TypeError: If any element is not a list-like or tuple-like key-value pair.
+            """
             for el in iterable:
                 if not isinstance(el, (tuple, list)):
                     raise TypeError(
@@ -838,6 +1218,17 @@ class Dataset(
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
     def _validate_data_file(self, data_file: str) -> None:
+        """Validate one stored dataset item in place.
+
+        Args:
+            data_file: Key of the item that should be revalidated.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            ValidationError: If the stored item does not validate for this dataset type.
+        """
         from omnipy.data.model import is_model_instance
 
         val = self.data[data_file]
@@ -849,6 +1240,20 @@ class Dataset(
     @staticmethod
     def _basic_validation_func(type_variant: 'type[Model | Dataset]',
                                value: UndefinedType | object) -> _ModelOrDatasetT:
+        """Construct one candidate model or dataset during validation.
+
+        Args:
+            type_variant: Candidate model or dataset class to instantiate.
+            value: Raw value passed to the candidate class constructor.
+
+        Returns:
+            The validated model or dataset instance.
+
+        Raises:
+            ValidationError: If construction of the candidate type fails validation.
+            TypeError: If the candidate type cannot be constructed from ``value``.
+            ValueError: If the candidate type rejects ``value`` semantically.
+        """
         return cast(_ModelOrDatasetT, type_variant(value))  # type: ignore[arg-type]
 
     @classmethod
@@ -860,6 +1265,19 @@ class Dataset(
             'Callable[[type[Model | Dataset], UndefinedType | object], _ModelOrDatasetT]'
         ) = _basic_validation_func,
     ) -> _ModelOrDatasetT:
+        """Validate one data-file value against all allowed dataset item variants.
+
+        Args:
+            data_file: Key associated with the candidate item.
+            value: Raw value to validate.
+            validation_func: Callable used to try construction for each allowed type variant.
+
+        Returns:
+            The first validated model or dataset instance accepted by the allowed type variants.
+
+        Raises:
+            ValidationError: If all candidate type variants reject the value.
+        """
         errors = []
         for type_variant in split_to_union_variants(cls.get_type()):
             try:
@@ -870,11 +1288,25 @@ class Dataset(
         raise ValidationError([pyd.ErrorWrapper(exc, loc=data_file) for exc in errors], cls)
 
     def _force_full_validation(self):
+        """Trigger assignment-based validation for the full dataset mapping.
+
+        Args:
+            self: Dataset instance to revalidate.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            ValidationError: If any stored item fails full dataset validation.
+        """
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
 
     @override
     def __iter__(self) -> Iterator[str]:  # type: ignore[override]
         """Iterate over dataset keys.
+
+        Args:
+            self: Dataset instance to iterate over.
 
         Returns:
             An iterator over data-file names in the backing mapping.
@@ -882,6 +1314,18 @@ class Dataset(
         return UserDict.__iter__(self)
 
     def __setattr__(self, attr: str, value: Any) -> None:
+        """Restrict attribute assignment to declared dataset fields and properties.
+
+        Args:
+            attr: Attribute name being assigned.
+            value: Value to store on the dataset instance.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            RuntimeError: If assignment targets an undeclared extra attribute.
+        """
         if attr in self.__dict__ or attr == DATA_KEY or attr.startswith('__'):
             super().__setattr__(attr, value)
         elif attr == 'repr_state':
@@ -895,6 +1339,19 @@ class Dataset(
         cls,
         root_obj: dict_t[str, dict_t[str, _ModelOrDatasetT]],
     ) -> Any:  # noqa
+        """Pre-validate the root dataset object before normal field parsing.
+
+        Args:
+            cls: Dataset class performing validation.
+            root_obj: Root object containing the ``data`` field to normalize.
+
+        Returns:
+            A root object whose ``data`` field has normalized values.
+
+        Raises:
+            AssertionError: If the root object does not contain the ``data`` field.
+            ValidationError: If ``None`` values cannot be parsed by any allowed item type.
+        """
         assert DATA_KEY in root_obj
         data_dict = root_obj[DATA_KEY]
         for data_file, val in data_dict.items():
@@ -904,6 +1361,15 @@ class Dataset(
                     type_variant: 'type[Model | Dataset]',
                     value: UndefinedType | object,
                 ) -> _ModelOrDatasetT:
+                    """Parse a raw value with ``parse_obj()`` for one candidate type.
+
+                    Args:
+                        type_variant: Candidate model or dataset class to parse with.
+                        value: Raw value to parse.
+
+                    Returns:
+                        The parsed model or dataset instance.
+                    """
                     return cast(_ModelOrDatasetT, type_variant.parse_obj(value))
 
                 data_dict[data_file] = cls._validate_value_for_data_file(
@@ -943,8 +1409,16 @@ class Dataset(
     def to_data(self) -> dict_t[str, Any]:
         """Return the dataset as plain Python contents.
 
+        Args:
+            self: Dataset instance to serialize.
+
         Returns:
             A mapping from data-file name to plain Python data extracted from each validated item.
+
+        Example:
+            >>> from omnipy.data.model import Model
+            >>> Dataset[Model[int]]({'one': 1}).to_data()
+            {'one': 1}
         """
         return {key: self._check_value(val) for key, val in self.dict(by_alias=True).items()}
 
@@ -969,6 +1443,15 @@ class Dataset(
             update: Whether to merge into existing contents instead of replacing them first.
         """
         def callback_func(type_variant: 'Model | Dataset', content: Any):
+            """Populate one item instance from plain Python content.
+
+            Args:
+                type_variant: Newly created model or dataset instance to populate.
+                content: Plain Python content to load into the instance.
+
+            Returns:
+                ``None``.
+            """
             type_variant.from_data(content)
 
         self._from_dict_with_callback(data, update, callback_func)
@@ -977,6 +1460,19 @@ class Dataset(
                                  data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                                  update: bool,
                                  callback_func: 'Callable[[Model | Dataset, Any], None]'):
+        """Populate the dataset by applying a callback to fresh item instances.
+
+        Args:
+            data: Mapping or iterable of ``(key, value)`` pairs to ingest.
+            update: Whether to merge with current contents instead of clearing first.
+            callback_func: Callback that populates one newly created item instance from raw input.
+
+        Returns:
+            ``None``.
+
+        Raises:
+            ValidationError: If any generated item fails dataset validation.
+        """
         if isinstance(data, dict):
             data_as_dict: dict[str, Any] = data  # pyright: ignore [reportAssignmentType]
         else:
@@ -1001,6 +1497,15 @@ class Dataset(
                 type_variant: 'type[Model | Dataset]',
                 value: UndefinedType | object,
             ) -> _ModelOrDatasetT:
+                """Create one validated item by invoking the provided callback.
+
+                Args:
+                    type_variant: Candidate model or dataset class to instantiate.
+                    value: Raw value to hand to the callback.
+
+                Returns:
+                    A populated item instance accepted by the dataset type.
+                """
                 new_instance = type_variant()
                 callback_func(new_instance, value)
                 return cast(_ModelOrDatasetT, new_instance)
@@ -1053,6 +1558,15 @@ class Dataset(
             update: Whether to merge into existing contents instead of replacing them first.
         """
         def callback_func(type_variant: 'Model | Dataset', content: Any):
+            """Populate one item instance from a JSON string.
+
+            Args:
+                type_variant: Newly created model or dataset instance to populate.
+                content: JSON content to load into the instance.
+
+            Returns:
+                ``None``.
+            """
             type_variant.from_json(content)
 
         self._from_dict_with_callback(data, update, callback_func)
@@ -1113,6 +1627,14 @@ class Dataset(
 
     @staticmethod
     def _pretty_print_json(json_content: Any) -> str:
+        """Render JSON-serializable content as indented JSON text.
+
+        Args:
+            json_content: JSON-serializable object to pretty-print.
+
+        Returns:
+            Indented JSON text.
+        """
         return json.dumps(json_content, indent=2)
 
     def save(self, path: str):
@@ -1248,6 +1770,15 @@ class Dataset(
         http_url_dataset: IsHttpUrlDataset,
         as_mime_type: None | str = None,
     ) -> Self | asyncio.Task[Self]:
+        """Load dataset contents from one or more HTTP URLs.
+
+        Args:
+            http_url_dataset: Dataset of HTTP URLs keyed by data-file name.
+            as_mime_type: Optional MIME type hint passed to the remote loading task.
+
+        Returns:
+            This dataset instance after loading, or an ``asyncio.Task`` in an active event loop.
+        """
         from omnipy.components.remote.helpers import RateLimitingClientSession
         from omnipy.components.remote.tasks import get_auto_from_api_endpoint, get_retry_client
 
@@ -1256,6 +1787,14 @@ class Dataset(
             hosts[url.host].append(i)
 
         async def load_all(as_mime_type: None | str = None) -> 'Dataset[_ModelOrDatasetT]':
+            """Fetch all grouped HTTP URLs asynchronously.
+
+            Args:
+                as_mime_type: Optional MIME type hint forwarded to the remote fetch task.
+
+            Returns:
+                This dataset instance after all remote loads complete.
+            """
             tasks = []
 
             # TODO: Manage ClientConnectionResetError in Dataset._load_http_urls
@@ -1310,6 +1849,18 @@ class Dataset(
             return asyncio.run(load_all(as_mime_type=as_mime_type))
 
     def _load_paths(self, path_or_urls: Iterable[str], by_file_suffix: bool) -> Self:
+        """Load dataset contents from local tar files or directories.
+
+        Args:
+            path_or_urls: Iterable of local filesystem paths to load from.
+            by_file_suffix: Whether serializer selection should use file-suffix detection.
+
+        Returns:
+            This dataset instance after all paths have been loaded.
+
+        Raises:
+            RuntimeError: If no serializer can load one of the provided paths.
+        """
         for path_or_url in path_or_urls:
             serializer_registry = self._get_serializer_registry()
             tar_gz_file_path = self._ensure_tar_gz_file(path_or_url)
@@ -1331,6 +1882,17 @@ class Dataset(
 
     @staticmethod
     def _ensure_tar_gz_file(path: str):
+        """Return a ``.tar.gz`` path, creating an archive when needed.
+
+        Args:
+            path: Existing file or directory path, optionally already ending in ``.tar.gz``.
+
+        Returns:
+            Path to an existing or newly created ``.tar.gz`` archive.
+
+        Raises:
+            AssertionError: If the provided path does not exist.
+        """
         assert os.path.exists(path), f'No file or directory at {path}'
 
         if not path.endswith('.tar.gz'):
@@ -1352,11 +1914,22 @@ class Dataset(
 
     @staticmethod
     def _get_serializer_registry():
+        """Return the global serializer registry used for dataset I/O.
+
+        Args:
+            None: This helper reads global serializer configuration only.
+
+        Returns:
+            The serializer registry singleton from :mod:`omnipy.components`.
+        """
         from omnipy.components import get_serializer_registry
         return get_serializer_registry()
 
     def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelOrDatasetT]':
         """Return a multi-model view of this dataset.
+
+        Args:
+            self: Dataset instance to convert.
 
         Returns:
             A ``MultiModelDataset`` initialized with the same item type and current contents.
@@ -1385,6 +1958,14 @@ class Dataset(
             and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
 
     def __repr_args__(self):
+        """Return key-value pairs used by Pydantic when building ``repr()`` output.
+
+        Args:
+            self: Dataset instance being represented.
+
+        Returns:
+            A list of ``(key, value)`` pairs formatted for concise dataset representation.
+        """
         from omnipy.data.model import is_model_instance
 
         return [(k, v.content) if is_model_instance(v) else (k, v) for k, v in self.data.items()]

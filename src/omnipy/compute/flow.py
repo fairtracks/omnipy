@@ -54,7 +54,13 @@ _RetT = TypeVar('_RetT')
 
 
 class FlowBase:
-    """Marker base class for Omnipy flow objects."""
+    """Provide a shared marker base for Omnipy flow objects.
+
+    ``FlowBase`` exists to give concrete flow templates and executable flow
+    instances a common nominal base type. It does not define behavior on its
+    own, but it makes flow-specific mixin registration and type-based checks
+    possible within the compute subsystem.
+    """
 
     ...
 
@@ -77,6 +83,19 @@ class LinearFlowTemplateCore(
 ):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsLinearFlow[_CallP, _RetT]]:
+        """Return the executable flow type produced by this template.
+
+        The template/application machinery calls this hook when it needs the
+        concrete job class that should be instantiated from a linear flow
+        template.
+
+        Args:
+            cls: Current linear flow template class.
+
+        Returns:
+            type[IsLinearFlow[_CallP, _RetT]]: The executable ``LinearFlow``
+                subclass associated with this template.
+        """
         return cast(type[IsLinearFlow[_CallP, _RetT]], LinearFlow[_CallP, _RetT])
 
 
@@ -127,14 +146,30 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
                                         _CallP,
                                         _RetT],
                  Generic[_CallP, _RetT]):
-    """Executable sequential flow.
+    """Execute a flow whose tasks run in declaration order.
 
     A ``LinearFlow`` runs its constituent tasks in declaration order, making
     each step wait for the previous one to finish. Use it for pipelines where
     every stage depends on the output or side effects of the stage before it.
+
+    Instances are typically produced by calling a ``LinearFlowTemplate``
+    rather than by constructing ``LinearFlow`` directly.
     """
 
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
+        """Register the engine decorator for linear-flow execution.
+
+        When the flow already holds a runner engine, this method asks that
+        engine to wrap the flow's call function with the engine-specific
+        linear-flow execution behavior.
+
+        Args:
+            self: Current linear flow instance.
+            engine: Engine candidate supplied during job setup.
+
+        Returns:
+            None: The method updates decorator state in place.
+        """
         if self.engine:
             engine = cast(IsJobRunnerEngine, self.engine)
             self_with_mixins = cast(IsLinearFlow, self)
@@ -146,6 +181,18 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsLinearFlowTemplate[_CallP, _RetT]]:
+        """Return the template type used to revise this flow.
+
+        Revision operations use this hook to recover the decorator-backed
+        template class corresponding to an executable linear flow instance.
+
+        Args:
+            cls: Current linear flow class.
+
+        Returns:
+            type[IsLinearFlowTemplate[_CallP, _RetT]]: The ``LinearFlowTemplate``
+                class associated with this flow.
+        """
         return cast(type[IsLinearFlowTemplate[_CallP, _RetT]], LinearFlowTemplate)
 
 
@@ -161,6 +208,18 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
                           Generic[_CallP, _RetT]):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsDagFlow[_CallP, _RetT]]:
+        """Return the executable DAG flow type produced by this template.
+
+        The template/application machinery calls this hook when it needs the
+        concrete flow class to instantiate from a DAG flow template.
+
+        Args:
+            cls: Current DAG flow template class.
+
+        Returns:
+            type[IsDagFlow[_CallP, _RetT]]: The executable ``DagFlow`` subclass
+                associated with this template.
+        """
         return cast(type[IsDagFlow[_CallP, _RetT]], DagFlow[_CallP, _RetT])
 
 
@@ -212,6 +271,19 @@ class DagFlow(
         Generic[_CallP, _RetT],
 ):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
+        """Register the engine decorator for DAG-flow execution.
+
+        When a runner engine is bound to the flow, this method asks that
+        engine to wrap the flow's call function with DAG-specific execution
+        behavior.
+
+        Args:
+            self: Current DAG flow instance.
+            engine: Engine candidate supplied during job setup.
+
+        Returns:
+            None: The method updates decorator state in place.
+        """
         if self.engine:
             engine = cast(IsJobRunnerEngine, self.engine)
             self_with_mixins = cast(IsDagFlow, self)
@@ -223,6 +295,18 @@ class DagFlow(
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsDagFlowTemplate[_CallP, _RetT]]:
+        """Return the template type used to revise this flow.
+
+        Revision operations use this hook to recover the decorator-backed DAG
+        flow template class corresponding to an executable DAG flow instance.
+
+        Args:
+            cls: Current DAG flow class.
+
+        Returns:
+            type[IsDagFlowTemplate[_CallP, _RetT]]: The ``DagFlowTemplate``
+                class associated with this flow.
+        """
         return cast(type[IsDagFlowTemplate[_CallP, _RetT]], DagFlowTemplate)
 
 
@@ -236,15 +320,31 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
                                             _RetT],
                            FlowBase,
                            Generic[_CallP, _RetT]):
-    """Core implementation for callable-backed flow templates.
+    """Implement the core callable-backed flow template behavior.
 
     A function flow template wraps a Python callable that orchestrates work as
     a flow. Use this when the control flow is easiest to express directly in
     Python instead of as an explicit task list or dependency graph.
+
+    Instances are normally produced through the ``FuncFlowTemplate`` decorator
+    factory rather than by direct construction.
     """
 
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsFuncFlow[_CallP, _RetT]]:
+        """Return the executable function flow type produced by this template.
+
+        The template/application machinery calls this hook when it needs the
+        concrete flow class that should be instantiated from a function flow
+        template.
+
+        Args:
+            cls: Current function flow template class.
+
+        Returns:
+            type[IsFuncFlow[_CallP, _RetT]]: The executable ``FuncFlow``
+                subclass associated with this template.
+        """
         return cast(type[IsFuncFlow[_CallP, _RetT]], FuncFlow[_CallP, _RetT])
 
 
@@ -309,6 +409,19 @@ class FuncFlow(
         Generic[_CallP, _RetT],
 ):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
+        """Register the engine decorator for callable-backed flow execution.
+
+        When a runner engine is bound to the flow, this method asks that
+        engine to wrap the coordinating callable with function-flow execution
+        behavior.
+
+        Args:
+            self: Current function flow instance.
+            engine: Engine candidate supplied during job setup.
+
+        Returns:
+            None: The method updates decorator state in place.
+        """
         if self.engine:
             engine = cast(IsJobRunnerEngine, self.engine)
             self_with_mixins = cast(IsFuncFlow, self)
@@ -320,6 +433,19 @@ class FuncFlow(
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsFuncFlowTemplate[_CallP, _RetT]]:
+        """Return the template type used to revise this flow.
+
+        Revision operations use this hook to recover the decorator-backed
+        function flow template class corresponding to an executable function
+        flow instance.
+
+        Args:
+            cls: Current function flow class.
+
+        Returns:
+            type[IsFuncFlowTemplate[_CallP, _RetT]]: The ``FuncFlowTemplate``
+                class associated with this flow.
+        """
         return cast(type[IsFuncFlowTemplate[_CallP, _RetT]], FuncFlowTemplate)
 
 

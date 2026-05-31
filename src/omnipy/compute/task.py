@@ -35,7 +35,12 @@ _RetT = TypeVar('_RetT')
 
 
 class TaskBase:
-    """Marker base class for Omnipy task objects."""
+    """Provide a shared marker base for Omnipy task objects.
+
+    ``TaskBase`` exists to give concrete task templates and executable task
+    instances a common nominal base type. It does not add runtime behavior on
+    its own, but it supports task-specific typing and internal mixin handling.
+    """
 
     # TODO: Can this and FlowBase be replaced with IsTask/IsFlow, or similar?
     ...
@@ -60,6 +65,18 @@ class TaskTemplateCore(
     """"""
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsTask[_CallP, _RetT]]:
+        """Return the executable task type produced by this template.
+
+        The template/application machinery calls this hook when it needs the
+        concrete job class that should be instantiated from a task template.
+
+        Args:
+            cls: Current task template class.
+
+        Returns:
+            type[IsTask[_CallP, _RetT]]: The executable ``Task`` subclass
+                associated with this template.
+        """
         return cast(type[IsTask[_CallP, _RetT]], Task[_CallP, _RetT])
 
 
@@ -113,7 +130,7 @@ class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP
            TaskBase,
            FuncArgJobBase[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP, _RetT],
            Generic[_CallP, _RetT]):
-    """Executable callable-backed task.
+    """Execute a single callable-backed Omnipy task.
 
     A ``Task`` is the runnable job object produced from a ``TaskTemplate``.
     When invoked, it delegates execution of the wrapped callable to the
@@ -121,9 +138,24 @@ class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP
 
     Use this type when one callable should be scheduled, configured, logged,
     and optionally persisted as a standalone compute step.
+
+    Instances are typically produced by calling a ``TaskTemplate``.
     """
 
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
+        """Register the engine decorator for task execution.
+
+        When a runner engine is bound to the task, this method asks that
+        engine to wrap the task's callable with task-specific execution
+        behavior.
+
+        Args:
+            self: Current task instance.
+            engine: Engine candidate supplied during job setup.
+
+        Returns:
+            None: The method updates decorator state in place.
+        """
         if self.engine:
             engine = cast(IsJobRunnerEngine, self.engine)
             self_with_mixins = cast(IsTask[_CallP, _RetT], self)
@@ -135,6 +167,18 @@ class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsTaskTemplate[_CallP, _RetT]]:
+        """Return the template type used to revise this task.
+
+        Revision operations use this hook to recover the decorator-backed task
+        template class corresponding to an executable task instance.
+
+        Args:
+            cls: Current task class.
+
+        Returns:
+            type[IsTaskTemplate[_CallP, _RetT]]: The ``TaskTemplate`` class
+                associated with this task.
+        """
         return cast(type[IsTaskTemplate[_CallP, _RetT]], TaskTemplate)
 
 

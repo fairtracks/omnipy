@@ -162,7 +162,19 @@ class Model(  # type: ignore[misc]
     # TODO: Pydantic v2, see if slots=True can be used for Model and Dataset to reduce memory usage
 
     class Config:
-        """Pydantic model configuration: allows arbitrary types and validates all fields by default."""
+        """Configure pydantic behavior for Omnipy models.
+
+        This nested configuration class enables Omnipy's relaxed runtime model
+        behavior, including arbitrary wrapped types, eager validation, and enum
+        value serialization.
+
+        Attributes:
+            arbitrary_types_allowed: Allows root values that are not native
+                pydantic field types.
+            validate_all: Validates all fields during model creation.
+            smart_union: Enables pydantic's smarter union parsing behavior.
+            use_enum_values: Serializes enums by their values.
+        """
         arbitrary_types_allowed = True
         validate_all = True
         # validate_assignment = True
@@ -172,6 +184,16 @@ class Model(  # type: ignore[misc]
         use_enum_values = True
 
     def _get_default_factory(self) -> Callable[[], _RootT]:
+        """Build a default factory for the current concrete model.
+
+        The factory prefers reusing a previously computed default value when it
+        is safe to do so, but falls back to recomputing the default for models
+        whose defaults cannot be copied safely.
+
+        Returns:
+            Callable[[], _RootT]: A callable producing default root values for
+                this model instance.
+        """
         try:
             fixed_default_val = self._get_default_value()
             return lambda: fixed_default_val
@@ -183,6 +205,21 @@ class Model(  # type: ignore[misc]
             cls,
             model: type[_RootT] | TypeForm | TypeVar,
     ) -> _RootT:
+        """Instantiate a default root value from a type expression.
+
+        The method normalizes Omnipy and typing constructs such as
+        ``Annotated``, unions, literals, tuples, callables, and type variables
+        into a concrete default value that can seed a model instance.
+
+        Args:
+            model: Type expression describing the model's root value.
+
+        Returns:
+            _RootT: A best-effort default value compatible with ``model``.
+
+        Raises:
+            TypeError: If the type expression cannot be instantiated safely.
+        """
         model = get_default_if_typevar(model)
         origin_type = get_origin(model)
         args = get_args(model)
@@ -228,11 +265,34 @@ class Model(  # type: ignore[misc]
             cls,
             created_model: 'type[Model[_RootT]]',
     ) -> None:
+        """Install special-method proxies matching the wrapped root type.
+
+        Omnipy dynamically equips concrete ``Model[T]`` classes with special
+        methods such as arithmetic, iteration, and container operations when
+        the wrapped type supports them.
+
+        Args:
+            created_model: Concrete model class to augment with proxied special
+                methods.
+
+        Returns:
+            None: This method mutates ``created_model`` in place.
+        """
         from omnipy.data._typing.helpers import all_model_type_variants
 
         outer_types = all_model_type_variants(created_model)
 
         def _type_supports_method(_type: type | GenericAlias, _method_name: str) -> bool:
+            """Check whether a type meaningfully implements a special method.
+
+            Args:
+                _type: Candidate runtime type or specialized generic alias.
+                _method_name: Special-method name to test.
+
+            Returns:
+                bool: ``True`` when ``_type`` should be treated as supporting
+                    ``_method_name``.
+            """
             if is_literal_type(_type):
                 # Literal types should be considered to support the same
                 # methods as their underlying type, e.g. int for Literal[3]
@@ -346,6 +406,15 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def _inherit_first_orig_model_in_bases_if_missing(cls):
+        """Copy original model metadata from concrete model bases when absent.
+
+        This keeps derived model classes aligned with the earliest recorded
+        original type expression even after pydantic-generated intermediate base
+        classes are involved.
+
+        Returns:
+            None: This method updates class metadata and clears type caches.
+        """
         if cls is not Model:
             for orig_base in get_original_bases(cls):
                 if isinstance(orig_base, ModelMetaclass):
@@ -381,6 +450,15 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_float:
+            """Type-check construction of float-based models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_float: A statically narrowed float model instance.
+            """
             ...
 
         @overload
@@ -389,6 +467,15 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_int:
+            """Type-check construction of int-based models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_int: A statically narrowed int model instance.
+            """
             ...
 
         @overload
@@ -397,6 +484,15 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_bool:
+            """Type-check construction of bool-based models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_bool: A statically narrowed bool model instance.
+            """
             ...
 
         @overload
@@ -405,6 +501,15 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_str:
+            """Type-check construction of string-based models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_str: A statically narrowed string model instance.
+            """
             ...
 
         @overload
@@ -413,6 +518,15 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_bytes:
+            """Type-check construction of bytes-based models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_bytes: A statically narrowed bytes model instance.
+            """
             ...
 
         @overload
@@ -421,6 +535,15 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_set[_ValT]:
+            """Type-check construction of set-based models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_set[_ValT]: A statically narrowed set model instance.
+            """
             ...
 
         @overload
@@ -429,6 +552,15 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_list[_ValT]:
+            """Type-check construction of list-based models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_list[_ValT]: A statically narrowed list model instance.
+            """
             ...
 
         @overload
@@ -437,6 +569,16 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_tuple_pair[_ValT, _ValT2]:
+            """Type-check construction of fixed two-item tuple models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_tuple_pair[_ValT, _ValT2]: A statically narrowed tuple
+                    pair model instance.
+            """
             ...
 
         @overload
@@ -445,6 +587,16 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_tuple_same_type[_ValT]:
+            """Type-check construction of homogeneous tuple models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_tuple_same_type[_ValT]: A statically narrowed tuple model
+                    instance.
+            """
             ...
 
         @overload
@@ -453,6 +605,16 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> Model_dict[_KeyT, _ValT]:
+            """Type-check construction of dict-based models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_dict[_KeyT, _ValT]: A statically narrowed dict model
+                    instance.
+            """
             ...
 
         @overload
@@ -461,6 +623,16 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> 'Model_Dataset[_OtherModelT]':
+            """Type-check construction of dataset-backed models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_Dataset[_OtherModelT]: A statically narrowed dataset model
+                    instance.
+            """
             ...
 
         @overload
@@ -469,6 +641,16 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> 'Model_Dataset[_DatasetT]':
+            """Type-check construction of dataset union models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_Dataset[_DatasetT]: A statically narrowed dataset model
+                    instance.
+            """
             ...
 
         @overload
@@ -477,6 +659,15 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> '_ModelT':
+            """Type-check construction of arbitrary concrete model subclasses.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                _ModelT: A statically narrowed instance of ``cls``.
+            """
             ...
 
         def __new__(
@@ -484,6 +675,15 @@ class Model(  # type: ignore[misc]
             *args: Any,
             **kwargs: Any,
         ) -> 'Model | _ModelT':
+            """Type-check construction of runtime model instances.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model | _ModelT: A model instance matching the active overload.
+            """
             ...
     else:
 
@@ -605,14 +805,42 @@ class Model(  # type: ignore[misc]
             self._set_standard_field_description()
 
     def _get_default_value(self) -> _RootT:
+        """Compute the default root value for this concrete model instance.
+
+        Returns:
+            _RootT: Default value derived from the model's full root type.
+        """
         return self.__class__._get_default_value_from_model(self.full_type())
 
     def _primary_validation(self, super_kwargs):
+        """Run the primary pydantic validation pass.
+
+        Args:
+            super_kwargs: Root-field payload forwarded to ``GenericModel``.
+
+        Returns:
+            None: The validated state is stored on ``self``.
+
+        Raises:
+            ValidationError: If pydantic rejects the provided root payload.
+        """
         # Pydantic validation of super_kwargs
         validate_cls_counts[self.__class__.__name__] += 1
         super().__init__(**super_kwargs)
 
     def _secondary_validation_from_data(self, super_kwargs):
+        """Retry validation by reparsing prepared raw data.
+
+        Args:
+            super_kwargs: Root-field payload whose ``__root__`` entry should be
+                reparsed through :meth:`from_data`.
+
+        Returns:
+            None: The reparsed value is stored on ``self``.
+
+        Raises:
+            ValidationError: If reparsing still fails.
+        """
         super().__init__()
         self.from_data(super_kwargs[ROOT_KEY])
 
@@ -620,6 +848,11 @@ class Model(  # type: ignore[misc]
         ...
 
     def __del__(self):
+        """Schedule snapshot cleanup when the model instance is garbage-collected.
+
+        Returns:
+            None: Cleanup is delegated to the snapshot holder.
+        """
         content_id = id(self.content)
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id)
 
@@ -636,6 +869,11 @@ class Model(  # type: ignore[misc]
 
         @override
         def __iter__(self) -> Iterator:  # type: ignore[override]
+            """Type-check iteration over wrapped iterable content.
+
+            Returns:
+                Iterator: Iterator over the wrapped content.
+            """
             ...
 
     def copy(self, *, deep: bool = False, **kwargs) -> Self:
@@ -675,6 +913,15 @@ class Model(  # type: ignore[misc]
 
     @staticmethod
     def _raise_no_model_exception() -> None:
+        """Raise the standard error for unspecialized ``Model`` construction.
+
+        Returns:
+            None: This method never returns.
+
+        Raises:
+            TypeError: Always raised to explain how to bind a concrete model
+                type before instantiation.
+        """
         raise TypeError('Note: The Model class requires a concrete model to be specified as '
                         'a type hierarchy within brackets either directly, e.g.:\n\n'
                         '\tmodel = Model[list[int]]([1,2,3])\n\n'
@@ -682,10 +929,20 @@ class Model(  # type: ignore[misc]
                         '\tclass MyNumberList(Model[list[int]]): ...\n\n')
 
     def _set_standard_field_description(self) -> None:
+        """Populate the root field description when the class lacks a docstring.
+
+        Returns:
+            None: The field metadata is updated in place.
+        """
         self.__fields__[ROOT_KEY].field_info.description = self._get_standard_field_description()
 
     @classmethod
     def _get_standard_field_description(cls) -> str:
+        """Return the fallback root-field description for generated models.
+
+        Returns:
+            str: Standard descriptive text for the root field metadata.
+        """
         return ('This class represents a concrete model for data items in the `omnipy` Python '
                 'package. It is a statically typed specialization of the Model class, '
                 'which is itself wrapping the excellent Python package named `pydantic`.')
@@ -712,6 +969,13 @@ class Model(  # type: ignore[misc]
 
             @contextmanager
             def temporary_set_value_iter_to_pydantic_method() -> Iterator[None]:
+                """Temporarily restore pydantic's iterator implementation.
+
+                Returns:
+                    Iterator[None]: Context manager generator that swaps in the
+                        original pydantic ``__iter__`` implementation during
+                        validation.
+                """
                 prev_iter = value.__class__.__iter__
                 value.__class__.__iter__ = pyd.GenericModel.__iter__  # type: ignore[method-assign]
 
@@ -834,10 +1098,33 @@ class Model(  # type: ignore[misc]
         reset_solution: ContextManager[None] | None = None,
         lazy_snapshot_if_possible: bool = False,
     ) -> None:
+        """Validate a candidate root value and store it on the model.
+
+        Args:
+            new_content: Candidate content to validate.
+            reset_solution: Optional context manager used to restore state on
+                validation failure.
+            lazy_snapshot_if_possible: When ``True``, delay snapshot refresh when
+                safe to do so.
+
+        Returns:
+            None: The validated content is written back to ``self``.
+
+        Raises:
+            ValidationError: If ``new_content`` does not satisfy the model type.
+        """
 
         old_content_id = id(self.content)
 
         def _set_new_content(content: object) -> None:
+            """Replace stored content only when object identity changes.
+
+            Args:
+                content: Validated content object to store.
+
+            Returns:
+                None: The content attribute may be updated in place.
+            """
             if id(content) != old_content_id:
                 self.content = content  # type: ignore[assignment]
 
@@ -852,6 +1139,12 @@ class Model(  # type: ignore[misc]
         self,
         /,
     ) -> ResetSolutionTuple:
+        """Prepare rollback handling and eager snapshotting for validation.
+
+        Returns:
+            ResetSolutionTuple: Reset context plus a flag describing whether a
+                snapshot was taken during preparation.
+        """
         snapshot_taken = False
         if self.config.model.interactive:
             # TODO: Lazy snapshotting causes unneeded double validation for data that is later
@@ -873,18 +1166,40 @@ class Model(  # type: ignore[misc]
         )
 
     def _get_reset_solution(self) -> ContextManager[None]:
+        """Return the active rollback strategy for state-changing operations.
+
+        Returns:
+            ContextManager[None]: Snapshot-based rollback context in interactive
+                mode, otherwise a no-op context manager.
+        """
         if self.config.model.interactive and self.has_snapshot():
             return self._get_revert_to_snapshot_reset_solution()
         else:
             return nothing()
 
     def _get_revert_to_snapshot_reset_solution(self) -> ContextManager[None]:
+        """Create a reset context that restores the current snapshot on failure.
+
+        Returns:
+            ContextManager[None]: Context manager that restores snapshot state if
+                an exception escapes the protected block.
+        """
         prev_deepcopy_content_ids = SetDeque[int]()
 
         def _setup():
+            """Capture existing tracked deepcopy identifiers before mutation.
+
+            Returns:
+                None: Previous identifiers are recorded in the closure.
+            """
             prev_deepcopy_content_ids.extend(self.snapshot_holder.get_deepcopy_content_ids())
 
         def _handle_exception():
+            """Restore snapshot state and merge deferred cleanup identifiers.
+
+            Returns:
+                None: Snapshot rollback is applied in place.
+            """
             new_deepcopy_content_ids = SetDeque[int](
                 self.snapshot_holder.get_deepcopy_content_ids())
             new_deepcopy_content_ids.extend(prev_deepcopy_content_ids)
@@ -906,6 +1221,23 @@ class Model(  # type: ignore[misc]
         post_validation_func: Callable[[_RootT], None] | None = None,
         lazy_snapshot_if_possible: bool = False,
     ) -> None:
+        """Validate content with optional rollback and post-processing hooks.
+
+        Args:
+            new_content: Candidate value to validate.
+            outer_reset_solution: Existing rollback context supplied by the
+                caller.
+            post_validation_func: Optional callback run with the validated
+                content before snapshot handling.
+            lazy_snapshot_if_possible: When ``True``, avoid unnecessary snapshot
+                refreshes when safe.
+
+        Returns:
+            None: Validation side effects are applied to ``self``.
+
+        Raises:
+            ValidationError: If ``new_content`` fails validation.
+        """
         keep_alive_old_content = self.content  # To ensure old content ids are not reused
 
         inner_reset_solution: ContextManager[None]
@@ -969,6 +1301,15 @@ class Model(  # type: ignore[misc]
         return self in self.snapshot_holder
 
     def _get_snapshot_wrapper(self) -> IsSnapshotWrapper[IsModel, _RootT]:
+        """Return the snapshot wrapper currently registered for this model.
+
+        Returns:
+            IsSnapshotWrapper[IsModel, _RootT]: Snapshot metadata and payload for
+                this model.
+
+        Raises:
+            AssertionError: If no snapshot has been taken yet.
+        """
         assert self.has_snapshot(), 'No snapshot taken yet'
         return self.snapshot_holder[self]
 
@@ -1009,6 +1350,11 @@ class Model(  # type: ignore[misc]
         return not needs_validation
 
     def _take_snapshot_of_validated_content(self) -> None:
+        """Store a validated snapshot when interactive mode is enabled.
+
+        Returns:
+            None: Snapshot state is updated only in interactive mode.
+        """
         if self.config.model.interactive:
             with self.deepcopy_context(self.snapshot_holder.take_snapshot_setup,
                                        self.snapshot_holder.take_snapshot_teardown):
@@ -1016,6 +1362,14 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def _parse_data(cls, data: Any) -> _RootT:
+        """Hook for subclasses to preprocess raw root data before validation.
+
+        Args:
+            data: Raw input value prepared by root validators.
+
+        Returns:
+            _RootT: Unchanged ``data`` in the base implementation.
+        """
         return data
 
     # TODO: See if it is possible to support general mappings similarly to iterables (in Model)
@@ -1116,8 +1470,28 @@ class Model(  # type: ignore[misc]
         return super().dict(by_alias=True)[ROOT_KEY]
 
     def _empty_from_data(self, value: object) -> None:
+        """Load data into an empty model using a temporary default reset hook.
+
+        Args:
+            value: Raw data to parse into the current model.
+
+        Returns:
+            None: Parsed content is written back to ``self``.
+        """
         @contextmanager
         def _reset_to_default(*args, **kwds):
+            """Temporarily restore the model's default content on rollback.
+
+            Args:
+                *args: Unused positional arguments required by the contextmanager
+                    protocol.
+                **kwds: Unused keyword arguments required by the contextmanager
+                    protocol.
+
+            Returns:
+                Generator[None, None, None]: Context manager generator that
+                    resets content before yielding.
+            """
             self.content = self._get_default_value_from_model(self.full_type())
             yield
 
@@ -1222,6 +1596,11 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def _clean_type_caches(cls):
+        """Clear cached type-introspection results for this model class.
+
+        Returns:
+            None: Cached helper methods are invalidated in place.
+        """
         cls._get_root_type.cache_clear()
         cls.outer_type.cache_clear()
         cls.inner_type.cache_clear()
@@ -1230,11 +1609,25 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def _get_root_field(cls) -> pyd.ModelField:
+        """Return pydantic's root field object for the concrete model class.
+
+        Returns:
+            pyd.ModelField: Field metadata for ``__root__``.
+        """
         return cast(pyd.ModelField, cls.__fields__.get(ROOT_KEY))
 
     @classmethod
     @functools.cache
     def _get_root_type(cls, outer: bool, with_args: bool) -> TypeForm:
+        """Resolve the inner or outer root type for this concrete model class.
+
+        Args:
+            outer: When ``True``, return the declared outer type.
+            with_args: When ``True``, preserve generic arguments.
+
+        Returns:
+            TypeForm: Resolved root type for the requested view.
+        """
         root_field = cls._get_root_field()
         root_type = root_field.outer_type_ if outer else root_field.type_
 
@@ -1282,9 +1675,29 @@ class Model(  # type: ignore[misc]
 
     @staticmethod
     def _pretty_print_json(json_content: Any) -> str:
+        """Serialize an object as indented JSON text.
+
+        Args:
+            json_content: JSON-compatible object to render.
+
+        Returns:
+            str: Pretty-printed JSON string.
+
+        Example:
+            >>> Model._pretty_print_json({'a': 1})
+            '{\n  "a": 1\n}'
+        """
         return json.dumps(json_content, indent=2)
 
     def _check_for_root_key(self) -> None:
+        """Ensure the internal root attribute exists on the model instance.
+
+        Returns:
+            None: This method only validates internal instance structure.
+
+        Raises:
+            TypeError: If the model was created without a concrete root binding.
+        """
         if ROOT_KEY not in self.__dict__:
             raise TypeError('The Model class requires the specific model to be specified in as '
                             'a type hierarchy within brackets either directly, e.g.:\n'
@@ -1337,11 +1750,38 @@ class Model(  # type: ignore[misc]
 
     def _special_method(  # noqa: C901
             self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
+        """Execute a proxied special method against the wrapped content object.
+
+        This helper centralizes Omnipy's logic for rollback handling,
+        validation of state-changing operations, and conversion of returned
+        values back into model instances when appropriate.
+
+        Args:
+            name: Special-method name to invoke.
+            info: Metadata describing mutability and return-type expectations.
+            *args: Positional arguments forwarded to the special method.
+            **kwargs: Keyword arguments forwarded to the special method.
+
+        Returns:
+            object: Result of the proxied operation, possibly wrapped back into a
+                model.
+        """
 
         if info.state_changing:
 
             def _call_special_method_and_return_self_if_inplace(*inner_args: object,
                                                                 **inner_kwargs: object) -> object:
+                """Call the proxied method and preserve ``self`` for in-place ops.
+
+                Args:
+                    *inner_args: Positional arguments passed to the proxied
+                        special method.
+                    **inner_kwargs: Keyword arguments passed to the proxied
+                        special method.
+
+                Returns:
+                    object: Operation result, or ``self`` for in-place mutations.
+                """
                 return_val = self._call_special_method(name, *inner_args, **inner_kwargs)
 
                 # In-place operators should return self, which here includes the wrapping Model obj
@@ -1408,6 +1848,14 @@ class Model(  # type: ignore[misc]
         if name == '__add__' and has_add_method:
 
             def _add(other) -> object:
+                """Add another value to the wrapped content.
+
+                Args:
+                    other: Value to add.
+
+                Returns:
+                    object: Result of the underlying addition.
+                """
                 # try:
                 #     return content.__add__(self.__class__(other).content)
                 # except ValidationError:
@@ -1421,6 +1869,14 @@ class Model(  # type: ignore[misc]
         elif name == '__radd__' and (has_radd_method or has_add_method):
 
             def _radd(other) -> object:
+                """Perform reflected addition against the wrapped content.
+
+                Args:
+                    other: Left-hand operand supplied by Python's dispatch.
+
+                Returns:
+                    object: Result of the reflected addition.
+                """
                 if has_radd_method:
                     ret = content.__radd__(other)  # type: ignore[attr-defined]
                     if ret is NotImplemented and has_add_method:
@@ -1452,6 +1908,14 @@ class Model(  # type: ignore[misc]
         elif name == '__iadd__' and (has_iadd_method or has_add_method):
 
             def _iadd(other) -> object:
+                """Perform in-place addition on the wrapped content.
+
+                Args:
+                    other: Value to add in place.
+
+                Returns:
+                    object: Result of the underlying in-place addition.
+                """
                 if has_iadd_method:
                     ret = content.__iadd__(other)  # type: ignore[attr-defined]
                     if ret is NotImplemented and has_add_method:
@@ -1511,6 +1975,23 @@ class Model(  # type: ignore[misc]
         model_converted_other_method: Callable | None = None,
         **kwargs: object,
     ):
+        """Call a binary method, preferring model-converted operands first.
+
+        Args:
+            name: Method name used for error reporting.
+            method: Fallback callable operating on the original operand.
+            *args: Single positional operand.
+            model_converted_other_method: Optional callable that performs the
+                operation after converting the operand to this model type.
+            **kwargs: Keyword arguments, which are not supported.
+
+        Returns:
+            object: Result of the operation or ``NotImplemented`` if Python
+                dispatch should continue.
+
+        Raises:
+            TypeError: If the argument count or keyword usage is invalid.
+        """
         if len(args) != 1:
             raise TypeError(f'expected 1 argument, got {len(args)}')
 
@@ -1542,6 +2023,22 @@ class Model(  # type: ignore[misc]
         *args: object,
         **kwargs: object,
     ):
+        """Call a wrapped method with optional argument conversion fallback.
+
+        Args:
+            method: Bound content method to invoke.
+            self_convert_args_if_failure: Whether to retry with operands coerced
+                through this model class after a failed direct call.
+            *args: Positional arguments for the method.
+            **kwargs: Keyword arguments for the method.
+
+        Returns:
+            object: Result of the wrapped call.
+
+        Raises:
+            TypeError: Re-raised when both direct and converted calls fail due to
+                type mismatch.
+        """
         with hold_and_reset_prev_attrib_value(
                 self.config.model,
                 'dynamically_convert_elements_to_models',
@@ -1584,7 +2081,24 @@ class Model(  # type: ignore[misc]
         self,
         elements: Iterable,
     ) -> Callable[..., Generator]:
+        """Build a generator factory that wraps yielded elements as models.
+
+        Args:
+            elements: Iterable whose yielded values should be converted.
+
+        Returns:
+            Callable[..., Generator]: Zero-argument generator factory yielding
+                converted elements.
+        """
         def _convert_full_element_model_generator(elements=elements):
+            """Yield model-converted elements from a captured iterable.
+
+            Args:
+                elements: Iterable captured from the enclosing scope.
+
+            Returns:
+                Generator: Generator yielding per-element model conversions.
+            """
             for el in elements:
                 yield self._convert_to_model_if_reasonable(el, level_up=True)
 
@@ -1592,7 +2106,26 @@ class Model(  # type: ignore[misc]
 
     def _get_convert_element_value_model_generator(self,
                                                    elements: Iterable) -> Callable[..., Generator]:
+        """Build a generator factory that wraps mapping values as models.
+
+        Args:
+            elements: Iterable of key-value pairs whose values should be
+                converted.
+
+        Returns:
+            Callable[..., Generator]: Zero-argument generator factory yielding
+                pairs with converted values.
+        """
         def _convert_element_value_model_generator(elements=elements):
+            """Yield key-value pairs with their values converted to models.
+
+            Args:
+                elements: Iterable of key-value pairs captured from the enclosing
+                    scope.
+
+            Returns:
+                Generator: Generator yielding pairs with converted values.
+            """
             for el in elements:
                 yield (
                     el[0],
@@ -1607,6 +2140,20 @@ class Model(  # type: ignore[misc]
         level_up: bool = False,
         raise_validation_errors: bool = False,
     ) -> 'Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] | Model[_ReturnT] | Model[_RootT] | _ReturnT':  # noqa: E501
+        """Wrap a returned value in a suitable model when type information fits.
+
+        Args:
+            ret: Returned value from a proxied content operation.
+            level_up: When ``True``, attempt element-level wrapping rather than
+                whole-container wrapping.
+            raise_validation_errors: When ``True``, propagate validation errors
+                encountered during attempted wrapping.
+
+        Returns:
+            Model[_KeyT] | Model[_ValT] | Model[tuple[_KeyT, _ValT]] |
+            Model[_ReturnT] | Model[_RootT] | _ReturnT: Wrapped model when a
+            reasonable conversion exists, otherwise the original value.
+        """
         from omnipy.data._typing.helpers import all_model_type_variants
 
         if level_up and not self.config.model.dynamically_convert_elements_to_models:
@@ -1658,6 +2205,16 @@ class Model(  # type: ignore[misc]
 
     @staticmethod
     def _is_instance_or_literal(obj: object, plain_type: type, raw_type: type | GenericAlias):
+        """Check a value against either a runtime type or literal alternatives.
+
+        Args:
+            obj: Value to test.
+            plain_type: Runtime type to check directly.
+            raw_type: Original type expression, possibly a ``Literal``.
+
+        Returns:
+            bool: ``True`` when ``obj`` matches the requested type semantics.
+        """
         if plain_type is Literal:
             args = get_args(raw_type)
             for arg in args:
@@ -1670,6 +2227,16 @@ class Model(  # type: ignore[misc]
     def _fix_tuple_type_from_args(
         self, level_up_type_to_check: type | GenericAlias | tuple[type | GenericAlias, ...]
     ) -> type | GenericAlias:
+        """Normalize tupled type arguments into a usable tuple type expression.
+
+        Args:
+            level_up_type_to_check: Candidate element type or tuple of type
+                arguments.
+
+        Returns:
+            type | GenericAlias: Normalized type expression suitable for model
+                construction.
+        """
         if isinstance(level_up_type_to_check, tuple):
             match len(level_up_type_to_check):
                 case 1:
@@ -1717,6 +2284,19 @@ class Model(  # type: ignore[misc]
                                                       self._getattr_from_content_obj(attr))
 
                     def _validate_content(ret: Any):
+                        """Re-validate content after a proxied mutating method call.
+
+                        Args:
+                            ret: Raw return value from the wrapped content
+                                method.
+
+                        Returns:
+                            Any: Possibly model-converted return value.
+
+                        Raises:
+                            ValidationError: If the wrapped mutation leaves the
+                                content in an invalid state.
+                        """
                         self._validate_and_set_value(self.content, reset_solution=reset_solution)
                         return self._convert_to_model_if_reasonable(
                             ret,
@@ -1953,6 +2533,15 @@ def parse_none_according_to_model(value, root_model):  # IsModel
 
 
 def _parse_none_in_model(outer_type, value):
+    """Wrap a ``None``-like value in a nested model when needed.
+
+    Args:
+        outer_type: Model subclass to instantiate when wrapping is required.
+        value: Candidate value to preserve or wrap.
+
+    Returns:
+        object: Existing model instance or a newly constructed model.
+    """
     # Not exactly sure which is the best solution. Both seem to work. The latter option should be
     # more general, but potentially slower
     #
@@ -1962,24 +2551,74 @@ def _parse_none_in_model(outer_type, value):
 
 
 def _split_outer_type_to_union_variants(outer_type_args):
+    """Split each outer type argument into its union variants.
+
+    Args:
+        outer_type_args: Type arguments extracted from an outer type.
+
+    Returns:
+        tuple: Tuple containing per-argument union-variant tuples.
+    """
     return tuple(split_to_union_variants(_) for _ in outer_type_args)
 
 
 def _flatten_two_level_tuple(two_level_tuple):
+    """Flatten a tuple of tuples into a single tuple.
+
+    Args:
+        two_level_tuple: Nested tuple structure to flatten.
+
+    Returns:
+        tuple: Flattened tuple containing all nested elements.
+
+    Example:
+        >>> _flatten_two_level_tuple(((1, 2), (3,)))
+        (1, 2, 3)
+    """
     return tuple(el for first_level_tuple in two_level_tuple for el in first_level_tuple)
 
 
 def _supports_none(type_: TypeForm) -> bool:
+    """Check whether a type expression accepts ``None`` values.
+
+    Args:
+        type_: Type expression to inspect.
+
+    Returns:
+        bool: ``True`` when ``type_`` allows ``None`` explicitly or implicitly.
+    """
     return is_none_type(type_) or is_optional(type_) or type_ in (object, Any)
 
 
 def _outer_type_and_value_are_of_types(plain_outer_type, value, *types):
+    """Check both declared type and runtime value against candidate base types.
+
+    Args:
+        plain_outer_type: Declared outer runtime type to compare.
+        value: Runtime value to inspect.
+        *types: Candidate runtime base types.
+
+    Returns:
+        bool: ``True`` when both the declared type and the value match at least
+            one candidate type.
+    """
     return any(
         lenient_issubclass(plain_outer_type, type_) and lenient_isinstance(value, type_)
         for type_ in types)
 
 
 def _parse_none_in_mutable_sequence_or_tuple(plain_outer_type, inner_val_type, value):
+    """Normalize ``None`` entries inside mutable sequences or variable tuples.
+
+    Args:
+        plain_outer_type: Concrete sequence or tuple type to reconstruct.
+        inner_val_type: Type expression for sequence elements.
+        value: Runtime sequence or tuple value to normalize.
+
+    Returns:
+        object: Original sequence or reconstructed sequence with normalized
+            ``None`` entries.
+    """
     inner_val_union_types = split_to_union_variants(inner_val_type)
 
     if any(is_model_subclass(_) or _supports_none(_) for _ in inner_val_union_types):
@@ -1989,6 +2628,18 @@ def _parse_none_in_mutable_sequence_or_tuple(plain_outer_type, inner_val_type, v
 
 
 def _parse_none_in_mapping(plain_outer_type, outer_type_args, inner_val_type, value):
+    """Normalize ``None`` keys or values inside mapping-like content.
+
+    Args:
+        plain_outer_type: Concrete mapping type to reconstruct.
+        outer_type_args: Declared key and value type arguments.
+        inner_val_type: Type expression for mapping values.
+        value: Runtime mapping to normalize.
+
+    Returns:
+        object: Original mapping or reconstructed mapping with normalized
+            ``None`` keys and values.
+    """
     inner_val_union_types = split_to_union_variants(inner_val_type)
 
     inner_key_type = outer_type_args[0] if lenient_issubclass(
@@ -2007,18 +2658,52 @@ def _parse_none_in_mapping(plain_outer_type, outer_type_args, inner_val_type, va
 
 
 def _parse_none_in_typevar(inner_val_type):
+    """Normalize ``None`` according to a type variable's resolved variants.
+
+    Args:
+        inner_val_type: Resolved type expression for the type variable.
+
+    Returns:
+        object: Replacement value chosen according to supported union variants.
+
+    Raises:
+        OmnipyNoneIsNotAllowedError: If no variant accepts ``None``.
+    """
     inner_val_union_types = split_to_union_variants(inner_val_type)
 
     return _parse_none_in_types(inner_val_union_types)
 
 
 def _parse_none_in_fixed_tuple(plain_outer_type, tuple_of_union_variant_types, value):
+    """Normalize ``None`` entries in a fixed-length typed tuple.
+
+    Args:
+        plain_outer_type: Concrete tuple type to reconstruct.
+        tuple_of_union_variant_types: Per-position union variants.
+        value: Runtime tuple to normalize.
+
+    Returns:
+        object: Reconstructed tuple with normalized ``None`` elements.
+    """
     return plain_outer_type(
         _parse_none_in_types(tuple_of_union_variant_types[i]) if val is None else val
         for i, val in enumerate(value))
 
 
 def _parse_none_in_union(flattened_union_variant_types, value):
+    """Normalize ``None`` according to the variants of a union type.
+
+    Args:
+        flattened_union_variant_types: Flattened union alternatives.
+        value: Runtime value to preserve or replace.
+
+    Returns:
+        object: ``value`` when non-``None``, otherwise a replacement allowed by
+            the union.
+
+    Raises:
+        OmnipyNoneIsNotAllowedError: If the union does not support ``None``.
+    """
     if value is None:
         return _parse_none_in_types(flattened_union_variant_types)
     else:
@@ -2026,6 +2711,17 @@ def _parse_none_in_union(flattened_union_variant_types, value):
 
 
 def _parse_none_in_types(inner_union_types: tuple[TypeForm]) -> object:
+    """Choose a valid replacement for ``None`` from candidate union variants.
+
+    Args:
+        inner_union_types: Candidate type variants to inspect in order.
+
+    Returns:
+        object: Nested model instance or ``None`` compatible with the variants.
+
+    Raises:
+        OmnipyNoneIsNotAllowedError: If none of the variants support ``None``.
+    """
     for type_ in inner_union_types:
         if is_model_subclass(type_):
             model = type_
