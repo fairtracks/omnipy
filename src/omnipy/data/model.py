@@ -275,8 +275,6 @@ class Model(  # type: ignore[misc]
             created_model: Concrete model class to augment with proxied special
                 methods.
 
-        Returns:
-            None: This method mutates ``created_model`` in place.
         """
         from omnipy.data._typing.helpers import all_model_type_variants
 
@@ -1111,8 +1109,6 @@ class Model(  # type: ignore[misc]
             Args:
                 content: Validated content object to store.
 
-            Returns:
-                None: The content attribute may be updated in place.
             """
             if id(content) != old_content_id:
                 self.content = content  # type: ignore[assignment]
@@ -1221,10 +1217,6 @@ class Model(  # type: ignore[misc]
             lazy_snapshot_if_possible: When ``True``, avoid unnecessary snapshot
                 refreshes when safe.
 
-        Returns:
-            None: Validation side effects are applied to ``self``.
-
-        Raises:
             ValidationError: If ``new_content`` fails validation.
         """
         keep_alive_old_content = self.content  # To ensure old content ids are not reused

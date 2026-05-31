@@ -1732,7 +1732,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             #
             # {{DISPLAY_METHOD_ARGS}}
             #
-            # {{DISPLAY_METHOD_RETURNS}}
             #
             # {{DISPLAY_METHOD_NOTE}}
             #
