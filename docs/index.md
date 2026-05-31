@@ -3,6 +3,10 @@
 Typed dataflows for messy real-world data — continuous validation, safe interactive manipulation,
 and one-line conversions from nested JSON to tables.
 
+Deep JSON flattening works for many common structures, but there are current boundaries and
+shape-dependent edge cases — see [Tutorial 2: Nested JSON to tables](tutorials/02-json-to-tables.md)
+for the current limits.
+
 ## Why you care
 
 - **Continuous validation** while editing keeps model state valid after failed operations.
@@ -45,3 +49,4 @@ and one-line conversions from nested JSON to tables.
 ## Visual metaphors and story mode (coming later)
 
 Visual metaphors and story mode (coming later).
+See the planned stub page: [Visual metaphors and story mode](learn/visual-metaphors-story-mode.md).

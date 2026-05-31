@@ -30,6 +30,10 @@ Start with Dataset + Model batch parsing, then apply transformations without exp
 >>> incremented.to_data()
 ```
 
+```pycon exec="1" session="tutorial3" result="console" html="true"
+>>> incremented.to_data()
+```
+
 ## Hierarchical datasets
 
 ```pycon exec="1" session="tutorial3" source="console"
@@ -45,6 +49,10 @@ Start with Dataset + Model batch parsing, then apply transformations without exp
 
 ```pycon exec="1" session="tutorial3" source="console"
 >>> grouped_incremented = grouped.do(lambda dataset: dataset.do(lambda value: int(value) + 1))
+>>> grouped_incremented.to_data()
+```
+
+```pycon exec="1" session="tutorial3" result="console" html="true"
 >>> grouped_incremented.to_data()
 ```
 
