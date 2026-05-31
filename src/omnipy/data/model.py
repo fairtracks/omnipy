@@ -1107,9 +1107,6 @@ class Model(  # type: ignore[misc]
             lazy_snapshot_if_possible: When ``True``, delay snapshot refresh when
                 safe to do so.
 
-        Returns:
-            None: The validated content is written back to ``self``.
-
         Raises:
             ValidationError: If ``new_content`` does not satisfy the model type.
         """

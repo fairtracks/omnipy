@@ -216,9 +216,6 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         The template/application machinery calls this hook when it needs the
         concrete flow class to instantiate from a DAG flow template.
 
-        Args:
-            cls: Current DAG flow template class.
-
         Returns:
             type[IsDagFlow[_CallP, _RetT]]: The executable ``DagFlow`` subclass
                 associated with this template.
@@ -283,9 +280,6 @@ class DagFlow(
         Args:
             self: Current DAG flow instance.
             engine: Engine candidate supplied during job setup.
-
-        Returns:
-            None: The method updates decorator state in place.
         """
         if self.engine:
             engine = cast(IsJobRunnerEngine, self.engine)
@@ -302,9 +296,6 @@ class DagFlow(
 
         Revision operations use this hook to recover the decorator-backed DAG
         flow template class corresponding to an executable DAG flow instance.
-
-        Args:
-            cls: Current DAG flow class.
 
         Returns:
             type[IsDagFlowTemplate[_CallP, _RetT]]: The ``DagFlowTemplate``

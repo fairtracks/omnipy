@@ -361,9 +361,6 @@ def display_jupyter_setup_note(detected_ui_type: JupyterUserInterfaceType.Litera
     Args:
         detected_ui_type: Detected Jupyter user-interface type.
 
-    Returns:
-        None.
-
     Raises:
         AssertionError: If a non-Jupyter-in-browser type reaches the browser-only branch.
     """

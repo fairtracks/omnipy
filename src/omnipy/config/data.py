@@ -285,9 +285,6 @@ class TerminalUserInterfaceConfig(DimsModeConfig):
             cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         """Fetch terminal width and height from the current shell session.
 
-        Args:
-            cls: The terminal UI configuration class.
-
         Returns:
             tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
                 Terminal width and height, or ``None`` for unavailable values.
@@ -332,9 +329,6 @@ class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
             cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         """Return notebook display dimensions when they can be queried.
 
-        Args:
-            cls: The Jupyter UI configuration class.
-
         Returns:
             tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
                 ``(None, None)`` because dimensions are currently pushed from
@@ -356,9 +350,6 @@ class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
         Args:
             **data: Optional pydantic field values passed to the parent model
                 initializer.
-
-        Returns:
-            None: Initializes the instance in place.
 
         Raises:
             pyd.ValidationError: If provided ``data`` does not satisfy model
@@ -386,9 +377,6 @@ class BrowserUserInterfaceConfig(HtmlUserInterfaceConfig):
         Args:
             **data: Optional pydantic field values passed to the parent model
                 initializer.
-
-        Returns:
-            None: Initializes the instance in place.
 
         Raises:
             pyd.ValidationError: If provided ``data`` does not satisfy model
