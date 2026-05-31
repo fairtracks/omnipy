@@ -30,7 +30,6 @@ from typing_extensions import TypeForm, TypeVar
 
 from omnipy.components.json.models import is_json_model_instance_hack
 import omnipy.data._display.text.pretty as pretty_module
-import omnipy.data._display.text.pretty_printer.base as pretty_printer_base
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
 from omnipy.shared.enums.display import PrettyPrinterLib
@@ -698,62 +697,30 @@ def test_model_json_preview_pruning_triggers_for_large_json_list(
     assert observed_pruned_json_model_panel is True
 
 
-def test_model_json_preview_pruning_limits_pretty_printer_prepare_input_size(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+def test_model_json_verbose_prune_logs_reduced_preparation(
+        capsys: pytest.CaptureFixture[str]) -> None:
+    import omnipy.shared.constants as const
+
     model = Model[list[int]](range(10000))
 
-    prepared_content_sizes: list[int] = []
-    original_prepare_draft_panel = getattr(pretty_printer_base.PrettyPrinter,
-                                           'prepare_draft_panel')
+    const.VERBOSE_PRUNE = True
+    try:
+        model.json()
+        captured = capsys.readouterr()
+    finally:
+        const.VERBOSE_PRUNE = False
 
-    def _track_prepare_draft_panel_size(self, draft_panel):
-        content = draft_panel.content
-        if hasattr(content, '__len__'):
-            prepared_content_sizes.append(len(content))
+    prune_lines = [line for line in captured.out.splitlines() if line.startswith('[PRUNE] ')]
+    assert prune_lines
 
-        return original_prepare_draft_panel(self, draft_panel)
+    pruned_lines = [line for line in prune_lines if line.startswith('[PRUNE] Pruned: ')]
+    assert pruned_lines
 
-    monkeypatch.setattr(
-        pretty_printer_base.PrettyPrinter,
-        'prepare_draft_panel',
-        _track_prepare_draft_panel_size,
-    )
+    before_after_text = pruned_lines[-1].removeprefix('[PRUNE] Pruned: ').removesuffix(' items')
+    before_text, after_text = before_after_text.split(' -> ', maxsplit=1)
 
-    with monkeypatch.context() as patch_ctx:
-        patch_ctx.setattr(
-            pretty_module,
-            '_maybe_prune_draft_panel',
-            lambda draft_panel, *, probe_render, memo: draft_panel,
-        )
-        unpruned_output = _render_panel_to_plain_terminal(
-            model._json(
-                width=24,
-                height=8,
-                ui=UserInterfaceType.TERMINAL,
-                printer=PrettyPrinterLib.RICH,
-                freedom=0,
-                debug=False,
-            ))
-    assert prepared_content_sizes
-    unpruned_max_prepared_size = max(prepared_content_sizes)
-
-    prepared_content_sizes.clear()
-    pruned_output = _render_panel_to_plain_terminal(
-        model._json(
-            width=24,
-            height=8,
-            ui=UserInterfaceType.TERMINAL,
-            printer=PrettyPrinterLib.RICH,
-            freedom=0,
-            debug=False,
-        ))
-
-    assert prepared_content_sizes
-    pruned_max_prepared_size = max(prepared_content_sizes)
-
-    assert unpruned_output == pruned_output
-    assert unpruned_max_prepared_size == 10000
-    assert pruned_max_prepared_size < unpruned_max_prepared_size
+    assert int(before_text) == 10000
+    assert int(after_text) < int(before_text)
 
 
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:

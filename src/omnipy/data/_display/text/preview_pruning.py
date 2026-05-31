@@ -15,6 +15,13 @@ _probe_render_active_ctx_var: ContextVar[bool] = ContextVar(
 )
 
 
+def _log_prune(msg: str) -> None:
+    from omnipy.shared.constants import VERBOSE_PRUNE
+
+    if VERBOSE_PRUNE:
+        print(f'[PRUNE] {msg}')
+
+
 @dataclass(frozen=True)
 class _PanelPreviewBudget:
     width_budget: int | None
@@ -44,6 +51,7 @@ def _maybe_prune_draft_panel(
     width_stabilization_window: int = _DEFAULT_WIDTH_STABILIZATION_WINDOW,
 ) -> Any:
     if _is_probe_render_active():
+        _log_prune('Skipping pruning: probe render is already active')
         return draft_panel
 
     prunable_content = _content_for_pruning(draft_panel)
@@ -51,6 +59,7 @@ def _maybe_prune_draft_panel(
     budget = _derive_budget(draft_panel)
     plan = _build_prunable_chunk_plan(prunable_content, budget)
     if plan is None:
+        _log_prune(f'Skipping pruning: {_pruning_skip_reason(prunable_content, budget)}')
         return draft_panel
 
     if memo is None:
@@ -79,7 +88,10 @@ def _maybe_prune_draft_panel(
 
     memo.panel_cache[panel_key] = prefix_size
     if prefix_size is None or prefix_size >= plan.total_chunks:
+        _log_prune('Skipping pruning: no reduction found')
         return draft_panel
+
+    _log_prune(f'Pruned: {plan.total_chunks} -> {prefix_size} items')
 
     return _panel_with_prefix(draft_panel, plan, prefix_size)
 
@@ -171,6 +183,23 @@ def _build_prunable_chunk_plan(
     return plan
 
 
+def _pruning_skip_reason(content: object, budget: _PanelPreviewBudget) -> str:
+    if budget.width_budget is None and budget.height_budget is None:
+        return 'unbounded width and height budget'
+
+    if not _is_supported_content(content):
+        return f'unsupported content type {type(content)!r}'
+
+    if _requires_bounded_width(content) and budget.width_budget is None:
+        return 'unbounded width for sequence/mapping content'
+
+    plan = _build_chunk_plan(content)
+    if plan.total_chunks <= 1:
+        return 'content already within one chunk'
+
+    return 'unknown reason'
+
+
 def _requires_bounded_width(content: object) -> bool:
     return not isinstance(content, (str, bytes, bytearray))
 
@@ -204,6 +233,7 @@ def _compute_prefix_size_fail_open(
 ) -> int | None:
     object_id = id(prunable_content)
     if object_id in memo.active_object_ids:
+        _log_prune('Skipping pruning: detected active recursion for content object')
         return None
 
     memo.active_object_ids.add(object_id)
@@ -218,6 +248,7 @@ def _compute_prefix_size_fail_open(
             width_stabilization_window=width_stabilization_window,
         )
     except Exception:
+        _log_prune('Skipping pruning: probe error while computing prefix size')
         return None
     finally:
         memo.active_object_ids.discard(object_id)

@@ -25,6 +25,9 @@ MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED: pyd.NonNegativeInt | None = 4
 
 MAX_PANEL_NESTING_DEPTH: pyd.NonNegativeInt | None = 3
 
+# Data - Display - Pruning
+VERBOSE_PRUNE = False
+
 DEFAULT_DARK_BACKGROUND = False
 
 TERMINAL_DEFAULT_WIDTH: pyd.NonNegativeInt | None = 80
