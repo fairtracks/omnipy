@@ -82,7 +82,7 @@ def _generate_attribute_name(value: Any, used_names: KeysView[str]) -> str:
     """
     Generate a valid Python attribute name from a value.
 
-    Parameters:
+    Args:
         value: The value to convert to an attribute name
         used_names: QAlready used attribute names to avoid conflicts
 

@@ -462,7 +462,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
                        value: LiteralInnerTypeT) -> str:
         """Get the name of the enum attribute for the given value.
 
-        Parameters:
+        Args:
             value: The value to look up in the enum
 
         Returns:
@@ -489,7 +489,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
     def is_random_choice_value(cls, value: object) -> bool:
         """Checks whether the value is valid as random choice for this enum.
 
-        Parameters:
+        Args:
             value: The value to check.
 
         Returns:

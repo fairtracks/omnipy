@@ -39,7 +39,7 @@ class OutputConfig:
     both terminal and HTML output. It is intended to be used for a specific
     instance of DraftOutput, and not as a global configuration.
 
-    Parameters:
+    Args:
         tab (NonNegativeInt): Number of spaces to use for each tab
         indent (NonNegativeInt): Number of spaces to use for each
             indentation level.

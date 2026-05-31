@@ -32,7 +32,7 @@ def create_panel_with_updated_frame(
     not dimensions-aware, it renders the next stage to get a
     dimensions-aware panel.
 
-    Parameters:
+    Args:
         draft_panel_basis: Original draft panel to base the new panel on
         frame: New frame to apply to the panel
 
@@ -360,7 +360,7 @@ class LayoutFlowContext(Generic[FrameT]):
         a panel is being tightened without this changing the dimensions of
         the content, it is no longer considered resizable.
 
-        Parameters:
+        Args:
             key: Key of the panel to check
 
         Returns:
@@ -377,7 +377,7 @@ class LayoutFlowContext(Generic[FrameT]):
         is no longer considered resizable. Conversely, if a non-resizable
         panel is widened, it will become resizable again.
 
-        Parameters:
+        Args:
             key: Key of the panel being resized
             resize_helper: Helper object containing panel resize information
 

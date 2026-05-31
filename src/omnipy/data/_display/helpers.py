@@ -52,7 +52,7 @@ def soft_wrap_words(words: list[str], max_width: int) -> list[str]:
     exceed the specified maximum width. Single words longer than max_width
     are not split and will appear on their own line.
 
-    Parameters:
+    Args:
         words: List of words to be wrapped
         max_width: Maximum width (in characters) for each line
 

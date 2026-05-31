@@ -39,7 +39,7 @@ def optimize_layout_to_fit_frame(
     4. Iteratively resizes panels to fit within the total frame width
     5. Widens panels whose titles need more space
 
-    Parameters:
+    Args:
         input_layout_panel: Original draft panel containing a layout to be
                             optimized
 
@@ -96,7 +96,7 @@ def _create_layout_with_distributed_widths(
     Panels with pre-defined widths keep their widths. Remaining width is
     distributed evenly among panels without pre-defined widths.
 
-    Parameters:
+    Args:
         layout_panel: Draft panel containing a layout
 
     Returns:
@@ -139,7 +139,7 @@ def _calculate_per_panel_width_for_panels_without_width(
     calculated based on content (or both).
 
 
-    Parameters:
+    Args:
         layout: The panel layout
         frame_width: Width of the containing frame, or None if not constrained
         panel_design: Layout design parameters
@@ -186,7 +186,7 @@ def _determine_panel_width(
     For panels without a pre-defined width, assigns the calculated per-panel width.
     For panels with an existing width, preserves their original width and fixed_width flag.
 
-    Parameters:
+    Args:
         panel: Panel to determine width for
         per_panel_width: Calculated width for panels without pre-set width
 
@@ -215,7 +215,7 @@ def _iteratively_resize_inner_panels(  # noqa: C901
     dimensions, position in the layout, and whether they're marked as
     resizable.
 
-    Parameters:
+    Args:
         context: The layout flow context containing panels to be resized
 
     Returns:
@@ -308,7 +308,7 @@ def _sort_panels_by_resize_priority(context: LayoutFlowContext[FrameT]) -> list[
     When expanding (`context.extra_width_available == True`), the priority
     order is reversed.
 
-    Parameters:
+    Args:
         context: The layout flow context
 
     Returns:
@@ -374,7 +374,7 @@ def _set_inner_panel_heights(input_layout_panel: DraftPanel[Layout[DraftPanel], 
     container frame's available height (minus borders). Panels with fixed
     height retain their original height.
 
-    Parameters:
+    Args:
         input_layout_panel: The input layout panel
         draft_layout: The initial layout of draft panels
 
@@ -404,7 +404,7 @@ def _adjust_inner_panel_heights_after_render(
     rendering and reflowing of nested layouts. All panels with flexible
     heights are set to the same height.
 
-    Parameters:
+    Args:
         context: The layout flow context containing the layout and its frame
 
     Returns:
@@ -478,7 +478,7 @@ def _tighten_inner_panel_frame_widths(
     be only as wide as needed for their content, which helps optimize space
     usage in the layout.
 
-    Parameters:
+    Args:
         context: The layout flow context containing panels to be adjusted
 
     Returns:
@@ -498,7 +498,7 @@ def _tighten_inner_panel_frame_heights(
     Reduce inner panel frame heights to match their content height when
     possible.
 
-    Parameters:
+    Args:
         context: The layout flow context containing panels to be adjusted
 
     Returns:
@@ -523,7 +523,7 @@ def _widen_inner_panels_to_make_room_for_titles(
     It prioritizes panels with shorter titles first to ensure the maximum
     number of titles can be fully displayed.
 
-    Parameters:
+    Args:
         context: The layout flow context
 
     Returns:
@@ -554,7 +554,7 @@ def _identify_cramped_panels(
     Groups panels by their title width to facilitate prioritizing
     shorter titles first when distributing extra width.
 
-    Parameters:
+    Args:
         context: The layout flow context
 
     Returns:
@@ -584,7 +584,7 @@ def _distribute_width_to_cramped_panels(
     with the shortest titles first until either all panels fit their titles
     or the extra width is exhausted.
 
-    Parameters:
+    Args:
         title_width2cramped_panels: Dict mapping title widths to panels
         extra_width: Total extra width available to distribute
 
@@ -622,7 +622,7 @@ def _apply_width_additions(
     Apply calculated width additions to panels that need more space for
     titles.
 
-    Parameters:
+    Args:
         context: The layout flow context containing panels to be modified
         panel_width_additions: Dict mapping panel keys to width amounts to
                                add
