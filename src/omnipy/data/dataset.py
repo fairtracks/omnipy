@@ -956,7 +956,13 @@ class Dataset(
         result = {}
 
         for key, val in self.data.items():
-            result[key] = val.to_json(pretty=pretty)
+            json_content = val.to_json(pretty=pretty)
+            if not pretty:
+                try:
+                    json_content = json.dumps(json.loads(json_content))
+                except Exception:
+                    ...
+            result[key] = json_content
 
         return result
 
@@ -987,27 +993,49 @@ class Dataset(
 
     @classmethod
     def to_json_schema(cls, pretty: bool = True) -> str | dict_t[str, str]:
-        result = {}
+        from omnipy.data.model import Model
+
+        def _normalize_refs(obj: Any) -> Any:
+            if isinstance(obj, dict):
+                out = {}
+                for key, val in obj.items():
+                    if key == '$ref' and isinstance(val, str):
+                        out[key] = val.replace('#/$defs/', '#/definitions/')
+                    else:
+                        out[key] = _normalize_refs(val)
+                return out
+            if isinstance(obj, list):
+                return [_normalize_refs(val) for val in obj]
+            return obj
+
+        def _strip_orig_model(definitions: dict_t[str, Any]) -> None:
+            for model_desc in definitions.values():
+                if isinstance(model_desc, dict):
+                    model_desc.pop('orig_model', None)
+
         clean_dataset = super(Dataset, Dataset).__class_getitem__(cls.get_type())
-        schema = clean_dataset.schema()
-        for key, val in schema['properties'][DATA_KEY].items():
-            # Remove the first part of the type definition of 'data', added
-            # as a hack to stop coercing of e.g. [{'a': 'b', 'c': 'd'}]
-            # to {'a': 'c'}
-            if key == 'anyOf':
-                result['type'] = 'object'
-                result['additionalProperties'] = {
-                    '$ref': '#/definitions/' + pyd.normalize_name(clean_dataset.get_type().__name__)
-                }
-            else:
-                result[key] = val
+        item_type = clean_dataset.get_type()
+        model_name = pyd.normalize_name(item_type.__name__)
 
-        result['title'] = clean_dataset.__name__
-        result['definitions'] = schema['definitions']
+        model_schema = cast(dict_t[str, Any], item_type.schema())
+        definitions = cast(dict_t[str, Any], _normalize_refs(
+            model_schema.pop('definitions', None) or model_schema.pop('$defs', None) or {}))
+        model_schema = cast(dict_t[str, Any], _normalize_refs(model_schema))
 
-        for model_desc in result['definitions'].values():
-            if 'orig_model' in model_desc:
-                del model_desc['orig_model']
+        model_schema.setdefault('description', Model._get_standard_field_description())
+        definitions[model_name] = model_schema
+        _strip_orig_model(definitions)
+
+        result = {
+            'title': clean_dataset.__name__,
+            'description': cls._get_standard_field_description(),
+            'default': {},
+            'type': 'object',
+            'additionalProperties': {
+                '$ref': '#/definitions/' + model_name
+            },
+            'definitions': definitions,
+        }
 
         if pretty:
             return cls._pretty_print_json(result)
@@ -1228,7 +1256,7 @@ class Dataset(
         return isinstance(other, Dataset) \
             and self.__class__ == other.__class__ \
             and self.data == other.data \
-            and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
+            and self.to_data() == other.to_data()
 
     def __repr_args__(self):
         from omnipy.data.model import is_model_instance
