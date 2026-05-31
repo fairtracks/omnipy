@@ -608,7 +608,16 @@ class Model(  # type: ignore[misc]
     def _primary_validation(self, super_kwargs):
         # Pydantic validation of super_kwargs
         validate_cls_counts[self.__class__.__name__] += 1
-        super().__init__(root=super_kwargs[ROOT_KEY])
+        try:
+            super().__init__(root=super_kwargs[ROOT_KEY])
+        except TypeError as exc:
+            raise pyd.validation_error_from_wrappers(
+                [
+                    pyd.ErrorWrapper(exc, loc=ROOT_KEY),
+                    pyd.ErrorWrapper(ValueError(str(exc)), loc=ROOT_KEY),
+                ],
+                self.__class__,
+            )
 
     def _secondary_validation_from_data(self, super_kwargs):
         super().__init__(root=self._get_default_value())
