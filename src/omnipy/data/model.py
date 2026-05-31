@@ -519,23 +519,71 @@ class Model(  # type: ignore[misc]
             root_field.json_schema_extra = {}
         root_field.json_schema_extra['orig_model'] = orig_model
 
-    def __init__(
+    def __init__(  # noqa: C901
         self,
         value: _RootT | object | UndefinedType = Undefined,
         *,
         __root__: _RootT | object | UndefinedType = Undefined,
         **kwargs: _RootT | object,
     ) -> None:
-        if value is not Undefined:
-            root_value = value
-        elif __root__ is not Undefined:
-            root_value = __root__
-        elif kwargs:
-            root_value = kwargs
-        else:
-            root_value = self._get_default_value()
+        super_kwargs: dict[str, _RootT] = {}
+        num_root_vals = 0
 
-        super().__init__(root=cast(_RootT, root_value))
+        if value is not Undefined:
+            super_kwargs[ROOT_KEY] = cast(_RootT, value)
+            num_root_vals += 1
+
+        if __root__ is not Undefined:
+            super_kwargs[ROOT_KEY] = cast(_RootT, __root__)
+            num_root_vals += 1
+
+        if kwargs:
+            super_kwargs[ROOT_KEY] = cast(_RootT, kwargs)
+            kwargs = {}
+            num_root_vals += 1
+
+        assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
+
+        if self._get_root_field().default_factory is undefined_default_factory:
+            self._get_root_field().default_factory = self._get_default_factory()
+
+        dataset_or_model_as_input = False
+
+        # In pydantic v2, the compiled validator must always receive a root value.
+        # If none is provided, generate a default here instead of relying on the
+        # undefined_default_factory (which returns PydanticUndefined and causes
+        # a hang/crash in pydantic-core when validate_default=True).
+        if ROOT_KEY not in super_kwargs:
+            try:
+                super_kwargs[ROOT_KEY] = self._get_default_value()
+            except (ValidationError, TypeError, ValueError):
+                super_kwargs[ROOT_KEY] = self._get_default_value()
+
+        if ROOT_KEY in super_kwargs:
+            try:
+                dataset_or_model_as_input, value = \
+                    self._prepare_value_for_validation_if_dataset_or_model(super_kwargs[ROOT_KEY])
+            except Exception as exc:
+                val_exc = ValueError(f'Failed to prepare value for validation: {exc}')
+                raise pyd.validation_error_from_wrappers(
+                    [
+                        pyd.ErrorWrapper(exc, loc=ROOT_KEY),
+                        pyd.ErrorWrapper(val_exc, loc=ROOT_KEY),
+                    ],
+                    self.__class__,
+                )
+            if dataset_or_model_as_input:
+                super_kwargs[ROOT_KEY] = cast(_RootT, self._coerce_prepared_value_to_model_type(value))
+
+        self._init(super_kwargs, **kwargs)
+
+        try:
+            self._primary_validation(super_kwargs)
+        except ValidationError:
+            if dataset_or_model_as_input:
+                self._secondary_validation_from_data(super_kwargs)
+            else:
+                raise
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -546,10 +594,10 @@ class Model(  # type: ignore[misc]
     def _primary_validation(self, super_kwargs):
         # Pydantic validation of super_kwargs
         validate_cls_counts[self.__class__.__name__] += 1
-        super().__init__(**super_kwargs)
+        super().__init__(root=super_kwargs[ROOT_KEY])
 
     def _secondary_validation_from_data(self, super_kwargs):
-        super().__init__()
+        super().__init__(root=self._get_default_value())
         self.from_data(super_kwargs[ROOT_KEY])
 
     def _prepare_value_for_validation_if_dataset_or_model(
@@ -563,6 +611,29 @@ class Model(  # type: ignore[misc]
         elif is_non_omnipy_pydantic_model(value):
             return True, cast(pyd.BaseModel, value).model_dump(by_alias=True)
         return False, value
+
+    @classmethod
+    def _coerce_prepared_value_to_type(cls, value: object, target_type: TypeForm) -> object:
+        if is_model_instance(value):
+            value = value.to_data()
+        elif is_dataset_instance(value):
+            value = value.to_data()
+        elif is_non_omnipy_pydantic_model(value):
+            value = cast(pyd.BaseModel, value).model_dump(by_alias=True)
+
+        try:
+            import pydantic.v1 as pyd_v1
+            return pyd_v1.parse_obj_as(target_type, value)
+        except Exception:
+            return value
+
+    def _coerce_prepared_value_to_model_type(self, value: object) -> object:
+        target_type = self.full_type()
+        if is_model_subclass(target_type):
+            inner_target_type = target_type.full_type()
+            coerced_value = self._coerce_prepared_value_to_type(value, inner_target_type)
+            return target_type(coerced_value)
+        return self._coerce_prepared_value_to_type(value, target_type)
 
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...

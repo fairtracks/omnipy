@@ -247,7 +247,7 @@ def _as_v1_style_input_fields_set(model: type[BaseModel], input_data: dict[str, 
 
 def _as_v1_style_values(model: type[BaseModel], validated_obj: BaseModel) -> dict[str, Any]:
     if _is_root_model_cls(model):
-        return {'__root__': validated_obj.model_dump()}
+        return {'__root__': getattr(validated_obj, 'root')}
     return validated_obj.model_dump()
 
 
