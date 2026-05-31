@@ -7,6 +7,8 @@ site_url: https://omnipy.readthedocs.io/
 exclude_docs: |
   /agents/
   /agents/**
+  /_includes/
+  /_includes/**
 
 theme:
   name: material
