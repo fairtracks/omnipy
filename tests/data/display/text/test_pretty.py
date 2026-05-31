@@ -1063,6 +1063,30 @@ def test_pretty_repr_preview_pruning_fail_open_when_probe_raises(
     assert max(_TrackedItem.touched_indices) == len(content) - 1
 
 
+def test_pretty_repr_preview_pruning_fail_open_for_recursive_cycle_content(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    cycle: list[Any] = [1, 2, 3]
+    cycle.append(cycle)
+
+    panel = DraftPanel(
+        cycle,
+        frame=Frame(Dimensions(22, 6), fixed_width=False, fixed_height=False),
+        config=OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0),
+    )
+
+    with monkeypatch.context() as patch_ctx:
+        patch_ctx.setattr(
+            pretty_module,
+            '_maybe_prune_draft_panel',
+            lambda draft_panel, *, probe_render, memo: draft_panel,
+        )
+        unpruned_output_panel = pretty_repr_of_draft_output(panel)
+
+    pruned_output_panel = pretty_repr_of_draft_output(panel)
+
+    assert pruned_output_panel.content == unpruned_output_panel.content
+
+
 def test_pretty_repr_preview_pruning_fail_open_when_width_unstable_at_probe_cap(
         monkeypatch: pytest.MonkeyPatch) -> None:
     class _GrowingWidthItem:
