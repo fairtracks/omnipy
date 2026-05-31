@@ -1,3 +1,5 @@
+"""Shared fixtures for integration reused engine tests."""
+
 from typing import Annotated, Callable, Type
 
 import pytest
@@ -34,6 +36,7 @@ def all_job_classes(
     dag_flow_template_cls: Type[IsDagFlowTemplate],
     func_flow_template_cls: Type[IsFuncFlowTemplate],
 ):
+    """Provide all job classes."""
     return (job_type,
             task_template_cls,
             linear_flow_template_cls,
@@ -44,6 +47,7 @@ def all_job_classes(
 @pc.fixture(scope='function', name='plain_engine')
 @pc.parametrize(engine_decorator=[None], ids=[''])
 def no_engine_decorator(engine_decorator):
+    """Provide no engine decorator."""
     return engine_decorator
 
 
@@ -56,6 +60,7 @@ def run_state_registry(
     runtime: Annotated[None, pytest.fixture],
     registry_cls: Type[IsRunStateRegistry],
 ):
+    """Provide run state registry."""
     return registry_cls()
 
 
@@ -76,6 +81,7 @@ def all_func_types_real_jobs_all_engines_real_reg(
     engine_decorator: Callable[[IsEngine], IsEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
+    """Provide all func types real jobs all engines real reg."""
     (job_type,
      task_template_cls,
      linear_flow_template_cls,

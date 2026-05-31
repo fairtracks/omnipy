@@ -1,3 +1,5 @@
+"""Tests for frozen dictionary typedef behavior."""
+
 from types import MappingProxyType
 
 import pytest
@@ -6,6 +8,7 @@ from omnipy.components._frozen.typedefs import FrozenDict
 
 
 def test_frozendict_empty() -> None:
+    """Create an empty FrozenDict and keep it immutable."""
     empty_frozen_dict = FrozenDict()
 
     assert empty_frozen_dict == MappingProxyType({})
@@ -18,6 +21,7 @@ def test_frozendict_empty() -> None:
 
 
 def test_frozendict_simple() -> None:
+    """Create a populated FrozenDict and reject mutation."""
     simple_frozen_dict = FrozenDict({'a': 'b', 'c': 'd'})
 
     assert simple_frozen_dict == MappingProxyType({'a': 'b', 'c': 'd'})
@@ -35,6 +39,7 @@ def test_frozendict_simple() -> None:
 
 
 def test_nested_frozendict_mutable() -> None:
+    """Show that nested mutable values remain mutable."""
     nested_frozen_dict = FrozenDict({'nested': {}})
 
     assert nested_frozen_dict == MappingProxyType({'nested': {}})
@@ -52,6 +57,7 @@ def test_nested_frozendict_mutable() -> None:
 
 
 def test_frozendict_repr() -> None:
+    """Represent FrozenDict instances consistently."""
     simple_frozen_dict = FrozenDict({'a': 'b', 'c': 'd'})
 
     assert repr(simple_frozen_dict) == "FrozenDict({'a': 'b', 'c': 'd'})"

@@ -1,3 +1,5 @@
+"""Mock objects for utility tests."""
+
 from omnipy.util.publisher import DataPublisher
 import omnipy.util.pydantic as pyd
 

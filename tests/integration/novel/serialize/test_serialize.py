@@ -1,3 +1,5 @@
+"""Tests for serialization."""
+
 from typing import Annotated
 
 import pytest
@@ -15,6 +17,7 @@ from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_')
 def test_all_properties_pytest_default_config(case_tmpl) -> None:
+    """Test all properties pytest default config."""
     for job_obj in case_tmpl, case_tmpl.apply():
         assert job_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
         assert job_obj.will_persist_outputs is PersistOutputsOptions.ENABLED
@@ -30,6 +33,7 @@ def test_all_properties_runtime_default_config(
     case_tmpl,
 ) -> None:
 
+    """Test all properties runtime default config."""
     assert runtime.config.job.output_storage.persist_outputs == \
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     assert runtime.config.job.output_storage.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
@@ -56,6 +60,7 @@ def test_properties_persist_outputs_enable_disable(
     case_flow_tmpl,
 ) -> None:
 
+    """Test properties persist outputs enable disable."""
     runtime.config.job.output_storage.persist_outputs = (
         ConfigPersistOutputsOptions.ENABLE_FLOW_OUTPUTS)
 
@@ -87,6 +92,7 @@ def test_properties_persist_outputs_override_config(
     case_tmpl,
 ) -> None:
 
+    """Test properties persist outputs override config."""
     assert runtime.config.job.output_storage.persist_outputs == \
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
 
@@ -125,6 +131,7 @@ def test_properties_restore_outputs_enable_disable(
     case_tmpl,
 ) -> None:
 
+    """Test properties restore outputs enable disable."""
     runtime.config.job.output_storage.restore_outputs = \
         ConfigRestoreOutputsOptions.AUTO_ENABLE_IGNORE_PARAMS
 
@@ -145,6 +152,7 @@ def test_properties_restore_outputs_override_config(
     case_tmpl: Annotated[IsFuncArgJobTemplate, pc.case],
 ) -> None:
 
+    """Test properties restore outputs override config."""
     assert runtime.config.job.output_storage.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
 
     case_tmpl_2 = case_tmpl.refine(restore_outputs='auto_ignore_params')
@@ -186,6 +194,7 @@ def test_properties_output_storage_protocols(
     case_flow_tmpl,
 ) -> None:
 
+    """Test properties output storage protocols."""
     runtime.config.job.output_storage.protocol = ConfigOutputStorageProtocolOptions.S3
 
     for job_obj in case_task_tmpl, case_task_tmpl.apply(), case_flow_tmpl, case_flow_tmpl.apply():
@@ -204,6 +213,7 @@ def test_properties_output_storage_protocols_override_config(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case_tmpl,
 ) -> None:
+    """Test properties output storage protocols override config."""
     assert runtime.config.job.output_storage.protocol == ConfigOutputStorageProtocolOptions.LOCAL
 
     case_tmpl_2 = case_tmpl.refine(output_storage_protocol='s3')
@@ -240,6 +250,7 @@ def test_persist_and_restore(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case_tmpl: Annotated[IsFuncArgJobTemplate, pc.case],
 ) -> None:
+    """Test persist and restore."""
     case_persist_tmpl = case_tmpl.refine(persist_outputs='enabled')
     dataset_persist = case_persist_tmpl.run()
 

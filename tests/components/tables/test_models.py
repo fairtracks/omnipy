@@ -1,3 +1,5 @@
+"""Tests for table models and pydantic-backed records."""
+
 from dataclasses import dataclass
 import math
 from typing import Annotated, Any, Callable, cast, Generic
@@ -207,6 +209,7 @@ def test_columnwise_table_index(
     has_tag='concat',
 )
 def test_columnwise_table_concatenate_add(case: ConcatCase) -> None:
+    """Test concatenating column-wise tables with addition."""
     concat_model = case.col_wise_model + case.other
     assert concat_model.to_data() == case.expected
 
@@ -217,6 +220,7 @@ def test_columnwise_table_concatenate_add(case: ConcatCase) -> None:
     has_tag='concat',
 )
 def test_columnwise_table_concatenate_inplace_add(case: ConcatCase) -> None:
+    """Test concatenating column-wise tables with in-place addition."""
     concat_model = case.col_wise_model
     concat_model += case.other
     assert concat_model.to_data() == case.expected
@@ -228,6 +232,7 @@ def test_columnwise_table_concatenate_inplace_add(case: ConcatCase) -> None:
     has_tag=['concat', 'reverse'],
 )
 def test_columnwise_table_reverse_concatenate_add(case: ConcatCaseReverse) -> None:
+    """Test reverse-add concatenation for column-wise tables."""
     concat_model = case.other + case.col_wise_model
     assert concat_model.to_data() == case.expected_reverse
 
@@ -270,6 +275,7 @@ def test_rowwise_table_first_row_as_col_names_model_empty() -> None:
 
 
 def test_pydantic_record_model_all_required() -> None:
+    """Test pydantic record models with all required fields."""
     class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
@@ -394,6 +400,7 @@ def test_iterating_pydantic_record_model_row_wise_uses_declared_output_type() ->
 def test_iterating_pydantic_record_model_row_wise_data(
         # runtime: Annotated[IsRuntime, pytest.fixture],
 ) -> None:
+    """Test iterating pydantic record models from row-wise input."""
     persons = IteratingPersonModel([
         ['John', 'Doe', '30'],
         ['Jane', 'Doe', '25'],
@@ -425,6 +432,7 @@ def test_iterating_pydantic_record_model_row_wise_data(
 
 
 def test_pydantic_record_model_optional() -> None:
+    """Test pydantic record models with optional fields."""
     class NameRecordOptionalLastName(pyd.BaseModel):
         firstname: str
         lastname: str | None = None
@@ -497,6 +505,7 @@ def test_pydantic_record_model_base_forwards_output_type_to_row_parser() -> None
 
 
 def test_pydantic_record_model_extra_fields_config() -> None:
+    """Test pydantic record models honoring extra-field config."""
     class NameRecordNoExtraFields(pyd.BaseModel):
         firstname: str
         lastname: str | None = None
@@ -537,6 +546,7 @@ class TableCase:
 
 @pc.fixture
 def RowWiseRecordsTableModel() -> type[TableOfPydanticRecordsModel]:
+    """Return a table model for required name records."""
     class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
@@ -549,6 +559,7 @@ def RowWiseRecordsTableModel() -> type[TableOfPydanticRecordsModel]:
 
 @pc.fixture
 def CsvRowWiseRecordsTableModel() -> type[CsvTableOfPydanticRecordsModel]:
+    """Return a CSV-backed table model for required name records."""
     class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
@@ -561,6 +572,7 @@ def CsvRowWiseRecordsTableModel() -> type[CsvTableOfPydanticRecordsModel]:
 
 @pc.fixture
 def RowWiseRecordsTableOptionalLastModel() -> type[TableOfPydanticRecordsModel]:
+    """Return a table model for name records with an optional age."""
     class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
@@ -600,6 +612,7 @@ def rowwise_data_optional_last() -> Any:
 def rowwise_records_assert(
     rowwise_data: Annotated[Any,
                             pc.fixture]) -> Callable[[RowWiseTableFirstRowAsColNamesModel], None]:
+    """Return an assertion helper for plain row-wise record tables."""
     def _assert_func(table: RowWiseTableFirstRowAsColNamesModel) -> None:
         assert len(table) == 2
 
@@ -631,6 +644,7 @@ def rowwise_pyd_records_assert(
 def rowwise_pyd_records_optional_last_assert(
     rowwise_data_optional_last: Annotated[Any, pc.fixture]
 ) -> Callable[[TableOfPydanticRecordsModel], None]:
+    """Return an assertion helper for optional-age record tables."""
     def _assert_func(table: TableOfPydanticRecordsModel) -> None:
         assert len(table) == 2
         assert isinstance(table[0], PydanticRecordModel)
@@ -646,6 +660,7 @@ def case_rowwise_from_tsv(
     rowwise_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                       pytest.fixture],
 ) -> TableCase:
+    """Return a TSV case for plain row-wise table parsing."""
     return TableCase(
         model=TsvTableModel,
         data='firstname\tlastname\nJohn\tDoe\nJane\tDoe\n',
@@ -658,6 +673,7 @@ def case_rowwise_from_csv(
     rowwise_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                       pytest.fixture],
 ) -> TableCase:
+    """Return a CSV case for plain row-wise table parsing."""
     return TableCase(
         model=CsvTableModel,
         data='firstname,lastname\nJohn,Doe\nJane,Doe\n',
@@ -672,6 +688,7 @@ def case_rowwise_pyd_from_records(
     rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                           pytest.fixture],
 ) -> TableCase:
+    """Return a pydantic-record case from row-wise dictionaries."""
     return TableCase(
         model=RowWiseRecordsTableModel,
         data=rowwise_data,
@@ -685,6 +702,7 @@ def case_rowwise_pyd_from_list_of_lists_table(
     rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                           pytest.fixture],
 ) -> TableCase:
+    """Return a pydantic-record case from row-wise lists."""
     return TableCase(
         model=RowWiseRecordsTableModel,
         data=[['John', 'Doe'], ['Jane', 'Doe']],
@@ -697,6 +715,7 @@ def case_rowwise_pyd_from_tsv(
     rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                           pytest.fixture],
 ) -> TableCase:
+    """Return a pydantic-record case from TSV text."""
     return TableCase(
         model=RowWiseRecordsTableModel,
         data='John\tDoe\nJane\tDoe\n',
@@ -709,6 +728,7 @@ def case_rowwise_pyd_from_csv(
     rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
                                           pytest.fixture],
 ) -> TableCase:
+    """Return a pydantic-record case from CSV text."""
     return TableCase(
         model=CsvRowWiseRecordsTableModel,
         data='John,Doe\nJane,Doe\n',
@@ -723,6 +743,7 @@ def case_rowwise_pyd_from_tsv_optional_last(
                                                                  None],
                                                         pytest.fixture],
 ) -> TableCase:
+    """Return a pydantic-record case with an optional trailing field."""
     return TableCase(
         model=RowWiseRecordsTableOptionalLastModel,
         data='John\tDoe\nJane\tDoe\t37',
@@ -731,10 +752,12 @@ def case_rowwise_pyd_from_tsv_optional_last(
 
 @pc.parametrize_with_cases('case', cases='.', has_tag='tables')
 def test_table_of_tables_model(case: TableCase) -> None:
+    """Test table model cases built from the parametrized fixtures."""
     case.assert_func(case.model(case.data))
 
 
 def test_fail_table_of_records_model_with_optional_field_not_last() -> None:
+    """Test record tables reject optional fields before required ones."""
     class OptionalNotLastRecord(pyd.BaseModel):
         firstname: str
         lastname: str | None = None
@@ -751,6 +774,7 @@ def test_fail_table_of_records_model_with_optional_fields_incorrect_input(
     RowWiseRecordsTableOptionalLastModel: Annotated[type[TableOfPydanticRecordsModel],
                                                     pytest.fixture]
 ) -> None:
+    """Test record tables reject malformed optional-field input rows."""
 
     with pytest.raises(ValidationError):
         RowWiseRecordsTableOptionalLastModel('Tarzan')

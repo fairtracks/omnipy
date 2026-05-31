@@ -1,3 +1,5 @@
+"""Test compute decorators for tasks and flows."""
+
 from typing import Annotated, Callable
 
 import pytest
@@ -28,6 +30,7 @@ def test_task_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_one_template: IsTaskTemplate,
 ) -> None:
+    """Test task templates work as decorators."""
     assert isinstance(plus_one_template,
                       TaskTemplateCore)  # noqa  # Pycharm static type checker bug
     assert plus_one_template.name == 'plus_one'  # noqa  # Pycharm static type checker bug
@@ -47,6 +50,7 @@ def test_linear_flow_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_five_template: IsLinearFlowTemplate,
 ) -> None:
+    """Test linear flow templates work as decorators."""
 
     assert isinstance(plus_five_template, LinearFlowTemplateCore)
     assert plus_five_template.name == 'plus_five'
@@ -66,6 +70,7 @@ def test_dag_flow_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_five_template: IsDagFlowTemplate,
 ) -> None:
+    """Test DAG flow templates work as decorators."""
 
     assert isinstance(plus_five_template, DagFlowTemplateCore)
     assert plus_five_template.name == 'plus_five'
@@ -90,6 +95,7 @@ def test_func_flow_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_y_template: IsFuncFlowTemplate,
 ) -> None:
+    """Test function flow templates work as decorators."""
 
     assert isinstance(plus_y_template, FuncFlowTemplateCore)
     assert plus_y_template.name == 'plus_y'
@@ -101,6 +107,7 @@ def test_func_flow_template_as_decorator(
 
 
 def test_fail_task_template_decorator_with_func_argument() -> None:
+    """Test task template decorators reject callable arguments."""
     with pytest.raises(TypeError):
 
         def myfunc(a: Callable) -> Callable:
@@ -121,6 +128,7 @@ def test_fail_func_flow_template_decorator_with_func_argument(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_one_template,
 ) -> None:
+    """Test function flow template decorators reject callable arguments."""
     with pytest.raises(TypeError):
 
         def myfunc(a: Callable) -> Callable:

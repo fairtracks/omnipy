@@ -1,3 +1,5 @@
+"""Table pair cases for components pandas tests."""
+
 from dataclasses import dataclass
 
 import pytest_cases as pc
@@ -7,6 +9,7 @@ from omnipy.components.json.typedefs import JsonListOfListsOfScalars
 
 @dataclass
 class TablePairCase:
+    """Define TablePairCase."""
     table_1: JsonListOfListsOfScalars
     table_2: JsonListOfListsOfScalars
     common_colnames: tuple[str, ...]
@@ -22,11 +25,13 @@ class TablePairCase:
 
 @pc.case(id='error_join_two_empty_tables', tags=['join', 'on_all_cols'])
 def case_error_join_two_empty_tables() -> TablePairCase:
+    """Return the error join two empty tables case."""
     return TablePairCase(table_1=[], table_2=[], common_colnames=(), exception_cls=ValueError)
 
 
 @pc.case(id='cross_two_empty_tables', tags=['cartesian'])
 def case_cross_two_empty_tables() -> TablePairCase:
+    """Return the cross two empty tables case."""
     result_cartesian: JsonListOfListsOfScalars = []
     return TablePairCase(
         table_1=[], table_2=[], common_colnames=(), result_cartesian=result_cartesian)
@@ -34,6 +39,7 @@ def case_cross_two_empty_tables() -> TablePairCase:
 
 @pc.case(id='join_two_empty_tables_with_cols', tags=['join', 'on_all_cols'])
 def case_join_two_empty_tables_with_cols() -> TablePairCase:
+    """Return the join two empty tables with cols case."""
     result_outer_join: JsonListOfListsOfScalars = [['a', 'b', 'c']]
     return TablePairCase(
         table_1=[['a', 'b']],
@@ -48,6 +54,7 @@ def case_join_two_empty_tables_with_cols() -> TablePairCase:
 
 @pc.case(id='cross_two_empty_tables_with_cols', tags=['cartesian'])
 def case_cross_two_empty_tables_with_cols() -> TablePairCase:
+    """Return the cross two empty tables with cols case."""
     result_cartesian: JsonListOfListsOfScalars = [['a', 'b_1', 'b_2', 'c']]
     return TablePairCase(
         table_1=[['a', 'b']],
@@ -59,6 +66,7 @@ def case_cross_two_empty_tables_with_cols() -> TablePairCase:
 @pc.case(id='join_two_tables_one_common_colname_all_match', tags=['join', 'on_all_cols'])
 def case_join_two_tables_one_common_colname_all_match(
         table_age_firstname_lastname, table_weight_firstname_height_all_match) -> TablePairCase:
+    """Return the join two tables one common colname all match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'weight', 'height'],
         [7, 'Bob', 'Duck', 37.2, 127],
@@ -79,6 +87,7 @@ def case_join_two_tables_one_common_colname_all_match(
 @pc.case(id='cross_two_tables_one_common_colname_all_match', tags=['cartesian'])
 def case_cross_two_tables_one_common_colname_all_match(
         table_age_firstname_lastname, table_weight_firstname_height_all_match) -> TablePairCase:
+    """Return the cross two tables one common colname all match case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'weight', 'firstname_2', 'height'],
         [7, 'Bob', 'Duck', 37.2, 'Bob', 127],
@@ -102,6 +111,7 @@ def case_cross_two_tables_one_common_colname_all_match(
 @pc.case(id='join_two_tables_one_common_colname_partial_match', tags=['join', 'on_all_cols'])
 def case_join_two_tables_one_common_colname_partial_match(
         table_age_firstname_lastname, table_weight_firstname_height_partial_match) -> TablePairCase:
+    """Return the join two tables one common colname partial match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'weight', 'height'],
         [7, 'Bob', 'Duck', 37.2, 127],
@@ -127,6 +137,7 @@ def case_join_two_tables_one_common_colname_partial_match(
 @pc.case(id='cross_two_tables_one_common_colname_partial_match', tags=['cartesian'])
 def case_cross_two_tables_one_common_colname_partial_match(
         table_age_firstname_lastname, table_weight_firstname_height_partial_match) -> TablePairCase:
+    """Return the cross two tables one common colname partial match case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'weight', 'firstname_2', 'height'],
         [7, 'Bob', 'Duck', 37.2, 'Bob', 127],
@@ -149,6 +160,7 @@ def case_cross_two_tables_one_common_colname_partial_match(
 def case_join_two_tables_one_common_colname_partial_match_plus_extra(
         table_age_firstname_lastname,
         table_weight_firstname_height_partial_match_plus_extra) -> TablePairCase:
+    """Return the join two tables one common colname partial match plus extra case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'weight', 'height'],
         [7, 'Bob', 'Duck', 37.2, 127],
@@ -188,6 +200,7 @@ def case_join_two_tables_one_common_colname_partial_match_plus_extra(
 def case_cross_two_tables_one_common_colname_partial_match_plus_extra(
         table_age_firstname_lastname,
         table_weight_firstname_height_partial_match_plus_extra) -> TablePairCase:
+    """Return the cross two tables one common colname partial match plus extra case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'weight', 'firstname_2', 'height'],
         [7, 'Bob', 'Duck', 37.2, 'Bob', 127],
@@ -211,6 +224,7 @@ def case_cross_two_tables_one_common_colname_partial_match_plus_extra(
 @pc.case(id='join_two_tables_two_common_colnames_all_match', tags=['join', 'on_all_cols'])
 def case_join_two_tables_two_common_colnames_all_match(
         table_age_firstname_lastname, table_firstname_lastname_adult_all_match) -> TablePairCase:
+    """Return the join two tables two common colnames all match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'adult'],
         [7, 'Bob', 'Duck', False],
@@ -238,6 +252,7 @@ def case_join_two_tables_two_common_colnames_all_match(
     id='join_two_tables_two_common_colnames_on_last_col_quadruple_plus_one_match', tags=['join'])
 def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_one_match(
         table_age_firstname_lastname, table_firstname_lastname_adult_all_match) -> TablePairCase:
+    """Return the join two tables two common colnames on last col quadruple plus one match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Donald', True],
@@ -269,6 +284,7 @@ def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_one_matc
 @pc.case(id='cross_two_tables_two_common_colnames_complete_match', tags=['cartesian'])
 def case_cross_two_tables_two_common_colnames_complete_match(
         table_age_firstname_lastname, table_firstname_lastname_adult_all_match) -> TablePairCase:
+    """Return the cross two tables two common colnames complete match case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Donald', 'Duck', True],
@@ -293,6 +309,7 @@ def case_cross_two_tables_two_common_colnames_complete_match(
     id='join_two_tables_two_common_colnames_all_match_out_of_order', tags=['join', 'on_all_cols'])
 def case_join_two_tables_two_common_colnames_all_match_out_of_order(
         table_age_firstname_lastname, table_adult_lastname_firstname_all_match) -> TablePairCase:
+    """Return the join two tables two common colnames all match out of order case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'adult'],
         [7, 'Bob', 'Duck', False],
@@ -321,6 +338,7 @@ def case_join_two_tables_two_common_colnames_all_match_out_of_order(
     tags=['join'])
 def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_one_match_out_of_order(
         table_age_firstname_lastname, table_adult_lastname_firstname_all_match) -> TablePairCase:
+    """Return the join two tables two common colnames on last col quadruple plus one match out of order case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'adult', 'firstname_2'],
         [7, 'Bob', 'Duck', True, 'Donald'],
@@ -352,6 +370,7 @@ def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_one_matc
 @pc.case(id='cross_two_tables_two_common_colnames_complete_match_out_of_order', tags=['cartesian'])
 def case_cross_two_tables_two_common_colnames_complete_match_out_of_order(
         table_age_firstname_lastname, table_adult_lastname_firstname_all_match) -> TablePairCase:
+    """Return the cross two tables two common colnames complete match out of order case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname_1', 'adult', 'lastname_2', 'firstname_2'],
         [7, 'Bob', 'Duck', True, 'Duck', 'Donald'],
@@ -375,6 +394,7 @@ def case_cross_two_tables_two_common_colnames_complete_match_out_of_order(
 @pc.case(id='join_two_tables_two_common_colnames_double_match', tags=['join', 'on_all_cols'])
 def case_join_two_tables_two_common_colnames_double_match(
         table_age_firstname_lastname, table_firstname_lastname_adult_double_match) -> TablePairCase:
+    """Return the join two tables two common colnames double match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'adult'],
         [7, 'Bob', 'Duck', True],
@@ -403,6 +423,7 @@ def case_join_two_tables_two_common_colnames_double_match(
 @pc.case(id='join_two_tables_two_common_colnames_on_last_col_sixfold_plus_one_match', tags=['join'])
 def case_join_two_tables_two_common_colnames_on_last_col_sixfold_plus_one_match(
         table_age_firstname_lastname, table_firstname_lastname_adult_double_match) -> TablePairCase:
+    """Return the join two tables two common colnames on last col sixfold plus one match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Bob', True],
@@ -439,6 +460,7 @@ def case_join_two_tables_two_common_colnames_on_last_col_sixfold_plus_one_match(
     id='cross_two_tables_two_common_colnames_complete_match_plus_duplicate', tags=['cartesian'])
 def case_cross_two_tables_two_common_colnames_complete_match_plus_duplicate(
         table_age_firstname_lastname, table_firstname_lastname_adult_double_match) -> TablePairCase:
+    """Return the cross two tables two common colnames complete match plus duplicate case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Bob', 'Duck', True],
@@ -466,6 +488,7 @@ def case_cross_two_tables_two_common_colnames_complete_match_plus_duplicate(
 def case_join_two_tables_two_common_colnames_partial_match(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_partial_match) -> TablePairCase:
+    """Return the join two tables two common colnames partial match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'adult'],
         [7, 'Bob', 'Duck', False],
@@ -499,6 +522,7 @@ def case_join_two_tables_two_common_colnames_partial_match(
 def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_missing_match(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_partial_match) -> TablePairCase:
+    """Return the join two tables two common colnames on last col quadruple plus missing match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Donald', True],
@@ -537,6 +561,7 @@ def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_missing_
 def case_cross_two_tables_two_common_colnames_partial_match(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_partial_match) -> TablePairCase:
+    """Return the cross two tables two common colnames partial match case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Donald', 'Duck', True],
@@ -559,6 +584,7 @@ def case_cross_two_tables_two_common_colnames_partial_match(
 def case_join_two_tables_two_common_colnames_partial_match_plus_extra(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_partial_match_plus_extra) -> TablePairCase:
+    """Return the join two tables two common colnames partial match plus extra case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'adult'],
         [7, 'Bob', 'Duck', False],
@@ -600,6 +626,7 @@ def case_join_two_tables_two_common_colnames_partial_match_plus_extra(
 def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_one_match_with_extra(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_partial_match_plus_extra) -> TablePairCase:
+    """Return the join two tables two common colnames on last col quadruple plus one match with extra case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Donald', True],
@@ -632,6 +659,7 @@ def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_one_matc
 def case_cross_two_tables_two_common_colnames_partial_match_plus_extra(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_partial_match_plus_extra) -> TablePairCase:
+    """Return the cross two tables two common colnames partial match plus extra case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Donald', 'Duck', True],
@@ -657,6 +685,7 @@ def case_cross_two_tables_two_common_colnames_partial_match_plus_extra(
 def case_join_two_tables_two_common_colnames_all_match_plus_extra(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_all_match_plus_extra) -> TablePairCase:
+    """Return the join two tables two common colnames all match plus extra case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'adult'],
         [7, 'Bob', 'Duck', False],
@@ -694,6 +723,7 @@ def case_join_two_tables_two_common_colnames_all_match_plus_extra(
 def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_double_match_with_extra(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_all_match_plus_extra) -> TablePairCase:
+    """Return the join two tables two common colnames on last col quadruple plus double match with extra case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Donald', True],
@@ -729,6 +759,7 @@ def case_cross_two_tables_two_common_colnames_complete_match_plus_extra(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_all_match_plus_extra) -> TablePairCase:
 
+    """Return the cross two tables two common colnames complete match plus extra case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Donald', 'Duck', True],
@@ -757,6 +788,7 @@ def case_join_two_tables_two_common_colnames_no_match(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_no_match_when_paired) -> TablePairCase:
     # Why this order of result_outer_join?
+    """Return the join two tables two common colnames no match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'adult'],
         [7, 'Bob', 'Duck', None],
@@ -801,6 +833,7 @@ def case_join_two_tables_two_common_colnames_no_match(
 def case_join_two_tables_two_common_colnames_on_last_col_using_mapping_quadruple_plus_double_match(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_no_match_when_paired) -> TablePairCase:
+    """Return the join two tables two common colnames on last col using mapping quadruple plus double match case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname', 'firstname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Mickey', True],
@@ -835,6 +868,7 @@ def case_join_two_tables_two_common_colnames_on_last_col_using_mapping_quadruple
 def case_cross_two_tables_two_common_colnames_no_match(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_no_match_when_paired) -> TablePairCase:
+    """Return the cross two tables two common colnames no match case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],
         [7, 'Bob', 'Duck', 'Mickey', 'Duck', True],
@@ -861,6 +895,7 @@ def case_cross_two_tables_two_common_colnames_no_match(
 @pc.case(id='error_join_two_tables_no_common_colnames', tags=['join', 'on_all_cols'])
 def case_error_join_two_tables_no_common_colnames(table_age_firstname_lastname,
                                                   table_last_first_weight_height) -> TablePairCase:
+    """Return the error join two tables no common colnames case."""
     return TablePairCase(
         table_1=table_age_firstname_lastname,
         table_2=table_last_first_weight_height,
@@ -872,6 +907,7 @@ def case_error_join_two_tables_no_common_colnames(table_age_firstname_lastname,
 @pc.case(id='join_two_tables_no_common_colnames_on_mapping_both_cols', tags=['join'])
 def case_join_two_tables_no_common_colnames_on_mapping_both_cols(
         table_age_firstname_lastname, table_last_first_weight_height) -> TablePairCase:
+    """Return the join two tables no common colnames on mapping both cols case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'last', 'first', 'weight', 'height'],
         [7, 'Bob', 'Duck', 'Duck', 'Bob', 37.2, 127],
@@ -893,6 +929,7 @@ def case_join_two_tables_no_common_colnames_on_mapping_both_cols(
 @pc.case(id='join_two_tables_no_common_colnames_on_mapping_one_col', tags=['join'])
 def case_join_two_tables_no_common_colnames_on_mapping_one_col(
         table_age_firstname_lastname, table_last_first_weight_height) -> TablePairCase:
+    """Return the join two tables no common colnames on mapping one col case."""
     result_outer_join: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'last', 'first', 'weight', 'height'],
         [7, 'Bob', 'Duck', 'Duck', 'Bob', 37.2, 127],
@@ -924,6 +961,7 @@ def case_join_two_tables_no_common_colnames_on_mapping_one_col(
 @pc.case(id='error_join_two_tables_two_common_colnames_on_empty_colname_list', tags=['join'])
 def case_error_join_two_tables_two_common_colnames_on_empty_colname_list(
         table_age_firstname_lastname, table_firstname_lastname_adult_all_match) -> TablePairCase:
+    """Return the error join two tables two common colnames on empty colname list case."""
     return TablePairCase(
         table_1=table_age_firstname_lastname,
         table_2=table_firstname_lastname_adult_all_match,
@@ -936,6 +974,7 @@ def case_error_join_two_tables_two_common_colnames_on_empty_colname_list(
 @pc.case(id='error_join_two_tables_two_common_colnames_on_incorrect_colname', tags=['join'])
 def case_error_join_two_tables_two_common_colnames_on_incorrect_colname(
         table_age_firstname_lastname, table_firstname_lastname_adult_all_match) -> TablePairCase:
+    """Return the error join two tables two common colnames on incorrect colname case."""
     return TablePairCase(
         table_1=table_age_firstname_lastname,
         table_2=table_firstname_lastname_adult_all_match,
@@ -948,6 +987,7 @@ def case_error_join_two_tables_two_common_colnames_on_incorrect_colname(
 @pc.case(id='error_join_two_tables_no_common_colnames_on_empty_colname_mapping', tags=['join'])
 def case_error_join_two_tables_no_common_colnames_on_empty_colname_mapping(
         table_age_firstname_lastname, table_last_first_weight_height) -> TablePairCase:
+    """Return the error join two tables no common colnames on empty colname mapping case."""
     return TablePairCase(
         table_1=table_age_firstname_lastname,
         table_2=table_last_first_weight_height,
@@ -960,6 +1000,7 @@ def case_error_join_two_tables_no_common_colnames_on_empty_colname_mapping(
 @pc.case(id='error_join_two_tables_no_common_colnames_on_incorrect_colname_mapping', tags=['join'])
 def case_error_join_two_tables_no_common_colnames_on_incorrect_colname_mapping(
         table_age_firstname_lastname, table_last_first_weight_height) -> TablePairCase:
+    """Return the error join two tables no common colnames on incorrect colname mapping case."""
     return TablePairCase(
         table_1=table_age_firstname_lastname,
         table_2=table_last_first_weight_height,
@@ -973,6 +1014,7 @@ def case_error_join_two_tables_no_common_colnames_on_incorrect_colname_mapping(
     id='error_join_two_tables_no_common_colnames_on_incorrect_colname_mapping_2', tags=['join'])
 def case_error_join_two_tables_no_common_colnames_on_incorrect_colname_mapping_2(
         table_age_firstname_lastname, table_last_first_weight_height) -> TablePairCase:
+    """Return the error join two tables no common colnames on incorrect colname mapping 2 case."""
     return TablePairCase(
         table_1=table_age_firstname_lastname,
         table_2=table_last_first_weight_height,
@@ -985,6 +1027,7 @@ def case_error_join_two_tables_no_common_colnames_on_incorrect_colname_mapping_2
 @pc.case(id='cross_two_tables_no_common_colnames', tags=['cartesian'])
 def case_cross_two_tables_no_common_colnames(table_age_firstname_lastname,
                                              table_last_first_weight_height) -> TablePairCase:
+    """Return the cross two tables no common colnames case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname', 'lastname', 'last', 'first', 'weight', 'height'],
         [7, 'Bob', 'Duck', 'Duck', 'Bob', 37.2, 127],

@@ -1,3 +1,5 @@
+"""Example data for components JSON tests."""
+
 b_none = None
 b_int = 123
 b_float = -12.3

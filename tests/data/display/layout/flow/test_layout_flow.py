@@ -1,3 +1,5 @@
+"""Tests for layout flow."""
+
 import pytest_cases as pc
 
 from omnipy.data._display.layout.base import Layout
@@ -15,6 +17,7 @@ from ...panel.helpers.panel_assert import assert_dims_aware_panel
     has_tag=('reflow_cases', 'layout'),
 )
 def test_resized_layout_draft_panel_reflow_cases(case: PanelFrameVariantTestCase[Layout]) -> None:
+    """Test resized layout draft panel reflow cases."""
     frame_case = apply_frame_variant_to_test_case(case, stylized_stage=False)
 
     assert not isinstance(case.config, pyd.UndefinedType)
@@ -42,6 +45,7 @@ def test_resized_layout_draft_panel_reflow_cases(case: PanelFrameVariantTestCase
     has_tag=('reflow_cases', 'layout'),
 )
 def test_stylized_layout_panel_reflow_cases(case: PanelFrameVariantTestCase[Layout],) -> None:
+    """Test stylized layout panel reflow cases."""
     frame_case = apply_frame_variant_to_test_case(case, stylized_stage=True)
     draft_layout_panel = DraftPanel(
         frame_case.content,

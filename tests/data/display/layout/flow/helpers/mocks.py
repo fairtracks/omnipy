@@ -1,3 +1,5 @@
+"""Mock helpers for data display layout flow tests."""
+
 from functools import cached_property
 from typing import cast, ClassVar
 
@@ -16,6 +18,7 @@ from ....helpers.mocks import (MockDimsAwarePanelBase,
 
 
 class MockConfigCropOutputVariant(MockOutputVariantBase):
+    """Define mock Config Crop Output Variant."""
     def _crop_to_frame(self, lines: list[str], frame: Frame, config: OutputConfig) -> list[str]:
         vert_mode = config.v_overflow
         hor_mode = config.h_overflow
@@ -39,6 +42,7 @@ class MockConfigCropOutputVariant(MockOutputVariantBase):
 
 
 class SplitAndVerticallyCropContentMixin:
+    """Define SplitAndVerticallyCropContentMixin."""
     @cached_property
     def _content_lines(self) -> list[str]:
         _self = cast(DimensionsAwareDraftPanel[str, AnyFrame], self)
@@ -54,14 +58,17 @@ class SplitAndVerticallyCropContentMixin:
 
 @pyd.dataclass(init=False, frozen=True)
 class MockStylizedConfigCropPanel(SplitAndVerticallyCropContentMixin, MockFullyRenderedPanelBase):
+    """Define mock Stylized Config Crop Panel."""
     _output_variant_cls: ClassVar[type[MockOutputVariantBase]] = MockConfigCropOutputVariant
 
 
 @pyd.dataclass(init=False, frozen=True)
 class MockResizedConfigCropPanel(SplitAndVerticallyCropContentMixin, MockDimsAwarePanelBase):
+    """Define mock Resized Config Crop Panel."""
     _fully_rendered_panel_cls: ClassVar[type[FullyRenderedDraftPanel]] = MockStylizedConfigCropPanel
 
 
 @pyd.dataclass(init=False, frozen=True)
 class MockConfigCropPanel(MockPanelBase):
+    """Define mock Config Crop Panel."""
     _dims_aware_panel_cls: ClassVar[type[DimensionsAwareDraftPanel]] = MockResizedConfigCropPanel

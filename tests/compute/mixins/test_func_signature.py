@@ -1,3 +1,5 @@
+"""Test task function-signature mixin behavior."""
+
 from inspect import Parameter
 
 import pytest
@@ -11,6 +13,7 @@ from ..cases.tasks import TaskCase
 
 @pc.parametrize_with_cases('case', cases='..cases.tasks')
 def test_property_param_signature_and_return_type_task(case: TaskCase) -> None:
+    """Test tasks expose expected parameter signatures and return types."""
 
     task_template = TaskTemplate()(case.task_func)
 
@@ -19,6 +22,7 @@ def test_property_param_signature_and_return_type_task(case: TaskCase) -> None:
 
 
 def test_property_param_signature_and_return_type_immutable_task() -> None:
+    """Test task signatures and return types are immutable."""
 
     task_template = TaskTemplate()(format_to_string_func)
 

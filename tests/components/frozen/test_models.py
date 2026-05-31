@@ -1,3 +1,5 @@
+"""Tests for frozen scalar and nested frozen models."""
+
 from dataclasses import fields
 from types import MappingProxyType
 
@@ -17,6 +19,7 @@ from ..helpers.classes import CaseInfo
 
 
 def test_frozen_scalar() -> None:
+    """Validate frozen scalar models for integers."""
     class FrozenScalarModel(Model[_FrozenScalarM[int]]):
         ...
 
@@ -32,6 +35,7 @@ def test_frozen_scalar() -> None:
 
 
 def test_frozen_scalar_of_none() -> None:
+    """Validate frozen scalar models for None values."""
     class FrozenScalarModel(Model[_FrozenScalarM[None]]):
         ...
 
@@ -46,6 +50,7 @@ def test_frozen_scalar_of_none() -> None:
 
 
 def test_frozen_dict_of_none() -> None:
+    """Validate frozen dict models that map to None."""
     class NoneModel(Model[None]):
         ...
 
@@ -69,6 +74,7 @@ def test_frozen_dict_of_none() -> None:
 
 
 def test_nested_frozen_only_tuples() -> None:
+    """Validate nested frozen tuple parsing for integers."""
     class NestedFrozenTuplesOfIntsModel(
             Model[NestedFrozenOnlyTuplesModel[int]],):
         ...
@@ -97,6 +103,7 @@ def test_nested_frozen_only_tuples() -> None:
 
 
 def test_nested_frozen_only_tuples_of_none() -> None:
+    """Validate nested frozen tuple parsing for None values."""
     class NestedFrozenOnlyTuplesOfNoneModel(
             Model[NestedFrozenOnlyTuplesModel[None]],):
         ...
@@ -123,6 +130,7 @@ def test_nested_frozen_only_tuples_of_none() -> None:
 
 
 def test_nested_frozen_only_dicts() -> None:
+    """Validate nested frozen dict parsing for typed keys and values."""
     class NestedFrozenOnlyDictsOfInt2StrModel(
             Model[NestedFrozenOnlyDictsModel[int, str]],):
         ...
@@ -161,6 +169,7 @@ def test_nested_frozen_only_dicts() -> None:
 
 
 def test_nested_frozen_only_dicts_of_none() -> None:
+    """Validate nested frozen dict parsing with None values."""
     class NestedFrozenOnlyDictsOfInt2NoneModel(
             Model[NestedFrozenOnlyDictsModel[int, None]],):
         ...
@@ -199,6 +208,7 @@ def test_nested_frozen_only_dicts_of_none() -> None:
 
 
 def test_nested_frozen_dicts_or_tuples() -> None:
+    """Validate mixed nested frozen dict-or-tuple parsing."""
     class NestedFrozenDictsOfInt2IntOrTuplesOfIntsModel(
             Model[NestedFrozenDictsOrTuplesModel[int, int]],):
         ...
@@ -232,6 +242,7 @@ def test_nested_frozen_dicts_or_tuples() -> None:
 
 
 def test_nested_frozen_dicts_or_tuples_of_none() -> None:
+    """Validate mixed nested frozen dict-or-tuple parsing with None."""
     _FrozenAnyUnionM[int, None](None)
 
     class NestedFrozenDictsOfInt2NoneOrTuplesOfNoneModel(
@@ -266,6 +277,7 @@ def test_nested_frozen_dicts_or_tuples_of_none() -> None:
 
 @pc.parametrize_with_cases('case', cases='.cases.frozen_data')
 def test_nested_frozen_models(case: CaseInfo) -> None:
+    """Validate frozen model classes against shared cases."""
     for field in fields(case.data_points):
         name = field.name
         for model_cls in case.model_classes_for_data_point(name):

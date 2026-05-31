@@ -1,3 +1,5 @@
+"""Tests for raw models and nested split-join behavior."""
+
 from enum import Enum
 import os
 from textwrap import dedent
@@ -29,6 +31,7 @@ from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_bytes_model() -> None:
+    """Test bytes models accepting text and bytes inputs."""
     assert BytesModel(b'').content == b''
     assert BytesModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
     assert BytesModel('').content == b''
@@ -43,6 +46,7 @@ def test_bytes_model() -> None:
 
 
 def test_strict_bytes_model() -> None:
+    """Test strict bytes models rejecting text inputs."""
     assert StrictBytesModel(b'').content == b''
     assert StrictBytesModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
 
@@ -54,6 +58,7 @@ def test_strict_bytes_model() -> None:
 
 
 def test_str_model():
+    """Test string models decoding bytes with configured encodings."""
     assert StrModel('').content == ''
     assert StrModel('æøå').content == 'æøå'
     assert StrModel(b'').content == ''
@@ -77,6 +82,7 @@ def test_str_model():
 
 
 def test_strict_str_model():
+    """Test strict string models rejecting bytes inputs."""
     assert StrictStrModel('').content == ''
     assert StrictStrModel('æøå').content == 'æøå'
 
@@ -93,6 +99,7 @@ def test_split_to_and_join_lines_model(
     mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
+    """Test splitting raw models into lines and joining them again."""
 
     raw_data = """\
         \r
@@ -162,6 +169,7 @@ def test_split_to_and_join_items_model(
     use_str_model: bool,
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
+    """Test splitting raw models into items and joining them again."""
 
     raw_data_comma = 'abc, def ,ghi,jkl'
 
@@ -210,6 +218,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
     use_str_model: bool,
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
+    """Test splitting line models into columns and joining them back."""
 
     raw_data_tab = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
     data_tab = [Model[str](line) for line in raw_data_tab] if use_str_model else raw_data_tab
@@ -326,6 +335,7 @@ def splittable_data(
     pre_split: PreSplitEnum,
     use_model: bool,
 ) -> SplittableDataReturnType:
+    """Return splittable data prepared at varying nesting levels."""
     raw_data = cast(str, 'abc=def&ghi=jkl&pqr=stu&xyz=123;x=1&y=2')  # type: ignore[redundant-cast]
     data: SplittableDataType
 
@@ -352,6 +362,7 @@ def splittable_data(
 
 
 def _assert_empty_model(model_cls: type[Model], default_value: object) -> None:
+    """Assert that empty model variants produce the expected default value."""
     empty_model: Model
     for empty_model in [model_cls(), model_cls(''), model_cls([])]:
         assert empty_model.content == empty_model.to_data() == default_value
@@ -359,6 +370,7 @@ def _assert_empty_model(model_cls: type[Model], default_value: object) -> None:
 
 def test_nested_split_to_items_model_default(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    """Test default nested item splitting without explicit delimiters."""
 
     _assert_empty_model(NestedSplitToItemsModel, [])
 
@@ -375,6 +387,7 @@ def test_nested_split_to_items_model_default(
 
 def test_nested_split_to_items_model_one_level(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    """Test nested item splitting with one delimiter level."""
 
     pre_split, raw_data, data = splittable_data
 
@@ -397,6 +410,7 @@ def test_nested_split_to_items_model_one_level(
 
 def test_nested_split_to_items_model_two_levels(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    """Test nested item splitting with two delimiter levels."""
 
     pre_split, raw_data, data = splittable_data
 
@@ -420,6 +434,7 @@ def test_nested_split_to_items_model_two_levels(
 
 def test_nested_split_to_items_model_three_levels(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    """Test nested item splitting with three delimiter levels."""
 
     pre_split, raw_data, data = splittable_data
 
@@ -438,6 +453,7 @@ def test_nested_split_to_items_model_three_levels(
 
 
 def test_nested_split_to_items_model_mixed_levels() -> None:
+    """Test nested item splitting rejects inconsistent mixed levels."""
     VarSpecNestedSplitToItemsModel = NestedSplitToItemsModel.adjust(
         'VarSpecNestedSplitToItemsModel',
         delimiters=(';', '='),
@@ -459,6 +475,7 @@ def test_nested_split_to_items_model_mixed_levels() -> None:
 
 
 def test_nested_split_to_items_model_parse_to_str() -> None:
+    """Test nested item splitting stringifies non-string scalar values."""
     ThreeLevelNestedSplitToItemsModel = NestedSplitToItemsModel.adjust(
         'ThreeLevelNestedSplitToItemsModel',
         delimiters=(';', '&', '='),
@@ -483,6 +500,7 @@ def test_nested_split_to_items_model_parse_to_str() -> None:
 
 def test_nested_join_items_model_default(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    """Test default nested item joining without explicit delimiters."""
 
     _assert_empty_model(NestedJoinItemsModel, '')
 
@@ -499,6 +517,7 @@ def test_nested_join_items_model_default(
 
 def test_nested_join_items_model_one_level(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    """Test nested item joining with one delimiter level."""
 
     pre_split, raw_data, data = splittable_data
 
@@ -519,6 +538,7 @@ def test_nested_join_items_model_one_level(
 
 def test_nested_join_items_model_two_levels(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    """Test nested item joining with two delimiter levels."""
 
     pre_split, raw_data, data = splittable_data
 
@@ -539,6 +559,7 @@ def test_nested_join_items_model_two_levels(
 
 def test_nested_join_items_model_three_levels(
         splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    """Test nested item joining with three delimiter levels."""
 
     pre_split, raw_data, data = splittable_data
 
@@ -554,6 +575,7 @@ def test_nested_join_items_model_three_levels(
 
 
 def test_nested_join_items_model_mixed_levels() -> None:
+    """Test nested item joining rejects inconsistent mixed levels."""
     VarSpecNestedJoinItemsModel = NestedJoinItemsModel.adjust(
         'VarSpecNestedJoinItemsModel',
         delimiters=(';', '='),
@@ -573,6 +595,7 @@ def test_nested_join_items_model_mixed_levels() -> None:
 
 
 def test_nested_join_items_model_parse_to_str() -> None:
+    """Test nested item joining stringifies non-string scalar values."""
     ThreeLevelNestedJoinItemsModel = NestedJoinItemsModel.adjust(
         'ThreeLevelNestedJoinItemsModel',
         delimiters=(';', '&', '='),
@@ -590,6 +613,7 @@ def test_nested_join_items_model_parse_to_str() -> None:
 
 
 def test_match_items_model_default() -> None:
+    """Test matching items with the default string conversion behavior."""
     data = ('abc', 123, 13.0)
 
     matched_model = MatchItemsModel(data)
@@ -597,6 +621,7 @@ def test_match_items_model_default() -> None:
 
 
 def test_match_items_model_one_func() -> None:
+    """Test matching items with a single match function."""
     match_comments_func: Callable[[str], bool] = lambda x: x.startswith('#')
 
     data = ['# comment 1', 'line 1', '# comment 2', 'line 2']
@@ -615,6 +640,7 @@ def test_match_items_model_one_func() -> None:
 
 
 def test_match_items_model_two_funcs() -> None:
+    """Test matching items with two match functions and modes."""
     match_lowercase_func: Callable[[str], bool] = lambda x: x.islower()
     match_alphanum_func: Callable[[str], bool] = lambda x: x.isalnum()
 

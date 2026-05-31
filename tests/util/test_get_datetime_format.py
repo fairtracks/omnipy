@@ -1,3 +1,5 @@
+"""Tests for datetime formatting helpers."""
+
 import os
 
 import pytest
@@ -13,11 +15,13 @@ test assumes the default locale is "en_US.UTF-8", but that is probably an incorr
 assumption.
 """)
 def test_default():
+    """Test default."""
     assert get_datetime_format() == '%a %b %e %X %Y'
 
 
 def test_different_locale():
     # TODO: Add new platforms as needed
+    """Test different locale."""
     assert get_datetime_format(('de_DE', 'UTF-8')) in (
         '%a %e %b %X %Y',  # MacOS
         '%a %d %b %Y %T %Z',  # Ubuntu

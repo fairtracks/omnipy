@@ -1,3 +1,5 @@
+"""Helper functions for engine tests."""
+
 import asyncio
 from time import sleep
 from typing import AsyncGenerator, Generator
@@ -6,6 +8,7 @@ from typing import AsyncGenerator, Generator
 
 
 def sync_power(number: int, exponent: int):
+    """Run sync power."""
     return number**exponent
 
 
@@ -13,6 +16,7 @@ def sync_power(number: int, exponent: int):
 
 
 def sync_wait_a_bit(seconds: float) -> float:
+    """Run sync wait a bit."""
     sleep(seconds)
     return seconds
 
@@ -29,6 +33,7 @@ async def async_wait_a_bit(seconds: float) -> float:
 
 
 def sync_range(num: int) -> Generator:
+    """Run sync range."""
     for i in range(num):
         yield i
 
@@ -46,6 +51,7 @@ async def async_range(num: int) -> AsyncGenerator:
 
 
 def sync_wait_for_send_twice() -> Generator:
+    """Run sync wait for send twice."""
     for i in range(2):
         value = yield
         yield i, value

@@ -1,3 +1,5 @@
+"""Tests for utility helper functions."""
+
 from types import MethodType, NoneType, UnionType
 from typing import Annotated, Any, ForwardRef, Generic, get_args, Iterator, Literal, Optional, Union
 
@@ -30,6 +32,7 @@ U = TypeVar('U')
 
 
 def test_key_sorted_dict_hash() -> None:
+    """Test key sorted dict hash."""
     d1 = {'b': 2, 'a': 1}
     d2 = {'a': 1, 'b': 2}
     d3 = {'a': 1, 'c': 2}
@@ -47,6 +50,7 @@ class MyGenericDict(dict[T, U], Generic[T, U]):
 
 
 def test_transfer_generic_params_to_new_generic_cls() -> None:
+    """Test transfer generic parameters to new generic class."""
     init_dict = MyGenericDict[str, int]({'a': 123})
 
     assert get_args(get_parametrized_type(init_dict)) == (str, int)
@@ -65,6 +69,7 @@ def test_transfer_generic_params_to_new_generic_cls() -> None:
 
 
 def test_do_not_transfer_generic_params_to_non_generic_cls() -> None:
+    """Test do not transfer generic parameters to non generic class."""
     my_int = 123
     my_int_cls = transfer_generic_args_to_cls(int, get_parametrized_type(my_int))
 
@@ -74,6 +79,7 @@ def test_do_not_transfer_generic_params_to_non_generic_cls() -> None:
 
 
 def test_ensure_plain_type() -> None:
+    """Test ensure plain type."""
     T = TypeVar('T')
 
     assert ensure_plain_type(ForwardRef('list[str]')) == ForwardRef('list[str]')  # ForwardRef
@@ -94,6 +100,7 @@ class MyGlobalClass:
 
 
 def test_evaluate_any_forward_refs_if_possible() -> None:
+    """Test evaluate any forward refs if possible."""
     assert evaluate_any_forward_refs_if_possible(ForwardRef('list')) == list
     assert evaluate_any_forward_refs_if_possible(ForwardRef('list[str]')) == list[str]
 
@@ -146,6 +153,7 @@ def test_evaluate_any_forward_refs_if_possible() -> None:
 
 
 def test_all_type_variants() -> None:
+    """Test all type variants."""
     assert all_type_variants(list) == (list,)
     assert all_type_variants(list[str]) == (list[str],)
     assert all_type_variants(int | str) == (int, str)
@@ -156,6 +164,7 @@ def test_all_type_variants() -> None:
 
 
 def test_is_iterable() -> None:
+    """Test is iterable."""
     assert is_iterable(None) is False
     assert is_iterable(False) is False
     assert is_iterable(42) is False
@@ -185,6 +194,7 @@ def test_is_iterable() -> None:
 
 
 def test_is_non_str_byte_iterable() -> None:
+    """Test is non str byte iterable."""
     assert is_non_str_byte_iterable(None) is False
     assert is_non_str_byte_iterable(False) is False
     assert is_non_str_byte_iterable(42) is False
@@ -214,6 +224,7 @@ def test_is_non_str_byte_iterable() -> None:
 
 
 def test_ensure_non_str_byte_iterable() -> None:
+    """Test ensure non str byte iterable."""
     assert ensure_non_str_byte_iterable((1, 2, 3)) == (1, 2, 3)
     assert ensure_non_str_byte_iterable([1, 2, 3]) == [1, 2, 3]
     assert ensure_non_str_byte_iterable({'a': 1, 'b': 2}) == {'a': 1, 'b': 2}
@@ -230,6 +241,7 @@ def test_ensure_non_str_byte_iterable() -> None:
 
 
 def test_has_items() -> None:
+    """Test has items."""
     assert has_items(None) is False
     assert has_items(False) is False
     assert has_items(42) is False
@@ -263,6 +275,7 @@ def test_has_items() -> None:
 
 
 def test_get_first_item() -> None:
+    """Test get first item."""
     with pytest.raises(AssertionError):
         get_first_item(42)  # type: ignore[arg-type]
 
@@ -279,6 +292,7 @@ def test_get_first_item() -> None:
 
 
 def test_split_to_union_variants() -> None:
+    """Test split to union variants."""
     assert split_to_union_variants(str) == (str,)
     assert split_to_union_variants(Optional[str]) == (str, NoneType)
     assert split_to_union_variants(Union[str, None]) == (str, NoneType)
@@ -300,6 +314,7 @@ def test_split_to_union_variants() -> None:
 
 
 def test_is_union() -> None:
+    """Test is union."""
     assert is_union(str) is False
     assert is_union(Optional[str]) is True
     assert is_union(Union[str, None]) is True
@@ -325,6 +340,7 @@ def test_is_union() -> None:
 
 
 def test_is_optional() -> None:
+    """Test is optional."""
     assert is_optional(str) is False
     assert is_optional(Optional[str]) is True
     assert is_optional(Union[str, None]) is True
@@ -372,6 +388,7 @@ def test_is_optional() -> None:
 
 
 def test_is_literal_type() -> None:
+    """Test is literal type."""
     assert is_literal_type(Literal['a', 'b'])
     assert is_literal_type(Literal[True, False])
     assert is_literal_type(Literal[1, 2, 3])
@@ -384,6 +401,7 @@ def test_is_literal_type() -> None:
 
 
 def test_is_type_specialization() -> None:
+    """Test is type specialization."""
     class MyGenericClass(Generic[T]):
         ...
 
@@ -403,6 +421,7 @@ def test_is_type_specialization() -> None:
 
 
 def test_is_strict_subclass() -> None:
+    """Test is strict subclass."""
     class Mother:
         ...
 
@@ -444,6 +463,7 @@ def test_is_strict_subclass() -> None:
 
 
 def test_is_unreserved_identifier():
+    """Test is unreserved identifier."""
     assert is_unreserved_identifier('MyClass') is True
     assert is_unreserved_identifier('myobj_1') is True
     assert is_unreserved_identifier('123_a') is False
@@ -453,6 +473,7 @@ def test_is_unreserved_identifier():
 
 
 def test_get_calling_module_name() -> None:
+    """Test get calling module name."""
     def local_call_get_calling_module_name() -> str | None:
         return get_calling_module_name()
 
@@ -466,10 +487,12 @@ def test_get_calling_module_name() -> None:
 
 def test_called_from_omnipy_tests() -> None:
     # Negative test is left as an exercise to the reader
+    """Test called from omnipy tests."""
     assert called_from_omnipy_tests()
 
 
 def test_min_or_none() -> None:
+    """Test min or none."""
     from omnipy.util.helpers import min_or_none
 
     assert min_or_none(3, 1, 2.5) == 1
@@ -479,6 +502,7 @@ def test_min_or_none() -> None:
 
 
 def test_max_or_none() -> None:
+    """Test max or none."""
     from omnipy.util.helpers import max_or_none
 
     assert max_or_none(3, 1, 2.5) == 3

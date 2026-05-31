@@ -1,3 +1,5 @@
+"""Provide reusable task test cases."""
+
 from dataclasses import dataclass
 from inspect import Parameter
 import json
@@ -23,6 +25,7 @@ RetT = TypeVar('RetT')
 
 @dataclass
 class TaskCase(Generic[CallP, RetT]):
+    """Bundle reusable task inputs and assertions."""
     task_func: Callable[CallP, RetT]
     args: tuple[Any, ...]
     kwargs: dict[str, Any]
@@ -35,6 +38,7 @@ class TaskCase(Generic[CallP, RetT]):
     tags=['sync', 'function', 'singlethread', 'success'],
 )
 def case_sync_action_func_no_params() -> TaskCase[[], None]:
+    """Provide a no-parameter action task case."""
     def assert_results(result: None) -> None:
         assert result is None
 
@@ -56,6 +60,7 @@ def case_sync_action_func_no_params() -> TaskCase[[], None]:
     tags=['sync', 'function', 'singlethread', 'success'],
 )
 def case_sync_action_func_with_params() -> TaskCase[[str, bool], None]:
+    """Provide an action task case with parameters."""
     def assert_results(result: None) -> None:
         assert result is None
 
@@ -83,6 +88,7 @@ def case_sync_action_func_with_params() -> TaskCase[[str, bool], None]:
     tags=['sync', 'function', 'singlethread', 'success'],
 )
 def case_sync_data_import_func() -> TaskCase[[], str]:
+    """Provide a data import task case."""
     def assert_results(json_data: str) -> None:
         assert type(json_data) is str
         assert json.loads(json_data) == dict(my_data=[123, 234, 345, 456])
@@ -105,6 +111,7 @@ def case_sync_data_import_func() -> TaskCase[[], str]:
     tags=['sync', 'function', 'singlethread', 'success'],
 )
 def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
+    """Provide a formatting task case."""
     def assert_results(result: str) -> None:
         assert result == 'Number: 12'
 
@@ -129,6 +136,7 @@ def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
     tags=['sync', 'function', 'singlethread', 'success'],
 )
 def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
+    """Provide a power-minus-one task case."""
     def assert_results(result: int) -> None:
         assert result == 64
 
@@ -162,6 +170,7 @@ def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
     tags=['sync', 'function', 'singlethread', 'success'],
 )
 def case_sync_empty_dict_fun() -> TaskCase[[], dict]:
+    """Provide an empty-dict task case."""
     def assert_results(result: dict) -> None:
         assert result == {}
 
@@ -183,6 +192,7 @@ def case_sync_empty_dict_fun() -> TaskCase[[], dict]:
     tags=['sync', 'function', 'singlethread', 'success'],
 )
 def case_sync_plus_one_dict_func() -> TaskCase[[int], dict[str, int]]:
+    """Provide a plus-one-dict task case."""
     def assert_results(result: dict[str, int]) -> None:
         assert result == {'number': 4}
 
@@ -206,6 +216,7 @@ def case_sync_plus_one_dict_func() -> TaskCase[[int], dict[str, int]]:
     tags=['sync', 'function', 'singlethread', 'success'],
 )
 def case_sync_dict_of_squared_fun() -> TaskCase[[int], dict[int, int]]:
+    """Provide a squared-dict task case."""
     def assert_results(result: dict[int, int]) -> None:
         assert result == {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
 

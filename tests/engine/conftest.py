@@ -1,3 +1,5 @@
+"""Shared fixtures for engine tests."""
+
 from typing import Callable, Type
 
 import pytest
@@ -39,6 +41,7 @@ def prefect_test_fixture():
     ids=['m[task]'],
 )
 def mock_task_template(task_template_cls):
+    """Provide the mock task template fixture."""
     return task_template_cls
 
 
@@ -48,6 +51,7 @@ def mock_task_template(task_template_cls):
     ids=['m[linearflow]'],
 )
 def mock_linear_flow_template(flow_template_cls):
+    """Provide the mock linear flow template fixture."""
     return flow_template_cls
 
 
@@ -57,6 +61,7 @@ def mock_linear_flow_template(flow_template_cls):
     ids=['m[dagflow]'],
 )
 def mock_dag_flow_template(flow_template_cls):
+    """Provide the mock dag flow template fixture."""
     return flow_template_cls
 
 
@@ -66,6 +71,7 @@ def mock_dag_flow_template(flow_template_cls):
     ids=['m[funcflow]'],
 )
 def mock_func_flow_template(flow_template_cls):
+    """Provide the mock func flow template fixture."""
     return flow_template_cls
 
 
@@ -143,12 +149,14 @@ def no_verbose_config_engine_decorator():
     ids=['m[registry]'],
 )
 def mock_registry(registry):
+    """Provide the mock registry fixture."""
     return registry
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(registry=[None], ids=['no_registry'])
 def no_registry(registry):
+    """Provide the no registry fixture."""
     return registry
 
 

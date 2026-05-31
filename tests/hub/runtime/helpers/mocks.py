@@ -1,3 +1,5 @@
+"""Mock helpers for hub runtime tests."""
+
 from abc import ABC, abstractmethod
 from typing import cast, Generic, Protocol
 
@@ -11,6 +13,7 @@ EngineConfigT = TypeVar('EngineConfigT', bound=IsJobRunnerConfig)
 
 
 class MockEngine(ABC, Generic[EngineConfigT]):
+    """Define mock Engine."""
     def __init__(self) -> None:
         config_cls = self.get_config_cls()
         self._config: IsJobRunnerConfig = config_cls()
@@ -29,14 +32,17 @@ class MockEngine(ABC, Generic[EngineConfigT]):
 
 
 class MockLocalRunnerConfig(ConfigBase):
+    """Define mock Local Runner Config."""
     backend_verbose: bool = True
 
 
 class IsMockLocalRunnerConfig(IsJobRunnerConfig, Protocol):
+    """Define IsMockLocalRunnerConfig."""
     backend_verbose: bool
 
 
 class MockLocalRunner(MockEngine[IsMockLocalRunnerConfig]):
+    """Define mock Local Runner."""
     @classmethod
     def get_config_cls(cls) -> type[IsMockLocalRunnerConfig]:
         return MockLocalRunnerConfig
@@ -47,16 +53,19 @@ class MockLocalRunner(MockEngine[IsMockLocalRunnerConfig]):
 
 
 class MockPrefectEngineConfig(ConfigBase):
+    """Define mock Prefect Engine Config."""
     server_url: str = ''
     use_cached_results: bool = False
 
 
 class IsMockPrefectEngineConfig(IsJobRunnerConfig, Protocol):
+    """Define IsMockPrefectEngineConfig."""
     server_url: str = ''
     use_cached_results: bool
 
 
 class MockPrefectEngine(MockEngine[IsMockPrefectEngineConfig]):
+    """Define mock Prefect Engine."""
     @classmethod
     def get_config_cls(cls) -> type[IsMockPrefectEngineConfig]:
         return MockPrefectEngineConfig

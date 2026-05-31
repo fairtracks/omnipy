@@ -1,3 +1,5 @@
+"""Example data for components frozen tests."""
+
 from omnipy.components._frozen.typedefs import FrozenDict
 
 f_none = None

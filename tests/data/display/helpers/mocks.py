@@ -1,3 +1,5 @@
+"""Mock helpers for data display tests."""
+
 from abc import ABC, abstractmethod
 from dataclasses import field
 from functools import cached_property
@@ -19,6 +21,7 @@ import omnipy.util.pydantic as pyd
 
 @pyd.dataclass(init=False, frozen=True)
 class MockPanelBase(DraftPanel[str, AnyFrame]):
+    """Define mock Panel Base."""
     _dims_aware_panel_cls: ClassVar[type[DimensionsAwareDraftPanel]] = field(init=False)
 
     def __init__(self, content: str = '', frame=None, title='', constraints=None, config=None):
@@ -53,6 +56,7 @@ class MockPanelBase(DraftPanel[str, AnyFrame]):
 
 @pyd.dataclass(init=False, frozen=True)
 class MockDimsAwarePanelBase(DimensionsAwareDraftPanel[Any, AnyFrame], ABC):
+    """Define mock Dims Aware Panel Base."""
     _fully_rendered_panel_cls: ClassVar[type[FullyRenderedDraftPanel]] = field(init=False)
 
     @override
@@ -79,6 +83,7 @@ class MockDimsAwarePanelBase(DimensionsAwareDraftPanel[Any, AnyFrame], ABC):
 
 
 class MockOutputVariantBase(OutputVariant):
+    """Define mock Output Variant Base."""
     def __init__(
         self,
         content_lines: list[str],
@@ -101,6 +106,7 @@ class MockOutputVariantBase(OutputVariant):
 
 @pyd.dataclass(init=False, frozen=True)
 class MockFullyRenderedPanelBase(FullyRenderedDraftPanel[Any, AnyFrame], MockDimsAwarePanelBase):
+    """Define mock Fully Rendered Panel Base."""
     _output_variant_cls: ClassVar[type[MockOutputVariantBase]] = field(init=False)
 
     @cached_property

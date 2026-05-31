@@ -1,3 +1,5 @@
+"""Provide reusable flow test cases."""
+
 from dataclasses import dataclass
 from functools import update_wrapper
 from typing import Any, Callable, Generic, ParamSpec, TypeVar
@@ -19,6 +21,7 @@ RetT = TypeVar('RetT')
 
 @dataclass
 class FlowCase(Generic[CallP, RetT]):
+    """Bundle reusable flow inputs and assertions."""
     flow_func: Callable[CallP, RetT]
     flow_template: IsLinearFlowTemplate | IsDagFlowTemplate | IsFuncFlowTemplate
     args: tuple[Any, ...]
@@ -36,6 +39,7 @@ class FlowCase(Generic[CallP, RetT]):
 )
 @pc.parametrize_with_cases('task_case', cases='.tasks')
 def case_sync_linearflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
+    """Provide a linear flow case built from one task."""
     task_template = TaskTemplate()(task_case.task_func)
     linear_flow = LinearFlowTemplate(task_template)(task_case.task_func)
 
@@ -55,6 +59,7 @@ def case_sync_linearflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
 )
 @pc.parametrize_with_cases('task_case', cases='.tasks')
 def case_sync_dagflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
+    """Provide a DAG flow case built from one task."""
     task_template = TaskTemplate()(task_case.task_func)
     dag_flow = DagFlowTemplate(task_template)(task_case.task_func)
 
@@ -74,6 +79,7 @@ def case_sync_dagflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
 )
 @pc.parametrize_with_cases('task_case', cases='.tasks')
 def case_sync_funcflow_single_task(task_case: TaskCase) -> FlowCase[[], None]:
+    """Provide a function flow case built from one task."""
     task_template = TaskTemplate()(task_case.task_func)
 
     def single_task_func_decorator(task: IsTaskTemplate) -> Callable:

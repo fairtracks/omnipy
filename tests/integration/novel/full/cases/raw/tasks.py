@@ -1,3 +1,5 @@
+"""Task definitions for integration novel full tests."""
+
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.multi import MultiModelDataset
@@ -7,16 +9,19 @@ from ...helpers.models import GeneralTable, record_schema_factory, RecordSchemaD
 
 @TaskTemplate()
 def uppercase(text: str) -> str:
+    """Uppercase uppercase."""
     return text.upper()
 
 
 @TaskTemplate()
 def square_root(number: int) -> dict[str, float]:
+    """Return the square root."""
     return {'neg_root': -number**0.5, 'pos_root': number**0.5}
 
 
 @TaskTemplate()
 def merge_key_value_into_str(key: object, val: object) -> str:
+    """Merge key value into string."""
     return '{}: {}'.format(key, val)
 
 
@@ -25,6 +30,7 @@ def merge_key_value_into_str(key: object, val: object) -> str:
 
 @TaskTemplate()
 def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
+    """Extract record schema def."""
     record_model = {}
     for record in table.to_data():
         for field_key, field_val in record.items():
@@ -42,6 +48,7 @@ def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
 def apply_models_to_dataset(
         dataset: Dataset[GeneralTable],
         record_schema_defs: Dataset[RecordSchemaDef]) -> MultiModelDataset[GeneralTable]:
+    """Apply models to dataset."""
     multi_model_dataset = dataset.as_multi_model_dataset()
     for data_file in multi_model_dataset.keys():
         multi_model_dataset.set_model(

@@ -1,3 +1,5 @@
+"""Utility test package."""
+
 from typing import Generic, TypeVar
 
 from omnipy.util.param_key_mapper import ParamKeyMapper

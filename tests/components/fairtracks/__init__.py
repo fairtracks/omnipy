@@ -1,0 +1,1 @@
+"""Fairtracks component tests."""

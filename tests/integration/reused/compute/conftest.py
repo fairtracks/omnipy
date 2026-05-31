@@ -1,3 +1,5 @@
+"""Shared fixtures for integration reused compute tests."""
+
 import pytest
 
 from omnipy.compute.task import TaskTemplate
@@ -16,4 +18,5 @@ from ....compute.conftest import linear_flow_cls_tuple  # noqa
 
 @pytest.fixture
 def mock_local_runner(runtime_all_engines):
+    """Provide mock local runner."""
     return TaskTemplate.engine

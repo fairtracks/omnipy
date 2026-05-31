@@ -1,3 +1,5 @@
+"""Tests for layout draft."""
+
 import pytest
 import pytest_cases as pc
 
@@ -22,6 +24,7 @@ from ..helpers.panel_assert import (assert_dims_aware_panel,
 
 
 def test_resized_layout_draft_panel_init() -> None:
+    """Test resized layout draft panel init."""
     panel_cls = ResizedLayoutDraftPanel
     assert_draft_panel_subcls(panel_cls, Layout(), content_is_identical=False)
 
@@ -74,6 +77,7 @@ def test_resized_layout_draft_panel_init() -> None:
 
 
 def test_resized_layout_draft_panel_hashable() -> None:
+    """Test resized layout draft panel hashable."""
     draft_panel_1 = ResizedLayoutDraftPanel(Layout())
     draft_panel_2 = ResizedLayoutDraftPanel(Layout())
 
@@ -105,6 +109,7 @@ def test_resized_layout_draft_panel_hashable() -> None:
 
 def test_fail_resized_layout_draft_panel_if_extra_params() -> None:
 
+    """Test fail resized layout draft panel if extra parameters."""
     with pytest.raises(TypeError):
         ResizedLayoutDraftPanel(Layout(), extra=123)  # type: ignore[call-arg]
 
@@ -112,6 +117,7 @@ def test_fail_resized_layout_draft_panel_if_extra_params() -> None:
 # noinspection PyDataclass
 def test_fail_resized_layout_draft_panel_no_assignments() -> None:
 
+    """Test fail resized layout draft panel no assignments."""
     resized_layout_panel = ResizedLayoutDraftPanel(Layout())
 
     with pytest.raises(AttributeError):
@@ -137,6 +143,7 @@ def test_fail_resized_layout_draft_panel_no_assignments() -> None:
 )
 def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
         frame_variant_case: PanelFrameVariantTestCase[Layout]) -> None:
+    """Test resized layout draft panel basic dims and edge cases."""
     case = apply_frame_variant_to_test_case(frame_variant_case, stylized_stage=False)
     case = set_case_config(case, min_panel_width=0)
 
@@ -156,6 +163,7 @@ def test_resized_layout_draft_panel_basic_dims_and_edge_cases(
 
 
 def test_draft_panel_render_next_stage_simple() -> None:
+    """Test draft panel render next stage simple."""
     resized_layout_panel = ResizedLayoutDraftPanel(
         Layout(panel=MockStylablePlainCropPanel('Some text')))
     assert_next_stage_panel(
@@ -168,6 +176,7 @@ def test_draft_panel_render_next_stage_simple() -> None:
 
 def test_draft_panel_render_next_stage_complex() -> None:
     # No reflow of panels, just rendering of the content
+    """Test draft panel render next stage complex."""
     resized_layout_panel_complex = ResizedLayoutDraftPanel(
         Layout(
             first=MockStylablePlainCropPanel('Some text', title='First panel'),
@@ -204,6 +213,7 @@ def test_draft_panel_render_next_stage_complex() -> None:
 
 
 def test_dimensions_aware_draft_panel_layout() -> None:
+    """Test dimensions aware draft panel layout."""
     layout = DimensionsAwareDraftPanelLayout()
 
     assert layout.total_subpanel_cropped_dims == Dimensions(0, 0)

@@ -1,3 +1,5 @@
+"""Tests for remote URL and response content models."""
+
 from pathlib import PurePosixPath
 from typing import Annotated
 
@@ -17,6 +19,7 @@ from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_query_params_model():
+    """Test parsing and serializing URL query parameters."""
     empty_params = QueryParamsModel()
     assert empty_params.content == {}
     assert empty_params.to_data() == str(empty_params) == ''
@@ -30,6 +33,7 @@ def test_query_params_model():
 
 
 def test_query_params_model_split_before_url_decode():
+    """Test query parameters split keys and values before URL decoding."""
     params = QueryParamsModel(str(QueryParamsModel(a='1', b='2')))
     assert params.content == {'a': '1', 'b': '2'}
     params = QueryParamsModel(str(QueryParamsModel(a='=', b='&')))
@@ -43,6 +47,7 @@ def test_query_params_model_split_before_url_decode():
 
 
 def test_url_path_model():
+    """Test path model composition and string conversion."""
     empty_path = UrlPathModel()
     assert empty_path.content == PurePosixPath('.')
 
@@ -91,6 +96,7 @@ def test_url_path_model():
 
 
 def test_http_url_model_validation_errors():
+    """Test HTTP URL models reject unsupported URL forms."""
     with pytest.raises(ValidationError):
         HttpUrlModel('/abc/def')
 
@@ -99,6 +105,7 @@ def test_http_url_model_validation_errors():
 
 
 def test_http_url_model_default_localhost():
+    """Test default HTTP URL models target localhost."""
     url = HttpUrlModel()
 
     assert url.scheme == 'http'
@@ -119,6 +126,7 @@ def test_http_url_model_default_localhost():
 
 
 def test_http_url_model_parse_all_fields():
+    """Test parsing every field of a fully specified HTTP URL."""
     url = HttpUrlModel('https://user:pass@abc.net:8080/def?ghi=jkl#mno')
 
     assert url.scheme == 'https'
@@ -134,6 +142,7 @@ def test_http_url_model_parse_all_fields():
 
 
 def test_http_url_model_parse_international_domains():
+    """Test parsing internationalized domain names."""
     for domain in ('https://www.example.珠宝/', 'https://www.example.xn--pbt977c/'):
         url = HttpUrlModel(domain)
         assert url.host == 'www.example.珠宝'
@@ -141,6 +150,7 @@ def test_http_url_model_parse_international_domains():
 
 
 def test_http_url_model_url_escape():
+    """Test URL escaping and unescaping of non-ASCII fields."""
     def _assert_fields(url: HttpUrlModel):
         assert url.username == 'bø'
         assert url.password == 'bø'
@@ -161,6 +171,7 @@ def test_http_url_model_url_escape():
 
 
 def test_http_url_model_modify_direct_fields(runtime: Annotated[IsRuntime, pytest.fixture]):
+    """Test mutating direct fields on an HTTP URL model."""
     url = HttpUrlModel('http://abc.net/def')
     url.scheme = 'https'
     url.username = 'user'
@@ -189,6 +200,7 @@ def test_http_url_model_modify_direct_fields(runtime: Annotated[IsRuntime, pytes
 
 
 def test_http_url_model_modify_port():
+    """Test port defaults and overrides when switching schemes."""
     url = HttpUrlModel('http://abc.net/def')
     assert url.port == 80
 
@@ -226,6 +238,7 @@ def test_http_url_model_modify_port():
 
 def test_http_url_model_query_params(
         assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]):
+    """Test mutating query parameters through the HTTP URL model."""
     url = HttpUrlModel('http://abc.net/def')
 
     # TODO: When type-dependent conversion is implemented, make QueryParamsModel convertible to both
@@ -258,6 +271,7 @@ def test_http_url_model_query_params(
 
 def test_http_url_model_add_operator(
         assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]):
+    """Test extending HTTP URL models with the add operator."""
     url = HttpUrlModel('http://abc.net')
 
     url += 'path/to/file'
@@ -285,6 +299,7 @@ def test_http_url_model_add_operator(
 
 
 def test_auto_response_content_model() -> None:
+    """Test auto-selecting response content model types from content type."""
     model = AutoResponseContentModel(
         ResponseContentPydModel(content_type='text/plain', response='abc'))
     assert model.content == StrictStrModel('abc')

@@ -1,3 +1,5 @@
+"""Request type cases for components remote tests."""
+
 from typing import Annotated
 
 import pytest
@@ -25,27 +27,32 @@ from ..helpers.classes import EndpointCase, RequestTypeCase
 
 @pc.case(tags='supports_external_retry_client')
 def case_get_json_from_api_endpoint() -> RequestTypeCase:
+    """Return the get JSON from API endpoint case."""
     return RequestTypeCase(True, get_json_from_api_endpoint, dict(), JsonDataset)
 
 
 @pc.case(tags='supports_external_retry_client')
 def case_get_str_from_api_endpoint() -> RequestTypeCase:
+    """Return the get string from API endpoint case."""
     return RequestTypeCase(True, get_str_from_api_endpoint, dict(), StrDataset)
 
 
 @pc.case(tags='supports_external_retry_client')
 def case_get_bytes_from_api_endpoint() -> RequestTypeCase:
+    """Return the get bytes from API endpoint case."""
     return RequestTypeCase(True, get_bytes_from_api_endpoint, dict(), BytesDataset)
 
 
 @pc.case(tags='supports_external_retry_client')
 def case_get_auto_from_api_endpoint() -> RequestTypeCase:
+    """Return the get auto from API endpoint case."""
     return RequestTypeCase(True, get_auto_from_api_endpoint, dict(), AutoResponseContentDataset)
 
 
 @pc.case
 def case_sync_load_urls_into_new_dataset(
         endpoint: Annotated[EndpointCase, pytest.fixture]) -> RequestTypeCase:
+    """Return the sync load URLs into new dataset case."""
     return RequestTypeCase(False,
                            load_urls_into_new_dataset,
                            dict(dataset_cls=Dataset[endpoint.auto_model_type]),
@@ -55,6 +62,7 @@ def case_sync_load_urls_into_new_dataset(
 @pc.case
 def case_async_load_urls_into_new_dataset(
         endpoint: Annotated[EndpointCase, pytest.fixture]) -> RequestTypeCase:
+    """Return the async load URLs into new dataset case."""
     return RequestTypeCase(True,
                            async_load_urls_into_new_dataset,
                            dict(dataset_cls=Dataset[endpoint.auto_model_type]),
@@ -75,6 +83,7 @@ def case_async_load_urls_into_new_dataset_auto_as_mime_type(
     model_cls: type[Model],
     mime_type: str,
 ) -> RequestTypeCase:
+    """Return the async load URLs into new dataset auto as mime type case."""
     return RequestTypeCase(True,
                            async_load_urls_into_new_dataset,
                            dict(
@@ -99,6 +108,7 @@ def case_fail_async_load_urls_into_new_dataset_auto_as_incorrect_mime_type(
     model_cls: type[Model],
     mime_type: str,
 ) -> RequestTypeCase:
+    """Return the fail async load URLs into new dataset auto as incorrect mime type case."""
     return RequestTypeCase(True,
                            async_load_urls_into_new_dataset,
                            dict(

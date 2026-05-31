@@ -1,3 +1,5 @@
+"""Shared fixtures for data display tests."""
+
 from typing import Annotated
 
 import pytest
@@ -12,6 +14,7 @@ from .panel.helpers.case_setup import FrameVariant, OutputPropertyType
 @pytest.fixture(scope='function', autouse=True)
 def autouse_runtime_data_config_variants(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> IsRuntime:
+    """Provide the autouse runtime data configuration variants fixture."""
     return runtime
 
 
@@ -26,51 +29,61 @@ def autouse_runtime_data_config_variants(
     ids=('only_width', 'only_height', 'standard'),
 )
 def per_frame_variant(frame_variant: FrameVariant) -> FrameVariant:
+    """Provide the per frame variant fixture."""
     return frame_variant
 
 
 @pc.fixture
 def plain_terminal() -> OutputPropertyType:
+    """Provide the plain terminal fixture."""
     return lambda output: output.plain.terminal
 
 
 @pc.fixture
 def plain_html_tag() -> OutputPropertyType:
+    """Provide the plain HTML tag fixture."""
     return lambda output: output.plain.html_tag
 
 
 @pc.fixture
 def plain_html_page() -> OutputPropertyType:
+    """Provide the plain HTML page fixture."""
     return lambda output: output.plain.html_page
 
 
 @pc.fixture
 def bw_stylized_terminal() -> OutputPropertyType:
+    """Provide the bw stylized terminal fixture."""
     return lambda output: output.bw_stylized.terminal
 
 
 @pc.fixture
 def bw_stylized_html_tag() -> OutputPropertyType:
+    """Provide the bw stylized HTML tag fixture."""
     return lambda output: output.bw_stylized.html_tag
 
 
 @pc.fixture
 def bw_stylized_html_page() -> OutputPropertyType:
+    """Provide the bw stylized HTML page fixture."""
     return lambda output: output.bw_stylized.html_page
 
 
 @pc.fixture
 def colorized_terminal() -> OutputPropertyType:
+    """Provide the colorized terminal fixture."""
     return lambda output: output.colorized.terminal
 
 
 @pc.fixture
 def colorized_html_tag() -> OutputPropertyType:
+    """Provide the colorized HTML tag fixture."""
     return lambda output: output.colorized.html_tag
 
 
 @pc.fixture
 def colorized_html_page() -> OutputPropertyType:
+    """Provide the colorized HTML page fixture."""
     return lambda output: output.colorized.html_page
 
 

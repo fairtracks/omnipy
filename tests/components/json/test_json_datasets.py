@@ -1,3 +1,5 @@
+"""Case-driven tests for JSON datasets."""
+
 from dataclasses import fields
 
 import pytest
@@ -10,6 +12,7 @@ from ..helpers.classes import CaseInfo
 
 @pc.parametrize_with_cases('case', cases='.cases.json_data')
 def test_json_datasets(case: CaseInfo) -> None:
+    """Validate JSON dataset classes against shared cases."""
     for field in fields(case.data_points):
         name = field.name
         for dataset_cls in case.dataset_classes_for_data_point(name):

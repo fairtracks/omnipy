@@ -1,9 +1,12 @@
+"""Test result-key task mixin behavior."""
+
 from omnipy.compute.task import TaskTemplate
 
 from ..cases.raw.functions import power_m1_func
 
 
 def test_property_result_key_default_task() -> None:
+    """Test result keys default to None."""
 
     power_m1_template = TaskTemplate()(power_m1_func)
 
@@ -20,6 +23,7 @@ def test_property_result_key_default_task() -> None:
 
 
 def test_property_result_key_task() -> None:
+    """Test result keys wrap task results in a mapping."""
 
     power_m1_template = TaskTemplate(result_key='i_have_the_power')(power_m1_func)
 

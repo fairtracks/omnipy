@@ -1,3 +1,5 @@
+"""Case data for model special-method tests."""
+
 from dataclasses import dataclass
 from typing import Callable
 
@@ -18,6 +20,7 @@ class ModelValueAssignmentSpec:
 
 
 def case_omnipy_model() -> ModelValueAssignmentSpec:
+    """Provide the omnipy model case."""
     return ModelValueAssignmentSpec(
         value_factory=lambda: MyFloatObjModel(MyFloatObject(int_part=4, float_part=0.5)),
         setitem_target_factory=lambda: Model[dict[str, float]]({}),
@@ -27,6 +30,7 @@ def case_omnipy_model() -> ModelValueAssignmentSpec:
 
 
 def case_dataset() -> ModelValueAssignmentSpec:
+    """Provide the dataset case."""
     return ModelValueAssignmentSpec(
         value_factory=lambda: MyFloatObjDataset(pi=MyFloatObject(int_part=3, float_part=0.5)),
         setitem_target_factory=lambda: Model[dict[str, dict[str, float]]]({}),
@@ -36,6 +40,7 @@ def case_dataset() -> ModelValueAssignmentSpec:
 
 
 def case_pydantic_model() -> ModelValueAssignmentSpec:
+    """Provide the pydantic model case."""
     return ModelValueAssignmentSpec(
         value_factory=lambda: PydanticChildModel(**{
             '@id': 7, 'value': 1.5

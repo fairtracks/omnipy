@@ -1,3 +1,5 @@
+"""Tests for raw dataset models and split-join behavior."""
+
 import os
 from textwrap import dedent
 from typing import Annotated, Iterable
@@ -23,6 +25,7 @@ from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_bytes_dataset() -> None:
+    """Test bytes datasets accepting text and bytes inputs."""
     assert BytesDataset(dict(a=b''))['a'].content == b''
     assert BytesDataset(
         dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
@@ -41,6 +44,7 @@ def test_bytes_dataset() -> None:
 
 
 def test_strict_bytes_dataset() -> None:
+    """Test strict bytes datasets rejecting text inputs."""
     assert StrictBytesDataset(dict(a=b''))['a'].content == b''
     assert StrictBytesDataset(
         dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
@@ -53,6 +57,7 @@ def test_strict_bytes_dataset() -> None:
 
 
 def test_str_dataset() -> None:
+    """Test string datasets decoding bytes with configured encodings."""
     assert StrDataset(dict(a=''))['a'].content == ''
     assert StrDataset(dict(a='æøå'))['a'].content == 'æøå'
     assert StrDataset(dict(a=b''))['a'].content == ''
@@ -77,6 +82,7 @@ def test_str_dataset() -> None:
 
 
 def test_strict_str_dataset() -> None:
+    """Test strict string datasets rejecting bytes inputs."""
     assert StrictStrDataset(dict(a=''))['a'].content == ''
     assert StrictStrDataset(dict(a='æøå'))['a'].content == 'æøå'
 
@@ -94,6 +100,7 @@ def test_split_to_and_join_lines_dataset(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
+    """Test splitting text datasets into lines and joining them again."""
 
     raw_data = """\
         
@@ -172,6 +179,7 @@ def test_split_to_and_join_items_dataset(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
+    """Test splitting string datasets into items and joining them again."""
 
     raw_data_comma_start = 'abc, def ,ghi,jkl'
     data_comma_start = Model[str](raw_data_comma_start) if use_str_model else raw_data_comma_start
@@ -238,6 +246,7 @@ def test_split_lines_to_columns_and_join_columns_to_lines_dataset(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
+    """Test splitting line datasets into columns and joining them back."""
 
     raw_data_tab_fw = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
     data_tab_fw = [Model[str](_) for _ in raw_data_tab_fw] if use_str_model else raw_data_tab_fw

@@ -1,3 +1,5 @@
+"""Test iterate-over-data-files task mixin behavior."""
+
 import asyncio
 
 import pytest
@@ -15,6 +17,7 @@ from ..cases.raw.functions import data_import_func
 
 
 def test_fail_property_iterate_over_data_files_no_arg_task() -> None:
+    """Test iterate_over_data_files requires a dataset argument."""
     with pytest.raises(ValueError):
         TaskTemplate(iterate_over_data_files=True)(data_import_func)
 
@@ -108,6 +111,7 @@ def _run_task_template(
     dataset: Dataset[Model[int]],
     output_dataset: Dataset | None = None,
 ) -> Dataset[Model[str]] | asyncio.Task[Dataset[Model[str]]]:
+    """Run a task template with optional output dataset injection."""
     kwargs = case.kwargs
     if output_dataset is not None and case.iterate_over_data_files:
         kwargs['output_dataset'] = output_dataset
@@ -115,6 +119,7 @@ def _run_task_template(
 
 
 async def _ensure_dataset_await_if_task(case, dataset_or_task):
+    """Await async task results and pass through sync ones."""
     if case.func_is_async:
         returned_dataset = await dataset_or_task
     else:
@@ -123,6 +128,7 @@ async def _ensure_dataset_await_if_task(case, dataset_or_task):
 
 
 def _assert_str_result(case, returned_dataset):
+    """Assert string dataset results for iterate cases."""
     if case.fail_parsing_when_output_dataset_is_int:
         assert returned_dataset.to_data() == dict(a='Answer: 5', b='Answer: 7', c='Answer: 0')
     else:
@@ -131,6 +137,7 @@ def _assert_str_result(case, returned_dataset):
 
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks', has_tag=['no_output_dataset'])
 async def test_iterate_over_data_files_task(case: IterateDataFilesCase) -> None:
+    """Test iterate tasks return string datasets."""
 
     task_template = TaskTemplate(iterate_over_data_files=case.iterate_over_data_files)(
         case.task_func)
@@ -147,6 +154,7 @@ async def test_iterate_over_data_files_task(case: IterateDataFilesCase) -> None:
     'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'str_output_dataset'])
 async def test_iterate_over_data_files_with_default_output_dataset_param_task(
         case: IterateDataFilesCase) -> None:
+    """Test iterate tasks use the default output dataset parameter."""
 
     task_template = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
@@ -165,6 +173,7 @@ async def test_iterate_over_data_files_with_default_output_dataset_param_task(
     'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'str_output_dataset'])
 async def test_iterate_over_data_files_with_output_dataset_param_task(
         case: IterateDataFilesCase) -> None:
+    """Test iterate tasks populate a provided output dataset."""
 
     task_template = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
@@ -184,6 +193,7 @@ async def test_iterate_over_data_files_with_output_dataset_param_task(
     'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'no_output_dataset'])
 async def test_iterate_over_data_files_with_output_dataset_cls_is_int_task(
         case: IterateDataFilesCase) -> None:
+    """Test iterate tasks can target int output datasets."""
 
     task_template = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
@@ -205,6 +215,7 @@ async def test_iterate_over_data_files_with_output_dataset_cls_is_int_task(
     'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'int_output_dataset'])
 async def test_iterate_over_data_files_with_output_dataset_param_and_cls_is_int_task(
         case: IterateDataFilesCase) -> None:
+    """Test iterate tasks support both output dataset options."""
 
     task_template = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
@@ -275,6 +286,7 @@ def _assert_all_failed_data(
     returned_dataset: Dataset[Model[int]] | Dataset[Model[str]],
     exception_cls: type[BaseException],
 ) -> None:
+    """Assert all dataset items failed with the expected exception."""
     failed_task_details = returned_dataset.failed_task_details()
     assert len(failed_task_details) == len(returned_dataset)
     for failed_data in failed_task_details.values():

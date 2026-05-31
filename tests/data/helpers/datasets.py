@@ -1,3 +1,5 @@
+"""Helper datasets for data tests."""
+
 from typing import Generic, Optional, TypeAlias
 
 from typing_extensions import TypeVar

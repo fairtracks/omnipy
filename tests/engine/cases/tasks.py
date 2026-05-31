@@ -1,3 +1,5 @@
+"""Task and flow cases for engine tests."""
+
 import asyncio
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import threading
@@ -41,6 +43,7 @@ AsyncRunTaskAndAssertType = Callable[[IsJob], Awaitable[None]]
     tags=['sync', 'function', 'singlethread', 'success', 'power'],
 )
 def case_sync_power_args() -> JobCase[[int, int], int]:
+    """Provide the sync power arguments case."""
     def run_and_assert_results(job: IsJob) -> None:
         assert job(4, 2) == 16
         assert_job_state(job, [RunState.FINISHED])
@@ -53,6 +56,7 @@ def case_sync_power_args() -> JobCase[[int, int], int]:
     tags=['sync', 'function', 'singlethread', 'success', 'power'],
 )
 def case_sync_power_kwargs() -> JobCase[[int, int], int]:
+    """Provide the sync power keyword arguments case."""
     def run_and_assert_results(job: IsJob) -> None:
         assert job(number=3, exponent=5) == 243
         assert_job_state(job, [RunState.FINISHED])
@@ -68,6 +72,7 @@ def case_sync_power_kwargs() -> JobCase[[int, int], int]:
     tags=['sync', 'generator', 'singlethread', 'success'],
 )
 def case_sync_range() -> JobCase[[int], Generator]:
+    """Provide the sync range case."""
     def run_and_assert_results(job: IsJob) -> None:
         generator = job(5)
         assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])
@@ -106,6 +111,7 @@ def case_async_range() -> JobCase[[int], AsyncGenerator]:
     tags=['sync', 'generator-coroutine', 'singlethread', 'localsuccess'],
 )
 def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
+    """Provide the sync wait for send twice case."""
     def run_and_assert_results(job: IsJob) -> None:
         from omnipy.components.prefect.engine.prefect import PrefectEngine
         if check_engine_cls(job, PrefectEngine):
@@ -169,6 +175,7 @@ def case_async_wait_for_send_twice() -> JobCase[[], AsyncGenerator]:
 )
 @pytest.mark.asyncio
 def case_async_wait_a_bit() -> JobCase[[float], Awaitable[float]]:
+    """Provide the async wait a bit case."""
     async def run_and_assert_results(job: IsJob) -> None:
         async_assert_results_wait_a_bit: Callable[[float], Awaitable] = \
             get_async_assert_results_wait_a_bit_func(job)
@@ -201,6 +208,7 @@ def case_async_wait_a_bit() -> JobCase[[float], Awaitable[float]]:
     tags=['sync', 'function', 'multithread', 'success'],
 )
 def case_sync_wait_a_bit_multithreaded_threading() -> JobCase[[float], float]:
+    """Provide the sync wait a bit multithreaded threading case."""
     def run_and_assert_results(job: IsJob) -> None:
         sync_assert_results_wait_a_bit: Callable[[float], None] = \
             get_sync_assert_results_wait_a_bit_func(job)
@@ -220,6 +228,7 @@ def case_sync_wait_a_bit_multithreaded_threading() -> JobCase[[float], float]:
     tags=['sync', 'function', 'multithread', 'success'],
 )
 def case_sync_wait_a_bit_multithreaded_futures() -> JobCase[[float], float]:
+    """Provide the sync wait a bit multithreaded futures case."""
     def run_and_assert_results(job: IsJob) -> None:
         with ThreadPoolExecutor(max_workers=1) as executor:
             future = executor.submit(job, 0.005)
@@ -240,6 +249,7 @@ def case_sync_wait_a_bit_multithreaded_futures() -> JobCase[[float], float]:
 )
 @pytest.mark.asyncio
 def case_async_wait_a_bit_multithreaded_threading() -> JobCase[[float], Awaitable[float]]:
+    """Provide the async wait a bit multithreaded threading case."""
     def run_and_assert_results(job: IsJob) -> None:
         async_assert_results_wait_a_bit: Callable[[float], Coroutine] = \
             get_async_assert_results_wait_a_bit_func(job)
@@ -268,6 +278,7 @@ def case_async_wait_a_bit_multithreaded_threading() -> JobCase[[float], Awaitabl
 )
 @pytest.mark.asyncio
 def case_async_wait_a_bit_multithreaded_futures() -> JobCase[[float], Awaitable[float]]:
+    """Provide the async wait a bit multithreaded futures case."""
     async def run_and_assert_results(job: IsJob) -> None:
         future = await asyncio.get_running_loop().run_in_executor(None, job, 0.005)
         sync_wait_for_job_state(job, [RunState.RUNNING, RunState.FINISHED])
@@ -294,6 +305,7 @@ def case_async_wait_a_bit_multithreaded_futures() -> JobCase[[float], Awaitable[
     tags=['sync', 'function', 'multiprocess', 'fail'])
 def case_sync_wait_a_bit_multiprocessing_futures() -> JobCase[[float], float]:
 
+    """Provide the sync wait a bit multiprocessing futures case."""
     pytest.xfail("Can't pickle function")
 
     def run_and_assert_results(job: IsJob) -> None:
@@ -314,6 +326,7 @@ def case_sync_wait_a_bit_multiprocessing_futures() -> JobCase[[float], float]:
 @pytest.mark.asyncio
 def case_async_wait_a_bit_multiprocessing() -> JobCase[[float], Awaitable[float]]:
 
+    """Provide the async wait a bit multiprocessing case."""
     pytest.xfail("Can't pickle function")
 
     async def run_and_assert_results(job: IsJob) -> None:

@@ -1,3 +1,5 @@
+"""Helper functions for components pandas tests."""
+
 from omnipy.components.json.typedefs import JsonListOfListsOfScalars
 from omnipy.components.pandas.models import PandasModel
 
@@ -6,6 +8,7 @@ def convert_testcase_table_to_dataframe(
     testcase_table: JsonListOfListsOfScalars,
     col_dtypes: dict[str, str] | None = None,
 ):
+    """Convert testcase table to dataframe."""
     from omnipy.components.pandas.lazy_import import pd
 
     if len(testcase_table) == 0:
@@ -21,4 +24,5 @@ def get_target_as_pandas_model(
     testcase_table: JsonListOfListsOfScalars,
     col_dtypes: dict[str, str] | None = None,
 ) -> PandasModel:
+    """Get target as pandas model."""
     return PandasModel(convert_testcase_table_to_dataframe(testcase_table, col_dtypes=col_dtypes))

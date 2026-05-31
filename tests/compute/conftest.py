@@ -1,3 +1,5 @@
+"""Provide shared compute test fixtures."""
+
 from datetime import datetime
 from typing import Annotated, cast, Generator
 
@@ -33,6 +35,7 @@ MockJobClasses = tuple[type[IsMockJobTemplate], type[IsMockJob]]
 
 @pytest.fixture(scope='function')
 def mock_job_classes() -> MockJobClasses:
+    """Return mock job template and job classes."""
     return (cast(type[IsMockJobTemplate], MockJobTemplateSubclass),
             cast(type[IsMockJob], MockJobSubclass))
 
@@ -40,6 +43,7 @@ def mock_job_classes() -> MockJobClasses:
 @pytest.fixture(scope='function')
 def mock_local_runner(
         teardown_reset_job_creator: Annotated[None, pytest.fixture]) -> MockLocalRunner:
+    """Return a mock runner installed on the shared job creator."""
     mock_local_runner = MockLocalRunner()
     JobBase.job_creator.set_engine(mock_local_runner)
     return mock_local_runner
@@ -48,6 +52,7 @@ def mock_local_runner(
 @pytest.fixture(scope='function')
 def mock_job_datetime(
         mock_datetime: Annotated[datetime, pytest.fixture]) -> Generator[datetime, None, None]:
+    """Patch job creator time calls with the mock datetime."""
     import omnipy.compute._job_creator
 
     prev_datetime = omnipy.compute._job_creator.datetime
@@ -81,6 +86,7 @@ def dag_flow_cls_tuple() -> FlowClsTuple[type[DagFlow], SingleChildJobDagFlowTem
 
 @pc.fixture(scope='function')
 def func_flow_cls_tuple() -> FlowClsTuple[type[FuncFlow], FuncFlowTemplateCallable]:
+    """Provide the function flow class tuple for reuse."""
     return FlowClsTuple(
         flow_cls=FuncFlow,
         flow_tmpl_cls=FuncFlowTemplate,
@@ -92,6 +98,7 @@ def func_flow_cls_tuple() -> FlowClsTuple[type[FuncFlow], FuncFlowTemplateCallab
 @pc.parametrize('flow_cls_tuple', [func_flow_cls_tuple])
 def func_arg_flow_cls_tuple(
         flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pc.fixture]) -> FuncArgFlowClsTuple:
+    """Provide flow classes that take only callable arguments."""
     return flow_cls_tuple
 
 
@@ -106,4 +113,5 @@ def child_job_list_arg_flow_cls_tuple(
 @pc.fixture(scope='function')
 @pc.parametrize('_flow_cls_tuple', [dag_flow_cls_tuple, linear_flow_cls_tuple, func_flow_cls_tuple])
 def flow_cls_tuple(_flow_cls_tuple: AnyFlowClsTuple) -> AnyFlowClsTuple:
+    """Provide any supported flow class tuple."""
     return _flow_cls_tuple

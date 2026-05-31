@@ -1,3 +1,5 @@
+"""Helper functions for engine tests."""
+
 import asyncio
 from datetime import datetime, timedelta
 from time import sleep
@@ -34,6 +36,7 @@ def extract_engine(job: IsJobBase) -> IsEngine:
 
 
 def extract_job_run_state(job: IsJob) -> RunState.Literals | None:
+    """Provide extract job run state for test reuse."""
     engine = extract_engine(cast(IsJobBase, job))
     registry = engine.registry
     if registry:
@@ -41,6 +44,7 @@ def extract_job_run_state(job: IsJob) -> RunState.Literals | None:
 
 
 def assert_job_state(job: IsJob, states: list[RunState.Literals]):
+    """Assert job state."""
     job_state = extract_job_run_state(job)
     if job_state:
         assert job_state in states, job_state
@@ -52,6 +56,7 @@ def _check_timeout(
     job: IsJob,
     states: list[RunState.Literals],
 ):
+    """Provide check timeout for test reuse."""
     if datetime.now() - start_time >= timedelta(seconds=timeout_secs):
         current_state = extract_job_run_state(job)
         current_state_text = (
@@ -63,6 +68,7 @@ def _check_timeout(
 
 
 def sync_wait_for_job_state(job: IsJob, states: list[RunState.Literals], timeout_secs: float = 1):
+    """Provide sync wait for job state for test reuse."""
     start_time = datetime.now()
     while extract_job_run_state(job) not in states:
         sleep(0.001)
@@ -72,6 +78,7 @@ def sync_wait_for_job_state(job: IsJob, states: list[RunState.Literals], timeout
 async def async_wait_for_job_state(job: IsJob,
                                    states: list[RunState.Literals],
                                    timeout_secs: float = 1):
+    """Provide async wait for job state for test reuse."""
     start_time = datetime.now()
     while extract_job_run_state(job) not in states:
         await asyncio.sleep(0.001)
@@ -79,6 +86,7 @@ async def async_wait_for_job_state(job: IsJob,
 
 
 def get_sync_assert_results_wait_a_bit_func(job: IsJob):
+    """Return sync assert results wait a bit func."""
     def sync_assert_results_wait_a_bit(seconds: float) -> None:
         assert job(seconds) == seconds
 
@@ -86,6 +94,7 @@ def get_sync_assert_results_wait_a_bit_func(job: IsJob):
 
 
 def get_async_assert_results_wait_a_bit_func(job: IsJob):
+    """Return async assert results wait a bit func."""
     async def async_assert_results_wait_a_bit(seconds: float) -> None:
         assert await resolve(job(seconds)) == seconds
 
@@ -93,6 +102,7 @@ def get_async_assert_results_wait_a_bit_func(job: IsJob):
 
 
 def check_engine_cls(job: IsJob, engine_cls: type[IsEngine]):
+    """Check engine class."""
     return isinstance(extract_engine(job), engine_cls)
 
 
@@ -104,6 +114,7 @@ def create_task_with_func(
     registry: IsRunStateRegistry | None,
 ) -> IsTask:
 
+    """Provide create task with func for test reuse."""
     task_template = task_template_cls(name=name)(func)
 
     task_template_cls.job_creator.set_engine(engine)  # type: ignore[attr-defined]
@@ -121,6 +132,7 @@ def create_linear_flow_with_two_func_tasks(
     engine: IsJobRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsLinearFlow:
+    """Provide create linear flow with two func tasks for test reuse."""
     @task_template_cls()
     def _passthrough_task(arg):
         return arg
@@ -161,6 +173,7 @@ def create_dag_flow_with_two_func_tasks(
     registry: IsRunStateRegistry | None,
 ) -> IsDagFlow:
 
+    """Provide create dag flow with two func tasks for test reuse."""
     task_template = task_template_cls(name=name)(func)
     dag_flow_template = dag_flow_template_cls(task_template, task_template, name=name)(func)
 
@@ -180,6 +193,7 @@ def create_func_flow_with_two_func_tasks(
     registry: IsRunStateRegistry | None,
 ) -> IsFuncFlow:
 
+    """Provide create func flow with two func tasks for test reuse."""
     task_template = task_template_cls(name=name)(func)
 
     task_template_cls.job_creator.set_engine(engine)  # type: ignore[attr-defined]
@@ -214,6 +228,7 @@ def update_job_case_with_job(
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
+    """Provide update job case with job for test reuse."""
     if engine_decorator:
         engine = engine_decorator(engine)
 
@@ -258,4 +273,5 @@ def update_job_case_with_job(
 
 
 async def run_job_test(job_case: JobCase):
+    """Provide run job test for test reuse."""
     await resolve(job_case.run_and_assert_results_func(job_case.job))

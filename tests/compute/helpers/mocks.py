@@ -1,3 +1,5 @@
+"""Provide reusable compute test mocks and protocols."""
+
 from datetime import datetime
 from types import MappingProxyType
 from typing import (Any,
@@ -76,6 +78,7 @@ class MockJobTemplateSubclass(
 class MockJobSubclass(JobMixin[IsMockJobTemplate[CallP, RetT], IsMockJob[CallP, RetT], CallP, RetT],
                       JobBase,
                       Generic[CallP, RetT]):
+    """Provide a reusable mock job subclass."""
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsMockJobTemplate[CallP, RetT]]:
         return cast(type[IsMockJobTemplate[CallP, RetT]], MockJobTemplateSubclass)
@@ -155,6 +158,7 @@ class CommandMockInit(JobBase, Generic[CallP, RetT]):
 
 
 class CommandMockParamMixin:
+    """Provide immutable command parameter properties for tests."""
     def __init__(self, *, id: str = '', uppercase: bool = False, params: ParamsType = None):
 
         self._id = id
@@ -191,6 +195,7 @@ class HasCommandMockJobTemplateInit(Generic[JobTemplateT, CallP, RetContraT]):
 
 
 class IsCommandMockJobBase(Protocol):
+    """Describe shared command mock job properties."""
     @property
     def id(self) -> str:
         ...
@@ -267,6 +272,7 @@ class CommandMockJobTemplateCore(
 def command_mock_job_template_as_callable_decorator(
     decorated_cls: Callable[Concatenate[CallableT, InitP], IsCommandMockJobTemplate]) -> \
         Callable[InitP, Callable[[Callable[CallP, RetT]], IsCommandMockJobTemplate[CallP, RetT]]]:
+    """Wrap the command mock template core as a callable decorator."""
     return callable_decorator_cls(
         cast(
             Callable[Concatenate[Callable[CallP, RetT], InitP],
@@ -277,6 +283,7 @@ def command_mock_job_template_as_callable_decorator(
 def to_command_mock_task_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP], CommandMockJobTemplateCore]
 ) -> HasCommandMockJobTemplateInit[IsCommandMockJobTemplate[CallP, RetT], CallP, RetT]:
+    """Cast the command mock template core to its init protocol."""
     return cast(HasCommandMockJobTemplateInit[IsCommandMockJobTemplate[CallP, RetT], CallP, RetT],
                 decorated_cls)
 
@@ -373,6 +380,7 @@ class PublicPropertyErrorsMockParamsMixin:
 
 class PublicPropertyErrorsMockJobTemplate(JobBase[IsJobTemplate, IsJob, CallP, RetT],
                                           JobTemplateMixin[IsJobTemplate, IsJob, CallP, RetT]):
+    """Provide a template that surfaces public-property validation errors."""
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsJob]:
         return cast(type[IsJob], PublicPropertyErrorsMockJob)
@@ -380,6 +388,7 @@ class PublicPropertyErrorsMockJobTemplate(JobBase[IsJobTemplate, IsJob, CallP, R
 
 class PublicPropertyErrorsMockJob(JobBase[IsJobTemplate, IsJob, CallP, RetT],
                                   JobMixin[IsJobTemplate, IsJob, CallP, RetT]):
+    """Provide a job that surfaces public-property validation errors."""
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[IsJobTemplate]:
         return cast(type[IsJobTemplate], PublicPropertyErrorsMockJobTemplate)
@@ -392,6 +401,7 @@ class PublicPropertyErrorsMockJob(JobBase[IsJobTemplate, IsJob, CallP, RetT],
 
 
 def mock_cmd_func(**params: bool) -> Any:  # noqa
+    """Provide a placeholder command callable for mock jobs."""
     pass
 
 
@@ -479,11 +489,13 @@ class MockLocalRunner:
 
 
 class MockJobConfig(ConfigBase):
+    """Provide a simple job config for tests."""
     persist_outputs: bool = True
     restore_outputs: bool = False
 
 
 class AssertSameTimeOfCurFlowRunJobBaseMixin:
+    """Persist the top-level flow run time for assertions."""
     _persisted_time_of_cur_toplevel_flow_run: list[datetime] = []
 
     @property
@@ -509,6 +521,7 @@ class AssertSameTimeOfCurFlowRunJobBaseMixin:
 
 
 class AssertsSameTimeOfCurFlowRun(Protocol):
+    """Describe helpers that persist a top-level flow run time."""
     @property
     def persisted_time_of_cur_toplevel_flow_run(self) -> datetime | None:
         ...

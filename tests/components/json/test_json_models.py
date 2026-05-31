@@ -1,3 +1,5 @@
+"""Case-driven and focused tests for JSON models."""
+
 from dataclasses import fields
 import os
 from textwrap import dedent
@@ -29,6 +31,7 @@ from ..helpers.classes import CaseInfo
 
 @pc.parametrize_with_cases('case', cases='.cases.json_data')
 def test_json_models(case: CaseInfo) -> None:
+    """Validate JSON model classes against shared cases."""
     for field in fields(case.data_points):
         name = field.name
         for model_cls in case.model_classes_for_data_point(name):
@@ -57,6 +60,7 @@ MyJsonListOfScalarsModel: TypeAlias = JsonCustomListModel[JsonScalar]
 
 
 def test_json_model_consistency_basic() -> None:
+    """Keep base JSON model specializations consistent."""
     example_dict_data = {'abc': 2312}
     assert JsonModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': 2312})
     assert JsonDictModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': 2312})
@@ -79,6 +83,7 @@ def test_json_model_consistency_basic() -> None:
 
 
 def test_json_model_consistency_with_none() -> None:
+    """Keep JSON model specializations consistent with None values."""
     example_dict_data = {'abc': None}
     assert JsonModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': None})
 
@@ -115,6 +120,7 @@ def test_json_model_consistency_with_none() -> None:
       Here the inner dict is treated as a sequence, which returns the keys.
       """))
 def test_error_list_of_single_dict_with_two_elements_known_issue():
+    """Document the known pydantic v1 list-of-dict issue."""
     with pytest.raises(ValidationError):
         a = JsonDictModel([{'a': 1, 'b': 2}])
         assert a.to_data() == {'a': 'b'}
@@ -148,6 +154,7 @@ def test_error_list_of_single_dict_with_two_elements_known_issue():
         interoperable parsing as possible, the stricter v2 behavior is in this case preferable.
     """))
 def test_error_dict_with_empty_list_known_issue(runtime: Annotated[IsRuntime, pytest.fixture]):
+    """Document known pydantic v1 empty-list dict behavior."""
     with pytest.raises(ValidationError):
         # A dict value of [] is interpreted by pydantic v1 as an empty dict
         dict_model = JsonDictModel([])
@@ -175,6 +182,7 @@ def test_json_model_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ):
+    """Exercise common item access and merge operations."""
 
     a = JsonListModel([1, 2, 3])
     assert_model_if_dyn_conv_else_val(a[0], int, 1)
@@ -228,6 +236,7 @@ def test_json_model_operations(
                     ('"false"', '"false"'),
                 ])
 def test_json_parsing_of_json_strings(json_string: str, expected_data: Any) -> None:
+    """Parse JSON strings into the expected JSON model data."""
     assert JsonModel(json_string).to_data() == expected_data
 
     if isinstance(expected_data, str):

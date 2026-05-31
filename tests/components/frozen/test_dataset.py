@@ -1,3 +1,5 @@
+"""Case-driven tests for frozen datasets."""
+
 from dataclasses import fields
 
 import pytest
@@ -10,6 +12,7 @@ from ..helpers.classes import CaseInfo
 
 @pc.parametrize_with_cases('case', cases='.cases.frozen_data')
 def test_nested_frozen_datasets(case: CaseInfo) -> None:
+    """Validate frozen dataset classes against shared cases."""
     for field in fields(case.data_points):
         name = field.name
         for dataset_cls in case.dataset_classes_for_data_point(name):

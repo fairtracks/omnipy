@@ -1,3 +1,5 @@
+"""Tests for datasets."""
+
 from copy import copy, deepcopy
 import os
 from textwrap import dedent
@@ -27,6 +29,7 @@ from .helpers.models import MyFloatObjModel, NumberModel, StringToLength
 
 
 def test_no_model():
+    """Test no model."""
     with pytest.raises(TypeError):
         Dataset()
 
@@ -52,6 +55,7 @@ def test_no_model():
 
 
 def test_init_with_basic_parsing() -> None:
+    """Test initialization with basic parsing."""
     dataset_1 = Dataset[Model[int]]()
 
     dataset_1['data_file_1'] = 123
@@ -91,6 +95,7 @@ def test_init_with_basic_parsing() -> None:
 
 
 def test_init_empty() -> None:
+    """Test initialization empty."""
     dataset = Dataset[Model[int]]()
     assert len(dataset) == 0
     assert dataset.to_data() == {}
@@ -114,12 +119,14 @@ def test_init_empty() -> None:
 
 
 def test_init_iterables_as_input() -> None:
+    """Test initialization iterables as input."""
     assert Dataset[Model[int]]((('x', 4.5),)).to_data() == {'x': 4}
     assert Dataset[Model[str]]([[1, 'y'], [2, 'b']]).to_data() == {'1': 'y', '2': 'b'}
     assert Dataset[Model[str]]({'1': 'y', '2': 'b'}.items()).to_data() == {'1': 'y', '2': 'b'}
 
 
 def test_init_iterables_as_input_errors_wrong_shape() -> None:
+    """Test initialization iterables as input errors wrong shape."""
     with pytest.raises(TypeError):
         Dataset[Model[int]]([1, 2, 3])
 
@@ -134,6 +141,7 @@ def test_init_iterables_as_input_errors_wrong_shape() -> None:
 
 
 def test_init_iterables_as_input_errors_wrong_type() -> None:
+    """Test initialization iterables as input errors wrong type."""
     with pytest.raises(TypeError):
         Dataset[Model[str]](['ab', 'cd'])
 
@@ -145,6 +153,7 @@ def test_init_iterables_as_input_errors_wrong_type() -> None:
 
 
 def test_init_dataset_as_input():
+    """Test initialization dataset as input."""
     assert Dataset[Model[int]](Dataset[Model[float]](x=4.5, y=5.5)).to_data() == {'x': 4, 'y': 5}
 
     list_of_floats_dataset = Dataset[Model[list[float]]](x=[4.5, 2.3], y=[1.3, 4.2, 6.7])
@@ -153,6 +162,7 @@ def test_init_dataset_as_input():
 
 
 def test_init_models_as_input():
+    """Test initialization models as input."""
     assert Dataset[Model[int]](a=Model[float](4.5), b=Model[str]('5')).to_data() == {'a': 4, 'b': 5}
 
     tuple_of_ints_dataset = Dataset[Model[tuple[int, ...]]](
@@ -188,6 +198,7 @@ def test_init_model_wrapped_mapping_as_data_input() -> None:
                          ])
 def test_init_converting_dataset_or_models_as_input(dataset_cls: type[IsDataset],
                                                     expects_str: bool):
+    """Test initialization converting dataset or models as input."""
     my_float_dataset = MyFloatObjDataset()
     my_float_dataset.from_data(dict(x=4.5, y=3.25))
     assert my_float_dataset['x'].content == MyFloatObject(int_part=4, float_part=0.5)
@@ -213,6 +224,7 @@ def test_init_converting_dataset_or_models_as_input(dataset_cls: type[IsDataset]
 
 
 def test_init_errors():
+    """Test initialization errors."""
     with pytest.raises(TypeError):
         Dataset[Model[int]]({'data_file_1': 123}, {'data_file_2': 234})
 
@@ -230,6 +242,7 @@ def test_init_errors():
 
 
 def test_parsing_none_allowed():
+    """Test parsing none allowed."""
     class NoneModel(Model[NoneType]):
         ...
 
@@ -256,6 +269,7 @@ def test_parsing_none_allowed():
 
 
 def test_parsing_none_not_allowed():
+    """Test parsing none not allowed."""
     class IntListModel(Model[list[int]]):
         ...
 
@@ -269,6 +283,7 @@ def test_parsing_none_not_allowed():
 
 
 def test_more_dict_methods_with_parsing():
+    """Test more dict methods with parsing."""
     dataset_1 = Dataset[Model[int]]()
 
     assert len(dataset_1) == 0
@@ -330,6 +345,7 @@ def test_more_dict_methods_with_parsing():
 
 
 def test_get_item_with_int_and_slice() -> None:
+    """Test get item with int and slice."""
     dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
     assert dataset[0] == dataset['data_file_1'] == Model[int](123)
     assert dataset[1] == dataset['data_file_2'] == Model[int](456)
@@ -351,6 +367,7 @@ def test_get_item_with_int_and_slice() -> None:
 
 
 def test_get_items_with_tuple_or_list() -> None:
+    """Test get items with tuple or list."""
     dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
 
     assert dataset[()] == dataset[[]] == Dataset[Model[int]]()
@@ -375,6 +392,7 @@ def test_get_items_with_tuple_or_list() -> None:
 
 
 def test_set_item_with_int_and_slice() -> None:
+    """Test set item with int and slice."""
     dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
     dataset[0] = 321
     assert len(dataset) == 3
@@ -463,6 +481,7 @@ def test_set_item_with_int_and_slice() -> None:
 
 
 def test_set_items_with_immutable_sequence_data() -> None:
+    """Test set items with immutable sequence data."""
     dataset = Dataset[Model[str]](data_file_1='abc', data_file_2='def', data_file_3='ghi')
 
     with pytest.raises(TypeError):
@@ -472,6 +491,7 @@ def test_set_items_with_immutable_sequence_data() -> None:
 
 
 def test_set_items_with_tuple_or_list() -> None:
+    """Test set items with tuple or list."""
     dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
 
     with pytest.raises(TypeError):
@@ -525,6 +545,7 @@ def test_set_items_with_tuple_or_list() -> None:
 
 
 def test_set_item_converting_models_as_input():
+    """Test set item converting models as input."""
     float_model = Model[float](4.5)
     my_float_model = MyFloatObjModel(MyFloatObject(int_part=4, float_part=0.5))
 
@@ -538,6 +559,7 @@ def test_set_item_converting_models_as_input():
 
 
 def test_del_item_with_str() -> None:
+    """Test del item with str."""
     dataset = Dataset[Model[int]](data_file_1=123, data_file_2=456, data_file_3=789)
 
     del dataset['data_file_1']
@@ -551,6 +573,7 @@ def test_del_item_with_str() -> None:
 
 
 def test_del_item_with_int_and_slice() -> None:
+    """Test del item with int and slice."""
     dataset = Dataset[Model[int]](
         data_file_1=123, data_file_2=234, data_file_3=345, data_file_4=456, data_file_5=567)
 
@@ -582,6 +605,7 @@ def test_del_item_with_int_and_slice() -> None:
 
 
 def test_del_items_with_tuple_or_list() -> None:
+    """Test del items with tuple or list."""
     dataset = Dataset[Model[int]](
         data_file_1=123, data_file_2=234, data_file_3=345, data_file_4=456, data_file_5=567)
 
@@ -618,6 +642,7 @@ def test_del_items_with_tuple_or_list() -> None:
 
 
 def test_equality() -> None:
+    """Test equality."""
     assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3], 'data_file_2': [1.0, 2.0, 3.0]}) \
            == Dataset[Model[list[int]]]({'data_file_1': [1.0, 2.0, 3.0], 'data_file_2': [1, 2, 3]})
 
@@ -632,6 +657,7 @@ def test_equality() -> None:
 
 
 def test_complex_equality() -> None:
+    """Test complex equality."""
     class MyIntList(Model[list[int]]):
         ...
 
@@ -667,6 +693,7 @@ def test_complex_equality() -> None:
 
 
 def test_equality_with_pydantic() -> None:
+    """Test equality with pydantic."""
     class PydanticModel(pyd.BaseModel):
         a: int = 0
 
@@ -681,6 +708,7 @@ def test_equality_with_pydantic() -> None:
 
 
 def test_name_qualname_and_module():
+    """Test name qualname and module."""
     assert Dataset[Model[int]].__name__ == 'Dataset[Model[int]]'
     assert Dataset[Model[int]].__qualname__ == 'Dataset[Model[int]]'
     assert Dataset[Model[int]].__module__ == 'omnipy.data.dataset'
@@ -703,6 +731,7 @@ def test_name_qualname_and_module():
 
 
 def test_repr():
+    """Test repr."""
     assert repr(Dataset[Model[int]]) == "<class 'omnipy.data.dataset.Dataset[Model[int]]'>"
     assert repr(Dataset[Model[int]](a=5, b=7)) == 'Dataset[Model[int]](a=5, b=7)'
     assert repr(Dataset[Model[int]]({'a': 5, 'b': 7})) == 'Dataset[Model[int]](a=5, b=7)'
@@ -732,6 +761,7 @@ def test_repr():
     ids=['dataset.copy()', 'dataset.copy(deep=False)', 'copy.copy()'],
 )
 def test_copy(copy_func: Callable[[Dataset], Dataset]) -> None:
+    """Test copy."""
     dataset = Dataset[Model[list[int]]](data_file_1=[123], data_file_2=[456])
 
     dataset_copy = copy_func(dataset)
@@ -757,6 +787,7 @@ def test_copy(copy_func: Callable[[Dataset], Dataset]) -> None:
     ids=['dataset.copy(deep=True)', 'copy.deepcopy()'],
 )
 def test_deepcopy(deepcopy_func: Callable[[Dataset], Dataset]) -> None:
+    """Test deepcopy."""
     dataset = Dataset[Model[list[int]]](data_file_1=[123], data_file_2=[456])
 
     dataset_deepcopy = deepcopy_func(dataset)
@@ -783,6 +814,7 @@ def test_deepcopy(deepcopy_func: Callable[[Dataset], Dataset]) -> None:
 
 
 def test_basic_validation(runtime: Annotated[IsRuntime, pytest.fixture]):
+    """Test basic validation."""
     dataset = Dataset[Model[int]](data_file_1=123)
 
     with pytest.raises(ValidationError):
@@ -797,6 +829,7 @@ def test_basic_validation(runtime: Annotated[IsRuntime, pytest.fixture]):
 
 
 def test_validation_union_and_nested_type(runtime: Annotated[IsRuntime, pytest.fixture]):
+    """Test validation union and nested type."""
     class UnionDataset(Dataset[Model[int] | Model[str] | Dataset[Model[int]]]):
         ...
 
@@ -818,6 +851,7 @@ def test_validation_union_and_nested_type(runtime: Annotated[IsRuntime, pytest.f
 
 
 def test_nested_validation_level_one(runtime: Annotated[IsRuntime, pytest.fixture]):
+    """Test nested validation level one."""
     dataset = Dataset[Model[list[int]]](data_file_1=[123])
 
     with pytest.raises(ValidationError):
@@ -838,6 +872,7 @@ def test_nested_validation_level_one(runtime: Annotated[IsRuntime, pytest.fixtur
 
 def test_nested_validation_level_two_only_model_at_top(runtime: Annotated[IsRuntime,
                                                                           pytest.fixture]):
+    """Test nested validation level two only model at top."""
     dataset = Dataset[Model[list[list[int]]]](data_file_1=[[123]])
 
     dataset['data_file_2'] = [['234']]
@@ -885,6 +920,7 @@ def test_nested_validation_level_two_models_at_both_levels(runtime: Annotated[Is
     # Compare with test_nested_validation_level_two_only_model_at_top. It is recommended to insert
     # a model at every level except the last when working with nested structures.
 
+    """Test nested validation level two models at both levels."""
     dataset = Dataset[Model[list[Model[list[int]]]]](data_file_1=[[123]])
 
     dataset['data_file_2'] = [['234']]
@@ -907,6 +943,7 @@ def test_nested_validation_level_two_models_at_both_levels(runtime: Annotated[Is
 
 
 def test_nested_validation_init_parameters_as_keys_in_data() -> None:
+    """Test nested validation initialization parameters as keys in data."""
     nested_dataset = Dataset[Dataset[Model[str | int]]](a=dict(self=4, value=3, data='abc'))
     assert nested_dataset['a'].to_data() == {'self': 4, 'value': 3, 'data': 'abc'}
 
@@ -918,6 +955,7 @@ def test_nested_validation_init_parameters_as_keys_in_data() -> None:
 
 
 def test_validation_pydantic_types():
+    """Test validation pydantic types."""
     dataset_1 = Dataset[Model[pyd.PositiveInt]]()
 
     dataset_1['data_file_1'] = 123
@@ -930,6 +968,7 @@ def test_validation_pydantic_types():
 
 
 def test_import_and_export():
+    """Test import and export."""
     dataset = Dataset[Model[dict[str, str]]]()
 
     data = {'data_file_1': {'a': 123, 'b': 234, 'c': 345}, 'data_file_2': {'c': 456}}
@@ -1057,6 +1096,7 @@ TODO: Change from Model to _Model caused this test to fail, due to `cls.__name__
 a test suite, not if this is the only test run.
 """)
 def test_import_export_custom_parser_to_other_type():
+    """Test import export custom parser to other type."""
     dataset = Dataset[StringToLength]()
 
     dataset['data_file_1'] = 'And we lived beneath the waves'
@@ -1096,6 +1136,7 @@ def test_generic_dataset_unbound_typevar():
     # TypeVars used for generic Model classes (see test_generic_dataset_bound_typevar() below).
     # Here the TypeVar is used to specialize `tuple` and `list`, not `Model`, and does not need to
     # be bound.
+    """Test generic dataset unbound typevar."""
     DatasetValT = TypeVar('DatasetValT')
 
     class MyTupleOrListDataset(Dataset[Model[tuple[DatasetValT, ...] | list[DatasetValT]]],
@@ -1130,6 +1171,7 @@ def test_generic_dataset_bound_typevar():
     # Note that the TypeVars for generic Model classes need to be bound to a type who in itself, or
     # whose origin_type produces a default value when called without parameters. Here, `ValT` is
     # bound to `int | str`, and `typing.get_origin(int | str)() == 0`.
+    """Test generic dataset bound typevar."""
     ModelValT = TypeVar('ModelValT', bound=int | str, default=int)
 
     class MyListOfIntsOrStringsModel(Model[list[ModelValT]], Generic[ModelValT]):
@@ -1170,6 +1212,7 @@ def test_generic_dataset_bound_typevar():
 
 def test_generic_dataset_two_typevars():
     # Here the TypeVars do not need to be bound, as they are used to specialize `dict`, not `Model`.
+    """Test generic dataset two typevars."""
     KeyT = TypeVar('KeyT')
     ValT = TypeVar('ValT')
 
@@ -1214,6 +1257,7 @@ def test_complex_models():
     # Model subclass
     #
 
+    """Test complex models."""
     class MyRangeList(Model[list[pyd.PositiveInt]]):
         """
         Transforms a pair of min and max ints to an inclusive range
@@ -1332,6 +1376,7 @@ def test_complex_models():
 
 
 def test_dataset_model_class():
+    """Test dataset model class."""
     assert Dataset[Model[int]]().get_type() == Model[int]
     assert Dataset[Model[str]]().get_type() == Model[str]
     assert Dataset[Model[list[float]]]().get_type() == Model[list[float]]
@@ -1339,6 +1384,7 @@ def test_dataset_model_class():
 
 
 def test_dataset_switch_models_issue():
+    """Test dataset switch models issue."""
     dataset = Dataset[Model[int]]({'a': 123, 'b': 234})
     dataset['a'], dataset['b'] = dataset['b'], dataset['a']
 
@@ -1353,6 +1399,7 @@ def test_dataset_switch_models_issue():
 
 
 def test_nested_datasets():
+    """Test nested datasets."""
     nested_data = {'a': {'x': 123}, 'b': {'y': 234}}
     nested_dataset = Dataset[Dataset[Model[int]]](nested_data)
     assert isinstance(nested_dataset['a'], Dataset)
@@ -1386,6 +1433,7 @@ def _assert_no_access_data_exceptions(dataset: Dataset,
                                       model_cls: type,
                                       keys: list[str],
                                       values: list) -> None:
+    """Provide assert no access data exceptions for test reuse."""
     assert len(keys) == len(values) == len(dataset)
     model_values = [model_cls(value) for value in values]
     assert [_ for _ in dataset.values()] == model_values
@@ -1398,6 +1446,7 @@ def _assert_no_access_data_exceptions(dataset: Dataset,
 
 def _assert_access_data_exception(dataset: Dataset, exception_cls: type[Exception],
                                   keys: list[str]) -> None:
+    """Provide assert access data exception for test reuse."""
     with pytest.raises(exception_cls):
         [_ for _ in dataset.values()]
 
@@ -1422,6 +1471,7 @@ def _assert_dataset(
     error_cls: type[Exception] | None,
     values: list | None = None,
 ) -> None:
+    """Provide assert dataset for test reuse."""
     assert len(dataset) == len(keys)
     assert isinstance(dataset, Dataset)
     assert dataset.get_type() == model_cls
@@ -1434,6 +1484,7 @@ def _assert_dataset(
 
 
 def test_dataset_pending_and_failed_data() -> None:
+    """Test dataset pending and failed data."""
     dataset = Dataset[Model[str]]()
 
     dataset['old_data'] = 'Existing data'
@@ -1507,6 +1558,7 @@ def test_dataset_pending_and_failed_data() -> None:
 
 
 def test_dataset_pending_and_failed_data_extract_details() -> None:
+    """Test dataset pending and failed data extract details."""
     dataset = Dataset[Model[str]]()
 
     dataset['data_1'] = 'Existing data'
@@ -1571,6 +1623,7 @@ def test_dataset_pending_and_failed_data_extract_details() -> None:
 
 
 def test_parametrized_dataset() -> None:
+    """Test parametrized dataset."""
     assert ParamUpperStrDataset(x='foo')['x'].content == 'foo'
 
     MyUpperStrDataset = ParamUpperStrDataset.adjust(
@@ -1605,11 +1658,13 @@ def test_parametrized_dataset() -> None:
 
 
 def test_parametrized_dataset_wrong_keyword() -> None:
+    """Test parametrized dataset wrong keyword."""
     with pytest.raises(KeyError):
         ParamUpperStrDataset.adjust('ParamSupperStrDataset', 'ParamSupperStrModel', supper=True)
 
 
 def test_parametrized_dataset_with_none() -> None:
+    """Test parametrized dataset with none."""
     with pytest.raises(ValidationError):
         ParamUpperStrDataset(dict(x=None))
 

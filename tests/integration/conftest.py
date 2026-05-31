@@ -1,3 +1,5 @@
+"""Shared fixtures for integration tests."""
+
 from typing import Annotated
 
 import pytest
@@ -10,12 +12,14 @@ from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 @pytest.fixture(scope='function')
 def runtime(runtime_data_config_variants: Annotated[IsRuntime, pytest.fixture]) -> IsRuntime:
+    """Provide the runtime fixture."""
     return runtime_data_config_variants
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(engine=[EngineChoice.LOCAL, EngineChoice.PREFECT], ids=['local', 'prefect'])
 def runtime_all_engines(runtime: Annotated[IsRuntime, pytest.fixture], engine: str) -> None:
+    """Provide the runtime all engines fixture."""
     runtime.config.engine.choice = engine  # type: ignore[assignment]
 
 

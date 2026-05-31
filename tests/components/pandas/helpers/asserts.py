@@ -1,3 +1,5 @@
+"""Assertions for components pandas tests."""
+
 from omnipy.components.pandas.datasets import PandasDataset
 from omnipy.shared.typing import TYPE_CHECKING
 
@@ -6,12 +8,14 @@ if TYPE_CHECKING:
 
 
 def assert_pandas_frame_dtypes(frame: 'pd.DataFrame', expected_dtypes: tuple) -> None:
+    """Assert pandas frame dtypes."""
     real_dtypes = tuple(str(_) for _ in frame.dtypes)
     assert real_dtypes == expected_dtypes, f'{real_dtypes} != {expected_dtypes}'
 
 
 def assert_pandas_dataset_equals(pandas_dataset_1: PandasDataset,
                                  pandas_dataset_2: PandasDataset) -> None:
+    """Assert pandas dataset equals."""
     from omnipy.components.pandas.lazy_import import pd
 
     assert pandas_dataset_1.keys() == pandas_dataset_2.keys()

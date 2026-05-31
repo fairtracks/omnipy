@@ -1,3 +1,5 @@
+"""Test fixed-parameter and parameter-mapping task mixins."""
+
 from typing import Iterable, Mapping
 
 import pytest
@@ -8,6 +10,7 @@ from ..cases.raw.functions import kwargs_func, power_m1_func
 
 
 def test_property_fixed_params_default_task() -> None:
+    """Test fixed parameters default to empty."""
 
     power_m1_template = TaskTemplate()(power_m1_func)
 
@@ -25,6 +28,7 @@ def test_property_fixed_params_default_task() -> None:
 
 
 def test_property_fixed_params_last_args_task() -> None:
+    """Test fixed parameters can bind trailing arguments."""
 
     square_template = TaskTemplate(fixed_params=dict(exponent=2, minus_one=False))(power_m1_func)
 
@@ -56,6 +60,7 @@ def test_property_fixed_params_last_args_task() -> None:
 
 
 def test_property_fixed_params_first_arg_task() -> None:
+    """Test fixed parameters can bind leading arguments."""
 
     two_power_m1_template = TaskTemplate(fixed_params=dict(number=2))(power_m1_func)
 
@@ -85,6 +90,7 @@ def test_property_fixed_params_first_arg_task() -> None:
 
 
 def test_property_fixed_params_all_args_task() -> None:
+    """Test fixed parameters can bind all required arguments."""
 
     seven_template = TaskTemplate(fixed_params=dict(number=2, exponent=3))(power_m1_func)
 
@@ -118,6 +124,7 @@ def test_property_fixed_params_all_args_task() -> None:
 
 
 def test_property_fixed_params_kwargs_task() -> None:
+    """Test fixed parameters work with kwargs-style tasks."""
 
     kwargs_tmpl = TaskTemplate(fixed_params=dict(number=2, boolean=False))(kwargs_func)
 
@@ -133,6 +140,7 @@ def test_property_fixed_params_kwargs_task() -> None:
 
 
 def test_property_param_key_map_default_task() -> None:
+    """Test parameter key maps default to empty."""
 
     power_m1_template = TaskTemplate()(power_m1_func)
 
@@ -150,6 +158,7 @@ def test_property_param_key_map_default_task() -> None:
 
 
 def test_property_param_key_map_task() -> None:
+    """Test parameter key maps rename accepted arguments."""
     power_m1_template = TaskTemplate(param_key_map=dict(number='n', minus_one='m'))(power_m1_func)
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():
@@ -186,6 +195,7 @@ def test_property_param_key_map_task() -> None:
 
 
 def test_property_param_key_map_validation_task() -> None:
+    """Test parameter key maps reject duplicate target names."""
 
     power_m1_template = TaskTemplate(param_key_map=[('number', 'n'), ('exponent', 'e')])(
         power_m1_func)
@@ -201,6 +211,7 @@ def test_property_param_key_map_validation_task() -> None:
 
 
 def test_property_param_key_map_kwargs_task() -> None:
+    """Test parameter key maps work with kwargs-style tasks."""
 
     kwargs_tmpl = TaskTemplate(param_key_map=dict(number='num', boolean='bool'))(kwargs_func)
 
@@ -217,6 +228,7 @@ def test_property_param_key_map_kwargs_task() -> None:
 
 
 def test_error_properties_param_key_map_and_fixed_params_unmatched_params_task() -> None:
+    """Test fixed params and key maps reject unknown parameters."""
 
     power_m1_template = TaskTemplate()(power_m1_func)
 

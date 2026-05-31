@@ -1,3 +1,5 @@
+"""Tests for registry."""
+
 from copy import copy
 from datetime import datetime, timedelta
 from io import StringIO
@@ -21,10 +23,12 @@ from ..helpers.functions import read_log_lines_from_stream
 
 @pytest.fixture(scope='module')
 def task_template_a() -> MockTaskTemplate:
+    """Provide task template a."""
     MockTaskTemplate.job_creator.engine = MockJobRunnerSubclass()
 
     @MockTaskTemplate(name='a')
     def concat_a(s: str) -> str:
+        """Provide concat a."""
         return s + 'a'
 
     return concat_a
@@ -32,10 +36,12 @@ def task_template_a() -> MockTaskTemplate:
 
 @pytest.fixture(scope='module')
 def task_template_b() -> MockTaskTemplate:
+    """Provide task template b."""
     MockTaskTemplate.job_creator.engine = MockJobRunnerSubclass()
 
     @MockTaskTemplate(name='b')
     def concat_b(s: str) -> str:
+        """Provide concat b."""
         return s + 'b'
 
     return concat_b
@@ -43,18 +49,22 @@ def task_template_b() -> MockTaskTemplate:
 
 @pytest.fixture(scope='module')
 def task_a(task_template_a) -> MockTask:
+    """Provide task a."""
     return task_template_a.apply()
 
 
 @pytest.fixture(scope='module')
 def task_b(task_template_b) -> MockTask:
+    """Provide task b."""
     return task_template_b.apply()
 
 
 @pytest.fixture(scope='module')
 def dag_flow_a(task_template_a, task_template_b) -> MockDagFlow:
+    """Provide dag flow a."""
     @MockDagFlowTemplate(task_template_a, task_template_b, name='a')
     def concat_a(s: str) -> str:
+        """Provide concat a."""
         ...
 
     return concat_a.apply()
@@ -62,8 +72,10 @@ def dag_flow_a(task_template_a, task_template_b) -> MockDagFlow:
 
 @pytest.fixture(scope='module')
 def dag_flow_b(task_template_a, task_template_b) -> MockDagFlow:
+    """Provide dag flow b."""
     @MockDagFlowTemplate(task_template_a, task_template_b, name='b')
     def concat_b(s: str) -> str:
+        """Provide concat b."""
         ...
 
     return concat_b.apply()
@@ -75,6 +87,7 @@ def test_job_state_transitions(
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
+    """Test job state transitions."""
     for job_a, job_b in [(task_a, task_b), (dag_flow_a, dag_flow_b)]:
         registry = RunStateRegistry()
 
@@ -125,6 +138,7 @@ def test_fail_job_state_transitions(
     task_a: Annotated[IsTask, pytest.fixture],
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
 ):
+    """Test fail job state transitions."""
     for job_a in [task_a, dag_flow_a]:
         registry = RunStateRegistry()
 
@@ -166,6 +180,7 @@ def test_datetime_of_state_change_event(
     task_a: Annotated[IsTask, pytest.fixture],
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
 ):
+    """Test datetime of state change event."""
     for job_a in [task_a, dag_flow_a]:
         registry = RunStateRegistry()
         cur_time = datetime.now()
@@ -197,6 +212,7 @@ def test_fail_job_key_error(
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
+    """Test fail job key error."""
     for job_a, job_b in [(task_a, task_b), (dag_flow_a, dag_flow_b)]:
         registry = RunStateRegistry()
 
@@ -226,6 +242,7 @@ def test_same_unique_name_different_job(
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
+    """Test same unique name different job."""
     for job_a, job_b in [(task_a, task_b), (dag_flow_a, dag_flow_b)]:
         job_b = copy(job_b)
         job_b.name = job_a.name
@@ -251,6 +268,7 @@ def test_state_change_logging(
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
+    """Test state change logging."""
     my_stdout = StringIO()
     runtime.config.root_log.stdout = my_stdout
 

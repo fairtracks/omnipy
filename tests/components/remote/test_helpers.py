@@ -1,3 +1,5 @@
+"""Tests for remote helper utilities."""
+
 import asyncio
 from datetime import datetime
 from typing import Annotated, AsyncGenerator
@@ -10,10 +12,12 @@ from omnipy.components.remote.helpers import RateLimitingClientSession
 
 
 async def my_endpoint(request: web.Request) -> web.Response:
+    """Return a simple JSON response for rate-limiting tests."""
     return web.json_response('My response')
 
 
 def create_app() -> web.Application:
+    """Create the aiohttp app used by rate-limiting tests."""
     app = web.Application()
     app.router.add_route('GET', '/my_endpoint', my_endpoint)
     return app
@@ -21,6 +25,7 @@ def create_app() -> web.Application:
 
 @pc.fixture(scope='function')
 async def my_endpoint_url(aiohttp_server) -> AsyncGenerator[str, None]:
+    """Return the URL for the rate-limiting test endpoint."""
     server = await aiohttp_server(create_app())
     yield str(server.make_url('/my_endpoint'))
 
@@ -30,6 +35,7 @@ async def _assert_requests_and_get_run_time_in_secs(
     my_endpoint_url: str,
     num_requests: int,
 ) -> float:
+    """Assert successful responses and return the total run time."""
     start_time = datetime.now()
 
     tasks = [client_session.get(my_endpoint_url) for _ in range(num_requests)]
@@ -58,6 +64,7 @@ async def test_rate_limiting_client_session(
     run_time_min: float,
     run_time_max: float,
 ) -> None:
+    """Test client-side rate limiting keeps request throughput within bounds."""
     client_session = RateLimitingClientSession(requests_per_time_period, time_period_in_secs)
 
     async with client_session:

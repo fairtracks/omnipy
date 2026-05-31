@@ -1,3 +1,5 @@
+"""Tests for styles."""
+
 import asyncio
 from collections import defaultdict
 from contextlib import contextmanager
@@ -32,6 +34,7 @@ from ....helpers.functions import get_pip_installed_packages
 
 @pc.fixture
 def example_base16_theme_yaml() -> str:
+    """Provide example Base16 theme yaml."""
     return dedent("""
         system: "base16"
         name: "Example 1"
@@ -59,6 +62,7 @@ def example_base16_theme_yaml() -> str:
 
 @pc.fixture
 def example_base2_theme_yaml() -> str:
+    """Provide example Base2 theme yaml."""
     return dedent("""
         system: "base2"
         name: "Example Base2"
@@ -72,6 +76,7 @@ def example_base2_theme_yaml() -> str:
 
 @pc.fixture
 def example_base16_theme() -> Base16Theme:
+    """Provide example Base16 theme."""
     return Base16Theme(
         name='Example 1',
         author='John Doe',
@@ -103,9 +108,11 @@ async def _get_endpoint_url(
     example_theme_yaml: str,
     failing_every_other_time: bool = False,
 ) -> str:
+    """Get endpoint URL."""
     _request_counts_per_url: defaultdict[str, int] = defaultdict(int)
 
     async def _my_endpoint(request: web.Request) -> web.Response:
+        """Provide my endpoint."""
         url = str(request.url)
         _request_counts_per_url[url] += 1
         if failing_every_other_time and _request_counts_per_url[url] % 2 == 0:
@@ -117,6 +124,7 @@ async def _get_endpoint_url(
         return web.Response(text=example_theme_yaml)
 
     def _create_app() -> web.Application:
+        """Provide create app."""
         app = web.Application()
         app.router.add_route('GET', endpoint_path, _my_endpoint)
         return app
@@ -130,6 +138,7 @@ async def my_base16_endpoint_url(
     aiohttp_server,
     example_base16_theme_yaml: Annotated[str, pytest.fixture],
 ) -> AsyncGenerator[str, None]:
+    """Provide my Base16 endpoint URL."""
     yield await _get_endpoint_url(aiohttp_server, '/example-1.yaml', example_base16_theme_yaml)
 
 
@@ -138,6 +147,7 @@ async def my_base2_endpoint_url(
     aiohttp_server,
     example_base2_theme_yaml: Annotated[str, pytest.fixture],
 ) -> AsyncGenerator[str, None]:
+    """Provide my Base2 endpoint URL."""
     yield await _get_endpoint_url(aiohttp_server, '/example-2.yaml', example_base2_theme_yaml)
 
 
@@ -146,6 +156,7 @@ async def my_base16_intermittently_failing_endpoint_url(
     aiohttp_server,
     example_base16_theme_yaml: Annotated[str, pytest.fixture],
 ) -> AsyncGenerator[str, None]:
+    """Provide my Base16 intermittently failing endpoint URL."""
     yield await _get_endpoint_url(
         aiohttp_server,
         '/example-1.yaml',
@@ -172,7 +183,9 @@ async def test_fetch_base16_theme(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ) -> None:
+    """Test fetch Base16 theme."""
     def _test_fetch_base16_theme():
+        """Provide test fetch Base16 theme."""
         base16_theme_output = fetch_base16_theme(my_base16_endpoint_url)
         assert base16_theme_output == example_base16_theme
 
@@ -185,7 +198,9 @@ async def test_fetch_base16_theme_with_caching(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ) -> None:
+    """Test fetch Base16 theme with caching."""
     def _test_fetch_base16_theme():
+        """Provide test fetch Base16 theme."""
         base16_theme_output = fetch_base16_theme(my_base16_intermittently_failing_endpoint_url)
         base16_theme_output = fetch_base16_theme(my_base16_intermittently_failing_endpoint_url)
         assert base16_theme_output == example_base16_theme
@@ -198,7 +213,9 @@ async def test_fail_incorrect_system_fetch_base2_theme(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ) -> None:
+    """Test fail incorrect system fetch Base2 theme."""
     def _test_fail_incorrect_system_fetch_base2_theme():
+        """Provide test fail incorrect system fetch Base2 theme."""
         with pytest.raises(ValueError):
             fetch_base16_theme(my_base2_endpoint_url)
 
@@ -207,6 +224,7 @@ async def test_fail_incorrect_system_fetch_base2_theme(
 
 def _assert_example_base16_style(TintedBase16Example_1Style: type[pygments.style.Style],
                                  example_theme: Base16Theme):
+    """Assert example Base16 style."""
     assert issubclass(TintedBase16Example_1Style, pygments.style.Style)
     assert issubclass(TintedBase16Example_1Style, TintedBase16Style)
     assert TintedBase16Example_1Style.__name__ == 'TintedBase16Example_1Style'
@@ -219,6 +237,7 @@ def _assert_example_base16_style(TintedBase16Example_1Style: type[pygments.style
 
 
 def test_create_dynamic_style_class(example_base16_theme: Annotated[Base16Theme, pytest.fixture]):
+    """Test create dynamic style class."""
     TintedBase16Example_1Style = create_dynamic_base16_style_class(
         'example-1-t16',
         example_base16_theme,
@@ -228,12 +247,14 @@ def test_create_dynamic_style_class(example_base16_theme: Annotated[Base16Theme,
 
 def test_fail_create_dynamic_style_class_incorrect_theme_suffix(
         example_base16_theme: Annotated[Base16Theme, pytest.fixture]) -> None:
+    """Test fail create dynamic style class incorrect theme suffix."""
     with pytest.raises(AssertionError):
         create_dynamic_base16_style_class('my-example-1', example_base16_theme)
 
 
 @contextmanager
 def _setup_base16_download_url(my_base16_endpoint_url: str) -> Iterator[None]:
+    """Set up base16 download URL."""
     import omnipy.data._display.styles.dynamic_styles
     domain_url = '/'.join(my_base16_endpoint_url.split('/')[:-1])
     with hold_and_reset_prev_attrib_value(
@@ -250,7 +271,9 @@ async def test_auto_create_dynamic_style_class_at_import(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ):
+    """Test auto create dynamic style class at import."""
     def _test_auto_create_dynamic_style_class_at_import():
+        """Provide test auto create dynamic style class at import."""
         with _setup_base16_download_url(my_base16_endpoint_url):
             from omnipy.data._display.styles.dynamic_styles import TintedBase16Example_1Style
             style_cls = TintedBase16Example_1Style
@@ -265,7 +288,9 @@ async def test_install_base16_theme(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ):
+    """Test install Base16 theme."""
     def _test_install_base16_theme():
+        """Provide test install Base16 theme."""
         with _setup_base16_download_url(my_base16_endpoint_url):
             install_base16_theme('example-1-t16')
             _assert_example_base16_style(
@@ -282,7 +307,9 @@ async def test_fail_install_base16_theme_incorrect_theme_prefix(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ):
+    """Test fail install Base16 theme incorrect theme prefix."""
     def _test_fail_install_base16_theme_incorrect_theme_prefix():
+        """Provide test fail install Base16 theme incorrect theme prefix."""
         with pytest.raises(AssertionError):
             with _setup_base16_download_url(my_base16_endpoint_url):
                 install_base16_theme('my-example-1')
@@ -296,7 +323,9 @@ async def test_fail_import_missing(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ):
+    """Test fail import missing."""
     def _test_fail_import_missing():
+        """Provide test fail import missing."""
         with _setup_base16_download_url(my_base16_endpoint_url):
             with pytest.raises(ImportError):
                 from omnipy.data._display.styles.dynamic_styles import \
@@ -309,6 +338,7 @@ async def test_fail_import_missing(
 
 
 def _filter_real_styles(external: bool) -> list[str]:
+    """Provide filter real styles."""
     IGNORE_PREFIXES = ['ansi-', 'random', 'auto']
     EXTERNAL_SUFFIXES = ['-t16']
 
@@ -325,6 +355,7 @@ def test_omnipy_style_import() -> None:
     # To make sure the tests only run when the omnipy package is installed, which is required for
     # the styles to be registered with the pygments package. This is needed as the tests might be
     # run in a development environment where the omnipy package is not installed.
+    """Test omnipy style import."""
     if 'omnipy' in get_pip_installed_packages():
         installed_styles = _filter_real_styles(external=False)
         for style in installed_styles:
@@ -333,6 +364,7 @@ def test_omnipy_style_import() -> None:
 
 
 def test_dynamic_style_import(register_runtime: Annotated[Iterable[None], pytest.fixture],) -> None:
+    """Test dynamic style import."""
     installable_styles = _filter_real_styles(external=True)
     for style in random.sample(installable_styles, 3):
         print(f'Installing style: {style}...')
@@ -347,6 +379,7 @@ def test_dynamic_style_import(register_runtime: Annotated[Iterable[None], pytest
 
 def test_resolve_and_fetch_ansi_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    """Test resolve and fetch ANSI style."""
     style = resolve_and_fetch_style('ansi-dark')
     assert style in rich.syntax.RICH_SYNTAX_THEMES
 
@@ -356,6 +389,7 @@ def test_resolve_and_fetch_ansi_style(
 
 def test_resolve_and_fetch_recommended_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    """Test resolve and fetch recommended style."""
     style = resolve_and_fetch_style('omnipy-selenized-white')
     pygments_style = pygments.styles.get_style_by_name(style)
     assert pygments_style.background_color == '#ffffff'
@@ -363,6 +397,7 @@ def test_resolve_and_fetch_recommended_style(
 
 def test_resolve_and_fetch_pygments_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    """Test resolve and fetch pygments style."""
     style = resolve_and_fetch_style('manni-pygments')
     pygments_style = pygments.styles.get_style_by_name(style)
     assert pygments_style.background_color == '#f0f3f3'
@@ -370,6 +405,7 @@ def test_resolve_and_fetch_pygments_style(
 
 def test_resolve_and_fetch_t16_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    """Test resolve and fetch t16 style."""
     style = resolve_and_fetch_style('zenburn-t16')
     pygments_style = pygments.styles.get_style_by_name(style)
     assert pygments_style.background_color == '#383838'
@@ -377,6 +413,7 @@ def test_resolve_and_fetch_t16_style(
 
 def test_resolve_and_fetch_random_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
+    """Test resolve and fetch random style."""
     for _ in range(5):
         style = resolve_and_fetch_style('random')
         assert style in rich.syntax.RICH_SYNTAX_THEMES or pygments.styles.get_style_by_name(style)

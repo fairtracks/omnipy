@@ -1,3 +1,5 @@
+"""Tests for data display frames."""
+
 import pytest
 
 from omnipy.data._display.dimensions import AnyDimensions, Dimensions
@@ -20,6 +22,7 @@ def _assert_frame(
     exp_frame_has_height: bool,
     exp_frame_has_width_and_height: bool,
 ) -> None:
+    """Provide assert frame for test reuse."""
     if dims is not None:
         frame = Frame(dims)
     else:
@@ -53,6 +56,7 @@ def _assert_frame(
 
 
 def test_frame() -> None:
+    """Test frame."""
     frame: Frame = empty_frame()
     assert frame.dims == Dimensions(width=None, height=None)
 
@@ -63,6 +67,7 @@ def test_frame() -> None:
 
 
 def test_frame_fixed_dims() -> None:
+    """Test frame fixed dims."""
     no_dims_frame: Frame = empty_frame()
     assert no_dims_frame.fixed_width is False
     assert no_dims_frame.fixed_height is False
@@ -102,6 +107,7 @@ def test_frame_fixed_dims() -> None:
 
 
 def test_fail_frame_fixed_dims_if_none() -> None:
+    """Test fail frame fixed dims if none."""
     with pytest.raises(ValidationError):
         Frame(Dimensions(None, None), fixed_width=True)
 
@@ -116,6 +122,7 @@ def test_fail_frame_fixed_dims_if_none() -> None:
 
 
 def test_frame_types() -> None:
+    """Test frame types."""
     def undefined_frame_func(dims: UndefinedFrame) -> None:
         ...
 
@@ -163,6 +170,7 @@ def test_frame_types() -> None:
 
 
 def test_frame_hashable() -> None:
+    """Test frame hashable."""
     frame_1 = empty_frame()
     frame_2 = empty_frame()
     frame_3 = Frame(Dimensions(None, 20))
@@ -186,6 +194,7 @@ def test_frame_hashable() -> None:
 
 # noinspection PyDataclass
 def test_fail_frame_no_assignments() -> None:
+    """Test fail frame no assignments."""
     frame = empty_frame()
 
     with pytest.raises(AttributeError):
@@ -199,6 +208,7 @@ def test_fail_frame_no_assignments() -> None:
 
 
 def test_fail_frame_if_extra_param() -> None:
+    """Test fail frame if extra parameter."""
     with pytest.raises(TypeError):
         Frame(Dimensions(), 123)  # type: ignore
 
@@ -207,6 +217,7 @@ def test_fail_frame_if_extra_param() -> None:
 
 
 def test_frame_modified_copy() -> None:
+    """Test frame modified copy."""
     frame = Frame(Dimensions(10, 20), fixed_width=False, fixed_height=True)
 
     # Exact copy
@@ -238,6 +249,7 @@ def test_frame_modified_copy() -> None:
 
 def test_cropped_dims() -> None:
     # No dimensions defined
+    """Test cropped dims."""
     frame: AnyFrame = Frame(Dimensions(None, None), fixed_width=False, fixed_height=False)
 
     assert frame.crop_width(11) == 11

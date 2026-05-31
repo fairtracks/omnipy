@@ -1,3 +1,5 @@
+"""Tests for data display dimensions."""
+
 from typing import TypedDict
 
 import pytest
@@ -27,6 +29,7 @@ def _assert_dimensions(
     exp_has_height: bool,
     exp_has_width_and_height: bool,
 ) -> None:
+    """Provide assert dimensions for test reuse."""
     kwargs = _WidthAndHeightKwargs()
 
     kwargs['width'] = width
@@ -62,6 +65,7 @@ def _assert_dimensions(
 
 
 def test_dimensions() -> None:
+    """Test dimensions."""
     _assert_dimensions(None, None, False, False, False)
     _assert_dimensions(10, None, True, False, False)
     _assert_dimensions(None, 20, False, True, False)
@@ -73,6 +77,7 @@ def test_dimensions() -> None:
 
 
 def test_dimension_types() -> None:
+    """Test dimension types."""
     def undefined_dims_func(dims: UndefinedDimensions) -> None:
         ...
 
@@ -120,6 +125,7 @@ def test_dimension_types() -> None:
 
 
 def test_fail_dimensions_if_negative() -> None:
+    """Test fail dimensions if negative."""
     with pytest.raises(ValueError):
         Dimensions(-1, None)
 
@@ -137,6 +143,7 @@ def test_fail_dimensions_if_negative() -> None:
 
 
 def test_dimensions_hashable() -> None:
+    """Test dimensions hashable."""
     dims_1 = Dimensions(None, None)
     dims_2 = Dimensions(None, None)
     dims_3 = Dimensions(10, None)
@@ -153,6 +160,7 @@ def test_dimensions_hashable() -> None:
 
 # noinspection PyDataclass
 def test_fail_dimensions_no_assignments() -> None:
+    """Test fail dimensions no assignments."""
     dims: Dimensions = Dimensions(width=None, height=10)
 
     with pytest.raises(AttributeError):
@@ -164,6 +172,7 @@ def test_fail_dimensions_no_assignments() -> None:
 
 
 def test_fail_dimensions_if_extra_param() -> None:
+    """Test fail dimensions if extra parameter."""
     with pytest.raises(TypeError):
         Dimensions(10, 20, 30)  # type: ignore
 
@@ -178,6 +187,7 @@ def _assert_within_frame(width: int,
                          fits_width: bool | None,
                          fits_height: bool | None,
                          fits_both: bool | None):
+    """Provide assert within frame for test reuse."""
     fit = DimensionsFit(Dimensions(width, height), Dimensions(frame_width, frame_height))
     assert fit.width is fits_width
     assert fit.height is fits_height
@@ -185,6 +195,7 @@ def _assert_within_frame(width: int,
 
 
 def test_dimensions_fit() -> None:
+    """Test dimensions fit."""
     _assert_within_frame(10, 10, None, None, None, None, None)
     _assert_within_frame(10, 10, 10, None, True, None, None)
     _assert_within_frame(10, 10, None, 10, None, True, None)
@@ -195,6 +206,7 @@ def test_dimensions_fit() -> None:
 
 
 def test_dimensions_fit_zeros() -> None:
+    """Test dimensions fit zeros."""
     _assert_within_frame(0, 0, None, None, None, None, None)
     _assert_within_frame(0, 0, 0, None, True, None, None)
     _assert_within_frame(0, 0, None, 0, None, True, None)
@@ -206,6 +218,7 @@ def test_dimensions_fit_zeros() -> None:
 
 # noinspection PyDataclass
 def test_dimensions_fit_immutable_properties() -> None:
+    """Test dimensions fit immutable properties."""
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(10, 10))
 
     with pytest.raises(AttributeError):
@@ -219,6 +232,7 @@ def test_dimensions_fit_immutable_properties() -> None:
 
 
 def test_dimensions_fit_proportionality_basic() -> None:
+    """Test dimensions fit proportionality basic."""
     Dims = Dimensions
 
     assert DimensionsFit(Dims(10, 10), Dims(20, 20)).proportionality is Proportionally.SAME
@@ -234,6 +248,7 @@ def test_dimensions_fit_proportionality_basic() -> None:
 
 
 def test_dimensions_fit_proportionality_large_deviations() -> None:
+    """Test dimensions fit proportionality large deviations."""
     Dims = Dimensions
 
     # Large deviations of proportionality give much wider or much thinner
@@ -265,6 +280,7 @@ def test_dimensions_fit_proportionality_large_deviations() -> None:
 
 
 def test_dimensions_fit_proportionality_no_freedom() -> None:
+    """Test dimensions fit proportionality no freedom."""
     Dims = Dimensions
 
     assert DimensionsFit(
@@ -275,6 +291,7 @@ def test_dimensions_fit_proportionality_no_freedom() -> None:
 
 def test_dimensions_fit_repr() -> None:
     # Test basic case with all properties defined
+    """Test dimensions fit repr."""
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(20, 20))
     assert repr(fit) == \
         'DimensionsFit(width=True, height=True, both=True, proportionality=Proportionally.SAME)'

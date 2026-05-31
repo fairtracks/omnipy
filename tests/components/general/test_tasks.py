@@ -1,3 +1,5 @@
+"""Tests for general-purpose dataset conversion tasks."""
+
 from typing import Generic
 
 from typing_extensions import TypeVar
@@ -63,6 +65,7 @@ class RoundedIntDataset(_RoundedIntDataset[RoundedIntModel]):
 
 
 def test_convert_dataset():
+    """Convert datasets between simple model types."""
     floats = FloatDataset(a=1.23, b=3.6)
     ints = convert_dataset.run(floats, dataset_cls=IntDataset)
     assert isinstance(ints, IntDataset)
@@ -70,6 +73,7 @@ def test_convert_dataset():
 
 
 def test_convert_dataset_with_default_params():
+    """Convert datasets using default adjustable parameters."""
     floats = FloatDataset(a=1.23, b=3.6)
     ints = convert_dataset.run(floats, dataset_cls=RoundedIntDataset)
     assert isinstance(ints, RoundedIntDataset)
@@ -77,6 +81,7 @@ def test_convert_dataset_with_default_params():
 
 
 def test_convert_dataset_with_params() -> None:
+    """Convert datasets using customized adjustable parameters."""
     RoundToNearestIntDataset = RoundedIntDataset.adjust(
         'RoundToNearestIntDataset', 'RoundToNearestIntModel', round_to_nearest=True)
 

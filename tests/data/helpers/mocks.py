@@ -1,3 +1,5 @@
+"""Mock objects for data tests."""
+
 import sys
 from typing import Any, IO, Type
 

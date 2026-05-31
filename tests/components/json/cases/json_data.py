@@ -1,3 +1,5 @@
+"""JSON data cases for components JSON tests."""
+
 from dataclasses import dataclass, field
 
 import pytest_cases as pc
@@ -66,12 +68,14 @@ from .raw.examples import (b_bool,
 
 @pc.case(id='test_json_scalar', tags=[])
 def case_json_scalar() -> CaseInfo:
+    """Return the jSON scalar case."""
     @dataclass
     class ScalarDataPoints:
         #
         # JsonScalarModel
         #
 
+        """Define ScalarDataPoints."""
         s_none: None = b_none
         s_int: int = b_int
         s_float: float = b_float
@@ -92,12 +96,14 @@ def case_json_scalar() -> CaseInfo:
 
 @pc.case(id='test_json_list', tags=[])
 def case_json_list() -> CaseInfo:
+    """Return the jSON list case."""
     @dataclass
     class JsonListDataPoints:
         #
         # JsonListModel
         #
 
+        """Define JsonListDataPoints."""
         err_l_none: None = b_none
         err_l_int: int = b_int
         err_l_float: float = b_float
@@ -119,12 +125,14 @@ def case_json_list() -> CaseInfo:
 
 @pc.case(id='test_json_dict', tags=[])
 def case_json_dict() -> CaseInfo:
+    """Return the jSON dict case."""
     @dataclass
     class JsonDictDataPoints:
         #
         # JsonDictModel
         #
 
+        """Define JsonDictDataPoints."""
         err_d_none: None = b_none
         err_d_int: int = b_int
         err_d_float: float = b_float
@@ -156,12 +164,14 @@ def case_json_dict() -> CaseInfo:
 
 @pc.case(id='test_json_list_or_dict', tags=[])
 def case_json_list_or_dict() -> CaseInfo:
+    """Return the jSON list or dict case."""
     @dataclass
     class JsonListOrDictDataPoints:
         #
         # JsonListOrDictModel
         #
 
+        """Define JsonListOrDictDataPoints."""
         err_l_none: None = b_none
         err_l_int: int = b_int
         err_l_float: float = b_float
@@ -183,12 +193,14 @@ def case_json_list_or_dict() -> CaseInfo:
 
 @pc.case(id='test_json', tags=[])
 def case_json() -> CaseInfo:
+    """Return the jSON case."""
     @dataclass
     class JsonDataPoints:
         #
         # JsonModel
         #
 
+        """Define JsonDataPoints."""
         j_none: None = b_none
         j_int: int = b_int
         j_float: float = b_float
@@ -227,6 +239,7 @@ def case_json() -> CaseInfo:
 
 @pc.case(id='test_json_nested', tags=[])
 def case_json_nested() -> CaseInfo:
+    """Return the jSON nested case."""
     _two_level_list: list[JS | list[JS] | dict[str, JS]] = b_list + [list(b_list)] + [dict(b_dict)]
     _two_level_dict: dict[str, str | list[JS] | dict[str, JS]] = {
         'a': b_str, 'b': list(b_list), 'c': dict(b_dict)
@@ -239,6 +252,7 @@ def case_json_nested() -> CaseInfo:
         #
 
         # Origs: l_two_level_list, j_two_level_list
+        """Define JsonNestedDataPoints."""
         lj_two_level_list: list[JS | list[JS] | dict[str, JS]] = \
             field(default_factory=lambda: _two_level_list)
 
@@ -303,6 +317,7 @@ def case_json_nested() -> CaseInfo:
 
 @pc.case(id='test_json_list_on_top', tags=[])
 def case_json_list_on_top() -> CaseInfo:
+    """Return the jSON list on top case."""
     @dataclass
     class JsonListOnTopDataPoints:
 
@@ -310,6 +325,7 @@ def case_json_list_on_top() -> CaseInfo:
         # JsonListOfScalarsModel
         #
 
+        """Define JsonListOnTopDataPoints."""
         err_l_list_of_scalars_none: None = b_none
         err_l_list_of_scalars_int: int = b_int
         err_l_list_of_scalars_float: float = b_float
@@ -423,6 +439,7 @@ def case_json_list_on_top() -> CaseInfo:
 
 @pc.case(id='test_json_dict_on_top', tags=[])
 def case_json_dict_on_top() -> CaseInfo:
+    """Return the jSON dict on top case."""
     @dataclass
     class JsonDictOnTopDataPoints:
 
@@ -430,6 +447,7 @@ def case_json_dict_on_top() -> CaseInfo:
         # JsonDictOfScalarsModel
         #
 
+        """Define JsonDictOnTopDataPoints."""
         err_d_dict_of_scalars_none: None = b_none
         err_d_dict_of_scalars_int: int = b_int
         err_d_dict_of_scalars_float: float = b_float
@@ -574,6 +592,7 @@ def case_json_dict_on_top() -> CaseInfo:
 
 @pc.case(id='test_json_nested_lists', tags=[])
 def case_json_nested_lists() -> CaseInfo:
+    """Return the jSON nested lists case."""
     @dataclass
     class JsonNestedListsDataPoints:
 
@@ -581,6 +600,7 @@ def case_json_nested_lists() -> CaseInfo:
         # JsonOnlyListsModel
         #
 
+        """Define JsonNestedListsDataPoints."""
         v_no_dicts_none: None = b_none
         v_no_dicts_int: int = b_int
         v_no_dicts_float: float = b_float
@@ -657,12 +677,14 @@ def case_json_nested_lists() -> CaseInfo:
 
 @pc.case(id='test_json_nested_dicts', tags=[])
 def case_json_nested_dicts() -> CaseInfo:
+    """Return the jSON nested dicts case."""
     @dataclass
     class JsonNestedDictsDataPoints:
         #
         # JsonOnlyDictsModel
         #
 
+        """Define JsonNestedDictsDataPoints."""
         v_no_lists_none: None = b_none
         v_no_lists_int: int = b_int
         v_no_lists_float: float = b_float
@@ -760,12 +782,14 @@ def case_json_nested_dicts() -> CaseInfo:
 
 @pc.case(id='test_json_more_specific_types', tags=[])
 def case_json_more_specific_types() -> CaseInfo:
+    """Return the jSON more specific types case."""
     @dataclass
     class JsonMoreSpecificTypesDataPoints:
         #
         # JsonListOfNestedDictsModel
         #
 
+        """Define JsonMoreSpecificTypesDataPoints."""
         err_m_list_of_nested_dicts_none: None = b_none
         err_m_list_of_nested_dicts_int: int = b_int
         err_m_list_of_nested_dicts_float: float = b_float

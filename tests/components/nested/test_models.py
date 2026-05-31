@@ -1,3 +1,5 @@
+"""Tests for nested models and datasets."""
+
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -13,6 +15,7 @@ from omnipy.util.pydantic import ValidationError
 
 
 def test_enumerated_list_of_tuples_model() -> None:
+    """Normalize enumerated tuple lists with sequential indexes."""
     data = [(0, 'a'), ('1', 'b'), (2, 'c')]
     expected = [(0, 'a'), (1, 'b'), (2, 'c')]
     enumerated = EnumeratedListOfTuplesModel(data)
@@ -27,6 +30,7 @@ def test_enumerated_list_of_tuples_model() -> None:
 
 
 def test_enumerated_list_of_tuples_model_failures() -> None:
+    """Reject enumerated tuple lists with invalid indexes."""
     data_not_sequential = [(3, 'a'), (5, 'b'), (1, 'c')]
     with pytest.raises(ValidationError):
         EnumeratedListOfTuplesModel(data_not_sequential)
@@ -37,6 +41,7 @@ def test_enumerated_list_of_tuples_model_failures() -> None:
 
 
 def test_enumerated_list_model() -> None:
+    """Enumerate plain lists into indexed tuple pairs."""
     data = ['a', 'b', 'c']
     expected = [(0, 'a'), (1, 'b'), (2, 'c')]
     enumerated = EnumeratedListModel(data)
@@ -64,6 +69,7 @@ def test_enumerated_list_model() -> None:
 
 
 def test_nested_dataset_only_dicts() -> None:
+    """Treat nested dict structures as nested datasets."""
     nested_dict_data = {'id_0': {'name': 'Alice', 'age': 30}, 'id_1': {'name': 'Bob', 'age': 25}}
     nested_dict_dataset = NestedDataset(nested_dict_data)
     assert nested_dict_dataset.to_data() == nested_dict_data
@@ -88,6 +94,7 @@ def test_nested_dataset_only_dicts() -> None:
 
 
 def test_list_as_nested_dataset_model() -> None:
+    """Convert lists into nested-dataset-compatible mappings."""
     list_data = [123, 'abc', 45.6, True, None, {'x': 1, 'y': 2}]
     list_data_expected_output = {
         '0': 123, '1': 'abc', '2': 45.6, '3': True, '4': None, '5': {
@@ -121,6 +128,7 @@ def test_nested_dataset_forward_ref_updates_with_table_model_variants() -> None:
 def test_nested_dataset_lists_and_dicts(
         skip_test_if_dynamically_convert_elements_to_models: Annotated[None,
                                                                        pytest.fixture]) -> None:
+    """Handle nested datasets containing both lists and dicts."""
     nested_lists_and_dict_data = {
         'id_0': {
             'name':

@@ -1,3 +1,5 @@
+"""Tests for remote request tasks."""
+
 import asyncio
 from functools import partial
 from typing import Annotated, Any, cast
@@ -124,6 +126,7 @@ def _assert_query_results(assert_model_if_dyn_conv_else_val,
                           case: RequestTypeCase,
                           data: Dataset,
                           auto_model_type: type[Model]):
+    """Assert remote query results for the requested dataset type."""
     assert isinstance(data, case.dataset_cls)
     _type = case.dataset_cls.get_type(
     ) if case.dataset_cls != AutoResponseContentDataset else auto_model_type
@@ -139,6 +142,7 @@ def _assert_query_results(assert_model_if_dyn_conv_else_val,
 
 
 def _assert_bytes_query_results(data: StrictBytesDataset):
+    """Assert the trailing bytes content for each lyrics response."""
     assert_val(data['jokke'].content[-10:], bytes | str, b'f\\u00e5"]}')
     assert_val(data['odd'].content[-10:], bytes | str, b'5 drite"]}')
     assert_val(data['delillos'].content[-10:], bytes | str, b'ttifire"]}')
@@ -146,6 +150,7 @@ def _assert_bytes_query_results(data: StrictBytesDataset):
 
 
 def _assert_str_query_results(data: StrictStrDataset):
+    """Assert the trailing text content for each lyrics response."""
     assert_val(data['jokke'].content[-10:], str | bytes, 'f\\u00e5"]}')
     assert_val(data['odd'].content[-10:], str | bytes, '5 drite"]}')
     assert_val(data['delillos'].content[-10:], str | bytes, 'ttifire"]}')
@@ -153,6 +158,7 @@ def _assert_str_query_results(data: StrictStrDataset):
 
 
 def _assert_json_query_results(data: JsonDictOfListsDataset):
+    """Assert the parsed JSON content for each lyrics response."""
     assert_model_or_val(data['jokke']['author'], str, 'Joachim Nielsen')
     assert_model_or_val(data['jokke']['lyrics'][0], str, "Her kommer vinter'n")
     assert_model_or_val(data['odd']['author'], str, 'Odd Børretzen')
@@ -169,6 +175,7 @@ async def test_get_from_api_endpoint_without_retry_client(
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
     case: RequestTypeCase,
 ) -> None:
+    """Test fetching remote endpoint data without an external client session."""
     if case.is_async:
         data = await case.job.run(endpoint.query_urls, **case.kwargs)
     else:
@@ -208,6 +215,7 @@ async def test_get_from_api_endpoint_with_retry_client(
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
     case: RequestTypeCase,
 ) -> None:
+    """Test fetching remote endpoint data with a shared client session."""
 
     async with aiohttp.ClientSession() as client_session:
         async with get_retry_client(client_session=client_session) as retry_client:

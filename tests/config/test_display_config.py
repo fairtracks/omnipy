@@ -1,3 +1,5 @@
+"""Test display-related config behavior."""
+
 from typing_extensions import ClassVar, override
 
 from omnipy.config.data import ColorConfig, DimsModeConfig
@@ -7,6 +9,7 @@ import omnipy.util.pydantic as pyd
 
 
 class NoSizeDisplayDimsModeConfig(DimsModeConfig):
+    """Provide a dims config with no detected display size."""
     @classmethod
     @override
     def _get_available_display_dims(
@@ -15,6 +18,7 @@ class NoSizeDisplayDimsModeConfig(DimsModeConfig):
 
 
 def test_dims_mode_config_no_display_dims_size_set() -> None:
+    """Test dims config defaults when no display size is available."""
     no_size_display_config = NoSizeDisplayDimsModeConfig()
     assert no_size_display_config.width == 80
     assert no_size_display_config.height == 24
@@ -44,6 +48,7 @@ def test_dims_mode_config_no_display_dims_size_set() -> None:
 
 
 class BothSizesDisplayDimsModeConfig(DimsModeConfig):
+    """Provide a dims config with detected width and height."""
     display_width: ClassVar[pyd.NonNegativeInt] = 200
     display_height: ClassVar[pyd.NonNegativeInt] = 200
 
@@ -55,6 +60,7 @@ class BothSizesDisplayDimsModeConfig(DimsModeConfig):
 
 
 def test_dims_mode_config_both_display_dims_size_set() -> None:
+    """Test dims config follows detected width and height."""
     both_sizes_display_config = BothSizesDisplayDimsModeConfig()
     assert both_sizes_display_config.width == 200
     assert both_sizes_display_config.height == 200
@@ -93,6 +99,7 @@ def test_dims_mode_config_both_display_dims_size_set() -> None:
 
 
 class OnlyWidthDisplayDimsModeConfig(DimsModeConfig):
+    """Provide a dims config with only detected width."""
     display_width: ClassVar[pyd.NonNegativeInt] = 200
     display_height: ClassVar[pyd.NonNegativeInt | None] = None
 
@@ -104,6 +111,7 @@ class OnlyWidthDisplayDimsModeConfig(DimsModeConfig):
 
 
 def test_dims_mode_config_only_width_set() -> None:
+    """Test dims config follows only a detected width."""
     only_width_display_config = OnlyWidthDisplayDimsModeConfig()
     assert only_width_display_config.width == 200
     assert only_width_display_config.height == 24
@@ -141,6 +149,7 @@ def test_dims_mode_config_only_width_set() -> None:
 
 
 def test_color_config_auto_style_ansi() -> None:
+    """Test ANSI color styles are chosen automatically."""
     color_config = ColorConfig()
 
     assert color_config.system is DisplayColorSystem.AUTO
@@ -157,6 +166,7 @@ def test_color_config_auto_style_ansi() -> None:
 
 
 def test_color_config_auto_style_more_colors() -> None:
+    """Test richer color systems choose richer recommended styles."""
     color_config = ColorConfig(system=DisplayColorSystem.ANSI_256)
     assert color_config.style is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
 
@@ -174,6 +184,7 @@ def test_color_config_auto_style_more_colors() -> None:
 
 
 def test_color_config_specific_not_recommended_style() -> None:
+    """Test explicit non-recommended styles override auto selection."""
     color_config = ColorConfig(
         system=DisplayColorSystem.ANSI_RGB, style=DarkHighContrastColorStyles.GOTHAM_T16)
     # If a specific style is set, it overrides the automatic style selection.
@@ -186,6 +197,7 @@ def test_color_config_specific_not_recommended_style() -> None:
 
 
 def test_color_config_specific_style_recommended_style() -> None:
+    """Test explicit recommended styles still resolve through auto selection."""
     color_config = ColorConfig(style=RecommendedColorStyles.OMNIPY_SELENIZED_LIGHT)
     # Automatic style selection only applies when style is set to auto or
     # one of the recommended styles.

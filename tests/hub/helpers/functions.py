@@ -1,3 +1,5 @@
+"""Helper functions for hub tests."""
+
 from datetime import datetime
 from io import TextIOBase
 import os
@@ -7,6 +9,7 @@ from omnipy.util.helpers import get_datetime_format
 
 
 def read_log_lines_from_stream(stream: TextIOBase, clear_stream: bool = True) -> list[str]:
+    """Read log lines from stream."""
     stream.seek(0)
     log_lines = [line.rstrip(os.linesep) for line in stream.readlines()]
     stream.seek(0)
@@ -16,6 +19,7 @@ def read_log_lines_from_stream(stream: TextIOBase, clear_stream: bool = True) ->
 
 
 def read_log_line_from_stream(stream: TextIOBase, clear_stream: bool = True) -> str:
+    """Read log line from stream."""
     log_lines = read_log_lines_from_stream(stream, clear_stream)
     if len(log_lines) == 1:
         return log_lines[0]
@@ -33,6 +37,7 @@ def assert_log_line_from_stream(
     datetime_str: str | None = None,
     clear_stream: bool = True,
 ):
+    """Assert log line from stream."""
     log_line = read_log_line_from_stream(stream, clear_stream)
     assert msg in log_line if msg else True
     assert level in log_line if level else True
@@ -42,4 +47,5 @@ def assert_log_line_from_stream(
 
 
 def format_datetime_obj(datetime_obj: datetime, runtime: IsRuntime):
+    """Format datetime obj."""
     return datetime_obj.strftime(get_datetime_format(runtime.config.root_log.locale))

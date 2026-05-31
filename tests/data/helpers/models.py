@@ -1,3 +1,5 @@
+"""Helper models for data tests."""
+
 from math import floor
 from typing import Generic, Literal, Optional, TypeAlias
 

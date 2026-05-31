@@ -1,3 +1,5 @@
+"""Tests for utility contexts."""
+
 from contextlib import suppress
 import sys
 from textwrap import dedent
@@ -18,6 +20,7 @@ StateAndSetupTeardownFuncs: TypeAlias = tuple[list[int],
 
 @pytest.fixture
 def state_and_callback_funcs() -> StateAndSetupTeardownFuncs:
+    """Provide the state and callback funcs fixture."""
     state = []
     default_num = 123
 
@@ -36,6 +39,7 @@ def state_and_callback_funcs() -> StateAndSetupTeardownFuncs:
 
 
 def test_setup_and_teardown_callback_context_no_args(state_and_callback_funcs) -> None:
+    """Test setup and teardown callback context no arguments."""
     state, setup, exception, teardown = state_and_callback_funcs
 
     with setup_and_teardown_callback_context(
@@ -50,6 +54,7 @@ def test_setup_and_teardown_callback_context_no_args(state_and_callback_funcs) -
 
 
 def test_setup_and_teardown_callback_context_with_exception(state_and_callback_funcs) -> None:
+    """Test setup and teardown callback context with exception."""
     state, setup, exception, teardown = state_and_callback_funcs
 
     try:
@@ -68,6 +73,7 @@ def test_setup_and_teardown_callback_context_with_exception(state_and_callback_f
 
 
 def test_setup_and_teardown_callback_context_args_with_exception(state_and_callback_funcs) -> None:
+    """Test setup and teardown callback context arguments with exception."""
     state, setup, exception, teardown = state_and_callback_funcs
 
     try:
@@ -90,6 +96,7 @@ def test_setup_and_teardown_callback_context_args_with_exception(state_and_callb
 
 def test_setup_and_teardown_callback_context_kwargs_with_exception(
         state_and_callback_funcs) -> None:
+    """Test setup and teardown callback context keyword arguments with exception."""
     state, setup, exception, teardown = state_and_callback_funcs
 
     try:
@@ -111,6 +118,7 @@ def test_setup_and_teardown_callback_context_kwargs_with_exception(
 
 
 def test_setup_and_teardown_callback_context_only_setup_func(state_and_callback_funcs) -> None:
+    """Test setup and teardown callback context only setup func."""
     state, setup, exception, teardown = state_and_callback_funcs
 
     try:
@@ -128,6 +136,7 @@ def test_setup_and_teardown_callback_context_only_setup_func(state_and_callback_
 
 
 def test_setup_and_teardown_callback_context_only_exception_func(state_and_callback_funcs) -> None:
+    """Test setup and teardown callback context only exception func."""
     state, setup, exception, teardown = state_and_callback_funcs
 
     try:
@@ -145,6 +154,7 @@ def test_setup_and_teardown_callback_context_only_exception_func(state_and_callb
 
 
 def test_setup_and_teardown_callback_context_only_teardown_func(state_and_callback_funcs) -> None:
+    """Test setup and teardown callback context only teardown func."""
     state, setup, exception, teardown = state_and_callback_funcs
 
     state.append(234)
@@ -164,6 +174,7 @@ def test_setup_and_teardown_callback_context_only_teardown_func(state_and_callba
 
 
 def test_setup_and_teardown_callback_context_as_decorator(state_and_callback_funcs) -> None:
+    """Test setup and teardown callback context as decorator."""
     state, setup, exception, teardown = state_and_callback_funcs
 
     @setup_and_teardown_callback_context(
@@ -190,6 +201,7 @@ def test_setup_and_teardown_callback_context_as_decorator(state_and_callback_fun
 
 
 def test_capture_stdout_stderr(capsys: pytest.CaptureFixture) -> None:
+    """Test capture stdout stderr."""
     print('To be or not to be, that is the question', end='')
     print('Something is rotten in the state of Denmark', end='', file=sys.stderr)
 
@@ -199,6 +211,7 @@ def test_capture_stdout_stderr(capsys: pytest.CaptureFixture) -> None:
 
 
 def test_print_exception(capsys: pytest.CaptureFixture) -> None:
+    """Test print exception."""
     with print_exception:
         'a' + 1  # type: ignore
 
@@ -217,6 +230,7 @@ def test_print_exception(capsys: pytest.CaptureFixture) -> None:
 
 
 def _raise_if_even_for_range(count: int):
+    """Provide raise if even for range for test reuse."""
     def raise_if_even(a: int):
         if a % 2 == 0:
             raise ValueError(f'a={a} is even')
@@ -232,6 +246,7 @@ def _raise_if_even_for_range(count: int):
 
 
 def test_with_last_error() -> None:
+    """Test with last error."""
     with pytest.raises(EOFError, match='last was: 0') as exc_info:
         _raise_if_even_for_range(1)
 
@@ -249,6 +264,7 @@ def test_with_last_error() -> None:
 
 
 def test_hold_and_reset_prev_attrib_value_at_teardown_and_exception() -> None:
+    """Test hold and reset prev attrib value at teardown and exception."""
     class A:
         ...
 
@@ -275,6 +291,7 @@ def test_hold_and_reset_prev_attrib_value_at_teardown_and_exception() -> None:
 
 
 def test_hold_and_reset_prev_attrib_value_at_exception_deepcopy() -> None:
+    """Test hold and reset prev attrib value at exception deepcopy."""
     class B:
         def __init__(self, numbers: list[list[int]]) -> None:
             self.numbers = numbers

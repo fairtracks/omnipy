@@ -1,3 +1,5 @@
+"""Shared fixtures and pytest hooks for Omnipy tests."""
+
 from datetime import datetime
 import gc
 import itertools
@@ -25,6 +27,7 @@ from .helpers.protocols import AssertModelOrValFunc
 
 @pytest.fixture(scope='function')
 def teardown_rm_default_root_log_dir() -> Iterator[None]:
+    """Remove the default root log directory after a test."""
     root_log_config = RootLogConfig()
     log_file_path = root_log_config.file_log_path
     yield
@@ -35,6 +38,7 @@ def teardown_rm_default_root_log_dir() -> Iterator[None]:
 
 @pytest.fixture(scope='function')
 def teardown_remove_root_log_handlers() -> Iterator[None]:
+    """Remove root logger handlers added during a test."""
     root_logger = logging.root
     num_root_log_handlers = len(root_logger.handlers)
     yield
@@ -45,18 +49,21 @@ def teardown_remove_root_log_handlers() -> Iterator[None]:
 
 @pytest.fixture(scope='function')
 def tmp_dir_path() -> Iterator[Path]:
+    """Provide a temporary directory path for test artifacts."""
     with tempfile.TemporaryDirectory() as _tmp_dir_path:
         yield Path(_tmp_dir_path)
 
 
 @pytest.fixture(scope='function')
 def teardown_reset_job_creator() -> Iterator[None]:
+    """Reset the shared job creator after a test."""
     yield None
     JobBaseMeta._job_creator_obj = JobCreator()
 
 
 @pytest.fixture(scope='function')
 def teardown_reset_data_class_creator() -> Iterator[None]:
+    """Reset the shared data class creator after a test."""
     yield None
     DataClassBaseMeta._data_class_creator_obj = DataClassCreator()
 
@@ -68,6 +75,7 @@ def runtime_cls(
     teardown_reset_job_creator: Annotated[None, pytest.fixture],
     teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
 ) -> Type[IsRuntime]:
+    """Return the runtime class configured for tests."""
     from omnipy.hub.runtime import Runtime
     return Runtime
 
@@ -77,6 +85,7 @@ def runtime(
     runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
     tmp_dir_path: Annotated[Path, pytest.fixture],
 ) -> Iterator[IsRuntime]:
+    """Provide an isolated runtime instance for a test."""
     runtime = runtime_cls()
 
     runtime.config.reset_to_defaults()
@@ -89,11 +98,15 @@ def runtime(
 
 @pytest.fixture(scope='function')
 def mock_datetime() -> datetime:
+    """Provide a datetime object with a stable now() value."""
     class MockDatetime(datetime):
+        """Datetime subclass that freezes now() per instance."""
+
         def __init__(self, *args: object, **kwargs: object):
             self._now = datetime.now()
 
         def now(self, tz=None) -> datetime:  # type: ignore[override]
+            """Return the stored timestamp for the mock instance."""
             return self._now
 
     return MockDatetime(2000, 1, 1)
@@ -102,11 +115,13 @@ def mock_datetime() -> datetime:
 @pytest.fixture(scope='function')
 def assert_empty_snapshot_holder_and_deepcopy_memo(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> Callable[[], None]:
+    """Return a checker that asserts snapshot state is empty."""
     snapshot_holder = runtime.objects.data_class_creator.snapshot_holder
 
     NOT_EMPTY_ERROR = 'Snapshot_holder and/or deepcopy_memo objects are{} not empty. '
 
     def _assert_empty_snapshot_holder_and_deepcopy_memo():
+        """Assert that snapshot holder state is fully cleared."""
         snapshot_holder.delete_scheduled_deepcopy_content_ids()
         try:
             assert snapshot_holder.all_are_empty()
@@ -135,6 +150,7 @@ def assert_empty_snapshot_holder_and_deepcopy_memo(
 @pytest.fixture(scope='function')
 def assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after(
         assert_empty_snapshot_holder_and_deepcopy_memo: Callable[[], None]) -> Iterator[None]:
+    """Assert empty snapshot state before and after each test."""
 
     assert_empty_snapshot_holder_and_deepcopy_memo()
 
@@ -152,6 +168,7 @@ def runtime_data_config_variants(
     interactive: bool,
     dyn_convert: bool,
 ) -> IsRuntime:
+    """Provide runtime variants across interactive and conversion settings."""
     runtime.config.data.model.interactive = interactive
     runtime.config.data.model.dynamically_convert_elements_to_models = dyn_convert
 
@@ -160,6 +177,7 @@ def runtime_data_config_variants(
 
 @pytest.fixture(scope='function')
 def skip_test_if_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    """Skip tests when interactive mode is enabled."""
     pass
     if runtime.config.data.model.interactive:
         pytest.skip('This test only runs without `model.interactive`')
@@ -167,6 +185,7 @@ def skip_test_if_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixture])
 
 @pytest.fixture(scope='function')
 def skip_test_if_not_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    """Skip tests when interactive mode is disabled."""
     pass
     if not runtime.config.data.model.interactive:
         pytest.skip('This test only runs with `model.interactive`')
@@ -175,6 +194,7 @@ def skip_test_if_not_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixtu
 @pytest.fixture(scope='function')
 def skip_test_if_dynamically_convert_elements_to_models(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    """Skip tests when dynamic model conversion is enabled."""
     pass
     if runtime.config.data.model.dynamically_convert_elements_to_models:
         pytest.skip('This test only runs without `dynamically_convert_elements_to_models`')
@@ -183,6 +203,7 @@ def skip_test_if_dynamically_convert_elements_to_models(
 @pytest.fixture(scope='function')
 def skip_test_if_not_dynamically_convert_elements_to_models(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    """Skip tests when dynamic model conversion is disabled."""
     pass
     if not runtime.config.data.model.dynamically_convert_elements_to_models:
         pytest.skip('This test only runs with `dynamically_convert_elements_to_models`')
@@ -191,6 +212,7 @@ def skip_test_if_not_dynamically_convert_elements_to_models(
 @pytest.fixture(scope='function')
 def skip_test_if_not_default_data_config_values(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    """Skip tests unless runtime data config matches defaults."""
     if any(
             getattr(runtime.config.data.model, attr) != getattr(ModelConfig(), attr)
             for attr in ('interactive', 'dynamically_convert_elements_to_models')):
@@ -200,11 +222,13 @@ def skip_test_if_not_default_data_config_values(
 @pytest.fixture(scope='function')
 def assert_model_if_dyn_conv_else_val(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> AssertModelOrValFunc:
+    """Return an assertion helper for model or plain-value access."""
     def _assert_model_if_dyn_convert_else_val(
         model_or_val: object,
         target_type: TypeForm,
         content: object,
     ):
+        """Assert either model-wrapped or plain values by config."""
         if runtime.config.data.model.dynamically_convert_elements_to_models:
             assert_model(model_or_val, target_type, content)
         else:
@@ -214,14 +238,17 @@ def assert_model_if_dyn_conv_else_val(
 
 
 def pytest_collection_modifyitems(items):
+    """Group ordinary, mypy, and integration tests in collection order."""
     integration_tests = []
     mypy_tests = []
     other_tests = []
 
     def _is_mypy_test(item):
+        """Return whether an item is a pytest-mypy-plugins test."""
         return item.__class__.__module__.startswith('pytest_mypy_plugins')
 
     def _module_name(item):
+        """Return the module name for a collected item."""
         return item.module.__name__
 
     for mypy_test, tests_per_type in itertools.groupby(items, key=_is_mypy_test):
@@ -248,12 +275,14 @@ def pytest_collection_modifyitems(items):
 
 @pc.fixture(scope='function')
 def mock_windows_linesep() -> Iterator[None]:
+    """Patch os.linesep to Windows line endings."""
     with mock.patch('os.linesep', new='\r\n'):
         yield
 
 
 @pc.fixture(scope='function')
 def mock_unix_mac_linesep() -> Iterator[None]:
+    """Patch os.linesep to Unix-style line endings."""
     with mock.patch('os.linesep', new='\n'):
         yield
 
@@ -265,4 +294,5 @@ def mock_unix_mac_linesep() -> Iterator[None]:
     ids=['unix_mac_linesep', 'windows_linesep'],
 )
 def mock_linesep_variants(linesep_variant: Annotated[Iterator[None], pc.fixture]) -> Iterator[None]:
+    """Parametrize tests across supported line separator variants."""
     yield

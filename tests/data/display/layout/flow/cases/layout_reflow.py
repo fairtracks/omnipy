@@ -1,3 +1,5 @@
+"""Case definitions for data display layout flow tests."""
+
 from typing import Annotated
 
 import pytest_cases as pc
@@ -266,6 +268,7 @@ def case_layout_single_panel(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout single panel case."""
     return PanelFrameVariantTestCase(
         content=Layout(panel=MockConfigCropPanel(content='This content is\nextraordinary!',)),
         exp_plain_output_no_frame=('╭─────────────────╮\n'
@@ -362,6 +365,7 @@ def case_layout_single_panel_fixed_dims(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout single panel fixed dims case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             panel=MockConfigCropPanel(
@@ -586,6 +590,7 @@ def case_layout_single_panel_with_title(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout single panel with title case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             panel=MockConfigCropPanel(content='Here is some text', title='A nice title'),),
@@ -682,6 +687,7 @@ def case_layout_single_panel_with_title_fixed_dims(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout single panel with title fixed dims case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             panel=MockConfigCropPanel(
@@ -773,6 +779,7 @@ def case_layout_single_panel_resized_inner_panel_fixed_dims(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout single panel resized inner panel fixed dims case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             panel=MockResizedConfigCropPanel(
@@ -1172,6 +1179,7 @@ def case_layout_two_panels(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout two panels case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             first=MockConfigCropPanel(content='Some text here'),
@@ -1297,6 +1305,7 @@ def case_layout_three_draft_panels_min_panel_and_crop_width(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout three draft panels min panel and crop width case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             first=DraftPanel(content='One', config=min_panel_and_crop_width_config),
@@ -1512,6 +1521,7 @@ def case_layout_nested_layout_panels_with_title(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout nested layout panels with title case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             nested=DraftPanel(

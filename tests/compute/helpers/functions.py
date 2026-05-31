@@ -11,6 +11,7 @@ def assert_flow_or_flow_template(
     assert_func: Callable,
     assert_name: str,
 ) -> None:
+    """Assert a flow object matches the expected callable metadata."""
     assert isinstance(flow_obj, assert_flow_cls)
     assert_func_wrapper(flow_obj, assert_func)
     assert flow_obj.name == assert_name

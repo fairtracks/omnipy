@@ -12,6 +12,7 @@ if sys.version_info >= (3, 14):
 
 
 def assert_model(model: object, target_type: TypeForm, content: object):
+    """Assert that a value is a model with expected type and content."""
     assert isinstance(model, Model)
     assert model.outer_type(with_args=True) == target_type, \
         f'{model.outer_type(with_args=True)} != {target_type}'
@@ -19,6 +20,7 @@ def assert_model(model: object, target_type: TypeForm, content: object):
 
 
 def assert_val(value: object, target_type: TypeForm, content: object):
+    """Assert that a plain value matches the expected type and content."""
     assert not isinstance(value, Model)
     assert any(
         isinstance(value, ensure_plain_type(_type)) for _type in all_type_variants(target_type))
@@ -26,6 +28,7 @@ def assert_val(value: object, target_type: TypeForm, content: object):
 
 
 def assert_model_or_val(model_or_val: object, target_type: TypeForm, content: object) -> None:
+    """Assert either a model or plain value against expectations."""
     if isinstance(model_or_val, Model):
         assert_model(model_or_val, target_type, content)
     else:
@@ -33,6 +36,7 @@ def assert_model_or_val(model_or_val: object, target_type: TypeForm, content: ob
 
 
 def get_pip_installed_packages() -> set[str]:
+    """Return installed package names from pip list output."""
     reqs_json = subprocess.check_output([sys.executable, '-m', 'pip', 'list', '--format=json'])
     reqs = json.loads(reqs_json)
     return set(req['name'] for req in reqs)

@@ -1,3 +1,5 @@
+"""Panel assertion helpers for data display panel tests."""
+
 import re
 from textwrap import dedent
 from typing import TypedDict
@@ -16,6 +18,7 @@ from .case_setup import OutputPropertyType, WithinFrameExp
 
 
 class DraftPanelKwArgs(TypedDict, total=False):
+    """Define DraftPanelKwArgs."""
     frame: Frame
     title: str
     constraints: Constraints
@@ -28,6 +31,7 @@ def create_draft_panel_kwargs(
     constraints: Constraints | None = None,
     config: OutputConfig | None = None,
 ) -> DraftPanelKwArgs:
+    """Create draft panel kwargs."""
     kwargs = DraftPanelKwArgs()
 
     if frame is not None:
@@ -54,6 +58,7 @@ def assert_draft_panel_subcls(
     config: OutputConfig | None = None,
     content_is_identical: bool = True,
 ) -> None:
+    """Assert draft panel subcls."""
     kwargs = create_draft_panel_kwargs(frame, title, constraints, config)
     draft_panel = panel_cls(content, **kwargs)
 
@@ -89,6 +94,7 @@ def assert_dims_aware_panel(
     exp_frame: Frame | None = None,
     exp_within_frame: WithinFrameExp | None = None,
 ) -> None:
+    """Assert dims aware panel."""
     if exp_frame is None:
         exp_frame = Frame(Dimensions(width=None, height=None))
         exp_within_frame = WithinFrameExp(width=None, height=None, both=None)
@@ -121,6 +127,7 @@ def assert_next_stage_panel(
     exp_content: object,
     exp_config: OutputConfig | None = None,
 ) -> None:
+    """Assert next stage panel."""
     assert isinstance(next_stage, next_stage_panel_cls)
     assert next_stage.frame == this_panel.frame, \
         f'\n{next_stage.frame} != \n{this_panel.frame}'
@@ -137,6 +144,7 @@ def assert_next_stage_panel(
 
 
 def _strip_html(html: str) -> str:
+    """Strip hTML."""
     matches = re.findall(r'<code[^>]*>([\S\s]*)</code>', html, re.MULTILINE)
     if not matches:
         return html
@@ -144,6 +152,7 @@ def _strip_html(html: str) -> str:
     code_no_tags = re.sub(r'<[^>]+>', '', matches[0])
 
     def _to_char(match: re.Match) -> str:
+        """Provide to char."""
         import sys
         byte_as_str = match[1]
         return int(byte_as_str, 16).to_bytes(length=1, byteorder=sys.byteorder).decode()
@@ -153,6 +162,7 @@ def _strip_html(html: str) -> str:
 
 
 def _strip_ansi(text: str) -> str:
+    """Strip aNSI."""
     return re.sub(r'\x1b\[[^m]+m', '', text)
 
 
@@ -160,10 +170,12 @@ def strip_all_styling_from_panel_output(
     text_panel: SyntaxStylizedTextPanel | StylizedLayoutPanel,
     get_output_property: OutputPropertyType,
 ) -> str:
+    """Strip all styling from panel output."""
     return _strip_ansi(_strip_html(get_output_property(text_panel)))
 
 
 def _get_font_style_by_case_id(case_id: str | None) -> str:
+    """Get font style by case id."""
     DEFAULT_FONT_STYLE = ("font-family: 'Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', "
                           "'monospace'; font-size: 14.0px; font-weight: 400; line-height: 1.25; ")
 
@@ -184,6 +196,7 @@ def _get_font_style_by_case_id(case_id: str | None) -> str:
 
 
 def fill_html_tag_template(data: str, color_style: str = '', case_id: str | None = None) -> str:
+    """Fill hTML tag template."""
     HTML_TAG_TEMPLATE = ('<pre>'
                          '<code style="{font_style}{color_style}">'
                          '{data}\n'
@@ -198,6 +211,7 @@ def fill_html_tag_template(data: str, color_style: str = '', case_id: str | None
 
 
 def fill_html_page_template(style: str, data: str, case_id: str | None = None) -> str:
+    """Fill hTML page template."""
     HTML_PAGE_TEMPLATE = dedent("""\
         <!DOCTYPE html>
         <html>

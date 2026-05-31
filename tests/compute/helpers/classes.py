@@ -1,3 +1,5 @@
+"""Provide reusable compute test helper classes."""
+
 from typing import Callable, Generic, ParamSpec, TypeAlias, TypeVar
 
 from typing_extensions import NamedTuple
@@ -42,6 +44,7 @@ FlowTmplClsT = TypeVar(
 
 
 class FlowClsTuple(NamedTuple, Generic[FlowClsT, FlowTmplClsT]):
+    """Bundle flow classes with their template helpers."""
     flow_cls: FlowClsT
     flow_tmpl_cls: FlowTmplClsT
     assert_flow_tmpl_cls: type[JobTemplateMixin]
@@ -58,8 +61,10 @@ AnyFlowClsTuple: TypeAlias = FlowClsTuple[type[LinearFlow] | type[DagFlow] | typ
 
 
 class CustomStrModel(Model[str]):
+    """Provide a custom string model for tests."""
     ...
 
 
 class CustomStrDataset(Dataset[CustomStrModel]):
+    """Provide a custom string dataset for tests."""
     ...

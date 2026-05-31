@@ -1,3 +1,5 @@
+"""Helper models for integration novel full tests."""
+
 from typing import Generic, Mapping, Type, TypeVar
 
 from omnipy.data.model import Model
@@ -8,6 +10,7 @@ import omnipy.util.pydantic as pyd
 
 
 class RecordSchemaBase(pyd.BaseModel):
+    """Define RecordSchemaBase."""
     class Config:
         extra = pyd.Extra.forbid
 
@@ -60,12 +63,15 @@ RecordSchemaDefType = dict[str, Type[object]]
 
 
 class RecordSchemaDef(Model[RecordSchemaDefType]):
+    """Define RecordSchemaDef."""
     ...
 
 
 def record_schema_factory(data_file: str,
                           record_schema_def: RecordSchemaDefType) -> Type[RecordSchemaBase]:
+    """Create schema factory."""
     class Config(pyd.BaseConfig):
+        """Define Config."""
         extra = pyd.Extra.forbid
 
     # For real-world implementation,

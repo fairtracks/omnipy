@@ -1,3 +1,5 @@
+"""Tests for root log."""
+
 from datetime import datetime, timedelta
 from io import StringIO, TextIOBase
 import logging
@@ -21,6 +23,7 @@ from ..helpers.functions import (assert_log_line_from_stream,
 
 
 def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: Path):
+    """Assert root log config default."""
     assert isinstance(root_log, RootLogConfig)
     assert isinstance(root_log.locale, (str, tuple))
 
@@ -37,6 +40,7 @@ def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: Path):
 
 
 def _assert_root_log_objects(root_log_objects: RootLogObjects,) -> None:
+    """Assert root log objects."""
     assert isinstance(root_log_objects.formatter, logging.Formatter)
     assert isinstance(root_log_objects.stdout_handler, logging.StreamHandler)
     assert isinstance(root_log_objects.stderr_handler, logging.StreamHandler)
@@ -44,11 +48,13 @@ def _assert_root_log_objects(root_log_objects: RootLogObjects,) -> None:
 
 
 def test_root_log_config_default() -> None:
+    """Test root log config default."""
     _assert_root_log_config_default(RootLogConfig(), Path.cwd())
 
 
 def test_root_log_objects_default(
         teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture]) -> None:
+    """Test root log objects default."""
     _assert_root_log_objects(RootLogObjects())
 
 
@@ -56,6 +62,7 @@ def test_runtime_root_log_config(
     runtime: Annotated[IsRuntime, pytest.fixture],
     tmp_dir_path: Annotated[Path, pytest.fixture],
 ) -> None:
+    """Test runtime root log config."""
     assert isinstance(runtime.config.root_log, RootLogConfig)
     assert isinstance(runtime.objects.root_log, RootLogObjects)
 
@@ -64,6 +71,7 @@ def test_runtime_root_log_config(
 
 
 def _log_record_for_level(level: int, datetime_obj: datetime | None = None):
+    """Provide log record for level."""
     test_logger = logging.getLogger('test.logger')
     record = test_logger.makeRecord(
         name=test_logger.name, level=level, fn='', lno=0, msg='my log msg', args=(), exc_info=None)
@@ -74,6 +82,7 @@ def _log_record_for_level(level: int, datetime_obj: datetime | None = None):
 
 
 def test_log_formatter(runtime: Annotated[IsRuntime, pytest.fixture]):
+    """Test log formatter."""
     locale = runtime.config.root_log.locale
     formatter = runtime.objects.root_log.formatter
     assert formatter
@@ -93,6 +102,7 @@ def test_log_formatter(runtime: Annotated[IsRuntime, pytest.fixture]):
 
 
 def test_log_formatter_date_localization(runtime: Annotated[IsRuntime, pytest.fixture]):
+    """Test log formatter date localization."""
     fixed_datetime_now = datetime.now()
     prev_formatter = runtime.objects.root_log.formatter
 
@@ -122,6 +132,7 @@ def test_log_formatter_date_localization(runtime: Annotated[IsRuntime, pytest.fi
 
 @pytest.fixture
 def logger() -> logging.Logger:
+    """Provide logger."""
     logger = logging.getLogger('tests.hub.test_root_log')
     logger.setLevel(logging.DEBUG)
     return logger
@@ -134,6 +145,7 @@ def _log_and_assert_log_line_from_stream(
         stream: TextIOBase,
         datetime_obj: datetime = datetime.now(),
 ):
+    """Provide log and assert log line from stream."""
     logger.log(level, 'Test log message', extra={'timestamp': datetime_obj.timestamp()})
     assert_log_line_from_stream(
         stream,
@@ -145,6 +157,7 @@ def _log_and_assert_log_line_from_stream(
 
 
 def _log_and_assert_no_stream_output(logger: logging.Logger, level: int, stream: TextIOBase):
+    """Provide log and assert no stream output."""
     logger.log(level, 'Test log message')
     assert read_log_line_from_stream(stream) == ''
 
@@ -153,6 +166,7 @@ def test_log_to_stdout_with_toggle(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test log to stdout with toggle."""
     my_stdout = StringIO()
     runtime.config.root_log.stdout = my_stdout
 
@@ -167,6 +181,7 @@ def test_log_to_stdout_with_level_cutoff(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test log to stdout with level cutoff."""
     my_stdout = StringIO()
     runtime.config.root_log.stdout = my_stdout
 
@@ -181,6 +196,7 @@ def test_log_to_stdout_with_specific_datetime(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test log to stdout with specific datetime."""
     my_stdout = StringIO()
     runtime.config.root_log.stdout = my_stdout
 
@@ -192,6 +208,7 @@ def test_do_not_log_to_stdout_if_logging_to_stderr_with_toggle(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test do not log to stdout if logging to stderr with toggle."""
     my_stdout = StringIO()
     runtime.config.root_log.stdout = my_stdout
 
@@ -206,6 +223,7 @@ def test_do_not_log_to_stdout_if_logging_to_stderr_with_level_cutoff(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test do not log to stdout if logging to stderr with level cutoff."""
     my_stdout = StringIO()
     runtime.config.root_log.stdout = my_stdout
 
@@ -220,6 +238,7 @@ def test_log_to_stderr_with_toggle(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test log to stderr with toggle."""
     my_stderr = StringIO()
     runtime.config.root_log.stderr = my_stderr
 
@@ -234,6 +253,7 @@ def test_log_to_stderr_with_level_cutoff(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test log to stderr with level cutoff."""
     my_stderr = StringIO()
     runtime.config.root_log.stderr = my_stderr
 
@@ -248,6 +268,7 @@ def test_log_to_stderr_with_specific_datetime(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test log to stderr with specific datetime."""
     my_stderr = StringIO()
     runtime.config.root_log.stderr = my_stderr
 
@@ -259,6 +280,7 @@ def test_log_to_file_with_toggle(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test log to file with toggle."""
     log_file_path = runtime.config.root_log.file_log_path
 
     assert runtime.config.root_log.log_to_file is True
@@ -275,6 +297,7 @@ def test_log_to_file_with_level_cutoff(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test log to file with level cutoff."""
     log_file_path = runtime.config.root_log.file_log_path
 
     assert runtime.config.root_log.file_log_min_level is logging.WARNING
@@ -291,6 +314,7 @@ def test_log_to_file_with_specific_datetime(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test log to file with specific datetime."""
     log_file_path = runtime.config.root_log.file_log_path
 
     specific_date = datetime(2021, 1, 1, 12, 0, 0)
@@ -306,6 +330,7 @@ def test_daily_log_file_rotation(
     runtime: Annotated[IsRuntime, pytest.fixture],
     logger: Annotated[logging.Logger, pytest.fixture],
 ):
+    """Test daily log file rotation."""
     log_file_path = runtime.config.root_log.file_log_path
 
     now = datetime.now()

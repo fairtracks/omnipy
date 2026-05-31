@@ -1,3 +1,5 @@
+"""Tests for JSON dataset serialization helpers."""
+
 from textwrap import dedent
 
 from omnipy.components.json.datasets import JsonDataset
@@ -8,6 +10,7 @@ from ...data.helpers.functions import assert_tar_file_content
 
 
 def test_json_dataset_serializer_to_tar_file():
+    """Serialize and deserialize JSON datasets via tar files."""
     json_data = JsonDataset()
     data_file_1_json = dedent("""\
         [
@@ -50,6 +53,7 @@ def test_json_dataset_serializer_to_tar_file():
 
 
 def test_json_scalar_dataset_serializer_to_tar_file():
+    """Serialize scalar JSON dataset entries via tar files."""
     json_scalar_data = JsonDataset(int_data=123, bool_data=True, none_data=None, float_data=3.14)
 
     serializer = JsonDatasetToTarFileSerializer()

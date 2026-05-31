@@ -1,3 +1,5 @@
+"""Helper datasets for integration novel serialization tests."""
+
 from textwrap import dedent
 
 import pandas
@@ -12,6 +14,7 @@ from omnipy.data.model import Model
 
 @pytest.fixture
 def pandas_dataset() -> PandasDataset:
+    """Provide pandas dataset."""
     _pandas_dataset = PandasDataset()
     _pandas_dataset.from_data({
         'pandas_person':
@@ -26,6 +29,7 @@ def pandas_dataset() -> PandasDataset:
 
 @pytest.fixture
 def json_table_dataset() -> JsonDataset:
+    """Provide jSON table dataset."""
     _json_table_dataset = JsonDataset()
     _json_table_dataset['json_table_a'] = [
         dict(firstname='John', lastname='Doe', age=46),
@@ -42,6 +46,7 @@ def json_table_dataset() -> JsonDataset:
 
 @pytest.fixture
 def json_nested_table_dataset() -> JsonDataset:
+    """Provide jSON nested table dataset."""
     _json_nested_table_dataset = JsonDataset()
     _json_nested_table_dataset['json_nested_table_a'] = [
         dict(name=dict(firstname='John', lastname='Doe'), age=46),
@@ -60,6 +65,7 @@ def json_nested_table_dataset() -> JsonDataset:
 #       Also for `json_str_dataset` below
 @pytest.fixture
 def json_table_as_str_dataset() -> Dataset[Model[str]]:
+    """Provide jSON table as string dataset."""
     _json_table_as_str_dataset = Dataset[Model[str]]()
     _json_table_as_str_dataset['json_table_a'] = dedent("""
     [
@@ -78,6 +84,7 @@ def json_table_as_str_dataset() -> Dataset[Model[str]]:
 
 @pytest.fixture
 def json_dataset() -> JsonDataset:
+    """Provide jSON dataset."""
     _json_dataset = JsonDataset()
     _json_dataset['json_python_a'] = {'one': ['content', 1, True], 'two': None}
     _json_dataset['json_python_b'] = [1, 4, 9, {'options': {'verbose': False}}]
@@ -86,6 +93,7 @@ def json_dataset() -> JsonDataset:
 
 @pytest.fixture
 def json_str_dataset() -> Dataset[Model[str]]:
+    """Provide jSON string dataset."""
     _json_str_dataset = Dataset[Model[str]]()
     _json_str_dataset['json_str_a'] = '{"one": ["content", 1, true], "two": null}'
     _json_str_dataset['json_str_b'] = '[1, 4, 9, {"options": {"verbose": false}}]'
@@ -94,6 +102,7 @@ def json_str_dataset() -> Dataset[Model[str]]:
 
 @pytest.fixture
 def csv_dataset() -> StrDataset:
+    """Provide cSV dataset."""
     _csv_dataset = StrDataset()
     _csv_dataset['csv_person'] = 'firstname,lastname,age\nJohn,Doe,46\nJane,Doe,42\nMr,Miyagi,82\n'
     _csv_dataset['csv_fruits'] = 'fruit,taste\napple,sweet\norange,sweet and sour\nlemon,sour\n'
@@ -102,6 +111,7 @@ def csv_dataset() -> StrDataset:
 
 @pytest.fixture
 def str_dataset() -> StrDataset:
+    """Provide string dataset."""
     _str_dataset = StrDataset()
     _str_dataset['str_a'] = '1, 2, 4, 6 -> aa\n6, 3, 4, 2 -> ab\n'
     _str_dataset['str_b'] = '3, 5, 6, 3 -> ba\n2, 5, 6, 3 -> bb\n'
@@ -110,6 +120,7 @@ def str_dataset() -> StrDataset:
 
 @pytest.fixture
 def str_unicode_dataset() -> StrDataset:
+    """Provide string unicode dataset."""
     _str_unicode_dataset = StrDataset()
     _str_unicode_dataset['str_unicode_a'] = b'\xef\xbb\xbf1, 2, 4, 6 -> aa\n6, 3, 4, 2 -> ab\n'
     _str_unicode_dataset['str_unicode_b'] = b'\xef\xbb\xbf3, 5, 6, 3 -> ba\n2, 5, 6, 3 -> bb\n'
@@ -118,6 +129,7 @@ def str_unicode_dataset() -> StrDataset:
 
 @pytest.fixture
 def python_dataset() -> Dataset[Model[object]]:
+    """Provide python dataset."""
     _python_dataset = Dataset[Model[object]]()
     _python_dataset['python_a'] = [{'a': 1, 'b': [2, 3, 4], 'c': {'yes': True, 'no': False}}]
     _python_dataset['python_b'] = lambda x: x + 1

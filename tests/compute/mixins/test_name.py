@@ -1,3 +1,5 @@
+"""Test name-related job and task mixin behavior."""
+
 from typing import Annotated
 
 import pytest
@@ -12,6 +14,7 @@ from ..helpers.mocks import MockLocalRunner
 
 def test_property_name_default_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    """Test mock jobs default to unnamed."""
     JobTemplate, _ = mock_job_classes
     job_tmpl = JobTemplate()
 
@@ -23,6 +26,7 @@ def test_property_name_default_mock(
 
 
 def test_property_name_default_task() -> None:
+    """Test tasks default their name from the callable."""
 
     power_m1_tmpl = TaskTemplate()(power_m1_func)
 
@@ -32,6 +36,7 @@ def test_property_name_default_task() -> None:
 
 def test_property_name_default_linear_flow(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    """Test linear flows default their name from the callable."""
 
     power_m1_tmpl = LinearFlowTemplate()(power_m1_func)
 
@@ -41,6 +46,7 @@ def test_property_name_default_linear_flow(
 
 def test_property_name_default_dag_flow(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    """Test DAG flows default their name from the callable."""
 
     power_m1_tmpl = DagFlowTemplate()(power_m1_func)
 
@@ -50,6 +56,7 @@ def test_property_name_default_dag_flow(
 
 def test_property_name_default_func_flow(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    """Test function flows default their name from the callable."""
 
     power_m1_tmpl = FuncFlowTemplate()(power_m1_func)
 
@@ -59,6 +66,7 @@ def test_property_name_default_func_flow(
 
 def test_property_name_change_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    """Test mock job names can be set at creation."""
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name='my_job')
@@ -72,6 +80,7 @@ def test_property_name_change_mock(
 
 def test_property_name_validation_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    """Test mock job names validate input."""
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name=None)
@@ -86,6 +95,7 @@ def test_property_name_validation_mock(
 
 def test_property_unique_name_default_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    """Test mock jobs default to no unique name."""
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate()
@@ -101,6 +111,7 @@ def test_property_unique_name_default_mock(
 
 def test_property_unique_name_change_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    """Test applied mock jobs get generated unique names."""
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name='my_job')
@@ -120,6 +131,7 @@ def test_property_unique_name_change_mock(
 
 def test_property_unique_name_uniqueness_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    """Test generated unique names differ across jobs."""
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name='my_job')
@@ -142,6 +154,7 @@ def test_property_unique_name_uniqueness_mock(
 
 def test_property_unique_name_regenerate_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    """Test unique names can be regenerated."""
     JobTemplate, _ = mock_job_classes
 
     job = JobTemplate(name='my_job').apply()
@@ -165,6 +178,7 @@ def test_property_unique_name_regenerate_mock(
 
 def test_property_unique_name_revise_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    """Test revising a job clears its unique name."""
     JobTemplate, _ = mock_job_classes
 
     job = JobTemplate(name='my_job').apply()
@@ -178,6 +192,7 @@ def test_property_unique_name_revise_mock(
 
 def test_equal_job_dependent_on_name_mock(
         mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    """Test equality depends on job names."""
     JobTemplate, _ = mock_job_classes
 
     my_job_tmpl = JobTemplate(name='my_job')

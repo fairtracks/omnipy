@@ -1,3 +1,5 @@
+"""Helper classes for engine tests."""
+
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Generic, ParamSpec, Type, TypeVar
 

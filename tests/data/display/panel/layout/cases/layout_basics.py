@@ -1,3 +1,5 @@
+"""Basic layout cases for data display panel layout tests."""
+
 from typing import Annotated
 
 import pytest_cases as pc
@@ -65,6 +67,7 @@ def case_layout_no_panels(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout no panels case."""
     return PanelFrameVariantTestCase(
         content=Layout(),
         config=None,
@@ -174,6 +177,7 @@ def case_layout_single_empty_panel(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout single empty panel case."""
     return PanelFrameVariantTestCase(
         content=Layout(empty=MockStylablePlainCropPanel('')),
         exp_plain_output_no_frame=('╭──╮\n'
@@ -260,6 +264,7 @@ def case_layout_single_empty_panel_height_zero(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout single empty panel height zero case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             empty=MockStylablePlainCropPanel('', frame=Frame(Dimensions(width=None, height=0)))),
@@ -543,6 +548,7 @@ def case_layout_single_panel(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout single panel case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             panel=MockStylablePlainCropPanel(content='This content is\nextraordinary!',)),
@@ -779,6 +785,7 @@ def case_layout_single_panel_fixed_width_with_title(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout single panel fixed width with title case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             panel=MockStylablePlainCropPanel(
@@ -998,6 +1005,7 @@ def case_layout_two_panels_fixed_content_and_frame(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout two panels fixed content and frame case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             # Stage 2 panel with fixed content and frame, as
@@ -1195,6 +1203,7 @@ def case_layout_nested_layout_panels_with_title(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[Layout]:
+    """Return the layout nested layout panels with title case."""
     return PanelFrameVariantTestCase(
         content=Layout(
             nested=DraftPanel(

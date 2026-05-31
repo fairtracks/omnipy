@@ -1,3 +1,5 @@
+"""Concatenation cases for components tables tests."""
+
 from dataclasses import dataclass
 from typing import Generic
 
@@ -53,6 +55,7 @@ class ConcatCaseReverse(
 
 @pc.case(id='concat_col_wise_model_with_col_wise_model', tags=['concat'])
 def case_concat_col_wise_model_with_col_wise_model() -> ConcatCase:
+    """Return the concat col wise model with col wise model case."""
     return ConcatCase(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=JsonScalarColumnWiseTableWithColNamesModel(other_col_wise_dict_of_lists_data),
@@ -62,6 +65,7 @@ def case_concat_col_wise_model_with_col_wise_model() -> ConcatCase:
 
 @pc.case(id='concat_col_wise_model_with_dict_of_lists', tags=['concat', 'reverse'])
 def case_concat_col_wise_model_with_dict_of_lists() -> ConcatCase:
+    """Return the concat col wise model with dict of lists case."""
     return ConcatCaseReverse(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=other_col_wise_dict_of_lists_data,
@@ -72,6 +76,7 @@ def case_concat_col_wise_model_with_dict_of_lists() -> ConcatCase:
 
 @pc.case(id='concat_col_wise_model_with_row_wise_model', tags=['concat'])
 def case_concat_col_wise_model_with_row_wise_model() -> ConcatCase:
+    """Return the concat col wise model with row wise model case."""
     return ConcatCase(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=RowWiseTableWithColNamesModel(other_row_wise_list_of_dicts_data),
@@ -81,6 +86,7 @@ def case_concat_col_wise_model_with_row_wise_model() -> ConcatCase:
 
 @pc.case(id='concat_col_wise_model_with_list_of_dicts', tags=['concat', 'reverse'])
 def case_concat_col_wise_model_with_list_of_dicts() -> ConcatCase:
+    """Return the concat col wise model with list of dicts case."""
     return ConcatCaseReverse(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=other_row_wise_list_of_dicts_data,
@@ -91,6 +97,7 @@ def case_concat_col_wise_model_with_list_of_dicts() -> ConcatCase:
 
 @pc.case(id='concat_col_wise_model_with_non_overlapping_col_wise_model', tags=['concat'])
 def case_concat_col_wise_model_with_non_overlapping_col_wise_model() -> ConcatCase:
+    """Return the concat col wise model with non overlapping col wise model case."""
     return ConcatCase(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=JsonScalarColumnWiseTableWithColNamesModel(
@@ -101,6 +108,7 @@ def case_concat_col_wise_model_with_non_overlapping_col_wise_model() -> ConcatCa
 
 @pc.case(id='concat_col_wise_model_with_non_overlapping_dict_of_lists', tags=['concat', 'reverse'])
 def case_concat_col_wise_model_with_non_overlapping_dict_of_lists() -> ConcatCase:
+    """Return the concat col wise model with non overlapping dict of lists case."""
     return ConcatCaseReverse(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=other_non_overlapping_col_wise_dict_of_lists_data,
@@ -111,6 +119,7 @@ def case_concat_col_wise_model_with_non_overlapping_dict_of_lists() -> ConcatCas
 
 @pc.case(id='concat_col_wise_model_with_empty_col_wise_model', tags=['concat'])
 def case_concat_col_wise_model_with_empty_col_wise_model() -> ConcatCase:
+    """Return the concat col wise model with empty col wise model case."""
     return ConcatCase(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=JsonScalarColumnWiseTableWithColNamesModel(),
@@ -120,6 +129,7 @@ def case_concat_col_wise_model_with_empty_col_wise_model() -> ConcatCase:
 
 @pc.case(id='concat_col_wise_model_with_empty_dict', tags=['concat', 'reverse'])
 def case_concat_col_wise_model_with_empty_dict() -> ConcatCase:
+    """Return the concat col wise model with empty dict case."""
     return ConcatCaseReverse(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other={},
@@ -130,6 +140,7 @@ def case_concat_col_wise_model_with_empty_dict() -> ConcatCase:
 
 @pc.case(id='concat_col_wise_model_with_col_wise_empty_lists_model', tags=['concat'])
 def case_concat_col_wise_model_with_col_wise_empty_lists_model() -> ConcatCase:
+    """Return the concat col wise model with col wise empty lists model case."""
     return ConcatCase(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=JsonScalarColumnWiseTableWithColNamesModel(col_wise_dict_of_empty_lists_data),
@@ -139,6 +150,7 @@ def case_concat_col_wise_model_with_col_wise_empty_lists_model() -> ConcatCase:
 
 @pc.case(id='concat_col_wise_model_with_dict_of_empty_lists', tags=['concat', 'reverse'])
 def case_concat_col_wise_model_with_dict_of_empty_lists() -> ConcatCase:
+    """Return the concat col wise model with dict of empty lists case."""
     return ConcatCaseReverse(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=col_wise_dict_of_empty_lists_data,
@@ -149,6 +161,7 @@ def case_concat_col_wise_model_with_dict_of_empty_lists() -> ConcatCase:
 
 @pc.case(id='concat_col_wise_model_with_empty_row_wise_model', tags=['concat'])
 def case_concat_col_wise_model_with_empty_row_wise_model() -> ConcatCase:
+    """Return the concat col wise model with empty row wise model case."""
     return ConcatCase(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=RowWiseTableWithColNamesModel(),
@@ -158,6 +171,7 @@ def case_concat_col_wise_model_with_empty_row_wise_model() -> ConcatCase:
 
 @pc.case(id='concat_col_wise_model_with_empty_list', tags=['concat', 'reverse'])
 def case_concat_col_wise_model_with_empty_list() -> ConcatCase:
+    """Return the concat col wise model with empty list case."""
     return ConcatCaseReverse(
         col_wise_model=JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data),
         other=[],

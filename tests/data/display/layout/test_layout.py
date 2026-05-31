@@ -1,3 +1,5 @@
+"""Tests for layout."""
+
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -12,12 +14,14 @@ from ..panel.helpers.mocks import MockStylablePlainCropPanel
 
 @dataclass
 class SimpleLayoutCase:
+    """Define SimpleLayoutCase."""
     layout: Layout
     first_panel: Panel
     second_panel: Panel
 
 
 def test_empty_layout() -> None:
+    """Test empty layout."""
     layout: Layout = Layout()
 
     # Check content
@@ -50,6 +54,7 @@ def simple_layout() -> SimpleLayoutCase:
 
 
 def test_layout_hashable(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
+    """Test layout hashable."""
     layout_1: Layout = Layout()
     layout_2: Layout = Layout()
 

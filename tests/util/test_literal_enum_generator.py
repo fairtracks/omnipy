@@ -1,3 +1,5 @@
+"""Tests for literal enum generation."""
+
 from enum import Enum
 from typing import get_args
 

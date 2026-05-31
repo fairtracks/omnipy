@@ -1,3 +1,5 @@
+"""Test auto_async task mixin behavior."""
+
 import asyncio
 from inspect import isawaitable, iscoroutine
 from typing import Any, Callable, Coroutine, TypeAlias
@@ -14,6 +16,7 @@ ReturnFloatCallable: TypeAlias = Callable[[], float | Coroutine[Any, Any, float]
 
 @pc.parametrize('async_task', [False, True], ids=['sync_task', 'async_task'])
 def test_synchronously_run_task_with_auto_async(async_task: bool) -> None:
+    """Test auto_async returns sync results outside async contexts."""
     task_func: ReturnFloatCallable = async_sleep_random_time_func if async_task \
         else sync_sleep_random_time_func
     _assert_synchronizity_of_task_without_auto_async_is_same_as_task_func(async_task, task_func)
@@ -27,6 +30,7 @@ def test_synchronously_run_task_with_auto_async(async_task: bool) -> None:
 @pc.parametrize('async_task', [False, True], ids=['sync_task', 'async_task'])
 @pytest.mark.anyio
 async def test_asynchronously_run_task_with_auto_async(async_task: bool) -> None:
+    """Test auto_async adapts task results inside async contexts."""
     task_func: ReturnFloatCallable = async_sleep_random_time_func if async_task \
         else sync_sleep_random_time_func
 
@@ -43,6 +47,7 @@ async def test_asynchronously_run_task_with_auto_async(async_task: bool) -> None
 
 
 def _assert_synchronizity_of_task_without_auto_async_is_same_as_task_func(async_task, task_func):
+    """Assert non-auto_async tasks preserve callable synchrony."""
     task_no_auto = TaskTemplate(auto_async=False)(task_func).apply()
     seconds_no_auto = task_no_auto()
     if async_task:

@@ -1,3 +1,5 @@
+"""Tests for utility decorators."""
+
 from typing import Callable
 
 import pytest
@@ -12,6 +14,7 @@ from omnipy.util.decorators import (add_callback_after_call,
 
 
 def test_exception_callback_with_args() -> None:
+    """Test exception callback with arguments."""
     def concatenate(a: list[int], b: list[int]) -> list[int]:
         if a == [42]:
             raise ValueError('Not enough compute power')
@@ -40,6 +43,7 @@ def test_exception_callback_with_args() -> None:
 
 
 def test_callback_after_func_call() -> None:
+    """Test callback after func call."""
     def my_appender(a: list[int], b: int) -> list[int]:
         a.append(b)
         return a
@@ -60,6 +64,7 @@ def test_callback_after_func_call() -> None:
 
 
 def test_callback_after_func_call_with_attrib_holder_error_in_func() -> None:
+    """Test callback after func call with attrib holder error in func."""
     class A:
         def __init__(self, numbers: list[int]) -> None:
             self.numbers = numbers
@@ -87,6 +92,7 @@ def test_callback_after_func_call_with_attrib_holder_error_in_func() -> None:
 
 
 def test_callback_after_func_call_with_attrib_holder_error_in_callback_func() -> None:
+    """Test callback after func call with attrib holder error in callback func."""
     class A:
         def __init__(self, numbers: list[int]) -> None:
             self.numbers = numbers
@@ -118,6 +124,7 @@ def test_callback_after_func_call_with_attrib_holder_error_in_callback_func() ->
 
 
 def test_apply_decorator_to_property():
+    """Test apply decorator to property."""
     class MyDataGetter:
         def __init__(self) -> None:
             self._data: str | None = None
@@ -193,6 +200,7 @@ def test_apply_decorator_to_property():
 
 
 def test_call_super_if_available() -> None:
+    """Test call super if available."""
     class MyClassWithoutSuper:
         @call_super_if_available(call_super_before_method=True)
         def my_method(self, number: int) -> int:
@@ -232,6 +240,7 @@ def test_call_super_if_available() -> None:
 
 
 def test_class_or_instance_method() -> None:
+    """Test class or instance method."""
     class MyClass:
         def __init__(self, a: int) -> None:
             self._a = a

@@ -1,3 +1,5 @@
+"""Tests for helpers."""
+
 from typing import Annotated
 
 import pytest
@@ -7,20 +9,24 @@ from omnipy.data._display.integrations.jupyter.helpers import ReactiveConfigCopy
 
 
 class MyChildConfig(ConfigBase):
+    """Define MyChildConfig."""
     param2: int = 0
 
 
 class MyConfig(ConfigBase):
+    """Define MyConfig."""
     param1: str = 'default'
     child: MyChildConfig = MyChildConfig()
 
 
 class MyParentConfig(ConfigBase):
+    """Define MyParentConfig."""
     config: MyConfig = MyConfig()
 
 
 @pytest.fixture
 def parent() -> MyParentConfig:
+    """Provide parent."""
     parent = MyParentConfig(config=MyConfig(
         param1='test',
         child=MyChildConfig(param2=10),
@@ -29,6 +35,7 @@ def parent() -> MyParentConfig:
 
 
 def test_reactive_config_copy_init(parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
+    """Test reactive config copy init."""
     reactive_config_copy = ReactiveConfigCopy[MyConfig](parent.config)
 
     assert reactive_config_copy.value.param1 == 'test'
@@ -42,6 +49,7 @@ def test_reactive_config_copy_init(parent: Annotated[MyParentConfig, pytest.fixt
 
 
 def test_reactive_config_copy_set(parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
+    """Test reactive config copy set."""
     reactive_config_copy = ReactiveConfigCopy[MyConfig](parent.config)
 
     assert reactive_config_copy.value.param1 == 'test'
@@ -58,6 +66,7 @@ def test_reactive_config_copy_set(parent: Annotated[MyParentConfig, pytest.fixtu
 
 def test_reactive_config_copy_subscribe_with_set(
         parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
+    """Test reactive config copy subscribe with set."""
     reactive_config_copy = ReactiveConfigCopy[MyConfig](parent.config)
 
     assert reactive_config_copy.value.param1 == 'test'

@@ -1,3 +1,5 @@
+"""Provide iterate-over-data-files task cases."""
+
 import asyncio
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -21,6 +23,7 @@ from .raw.functions import (all_int_dataset_plus_int_return_str_dataset_func,
 
 @dataclass
 class IterateDataFilesCase:
+    """Bundle reusable iterate-over-data-files task inputs."""
     task_func: Callable
     args: tuple[Any, ...]
     kwargs: dict[str, Any]
@@ -40,6 +43,7 @@ class IterateDataFilesCase:
     tags=['sync', 'function', 'all_data', 'no_output_dataset'],
 )
 def case_sync_all_int_dataset_plus_int_return_str_dataset_func() -> IterateDataFilesCase:
+    """Provide a sync dataset-wide task case."""
     return IterateDataFilesCase(
         task_func=all_int_dataset_plus_int_return_str_dataset_func,
         args=(2,),
@@ -57,6 +61,7 @@ def case_sync_all_int_dataset_plus_int_return_str_dataset_func() -> IterateDataF
     tags=['async', 'function', 'all_data', 'no_output_dataset'],
 )
 def case_async_all_int_dataset_plus_int_return_str_dataset_func() -> IterateDataFilesCase:
+    """Provide an async dataset-wide task case."""
     return IterateDataFilesCase(
         task_func=async_all_int_dataset_plus_int_return_str_dataset_func,
         args=(2,),
@@ -81,6 +86,7 @@ def case_async_all_int_dataset_plus_int_return_str_dataset_func() -> IterateData
     ],
 )
 def case_sync_single_int_model_plus_int_return_str_model_func() -> IterateDataFilesCase:
+    """Provide a sync per-item model task case."""
     return IterateDataFilesCase(
         task_func=single_int_model_plus_int_return_str_model_func,
         args=(2,),
@@ -103,6 +109,7 @@ def case_sync_single_int_model_plus_int_return_str_model_func() -> IterateDataFi
 )
 def case_sync_single_int_model_plus_default_int_pair_return_str_model_func(
 ) -> IterateDataFilesCase:
+    """Provide a sync per-item model case with default pair input."""
     return IterateDataFilesCase(
         task_func=single_int_model_plus_default_int_pair_return_str_model_func,
         args=(1,),
@@ -124,6 +131,7 @@ def case_sync_single_int_model_plus_default_int_pair_return_str_model_func(
     ],
 )
 def case_sync_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
+    """Provide a sync per-item primitive task case."""
     return IterateDataFilesCase(
         task_func=single_int_plus_int_return_str_func,
         args=(2,),
@@ -139,6 +147,7 @@ def case_sync_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
 )
 def case_sync_single_int_plus_int_return_str_model_with_output_str_dataset_func(
 ) -> IterateDataFilesCase:
+    """Provide a sync per-item case with string output dataset."""
     return IterateDataFilesCase(
         task_func=single_int_plus_int_return_str_model_with_output_str_dataset_func,
         args=(2,),
@@ -155,6 +164,7 @@ def case_sync_single_int_plus_int_return_str_model_with_output_str_dataset_func(
     tags=['sync', 'function', 'iterate', 'int_output_dataset'],
 )
 def case_sync_single_int_plus_int_return_str_with_output_int_dataset_func() -> IterateDataFilesCase:
+    """Provide a sync per-item case with int output dataset."""
     return IterateDataFilesCase(
         task_func=single_int_plus_int_return_str_with_output_int_dataset_func,
         args=(2,),
@@ -178,6 +188,7 @@ def case_sync_single_int_plus_int_return_str_with_output_int_dataset_func() -> I
     ],
 )
 def case_async_single_int_model_plus_int_return_str_model_func() -> IterateDataFilesCase:
+    """Provide an async per-item model task case."""
     return IterateDataFilesCase(
         task_func=async_single_int_model_plus_int_return_str_model_func,
         args=(2,),
@@ -199,6 +210,7 @@ def case_async_single_int_model_plus_int_return_str_model_func() -> IterateDataF
     ],
 )
 def case_async_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
+    """Provide an async per-item primitive task case."""
     return IterateDataFilesCase(
         task_func=async_single_int_plus_int_return_str_func,
         args=(2,),
@@ -220,6 +232,7 @@ def case_async_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
     ],
 )
 def case_async_single_int_plus_future_return_alphanum_string_func() -> IterateDataFilesCase:
+    """Provide an async per-item case with non-int string output."""
     return IterateDataFilesCase(
         task_func=async_single_int_plus_future_return_alphanum_string_func,
         args=(2,),
@@ -235,6 +248,7 @@ def case_async_single_int_plus_future_return_alphanum_string_func() -> IterateDa
 )
 def case_async_single_int_plus_int_return_str_model_with_output_str_dataset_func(
 ) -> IterateDataFilesCase:
+    """Provide an async per-item case with output dataset injection."""
     return IterateDataFilesCase(
         task_func=async_single_int_plus_int_return_str_model_with_output_str_dataset_func,
         args=(2,),

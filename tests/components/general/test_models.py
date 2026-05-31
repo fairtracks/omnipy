@@ -1,3 +1,5 @@
+"""Tests for general-purpose model helpers."""
+
 import pytest
 
 from omnipy.components.general.models import (Chain2,
@@ -13,6 +15,7 @@ from .helpers.models import MyList, MyListModel, RotateOneCharModel, SplitCharsM
 
 
 def test_not_iterable_except_str_model():
+    """Accept scalars while rejecting non-string iterables."""
     assert NotIterableExceptStrOrBytesModel().content is None
     assert NotIterableExceptStrOrBytesModel(None).content is None
     assert NotIterableExceptStrOrBytesModel(1234).content == 1234
@@ -35,6 +38,7 @@ def test_not_iterable_except_str_model():
 
 
 def test_chain2_model():
+    """Compose two model conversions in sequence."""
 
     MyListModel(MyList(['a', 'b', 'c']))
 
@@ -50,6 +54,7 @@ def test_chain2_model():
 
 
 def test_concat_chain2_model_with_to_data_conversion():
+    """Concatenate Chain2 models while preserving data conversion."""
     class SplitCharsToMyListModel(Chain2[
             SplitCharsModel,
             MyListModel,
@@ -64,6 +69,7 @@ def test_concat_chain2_model_with_to_data_conversion():
 
 
 def test_chain2_union_models():
+    """Document union handling for Chain2 models."""
     with pytest.raises(IndexError):
 
         class FailingStrToBoolOrFloatModel(Chain2[Model[str], Model[bool] | Model[float]]):
@@ -101,6 +107,7 @@ def test_chain2_union_models():
 
 
 def test_chain3_model():
+    """Compose three model conversions in sequence."""
     class RotateOneAndSplitCharsToMyListModel(Chain3[
             RotateOneCharModel,
             SplitCharsModel,
@@ -114,6 +121,7 @@ def test_chain3_model():
 
 
 def test_chain4_model():
+    """Compose four model conversions in sequence."""
     class RotateTwoAndSplitCharsToMyListModel(Chain4[
             RotateOneCharModel,
             RotateOneCharModel,
@@ -128,6 +136,7 @@ def test_chain4_model():
 
 
 def test_chain5_model():
+    """Compose five model conversions in sequence."""
     class RotateThreeAndSplitCharsToMyListModel(Chain5[
             RotateOneCharModel,
             RotateOneCharModel,
@@ -143,6 +152,7 @@ def test_chain5_model():
 
 
 def test_chain6_model():
+    """Compose six model conversions in sequence."""
     class RotateThreeAndSplitCharsToMyListModel(Chain6[
             RotateOneCharModel,
             RotateOneCharModel,

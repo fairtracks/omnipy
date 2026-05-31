@@ -1,3 +1,5 @@
+"""Test compute flow templates and runtime behavior."""
+
 from collections.abc import Iterable
 from datetime import datetime
 from typing import Annotated, Callable, cast, Type
@@ -30,6 +32,7 @@ MockJobClasses = tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
 
 
 def test_flow_context_mock() -> None:
+    """Test flow context state propagates within a flow."""
     flow_tmpl: MockFlowTemplateSubclass = MockFlowTemplateSubclass()
     flow = flow_tmpl.apply()
     job_tmpl: MockJobTemplateSubclass = MockJobTemplateSubclass()
@@ -63,6 +66,7 @@ def test_flow_context_mock() -> None:
 
 
 def test_time_of_flow_run_mock() -> None:
+    """Test flow run timestamps propagate within a flow."""
     flow_tmpl: MockFlowTemplateSubclass = MockFlowTemplateSubclass()
     flow = flow_tmpl.apply()
     job_tmpl: MockJobTemplateSubclass = MockJobTemplateSubclass()
@@ -103,6 +107,7 @@ def test_fail_init_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     flow_cls_tuple: Annotated[AnyFlowClsTuple, pytest.fixture],
 ) -> None:
+    """Test flow classes reject direct callable construction."""
     flow_cls = flow_cls_tuple.flow_cls
 
     with pytest.raises(JobStateException):
@@ -113,6 +118,7 @@ def test_fail_init_func_arg_flow_classes(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
+    """Test func-arg flow classes validate construction arguments."""
     flow_cls, flow_tmpl_cls, _ = func_arg_flow_cls_tuple
     with pytest.raises(TypeError):
         flow_cls()
@@ -141,6 +147,7 @@ def test_init_func_arg_flow_templates(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
+    """Test func-arg flow templates initialize correctly."""
     _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls()(format_to_string_func)
@@ -156,6 +163,7 @@ def _run_and_assert_flow_template(flow_template: IsFuncArgJobTemplate,
                                   assert_flow_cls: type,
                                   assert_func: Callable,
                                   assert_name: str) -> None:
+    """Apply a flow template and assert basic run behavior."""
     flow = flow_template.apply()
     assert_flow_or_flow_template(
         flow, assert_flow_cls=assert_flow_cls, assert_func=assert_func, assert_name=assert_name)
@@ -187,6 +195,7 @@ def test_apply_run_func_arg_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
+    """Test func-arg flow templates apply and run."""
     flow_cls, flow_tmpl_cls, _ = func_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls()(format_to_string_func)
@@ -218,6 +227,7 @@ def test_refine_func_arg_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
+    """Test func-arg flow templates can be refined."""
     _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls()(empty_dict_func)
@@ -235,6 +245,7 @@ def _apply_revise_and_run_and_assert_flow_template(flow_template: IsFuncArgJobTe
                                                    assert_flow_tmpl_cls: type,
                                                    assert_func: Callable,
                                                    assert_name: str) -> None:
+    """Revise a flow and assert the revised template runs."""
     flow = flow_template.apply()
     flow_template_2 = flow.revise()
 
@@ -264,6 +275,7 @@ def test_revise_func_arg_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
+    """Test func-arg flows revise back to templates."""
     _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls()(format_to_string_func)
@@ -277,6 +289,7 @@ def test_revise_func_arg_flow_cls_tuple(
 @pc.parametrize_with_cases('case', cases='.cases.flows')
 def test_flow_run_flow_cls_tuple(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
                                  case: FlowCase) -> None:
+    """Test flow cases run and return expected results."""
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
@@ -305,6 +318,7 @@ def test_flow_run_flow_cls_tuple(mock_local_runner: Annotated[MockLocalRunner, p
 
 def test_linear_flow_only_first_positional(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    """Test linear flows forward only the first positional result."""
     @TaskTemplate()
     def task_tmpl() -> tuple[int, int]:
         return 42, 42
@@ -365,6 +379,7 @@ def test_linear_flow_param_key_map_and_fixed_params(
 
 def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    """Test DAG flows ignore unmatched outputs."""
     @TaskTemplate()
     def task_tmpl() -> int:
         return 42
@@ -387,6 +402,7 @@ def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
 
 def test_dynamic_dag_flow_by_returned_dict(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    """Test DAG flows wire dependencies from returned dicts."""
     @TaskTemplate()
     def task_tmpl() -> dict[str, int]:
         return {'number': 42}
@@ -448,11 +464,13 @@ def test_dag_flow_mapped_key_cannot_override_fixed_params(
 def mypy_fix_mock_task_template_assert_same_time(
         mock_task_template_assert_same_time: object
 ) -> MockTaskTemplateAssertSameTimeOfCurFlowRunCore:
+    """Cast the mock task template helper for type checkers."""
     return cast(MockTaskTemplateAssertSameTimeOfCurFlowRunCore, mock_task_template_assert_same_time)
 
 
 def test_time_of_multi_level_flow_run_flow_cls_tuple(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    """Test nested flows share one top-level run time per execution."""
 
     # TaskTemplate
     @MockTaskTemplateAssertSameTimeOfCurFlowRun()
@@ -511,6 +529,7 @@ def _assert_diff_time_of_two_flow_runs(
         *args: object,
         assert_result: object,
         assert_task_tmpl: IsMockTaskTemplateAssertSameTimeOfCurFlowRun):
+    """Assert separate flow runs get distinct timestamps."""
     flow = flow_tmpl.apply()
     assert flow(*args) == assert_result
 

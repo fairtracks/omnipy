@@ -1,0 +1,1 @@
+"""JSON component tests."""

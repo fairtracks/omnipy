@@ -1,3 +1,5 @@
+"""Pytest fixtures for remote component endpoint tests."""
+
 import asyncio
 from collections import defaultdict
 from json import dumps
@@ -15,6 +17,7 @@ from .helpers.classes import EndpointCase
 
 @pc.fixture(scope='function')
 async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:
+    """Provide a test server exposing lyrics endpoints with varied response types."""
     async def _get_lyrics(url: str):
         url_model = HttpUrlModel(url)
         match url_model.query.get('song'):
@@ -106,24 +109,28 @@ async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:
 @pc.fixture(scope='function')
 async def lyrics_bytes_server_url(
         lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
+    """Return the bytes-response lyrics endpoint URL."""
     yield str(lyrics_server.make_url('/lyrics_bytes'))
 
 
 @pc.fixture(scope='function')
 async def lyrics_text_server_url(
         lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
+    """Return the text-response lyrics endpoint URL."""
     yield str(lyrics_server.make_url('/lyrics_text'))
 
 
 @pc.fixture(scope='function')
 async def lyrics_json_server_url(
         lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
+    """Return the JSON-response lyrics endpoint URL."""
     yield str(lyrics_server.make_url('/lyrics_json'))
 
 
 @pc.fixture(scope='function')
 async def timeout_lyrics_server_url(
         lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
+    """Return the flaky timeout lyrics endpoint URL."""
     yield str(lyrics_server.make_url('/timeout_lyrics'))
 
 
@@ -138,6 +145,7 @@ async def timeout_lyrics_server_url(
     ],
     ids=['bytes_content', 'text_content', 'json_content', 'timeout_issues'])
 def endpoint(server_url: str, auto_model_type: type[Model]) -> EndpointCase:
+    """Return endpoint cases with song query URLs and expected auto model type."""
     urls = HttpUrlDataset()
     for key, song in dict(jokke='Her kommer vinteren', odd='Blues fra Oslo Ø',
                           delillos='1984', delillos_2='Arne').items():
