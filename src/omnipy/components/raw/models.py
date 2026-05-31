@@ -20,6 +20,12 @@ if TYPE_CHECKING:
 class _EncodingParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
+        """Configure text/binary conversion encoding.
+
+        Attributes:
+            encoding: Codec used when coercing between ``str`` and ``bytes``.
+        """
+
         encoding: str = 'utf-8'
 
 
@@ -54,6 +60,12 @@ class BytesModel(_BytesModel):
 if TYPE_CHECKING:
 
     class StrictBytesModel(PlainModel[bytes], IsBytesContent):
+        """Store binary content without implicit coercion.
+
+        This type-checking variant mirrors the runtime ``StrictBytesModel`` and
+        accepts values that are already bytes-compatible.
+        """
+
         ...
 else:
 
@@ -100,6 +112,12 @@ class StrModel(_StrModel):
 if TYPE_CHECKING:
 
     class StrictStrModel(PlainModel[str], IsStrContent):
+        """Store text content without implicit coercion.
+
+        This type-checking variant mirrors the runtime ``StrictStrModel`` and
+        accepts values that are already strict strings.
+        """
+
         ...
 else:
 
@@ -118,6 +136,14 @@ else:
 
 class _HasSplitParams(Protocol):
     class Params:
+        """Protocol for split-model parameter access.
+
+        Attributes:
+            strip: Whether leading and trailing characters are stripped.
+            strip_chars: Optional character set passed to ``str.strip``.
+            delimiter: Delimiter used to split incoming text.
+        """
+
         strip: bool
         strip_chars: str | None
         delimiter: str
@@ -150,18 +176,36 @@ class _SplitParamsBase(ParamsBase):
 class _SplitByCommaParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
+        """Split-parameter variant using comma delimiters.
+
+        Attributes:
+            delimiter: Delimiter used when splitting item strings.
+        """
+
         delimiter: str = ','
 
 
 class _SplitByTabParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
+        """Split-parameter variant using tab delimiters.
+
+        Attributes:
+            delimiter: Delimiter used when splitting item strings.
+        """
+
         delimiter: str = '\t'
 
 
 class _SplitByNewlineParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
+        """Split-parameter variant using newline delimiters.
+
+        Attributes:
+            delimiter: Delimiter used when splitting item strings.
+        """
+
         delimiter: str = '\n'
 
 
@@ -170,6 +214,12 @@ class _SplitByNewlineParamsMixin:
 if TYPE_CHECKING:
 
     class SplitToItemsModelBase(PlainModel[list[str]], IsListContent[str]):
+        """Normalize text input into a flat list of string items.
+
+        Input may be provided either as an existing list of strings or as one
+        delimited string that should be split according to active parameters.
+        """
+
         ...
 
 else:
@@ -234,6 +284,12 @@ if TYPE_CHECKING:
             PlainModel[list[list[str]]],
             IsListOfListsContent[list[str], str],
     ):
+        """Normalize input into a two-dimensional list of string items.
+
+        Input may be provided as nested lists directly or as flat strings that
+        are split into subitems.
+        """
+
         ...
 
 else:
@@ -298,6 +354,12 @@ class SplitLinesToColumnsByCommaModel(_SplitByCommaParamsMixin, SplitItemsToSubi
 
 class _HasJoinParams(Protocol):
     class Params:
+        """Protocol for join-model parameter access.
+
+        Attributes:
+            delimiter: Delimiter used to join string elements.
+        """
+
         delimiter: str
 
 
@@ -314,18 +376,36 @@ def _join_items(model_cls: type[_HasJoinParams], data: list[str]) -> str:
 class _JoinByCommaParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
+        """Join-parameter variant using comma delimiters.
+
+        Attributes:
+            delimiter: Delimiter used when joining item strings.
+        """
+
         delimiter: str = ','
 
 
 class _JoinByTabParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
+        """Join-parameter variant using tab delimiters.
+
+        Attributes:
+            delimiter: Delimiter used when joining item strings.
+        """
+
         delimiter: str = '\t'
 
 
 class _JoinByNewlineParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
+        """Join-parameter variant using newline delimiters.
+
+        Attributes:
+            delimiter: Delimiter used when joining item strings.
+        """
+
         delimiter: str = '\n'
 
 
@@ -334,6 +414,12 @@ class _JoinByNewlineParamsMixin:
 if TYPE_CHECKING:
 
     class JoinItemsModelBase(PlainModel[str], IsStrContent):
+        """Normalize string-list input into one joined string.
+
+        Input may already be a string or a list of strings that should be
+        joined using the active delimiter parameters.
+        """
+
         ...
 
 else:
@@ -381,6 +467,12 @@ class JoinLinesModel(_JoinByNewlineParamsMixin, JoinItemsModelBase):
 if TYPE_CHECKING:
 
     class JoinSubitemsToItemsModelBase(PlainModel[list[str]], IsListContent[str]):
+        """Normalize nested string lists into a flat list of joined items.
+
+        Input may already be flat or may contain nested lists that should be
+        joined per sublist.
+        """
+
         ...
 
 else:
@@ -446,6 +538,12 @@ if TYPE_CHECKING:
             IsListContent[_NestedListsOfStrT],
             Generic[_NestedListsOfStrT],
     ):
+        """Represent recursive list nesting for string-based structures.
+
+        This generic wrapper models lists where elements may themselves be
+        recursively nested list structures containing strings.
+        """
+
         ...
 else:
 
@@ -488,6 +586,12 @@ _NestedPlainListsOfStrT = TypeVar(
 class _NestedItemsParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
+        """Configure delimiter hierarchy for nested split/join operations.
+
+        Attributes:
+            delimiters: Ordered delimiter tuple applied by nesting level.
+        """
+
         delimiters: tuple[str, ...] = ()
 
     @classmethod
@@ -645,6 +749,14 @@ class NestedJoinItemsModel(_NestedJoinItemsModel):
 class _MatchItemsParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
+        """Configure predicate-based filtering for string item lists.
+
+        Attributes:
+            match_functions: Predicate callables evaluated per item.
+            invert_matches: Whether to invert predicate outcomes.
+            match_all: Whether all predicates must match (otherwise any).
+        """
+
         match_functions: tuple[Callable[[str], bool], ...] = ()
         invert_matches: bool = False
         match_all: bool = True

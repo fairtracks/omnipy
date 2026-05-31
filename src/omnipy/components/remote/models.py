@@ -137,6 +137,12 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
 if TYPE_CHECKING:
 
     class QueryParamsModel_dict(QueryParamsModel, dict):  # type: ignore[misc]
+        """Type-checking helper refining ``QueryParamsModel`` as ``dict``-like.
+
+        This helper exists only for static typing so query-parameter model
+        instances can be treated as decoded string-to-string mappings.
+        """
+
         ...
 
 
@@ -185,6 +191,12 @@ class UrlPathModel(Model[PurePosixPath | str]):
         return PurePosixPath(data) if isinstance(data, str) else data
 
     def to_data(self) -> str:
+        """Return the normalized URL path as a string.
+
+        Returns:
+            str: Path content rendered as a POSIX-style string.
+        """
+
         return str(self.content)
 
     def __str__(self) -> str:
@@ -212,6 +224,12 @@ class UrlPathModel(Model[PurePosixPath | str]):
 if TYPE_CHECKING:
 
     class UrlPathModel_PurePosixPath(UrlPathModel, PurePosixPath):  # type: ignore[misc]
+        """Type-checking helper combining path-model and path-like APIs.
+
+        This helper exists only for static typing to expose both
+        ``UrlPathModel`` behavior and ``PurePosixPath`` operations.
+        """
+
         ...
 
 
@@ -360,6 +378,12 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
         return HttpUrlModel(str(self) + other)
 
     def to_data(self) -> str:
+        """Return the normalized URL as a string.
+
+        Returns:
+            str: Fully rendered HTTP(S) URL string.
+        """
+
         return str(self.content)
 
     def __str__(self) -> str:
@@ -369,6 +393,12 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
 if TYPE_CHECKING:
 
     class HttpUrlModel_UrlDataclassModel(HttpUrlModel, UrlDataclassModel):  # type: ignore[misc]
+        """Type-checking helper combining URL model and URL-part attributes.
+
+        This helper exists only for static typing so parsed URL fields can be
+        accessed directly on ``HttpUrlModel`` values.
+        """
+
         ...
 
 
@@ -428,7 +458,12 @@ class ResponseContentPydModel(pyd.BaseModel):
     response: object
 
     class Config:
-        """Pydantic model configuration: allows arbitrary types for HTTP response content."""
+        """Configure pydantic behavior for response-wrapper validation.
+
+        Arbitrary payload object types are allowed so decoded response content
+        can be preserved without additional wrapping.
+        """
+
         arbitrary_types_allowed = True
 
     @pyd.validator('content_type', allow_reuse=True)
@@ -486,7 +521,12 @@ class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel 
         'hello'
     """
     class Config(Model.Config):
-        """Pydantic model configuration: disables smart union for auto-detected content models."""
+        """Configure union parsing for automatic response-content decoding.
+
+        Smart-union matching is disabled so MIME-driven model selection for
+        bytes, text, and JSON remains explicit.
+        """
+
         smart_union = False
 
     @classmethod

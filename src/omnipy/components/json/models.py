@@ -401,7 +401,12 @@ class JsonScalarModel(Model[JsonScalar]):
 if TYPE_CHECKING:
 
     class JsonListModel(PlainModel[_JsonAnyListM], IsListContent[_JsonAnyUnionContent]):
-        """Validate JSON values with a top-level array shape."""
+        """Validate JSON values whose root is an array.
+
+        This type-checking variant mirrors the runtime ``JsonListModel`` and
+        enforces a list/array at the top level, while allowing arbitrary
+        JSON-compatible values within nested positions.
+        """
 
         ...
 
@@ -446,7 +451,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonListOfScalars],
             IsListContent[JsonScalar],
     ):
-        """Validate JSON arrays containing only scalar values."""
+        """Validate JSON arrays containing only scalar values.
+
+        This variant restricts each top-level item to a JSON scalar
+        (``null``, number, string, or boolean).
+        """
 
         ...
 
@@ -454,7 +463,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonListM[_JsonAnyListM]],
             IsListOfListsContent[_JsonAnyListM, _JsonAnyUnionContent],
     ):
-        """Validate JSON arrays whose elements are JSON arrays."""
+        """Validate JSON arrays whose elements are JSON arrays.
+
+        The top-level value must be an array, and each element must also be an
+        array that may contain general JSON-compatible content.
+        """
 
         ...
 
@@ -462,7 +475,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonListM[_JsonListOfScalars]],
             IsListOfListsContent[JsonListOfScalarsModel, JsonScalar],
     ):
-        """Validate JSON arrays of scalar-only JSON arrays."""
+        """Validate JSON arrays of scalar-only nested arrays.
+
+        Both the top-level array and each nested array are constrained so that
+        leaf values are JSON scalars.
+        """
 
         ...
 
@@ -470,7 +487,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonListM[_JsonAnyDictM]],
             IsListOfDictsContent[_JsonAnyDictM, str, _JsonAnyUnionContent],
     ):
-        """Validate JSON arrays whose elements are JSON objects."""
+        """Validate JSON arrays whose elements are JSON objects.
+
+        Each top-level item must be an object/dict with string keys and
+        JSON-compatible values.
+        """
 
         ...
 
@@ -478,7 +499,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonListM[_JsonDictOfScalars]],
             IsListOfDictsContent['JsonDictOfScalarsModel', str, JsonScalar],
     ):
-        """Validate JSON arrays of objects with scalar-only values."""
+        """Validate JSON arrays of objects with scalar-only values.
+
+        Each object in the top-level array must map string keys to JSON scalar
+        values only.
+        """
 
         ...
 
@@ -535,7 +560,12 @@ else:
 if TYPE_CHECKING:
 
     class JsonDictModel(PlainModel[_JsonAnyDictM], IsDictContent[str, _JsonAnyUnionContent]):
-        """Validate JSON values with a top-level object shape."""
+        """Validate JSON values whose root is an object.
+
+        This type-checking variant mirrors the runtime ``JsonDictModel`` and
+        requires a dict/object at the top level with string keys and
+        JSON-compatible nested values.
+        """
 
         ...
 
@@ -579,7 +609,10 @@ if TYPE_CHECKING:
             PlainModel[_JsonDictOfScalars],
             IsDictContent[str, JsonScalar],
     ):
-        """Validate JSON objects whose values are scalar values."""
+        """Validate JSON objects whose values are scalar values.
+
+        All top-level values must be JSON scalars, while keys remain strings.
+        """
 
         ...
 
@@ -587,7 +620,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonDictM[_JsonAnyListM]],
             IsDictOfListsContent[str, _JsonAnyListM, _JsonAnyUnionContent],
     ):
-        """Validate JSON objects whose values are JSON arrays."""
+        """Validate JSON objects whose values are JSON arrays.
+
+        Each top-level object value must be an array with JSON-compatible
+        nested content.
+        """
 
         ...
 
@@ -595,7 +632,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonDictM[_JsonListOfScalars]],
             IsDictOfListsContent[str, JsonListOfScalarsModel, JsonScalar],
     ):
-        """Validate JSON objects whose values are scalar-only JSON arrays."""
+        """Validate JSON objects whose values are scalar-only arrays.
+
+        Each top-level object value must be an array whose elements are JSON
+        scalars.
+        """
 
         ...
 
@@ -603,7 +644,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonDictM[_JsonAnyDictM]],
             IsDictOfDictsContent[str, _JsonAnyDictM, str, _JsonAnyUnionContent],
     ):
-        """Validate JSON objects whose values are JSON objects."""
+        """Validate JSON objects whose values are JSON objects.
+
+        Each top-level value must itself be an object with string keys and
+        JSON-compatible values.
+        """
 
         ...
 
@@ -611,7 +656,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonDictM[_JsonDictOfScalars]],
             IsDictOfDictsContent[str, JsonDictOfScalarsModel, str, JsonScalar],
     ):
-        """Validate JSON objects of nested objects with scalar-only values."""
+        """Validate nested JSON objects with scalar-only leaves.
+
+        Top-level values must be objects that map string keys to JSON scalar
+        values.
+        """
 
         ...
 
@@ -754,7 +803,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonNestedListsM],
             IsListContent[_JsonOnlyListsUnionContent],
     ):
-        """Validate recursively nested JSON arrays with scalar leaves."""
+        """Validate recursively nested JSON arrays with scalar leaves.
+
+        This model captures list-only JSON hierarchies where recursion ends at
+        scalar values.
+        """
 
         ...
 
@@ -762,7 +815,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonNestedDictsM],
             IsDictContent[str, _JsonOnlyDictsUnionContent],
     ):
-        """Validate recursively nested JSON objects with scalar leaves."""
+        """Validate recursively nested JSON objects with scalar leaves.
+
+        This model captures object-only JSON hierarchies where recursion ends at
+        scalar values.
+        """
 
         ...
 
@@ -795,7 +852,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonListM[_JsonNestedDictsM]],
             IsListOfDictsContent[JsonNestedDictsModel, str, _JsonOnlyDictsUnionContent],
     ):
-        """Validate JSON arrays whose items are nested JSON objects."""
+        """Validate JSON arrays whose items are nested JSON objects.
+
+        Each top-level element must be a recursively nested object structure
+        with scalar leaves.
+        """
 
         ...
 
@@ -803,7 +864,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonDictM[_JsonNestedListsM]],
             IsDictOfListsContent[str, JsonNestedListsModel, _JsonOnlyListsUnionContent],
     ):
-        """Validate JSON objects whose values are nested JSON arrays."""
+        """Validate JSON objects whose values are nested JSON arrays.
+
+        Each top-level value must be a recursively nested array structure with
+        scalar leaves.
+        """
 
         ...
 
@@ -811,7 +876,11 @@ if TYPE_CHECKING:
             PlainModel[_JsonDictM[_JsonListM[_JsonAnyDictM]]],
             IsDictOfListsContent[str, JsonListOfDictsModel, Mapping[str, '_JsonAnyUnionContent']],
     ):
-        """Validate JSON objects whose values are arrays of JSON objects."""
+        """Validate JSON objects whose values are arrays of objects.
+
+        Each top-level value must be an array where every element is a JSON
+        object.
+        """
 
         ...
 
@@ -854,7 +923,11 @@ if TYPE_CHECKING:
             IsListContent[_JsonBaseT],
             Generic[_JsonBaseT],
     ):
-        """Validate JSON arrays constrained to a custom JSON-compatible item type."""
+        """Validate JSON arrays constrained to a custom item type.
+
+        This generic model allows callers to define list-shaped JSON models with
+        explicit JSON-compatible element constraints.
+        """
 
         ...
 
@@ -863,7 +936,11 @@ if TYPE_CHECKING:
             IsDictContent[str, _JsonBaseT],
             Generic[_JsonBaseT],
     ):
-        """Validate JSON objects constrained to a custom JSON-compatible value type."""
+        """Validate JSON objects constrained to a custom value type.
+
+        This generic model allows callers to define object-shaped JSON models
+        with explicit JSON-compatible value constraints.
+        """
 
         ...
 
