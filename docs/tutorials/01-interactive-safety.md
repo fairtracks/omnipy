@@ -10,18 +10,18 @@ Omnipy models continuously validate data and type-mimic the wrapped Python type.
 ## Setup
 
 ```pycon exec="1" session="tutorial1" source="console"
->>> from omnipy import Model, runtime
->>> runtime.config.root_log.log_to_stdout = False
->>> runtime.config.root_log.log_to_stderr = False
->>> runtime.config.root_log.log_to_file = False
->>> runtime.config.job.output_storage.persist_outputs = 'disabled'
->>> runtime.config.data.model.interactive = True
+>>> import omnipy as om
+>>> om.runtime.config.root_log.log_to_stdout = False
+>>> om.runtime.config.root_log.log_to_stderr = False
+>>> om.runtime.config.root_log.log_to_file = False
+>>> om.runtime.config.job.output_storage.persist_outputs = 'disabled'
+>>> om.runtime.config.data.model.interactive = True
 ```
 
 ## Parse and inspect
 
 ```pycon exec="1" session="tutorial1" source="console"
->>> readings = Model[list[int]]((120, '135', 142.0))
+>>> readings = om.Model[list[int]]((120, '135', 142.0))
 >>> readings
 ```
 
@@ -32,12 +32,12 @@ Omnipy models continuously validate data and type-mimic the wrapped Python type.
 ## Error + rollback demonstration
 
 ```pycon exec="1" session="tutorial1" source="console"
->>> before_error = readings.to_data().copy()
+>>> before_error = readings.content.copy()
 >>> try:
 ...     readings.append('bonus-ticket')
 ... except Exception as err:
 ...     print(type(err).__name__)
->>> after_error = readings.to_data()
+>>> after_error = readings.content
 >>> print(before_error == after_error)
 >>> readings
 ```
@@ -55,8 +55,8 @@ Choose based on trade-offs, not environment:
   no rollback after validation errors.
 
 ```pycon exec="1" session="tutorial1" source="console"
->>> runtime.config.data.model.interactive = False
->>> fast_mode = Model[list[int]]([10, 20, 30])
+>>> om.runtime.config.data.model.interactive = False
+>>> fast_mode = om.Model[list[int]]([10, 20, 30])
 >>> try:
 ...     fast_mode.append('VIP')
 ... except Exception as err:

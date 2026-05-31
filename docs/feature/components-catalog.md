@@ -23,16 +23,16 @@ Omnipy ships component groups for common data/interoperability patterns:
 ## 3) Example
 
 ```pycon exec="1" source="console"
->>> from omnipy import JsonListOfDictsDataset
->>> ds = JsonListOfDictsDataset({'rows': [{'id': 'a', 'x': 1}, {'id': 'b', 'x': 2}]})
->>> ds.to_data()
+>>> import omnipy as om
+>>> ds = om.JsonListOfDictsDataset({'rows': [{'id': 'a', 'x': 1}, {'id': 'b', 'x': 2}]})
+>>> ds.json()
 ```
 
 ## 4) Output / display
 
-```pycon exec="1" source="console"
->>> from omnipy import JsonListOfDictsDataset
->>> ds = JsonListOfDictsDataset({'rows': [{'id': 'a', 'x': 1}, {'id': 'b', 'x': 2}]})
+```pycon exec="1" result="console" html="true"
+>>> import omnipy as om
+>>> ds = om.JsonListOfDictsDataset({'rows': [{'id': 'a', 'x': 1}, {'id': 'b', 'x': 2}]})
 >>> print(ds._docs())
 ```
 

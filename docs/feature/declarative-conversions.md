@@ -18,18 +18,18 @@ typed.
 ## 3) Example
 
 ```pycon exec="1" source="console"
->>> from omnipy import JsonListOfDictsDataset, PandasDataset
->>> ds = JsonListOfDictsDataset({'rows': [{'id': 'a', 'value': '1'}, {'id': 'b', 'value': 2}]})
->>> ds_pd = ds.to(PandasDataset)
->>> ds_pd.to_data()
+>>> import omnipy as om
+>>> ds = om.JsonListOfDictsDataset({'rows': [{'id': 'a', 'value': '1'}, {'id': 'b', 'value': 2}]})
+>>> ds_pd = ds.to(om.PandasDataset)
+>>> ds_pd.json()
 ```
 
 ## 4) Output / display
 
-```pycon exec="1" source="console"
->>> from omnipy import JsonListOfDictsDataset, PandasDataset
->>> ds = JsonListOfDictsDataset({'rows': [{'id': 'a', 'value': '1'}, {'id': 'b', 'value': 2}]})
->>> print(ds.to(PandasDataset)._docs())
+```pycon exec="1" result="console" html="true"
+>>> import omnipy as om
+>>> ds = om.JsonListOfDictsDataset({'rows': [{'id': 'a', 'value': '1'}, {'id': 'b', 'value': 2}]})
+>>> print(ds.to(om.PandasDataset)._docs())
 ```
 
 ## 5) When to use / when not
@@ -41,7 +41,7 @@ Avoid forcing `.to()` when no target parser exists yet; add a parse/transform st
 ## 6) Gotchas
 
 - Convertibility depends on whether the target can parse the source shape.
-- Check `.to_data()` before and after conversion when debugging.
+- Check `.json()` before and after conversion when debugging.
 
 ## 7) Links
 

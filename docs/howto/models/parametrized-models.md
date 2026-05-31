@@ -10,14 +10,14 @@
 ```pycon exec="1" source="console"
 >>> from omnipy import Dataset, Model
 >>> ds = Dataset[Model[int]]({'a': '1', 'b': 2.0})
->>> ds.to_data()
+>>> ds.json()
 ```
 
 ## Reuse shape, vary inner type
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> Model[list[str]]([1, '2', 3]).to_data()
+>>> import omnipy as om
+>>> om.Model[list[str]]([1, '2', 3]).content
 ```
 
 ## Current limitations

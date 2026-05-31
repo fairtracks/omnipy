@@ -10,20 +10,20 @@ Model-based tabular parsing for domain formats follows a stable three-step patte
 ## 1) Parse rows from text
 
 ```pycon exec="1" source="console"
->>> from omnipy import TsvTableModel
+>>> import omnipy as om
 >>> text = "a\tb\n1\t2\n"
->>> TsvTableModel(text).to_data()
+>>> om.TsvTableModel(text).content
 ```
 
 ## 2) Apply typed row spec
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model, TsvTableModel
->>> from omnipy.util import pydantic as pyd
->>> class Row(pyd.BaseModel):
+>>> import omnipy as om
+>>> import pydantic as pyd
+>>> class Row(pyd.v1.BaseModel):
 ...     a: int
 ...     b: int
->>> Model[list[Row]](TsvTableModel("a\tb\n1\t2\n").to_data()).to_data()
+>>> om.Model[list[Row]](om.TsvTableModel("a\tb\n1\t2\n").content).content
 ```
 
 ## 3) Convert to downstream representation

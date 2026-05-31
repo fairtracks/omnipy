@@ -7,18 +7,18 @@
 
 ## `_docs()` for stable rendered output
 
-```pycon exec="1" source="console"
->>> from omnipy import Model
->>> m = Model[dict[str, list[int]]]({'a': [1, 2], 'b': [3, 4]})
+```pycon exec="1" result="console" html="true"
+>>> import omnipy as om
+>>> m = om.Model[dict[str, list[int]]]({'a': [1, 2], 'b': [3, 4]})
 >>> print(m._docs())
 ```
 
 ## `peek()` / `full()` / `browse()` usage
 
 ```python
-from omnipy import Model
+import omnipy as om
 
-m = Model[list[int]]([1, 2, 3])
+m = om.Model[list[int]]([1, 2, 3])
 m.peek()
 m.full()
 m.browse()

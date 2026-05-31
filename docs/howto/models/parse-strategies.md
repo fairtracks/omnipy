@@ -10,21 +10,21 @@
 ### Let built-in coercion handle straightforward cases
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> Model[list[int]](['1', 2, 3.0]).to_data()
+>>> import omnipy as om
+>>> om.Model[list[int]](['1', 2, 3.0]).content
 ```
 
 ### Add custom normalization with `_parse_data`
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> class IntListFromAnything(Model[list[int]]):
+>>> import omnipy as om
+>>> class IntListFromAnything(om.Model[list[int]]):
 ...     @classmethod
 ...     def _parse_data(cls, data):
 ...         if isinstance(data, tuple):
 ...             data = list(data)
 ...         return data
->>> IntListFromAnything(('1', 2, 3.0)).to_data()
+>>> IntListFromAnything(('1', 2, 3.0)).content
 ```
 
 ## Guidance

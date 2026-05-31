@@ -13,41 +13,41 @@ validation in the flow.
 ## Columnar input to row-wise records
 
 ```pycon exec="1" source="console"
->>> from omnipy import ColumnWiseTableWithColNamesModel, RowWiseTableWithColNamesModel
->>> columnar = ColumnWiseTableWithColNamesModel({
+>>> import omnipy as om
+>>> columnar = om.ColumnWiseTableWithColNamesModel({
 ...     'sample': ['s1', 's2'],
 ...     'count': [10, 20],
 ... })
->>> columnar.to_data()
+>>> columnar.content
 {'sample': ['s1', 's2'], 'count': [10, 20]}
->>> columnar.to(RowWiseTableWithColNamesModel).to_data()
+>>> columnar.to(om.RowWiseTableWithColNamesModel).content
 [{"sample": "s1", "count": 10}, {"sample": "s2", "count": 20}]
 ```
 
 ## Add typed validation on top of records
 
 ```pycon exec="1" source="console"
->>> from omnipy import ColumnWiseTableWithColNamesModel, Model, RowWiseTableWithColNamesModel, runtime
->>> from omnipy.util import pydantic as pyd
->>> class Row(pyd.BaseModel):
+>>> import omnipy as om
+>>> import pydantic as pyd
+>>> class Row(pyd.v1.BaseModel):
 ...     sample: str
 ...     count: int
->>> runtime.config.data.model.interactive = True
->>> columnar = ColumnWiseTableWithColNamesModel({'sample': ['s1', 's2'], 'count': ['10', '20']})
->>> typed_rows = Model[list[Row]](columnar.to(RowWiseTableWithColNamesModel).to_data())
->>> typed_rows.to_data()
+>>> om.runtime.config.data.model.interactive = True
+>>> columnar = om.ColumnWiseTableWithColNamesModel({'sample': ['s1', 's2'], 'count': ['10', '20']})
+>>> typed_rows = om.Model[list[Row]](columnar.to(om.RowWiseTableWithColNamesModel).content)
+>>> typed_rows.content
 [{"sample": "s1", "count": 10}, {"sample": "s2", "count": 20}]
 >>> typed_rows[0] = {'sample': 's1', 'count': '11'}
->>> typed_rows.to_data()
+>>> typed_rows.content
 [{"sample": "s1", "count": 11}, {"sample": "s2", "count": 20}]
 >>> try:
 ...     typed_rows[0] = {'sample': 's1', 'count': 'bad'}
 ... except Exception as exc:
 ...     type(exc).__name__
 'ValidationError'
->>> typed_rows.to_data()
+>>> typed_rows.content
 [{"sample": "s1", "count": 11}, {"sample": "s2", "count": 20}]
->>> runtime.config.data.model.interactive = False
+>>> om.runtime.config.data.model.interactive = False
 ```
 
 With interactive mode enabled (`runtime.config.data.model.interactive = True`), failed assignments

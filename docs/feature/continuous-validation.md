@@ -18,17 +18,17 @@ Omnipy models also mimic the behavior of the wrapped type (for example, list met
 ## 3) Example
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> vals = Model[list[int]]((1, '2', 3.0))
+>>> import omnipy as om
+>>> vals = om.Model[list[int]]((1, '2', 3.0))
 >>> vals.append('4')
->>> vals.to_data()
+>>> vals.content
 ```
 
 ## 4) Output / display
 
-```pycon exec="1" source="console"
->>> from omnipy import Model
->>> vals = Model[list[int]]((1, '2', 3.0))
+```pycon exec="1" result="console" html="true"
+>>> import omnipy as om
+>>> vals = om.Model[list[int]]((1, '2', 3.0))
 >>> print(vals._docs())
 ```
 

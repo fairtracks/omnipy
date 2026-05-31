@@ -19,14 +19,14 @@
 ## Example: Pydantic row spec inside Omnipy
 
 ```pycon exec="1" source="console"
->>> from omnipy.util import pydantic as pyd
->>> from omnipy import Model
->>> class BedRow(pyd.BaseModel):
+>>> import omnipy as om
+>>> import pydantic as pyd
+>>> class BedRow(pyd.v1.BaseModel):
 ...     chrom: str
 ...     start: int
 ...     end: int
 ...     name: str | None = None
->>> Model[BedRow]({'chrom': 'chr1', 'start': '10', 'end': 20}).to_data()
+>>> om.Model[BedRow]({'chrom': 'chr1', 'start': '10', 'end': 20}).content
 ```
 
 ## Trust-builder note

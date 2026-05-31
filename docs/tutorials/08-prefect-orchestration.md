@@ -29,28 +29,28 @@ pip install omnipy-examples
 ## Step 2: Switch engine configuration to Prefect
 
 ```pycon exec="1" source="console"
->>> from omnipy import runtime
->>> runtime.config.engine.choice
+>>> import omnipy as om
+>>> om.runtime.config.engine.choice
 'local'
->>> runtime.config.engine.choice = 'prefect'
->>> runtime.config.engine.choice
+>>> om.runtime.config.engine.choice = 'prefect'
+>>> om.runtime.config.engine.choice
 'prefect'
 ```
 
 ## Step 3: Run a flow with the Prefect engine
 
 ```pycon exec="1" source="console"
->>> from omnipy import TaskTemplate, LinearFlowTemplate, runtime
->>> runtime.config.engine.choice = 'prefect'
->>> @TaskTemplate()
+>>> import omnipy as om
+>>> om.runtime.config.engine.choice = 'prefect'
+>>> @om.TaskTemplate()
 ... def plus_one(number: int) -> int:
 ...     return number + 1
->>> @LinearFlowTemplate(plus_one, plus_one)
+>>> @om.LinearFlowTemplate(plus_one, plus_one)
 ... def plus_two(number: int) -> int:
 ...     ...
 >>> plus_two.run(10)
 12
->>> runtime.config.engine.choice = 'local'
+>>> om.runtime.config.engine.choice = 'local'
 ```
 
 ## Step 4: Run an example from CLI with `--engine prefect`

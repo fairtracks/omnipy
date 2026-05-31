@@ -6,18 +6,17 @@ to pandas-backed types.
 ## Setup
 
 ```pycon exec="1" session="tutorial2" source="console"
->>> from omnipy import runtime
->>> runtime.config.root_log.log_to_stdout = False
->>> runtime.config.root_log.log_to_stderr = False
->>> runtime.config.root_log.log_to_file = False
->>> runtime.config.job.output_storage.persist_outputs = 'disabled'
+>>> import omnipy as om
+>>> om.runtime.config.root_log.log_to_stdout = False
+>>> om.runtime.config.root_log.log_to_stderr = False
+>>> om.runtime.config.root_log.log_to_file = False
+>>> om.runtime.config.job.output_storage.persist_outputs = 'disabled'
 ```
 
 ## Parse nested JSON
 
 ```pycon exec="1" session="tutorial2" source="console"
->>> from omnipy import JsonListOfDictsDataset
->>> nested = JsonListOfDictsDataset({'items': [
+>>> nested = om.JsonListOfDictsDataset({'items': [
 ...     {'id': 'a', 'meta': {'x': 1, 'y': 2}, 'tags': [{'k': 't', 'v': 1}, {'k': 'u', 'v': 2}]},
 ...     {'id': 'b', 'meta': {'x': 3, 'y': 4}, 'tags': []},
 ... ]})
@@ -33,7 +32,7 @@ to pandas-backed types.
 ```pycon exec="1" session="tutorial2" source="console"
 >>> from omnipy.components.json.flows import flatten_nested_json
 >>> flat = flatten_nested_json.run(nested)
->>> sorted(flat.to_data().keys())
+>>> sorted(flat.dict().keys())
 ```
 
 ```pycon exec="1" session="tutorial2" result="console" html="true"
@@ -46,10 +45,9 @@ relationships stay explicit.
 ## Convert with `.to(PandasModel)` and `.to(PandasDataset)`
 
 ```pycon exec="1" session="tutorial2" source="console"
->>> from omnipy import JsonListOfDictsModel, PandasDataset, PandasModel
->>> flat_pd = flat.to(PandasDataset)
->>> one_table = JsonListOfDictsModel([{'id': 'a', 'x': 1}, {'id': 'b', 'x': 3}])
->>> one_table_pd = one_table.to(PandasModel)
+>>> flat_pd = flat.to(om.PandasDataset)
+>>> one_table = om.JsonListOfDictsModel([{'id': 'a', 'x': 1}, {'id': 'b', 'x': 3}])
+>>> one_table_pd = one_table.to(om.PandasModel)
 >>> flat_pd
 >>> one_table_pd
 ```

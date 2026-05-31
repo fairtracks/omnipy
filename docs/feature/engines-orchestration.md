@@ -19,21 +19,21 @@ flow definitions.
 ## 3) Example
 
 ```pycon exec="1" source="console"
->>> from omnipy import TaskTemplate, runtime
->>> runtime.config.engine.choice
+>>> import omnipy as om
+>>> om.runtime.config.engine.choice
 'local'
->>> runtime.config.engine.choice = 'prefect'
->>> @TaskTemplate()
+>>> om.runtime.config.engine.choice = 'prefect'
+>>> @om.TaskTemplate()
 ... def double(x: int) -> int:
 ...     return x * 2
 >>> double.run(21)
 42
->>> runtime.config.engine.choice = 'local'
+>>> om.runtime.config.engine.choice = 'local'
 ```
 
 ## 4) Output / display
 
-Inspect values with `_docs()` / `.to_data()` the same way regardless of engine.
+Inspect values with `_docs()` / `.json()` the same way regardless of engine.
 
 ## 5) When to use / when not
 

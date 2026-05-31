@@ -10,16 +10,17 @@
 ```pycon exec="1" source="console"
 >>> from omnipy import Dataset, Model
 >>> xs = Dataset[Model[int]]({'a': '1', 'b': 2.0})
->>> xs.do(lambda x: int(x) + 1).to_data()
+>>> xs.do(lambda x: int(x) + 1).json()
 ```
 
 ## Task mapping with `iterate_over_data_files=True`
 
 ```pycon exec="1" source="console"
->>> from omnipy import Dataset, Model, TaskTemplate
+>>> import omnipy as om
+>>> from omnipy import Dataset, Model
 >>> xs = Dataset[Model[int]]({'a': '1', 'b': 2.0})
->>> @TaskTemplate(iterate_over_data_files=True)
+>>> @om.TaskTemplate(iterate_over_data_files=True)
 ... def inc(x: int) -> int:
 ...     return x + 1
->>> inc.run(xs).to_data()
+>>> inc.run(xs).json()
 ```

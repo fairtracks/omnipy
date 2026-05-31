@@ -20,12 +20,12 @@ Batch processing often devolves into nested loops with weak typing and unclear s
 >>> Inner = Dataset[Model[int]]
 >>> Outer = Dataset[Inner]
 >>> grouped = Outer({'group1': {'a': '1', 'b': 2}, 'group2': {'x': 10}})
->>> grouped.to_data()
+>>> grouped.json()
 ```
 
 ## 4) Output / display
 
-```pycon exec="1" source="console"
+```pycon exec="1" result="console" html="true"
 >>> from omnipy import Dataset, Model
 >>> ds = Dataset[Model[int]]({'a': '1', 'b': 2.0})
 >>> print(ds._docs())

@@ -12,18 +12,18 @@ To define a data model, simply provide a type hint as a type parameter to the Mo
 For example, to define a data model that represents a list of integers, you would write:
 
 ```python
-from omnipy import Model
+import omnipy as om
 
-int_list_model = Model[list[int]]([1,2,3])
+int_list_model = om.Model[list[int]]([1,2,3])
 ```
 
 As `Model` are standard python classes, you can easily subclass them to reuse common data models
 and/or define other model-specific functionality, e.g.:
 
 ```python
-from omnipy import Model
+import omnipy as om
 
-class IntListModel(Model[list[int]]): ...
+class IntListModel(om.Model[list[int]]): ...
 
 int_list_data = IntListModel([-1, 0, 1, 2, 3])
 print(int_list_data)  # prints: IntListModel([-1, 0, 1, 2, 3])
@@ -32,7 +32,9 @@ print(int_list_data)  # prints: IntListModel([-1, 0, 1, 2, 3])
 As in `Pydantic`, the `Model` class can de defined to contain other `Model` classes, e.g.:
 
 ```python
-class NestedModel(Model[dict[str, IntListModel]]): ...
+import omnipy as om
+
+class NestedModel(om.Model[dict[str, IntListModel]]): ...
 
 nested_data = NestedModel({'a': [-1, 2, 4], 'b': [-4, 5, 6]})
 print(nested_data)  # prints: NestedModel({'a': IntListModel([-1, 2, 4]), 'b': IntListModel([-4, 5, 6])})
@@ -68,9 +70,9 @@ More complex parsing can be achieved by overriding the `_parse_data` class metho
 `Model`, e.g.:
 
 ```python
-from omnipy import Model
+import omnipy as om
 
-class OnlyPosIntListModel(Model[list[int]]):
+class OnlyPosIntListModel(om.Model[list[int]]):
     @classmethod
     def _parse_data(cls, data: list[int]) -> list[int]:
         return [i for i in data if i > 0]
@@ -83,9 +85,10 @@ Note that the implementation of parse methods will be simplified in a future ver
 e.g. by using a `@parse` decorator:
 
 ```python
-from omnipy import Model, parse
+import omnipy as om
+parse = om.parse
 
-class OnlyPosIntListModel(Model[list[int]]):
+class OnlyPosIntListModel(om.Model[list[int]]):
     @parse
     def filter_positive_integers(data: list[int]) -> list[int]:
         return [i for i in data if i > 0]
@@ -99,9 +102,9 @@ last validated snapshot. As a consequence, a model object will always contain va
 an invalid operation, e.g.:
 
 ```python
-from omnipy import Model
+import omnipy as om
 
-class IntListModel(Model[list[int]]): ...
+class IntListModel(om.Model[list[int]]): ...
 
 int_list_data = IntListModel([1, 2, 3])
 try:
@@ -116,17 +119,17 @@ make mistakes and cumbersome to rerun code. Hence, the snapshot and rollback fea
 `Model` objects can be disabled through the interactive configuration, e.g.:
 
 ```python
-from omnipy import Model
+import omnipy as om
 
-Model.config.model.interactive = False
+om.Model.config.model.interactive = False
 ```
 
 Or equivalently:
 
 ```python
-from omnipy import runtime
+import omnipy as om
 
-runtime.config.data.model.interactive = False
+om.runtime.config.data.model.interactive = False
 ```
 
 ### Model objects can be operated as the modelled class

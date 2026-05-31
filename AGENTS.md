@@ -43,3 +43,22 @@
 - User-facing README content is `docs/readme.md`, not a root `README.md`.
 - Docs use MkDocs Material. `mkdocs.yml` runs `docs/gen_ref_pages.py` via `mkdocs-gen-files` to generate API reference pages.
 - Docs dev server: `uv run mkdocs serve`
+
+## Documentation examples conventions
+
+Code examples in docs/ pages follow these rules:
+
+- **Imports**: Use `import omnipy as om` and `import pydantic as pyd` as the default.
+  Reference types as `om.Model`, `pyd.BaseModel`, etc.
+  When the `om.` prefix creates visual clutter (e.g. using both Model and Dataset
+  repeatedly in one block), add `from omnipy import Dataset, Model` — limit
+  explicit imports to at most these two names.
+
+- **No setup/config bloat**: Unless configuration IS the example's topic, hide
+  runtime setup (e.g. `runtime.config.data.model.interactive = False`) behind
+  markdown-exec setup blocks so the reader sees only relevant code and output.
+
+- **Display output**: Use `.json()` to show JSON-rendered content, `.content`
+  to show stored data. Use `.peek(debug=True)` only for in-depth technical
+  explanations of model internals. Avoid `.to_data()` unless documenting that
+  method itself.

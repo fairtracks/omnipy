@@ -8,20 +8,20 @@
 ## Recipe: parse tabular text to rows
 
 ```pycon exec="1" source="console"
->>> from omnipy import TsvTableModel
+>>> import omnipy as om
 >>> tsv = "a\tb\n1\t2\n3\t4\n"
->>> TsvTableModel(tsv).to_data()
+>>> om.TsvTableModel(tsv).content
 ```
 
 ## Recipe: follow with typed row conversion
 
 ```pycon exec="1" source="console"
->>> from omnipy.util import pydantic as pyd
->>> from omnipy import Model, TsvTableModel
->>> class Row(pyd.BaseModel):
+>>> import omnipy as om
+>>> import pydantic as pyd
+>>> class Row(pyd.v1.BaseModel):
 ...     a: int
 ...     b: int
->>> Model[list[Row]](TsvTableModel("a\tb\n1\t2\n").to_data()).to_data()
+>>> om.Model[list[Row]](om.TsvTableModel("a\tb\n1\t2\n").content).content
 ```
 
 ## When to switch to compute flows

@@ -148,9 +148,9 @@ and raise an error if the data does not match the model.
 A pydantic data model might look something like this:
 
 ```python
-from pydantic import BaseModel
+import pydantic as pyd
 
-class Pair(BaseModel):
+class Pair(pyd.BaseModel):
     x: int
     y: int
 
@@ -171,9 +171,9 @@ fields, each with a fixed type. In its most general and dynamic form, a `pydanti
 the fully flexible `dict` type in Python, e.g.:
 
 ```python
-from pydantic import BaseModel
+import pydantic as pyd
 
-class Pair(BaseModel):
+class Pair(pyd.BaseModel):
     x: int
     y: int
 
@@ -185,9 +185,9 @@ assert pair.dict() == pair_as_dict
 Supporting other basic data types like `list` is more cumbersome, e.g.:
 
 ```python
-from pydantic import BaseModel
+import pydantic as pyd
 
-class MyListOfInts(BaseModel):
+class MyListOfInts(pyd.BaseModel):
     x: list[int]
 
 my_list = MyListOfInts(x=[1, 2, 3])
@@ -227,9 +227,9 @@ record-type data structures.
 A list of integers can be defined as follows as a `Model` object in `Omnipy`:
 
 ```python
-from omnipy import Model
+import omnipy as om
 
-my_list_of_ints = Model[list[int]]([1, 2, 3])
+my_list_of_ints = om.Model[list[int]]([1, 2, 3])
 my_list_of_ints.append('foo')  # raises a ValidationError
 ```
 

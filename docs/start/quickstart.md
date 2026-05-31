@@ -9,13 +9,13 @@ Follow [Install](install.md).
 ## 2) Parse messy input into a typed model
 
 ```pycon exec="1" session="quickstart" source="console"
->>> from omnipy import Model, runtime
->>> runtime.config.root_log.log_to_stdout = False
->>> runtime.config.root_log.log_to_stderr = False
->>> runtime.config.root_log.log_to_file = False
->>> runtime.config.job.output_storage.persist_outputs = 'disabled'
->>> runtime.config.data.model.interactive = True
->>> readings = Model[list[int]]((101, '102', 103.0))
+>>> import omnipy as om
+>>> om.runtime.config.root_log.log_to_stdout = False
+>>> om.runtime.config.root_log.log_to_stderr = False
+>>> om.runtime.config.root_log.log_to_file = False
+>>> om.runtime.config.job.output_storage.persist_outputs = 'disabled'
+>>> om.runtime.config.data.model.interactive = True
+>>> readings = om.Model[list[int]]((101, '102', 103.0))
 >>> readings
 ```
 
@@ -40,8 +40,7 @@ Follow [Install](install.md).
 ## 4) Build a Dataset and batch-parse values
 
 ```pycon exec="1" session="quickstart" source="console"
->>> from omnipy import Dataset
->>> batch = Dataset[Model[int]]({'sample_a': '1', 'sample_b': 2.0, 'sample_c': 3})
+>>> batch = om.Dataset[om.Model[int]]({'sample_a': '1', 'sample_b': 2.0, 'sample_c': 3})
 >>> batch
 ```
 
@@ -52,10 +51,9 @@ Follow [Install](install.md).
 ## 5) Convert nested records to pandas-ready tables
 
 ```pycon exec="1" session="quickstart" source="console"
->>> from omnipy import JsonListOfDictsDataset, PandasDataset
->>> records = JsonListOfDictsDataset({'rows': [{'id': 'a', 'value': '1'}, {'id': 'b', 'value': 2}]})
+>>> records = om.JsonListOfDictsDataset({'rows': [{'id': 'a', 'value': '1'}, {'id': 'b', 'value': 2}]})
 >>> records
->>> records_pd = records.to(PandasDataset)
+>>> records_pd = records.to(om.PandasDataset)
 >>> records_pd
 ```
 

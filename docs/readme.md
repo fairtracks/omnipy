@@ -98,9 +98,9 @@ data type in brackets, e.g. `Model[list[int]]`.
 The following creates a data model of a list of integers, and parses some data into that model:
 
 ```pycon exec="1" session="greet" source="console"
->>> from omnipy import Model
+>>> import omnipy as om
 >>> data = (123, '234', 345.0)  # Note that the input data is a tuple of mixed types
->>> data_as_list_of_ints = Model[list[int]](data)
+>>> data_as_list_of_ints = om.Model[list[int]](data)
 >>> data_as_list_of_ints  # The data is now parsed into a list of integers
 ```
 

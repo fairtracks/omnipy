@@ -58,22 +58,23 @@ pipeline data structures.
 ## Quick sanity check examples
 
 ```pycon exec="1" source="console"
->>> from omnipy import (NotIterableExceptStrOrBytesModel,
-...                     JsonListOfDictsModel,
-...                     NestedDataset,
-...                     SplitToLinesModel,
-...                     HttpUrlModel,
-...                     TsvTableModel)
->>> NotIterableExceptStrOrBytesModel('abc').to_data()
+>>> import omnipy as om
+>>> NotIterableExceptStrOrBytesModel = om.NotIterableExceptStrOrBytesModel
+>>> JsonListOfDictsModel = om.JsonListOfDictsModel
+>>> NestedDataset = om.NestedDataset
+>>> SplitToLinesModel = om.SplitToLinesModel
+>>> HttpUrlModel = om.HttpUrlModel
+>>> TsvTableModel = om.TsvTableModel
+>>> NotIterableExceptStrOrBytesModel('abc').content
 'abc'
->>> JsonListOfDictsModel([{'id': 's1'}]).to_data()
+>>> JsonListOfDictsModel([{'id': 's1'}]).content
 [{'id': 's1'}]
->>> NestedDataset({'group': {'value': 1}}).to_data()
+>>> NestedDataset({'group': {'value': 1}}).json()
 {'group': {'value': 1}}
->>> SplitToLinesModel('a\nb').to_data()
+>>> SplitToLinesModel('a\nb').content
 ['a', 'b']
->>> HttpUrlModel('https://example.org/api').to_data()
+>>> HttpUrlModel('https://example.org/api').content
 'https://example.org/api'
->>> TsvTableModel('a\tb\n1\t2\n').to_data()
+>>> TsvTableModel('a\tb\n1\t2\n').content
 [{'a': '1', 'b': '2'}]
 ```

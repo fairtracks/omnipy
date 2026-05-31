@@ -18,22 +18,22 @@ mutations.
 ## 3) Example
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model, runtime
->>> runtime.config.data.model.interactive = True
->>> xs = Model[list[int]]([1, 2, 3])
+>>> import omnipy as om
+>>> om.runtime.config.data.model.interactive = True
+>>> xs = om.Model[list[int]]([1, 2, 3])
 >>> try:
 ...     xs.append('oops')
 ... except Exception as err:
 ...     print(type(err).__name__)
->>> xs.to_data()
+>>> xs.content
 ```
 
 ## 4) Output / display
 
-```pycon exec="1" source="console"
->>> from omnipy import Model, runtime
->>> runtime.config.data.model.interactive = True
->>> xs = Model[list[int]]([1, 2, 3])
+```pycon exec="1" result="console" html="true"
+>>> import omnipy as om
+>>> om.runtime.config.data.model.interactive = True
+>>> xs = om.Model[list[int]]([1, 2, 3])
 >>> print(xs._docs())
 ```
 

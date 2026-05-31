@@ -5,17 +5,17 @@ Start with Dataset + Model batch parsing, then apply transformations without exp
 ## Setup
 
 ```pycon exec="1" session="tutorial3" source="console"
->>> from omnipy import Dataset, Model, runtime
->>> runtime.config.root_log.log_to_stdout = False
->>> runtime.config.root_log.log_to_stderr = False
->>> runtime.config.root_log.log_to_file = False
->>> runtime.config.job.output_storage.persist_outputs = 'disabled'
+>>> import omnipy as om
+>>> om.runtime.config.root_log.log_to_stdout = False
+>>> om.runtime.config.root_log.log_to_stderr = False
+>>> om.runtime.config.root_log.log_to_file = False
+>>> om.runtime.config.job.output_storage.persist_outputs = 'disabled'
 ```
 
 ## Batch parsing with Dataset
 
 ```pycon exec="1" session="tutorial3" source="console"
->>> readings = Dataset[Model[int]]({'sensor_a': '1', 'sensor_b': 2.0, 'sensor_c': 3})
+>>> readings = om.Dataset[om.Model[int]]({'sensor_a': '1', 'sensor_b': 2.0, 'sensor_c': 3})
 >>> readings
 ```
 
@@ -30,12 +30,13 @@ Start with Dataset + Model batch parsing, then apply transformations without exp
 ```
 
 ```pycon exec="1" session="tutorial3" result="console"
->>> print(incremented.to_data())
+>>> incremented.json()
 ```
 
 ## Hierarchical datasets
 
 ```pycon exec="1" session="tutorial3" source="console"
+>>> from omnipy import Dataset, Model
 >>> Inner = Dataset[Model[int]]
 >>> Outer = Dataset[Inner]
 >>> grouped = Outer({'group1': {'a': 1, 'b': 2}, 'group2': {'a': 10}})
@@ -51,7 +52,7 @@ Start with Dataset + Model batch parsing, then apply transformations without exp
 ```
 
 ```pycon exec="1" session="tutorial3" result="console"
->>> print(grouped_incremented.to_data())
+>>> grouped_incremented.json()
 ```
 
 You get batch behavior and hierarchy handling without writing explicit `for` loops.

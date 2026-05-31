@@ -16,13 +16,13 @@ for the current limits.
 ## Parse messy input → safe edit → visible output
 
 ```pycon exec="1" session="landing" source="console"
->>> from omnipy import Model, runtime
->>> runtime.config.root_log.log_to_stdout = False
->>> runtime.config.root_log.log_to_stderr = False
->>> runtime.config.root_log.log_to_file = False
->>> runtime.config.job.output_storage.persist_outputs = 'disabled'
->>> runtime.config.data.model.interactive = True
->>> readings = Model[list[int]]((101, '102', 103.0))
+>>> import omnipy as om
+>>> om.runtime.config.root_log.log_to_stdout = False
+>>> om.runtime.config.root_log.log_to_stderr = False
+>>> om.runtime.config.root_log.log_to_file = False
+>>> om.runtime.config.job.output_storage.persist_outputs = 'disabled'
+>>> om.runtime.config.data.model.interactive = True
+>>> readings = om.Model[list[int]]((101, '102', 103.0))
 >>> try:
 ...     readings.append('invalid')
 ... except Exception as err:

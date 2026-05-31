@@ -20,12 +20,12 @@ These patterns work well alongside tooling such as Instructor, Marvin, and Pydan
 Use a typed model at the boundary where untrusted model output enters your system.
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> from omnipy.util import pydantic as pyd
->>> class LlmAnswer(pyd.BaseModel):
+>>> import omnipy as om
+>>> import pydantic as pyd
+>>> class LlmAnswer(pyd.v1.BaseModel):
 ...     title: str
 ...     score: int
->>> Model[LlmAnswer]({'title': 'Candidate A', 'score': '7'}).to_data()
+>>> om.Model[LlmAnswer]({'title': 'Candidate A', 'score': '7'}).content
 {'title': 'Candidate A', 'score': 7}
 ```
 
@@ -36,15 +36,16 @@ This gives explicit, typed data before any business logic continues.
 When your downstream contract is strict, reject unknown fields instead of silently accepting them.
 
 ```python
-from omnipy import Model
-from omnipy.util import pydantic as pyd
+import omnipy as om
+import pydantic as pyd
 
 
-class StrictLlmAnswer(pyd.BaseModel):
+class StrictLlmAnswer(pyd.v1.BaseModel):
     title: str
     score: int
 
-    model_config = pyd.ConfigDict(extra='forbid')
+    class Config:
+        extra = 'forbid'
 
 
 # Hallucinated key: "confidence_bucket"
@@ -55,7 +56,7 @@ payload = {
 }
 
 # Raises ValidationError (extra fields not permitted)
-Model[StrictLlmAnswer](payload)
+om.Model[StrictLlmAnswer](payload)
 ```
 
 Use this in safety-critical paths where unknown keys should be treated as schema drift.
@@ -65,12 +66,12 @@ Use this in safety-critical paths where unknown keys should be treated as schema
 When input quality varies, start permissive and normalize first.
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> from omnipy.util import pydantic as pyd
->>> class ParsedAnswer(pyd.BaseModel):
+>>> import omnipy as om
+>>> import pydantic as pyd
+>>> class ParsedAnswer(pyd.v1.BaseModel):
 ...     score: int
 ...     approved: bool
->>> Model[ParsedAnswer]({'score': '7', 'approved': 'true'}).to_data()
+>>> om.Model[ParsedAnswer]({'score': '7', 'approved': 'true'}).content
 {'score': 7, 'approved': True}
 ```
 
@@ -81,7 +82,7 @@ This pattern is useful for inbound parsing layers where downstream tasks require
 For realistic pipelines, parse a batch of responses and then convert to a table-oriented model.
 
 ```python
-from omnipy import JsonListOfDictsModel, Model, PandasModel, RowWiseTableWithColNamesModel
+import omnipy as om
 
 raw_answers = [
     {'id': 'a1', 'score': '7', 'approved': 'true'},
@@ -89,10 +90,10 @@ raw_answers = [
     {'id': 'a3', 'score': '5', 'approved': 'true'},
 ]
 
-cleaned_answers = [Model[ParsedAnswer](answer).to_data() for answer in raw_answers]
+cleaned_answers = [om.Model[ParsedAnswer](answer).content for answer in raw_answers]
 
-table = JsonListOfDictsModel(cleaned_answers).to(RowWiseTableWithColNamesModel).to(PandasModel)
-table.to_data()
+table = om.JsonListOfDictsModel(cleaned_answers).to(om.RowWiseTableWithColNamesModel).to(om.PandasModel)
+table.content
 ```
 
 This pattern keeps AI output handling composable: parse at the boundary, then use familiar
@@ -103,12 +104,12 @@ table tooling for downstream analysis.
 Switch specific fields to strict types to reject coercion and force explicit repair logic.
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> from omnipy.util import pydantic as pyd
->>> class StrictAnswer(pyd.BaseModel):
+>>> import omnipy as om
+>>> import pydantic as pyd
+>>> class StrictAnswer(pyd.v1.BaseModel):
 ...     score: pyd.StrictInt
 >>> try:
-...     Model[StrictAnswer]({'score': '7'})
+...     om.Model[StrictAnswer]({'score': '7'})
 ... except Exception as exc:
 ...     type(exc).__name__
 'ValidationError'
@@ -122,16 +123,16 @@ Coercion alone is often not enough. Add a repair task that normalizes known LLM 
 before strict model parsing.
 
 ```python
-from omnipy import Model, TaskTemplate
+import omnipy as om
 
 
-@TaskTemplate()
+@om.TaskTemplate()
 def repair_and_parse_llm_answer(payload: dict[str, object]) -> dict[str, object]:
     normalized_payload = {
         'title': str(payload.get('title', '')).strip(),
         'score': int(payload.get('score', 0)),
     }
-    return Model[StrictLlmAnswer](normalized_payload).to_data()
+    return om.Model[StrictLlmAnswer](normalized_payload).content
 ```
 
 Typical repair actions:
@@ -162,9 +163,10 @@ Use this as a copy/paste starter for new AI-boundary pipelines.
 
 ```python
 # 1) schema
-class YourSchema(pyd.BaseModel):
+class YourSchema(pyd.v1.BaseModel):
     ...
-    model_config = pyd.ConfigDict(extra='forbid')
+    class Config:
+        extra = 'forbid'
 
 
 # 2) repair task
@@ -174,12 +176,12 @@ def repair_payload(payload: dict[str, object]) -> dict[str, object]:
 
 
 # 3) strict parse
-cleaned = Model[YourSchema](repair_payload.run(raw_payload)).to_data()
+cleaned = om.Model[YourSchema](repair_payload.run(raw_payload)).content
 
 
 # 4) batch -> table
-records = [Model[YourSchema](repair_payload.run(item)).to_data() for item in raw_items]
-table = JsonListOfDictsModel(records).to(RowWiseTableWithColNamesModel).to(PandasModel)
+records = [om.Model[YourSchema](repair_payload.run(item)).content for item in raw_items]
+table = om.JsonListOfDictsModel(records).to(om.RowWiseTableWithColNamesModel).to(om.PandasModel)
 
 
 # 5) escalate failures (retry queue / human review)

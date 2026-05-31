@@ -17,16 +17,16 @@ Omnipy models and datasets expose a shared display surface: `peek()`, `full()`, 
 ## 3) Example
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> m = Model[dict[str, list[int]]]({'a': [1, 2], 'b': [3, 4]})
->>> m.to_data()
+>>> import omnipy as om
+>>> m = om.Model[dict[str, list[int]]]({'a': [1, 2], 'b': [3, 4]})
+>>> m.content
 ```
 
 ## 4) Output / display
 
-```pycon exec="1" source="console"
->>> from omnipy import Model
->>> m = Model[dict[str, list[int]]]({'a': [1, 2], 'b': [3, 4]})
+```pycon exec="1" result="console" html="true"
+>>> import omnipy as om
+>>> m = om.Model[dict[str, list[int]]]({'a': [1, 2], 'b': [3, 4]})
 >>> print(m._docs())
 ```
 
@@ -39,7 +39,7 @@ Avoid `browse()` in headless environments.
 ## 6) Gotchas
 
 - Display output depends on UI environment (terminal vs notebook).
-- Keep runnable docs examples on `_docs()`/`to_data()` for deterministic output.
+- Keep runnable docs examples on `_docs()`/`.json()` for deterministic output.
 
 ## 7) Links
 

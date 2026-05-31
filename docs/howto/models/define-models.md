@@ -10,24 +10,24 @@
 ### Pattern 1: `Model[T]` directly
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> Model[list[int]]((1, '2', 3.0)).to_data()
+>>> import omnipy as om
+>>> om.Model[list[int]]((1, '2', 3.0)).content
 ```
 
 ### Pattern 2: subclass for reusable names
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> class IntList(Model[list[int]]):
+>>> import omnipy as om
+>>> class IntList(om.Model[list[int]]):
 ...     ...
->>> IntList(['1', 2, 3.0]).to_data()
+>>> IntList(['1', 2, 3.0]).content
 ```
 
 ### Pattern 3: nested type parameters
 
 ```pycon exec="1" source="console"
->>> from omnipy import Model
->>> Model[dict[str, list[int]]]({'a': [1, '2'], 'b': [3.0]}).to_data()
+>>> import omnipy as om
+>>> om.Model[dict[str, list[int]]]({'a': [1, '2'], 'b': [3.0]}).content
 ```
 
 ## Links
