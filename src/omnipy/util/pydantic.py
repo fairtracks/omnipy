@@ -164,11 +164,6 @@ def validate_model(
         validation_input = _to_v2_validation_input(model=model, input_data=input_data)
         validated_obj = model.model_validate(validation_input)
     except ValidationError as exc:
-        root_fallback_result = _try_root_model_v1_parse_obj_as_fallback(model=model,
-                                                                        input_data=input_data)
-        if root_fallback_result is not None:
-            return root_fallback_result
-
         values = _as_v1_style_input_values(model=model, input_data=input_data)
         fields_set = _as_v1_style_input_fields_set(model=model, input_data=input_data)
         return values, fields_set, exc
@@ -252,7 +247,7 @@ def _as_v1_style_input_fields_set(model: type[BaseModel], input_data: dict[str, 
 
 def _as_v1_style_values(model: type[BaseModel], validated_obj: BaseModel) -> dict[str, Any]:
     if _is_root_model_cls(model):
-        return {'__root__': getattr(validated_obj, 'root')}
+        return {'__root__': validated_obj.root}
     return validated_obj.model_dump()
 
 
@@ -272,61 +267,6 @@ def _as_v1_style_fields_set(model: type[BaseModel], validated_obj: BaseModel) ->
             fields_set.remove('root')
             fields_set.add('__root__')
     return fields_set
-
-
-def _try_root_model_v1_parse_obj_as_fallback(
-    model: type[BaseModel],
-    input_data: dict[str, Any],
-) -> tuple[dict[str, Any], set[str], ValidationError | None] | None:
-    if not _is_root_model_cls(model):
-        return None
-
-    if '__root__' in input_data:
-        root_value = input_data['__root__']
-    elif 'root' in input_data:
-        root_value = input_data['root']
-    else:
-        return None
-
-    root_field = model.model_fields.get('root')
-    if root_field is None:
-        return None
-
-    try:
-        import pydantic.v1 as pyd_v1
-
-        parsed_root_value = pyd_v1.parse_obj_as(root_field.annotation, root_value)
-    except Exception:
-        parsed_root_value = _try_root_model_nested_omnipy_model_fallback(
-            root_annotation=root_field.annotation,
-            root_value=root_value,
-        )
-        if parsed_root_value is None:
-            return None
-
-    return {'__root__': parsed_root_value}, {'__root__'}, None
-
-
-def _try_root_model_nested_omnipy_model_fallback(root_annotation: Any, root_value: Any) -> Any | None:
-    if not isinstance(root_annotation, type):
-        return None
-
-    try:
-        nested_target_type = root_annotation.full_type()
-    except Exception:
-        return None
-
-    try:
-        import pydantic.v1 as pyd_v1
-
-        parsed_nested_value = pyd_v1.parse_obj_as(nested_target_type, root_value)
-    except Exception:
-        return None
-
-    try:
-        return root_annotation(parsed_nested_value)
-    except Exception:
-        return None
 
 
 def _exception_to_line_errors(

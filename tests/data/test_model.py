@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from copy import copy, deepcopy
 from dataclasses import dataclass
 from datetime import datetime
@@ -30,7 +30,6 @@ from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
-from omnipy.shared.protocols.typing import IsMapping
 from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
@@ -666,7 +665,7 @@ def test_copy(
 
     assert not model_copy.has_snapshot()
 
-    assert model_copy.__fields_set__ == {'__root__'}
+    assert model_copy.model_fields_set == {'root'}
 
 
 def test_model_copy_tracks_rootmodel_fields_set() -> None:
@@ -3658,7 +3657,7 @@ def test_mimic_list_like_classes(
     ],
 )
 def test_mimic_dict_like_classes(
-    my_dict_model: Model[IsMapping[str, int]],
+    my_dict_model: Model[Mapping[str, int]],
     model_supports_dyn_conv: bool,
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
