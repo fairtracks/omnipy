@@ -26,6 +26,7 @@ class DataPublisher(pyd.BaseModel):
     """
 
     class Config:
+        """Pydantic model configuration: allows arbitrary types and validates on assignment."""
         arbitrary_types_allowed = True
         validate_assignment = True
 

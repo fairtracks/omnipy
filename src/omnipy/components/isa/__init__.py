@@ -1,3 +1,8 @@
+"""ISA-Tab component package providing Investigation, Study, and Assay
+
+models and datasets for working with ISA-Tab structured metadata.
+"""
+
 from .datasets import FlattenedIsaJsonDataset, IsaJsonDataset
 from .flows import flatten_isa_json
 from .models import FlattenedIsaJsonModel, IsaJsonModel

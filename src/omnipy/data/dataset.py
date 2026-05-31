@@ -120,6 +120,7 @@ class Dataset(
     validated item; plural selection returns a new dataset of the same specialized class.
     """
     class Config:
+        """Pydantic model configuration: validates on assignment and allows arbitrary types."""
         validate_assignment = True
         arbitrary_types_allowed = True
 

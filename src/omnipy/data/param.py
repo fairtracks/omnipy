@@ -74,6 +74,7 @@ class ParamsBase(pyd.BaseModel, metaclass=_ParamsMeta):
     """
 
     class Config:
+        """Pydantic model configuration: allows arbitrary types and enables smart union matching."""
         arbitrary_types_allowed = True
         smart_union = True
 

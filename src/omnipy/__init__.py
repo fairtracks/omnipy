@@ -1,3 +1,5 @@
+"""Top-level public API for the Omnipy library."""
+
 __version__ = '0.23.1'
 
 import os

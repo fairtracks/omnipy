@@ -108,6 +108,7 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
     """Base config that can refresh width and height from the active display."""
 
     class Config:  # pyright: ignore [reportIncompatibleVariableOverride]
+        """Pydantic model configuration: validates all fields and validates on assignment."""
         validate_all = True
         validate_assignment = True
 

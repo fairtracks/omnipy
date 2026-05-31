@@ -1,0 +1,1 @@
+"""Hub-related protocol definitions."""

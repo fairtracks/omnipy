@@ -231,6 +231,7 @@ class ResponseContentPydModel(pyd.BaseModel):
     response: object
 
     class Config:
+        """Pydantic model configuration: allows arbitrary types for HTTP response content."""
         arbitrary_types_allowed = True
 
     @pyd.validator('content_type', allow_reuse=True)
@@ -253,6 +254,7 @@ class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel 
                                      | JsonListOrDictModel]):
     """Decode HTTP response content to bytes, text, or JSON from its MIME type."""
     class Config(Model.Config):
+        """Pydantic model configuration: disables smart union for auto-detected content models."""
         smart_union = False
 
     @classmethod

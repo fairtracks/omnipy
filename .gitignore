@@ -143,7 +143,8 @@ html
 
 # IPython / Jupyter
 
-.ipynb_checkpointsoutputs/
+outputs/
 .opencode/opencode-loop/
 .envrc
 .envrc.local
+_cache/

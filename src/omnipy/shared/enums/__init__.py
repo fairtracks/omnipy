@@ -1,0 +1,1 @@
+"""Omnipy enum definitions package."""

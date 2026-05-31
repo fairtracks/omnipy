@@ -1,0 +1,1 @@
+"""Pandas integration component package."""

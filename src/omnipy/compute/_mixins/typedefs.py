@@ -1,3 +1,5 @@
+"""Type definitions for compute mixins."""
+
 from typing import Protocol, TypeAlias
 
 from typing_extensions import TypeVar
