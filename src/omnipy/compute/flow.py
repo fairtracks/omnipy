@@ -331,9 +331,6 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
         concrete flow class that should be instantiated from a function flow
         template.
 
-        Args:
-            cls: Current function flow template class.
-
         Returns:
             type[IsFuncFlow[_CallP, _RetT]]: The executable ``FuncFlow``
                 subclass associated with this template.
@@ -411,9 +408,6 @@ class FuncFlow(
         Args:
             self: Current function flow instance.
             engine: Engine candidate supplied during job setup.
-
-        Returns:
-            None: The method updates decorator state in place.
         """
         if self.engine:
             engine = cast(IsJobRunnerEngine, self.engine)
@@ -431,9 +425,6 @@ class FuncFlow(
         Revision operations use this hook to recover the decorator-backed
         function flow template class corresponding to an executable function
         flow instance.
-
-        Args:
-            cls: Current function flow class.
 
         Returns:
             type[IsFuncFlowTemplate[_CallP, _RetT]]: The ``FuncFlowTemplate``

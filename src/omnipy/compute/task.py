@@ -177,9 +177,6 @@ class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP
         Revision operations use this hook to recover the decorator-backed task
         template class corresponding to an executable task instance.
 
-        Args:
-            cls: Current task class.
-
         Returns:
             type[IsTaskTemplate[_CallP, _RetT]]: The ``TaskTemplate`` class
                 associated with this task.

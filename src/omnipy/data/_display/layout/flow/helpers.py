@@ -432,7 +432,7 @@ class PanelResizeHelper:
         constraints and panel fixed width settings. If the panel has fixed
         width, the width is cropped if larger than the defined frame width.
 
-        Parameters:
+        Args:
             frame_width_delta: Amount to change the frame width (positive to
                                expand, negative to shrink)
             context: Layout flow context containing minimum width
