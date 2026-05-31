@@ -1,3 +1,5 @@
+"""Experimental helpers for building Omnipy's dynamic public export list."""
+
 import os
 from types import ModuleType
 

@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
+"""Internal FAIRtracks helper for fetching GDC payloads from saved filters."""
+
 import json
 
 import requests
 
 
 def get_from_filter():
+    """Download GDC endpoint payloads using previously generated filter files."""
+
     for endpt_str in ['projects', 'cases', 'files', 'annotations']:
         endpt = 'https://api.gdc.cancer.gov/' + endpt_str
         endpt_map = endpt + '/_mapping'

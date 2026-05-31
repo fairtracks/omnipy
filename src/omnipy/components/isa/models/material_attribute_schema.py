@@ -2,6 +2,8 @@
 #   filename:  material_attribute_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a material attribute category."""
+
 from enum import Enum
 from typing import Optional
 
@@ -12,11 +14,17 @@ from . import ontology_annotation_schema
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA material attributes."""
+
     MaterialAttribute = 'MaterialAttribute'
 
 
 class IsaMaterialAttributeSchema(pyd.BaseModel):
+    """Pydantic schema for a material attribute category."""
+
     class Config:
+        """Pydantic configuration for strict ISA material-attribute validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

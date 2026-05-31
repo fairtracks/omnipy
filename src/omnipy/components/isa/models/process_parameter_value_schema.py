@@ -2,6 +2,8 @@
 #   filename:  process_parameter_value_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a process parameter value in an investigation."""
+
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -12,11 +14,17 @@ from . import comment_schema, ontology_annotation_schema, protocol_parameter_sch
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA process parameter values."""
+
     ParameterValue = 'ParameterValue'
 
 
 class IsaProcessParameterValueSchema(pyd.BaseModel):
+    """Pydantic schema for a protocol parameter value in a process."""
+
     class Config:
+        """Pydantic configuration for strict ISA process-parameter validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

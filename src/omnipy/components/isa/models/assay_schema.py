@@ -2,6 +2,8 @@
 #   filename:  assay_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing an assay in an investigation."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -18,6 +20,8 @@ from . import (comment_schema,
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA assays."""
+
     Assay = 'Assay'
 
 
@@ -31,7 +35,11 @@ class _MaterialsModel(Model[_Materials]):
 
 
 class IsaAssayJsonSchema(pyd.BaseModel):
+    """Pydantic schema for an assay in an investigation."""
+
     class Config:
+        """Pydantic configuration for strict ISA assay validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

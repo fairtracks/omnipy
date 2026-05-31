@@ -1,3 +1,5 @@
+"""Mixins for assigning stable display names and unique names to jobs."""
+
 from typing import Callable, cast
 
 from omnipy.util.helpers import generate_run_slug, get_full_job_slug
@@ -5,6 +7,8 @@ from omnipy.util.mixin import strip_mixins_suffix
 
 
 class NameJobBaseMixin:
+    """Provide base support for job names and generated unique names."""
+
     def __init__(self, *, name: str | None = None):
         self._name: str | None = name
 
@@ -26,6 +30,8 @@ class NameJobBaseMixin:
 
     @property
     def name(self) -> str | None:
+        """Return the configured job name."""
+
         return self._name
 
     @property
@@ -51,6 +57,10 @@ class NameJobBaseMixin:
 
 
 class NameJobMixin:
+    """Expose public helpers for refreshing generated job names."""
+
     def regenerate_unique_name(self) -> None:
+        """Regenerate the unique job name from the current base name."""
+
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
         self_as_name_job_base_mixin._regenerate_unique_slugs()

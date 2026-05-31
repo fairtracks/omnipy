@@ -2,6 +2,8 @@
 #   filename:  factor_value_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a factor value in an investigation."""
+
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -12,11 +14,17 @@ from . import comment_schema, factor_schema, ontology_annotation_schema
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA factor values."""
+
     FactorValue = 'FactorValue'
 
 
 class IsaFactorValueSchema(pyd.BaseModel):
+    """Pydantic schema for a factor value assigned in a study."""
+
     class Config:
+        """Pydantic configuration for strict ISA factor-value validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

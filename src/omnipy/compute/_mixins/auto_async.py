@@ -1,3 +1,5 @@
+"""Mixin for automatically awaiting coroutine-based jobs outside flow contexts."""
+
 import asyncio
 from inspect import iscoroutinefunction
 from typing import Callable, cast, Coroutine
@@ -7,6 +9,8 @@ from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
 
 class AutoAsyncJobBaseMixin:
+    """Add optional automatic execution of coroutine jobs."""
+
     def __init__(
         self,
         *,
@@ -16,6 +20,8 @@ class AutoAsyncJobBaseMixin:
 
     @property
     def auto_async(self) -> bool:
+        """Return whether coroutine jobs should auto-run outside flow contexts."""
+
         return self._auto_async
 
     def _call_job(self, *args: object, **kwargs: object) -> object:

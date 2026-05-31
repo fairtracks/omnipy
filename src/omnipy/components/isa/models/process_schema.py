@@ -20,11 +20,17 @@ from .validators import date_to_iso_format
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA process steps."""
+
     Process = 'Process'
 
 
 class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
+    """Pydantic schema for a process or protocol application step."""
+
     class Config:
+        """Pydantic configuration for strict ISA process-step validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

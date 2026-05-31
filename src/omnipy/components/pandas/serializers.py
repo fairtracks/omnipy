@@ -1,3 +1,5 @@
+"""Tar-file serializer for pandas-backed Omnipy datasets."""
+
 from io import BytesIO
 from typing import Any, IO, Type
 
@@ -12,21 +14,30 @@ from .datasets import PandasDataset
 
 
 class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
-    """"""
+    """Serialize pandas datasets to and from gzipped tar archives."""
+
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
+        """Return whether a dataset is a pandas dataset."""
+
         return isinstance(dataset, PandasDataset)
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+        """Return the dataset class created during deserialization."""
+
         return PandasDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
+        """Return the file suffix used for serialized dataset members."""
+
         return 'csv'
 
     @classmethod
     def serialize(cls, dataset: PandasDataset) -> bytes | memoryview:
+        """Serialize a pandas dataset into a gzipped tar archive."""
+
         assert isinstance(dataset, PandasDataset)
 
         def pandas_encode_func(pandas_data: 'pd.DataFrame') -> memoryview:
@@ -38,6 +49,8 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> PandasDataset:
+        """Deserialize a gzipped tar archive into a pandas dataset."""
+
         pandas_dataset = PandasDataset()
 
         def csv_decode_func(file_stream: IO[bytes]) -> 'pd.DataFrame':

@@ -2,6 +2,8 @@
 #   filename:  publication_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a publication in an investigation."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -12,11 +14,17 @@ from . import comment_schema, ontology_annotation_schema
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA publications."""
+
     Publication = 'Publication'
 
 
 class IsaPublicationSchema(pyd.BaseModel):
+    """Pydantic schema for a publication linked to ISA metadata."""
+
     class Config:
+        """Pydantic configuration for strict ISA publication validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

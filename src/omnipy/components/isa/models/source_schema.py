@@ -2,6 +2,8 @@
 #   filename:  source_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a source in an investigation."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -12,11 +14,17 @@ from . import comment_schema, material_attribute_value_schema
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA sources."""
+
     Source = 'Source'
 
 
 class IsaSourceSchema(pyd.BaseModel):
+    """Pydantic schema for a source material in a study."""
+
     class Config:
+        """Pydantic configuration for strict ISA source validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
         use_enum_values = True

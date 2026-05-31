@@ -1,3 +1,5 @@
+"""Validation helpers shared by ISA schema models."""
+
 from datetime import date, datetime
 from typing import Union
 
@@ -8,6 +10,8 @@ import omnipy.util.pydantic as pyd
 
 
 def date_to_iso_format(data: Union[datetime, date, pyd.constr(max_length=0)]):
+    """Convert ``date`` and ``datetime`` values to ISO-8601 strings."""
+
     if isinstance(data, date) or isinstance(data, datetime):
         return data.isoformat()
     return data

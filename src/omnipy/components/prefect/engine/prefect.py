@@ -50,6 +50,8 @@ class PrefectEngine(JobRunnerEngine):
 
     @classmethod
     def get_config_cls(cls) -> Type[IsPrefectEngineConfig]:
+        """Return the configuration class used by the Prefect engine."""
+
         return PrefectEngineConfig
 
     @staticmethod

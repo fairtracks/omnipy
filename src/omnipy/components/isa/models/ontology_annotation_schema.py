@@ -2,6 +2,8 @@
 #   filename:  ontology_annotation_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing an ontology annotation in an investigation."""
+
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -12,11 +14,17 @@ from . import comment_schema
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA ontology annotations."""
+
     OntologyAnnotation = 'OntologyAnnotation'
 
 
 class IsaOntologyReferenceSchema(pyd.BaseModel):
+    """Pydantic schema for an ISA ontology annotation."""
+
     class Config:
+        """Pydantic configuration for strict ISA ontology-annotation validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

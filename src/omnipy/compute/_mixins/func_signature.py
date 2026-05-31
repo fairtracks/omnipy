@@ -1,3 +1,5 @@
+"""Mixin for exposing and validating job function signatures."""
+
 from collections.abc import Iterable
 import inspect
 from types import MappingProxyType
@@ -7,6 +9,8 @@ from omnipy.shared.protocols.compute.job import IsPlainFuncArgJobBase
 
 
 class SignatureFuncJobBaseMixin:
+    """Cache a job function signature and expose signature helpers."""
+
     def __init__(self):
         self_as_plain_func_arg_job_base = cast(IsPlainFuncArgJobBase, self)
         self._func_signature = inspect.signature(self_as_plain_func_arg_job_base._job_func)
@@ -18,6 +22,8 @@ class SignatureFuncJobBaseMixin:
 
     @property
     def return_type(self) -> type:
+        """Return the annotated return type of the wrapped job function."""
+
         return self._func_signature.return_annotation
 
     def _check_param_keys_in_func_signature(self,
@@ -41,6 +47,8 @@ class SignatureFuncJobBaseMixin:
         self.__signature__ = new_signature
 
     def get_bound_args(self, *args: object, **kwargs: object) -> inspect.BoundArguments:
+        """Bind call arguments to the cached job function signature."""
+
         bound_args = self._func_signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
         return bound_args

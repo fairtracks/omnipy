@@ -1,3 +1,5 @@
+"""Models for representing nested datasets and enumerated list structures."""
+
 from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
@@ -13,6 +15,8 @@ DatasetT = TypeVar('DatasetT')
 
 
 class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
+    """Model storing an ordered list of index-value tuples."""
+
     @classmethod
     def _parse_data(cls, data: list[tuple[int, object]]) -> list[tuple[int, object]]:
         for expected_index, (actual_index, _) in enumerate(data):
@@ -24,6 +28,8 @@ class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
 
 class EnumeratedListModel(Model[EnumeratedListOfTuplesModel | list[object]
                                 | list[dict[str, object]]]):
+    """Model converting plain lists into enumerated tuple lists."""
+
     @classmethod
     def _parse_data(
         cls, data: EnumeratedListOfTuplesModel | list[object] | list[dict[str, object]]
@@ -42,8 +48,12 @@ if TYPE_CHECKING:
     from ..json.models import JsonScalarModel  # noqa: F401
 
     class ListAsNestedDatasetModel(Model[Dataset['NestedDataset | JsonScalarModel']]):
+        """Model representing a list as a nested dataset."""
+
         ...
 else:
 
     class ListAsNestedDatasetModel(_ListAsNestedDatasetModel):
+        """Model representing a list as a nested dataset."""
+
         ...

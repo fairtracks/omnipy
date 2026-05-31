@@ -1,3 +1,5 @@
+"""Internal FAIRtracks API helpers for ENCODE and GDC integrations."""
+
 import requests
 
 ENCODE_HEADERS = {'accept': 'application/json'}
@@ -7,6 +9,8 @@ GDC_BASE_URL = 'https://api.gdc.cancer.gov/'
 
 # ['experiments', 'biosample']
 def encode_api(endpoint='experiments', id=None, limit=None, format='json', frame='object'):
+    """Fetch records from the ENCODE API for an endpoint or object id."""
+
     api_url = ENCODE_BASE_URL + endpoint + '/' + (id if id else '@@listing') + '?' + '&'.join(
         (['limit=' + limit] if limit else []) + (['format=' + format] if format else [])
         + (['frame=' + frame] if frame else []))
@@ -23,6 +27,8 @@ def encode_api(endpoint='experiments', id=None, limit=None, format='json', frame
 
 # ['projects', 'cases', 'files', 'annotations'], starting_point='0', size='25'
 def gdc_api(object_type='projects', starting_point=None, size=None):
+    """Fetch records from a GDC collection endpoint."""
+
     api_url = GDC_BASE_URL + object_type + '/' + '?' + '&'.join(
         (['from=' + starting_point] if starting_point else []) + (['size=' + size] if size else [])
         + ([+ 'project'] if object_type == 'cases' else []))

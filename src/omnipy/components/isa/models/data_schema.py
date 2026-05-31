@@ -2,6 +2,8 @@
 #   filename:  data_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a data file in an investigation."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -12,10 +14,14 @@ from . import comment_schema
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA data files."""
+
     Data = 'Data'
 
 
 class Type(Enum):
+    """Enum of ISA data file categories."""
+
     Raw_Data_File = 'Raw Data File'
     Derived_Data_File = 'Derived Data File'
     Image_File = 'Image File'
@@ -35,7 +41,11 @@ class Type(Enum):
 
 
 class IsaDataSchema(pyd.BaseModel):
+    """Pydantic schema for a data file in an assay workflow."""
+
     class Config:
+        """Pydantic configuration for strict ISA data-file validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

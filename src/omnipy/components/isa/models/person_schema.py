@@ -2,6 +2,8 @@
 #   filename:  person_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a person in an investigation."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -12,11 +14,17 @@ from . import comment_schema, ontology_annotation_schema
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA people."""
+
     Person = 'Person'
 
 
 class IsaPersonSchema(pyd.BaseModel):
+    """Pydantic schema for a person involved in an investigation."""
+
     class Config:
+        """Pydantic configuration for strict ISA person validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

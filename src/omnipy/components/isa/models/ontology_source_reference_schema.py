@@ -2,6 +2,8 @@
 #   filename:  ontology_source_reference_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing an ontology source reference."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -12,11 +14,17 @@ from . import comment_schema
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA ontology sources."""
+
     OntologySourceReference = 'OntologySourceReference'
 
 
 class IsaOntologySourceReferenceSchema(pyd.BaseModel):
+    """Pydantic schema for an ISA ontology source reference."""
+
     class Config:
+        """Pydantic configuration for strict ISA ontology-source validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

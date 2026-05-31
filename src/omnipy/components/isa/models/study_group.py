@@ -2,6 +2,8 @@
 #   filename:  study_group.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a study group in an investigation."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -12,11 +14,17 @@ from . import comment_schema, factor_value_schema, sample_schema
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA study groups."""
+
     Study_Group = 'Study Group'
 
 
 class IsaStudyGroupSchema(pyd.BaseModel):
+    """Pydantic schema for a study group of related samples."""
+
     class Config:
+        """Pydantic configuration for strict ISA study-group validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

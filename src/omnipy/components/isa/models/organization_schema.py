@@ -2,6 +2,8 @@
 #   filename:  organization_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing an organization in an investigation."""
+
 from enum import Enum
 from typing import Optional
 
@@ -10,11 +12,17 @@ import omnipy.util.pydantic as pyd
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA organizations."""
+
     Organization = 'Organization'
 
 
 class IsaOrganizationSchema(pyd.BaseModel):
+    """Pydantic schema for an organization referenced by ISA metadata."""
+
     class Config:
+        """Pydantic configuration for strict ISA organization validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

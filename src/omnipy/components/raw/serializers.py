@@ -1,3 +1,5 @@
+"""Tar-file serializers for raw string and bytes datasets."""
+
 from typing import Any, IO, Type
 
 from omnipy.data._typing.helpers import all_dataset_type_variants
@@ -10,22 +12,31 @@ from .datasets import StrictBytesDataset, StrictStrDataset
 
 
 class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
-    """"""
+    """Serialize raw string datasets to and from gzipped tar archives."""
+
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
+        """Return whether a dataset stores raw strings."""
+
         type_variants = all_dataset_type_variants(dataset)
         return len(type_variants) > 0 and type_variants[0] is str
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+        """Return the dataset class created during deserialization."""
+
         return StrictStrDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
+        """Return the file suffix used for serialized dataset members."""
+
         return 'txt'
 
     @classmethod
     def serialize(cls, dataset: StrictStrDataset) -> bytes | memoryview:
+        """Serialize a raw string dataset into a gzipped tar archive."""
+
         def raw_encode_func(content: str) -> bytes:
             return content.encode('utf8')
 
@@ -33,6 +44,8 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> StrictStrDataset:
+        """Deserialize a gzipped tar archive into a raw string dataset."""
+
         dataset = StrictStrDataset()
 
         def raw_decode_func(file_stream: IO[bytes]) -> str:
@@ -54,22 +67,31 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
 
 
 class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
-    """"""
+    """Serialize raw bytes datasets to and from gzipped tar archives."""
+
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
+        """Return whether a dataset stores raw bytes."""
+
         type_variants = all_dataset_type_variants(dataset)
         return len(type_variants) > 0 and type_variants[0] is bytes
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+        """Return the dataset class created during deserialization."""
+
         return StrictBytesDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
+        """Return the file suffix used for serialized dataset members."""
+
         return 'bytes'
 
     @classmethod
     def serialize(cls, dataset: StrictBytesDataset) -> bytes | memoryview:
+        """Serialize a raw bytes dataset into a gzipped tar archive."""
+
         def raw_encode_func(content: bytes) -> bytes:
             return content
 
@@ -77,6 +99,8 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> StrictBytesDataset:
+        """Deserialize a gzipped tar archive into a raw bytes dataset."""
+
         dataset = Dataset[Model[bytes]]()
 
         def raw_decode_func(file_stream: IO[bytes]) -> bytes:

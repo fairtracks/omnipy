@@ -1,3 +1,5 @@
+"""Helpers for flattening nested JSON records into related record sets."""
+
 from copy import copy
 from typing import cast
 
@@ -17,6 +19,7 @@ def flatten_outer_level_of_nested_record(
     ref_key: str,
     default_key: str,
 ) -> tuple[JsonDictOfScalars, JsonDictOfListsOfDicts]:
+    """Split nested JSON fields into scalar fields and child record collections."""
 
     record_id = _ensure_item_first_in_nested_record(
         nested_record, key=id_key, value=f'{data_file_title}.{record_id}')

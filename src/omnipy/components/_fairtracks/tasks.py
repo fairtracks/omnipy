@@ -1,3 +1,5 @@
+"""Internal FAIRtracks task templates for importing ENCODE datasets."""
+
 from collections.abc import Iterable
 
 from omnipy.compute.task import TaskTemplate
@@ -10,6 +12,8 @@ from .functions import encode_api
 @TaskTemplate()
 def import_dataset_from_encode(endpoints: Iterable[pyd.constr(min_length=1)],
                                max_data_item_count: pyd.PositiveInt) -> JsonDataset:
+    """Import ENCODE endpoint payloads into a JSON dataset."""
+
     dataset = JsonDataset()
     for endpoint in endpoints:
         dataset[endpoint] = encode_api(

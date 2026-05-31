@@ -2,6 +2,8 @@
 #   filename:  sample_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a sample in an investigation."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -12,11 +14,17 @@ from . import comment_schema, factor_value_schema, material_attribute_value_sche
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA samples."""
+
     Sample = 'Sample'
 
 
 class IsaSampleSchema(pyd.BaseModel):
+    """Pydantic schema for a sample derived from source materials."""
+
     class Config:
+        """Pydantic configuration for strict ISA sample validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

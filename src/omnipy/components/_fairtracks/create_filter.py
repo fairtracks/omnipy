@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+"""Internal FAIRtracks helper for generating GDC filter payload files."""
+
 import json
 import sys
 
@@ -25,6 +27,8 @@ annotations_endpt = 'https://api.gdc.cancer.gov/annotations'
 
 
 def create_filter():  # noqa: C901
+    """Create small representative GDC filter files for FAIRtracks workflows."""
+
     ###########################################################
     # step1: get total number of TCGA projects (program.name)
     ###########################################################

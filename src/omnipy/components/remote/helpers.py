@@ -1,3 +1,5 @@
+"""Async HTTP helpers for rate limiting and retry strategy selection."""
+
 import asyncio
 from datetime import datetime
 from types import TracebackType
@@ -71,6 +73,8 @@ class RateLimitingClientSession(ClientSession):
 
     @property
     def requests_per_second(self) -> float:
+        """Return the configured steady-state request rate."""
+
         return self._requests_per_time_period / self._time_period_in_secs
 
     async def __aenter__(self) -> 'RateLimitingClientSession':

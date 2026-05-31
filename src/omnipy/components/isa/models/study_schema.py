@@ -2,6 +2,8 @@
 #   filename:  study_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a study in an investigation."""
+
 from datetime import date, datetime
 from enum import Enum
 from typing import List, Optional, Union
@@ -25,6 +27,8 @@ from .validators import date_to_iso_format
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA studies."""
+
     Study = 'Study'
 
 
@@ -39,7 +43,11 @@ class _MaterialsModel(Model[_Materials]):
 
 
 class IsaStudySchema(pyd.BaseModel):
+    """Pydantic schema for a study in an ISA investigation."""
+
     class Config:
+        """Pydantic configuration for strict ISA study validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

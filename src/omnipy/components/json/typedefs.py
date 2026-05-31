@@ -1,3 +1,5 @@
+"""Type aliases describing JSON-compatible Omnipy data structures."""
+
 from typing import TypeAlias
 
 JsonScalar: TypeAlias = None | int | float | str | bool

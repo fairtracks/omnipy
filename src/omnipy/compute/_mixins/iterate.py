@@ -1,3 +1,5 @@
+"""Mixin for iterating job functions across dataset items."""
+
 import asyncio
 import functools
 import inspect
@@ -51,6 +53,8 @@ def _create_dataset_cls(data_file_type: _InputTypeT) -> type[IsDataset]:
 
 
 class IterateFuncJobBaseMixin:
+    """Adapt a job function to run once per dataset item."""
+
     def __init__(  # noqa: C901
         self,
         *,
@@ -270,12 +274,18 @@ class IterateFuncJobBaseMixin:
 
     @property
     def iterate_over_data_files(self) -> bool:
+        """Return whether the job iterates over dataset items automatically."""
+
         return self._iterate_over_data_files
 
     @property
     def output_dataset_param(self) -> str | None:
+        """Return the keyword parameter name used for an output dataset override."""
+
         return self._output_dataset_param
 
     @property
     def output_dataset_cls(self) -> type[IsDataset] | None:
+        """Return the explicit output dataset class, if one is configured."""
+
         return self._output_dataset_cls

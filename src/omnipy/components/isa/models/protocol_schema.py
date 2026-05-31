@@ -2,6 +2,8 @@
 #   filename:  protocol_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a protocol in an investigation."""
+
 from enum import Enum
 from typing import List, Optional
 
@@ -12,17 +14,25 @@ from . import comment_schema, ontology_annotation_schema, protocol_parameter_sch
 
 
 class Component(pyd.BaseModel):
+    """Pydantic schema for a component within an ISA protocol."""
+
     componentName: Optional[str] = None
     componentType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA protocols."""
+
     Protocol = 'Protocol'
 
 
 class IsaProtocolSchema(pyd.BaseModel):
+    """Pydantic schema for a protocol used in a study."""
+
     class Config:
+        """Pydantic configuration for strict ISA protocol validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 

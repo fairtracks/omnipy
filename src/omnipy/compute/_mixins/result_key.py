@@ -1,3 +1,5 @@
+"""Mixin for wrapping job results under a configured dictionary key."""
+
 from typing import cast
 
 from omnipy.compute._mixins.name import NameJobBaseMixin
@@ -5,6 +7,8 @@ from omnipy.shared.protocols.compute.job import IsJobBase
 
 
 class ResultKeyFuncJobBaseMixin:
+    """Optionally wrap a job result in a single-key dictionary."""
+
     def __init__(self, *, result_key: str | None = None):
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
 
@@ -15,6 +19,8 @@ class ResultKeyFuncJobBaseMixin:
 
     @property
     def result_key(self) -> str | None:
+        """Return the key used to wrap job results, if configured."""
+
         return self._result_key
 
     def _call_job(self, *args: object, **kwargs: object) -> object:

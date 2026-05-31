@@ -1,3 +1,5 @@
+"""Mixin for binding fixed parameters and parameter key remapping to jobs."""
+
 from types import MappingProxyType
 from typing import cast, Iterable, Mapping
 
@@ -9,6 +11,8 @@ from omnipy.util.param_key_mapper import ParamKeyMapper
 
 
 class ParamsFuncJobBaseMixin:
+    """Apply fixed parameters and keyword remapping before job execution."""
+
     def __init__(
         self,
         *,
@@ -27,10 +31,14 @@ class ParamsFuncJobBaseMixin:
 
     @property
     def fixed_params(self) -> MappingProxyType[str, object]:
+        """Return the configured fixed parameter bindings."""
+
         return MappingProxyType(self._fixed_params)
 
     @property
     def param_key_map(self) -> MappingProxyType[str, str]:
+        """Return the mapping from external to job-function parameter names."""
+
         return MappingProxyType(self._param_key_mapper.key_map)
 
     def _call_job(self, *args: object, **kwargs: object) -> object:

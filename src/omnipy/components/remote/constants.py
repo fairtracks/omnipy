@@ -1,3 +1,5 @@
+"""Default retry configuration values for remote component helpers."""
+
 from omnipy.shared.enums.data import BackoffStrategy
 
 DEFAULT_RETRIES = 5

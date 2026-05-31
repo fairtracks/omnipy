@@ -2,6 +2,8 @@
 #   filename:  comment_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
+"""ISA model representing a comment in an investigation."""
+
 from enum import Enum
 from typing import Optional
 
@@ -10,11 +12,17 @@ import omnipy.util.pydantic as pyd
 
 
 class FieldType(Enum):
+    """Enum of JSON-LD type labels for ISA comments."""
+
     Comment = 'Comment'
 
 
 class IsaCommentSchema(pyd.BaseModel):
+    """Pydantic schema for a comment attached to an ISA entity."""
+
     class Config:
+        """Pydantic configuration for strict ISA comment validation."""
+
         extra = pyd.Extra.forbid
         use_enum_values = True
 
