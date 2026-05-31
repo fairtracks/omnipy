@@ -48,23 +48,91 @@ import omnipy.util.pydantic as pyd
 
 
 def _job_creator_factory() -> IsJobCreator:
+    """Return the process-global job creator used by runtimes.
+
+    Returns:
+        IsJobCreator: Shared job creator owned by ``JobBase``.
+
+    Raises:
+        None.
+
+    Example:
+        >>> creator = _job_creator_factory()
+        >>> creator is JobBase.job_creator
+        True
+    """
+
     return JobBase.job_creator
 
 
 def _job_config_factory() -> IsJobConfig:
+    """Return the active job configuration from the shared job creator.
+
+    Returns:
+        IsJobConfig: Runtime job configuration object.
+
+    Raises:
+        None.
+
+    Example:
+        >>> config = _job_config_factory()
+        >>> config is _job_creator_factory().config
+        True
+    """
+
     return _job_creator_factory().config
 
 
 def _data_class_creator_factory() -> IsDataClassCreator:
+    """Return the process-global data class creator used by runtimes.
+
+    Returns:
+        IsDataClassCreator: Shared data class creator owned by
+            ``DataClassBase``.
+
+    Raises:
+        None.
+
+    Example:
+        >>> creator = _data_class_creator_factory()
+        >>> creator is DataClassBase.data_class_creator
+        True
+    """
+
     return DataClassBase.data_class_creator
 
 
 def _data_config_factory() -> IsDataConfig:
+    """Return the active data configuration from the shared data creator.
+
+    Returns:
+        IsDataConfig: Runtime data configuration object.
+
+    Raises:
+        None.
+
+    Example:
+        >>> config = _data_config_factory()
+        >>> config is _data_class_creator_factory().config
+        True
+    """
+
     return _data_class_creator_factory().config
 
 
 class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
-    """Configuration tree owned by a ``Runtime`` instance."""
+    """Configuration tree owned by a ``Runtime`` instance.
+
+    Attributes:
+        data: Data-related runtime settings.
+        engine: Engine selection and per-engine configuration.
+        job: Job creation and execution settings.
+        root_log: Root logger integration settings.
+
+    Example:
+        >>> runtime_config = RuntimeConfig()
+        >>> runtime_config.reset_to_defaults()
+    """
 
     data: IsDataConfig = pyd.Field(default_factory=_data_config_factory)
     engine: IsEngineConfig = pyd.Field(default_factory=EngineConfig)
@@ -72,7 +140,22 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
     root_log: IsRootLogConfig = pyd.Field(default_factory=RootLogConfig)
 
     def reset_to_defaults(self) -> None:
-        """Reset all runtime configuration sections to their default values."""
+        """Reset all runtime configuration sections to their default values.
+
+        Args:
+            None.
+
+        Returns:
+            None: Updates ``data``, ``engine``, ``job``, and ``root_log`` in
+                place, then re-establishes subscriptions if available.
+
+        Raises:
+            None.
+
+        Example:
+            >>> runtime_config = RuntimeConfig()
+            >>> runtime_config.reset_to_defaults()
+        """
 
         prev_back = self._back
         self._back = None
@@ -88,7 +171,23 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
 
 
 class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
-    """Concrete services and registries owned by a ``Runtime`` instance."""
+    """Concrete services and registries owned by a ``Runtime`` instance.
+
+    Attributes:
+        job_creator: Shared job creator configured by ``RuntimeConfig.job``.
+        data_class_creator: Shared data creator configured by
+            ``RuntimeConfig.data``.
+        reactive: Optional UI-reactive helper objects for notebook contexts.
+        local: Local execution engine.
+        prefect: Prefect execution engine.
+        registry: Runtime run-state registry.
+        serializers: Dataset serializer registry.
+        root_log: Root logging integration objects.
+
+    Example:
+        >>> runtime_objects = RuntimeObjects()
+        >>> runtime_objects.setup_reactive(UserInterfaceType.NONE)
+    """
 
     job_creator: IsJobConfigHolder = pyd.Field(default_factory=_job_creator_factory)
     data_class_creator: IsDataClassCreator = pyd.Field(default_factory=_data_class_creator_factory)
@@ -104,6 +203,19 @@ class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
 
         Args:
             ui_type: Detected user-interface type for the current runtime.
+
+        Returns:
+            None: Mutates ``reactive`` to either a notebook integration object
+                or ``None``.
+
+        Raises:
+            None.
+
+        Example:
+            >>> objects = RuntimeObjects()
+            >>> objects.setup_reactive(UserInterfaceType.NONE)
+            >>> objects.reactive is None
+            True
         """
 
         if UserInterfaceType.is_jupyter_in_browser(ui_type):
@@ -123,12 +235,38 @@ class Runtime(DataPublisher):
     active execution engine, and initializes display-related integration for
     the current environment. Most applications should use the module-level
     ``runtime`` singleton.
+
+    Attributes:
+        config: Runtime configuration object.
+        objects: Runtime service and registry container.
+
+    Example:
+        >>> rt = Runtime()
+        >>> isinstance(rt.config, RuntimeConfig)
+        True
     """
 
     config: IsRuntimeConfig = pyd.Field(default_factory=RuntimeConfig)
     objects: IsRuntimeObjects = pyd.Field(default_factory=RuntimeObjects)
 
     def __init__(self, **data: Any) -> None:
+        """Initialize runtime data, UI integration, and subscriptions.
+
+        Args:
+            **data: Optional initialization data passed to ``DataPublisher``.
+
+        Returns:
+            None.
+
+        Raises:
+            Exception: Propagates exceptions raised during UI detection or
+                subscription initialization.
+
+        Example:
+            >>> rt = Runtime()
+            >>> rt.reset_subscriptions()
+        """
+
         super().__init__(**data)
         detect_and_setup_user_interface(self)
         self.reset_subscriptions()
@@ -139,6 +277,20 @@ class Runtime(DataPublisher):
         This method rebuilds the callback graph that keeps configuration,
         engines, registries, logging, and reactive UI objects synchronized.
         Call it after replacing runtime subobjects manually.
+
+        Args:
+            None.
+
+        Returns:
+            None: Rebinds all runtime subscription callbacks in place.
+
+        Raises:
+            AssertionError: If a Jupyter UI is detected but reactive objects
+                are unexpectedly missing.
+
+        Example:
+            >>> rt = Runtime()
+            >>> rt.reset_subscriptions()
         """
 
         self.reset_backlinks()
@@ -198,10 +350,42 @@ class Runtime(DataPublisher):
         self.objects.subscribe_attr('prefect', self._update_prefect_engine_config)
 
     def reset_backlinks(self) -> None:
+        """Set parent backlinks from runtime sub-objects to this runtime.
+
+        Args:
+            None.
+
+        Returns:
+            None: Mutates private ``_back`` references on runtime members.
+
+        Raises:
+            None.
+
+        Example:
+            >>> rt = Runtime()
+            >>> rt.reset_backlinks()
+        """
+
         self.config._back = self  # type: ignore[attr-defined]
         self.objects._back = self  # type: ignore[attr-defined]
 
     def _get_engine_config(self, choice: EngineChoice.Literals) -> IsEngineConfig:
+        """Return the engine configuration object for a selected engine.
+
+        Args:
+            choice: Engine identifier whose configuration should be returned.
+
+        Returns:
+            IsEngineConfig: Configuration object for the selected engine.
+
+        Raises:
+            AttributeError: If ``choice`` does not exist on ``config.engine``.
+
+        Example:
+            >>> rt = Runtime()
+            >>> _ = rt._get_engine_config(EngineChoice.LOCAL)
+        """
+
         return getattr(self.config.engine, choice)
 
     def _set_engine_config(
@@ -209,9 +393,43 @@ class Runtime(DataPublisher):
         choice: EngineChoice.Literals,
         engine_config: IsJobRunnerConfig,
     ) -> None:
+        """Set the configuration object for a selected engine.
+
+        Args:
+            choice: Engine identifier whose configuration should be updated.
+            engine_config: New engine configuration object.
+
+        Returns:
+            None.
+
+        Raises:
+            AttributeError: If ``choice`` does not exist on ``config.engine``.
+
+        Example:
+            >>> rt = Runtime()
+            >>> cfg = rt._get_engine_config(EngineChoice.LOCAL)
+            >>> rt._set_engine_config(EngineChoice.LOCAL, cfg)
+        """
+
         setattr(self.config.engine, choice, engine_config)
 
     def _get_engine(self, choice: EngineChoice.Literals) -> IsEngine:
+        """Return the engine object for a selected engine choice.
+
+        Args:
+            choice: Engine identifier whose runtime engine should be returned.
+
+        Returns:
+            IsEngine: Runtime engine object for ``choice``.
+
+        Raises:
+            AttributeError: If ``choice`` does not exist on ``objects``.
+
+        Example:
+            >>> rt = Runtime()
+            >>> _ = rt._get_engine(EngineChoice.LOCAL)
+        """
+
         return getattr(self.objects, choice)
 
     def _new_engine_config_if_new_cls(
@@ -219,6 +437,23 @@ class Runtime(DataPublisher):
         engine: IsEngine,
         choice: EngineChoice.Literals,
     ) -> None:
+        """Replace engine config when an engine requires a new config class.
+
+        Args:
+            engine: Engine instance to inspect for config class changes.
+            choice: Engine identifier whose config may need replacement.
+
+        Returns:
+            None: Replaces the per-engine config when class types differ.
+
+        Raises:
+            None.
+
+        Example:
+            >>> rt = Runtime()
+            >>> rt._new_engine_config_if_new_cls(rt.objects.local, EngineChoice.LOCAL)
+        """
+
         # TODO: when parsing config from file is implemented, make sure that the new engine
         #       config classes here reparse the config files
         engine_config_cls = engine.get_config_cls()
@@ -226,12 +461,61 @@ class Runtime(DataPublisher):
             self._set_engine_config(choice, engine_config_cls())
 
     def _update_local_runner_config(self, local_runner: IsEngine) -> None:
+        """Refresh local engine config when the local engine object changes.
+
+        Args:
+            local_runner: New local engine instance.
+
+        Returns:
+            None.
+
+        Raises:
+            None.
+
+        Example:
+            >>> rt = Runtime()
+            >>> rt._update_local_runner_config(rt.objects.local)
+        """
+
         self._new_engine_config_if_new_cls(local_runner, EngineChoice.LOCAL)
 
     def _update_prefect_engine_config(self, prefect_engine: IsEngine) -> None:
+        """Refresh Prefect engine config when the Prefect engine changes.
+
+        Args:
+            prefect_engine: New Prefect engine instance.
+
+        Returns:
+            None.
+
+        Raises:
+            None.
+
+        Example:
+            >>> rt = Runtime()
+            >>> rt._update_prefect_engine_config(rt.objects.prefect)
+        """
+
         self._new_engine_config_if_new_cls(prefect_engine, EngineChoice.PREFECT)
 
     def _update_job_creator_engine(self, _item_changed: Any) -> None:
+        """Sync the job creator with the currently selected runtime engine.
+
+        Args:
+            _item_changed: Subscription payload for the triggering change.
+
+        Returns:
+            None.
+
+        Raises:
+            AttributeError: If the configured engine choice has no matching
+                runtime engine object.
+
+        Example:
+            >>> rt = Runtime()
+            >>> rt._update_job_creator_engine(None)
+        """
+
         self.objects.job_creator.set_engine(self._get_engine(self.config.engine.choice))
 
 

@@ -21,6 +21,26 @@ _ParamsP = ParamSpec('_ParamsP')
 
 class _ParamsMeta(pyd.ModelMetaclass):
     def __init__(cls, name: str, bases: tuple[type, ...], namespace: dict[str, object]) -> None:
+        """Initialize a params class and validate all declared default values.
+
+        Args:
+            name: Name of the params class being created.
+            bases: Base classes used for the params class.
+            namespace: Class namespace dictionary with declared attributes.
+
+        Returns:
+            None.
+
+        Raises:
+            ValueError: If a field uses ``default_factory`` or is missing a required default.
+            pyd.ValidationError: If one or more declared default values fail model validation.
+
+        Example:
+            >>> class MyParams(ParamsBase):
+            ...     limit: int = 5
+            >>> MyParams.limit
+            5
+        """
         super().__init__(name, bases, namespace)
 
         model_cls = cast(type[pyd.BaseModel], cls)
@@ -43,6 +63,23 @@ class _ParamsMeta(pyd.ModelMetaclass):
             model_cls.__fields__[key].default = value
 
     def __getattr__(cls, attr: str) -> object:
+        """Read a parameter value from the class-level field defaults.
+
+        Args:
+            attr: Name of the parameter field to read.
+
+        Returns:
+            The validated default value for the requested parameter field.
+
+        Raises:
+            AttributeError: If ``attr`` is not a defined params field.
+
+        Example:
+            >>> class MyParams(ParamsBase):
+            ...     retries: int = 3
+            >>> MyParams.retries
+            3
+        """
         model_cls = cast(type[pyd.BaseModel], cls)
         if attr in model_cls.__fields__:
             return cls._get_param_value(attr, model_cls)
@@ -50,12 +87,50 @@ class _ParamsMeta(pyd.ModelMetaclass):
 
     @functools.cache
     def _get_param_value(cls, attr, model_cls):
+        """Return the cached default value for a parameter field.
+
+        Args:
+            attr: Name of the parameter field.
+            model_cls: Params model class that defines the field.
+
+        Returns:
+            The field default value, or a value produced by ``default_factory``.
+
+        Raises:
+            KeyError: If ``attr`` is not present in ``model_cls.__fields__``.
+
+        Example:
+            >>> class MyParams(ParamsBase):
+            ...     threshold: float = 0.75
+            >>> _ParamsMeta._get_param_value('threshold', MyParams)
+            0.75
+        """
         if model_cls.__fields__[attr].default_factory is not None:
             return model_cls.__fields__[attr].default_factory()
         else:
             return model_cls.__fields__[attr].default
 
     def __setattr__(cls, attr: str, value: object) -> None:
+        """Prevent writes to declared parameter fields on the params class.
+
+        Args:
+            attr: Name of the attribute to set.
+            value: Value requested for assignment.
+
+        Returns:
+            None.
+
+        Raises:
+            AttributeError: If ``attr`` targets a params field or unknown public attribute.
+
+        Example:
+            >>> class MyParams(ParamsBase):
+            ...     retries: int = 3
+            >>> MyParams.retries = 5
+            Traceback (most recent call last):
+            ...
+            AttributeError: MyParams.retries is read-only
+        """
         model_cls = cast(type[pyd.BaseModel], cls)
         if attr in model_cls.__fields__:
             raise AttributeError(f'{model_cls.__name__}.{attr} is read-only')
@@ -136,6 +211,23 @@ def bind_adjust_model_func(
         overrides, then returns the adjusted model class.
     """
     def _func(model_name: str, *args: _ParamsP.args, **kwargs: _ParamsP.kwargs) -> type[_ModelT]:
+        """Create an adjusted clone of the model class.
+
+        Args:
+            model_name: Name for the cloned model class.
+            *args: Positional arguments, which are not supported.
+            **kwargs: Parameter overrides applied to the cloned ``Params`` class.
+
+        Returns:
+            A cloned model class with adjusted parameter defaults.
+
+        Raises:
+            AttributeError: If any positional argument is supplied.
+
+        Example:
+            >>> adjust_model = bind_adjust_model_func(clone_model_func, params_cls)
+            >>> NewModel = adjust_model('NewModel', retries=2)
+        """
         if len(args) > 0:
             raise AttributeError(f'Positional arguments are not supported for '
                                  f'{params_cls.__module__}.{params_cls.__name__}')
@@ -171,6 +263,24 @@ def bind_adjust_dataset_func(
     """
     def _func(dataset_name: str, model_name: str, *args: _ParamsP.args,
               **kwargs: _ParamsP.kwargs) -> type[_DatasetT]:
+        """Create an adjusted clone of the dataset class.
+
+        Args:
+            dataset_name: Name for the cloned dataset class.
+            model_name: Name for the intermediate adjusted model class.
+            *args: Positional arguments, which are not supported.
+            **kwargs: Parameter overrides applied to model and params classes.
+
+        Returns:
+            A cloned dataset class bound to the adjusted model class.
+
+        Raises:
+            AttributeError: If any positional argument is supplied.
+
+        Example:
+            >>> adjust_dataset = bind_adjust_dataset_func(clone_dataset_func, model_cls, params_cls)
+            >>> NewDataset = adjust_dataset('NewDataset', 'NewModel', retries=2)
+        """
         if len(args) > 0:
             raise AttributeError(f'Positional arguments are not supported for '
                                  f'{params_cls.__module__}.{params_cls.__name__}')
@@ -201,6 +311,21 @@ def params_dataclass(cls: type[_ParamsT]) -> type[_ParamsT]:
         ``kw_only=True``.
     """
     def wrap(cls):
+        """Wrap a class using ``dataclass(..., kw_only=True)``.
+
+        Args:
+            cls: Class to transform into a keyword-only dataclass.
+
+        Returns:
+            The dataclass-decorated class.
+
+        Example:
+            >>> @params_dataclass
+            ... class P:
+            ...     x: int = 1
+            >>> P(x=2)
+            P(x=2)
+        """
         return dataclass(cls, kw_only=True)
 
     return wrap(cls)

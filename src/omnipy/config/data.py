@@ -66,6 +66,27 @@ class ColorConfig(ConfigBase):
 
     @pyd.root_validator()
     def default_style(cls, values: _ColorConfigTypedDict) -> _ColorConfigTypedDict:
+        """Resolve recommended style presets to concrete color style names.
+
+        Args:
+            values: Parsed configuration values for color rendering.
+
+        Returns:
+            _ColorConfigTypedDict: Updated values where ``style`` is replaced with
+                a concrete style when a recommended preset is used.
+
+        Raises:
+            None: This validator does not raise exceptions directly.
+
+        Example:
+            >>> ColorConfig.default_style({
+            ...     'system': DisplayColorSystem.TRUECOLOR,
+            ...     'style': RecommendedColorStyles.AUTO,
+            ...     'dark_background': True,
+            ...     'solid_background': False,
+            ... })
+            {'system': ..., 'style': ..., 'dark_background': True, 'solid_background': False}
+        """
         if values['style'] in RecommendedColorStyles:
             values['style'] = RecommendedColorStyles.get_default_style(
                 values['system'],
@@ -87,10 +108,23 @@ class UserInterfaceTypeConfig(ConfigBase):
         width: pyd.NonNegativeInt | None,
         height: pyd.NonNegativeInt | None,
     ) -> None:
-        """
-        Sets width and height, and notifies subscribers of the change. Only
-        notifies self-subscribers once after both attributes have been
-        updated.
+        """Set width and height and notify subscribers about the updates.
+
+        Args:
+            width: New UI width in character or pixel units, depending on
+                renderer.
+            height: New UI height in character or pixel units, depending on
+                renderer.
+
+        Returns:
+            None: This method mutates the instance and emits subscriber events.
+
+        Raises:
+            None: This method does not raise exceptions directly.
+
+        Example:
+            >>> ui_cfg = UserInterfaceTypeConfig()
+            >>> ui_cfg.set_width_and_height(120, 40)
         """
         for (dim_name, dim_value) in (('width', width), ('height', height)):
             object.__setattr__(self, dim_name, dim_value)
@@ -116,6 +150,23 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
     @abstractmethod
     def _get_available_display_dims(
             cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+        """Fetch currently available display dimensions for a UI target.
+
+        Args:
+            cls: The configuration class querying display capabilities.
+
+        Returns:
+            tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]: Width
+                and height where unavailable dimensions are ``None``.
+
+        Raises:
+            NotImplementedError: Implementations in subclasses provide concrete
+                behavior.
+
+        Example:
+            >>> TerminalUserInterfaceConfig._get_available_display_dims()
+            (120, 40)
+        """
         ...
 
     @pyd.validator('width', always=True)
@@ -124,6 +175,23 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
         value: pyd.NonNegativeInt,
         values: dict[str, Any],
     ) -> pyd.NonNegativeInt:
+        """Resolve width automatically when dimension mode is ``AUTO``.
+
+        Args:
+            value: Candidate width from parsed model input.
+            values: Additional parsed field values available to the validator.
+
+        Returns:
+            pyd.NonNegativeInt: Auto-detected width when available, otherwise
+                the provided ``value``.
+
+        Raises:
+            None: This validator does not raise exceptions directly.
+
+        Example:
+            >>> DimsModeConfig.check_and_set_auto_width(80, {'dims_mode': DisplayDimensionsUpdateMode.AUTO})
+            80
+        """
         return cls._get_available_display_dim_if_auto_dims_mode(value, values, index=0)
 
     @pyd.validator('height', always=True)
@@ -132,6 +200,23 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
         value: pyd.NonNegativeInt,
         values: dict[str, Any],
     ) -> pyd.NonNegativeInt:
+        """Resolve height automatically when dimension mode is ``AUTO``.
+
+        Args:
+            value: Candidate height from parsed model input.
+            values: Additional parsed field values available to the validator.
+
+        Returns:
+            pyd.NonNegativeInt: Auto-detected height when available, otherwise
+                the provided ``value``.
+
+        Raises:
+            None: This validator does not raise exceptions directly.
+
+        Example:
+            >>> DimsModeConfig.check_and_set_auto_height(24, {'dims_mode': DisplayDimensionsUpdateMode.AUTO})
+            24
+        """
         return cls._get_available_display_dim_if_auto_dims_mode(value, values, index=1)
 
     @classmethod
@@ -141,6 +226,29 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
         values: dict[str, Any],
         index: int,
     ):
+        """Resolve one display dimension from environment when in auto mode.
+
+        Args:
+            value: Fallback parsed value when auto-detection is disabled or
+                unavailable.
+            values: Parsed model field map containing ``dims_mode``.
+            index: Dimension index where ``0`` is width and ``1`` is height.
+
+        Returns:
+            pyd.NonNegativeInt: Auto-detected dimension value when available,
+                otherwise the provided ``value``.
+
+        Raises:
+            None: This helper does not raise exceptions directly.
+
+        Example:
+            >>> DimsModeConfig._get_available_display_dim_if_auto_dims_mode(
+            ...     80,
+            ...     {'dims_mode': DisplayDimensionsUpdateMode.AUTO},
+            ...     0,
+            ... )
+            80
+        """
         if values.get('dims_mode') is DisplayDimensionsUpdateMode.AUTO:
             fetched_val = cls._get_available_display_dims()[index]
             if fetched_val:
@@ -150,6 +258,22 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
     # Override __getattribute__ to dynamically update width and height
     # if dims_mode is AUTO and the display size is available.
     def __getattribute__(self, attr):
+        """Read attributes and refresh dimensions when auto mode is enabled.
+
+        Args:
+            attr: Name of the requested attribute.
+
+        Returns:
+            Any: Value of the requested attribute.
+
+        Raises:
+            AttributeError: If ``attr`` does not exist on the instance.
+
+        Example:
+            >>> cfg = TerminalUserInterfaceConfig()
+            >>> cfg.width
+            120
+        """
         if (attr in ['width', 'height']
                 and object.__getattribute__(self, 'dims_mode') is DisplayDimensionsUpdateMode.AUTO):
             width, height = object.__getattribute__(self, '_get_available_display_dims')()
@@ -167,6 +291,22 @@ class TerminalUserInterfaceConfig(DimsModeConfig):
     @override
     def _get_available_display_dims(
             cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+        """Fetch terminal width and height from the current shell session.
+
+        Args:
+            cls: The terminal UI configuration class.
+
+        Returns:
+            tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+                Terminal width and height, or ``None`` for unavailable values.
+
+        Raises:
+            None: This method does not raise exceptions directly.
+
+        Example:
+            >>> TerminalUserInterfaceConfig._get_available_display_dims()
+            (120, 40)
+        """
         width, height = shutil.get_terminal_size(fallback=(0, 0))
         return None if width == 0 else width, None if height == 0 else height
 
@@ -199,10 +339,45 @@ class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
     @override
     def _get_available_display_dims(
             cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+        """Return notebook display dimensions when they can be queried.
+
+        Args:
+            cls: The Jupyter UI configuration class.
+
+        Returns:
+            tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+                ``(None, None)`` because dimensions are currently pushed from
+                Jupyter frontend code.
+
+        Raises:
+            None: This method does not raise exceptions directly.
+
+        Example:
+            >>> JupyterUserInterfaceConfig._get_available_display_dims()
+            (None, None)
+        """
         # For now, Jupyter width is pushed, not fetched. Hence, we return None.
         return None, None
 
     def __init__(self, **data: Any) -> None:
+        """Initialize Jupyter defaults for dimensions and color settings.
+
+        Args:
+            **data: Optional pydantic field values passed to the parent model
+                initializer.
+
+        Returns:
+            None: Initializes the instance in place.
+
+        Raises:
+            pyd.ValidationError: If provided ``data`` does not satisfy model
+                validation constraints.
+
+        Example:
+            >>> cfg = JupyterUserInterfaceConfig()
+            >>> (cfg.width, cfg.height)
+            (JUPYTER_DEFAULT_WIDTH, JUPYTER_DEFAULT_HEIGHT)
+        """
         super().__init__(**data)
         self.width = JUPYTER_DEFAULT_WIDTH
         self.height = JUPYTER_DEFAULT_HEIGHT
@@ -215,6 +390,24 @@ class BrowserUserInterfaceConfig(HtmlUserInterfaceConfig):
     Configuration for browser user interface type.
     """
     def __init__(self, **data: Any) -> None:
+        """Initialize browser defaults for dimensions and color settings.
+
+        Args:
+            **data: Optional pydantic field values passed to the parent model
+                initializer.
+
+        Returns:
+            None: Initializes the instance in place.
+
+        Raises:
+            pyd.ValidationError: If provided ``data`` does not satisfy model
+                validation constraints.
+
+        Example:
+            >>> cfg = BrowserUserInterfaceConfig()
+            >>> (cfg.width, cfg.height)
+            (BROWSER_DEFAULT_WIDTH, BROWSER_DEFAULT_HEIGHT)
+        """
         super().__init__(**data)
         self.width = BROWSER_DEFAULT_WIDTH
         self.height = BROWSER_DEFAULT_HEIGHT
@@ -256,6 +449,22 @@ class LayoutConfig(ConfigBase):
 
 
 def _get_cache_dir_path() -> str:
+    """Build the default cache directory path beneath the working directory.
+
+    Args:
+        None: This helper takes no arguments.
+
+    Returns:
+        str: Absolute path to the ``_cache`` directory in the current working
+            directory.
+
+    Raises:
+        None: This helper does not raise exceptions directly.
+
+    Example:
+        >>> _get_cache_dir_path().endswith('/_cache')
+        True
+    """
     return str(Path.cwd().joinpath(Path('_cache')))
 
 
@@ -276,6 +485,24 @@ class UserInterfaceConfig(ConfigBase):
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
     ) -> IsUserInterfaceTypeConfig:  # pyright: ignore [reportReturnType]
+        """Return the UI-specific configuration object for a given UI type.
+
+        Args:
+            ui_type: UI type discriminator used to select terminal, Jupyter,
+                or browser settings.
+
+        Returns:
+            IsUserInterfaceTypeConfig: The matching configuration model for the
+                requested UI type.
+
+        Raises:
+            None: This method does not raise exceptions directly.
+
+        Example:
+            >>> cfg = UserInterfaceConfig()
+            >>> cfg.get_ui_type_config(UserInterfaceType.TERMINAL)
+            TerminalUserInterfaceConfig(...)
+        """
         match ui_type:
             case x if UserInterfaceType.is_terminal(x):
                 return self.terminal
@@ -318,6 +545,26 @@ class HttpConfig(ConfigBase):
     def update_http_defaults(cls,
                              _for_host: defaultdict[str, HttpRequestsConfig],
                              values: dict[str, Any]) -> defaultdict[str, HttpRequestsConfig]:
+        """Create a host map that clones current HTTP defaults per new key.
+
+        Args:
+            cls: The HTTP config model class.
+            _for_host: Parsed ``for_host`` value from pydantic input.
+            values: Other parsed field values, including ``defaults``.
+
+        Returns:
+            defaultdict[str, HttpRequestsConfig]: Mapping that returns a copy
+                of ``defaults`` for unknown hosts.
+
+        Raises:
+            KeyError: If ``defaults`` is missing from ``values`` during
+                validation.
+
+        Example:
+            >>> cfg = HttpConfig()
+            >>> cfg.for_host['example.org'].retry_attempts
+            5
+        """
         return defaultdict(lambda: values['defaults'].copy())
 
 
