@@ -18,6 +18,16 @@ class ConfigBase(DataPublisher):
     """Base class for Omnipy configuration models."""
 
     def as_model(self) -> 'JsonDictModel':
+        """Return a JSON model representation of the current configuration.
+
+        Allows the configuration object to be serialized, displayed, and
+        inspected using the same rendering pipeline as any other Omnipy
+        model.  The returned ``ConfigModel`` subclass also customizes the
+        default display panel to use JSON5 syntax.
+
+        Returns:
+            JsonDictModel: A JSON model view of this configuration instance.
+        """
         from omnipy.components.json.models import JsonDictModel
 
         class ConfigModel(JsonDictModel):

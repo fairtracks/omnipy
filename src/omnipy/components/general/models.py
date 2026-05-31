@@ -103,12 +103,15 @@ class _ChainMixin:
 if TYPE_CHECKING:
 
     class Chain2(_ChainMixin, Model[_V], Generic[_U, _V]):
+        """{{CHAIN_DOC_2}}"""
         ...
 
     class Chain3(_ChainMixin, Model[_W], Generic[_U, _V, _W]):
+        """{{CHAIN_DOC_3}}"""
         ...
 
     class Chain4(_ChainMixin, Model[_X], Generic[_U, _V, _W, _X]):
+        """{{CHAIN_DOC_4}}"""
         ...
 
     class Chain5(
@@ -116,6 +119,7 @@ if TYPE_CHECKING:
             Model[_Y],
             Generic[_U, _V, _W, _X, _Y],
     ):
+        """{{CHAIN_DOC_5}}"""
         ...
 
     class Chain6(
@@ -123,22 +127,23 @@ if TYPE_CHECKING:
             Model[_Z],
             Generic[_U, _V, _W, _X, _Y, _Z],
     ):
+        """{{CHAIN_DOC_6}}"""
         ...
 
 else:
 
     class Chain2(_ChainMixin, Model[_V | _U], Generic[_U, _V]):
-        """Convert data through a two-type chain from the first type argument to the second."""
+        """{{CHAIN_DOC_2}}"""
         ...
 
     class Chain3(_ChainMixin, Model[_W | TypeVarStore1[_V] | _U], Generic[_U, _V, _W]):
-        """Convert data through a three-type chain ending in the third type argument."""
+        """{{CHAIN_DOC_3}}"""
         ...
 
     class Chain4(_ChainMixin,
                  Model[_X | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
                  Generic[_U, _V, _W, _X]):
-        """Convert data through a four-type chain ending in the fourth type argument."""
+        """{{CHAIN_DOC_4}}"""
         ...
 
     class Chain5(
@@ -146,7 +151,7 @@ else:
             Model[_Y | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
             Generic[_U, _V, _W, _X, _Y],
     ):
-        """Convert data through a five-type chain ending in the fifth type argument."""
+        """{{CHAIN_DOC_5}}"""
         ...
 
     class Chain6(
@@ -155,7 +160,7 @@ else:
                   | _U],
             Generic[_U, _V, _W, _X, _Y, _Z],
     ):
-        """Convert data through a six-type chain ending in the sixth type argument."""
+        """{{CHAIN_DOC_6}}"""
         ...
 
 

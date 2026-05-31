@@ -274,6 +274,18 @@ _NegativeInteger: TypeAlias = Literal[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -
 
 # @disjoint_base
 # class int:
+
+# TODO: Auto-generate docstrings for stdlib-mirroring protocol methods
+#
+# Most method stubs in this file (IsStr.capitalize, IsStr.casefold, IsList.sort,
+# IsDict.get, etc.) mirror Python stdlib with identical signatures. Rather than
+# hand-writing docstrings that duplicate CPython docs, investigate whether
+# docstrings could be generated statically (e.g. via ast/token inspection of
+# typeshed stubs) or dynamically (e.g. at import time from the real stdlib
+# classes).  See also protocols/content.py, protocols/types.py and
+# protocols/typing.py for similar stdlib-derived stubs.
+#
+
 class IsInt(Protocol):
     """Protocol for the subset of built-in ``int`` behavior used by Omnipy typing."""
 
