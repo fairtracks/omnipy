@@ -1,3 +1,5 @@
+"""Selection and key-rewriting helpers used by Omnipy dataset indexing operations."""
+
 from collections import defaultdict
 from dataclasses import dataclass
 from typing import Iterable, Mapping, MutableMapping, TypeAlias
@@ -12,6 +14,14 @@ _ValT = TypeVar('_ValT')
 
 @dataclass
 class SelectedKeys:
+    """Normalized key-selection result used while applying dataset indexing.
+
+    Attributes:
+        singular: Whether the original selector targeted a single item.
+        keys: Resolved string keys in selection order.
+        last_index: Final insertion index used when extra items must be appended.
+    """
+
     singular: bool
     keys: tuple[str, ...]
     last_index: int = -1
@@ -24,6 +34,19 @@ MappingType: TypeAlias = MutableMapping[str, _ValT]
 
 def select_keys(selector: str | int | slice | Iterable[str | int],
                 mapping: MappingType[_ValT]) -> SelectedKeys:
+    """Resolve a dataset selector into normalized string keys.
+
+    Args:
+        selector: Key, positional index, slice, or iterable of keys and indices.
+        mapping: Source mapping whose key order defines positional selection.
+
+    Returns:
+        A normalized selection describing the resolved keys and insertion position.
+
+    Raises:
+        KeyError: If ``selector`` has an unsupported type.
+    """
+
     if isinstance(selector, str):
         return SelectedKeys(singular=True, keys=(selector,))
     else:
@@ -54,6 +77,16 @@ def prepare_selected_items_with_mapping_data(
     last_index: int,
     data_obj: Mapping[str, _ValT],
 ) -> tuple[Key2DataItemType[_ValT], Index2DataItemsType[_ValT]]:
+    """Align selected keys with mapping data for dataset update operations.
+
+    Args:
+        keys: Normalized selected keys.
+        last_index: Index after which overflow items should be inserted.
+        data_obj: Replacement data supplied as a mapping.
+
+    Returns:
+        A tuple containing direct key replacements and indexed overflow insertions.
+    """
 
     data_obj_keys = tuple(data_obj.keys())
     key_2_data_item: Key2DataItemType[_ValT] = {}
@@ -79,6 +112,17 @@ def prepare_selected_items_with_iterable_data(
     data_obj: tuple[_ValT, ...],
     mapping: Mapping[str, _ValT],
 ) -> tuple[Key2DataItemType[_ValT], Index2DataItemsType[_ValT]]:
+    """Align selected keys with iterable data for dataset update operations.
+
+    Args:
+        keys: Normalized selected keys.
+        last_index: Index after which overflow items should be inserted.
+        data_obj: Replacement data supplied as positional values.
+        mapping: Existing mapping used to preserve known keys where possible.
+
+    Returns:
+        A tuple containing direct key replacements and indexed overflow insertions.
+    """
 
     key_2_data_item: Key2DataItemType[_ValT] = {}
     index_2_data_items: Index2DataItemsType[_ValT] = defaultdict(list)
@@ -106,6 +150,16 @@ def create_updated_mapping(
     key_2_data_item: Key2DataItemType[_ValT],
     index_2_data_item: Index2DataItemsType[_ValT],
 ) -> MappingType[_ValT]:
+    """Build a new mapping with selected replacements and overflow insertions applied.
+
+    Args:
+        mapping: Original mapping to update.
+        key_2_data_item: Direct replacements keyed by original selection key.
+        index_2_data_item: Extra items grouped by insertion index.
+
+    Returns:
+        A new mapping containing the updated key/value order.
+    """
 
     updated_mapping: dict[str, _ValT] = {}
 
@@ -127,6 +181,8 @@ def uniquely_add_extra_items_by_index_to_mapping(
     index_2_data_item: Index2DataItemsType[_ValT],
     mapping: MappingType[_ValT],
 ) -> None:
+    """Insert any queued overflow items for ``index`` using unique output keys."""
+
     if index in index_2_data_item:
         for key, val in index_2_data_item[index]:
             uniquely_add_item_to_mapping(key, val, mapping)
@@ -137,6 +193,8 @@ def uniquely_add_item_by_key_to_mapping_if_val(
     key_2_data_item: Key2DataItemType[_ValT],
     mapping: MappingType[_ValT],
 ):
+    """Insert a keyed replacement when the selection resolved to an actual value."""
+
     data_item = key_2_data_item[key]
     if data_item is not None:
         key, val = data_item
@@ -144,10 +202,14 @@ def uniquely_add_item_by_key_to_mapping_if_val(
 
 
 def uniquely_add_item_to_mapping(key: str, val: _ValT, mapping: MappingType[_ValT]) -> None:
+    """Insert ``val`` into ``mapping`` under a key made unique if necessary."""
+
     mapping[make_unique_key(key, mapping)] = val
 
 
 def make_unique_key(key: str, mapping: MappingType[_ValT]) -> str:
+    """Return a non-conflicting key by appending or incrementing a numeric suffix."""
+
     while key in mapping:
         if is_duplicate_name(key):
             key = increase_duplicate_count(key)
@@ -157,10 +219,14 @@ def make_unique_key(key: str, mapping: MappingType[_ValT]) -> str:
 
 
 def is_duplicate_name(key: str) -> bool:
+    """Return whether ``key`` already ends with Omnipy's duplicate-name suffix format."""
+
     split_key = key.rsplit('_', 1)
     return len(split_key) == 2 and split_key[1].isdigit()
 
 
 def increase_duplicate_count(key: str) -> str:
+    """Increment the numeric duplicate suffix appended to ``key``."""
+
     key, count = key.rsplit('_', 1)
     return f'{key}_{int(count) + 1}'

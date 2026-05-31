@@ -1,3 +1,5 @@
+"""Protocols for job creator and job config holder contracts."""
+
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
@@ -8,7 +10,8 @@ from omnipy.shared.protocols.engine.base import IsEngine
 
 @runtime_checkable
 class IsJobConfigHolder(Protocol):
-    """"""
+    """Protocol for objects that hold mutable job config and engine state."""
+
     @property
     def config(self) -> IsJobConfig:
         ...
@@ -26,7 +29,8 @@ class IsJobConfigHolder(Protocol):
 
 @runtime_checkable
 class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
-    """"""
+    """Protocol for nested-context job creators."""
+
     @property
     def nested_context_level(self) -> int:
         ...

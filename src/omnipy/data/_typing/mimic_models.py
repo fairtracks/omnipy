@@ -1,3 +1,10 @@
+"""TYPE_CHECKING-only model facades used to improve static typing behavior.
+
+Type Aliases:
+    The mimic model classes in this module mirror common ``Model[...]`` shapes so
+    type checkers can reason about container-specialized content more precisely.
+"""
+
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,24 +33,36 @@ if TYPE_CHECKING:
             Model[_RootT],
             Generic[_RootT],
     ):
+        """Minimal generic stand-in for ``Model[_RootT]`` during type checking."""
+
         if TYPE_CHECKER != 'mypy':
 
             def __new__(cls, *args: Any, **kwargs: Any) -> Self:
                 ...
 
     class Model_int(PlainModel[int], IsIntContent):
+        """Typed stand-in for ``Model[int]``."""
+
         ...
 
     class Model_float(PlainModel[float], IsFloatContent):
+        """Typed stand-in for ``Model[float]``."""
+
         ...
 
     class Model_bool(PlainModel[bool], IsBoolContent):
+        """Typed stand-in for ``Model[bool]``."""
+
         ...
 
     class Model_str(PlainModel[str], IsStrContent):
+        """Typed stand-in for ``Model[str]``."""
+
         ...
 
     class Model_bytes(PlainModel[bytes], IsBytesContent):
+        """Typed stand-in for ``Model[bytes]``."""
+
         ...
 
     class Model_set(  # type: ignore[misc]
@@ -51,6 +70,8 @@ if TYPE_CHECKING:
             IsSetContent[_ValT],
             Generic[_ValT],
     ):
+        """Typed stand-in for ``Model[set[T]]``."""
+
         ...
 
     class Model_list(  # type: ignore[misc]
@@ -58,6 +79,8 @@ if TYPE_CHECKING:
             IsListContent[_ValT],
             Generic[_ValT],
     ):
+        """Typed stand-in for ``Model[list[T]]``."""
+
         ...
 
     class Model_tuple_same_type(  # type: ignore[misc]
@@ -65,6 +88,8 @@ if TYPE_CHECKING:
             IsSameTypeTupleContent[_ValT],
             Generic[_ValT],
     ):
+        """Typed stand-in for homogeneous tuple models."""
+
         ...
 
     class Model_tuple_pair(  # type: ignore[misc]
@@ -72,6 +97,8 @@ if TYPE_CHECKING:
             IsPairTupleContent[_ValT, _ValT2],
             Generic[_ValT, _ValT2],
     ):
+        """Typed stand-in for two-element tuple models."""
+
         ...
 
     class Model_dict(  # type: ignore[misc]
@@ -79,6 +106,8 @@ if TYPE_CHECKING:
             IsDictContent[_KeyT, _ValT],
             Generic[_KeyT, _ValT],
     ):
+        """Typed stand-in for ``Model[dict[K, V]]``."""
+
         ...
 
     class Model_Dataset(  # type: ignore[misc]
@@ -86,11 +115,15 @@ if TYPE_CHECKING:
             IsDataset[_ModelOrDatasetT],
             Generic[_ModelOrDatasetT],
     ):
+        """Typed stand-in for dataset-valued models."""
+
         ...
 
     _CorrectModelT = TypeVar('_CorrectModelT', bound=IsModel)
 
     class RevertModelMimicTypingHack(Generic[_CorrectModelT]):
+        """Restore normal subclass typing when mimic models are used as bases."""
+
         # Need to override Model.__new__() hack for Pyright to correctly
         # handle subclassing when one of the Mimic models is used as a base
         # class.

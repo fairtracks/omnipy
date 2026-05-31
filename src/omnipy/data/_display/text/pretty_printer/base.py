@@ -1,3 +1,5 @@
+"""Base classes for display pretty printers and iterative tightening logic."""
+
 from abc import ABC, abstractmethod
 import dataclasses
 import operator
@@ -18,6 +20,8 @@ import omnipy.util.pydantic as pyd
 
 
 class PrettyPrinter(ABC, Generic[ContentT]):
+    """Base strategy for converting draft panel content into text output."""
+
     @classmethod
     @abstractmethod
     def is_suitable_content(
@@ -114,6 +118,8 @@ class StatsTighteningPrettyPrinter(
         ABC,
         Generic[ContentT],
 ):
+    """Pretty printer that can iteratively tighten formatting constraints."""
+
     def __init__(self) -> None:
         super().__init__()
         self._prev_stat_requirements: dict[str, pyd.NonNegativeInt | None] = {}
@@ -200,6 +206,8 @@ class StatsTighteningPrettyPrinter(
 
 
 class WidthReducingPrettyPrinter(StatsTighteningPrettyPrinter[ContentT], Generic[ContentT]):
+    """Pretty printer that retries formatting with progressively smaller widths."""
+
     def _init_prev_frame_width(
         self,
         cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
@@ -259,6 +267,8 @@ class ConstraintTighteningPrettyPrinter(
         ABC,
         Generic[ContentT],
 ):
+    """Pretty printer that retries formatting with stricter content constraints."""
+
     # Must be defined in subclasses
     CONSTRAINT_STAT_NAME: ClassVar[str]
     CONSTRAINT_TIGHTEN_FUNC: Callable[[int], int]

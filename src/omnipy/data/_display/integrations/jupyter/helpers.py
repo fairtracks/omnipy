@@ -1,3 +1,5 @@
+"""Reactive helper objects used by Jupyter display integrations."""
+
 from typing import Generic
 
 import solara

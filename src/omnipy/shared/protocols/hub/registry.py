@@ -1,3 +1,5 @@
+"""Protocols for tracking job run-state transitions."""
+
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 
@@ -7,7 +9,8 @@ from omnipy.shared.protocols.compute.mixins import IsUniquelyNamedJob
 
 @runtime_checkable
 class IsRunStateRegistry(Protocol):
-    """"""
+    """Protocol for registries that track job run states."""
+
     def __init__(self) -> None:
         ...
 

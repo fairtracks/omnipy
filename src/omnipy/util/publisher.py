@@ -1,3 +1,10 @@
+"""Observable Pydantic models for propagating attribute change notifications.
+
+This module provides publisher models that notify subscribers when their public
+attributes change, including nested publisher attributes used in runtime and
+configuration state.
+"""
+
 from collections import defaultdict
 from typing import Callable, DefaultDict
 
@@ -12,6 +19,12 @@ def _subscribers_factory():
 
 
 class DataPublisher(pyd.BaseModel):
+    """Pydantic model that publishes updates to subscribers.
+
+    Subscribers can watch a single public attribute or the whole model. Nested
+    ``DataPublisher`` attributes propagate their changes to parent subscribers.
+    """
+
     class Config:
         arbitrary_types_allowed = True
         validate_assignment = True
@@ -93,6 +106,12 @@ class DataPublisher(pyd.BaseModel):
 
 
 class RuntimeEntryPublisher(DataPublisher):
+    """Data publisher that resets runtime subscriptions on value replacement.
+
+    When a public attribute is rebound to a different object and a runtime
+    backend is attached, the runtime subscription graph is rebuilt.
+    """
+
     _back: IsRuntime | None = pyd.PrivateAttr(default=None)
 
     def __setattr__(self, attr_name: str, value: object) -> None:

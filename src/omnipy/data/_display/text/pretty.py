@@ -1,3 +1,5 @@
+"""Draft-to-text formatting pipeline for non-layout display content."""
+
 from typing import cast
 
 from cachebox import cached, FIFOCache
@@ -13,6 +15,7 @@ from omnipy.data._display.text.pretty_printer.base import (PrettyPrinter,
 
 def pretty_repr_of_draft_output(
         in_draft_panel: DraftPanel[object, FrameT]) -> ReflowedTextDraftPanel[FrameT]:
+    """Format one draft panel into reflowed text using the selected printer."""
 
     pretty_printer = PrettyPrinter.get_pretty_printer_for_draft_panel(in_draft_panel)
     orig_draft_content_id = id(in_draft_panel.content)

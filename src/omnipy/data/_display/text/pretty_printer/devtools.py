@@ -1,3 +1,5 @@
+"""Devtools-based pretty printer with width and constraint tightening."""
+
 import operator
 import re
 from typing import Callable, ClassVar
@@ -23,6 +25,8 @@ class DevtoolsPrettyPrinter(
         ConstraintTighteningPrettyPrinter[object],
         WidthReducingPrettyPrinter[object],
 ):
+    """Format generic Python objects with the ``devtools`` pretty formatter."""
+
     CONSTRAINT_STAT_NAME: ClassVar[str] = 'max_inline_container_width_incl'
     CONSTRAINT_TIGHTEN_FUNC: Callable[[int], int] = lambda x: max(x - 1, 0)
     CONSTRAINT_TIGHTENED_OPERATOR: Callable[[int, int], bool] = operator.lt

@@ -1,3 +1,5 @@
+"""Serializer abstractions and registry helpers for Omnipy datasets."""
+
 from abc import ABC, abstractmethod
 from io import BytesIO
 import os
@@ -16,39 +18,61 @@ _DatasetT = TypeVar('_DatasetT', bound=IsDataset)
 
 
 class Serializer(ABC, Generic[_DatasetT]):
-    """"""
+    """Abstract base class for dataset serializers used by Omnipy import/export flows."""
+
     @classmethod
     @abstractmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
+        """Return whether ``dataset`` can be reconstructed directly by this serializer."""
+
         pass
 
     @classmethod
     @abstractmethod
     def get_dataset_cls_for_new(cls) -> type[IsDataset]:
+        """Return the dataset class created when deserializing with this serializer."""
+
         pass
 
     @classmethod
     @abstractmethod
     def get_output_file_suffix(cls) -> str:
+        """Return the filename suffix Omnipy associates with this serializer's output."""
+
         pass
 
     @classmethod
     @abstractmethod
     def serialize(cls, dataset: _DatasetT) -> bytes | memoryview:
+        """Serialize ``dataset`` into bytes suitable for persistence or transport."""
+
         pass
 
     @classmethod
     @abstractmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> _DatasetT:
+        """Deserialize ``serialized`` bytes into a dataset instance."""
+
         pass
 
 
 class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
-    """"""
+    """Serializer base class for datasets stored as gzipped tar archives of item files."""
+
     @classmethod
     def create_tarfile_from_dataset(cls,
                                     dataset: _DatasetT,
                                     data_encode_func: Callable[..., bytes | memoryview]) -> bytes:
+        """Build a gzipped tar archive by serializing each dataset item into one member file.
+
+        Args:
+            dataset: Dataset whose items should be written into the archive.
+            data_encode_func: Function converting each dataset item into raw bytes.
+
+        Returns:
+            The complete gzipped tar archive as bytes.
+        """
+
         bytes_io = BytesIO()
         with tarfile.open(fileobj=bytes_io, mode='w:gz') as tarfile_stream:
             for data_file, data in dataset.items():  # type: ignore[attr-defined]
@@ -67,6 +91,17 @@ class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
                                     dictify_object_func: Callable[[str, Any], dict | str],
                                     import_method: str = 'from_data',
                                     any_file_suffix: bool = False) -> None:
+        """Populate ``dataset`` from a gzipped tar archive.
+
+        Args:
+            dataset: Dataset instance to populate.
+            tarfile_bytes: Serialized gzipped tar archive.
+            data_decode_func: Function decoding a single extracted file object.
+            dictify_object_func: Function mapping filename and decoded payload to import data.
+            import_method: Dataset import method to call for each decoded item.
+            any_file_suffix: Whether to skip file-suffix validation inside the archive.
+        """
+
         with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
             for filename in tarfile_stream.getnames():
                 data_file = tarfile_stream.extractfile(filename)
@@ -79,25 +114,37 @@ class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
 
 
 class SerializerRegistry:
+    """Registry and auto-detection helper for the serializers available to Omnipy."""
+
     def __init__(self) -> None:
         self._serializer_classes: list[Type[IsSerializer]] = []
 
     def register(self, serializer_cls: Type[IsSerializer]) -> None:
+        """Register a serializer class for later lookup and auto-detection."""
+
         self._serializer_classes.append(serializer_cls)
 
     @property
     def serializers(self) -> tuple[Type[IsSerializer], ...]:
+        """Return all registered serializer classes in registration order."""
+
         return tuple(self._serializer_classes)
 
     @property
     def tar_file_serializers(self) -> tuple[Type[IsTarFileSerializer], ...]:
+        """Return registered serializers that operate on gzipped tar archives."""
+
         return tuple(cls for cls in self._serializer_classes if issubclass(cls, TarFileSerializer))
 
     def auto_detect(self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
+        """Try all registered serializers and return the first compatible dataset/serializer pair."""
+
         return self._autodetect_serializer(dataset, self.serializers)
 
     def auto_detect_tar_file_serializer(
             self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
+        """Try only tar-file serializers and return the first compatible pair."""
+
         return self._autodetect_serializer(dataset, self.tar_file_serializers)
 
     @classmethod
@@ -170,6 +217,12 @@ class SerializerRegistry:
 
     def detect_tar_file_serializers_from_dataset_cls(
             self, dataset: IsDataset) -> tuple[Type[IsTarFileSerializer], ...]:
+        """Return tar-file serializers that can load data into ``dataset``.
+
+        If no direct match exists, serializers using the generic ``bytes`` suffix are returned as a
+        fallback.
+        """
+
         serializers = tuple(
             serializer_cls for serializer_cls in self.tar_file_serializers
             if serializer_cls.is_dataset_directly_supported(dataset))
@@ -180,6 +233,8 @@ class SerializerRegistry:
 
     def detect_tar_file_serializers_from_file_suffix(
             self, file_suffix: str) -> tuple[Type[IsTarFileSerializer], ...]:
+        """Return tar-file serializers whose output suffix matches ``file_suffix``."""
+
         return tuple(serializer_cls for serializer_cls in self.tar_file_serializers
                      if serializer_cls.get_output_file_suffix() == file_suffix)
 
@@ -189,6 +244,18 @@ class SerializerRegistry:
         tar_file_path: str,
         to_dataset: IsDataset,
     ) -> IsDataset | None:
+        """Load a tar archive by detecting its serializer from member file suffixes.
+
+        Args:
+            log_obj: Logger-like object used for status and failure messages.
+            tar_file_path: Path to the gzipped tar archive.
+            to_dataset: Preferred destination dataset instance.
+
+        Returns:
+            The populated destination dataset, an auto-created dataset if conversion fails, or
+            ``None`` when no unique serializer can be determined.
+        """
+
         log: Callable
         if hasattr(log_obj, 'log'):
             log = log_obj.log
@@ -236,6 +303,18 @@ class SerializerRegistry:
         to_dataset: IsDataset,
         any_file_suffix: bool = False,
     ) -> IsDataset | None:
+        """Load a tar archive by trying serializers compatible with ``to_dataset``.
+
+        Args:
+            log_obj: Logger-like object used for status and failure messages.
+            tar_file_path: Path to the gzipped tar archive.
+            to_dataset: Dataset instance whose type guides serializer selection.
+            any_file_suffix: Whether deserializers may ignore file-suffix checks.
+
+        Returns:
+            The first dataset produced by a compatible serializer, or ``None`` if none match.
+        """
+
         log: Callable
         if hasattr(log_obj, 'log'):
             log = log_obj.log

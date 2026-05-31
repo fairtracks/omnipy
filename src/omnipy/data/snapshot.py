@@ -1,3 +1,5 @@
+"""Snapshot helpers that support change detection for Omnipy data objects."""
+
 from copy import copy, deepcopy
 from dataclasses import dataclass
 import gc
@@ -14,13 +16,24 @@ from omnipy.util.weak import WeakKeyRefContainer
 
 @dataclass
 class SnapshotWrapper(Generic[ObjContraT, ContentT]):
+    """Store a snapshot together with the identity of the source object.
+
+    Attributes:
+        id: ``id()`` of the object the snapshot was taken from.
+        snapshot: Copied content captured from that object.
+    """
+
     id: int
     snapshot: ContentT
 
     def taken_of_same_obj(self, obj: ObjContraT) -> bool:
+        """Return whether this snapshot was taken from ``obj`` itself."""
+
         return self.id == id(obj)
 
     def differs_from(self, obj: ObjContraT) -> bool:
+        """Return whether ``obj`` currently differs from the stored snapshot."""
+
         return not all_equals(self.snapshot, obj)
 
 
@@ -30,6 +43,12 @@ obj_setattr = object.__setattr__
 
 class SnapshotHolder(WeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasContentT, ContentT]],
                      Generic[HasContentT, ContentT]):
+    """Manage weakly referenced content snapshots for Omnipy models and datasets.
+
+    The holder keeps snapshot copies alongside memoized deepcopy state so Omnipy can compare
+    current content against prior state without permanently retaining deleted objects.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self._deepcopy_memo = RefCountMemoDict[ContentT]()
@@ -40,11 +59,22 @@ class SnapshotHolder(WeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasConte
         raise TypeError(f"'{self.__class__.__name__}' object does not support item assignment")
 
     def clear(self) -> None:
+        """Remove all stored snapshots and deepcopy bookkeeping state."""
+
         self._deepcopy_content_ids_for_deleted_objs.clear()
         self._deepcopy_memo.clear()
         super().clear()
 
     def all_are_empty(self, debug: bool = False) -> bool:
+        """Return whether both snapshot storage and deepcopy bookkeeping are empty.
+
+        Args:
+            debug: Whether to print detailed internal state before returning.
+
+        Returns:
+            ``True`` when no snapshots or pending deepcopy references remain.
+        """
+
         _deepcopy_memo_all_are_empty = self._deepcopy_memo.all_are_empty(debug=debug)
 
         _all_are_empty = (
@@ -70,20 +100,30 @@ class SnapshotHolder(WeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasConte
         return _all_are_empty
 
     def in_deepcopy_content_ids(self, key: int) -> bool:
+        """Return whether ``key`` is tracked in the deepcopy memo."""
+
         return self._deepcopy_memo.in_deepcopy_object_ids(key)
 
     def get_deepcopy_content_ids(self) -> SetDeque[int]:
+        """Return the content ids currently retained by the deepcopy memo."""
+
         return self._deepcopy_memo.get_deepcopy_object_ids()
 
     def get_deepcopy_content_ids_scheduled_for_deletion(self) -> SetDeque[int]:
+        """Return the queued content ids that should be pruned from the deepcopy memo."""
+
         return self._deepcopy_content_ids_for_deleted_objs
 
     def schedule_deepcopy_content_ids_for_deletion(self, *keys: int) -> None:
+        """Queue deepcopy-tracked content ids for deferred deletion when they are still known."""
+
         for key in keys:
             if self.in_deepcopy_content_ids(key):
                 self._deepcopy_content_ids_for_deleted_objs.append(key)
 
     def delete_scheduled_deepcopy_content_ids(self) -> None:
+        """Remove any queued content ids from the deepcopy memo."""
+
         keys_for_deleted_objs = self._deepcopy_content_ids_for_deleted_objs
         if len(keys_for_deleted_objs) > 0:
             # self._deepcopy_content_ids_for_deleted_objs = SetDeque()
@@ -91,13 +131,27 @@ class SnapshotHolder(WeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasConte
             deepcopy_memo.recursively_remove_deleted_objs(keys_for_deleted_objs)
 
     def take_snapshot_setup(self) -> None:
+        """Disable garbage collection before a snapshot run begins."""
+
         gc.disable()
 
     def take_snapshot_teardown(self) -> None:
+        """Prune stale deepcopy state and re-enable garbage collection after snapshotting."""
+
         self.delete_scheduled_deepcopy_content_ids()
         gc.enable()
 
     def take_snapshot(self, obj: HasContentT) -> None:
+        """Capture and store a snapshot of ``obj.content``.
+
+        The method first tries a memo-aware ``deepcopy`` so repeated snapshots can reuse preserved
+        object fragments efficiently. If that fails, it falls back to plain ``deepcopy`` and then
+        ``copy``.
+
+        Args:
+            obj: Object whose ``content`` attribute should be snapshotted.
+        """
+
         try:
             # Delete scheduled content in the deepcopy memo if the new object is reusing an old id.
             # This deletion might not succeed, e.g. if the current snapshot holds a reference to the

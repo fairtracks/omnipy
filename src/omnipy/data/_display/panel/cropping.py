@@ -1,3 +1,5 @@
+"""Cropping helpers for vertically and horizontally constrained panel output."""
+
 import rich.console
 
 from omnipy.data._display.config import OutputConfig
@@ -13,6 +15,8 @@ import omnipy.util.pydantic as pyd
 def rich_overflow_method(
     horizontal_overflow_mode: HorizontalOverflowMode.Literals
 ) -> rich.console.OverflowMethod | None:
+    """Translate Omnipy overflow settings to Rich overflow methods."""
+
     match horizontal_overflow_mode:
         case HorizontalOverflowMode.ELLIPSIS:
             return 'ellipsis'
@@ -89,6 +93,8 @@ def replace_ellipsis_lines_with_ellipses(
     cropped_lines: list[str],
     ellipsis_line_indices: set[int],
 ) -> list[str]:
+    """Replace marked cropped lines with a single ellipsis character."""
+
     for line_idx in ellipsis_line_indices:
         stripped_line, newline = strip_and_split_newline(cropped_lines[line_idx])
         if len(stripped_line) > 0:
@@ -147,6 +153,8 @@ def crop_content_line_horizontally(
     frame_width: pyd.NonNegativeInt | None,
     horizontal_overflow_mode: HorizontalOverflowMode.Literals,
 ) -> str:
+    """Crop one content line horizontally according to overflow policy."""
+
     if frame_width is None or len(content_line) <= frame_width:
         return content_line
 
@@ -170,6 +178,8 @@ def crop_content_with_extra_wide_chars(
     config: OutputConfig,
     char_width_map: UnicodeCharWidthMap,
 ) -> list[str]:
+    """Crop text using rendered character widths rather than raw code-point counts."""
+
     if has_width(frame.dims) \
             and frame.fixed_width is False \
             and frame.dims.width > 0:

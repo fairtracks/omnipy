@@ -1,3 +1,12 @@
+"""Decorator helpers for callbacks, properties, and dual-bound methods.
+
+This module provides lightweight decorator-building utilities used across Omnipy.
+The helpers cover common patterns such as fallback callbacks on exceptions,
+post-call result transformation, applying decorators to properties, optionally
+delegating through ``super()``, and exposing one implementation as both a class
+method and an instance method.
+"""
+
 from contextlib import AbstractContextManager
 from typing import Any, Callable, Concatenate, ContextManager, Generic, ParamSpec, TypeVar
 
@@ -9,6 +18,7 @@ _ArgT = TypeVar('_ArgT')
 _SelfOrClsT = TypeVar('_SelfOrClsT')
 T = TypeVar('T')
 
+#: Sentinel used when no extra context manager should wrap a decorated call.
 no_context = None
 
 
@@ -17,6 +27,16 @@ def add_callback_if_exception(
     callback_func: Callable[_DecoratedP, _DecoratedR],
     exception_types: tuple[type[Exception], ...] = (Exception,),
 ) -> Callable[_DecoratedP, _DecoratedR]:
+    """Return a wrapper that falls back to ``callback_func`` on selected exceptions.
+
+    Args:
+        decorated_func: Primary callable.
+        callback_func: Fallback callable invoked with the same arguments.
+        exception_types: Exception types that trigger the fallback.
+
+    Returns:
+        A wrapped callable with exception-triggered fallback behavior.
+    """
     def _inner(*args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs) -> _DecoratedR:
         try:
             return decorated_func(*args, **kwargs)
@@ -32,6 +52,19 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
                             with_context: ContextManager[None] | None,
                             *cb_args: _CallbackP.args,
                             **cb_kwargs: _CallbackP.kwargs) -> Callable[_DecoratedP, _DecoratedR]:
+    """Return a wrapper that post-processes a successful result.
+
+    Args:
+        decorated_func: Callable producing the initial result.
+        callback_func: Callable receiving the result plus callback arguments.
+        with_context: Optional context manager wrapped around the full call.
+        *cb_args: Extra positional callback arguments.
+        **cb_kwargs: Extra keyword callback arguments.
+
+    Returns:
+        A wrapped callable that runs ``callback_func`` only when the decorated
+        call succeeds without raising an exception.
+    """
     class CallbackAfterCall(AbstractContextManager):
         def __init__(self, dec_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
             self._decorated_func = dec_func
@@ -66,6 +99,15 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
 
 
 def apply_decorator_to_property(prop: property, decorator: Callable[[Callable], Any]) -> property:
+    """Apply the same decorator to all available accessors of a property.
+
+    Args:
+        prop: Property whose getter, setter, and deleter should be decorated.
+        decorator: Decorator applied to each existing accessor.
+
+    Returns:
+        A new property with decorated accessors and the original docstring.
+    """
     return property(
         fget=decorator(prop.fget) if prop.fget is not None else None,
         fset=decorator(prop.fset) if prop.fset is not None else None,
@@ -74,6 +116,20 @@ def apply_decorator_to_property(prop: property, decorator: Callable[[Callable], 
 
 
 def call_super_if_available(call_super_before_method: bool):
+    """Create a descriptor that composes a method with its ``super()`` version.
+
+    Args:
+        call_super_before_method: When ``True``, pass the result of ``super()`` to
+            the decorated method. When ``False``, feed the decorated result into
+            ``super()`` instead.
+
+    Returns:
+        A descriptor class wrapping a single-argument instance or class method.
+
+    Notes:
+        If the parent class has no same-named callable, the original method is
+        executed directly.
+    """
     class SuperCaller(Generic[_SelfOrClsT, _ArgT]):
         def __init__(self, method: Callable[[_SelfOrClsT, _ArgT], _ArgT]):
             self._method = method

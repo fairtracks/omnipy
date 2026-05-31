@@ -1,3 +1,5 @@
+"""Configuration for Omnipy root logger outputs and formatting."""
+
 from io import TextIOBase
 import locale as pkg_locale
 import logging
@@ -15,6 +17,8 @@ def _get_log_path() -> str:
 
 
 class RootLogConfig(ConfigBase):
+    """Root logging configuration for console and file handlers."""
+
     log_format_str: str = '[{engine}] {asctime} - {levelname}: {message} ({name})'
     locale: LocaleType = pkg_locale.getlocale()
     log_to_stdout: bool = True

@@ -1,3 +1,11 @@
+"""Task-list job bases used by linear and DAG flow templates.
+
+This module extends the callable-based job hierarchy with an immutable tuple of
+task-template dependencies. Concrete flow template classes compose this base with
+`JobTemplateMixin`, which lets flow templates preserve both the callable entrypoint
+and the ordered task list across refine/apply/revise operations.
+"""
+
 from typing import Callable, Generic, ParamSpec
 
 from typing_extensions import TypeVar

@@ -1,3 +1,5 @@
+"""Shared constants used across Omnipy data and display code."""
+
 import omnipy.util.pydantic as pyd
 
 # Data - General

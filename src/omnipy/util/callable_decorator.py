@@ -1,3 +1,11 @@
+"""Support class-based decorators that behave like function decorators.
+
+This module exposes a meta-decorator for turning ordinary classes into decorator
+factories for callables. It preserves wrapped-function metadata, supports both
+``@decorator`` and ``@decorator(...)`` syntax, and bridges the gap between Python's
+class-level special-method lookup and instance-level decoration state.
+"""
+
 from functools import update_wrapper
 from types import MethodWrapperType
 from typing import Callable, cast, Concatenate, ParamSpec, TypeVar

@@ -1,3 +1,10 @@
+"""Root logger object graph used by Omnipy hub logging.
+
+This module builds and refreshes the formatter and handlers attached to the Python
+root logger. `RootLogObjects` centralizes configuration-driven setup so runtime code
+can swap logging destinations or thresholds by replacing a single config object.
+"""
+
 import logging
 from logging import StreamHandler
 from logging.handlers import RotatingFileHandler
@@ -13,6 +20,8 @@ import omnipy.util.pydantic as pyd
 
 
 class RootLogObjects(DataPublisher):
+    """Own the formatter and handlers attached to the process root logger."""
+
     _config: IsRootLogConfig = pyd.PrivateAttr(default_factory=RootLogConfig)
 
     formatter: logging.Formatter | None = None
@@ -25,11 +34,13 @@ class RootLogObjects(DataPublisher):
         self._configure_all_objects()
 
     def set_config(self, config: IsRootLogConfig):
+        """Replace the root logging configuration and rebuild all logging objects."""
         self._config = config
         self._configure_all_objects()
 
     @property
     def config(self) -> IsRootLogConfig:
+        """Return the configuration currently driving root logger setup."""
         return self._config
 
     def _configure_all_objects(self):

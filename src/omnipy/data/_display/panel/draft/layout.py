@@ -1,3 +1,5 @@
+"""Draft panel representing a layout after reflow has chosen panel sizes."""
+
 from functools import cached_property
 from typing import cast, Generic
 

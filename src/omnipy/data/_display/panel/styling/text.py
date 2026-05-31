@@ -1,3 +1,5 @@
+"""Text-panel styling that applies syntax highlighting and export modes."""
+
 from functools import cached_property, lru_cache
 from typing import Generic
 
@@ -28,6 +30,8 @@ class SyntaxStylizedTextPanel(
         StylizedMonospacedPanel[ReflowedTextDraftPanel, str, FrameT],
         Generic[FrameT],
 ):
+    """Styled text panel that renders reflowed text with Rich syntax themes."""
+
     @staticmethod
     @lru_cache(maxsize=1024)
     def _get_stylized_content_common(

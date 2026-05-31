@@ -1,3 +1,5 @@
+"""Type-checker detection helpers shared across Omnipy typing code."""
+
 from typing import Literal, TYPE_CHECKING
 
 # These constants should be overridden through mypy and pyright configs,

@@ -1,3 +1,19 @@
+"""Provide Rich-based display helpers for Omnipy models and datasets.
+
+This module centralizes the terminal, browser, and Jupyter rendering pipeline
+used by :class:`Model` and :class:`Dataset` objects. The public display methods
+live on mixins so data objects can share one configurable subsystem for:
+
+- resolving the active user interface,
+- building panel/layout trees from model and dataset content,
+- rendering those trees to terminal text or HTML, and
+- opening browser-backed views when richer inspection is needed.
+
+Most public entry points are defined on :class:`BaseDisplayMixin`, while
+``ModelDisplayMixin`` and ``DatasetDisplayMixin`` supply model-specific and
+dataset-specific panel construction.
+"""
+
 from abc import ABCMeta, abstractmethod
 import dataclasses
 import functools
@@ -476,6 +492,14 @@ class IsDatasetDisplayMixin(IsBaseDisplayMixin, Protocol):
 
 
 class BaseDisplayMixin(metaclass=ABCMeta):
+    """Implement the shared display API for Omnipy data objects.
+
+    The mixin exposes the public rendering methods used by both models and
+    datasets and funnels them through a common configuration and UI-dispatch
+    pipeline. Subclasses only need to provide the object-specific panel
+    builders for preview, full-height, and browser rendering.
+    """
+
     @abstractmethod
     def _default_panel(self, **kwargs) -> DraftPanel:
         ...
@@ -484,6 +508,15 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self,
         ui_type: TerminalOutputUserInterfaceType.Literals,
     ) -> str:
+        """Render the default display panel as terminal text.
+
+        Args:
+            ui_type: Terminal-oriented user interface to render for.
+
+        Returns:
+            The fully rendered string representation for ``repr()``-style
+            terminal output.
+        """
         return self._display_according_to_ui_type(
             ui_type=ui_type,
             return_output_if_str=True,
@@ -893,6 +926,14 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         peek.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
     def _extract_ui_type(self, **kwargs) -> SpecifiedUserInterfaceType.Literals:
+        """Resolve the explicit or auto-detected UI type for a display call.
+
+        Args:
+            **kwargs: Display keyword arguments that may include ``ui``.
+
+        Returns:
+            The concrete user interface type to render for.
+        """
         ui_from_kwargs = kwargs.get('ui', UserInterfaceType.AUTO)
 
         if ui_from_kwargs is UserInterfaceType.AUTO:
@@ -904,18 +945,21 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     @classmethod
     def _prepare_kwargs_for_full(cls, kwargs):
+        """Normalize kwargs for ``full()`` rendering."""
         kwargs_copy = kwargs.copy()
         kwargs_copy['height'] = None
         return kwargs_copy
 
     @classmethod
     def _prepare_kwargs_for_json(cls, kwargs):
+        """Normalize kwargs for JSON-oriented rendering."""
         kwargs_copy = kwargs.copy()
         kwargs_copy['syntax'] = SyntaxLanguageSpec.JSON5
         return kwargs_copy
 
     @classmethod
     def _prepare_kwargs_for_docs(cls, kwargs):
+        """Normalize kwargs for documentation-friendly HTML output."""
         kwargs_copy = kwargs.copy()
         if 'style' not in kwargs_copy:
             kwargs_copy['style'] = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
@@ -2103,6 +2147,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ...
 
     def _get_self_as_json_model(self) -> 'Model':
+        """Convert the current object to a JSON-compatible model view."""
         from omnipy.components.json.models import JsonModel
         self_as_dataset_or_model = cast('Dataset | Model', self)
         return JsonModel(self_as_dataset_or_model.to_data())
@@ -2373,6 +2418,22 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> 'str | Element | None':
+        """Render a display panel for the requested user interface.
+
+        Args:
+            ui_type: Concrete UI type that determines the render target.
+            return_output_if_str: Whether plain terminal/HTML output should be
+                returned instead of emitted directly.
+            output_method: Panel-producing method for the requested display
+                variant.
+            *args: Positional arguments forwarded to ``output_method``.
+            **kwargs: Keyword arguments forwarded to ``output_method``.
+
+        Returns:
+            A rendered string for terminal or browser-page/tag output when
+            requested, a Jupyter element for browser-backed notebook output, or
+            ``None`` when the method writes directly to the active frontend.
+        """
         def _render_panel(
             ui_type: SpecifiedUserInterfaceType.Literals,
             *args: P.args,
@@ -2469,6 +2530,19 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         /,
         **kwargs: object,
     ) -> DraftPanel:
+        """Build a layout panel from nested model or dataset content.
+
+        Args:
+            nested_content: Mapping from panel titles to child models or
+                datasets.
+            title: Title for the outer container panel.
+            frame: Frame constraints inherited from a parent layout, if any.
+            level: Current nesting depth in the panel tree.
+            **kwargs: Display configuration overrides.
+
+        Returns:
+            A draft panel containing the nested layout.
+        """
         from omnipy.data.dataset import Dataset, is_dataset_instance
         from omnipy.data.model import is_model_instance
 
@@ -2548,6 +2622,20 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             dict[str, object],
             Frame,
     ]:
+        """Build the starting config, validated kwargs, and frame.
+
+        Args:
+            ui_type: Concrete UI type being rendered.
+            kwargs: Raw keyword arguments supplied to the display call.
+            use_min_crop_width: Whether multi-panel cropping limits should be
+                enabled.
+            frame: Optional incoming frame from a parent renderer.
+            level: Current panel nesting level.
+
+        Returns:
+            The resolved output config, sanitized config kwargs, and effective
+            frame for rendering.
+        """
         config = self._create_output_config_from_data_config(ui_type, use_min_crop_width)
 
         config_kwargs = self._validate_kwargs_for_config(**kwargs)
@@ -2569,6 +2657,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         /,
         **config_kwargs: object,
     ) -> tuple[OutputConfig, dict[str, object]]:
+        """Resolve AUTO config values and level-dependent display defaults.
+
+        Args:
+            config: Current output configuration.
+            ui_type: Concrete UI type being rendered.
+            level: Current panel nesting level.
+            **config_kwargs: User-provided config overrides tracked separately.
+
+        Returns:
+            The updated config and the corresponding tracked kwargs.
+        """
         if config.system is DisplayColorSystem.AUTO:
             config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
                 config,
@@ -2623,6 +2722,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         return config, config_kwargs
 
     def _calc_max_num_panels_in_frame(self, config: OutputConfig, frame: Frame) -> int | None:
+        """Estimate how many panels can fit side-by-side in a frame."""
         max_num_panels_in_frame: None | int = None
         if has_width(frame.dims):
             panel_design_dims = PanelDesignDims.create(config.panel)
@@ -2639,6 +2739,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         /,
         **kwargs: object,
     ) -> Frame:
+        """Apply width and height overrides from display kwargs to a frame."""
 
         self._check_kwarg_keys(**kwargs)
         frame_kwargs = {k: v for k, v in kwargs.items() if k in _DimsRestatedParams.__annotations__}
@@ -2651,6 +2752,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         self,
         **kwargs,
     ) -> dict[str, Any]:
+        """Validate and normalize kwargs that map to :class:`OutputConfig`."""
         self._check_kwarg_keys(**kwargs)
         config_kwargs = {k: v for k, v in kwargs.items() if k in OutputConfig.__annotations__}
 
@@ -2665,6 +2767,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config: OutputConfig,
         **config_kwargs,
     ) -> OutputConfig:
+        """Apply already validated config overrides to an output config."""
 
         if config_kwargs:
             config = dataclasses.replace(config, **config_kwargs)
@@ -2679,6 +2782,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config_kwargs: dict[str, object],
         **updated_kwargs: object,
     ) -> tuple[OutputConfig, dict[str, object]]:
+        """Keep config state and tracked initial overrides in sync."""
         assert all(key in self._INITIAL_CONFIG_KEYS for key in updated_kwargs.keys())
 
         config = dataclasses.replace(config, **updated_kwargs)
@@ -2693,6 +2797,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config_kwargs: dict[str, object],
         **updated_kwargs: object,
     ) -> OutputConfig:
+        """Update config defaults without overriding explicit user choices."""
 
         filtered_updated_kwargs = {}
 
@@ -2710,6 +2815,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         return config
 
     def _check_kwarg_keys(self, **kwargs):
+        """Reject keyword arguments outside the supported display config set."""
         supported_keys = (
             list(_DimsRestatedParams.__annotations__.keys())
             + list(OutputConfig.__annotations__.keys()))
@@ -2728,6 +2834,16 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         /,
         **kwargs,
     ) -> None:
+        """Open nested model or dataset views in browser-oriented frontends.
+
+        Args:
+            nested_content: Mapping from titles to child models or datasets.
+            initial_html_output: Optional accumulator reused across nested
+                dataset traversal.
+            nested_call: Whether this invocation is part of a recursive browse
+                operation.
+            **kwargs: Display configuration overrides.
+        """
         from omnipy.data.dataset import Dataset
 
         ui_type = self._extract_ui_type(**kwargs)
@@ -2765,6 +2881,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                         webbrowser.open(url, new=(i == 0))
 
     def _create_cached_html_file(self, filename: str, html_output: str) -> Path:
+        """Write rendered HTML to the configured UI cache directory."""
         self_as_dataclass = cast(DataClassBase, self)
 
         # TODO: Improve file caching mechanism, including style files
@@ -2851,6 +2968,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         panel_type: Literal['text', 'layout'],
         **config_kwargs: object,
     ) -> OutputConfig:
+        """Apply UI-specific overflow defaults for text or layout panels."""
         ui_config = cast(DataClassBase, self).config.ui
         overflow_config = getattr(ui_config, panel_type).overflow
 
@@ -2867,6 +2985,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ui_type: SpecifiedUserInterfaceType.Literals,
         use_min_crop_width: bool = False,
     ) -> OutputConfig:
+        """Create an :class:`OutputConfig` seeded from the object's UI config."""
         ui_config = cast(DataClassBase, self).config.ui
         ui_type_config = ui_config.get_ui_type_config(ui_type)
 
@@ -2907,6 +3026,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         panel_design: PanelDesign.Literals,
         color_style: AllColorStyles.Literals | str,
     ) -> PanelDesign.Literals:
+        """Expose the chosen style in the panel design for random styles."""
 
         if AllColorStyles.is_random_choice_value(color_style):
             if panel_design is PanelDesign.TABLE:
@@ -2919,6 +3039,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ui_type: SpecifiedUserInterfaceType.Literals,
         ui_type_config: IsUserInterfaceTypeConfig,
     ) -> DisplayColorSystem.Literals:
+        """Determine the color system to use for a specific UI type."""
 
         color_system: DisplayColorSystem.Literals
 
@@ -2932,6 +3053,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     def _define_frame_from_available_display_dims(
             self, ui_type: SpecifiedUserInterfaceType.Literals) -> Frame:
+        """Create the default frame from configured display dimensions."""
         ui_config = cast(DataClassBase, self).config.ui
         ui_type_config: IsUserInterfaceTypeConfig = ui_config.get_ui_type_config(ui_type)
 
@@ -2972,6 +3094,20 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
 
 def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
+    """Delegate model display helpers to nested datasets when appropriate.
+
+    Some model instances wrap dataset content. This decorator preserves the
+    model-level display API while forwarding rendering to the wrapped dataset's
+    implementation when that produces the correct view.
+
+    Args:
+        model_method: Model-specific helper method to decorate.
+
+    Returns:
+        A wrapper that dispatches to the wrapped dataset method when the model
+        content is itself a dataset.
+    """
+
     def wrapper(self, **kwargs) -> _RetT:
         from omnipy.data.dataset import is_dataset_instance
 
@@ -2987,6 +3123,14 @@ def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
 
 
 class ModelDisplayMixin(BaseDisplayMixin):
+    """Implement display behavior specific to individual models.
+
+    The inherited public display methods ultimately resolve to model-centric
+    panels from this mixin. When a model wraps dataset content, selected helpers
+    transparently delegate to ``DatasetDisplayMixin`` so the richer dataset view
+    is shown instead of a plain model preview.
+    """
+
     @_call_dataset_method_if_applicable
     def _default_panel(self, **kwargs) -> DraftPanel:
         return self._peek(**kwargs)
@@ -3006,6 +3150,7 @@ class ModelDisplayMixin(BaseDisplayMixin):
         self._browse_nested_content({self_as_model.__class__.__name__: self_as_model}, **kwargs)
 
     def _browse_model(self, **kwargs) -> DraftPanel:
+        """Create the browser-oriented inner panel for a single model."""
         self_as_model = cast('Model', self)
         ui_type = UserInterfaceType.BROWSER_PAGE
 
@@ -3021,6 +3166,13 @@ class ModelDisplayMixin(BaseDisplayMixin):
 
 
 class DatasetDisplayMixin(BaseDisplayMixin):
+    """Implement display behavior specific to datasets.
+
+    Datasets use the shared display pipeline from :class:`BaseDisplayMixin` but
+    provide dataset-oriented panels such as side-by-side previews, summary lists,
+    and recursive browser output for each contained model.
+    """
+
     def _default_panel(self, **kwargs) -> DraftPanel:
         return self._list(**kwargs)
 
@@ -3033,6 +3185,17 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                              level: int = 0,
                              /,
                              **kwargs: object) -> DraftPanel:
+        """Create the nested preview layout for models contained in a dataset.
+
+        Args:
+            title: Outer panel title.
+            frame: Optional frame constraints inherited from a parent layout.
+            level: Current nesting level.
+            **kwargs: Display configuration overrides.
+
+        Returns:
+            A draft panel containing one child panel per dataset item.
+        """
         from omnipy.data.dataset import Dataset
         from omnipy.data.model import Model
 
@@ -3457,6 +3620,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         list.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
     def _list(self, **kwargs) -> DraftPanel:
+        """Build the tabular summary view used by ``Dataset.list()``."""
         from omnipy.data.dataset import Dataset
         from omnipy.data.model import Model
 
@@ -3513,6 +3677,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         frame: Frame,
         config: OutputConfig,
     ) -> int:
+        """Calculate the width needed for dataset list row indices."""
         panels_design_dims = PanelDesignDims.create(config.panel)
 
         if has_height(frame.dims):
@@ -3532,6 +3697,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         self._browse_dataset(**kwargs)
 
     def _browse_dataset(self, html_output: dict[str, str] | None = None, **kwargs) -> None:
+        """Render and open the dataset overview plus per-model browser pages."""
         from omnipy.data.dataset import Dataset
         from omnipy.data.model import Model
 
@@ -3565,6 +3731,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
     @classmethod
     def _type_str(cls, obj: Any) -> str:
+        """Return a human-readable type label for dataset list output."""
         if isinstance(obj, PendingData):
             return f'{obj.job_name} -> Data pending...'
         elif isinstance(obj, FailedData):
@@ -3574,6 +3741,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
     @classmethod
     def _len_if_available(cls, obj: Any) -> int | str:
+        """Return ``len(obj)`` when available, otherwise ``'-'``."""
         try:
             return len(obj)
         except TypeError:
@@ -3581,6 +3749,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
     @classmethod
     def _obj_size_if_available(cls, obj: Any) -> str:
+        """Return the deep size of an object when it can be computed."""
         if isinstance(obj, PendingData):
             return '-'
         else:
@@ -3592,6 +3761,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
     @staticmethod
     def _obj_size(obj: Any) -> str:
+        """Return a human-readable deep size estimate for an object."""
         import humanize
         import objsize
 

@@ -1,3 +1,5 @@
+"""Constraint values and satisfaction summaries for pretty-print output."""
+
 import omnipy.util.pydantic as pyd
 
 
@@ -25,6 +27,8 @@ class Constraints:
 
 
 class ConstraintsSatisfaction:
+    """Reports whether measured output satisfied configured formatting constraints."""
+
     def __init__(self,
                  constraints: Constraints,
                  *,

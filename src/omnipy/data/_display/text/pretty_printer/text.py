@@ -1,3 +1,5 @@
+"""Pretty printers for plain text and code-highlighted string content."""
+
 from typing_extensions import override
 
 from omnipy.components.raw.models import StrModel
@@ -11,6 +13,8 @@ from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 
 class PlainTextPrettyPrinter(PrettyPrinter[str]):
+    """Format string content as plain text without code-style defaults."""
+
     @override
     @classmethod
     def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
@@ -67,6 +71,8 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
 
 
 class CodePrettyPrinter(PlainTextPrettyPrinter):
+    """Format generic string content as code-highlighted text."""
+
     @override
     @classmethod
     def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:

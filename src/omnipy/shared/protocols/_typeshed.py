@@ -13,6 +13,17 @@
 #
 # See "_typeshed/__init__.pyi" for more details.
 
+"""Selected local copies of reusable typeshed protocols and aliases.
+
+Type Aliases:
+    SupportsRichComparison: Union of ``__lt__`` and ``__gt__`` comparison support.
+    ReadOnlyBuffer: Read-only buffer protocol alias.
+    WriteableBuffer: Writable buffer protocol alias.
+    ReadableBuffer: Buffer protocol alias accepted by readers.
+    ConvertibleToInt: Values accepted by integer conversion helpers.
+    ConvertibleToFloat: Values accepted by float conversion helpers.
+"""
+
 from collections.abc import Iterable
 import sys
 from typing import Any, Protocol, SupportsFloat, SupportsIndex, SupportsInt
@@ -86,17 +97,23 @@ _T_contra = TypeVar('_T_contra', contravariant=True)
 
 
 class SupportsBool(Protocol):
+    """Protocol for values that implement truth testing."""
+
     def __bool__(self) -> bool:
         ...
 
 
 # Comparison protocols
 class SupportsDunderLT(Protocol[_T_contra]):
+    """Protocol for values that implement ``__lt__`` comparisons."""
+
     def __lt__(self, other: _T_contra, /) -> SupportsBool:
         ...
 
 
 class SupportsDunderGT(Protocol[_T_contra]):
+    """Protocol for values that implement ``__gt__`` comparisons."""
+
     def __gt__(self, other: _T_contra, /) -> SupportsBool:
         ...
 
@@ -202,6 +219,8 @@ SupportsRichComparisonT = TypeVar(
 
 
 class SupportsTrunc(Protocol):
+    """Protocol for values that implement ``__trunc__``."""
+
     def __trunc__(self) -> int:
         ...
 
@@ -216,6 +235,8 @@ class SupportsTrunc(Protocol):
 
 # stable
 class SupportsKeysAndGetItem(Protocol[_KT, _VT_co]):
+    """Protocol for mapping-like objects exposing ``keys`` and ``__getitem__``."""
+
     def keys(self) -> Iterable[_KT]:
         ...
 
@@ -401,6 +422,8 @@ class SupportsGetItem(Protocol[_KT_contra, _VT_co]):
 
 # @runtime_checkable
 class Buffer(Protocol):
+    """Protocol for objects that expose the PEP 688 buffer interface."""
+
     __slots__ = ()
 
     def __buffer__(self, flags: int, /) -> memoryview:

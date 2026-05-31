@@ -1,3 +1,5 @@
+"""macOS browser integration helpers for opening rendered HTML output."""
+
 import os
 from textwrap import dedent
 from typing import Iterable
@@ -8,6 +10,8 @@ import webbrowser
 
 
 class OmnipyMacOSXOSAScript(webbrowser.BaseBrowser):
+    """Browser controller that opens URLs via AppleScript on macOS."""
+
     def __init__(self, name='default'):
         super().__init__(name)
 
@@ -181,6 +185,8 @@ class OmnipyMacOSXOSAScript(webbrowser.BaseBrowser):
 
 
 def setup_macosx_browser_integration():
+    """Register Omnipy's macOS browser launchers with ``webbrowser``."""
+
     webbrowser._tryorder = []  # pyright: ignore [reportAttributeAccessIssue]
     webbrowser.register('MacOSX', None, OmnipyMacOSXOSAScript('default'), preferred=True)
     webbrowser.register('safari', None, OmnipyMacOSXOSAScript('safari'))

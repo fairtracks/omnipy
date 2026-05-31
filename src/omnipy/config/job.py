@@ -1,3 +1,5 @@
+"""Configuration models for persisted task and flow outputs."""
+
 import os
 from pathlib import Path
 
@@ -16,10 +18,14 @@ def _get_persist_data_dir_path() -> str:
 
 
 class LocalOutputStorageConfig(ConfigBase):
+    """Filesystem-backed output storage settings."""
+
     persist_data_dir_path: str = pyd.Field(default_factory=_get_persist_data_dir_path)
 
 
 class S3OutputStorageConfig(ConfigBase):
+    """S3-compatible output storage settings."""
+
     persist_data_dir_path: str = os.path.join('omnipy', 'outputs')
     endpoint_url: str = ''
     bucket_name: str = ''
@@ -28,6 +34,8 @@ class S3OutputStorageConfig(ConfigBase):
 
 
 class OutputStorageConfig(ConfigBase):
+    """Policy and backend settings for persisted outputs."""
+
     persist_outputs: ConfigPersistOutputsOptions.Literals = \
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     restore_outputs: ConfigRestoreOutputsOptions.Literals = \
@@ -38,4 +46,6 @@ class OutputStorageConfig(ConfigBase):
 
 
 class JobConfig(ConfigBase):
+    """Top-level job execution configuration."""
+
     output_storage: IsOutputStorageConfig = pyd.Field(default_factory=OutputStorageConfig)

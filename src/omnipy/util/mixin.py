@@ -1,3 +1,10 @@
+"""Dynamic mixin composition utilities for runtime-generated subclasses.
+
+This module lets selected classes accept mixins after definition time. It keeps
+constructor signatures in sync with accepted mixins and creates runtime
+subclasses that combine the original class with the requested mixin bases.
+"""
+
 from collections import defaultdict
 import inspect
 import types
@@ -11,6 +18,15 @@ WITH_MIXINS_CLS_SUFFIX = 'WithMixins'
 
 
 def strip_mixins_suffix(cls_name: str) -> str:
+    """Remove the generated mixin subclass suffix from a class name.
+
+    Args:
+        cls_name: Class name to normalize.
+
+    Returns:
+        The original class name when the generated suffix is present, otherwise
+        ``cls_name`` unchanged.
+    """
     if cls_name.endswith(WITH_MIXINS_CLS_SUFFIX):
         return cls_name[:-len(WITH_MIXINS_CLS_SUFFIX)]
 
@@ -18,6 +34,13 @@ def strip_mixins_suffix(cls_name: str) -> str:
 
 
 class DynamicMixinAcceptor:
+    """Base class for classes that accept mixins dynamically.
+
+    Subclasses register mixin classes through :meth:`accept_mixin`, after which
+    instance creation returns a generated subclass inheriting from both the
+    original class and its accepted mixins.
+    """
+
     # Declarations needed by mypy
     _orig_class: Type
     _orig_init_signature: inspect.Signature

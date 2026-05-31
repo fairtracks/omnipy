@@ -1,3 +1,5 @@
+"""Protocols for runtime configuration, objects, and root logging."""
+
 import logging
 from logging.handlers import RotatingFileHandler
 from typing import Protocol, runtime_checkable
@@ -17,7 +19,8 @@ from omnipy.shared.protocols.util import IsDataPublisher
 
 @runtime_checkable
 class IsRootLogObjects(Protocol):
-    """"""
+    """Protocol for root logger helper objects."""
+
     formatter: logging.Formatter | None = None
     stdout_handler: logging.StreamHandler | None = None
     stderr_handler: logging.StreamHandler | None = None
@@ -33,7 +36,8 @@ class IsRootLogObjects(Protocol):
 
 @runtime_checkable
 class IsRuntimeConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for the aggregated runtime configuration."""
+
     data: IsDataConfig
     engine: IsEngineConfig
     job: IsJobConfig
@@ -45,7 +49,7 @@ class IsRuntimeConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsRuntimeObjects(IsDataPublisher, Protocol):
-    """"""
+    """Protocol for the instantiated objects owned by the runtime."""
 
     job_creator: IsJobConfigHolder
     data_class_creator: IsDataClassCreator
@@ -62,7 +66,8 @@ class IsRuntimeObjects(IsDataPublisher, Protocol):
 
 @runtime_checkable
 class IsRuntime(Protocol):
-    """"""
+    """Protocol for the Omnipy runtime container."""
+
     config: IsRuntimeConfig
     objects: IsRuntimeObjects
 

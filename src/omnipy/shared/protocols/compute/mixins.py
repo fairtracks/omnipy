@@ -1,8 +1,11 @@
+"""Shared mixin protocols for compute contracts."""
+
 from typing import Protocol
 
 
 class IsUniquelyNamedJob(Protocol):
-    """"""
+    """Protocol for jobs with stable and regenerated names."""
+
     @property
     def name(self) -> str:
         ...
@@ -23,7 +26,8 @@ class IsUniquelyNamedJob(Protocol):
 
 
 class IsNestedContext(Protocol):
-    """"""
+    """Protocol for objects that manage nested execution contexts."""
+
     def __enter__(self):
         ...
 

@@ -29,12 +29,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+"""Bundled Selenized-derived color styles used by the display subsystem."""
+
 import pygments.style
 
 from .helpers import Base16Colors, get_styles_from_base16_colors
 
 
 class OmnipySelenizedBlackStyle(pygments.style.Style):
+    """High-contrast dark Selenized variant for black backgrounds."""
+
     name = 'omnipy-selenized-black'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'dark'
@@ -64,6 +68,8 @@ class OmnipySelenizedBlackStyle(pygments.style.Style):
 
 
 class OmnipySelenizedDarkStyle(pygments.style.Style):
+    """High-contrast dark Selenized variant for dark backgrounds."""
+
     name = 'omnipy-selenized-dark'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'dark'
@@ -93,6 +99,8 @@ class OmnipySelenizedDarkStyle(pygments.style.Style):
 
 
 class OmnipySelenizedLightStyle(pygments.style.Style):
+    """High-contrast light Selenized variant for cream backgrounds."""
+
     name = 'omnipy-selenized-light'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'light'
@@ -122,6 +130,8 @@ class OmnipySelenizedLightStyle(pygments.style.Style):
 
 
 class OmnipySelenizedWhiteStyle(pygments.style.Style):
+    """High-contrast light Selenized variant for white backgrounds."""
+
     name = 'omnipy-selenized-white'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'light'

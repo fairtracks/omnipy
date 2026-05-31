@@ -1,3 +1,5 @@
+"""Draft text panel that reflows formatted content before final styling."""
+
 from functools import cached_property
 import re
 from typing import Generic, Iterator, overload
@@ -28,6 +30,8 @@ class ReflowedTextDraftPanel(
         MonospacedDraftPanel[str, FrameT],
         Generic[FrameT],
 ):
+    """Draft panel containing text reflowed to match frame and title constraints."""
+
     @classmethod
     @overload
     def create_from_draft_panel(

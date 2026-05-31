@@ -1,10 +1,19 @@
 # flake8: noqa
 
+"""Compatibility wrapper around Pydantic APIs used by Omnipy.
+
+Omnipy imports Pydantic through this module so the rest of the codebase can rely
+on a stable, v1-shaped API while supporting both native Pydantic v1 installs and
+Pydantic v2's bundled ``pydantic.v1`` compatibility layer. Centralizing the
+wrapper keeps version checks, re-exports, and typing workarounds in one place.
+"""
+
 from typing import TYPE_CHECKING
 
 import pydantic
 from pydantic_core import Url
 
+#: Whether the active Pydantic installation is version 2.x.
 PYDANTIC_V2 = pydantic.__version__.startswith('2')
 
 if TYPE_CHECKING or PYDANTIC_V2:

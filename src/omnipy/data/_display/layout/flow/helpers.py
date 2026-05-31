@@ -1,3 +1,5 @@
+"""Helper objects used by the layout reflow and panel-resizing algorithm."""
+
 from dataclasses import dataclass, replace
 from functools import cached_property
 from typing import cast, Generic, NamedTuple
@@ -55,6 +57,8 @@ def create_panel_with_updated_frame(
 
 
 def create_ellipsis_panel(panel: DraftPanel) -> DimensionsAwareDraftPanel:
+    """Replace a removed panel with a one-character ellipsis placeholder."""
+
     ellipsis_panel = panel.create_modified_copy(
         '' if panel.title else '…',
         title='…' if panel.title else None,
@@ -553,5 +557,7 @@ class PanelResizeHelper:
 
 
 class CrampedPanelInfo(NamedTuple):
+    """Panel identity and current width for title-widening decisions."""
+
     key: str
     panel_width: int

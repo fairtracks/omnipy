@@ -1,3 +1,5 @@
+"""Compact JSON pretty printer with iterative inline-width tightening."""
+
 import operator
 from typing import Callable, ClassVar
 
@@ -17,6 +19,8 @@ class CompactJsonPrettyPrinter(
         JsonStatsTighteningPrettyPrinterMixin,
         ConstraintTighteningPrettyPrinter[object],
 ):
+    """Format JSON-like content using the compact-json backend."""
+
     CONSTRAINT_STAT_NAME: ClassVar[str] = 'max_inline_list_or_dict_width_excl'
     CONSTRAINT_TIGHTEN_FUNC: Callable[[int], int] = lambda x: max(x - 1, 0)
     CONSTRAINT_TIGHTENED_OPERATOR: Callable[[int, int], bool] = operator.lt

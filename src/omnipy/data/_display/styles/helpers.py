@@ -1,3 +1,5 @@
+"""Helpers for representing Base16 palettes and deriving token styles."""
+
 import pygments.token
 from pygments.token import Token
 
@@ -26,6 +28,8 @@ Base16.Deprecated
 
 
 class Base16Colors(pyd.BaseModel):
+    """Sixteen-color Base16 palette definition."""
+
     base00: str
     base01: str
     base02: str
@@ -45,6 +49,8 @@ class Base16Colors(pyd.BaseModel):
 
 
 class Base16Theme(pyd.BaseModel):
+    """Named Base16 theme with author metadata and a palette."""
+
     name: str
     author: str
     variant: str
@@ -53,6 +59,8 @@ class Base16Theme(pyd.BaseModel):
 
 def get_styles_from_base16_colors(
         base16_colors: Base16Colors) -> dict[pygments.token._TokenType, str]:
+    """Build a Pygments token-style mapping from a Base16 palette."""
+
     return {
         pygments.token.Text: base16_colors.base05,
         pygments.token.Token: base16_colors.base05,

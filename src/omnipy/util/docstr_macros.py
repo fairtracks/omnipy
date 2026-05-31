@@ -14,8 +14,10 @@ Created: January 2026
 import re
 
 # Constants
+#: Marker inserted above expanded docstrings to preserve the macro source text.
 ORIGINAL_DOCSTRING_PREFIX =\
     '%% Original docstring (managed by expand_docstr_macros.py) %%'
+#: Environment-variable prefix used to define runtime docstring macros.
 ENV_MACRO_PREFIX = 'OMNIPY_MACRO_'
 
 

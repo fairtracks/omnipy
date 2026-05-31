@@ -1,3 +1,5 @@
+"""Pretty printer that renders byte-oriented content as hex dumps."""
+
 from typing_extensions import override
 
 from omnipy.components.raw.models import BytesModel
@@ -11,6 +13,8 @@ from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 
 class HexdumpPrettyPrinter(PrettyPrinter[str]):
+    """Format byte content using a hexdump representation."""
+
     @override
     @classmethod
     def is_suitable_content(

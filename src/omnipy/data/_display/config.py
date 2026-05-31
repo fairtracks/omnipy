@@ -1,3 +1,5 @@
+"""Display configuration objects for text, layout, and styling output."""
+
 from typing import Any
 
 import pygments.lexers

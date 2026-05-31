@@ -7,6 +7,8 @@ from omnipy.util.range_lookup import RangeLookup
 
 
 class UnicodeCharWidthMap:
+    """Map Unicode characters to display cell widths used by panel layout."""
+
     def __init__(self) -> None:
         width_0_ranges = []
         width_2_ranges = []

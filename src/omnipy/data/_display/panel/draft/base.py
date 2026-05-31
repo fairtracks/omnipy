@@ -1,3 +1,5 @@
+"""Draft panel classes for pre-render display content and nested layouts."""
+
 from abc import ABC
 from typing import Any, cast, Generic, overload
 
@@ -18,6 +20,8 @@ import omnipy.util.pydantic as pyd
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
 )
 class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
+    """Draft-stage panel holding content before it is rendered or stylized."""
+
     content: ContentT
 
     def __init__(
@@ -86,6 +90,8 @@ class DimensionsAwareDraftPanel(DimensionsAwarePanel[FrameT],
                                 DraftPanel[ContentT, FrameT],
                                 Generic[ContentT, FrameT],
                                 ABC):
+    """Draft panel whose content has been measured for layout decisions."""
+
     ...
 
 
@@ -93,6 +99,8 @@ class FullyRenderedDraftPanel(FullyRenderedPanel[FrameT],
                               DimensionsAwareDraftPanel[ContentT, FrameT],
                               Generic[ContentT, FrameT],
                               ABC):
+    """Draft panel that has completed rendering and can export output variants."""
+
     @override
     def render_next_stage(self) -> 'FullyRenderedDraftPanel[ContentT, FrameT]':
         raise NotImplementedError('This panel is fully rendered.')
@@ -102,6 +110,8 @@ class DimensionsAwareDraftPanelLayout(
         Layout[DimensionsAwareDraftPanel[Any, AnyFrame]],
         DimensionsAwarePanelLayoutMixin,
 ):
+    """Layout of dimensions-aware draft panels."""
+
     ...
 
 
@@ -109,4 +119,6 @@ class FullyRenderedDraftPanelLayout(
         Layout[FullyRenderedDraftPanel[AnyFrame]],
         DimensionsAwarePanelLayoutMixin,
 ):
+    """Layout of fully rendered draft panels ready for styling composition."""
+
     ...

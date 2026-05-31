@@ -1,3 +1,5 @@
+"""Shared type aliases and protocol-based callable definitions."""
+
 from types import GenericAlias, UnionType
 from typing import _AnnotatedAlias  # type: ignore[attr-defined]
 from typing import _LiteralGenericAlias  # type: ignore[attr-defined]
@@ -19,5 +21,7 @@ RetT = TypeVar('RetT', covariant=True)
 
 
 class Method(Protocol, Generic[P, RetT]):
+    """Protocol for bound methods with preserved parameter and return types."""
+
     def __call__(self: Self, *args: P.args, **kwargs: P.kwargs) -> RetT:
         ...

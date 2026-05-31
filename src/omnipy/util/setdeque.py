@@ -1,3 +1,11 @@
+"""Ordered unique queue utilities.
+
+This module provides ``SetDeque``, a deque-backed data structure that preserves
+insertion order like ``collections.deque`` while enforcing set-like uniqueness.
+It is useful for work queues, caches, and registration lists where membership
+checks must be fast and duplicates should be ignored instead of accumulated.
+"""
+
 from collections import deque
 from copy import copy
 import inspect
@@ -9,6 +17,24 @@ _ObjT = TypeVar('_ObjT', bound=object)
 
 
 class SetDeque(deque, Generic[_ObjT]):
+    """Deque variant that keeps each element at most once.
+
+    ``SetDeque`` combines the ordered, append/pop-friendly behavior of
+    ``collections.deque`` with an internal set for ``O(1)`` membership tests.
+    Duplicate insertions are ignored, existing order is preserved, and explicit
+    removals keep the deque and set views synchronized.
+
+    Args:
+        iterable: Initial values. Later duplicates are discarded while keeping the
+            first occurrence.
+        maxlen: Optional deque length limit passed through to ``deque``.
+
+    Notes:
+        When ``maxlen`` causes ``deque`` to evict elements during appends, this
+        implementation does not proactively remove evicted values from the backing
+        set. Use this type primarily without ``maxlen`` unless that edge case is
+        acceptable for the calling code.
+    """
     def __init__(self, iterable: Iterable = (), maxlen: int | None = None):
         unique_ordered_els = dict.fromkeys(iterable).keys()
         super().__init__(iterable=unique_ordered_els, maxlen=maxlen)
@@ -43,34 +69,44 @@ class SetDeque(deque, Generic[_ObjT]):
         self._set.remove(el)
 
     def append(self, el: _ObjT) -> None:
+        """Append ``el`` to the right side if it is not already present."""
         self._add_element('append', el=el)
 
     def appendleft(self, el: _ObjT) -> None:
+        """Append ``el`` to the left side if it is not already present."""
         self._add_element('appendleft', el=el)
 
     def extend(self, el_iter: Iterable[_ObjT]) -> None:
+        """Append each new unique element from ``el_iter`` to the right side."""
         self._add_elements('extend', el_iter)
 
     def extendleft(self, el_iter: Iterable[_ObjT]) -> None:
+        """Append each new unique element from ``el_iter`` to the left side."""
         self._add_elements('extendleft', el_iter)
 
     def insert(self, __i: int, __x: _ObjT) -> None:
+        """Insert ``__x`` at ``__i`` when it is not already present."""
         self._add_element('insert', __i, el=__x)
 
     def pop(self) -> _ObjT:  # type: ignore[override]
+        """Remove and return the rightmost element."""
         return self._remove_returned_element('pop')
 
     def popleft(self) -> _ObjT:
+        """Remove and return the leftmost element."""
         return self._remove_returned_element('popleft')
 
     def remove(self, __value) -> None:
+        """Remove ``__value`` from both the deque order and membership set."""
         self._remove_explicit_element('remove', el=__value, add_el_to_args=True)
 
     def clear(self) -> None:
+        """Remove all elements and reset the backing membership set."""
         super().clear()
         self._set.clear()
 
     def count(self, __x: _ObjT) -> int:
+        """Return ``1`` when ``__x`` is present, otherwise ``0``."""
         return 1 if __x in self._set else 0
 
     def __setitem__(self, __key: SupportsIndex, __value: _ObjT) -> None:  # type: ignore[override]

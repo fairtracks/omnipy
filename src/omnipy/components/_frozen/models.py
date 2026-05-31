@@ -1,3 +1,5 @@
+"""Recursive model types for immutable nested container structures."""
+
 from types import MappingProxyType
 from typing import Generic, TypeAlias
 

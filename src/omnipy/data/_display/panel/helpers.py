@@ -1,3 +1,5 @@
+"""Color and theme helpers shared by panel styling code."""
+
 from functools import lru_cache
 from typing import Literal
 
@@ -13,7 +15,7 @@ from omnipy.util.literal_enum import LiteralEnum
 
 
 class ForceAutodetect(LiteralEnum[str]):
-    """Control when panel helpers auto-detect a background color."""
+    """Policy controlling when background color should be auto-detected."""
 
     Literals = Literal['never', 'if_no_bg_color_in_style', 'always']
 
@@ -25,6 +27,8 @@ class ForceAutodetect(LiteralEnum[str]):
 @lru_cache
 def get_syntax_theme_from_color_style(
         color_style: AllColorStyles.Literals) -> rich.syntax.SyntaxTheme:
+    """Return the Rich syntax theme associated with an Omnipy color style."""
+
     color_style_name = clean_style_name(color_style)
     return rich.syntax.Syntax.get_theme(color_style_name)
 
@@ -34,12 +38,16 @@ def get_token_style_from_color_style(
     token: pygments.token._TokenType,
     color_style: AllColorStyles.Literals,
 ) -> rich.style.Style:
+    """Return the Rich style used for a token under a color style."""
+
     syntax_theme = get_syntax_theme_from_color_style(clean_style_name(color_style))
     return syntax_theme.get_style_for_token(token)
 
 
 @lru_cache
 def calculate_fg_color_from_color_style(color_style: AllColorStyles.Literals) -> rich.color.Color:
+    """Calculate the effective foreground color for a style."""
+
     ANSI_FG_COLOR_MAP = {'ansi_light': 'black', 'ansi_dark': 'bright_white'}
 
     color_style_name = clean_style_name(color_style)
@@ -61,6 +69,8 @@ def calculate_fg_color_from_color_style(color_style: AllColorStyles.Literals) ->
 @lru_cache
 def calculate_fg_color_triplet_from_color_style(
         color_style: AllColorStyles.Literals) -> rich.color_triplet.ColorTriplet:
+    """Return the truecolor foreground triplet for a style."""
+
     syntax_theme_fg_color = calculate_fg_color_from_color_style(color_style)
     return syntax_theme_fg_color.get_truecolor(foreground=True)
 
@@ -78,6 +88,8 @@ def calculate_bg_color_from_color_style(
     color_style: AllColorStyles.Literals,
     force_autodetect: ForceAutodetect.Literals,
 ) -> rich.color.Color | None:
+    """Calculate the effective background color for a style."""
+
     def _auto_detect_bw_background_color(
             fg_color_triplet: rich.color_triplet.ColorTriplet) -> rich.color.Color:
         """
@@ -111,6 +123,8 @@ def calculate_bg_color_triplet_from_color_style(
     color_style: AllColorStyles.Literals,
     force_autodetect: ForceAutodetect.Literals,
 ) -> rich.color_triplet.ColorTriplet | None:
+    """Return the truecolor background triplet for a style, if any."""
+
     bg_color = calculate_bg_color_from_color_style(color_style, force_autodetect)
 
     if bg_color is not None:

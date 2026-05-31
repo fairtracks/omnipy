@@ -1,3 +1,12 @@
+"""Registry for job state transitions and lookup indexes.
+
+The registry stores jobs by unique name, tracks their current run state, and records
+the timestamp for each observed transition. Registration follows a strict pattern:
+new jobs must first enter the `INITIALIZED` state, existing jobs may only advance one
+state at a time, and unique-name collisions are resolved by asking the incoming job to
+regenerate its unique name before registering it as a distinct job.
+"""
+
 from collections import defaultdict
 from datetime import datetime
 from typing import DefaultDict
@@ -8,6 +17,8 @@ from omnipy.shared.protocols.compute.job import IsUniquelyNamedJob
 
 
 class RunStateRegistry(LogMixin):
+    """Track uniquely named jobs and their state-transition history."""
+
     def __init__(self) -> None:
 
         self._jobs: dict[str, IsUniquelyNamedJob] = {}
@@ -18,12 +29,15 @@ class RunStateRegistry(LogMixin):
         super().__init__()
 
     def get_job_state(self, job: IsUniquelyNamedJob) -> RunState.Literals:
+        """Return the current run state registered for a job."""
         return self._job_states[job.unique_name]
 
     def get_job_state_datetime(self, job: IsUniquelyNamedJob, state: RunState.Literals) -> datetime:
+        """Return when the job was recorded in a specific run state."""
         return self._job_state_datetime[(job.unique_name, state)]
 
     def all_jobs(self, state: RunState.Literals | None = None) -> tuple[IsUniquelyNamedJob, ...]:
+        """Return all registered jobs, optionally filtered by their current state."""
         if state is not None:
             job_unique_names = self._state_jobs[state]
             return tuple(self._jobs[unique_name] for unique_name in job_unique_names)
@@ -31,6 +45,7 @@ class RunStateRegistry(LogMixin):
             return tuple(self._jobs.values())
 
     def set_job_state(self, job: IsUniquelyNamedJob, state: RunState.Literals) -> None:
+        """Register a job transition, update indexes, and emit the matching log event."""
         cur_datetime = datetime.now()
 
         if job.unique_name in self._jobs:

@@ -1,3 +1,5 @@
+"""Utility protocols shared across internal protocol definitions."""
+
 from typing import Callable, Protocol, runtime_checkable
 
 from typing_extensions import TypeVar
@@ -8,12 +10,15 @@ _ValT = TypeVar('_ValT', bound=object)
 
 @runtime_checkable
 class IsCallableParamAfterSelf(Protocol):
-    """"""
+    """Protocol for callbacks whose callable argument follows ``self``."""
+
     def __call__(self, callable_arg: Callable, /, *args: object, **kwargs: object) -> None:
         ...
 
 
 class IsWeakKeyRefContainer(Protocol[_AnyKeyT, _ValT]):
+    """Protocol for weak-key containers with mapping-style access."""
+
     def __contains__(self, key: _AnyKeyT) -> bool:
         ...
 

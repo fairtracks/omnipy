@@ -1,3 +1,5 @@
+"""Draft panel base classes for monospaced text-based display content."""
+
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import cached_property, lru_cache
@@ -21,6 +23,8 @@ class MonospacedDraftPanel(
         Generic[ContentT, FrameT],
         ABC,
 ):
+    """Dimensions-aware draft panel that measures monospaced text content."""
+
     _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
 
     @cached_property
@@ -66,6 +70,8 @@ class MonospacedDraftPanel(
 
 @dataclass
 class LineStats:
+    """Accumulated width, character count, and overflow state for one line."""
+
     line_width: int = 0
     char_count: int = 0
     overflow: bool = False

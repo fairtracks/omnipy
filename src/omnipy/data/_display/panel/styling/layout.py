@@ -1,3 +1,5 @@
+"""Layout-panel styling that turns resized panel collections into tables."""
+
 from dataclasses import dataclass
 from functools import cached_property, lru_cache
 from typing import Any, cast, Generic, Iterator
@@ -50,6 +52,8 @@ class StylizedLayoutPanel(
                                 FrameInvT],
         Generic[FrameInvT],
 ):
+    """Styled layout panel that renders nested panels inside a table shell."""
+
     def __init__(self, panel: DraftPanel[Layout, FrameInvT] | ResizedLayoutDraftPanel[FrameInvT]):
         if not panel_is_dimensions_aware(panel):
             resized_panel: ResizedLayoutDraftPanel[FrameInvT] = cast(
@@ -149,6 +153,8 @@ class StylizedLayoutPanel(
 
 @dataclass
 class PanelElementStyles:
+    """Resolved Rich styles for layout borders, titles, and auxiliary text."""
+
     title_style: rich.style.Style
     table_style: rich.style.Style
     info_style: rich.style.Style
@@ -195,6 +201,8 @@ class PanelElementStyles:
 
 
 class InnerPanelStyler:
+    """Styles one rendered inner panel for placement inside an outer layout."""
+
     def __init__(
         self,
         inner_panel: FullyRenderedDraftPanel,
@@ -328,6 +336,8 @@ class InnerPanelStyler:
 
 
 class OuterLayoutPanelStyler:
+    """Build the outer Rich table that hosts styled inner panels."""
+
     def __init__(
         self,
         outer_panel: 'StylizedLayoutPanel[FrameInvT]',

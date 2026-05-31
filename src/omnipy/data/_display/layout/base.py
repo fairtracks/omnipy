@@ -1,3 +1,5 @@
+"""Core layout objects that compose panels into a single-row arrangement."""
+
 from collections import UserDict
 from dataclasses import dataclass
 from typing import Callable, cast, Generic, Iterable, Iterator, Mapping
@@ -97,6 +99,8 @@ class Layout(UserDict[str, PanelT], Generic[PanelT]):
 
 @dataclass
 class PanelDesignDims:
+    """Border and spacing overhead associated with a panel design."""
+
     num_horizontal_chars_per_panel: int
     num_horizontal_end_chars: int
     num_vertical_lines_per_panel: int
@@ -172,6 +176,8 @@ class PanelDesignDims:
 
 
 class DimensionsAwarePanelLayoutMixin:
+    """Layout mixin that derives aggregate dimensions from rendered subpanels."""
+
     def _total_dims_over_subpanels(self, dims_property: str) -> DimensionsWithWidthAndHeight:
         self_as_layout = cast(Layout, self)
 

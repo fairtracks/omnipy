@@ -1,3 +1,5 @@
+"""Solara components that bridge rendered panels into Jupyter notebooks."""
+
 import re
 from typing import Any, Callable, ParamSpec
 
@@ -46,6 +48,8 @@ def _get_available_display_dims(
 
 @solara.component  # pyright: ignore [reportPrivateImportUsage]
 def ReactiveBgColorUpdater(jupyter_ui_config: IsJupyterUserInterfaceConfig):
+    """Track notebook page background color and sync dark-mode config."""
+
     _bg_color = solara.use_reactive('')
 
     with PageBgColorDetector(
@@ -64,6 +68,8 @@ def AvailableDisplayDimsDetector(
     children=[],
     style={},
 ):
+    """Vue bridge that measures available notebook display space in pixels."""
+
     ...
 
 
@@ -79,6 +85,8 @@ def DimsCalculator(
     children=[],
     style={},
 ):
+    """Vue bridge that converts pixel space into character-based dimensions."""
+
     ...
 
 
@@ -111,6 +119,8 @@ def ReactiveAvailableDisplaySizeUpdater(
     jupyter_ui_config: IsJupyterUserInterfaceConfig,
     reactive_objects: IsReactiveObjects,
 ):
+    """Keep reactive Jupyter display dimensions synchronized with browser size."""
+
     reactive_jupyter_ui_config = reactive_objects.jupyter_ui_config.value
 
     def _set_available_display_dims(available_display_dims: AvailableDisplayDims):
@@ -146,6 +156,8 @@ def ReactivelyResizingHtml(
     render_output_method: Callable[[FullyRenderedPanel], str],
     reactive_kwargs: solara.Reactive[dict[str, Any]],
 ):
+    """Render HTML output that resizes reactively with notebook display changes."""
+
     kwargs = reactive_kwargs.value
     reactive_objs = obj.reactive_objects
     assert reactive_objs is not None
@@ -200,6 +212,8 @@ def PageBgColorDetector(
     children=[],
     style={},
 ):
+    """Vue bridge that reports the current page background color."""
+
     ...
 
 
@@ -209,4 +223,6 @@ def ModelBrowser(
     children=[],
     style={},
 ):
+    """Vue component for browser-style navigation of rendered model content."""
+
     ...

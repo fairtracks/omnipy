@@ -1,3 +1,5 @@
+"""Shared configuration base types and display helpers."""
+
 from typing_extensions import override
 
 from omnipy.shared.enums.display import SyntaxLanguageSpec
@@ -13,6 +15,8 @@ if TYPE_CHECKING:
 
 
 class ConfigBase(DataPublisher):
+    """Base class for Omnipy configuration models."""
+
     def as_model(self) -> 'JsonDictModel':
         from omnipy.components.json.models import JsonDictModel
 

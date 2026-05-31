@@ -1,3 +1,5 @@
+"""Helpers for expanding model and dataset type variants."""
+
 from types import GenericAlias
 
 from omnipy.data.dataset import is_dataset_subclass
@@ -12,6 +14,8 @@ def all_model_type_variants(model: type[IsModel] | IsModel,) -> tuple[type | Gen
 
 def all_dataset_type_variants(
         dataset: type[IsDataset] | IsDataset) -> tuple[type | GenericAlias, ...]:
+    """Return concrete content-type variants represented by a dataset type."""
+
     _type = dataset.get_type()
 
     type_variants: list[type | GenericAlias] = []

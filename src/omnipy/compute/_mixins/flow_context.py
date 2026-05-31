@@ -1,3 +1,10 @@
+"""Flow-context mixin for applied flow jobs.
+
+Concrete flow jobs compose this mixin to expose a context manager that proxies the
+shared `JobCreator` nesting state. The mixin also records the timestamp of the last
+top-level flow run observed by the job instance.
+"""
+
 from contextlib import AbstractContextManager
 from datetime import datetime
 from typing import cast
@@ -8,12 +15,14 @@ from omnipy.shared.protocols.compute.mixins import IsNestedContext
 
 
 class FlowContextJobMixin:
-    """"""
+    """Add flow-context tracking to executable flow jobs."""
+
     def __init__(self) -> None:
         self._time_of_last_run: datetime | None = None
 
     @property
     def flow_context(self) -> IsNestedContext:
+        """Return a context manager that enters and exits the shared flow context."""
         class FlowContext(AbstractContextManager):
             @classmethod
             def __enter__(cls) -> None:  # pyright: ignore [reportIncompatibleMethodOverride]
@@ -35,4 +44,5 @@ class FlowContextJobMixin:
 
     @property
     def time_of_last_run(self) -> datetime | None:
+        """Return the timestamp captured for the most recent top-level flow run."""
         return self._time_of_last_run

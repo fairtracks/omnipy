@@ -10,6 +10,8 @@
 # flake8: noqa
 # isort: skip_file
 
+"""Builtin-compatible protocol definitions used by Omnipy typing."""
+
 from __future__ import annotations
 
 # import _ast

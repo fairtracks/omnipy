@@ -1,3 +1,5 @@
+"""Protocols for Omnipy configuration objects and config sections."""
+
 from collections import defaultdict
 from io import TextIOBase
 from typing import Any, Protocol, runtime_checkable, TYPE_CHECKING
@@ -47,7 +49,8 @@ class IsConfigBase(IsDataPublisher, Protocol):
 
 @runtime_checkable
 class IsColorConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for UI color configuration."""
+
     system: DisplayColorSystem.Literals
     style: AllColorStyles.Literals | str
     dark_background: bool
@@ -56,7 +59,8 @@ class IsColorConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsUserInterfaceTypeConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for size-aware user-interface configuration."""
+
     width: pyd.NonNegativeInt | None
     height: pyd.NonNegativeInt | None
     color: IsColorConfig
@@ -75,25 +79,29 @@ class IsUserInterfaceTypeConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsDimsModeMixin(Protocol):
-    """"""
+    """Protocol for configs that expose a display-dimensions update mode."""
+
     dims_mode: DisplayDimensionsUpdateMode.Literals = DisplayDimensionsUpdateMode.AUTO
 
 
 @runtime_checkable
 class IsDimsModeConfig(IsUserInterfaceTypeConfig, IsDimsModeMixin, Protocol):
-    """"""
+    """Protocol for UI configs with dimension update mode support."""
+
     ...
 
 
 @runtime_checkable
 class IsTerminalUserInterfaceConfig(IsDimsModeConfig, Protocol):
-    """"""
+    """Protocol for terminal UI configuration."""
+
     ...
 
 
 @runtime_checkable
 class IsFontConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for font configuration used by HTML-based UIs."""
+
     families: tuple[str, ...]
     size: pyd.NonNegativeFloat
     weight: pyd.NonNegativeInt
@@ -102,32 +110,37 @@ class IsFontConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsHtmlUserInterfaceConfig(IsUserInterfaceTypeConfig, Protocol):
-    """"""
+    """Protocol for HTML-based user-interface configuration."""
+
     font: IsFontConfig
 
 
 @runtime_checkable
 class IsJupyterUserInterfaceConfig(IsHtmlUserInterfaceConfig, IsDimsModeConfig, Protocol):
-    """"""
+    """Protocol for Jupyter user-interface configuration."""
+
     ...
 
 
 @runtime_checkable
 class IsBrowserUserInterfaceConfig(IsHtmlUserInterfaceConfig, Protocol):
-    """"""
+    """Protocol for browser user-interface configuration."""
+
     ...
 
 
 @runtime_checkable
 class IsOverflowConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for text and layout overflow configuration."""
+
     horizontal: HorizontalOverflowMode.Literals
     vertical: VerticalOverflowMode.Literals
 
 
 @runtime_checkable
 class IsTextConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for text rendering configuration."""
+
     overflow: IsOverflowConfig
     tab_size: pyd.NonNegativeInt
     indent_tab_size: pyd.NonNegativeInt
@@ -138,7 +151,8 @@ class IsTextConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsLayoutConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for panel and layout rendering configuration."""
+
     overflow: IsOverflowConfig
     panel_design: PanelDesign.Literals
     panel_title_at_top: bool
@@ -152,7 +166,8 @@ class IsLayoutConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsUserInterfaceConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for the complete user-interface configuration tree."""
+
     detected_type: SpecifiedUserInterfaceType.Literals
     terminal: IsTerminalUserInterfaceConfig
     jupyter: IsJupyterUserInterfaceConfig
@@ -170,14 +185,16 @@ class IsUserInterfaceConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsModelConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for model-behavior configuration."""
+
     interactive: bool
     dynamically_convert_elements_to_models: bool
 
 
 @runtime_checkable
 class IsHttpRequestsConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for HTTP request throttling and retry configuration."""
+
     requests_per_time_period: float
     time_period_in_secs: float
     retry_http_statuses: tuple[int, ...]
@@ -187,14 +204,16 @@ class IsHttpRequestsConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsHttpConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for HTTP configuration grouped by host defaults."""
+
     defaults: IsHttpRequestsConfig
     for_host: defaultdict[str, IsHttpRequestsConfig]
 
 
 @runtime_checkable
 class IsDataConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for the top-level data configuration."""
+
     ui: IsUserInterfaceConfig
     model: IsModelConfig
     http: IsHttpConfig
@@ -205,25 +224,29 @@ class IsDataConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsJobRunnerConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for engine-specific job runner configuration."""
+
     ...
 
 
 @runtime_checkable
 class IsLocalRunnerConfig(IsJobRunnerConfig, Protocol):
-    """"""
+    """Protocol for local job runner configuration."""
+
     ...
 
 
 @runtime_checkable
 class IsPrefectEngineConfig(IsJobRunnerConfig, Protocol):
-    """"""
+    """Protocol for Prefect engine configuration."""
+
     use_cached_results: bool = False
 
 
 @runtime_checkable
 class IsEngineConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for selecting and configuring execution engines."""
+
     choice: EngineChoice.Literals
     local: IsLocalRunnerConfig
     prefect: IsPrefectEngineConfig
@@ -235,18 +258,20 @@ class IsEngineConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsOutputStorageConfigBase(IsConfigBase, Protocol):
-    """"""
+    """Protocol for output-storage configuration with a persistence directory."""
+
     persist_data_dir_path: str
 
 
 @runtime_checkable
 class IsLocalOutputStorageConfig(IsOutputStorageConfigBase, Protocol):
-    """"""
+    """Protocol for local output-storage configuration."""
 
 
 @runtime_checkable
 class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
-    """"""
+    """Protocol for S3 output-storage configuration."""
+
     endpoint_url: str
     access_key: str
     secret_key: str
@@ -255,7 +280,8 @@ class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
 
 @runtime_checkable
 class IsOutputStorageConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for job output persistence and restore configuration."""
+
     persist_outputs: ConfigPersistOutputsOptions.Literals
     restore_outputs: ConfigRestoreOutputsOptions.Literals
     protocol: ConfigOutputStorageProtocolOptions.Literals
@@ -265,7 +291,8 @@ class IsOutputStorageConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsJobConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for top-level job configuration."""
+
     output_storage: IsOutputStorageConfig
 
 
@@ -274,7 +301,8 @@ class IsJobConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsRootLogConfig(IsConfigBase, Protocol):
-    """"""
+    """Protocol for root logging configuration."""
+
     log_format_str: str
     locale: LocaleType
     log_to_stdout: bool

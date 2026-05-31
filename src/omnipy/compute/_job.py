@@ -1,3 +1,14 @@
+"""Core job base classes for template/job pairs and mixin composition.
+
+This module defines the shared typing and lifecycle machinery used by Omnipy jobs.
+`JobBase` implements the common creation, refinement, and revision logic, while
+`JobTemplateMixin` and `JobMixin` expose the two public faces of that machinery:
+template objects that can be refined or applied, and applied jobs that can be
+executed. Concrete task and flow types compose these bases with argument-handling
+mixins such as `FuncArgJobBase`, `TaskTemplateArgsJobBase`, and flow-specific
+mixins.
+"""
+
 from abc import abstractmethod
 from datetime import datetime
 from functools import update_wrapper
@@ -26,20 +37,31 @@ class JobBase(
         DynamicMixinAcceptor,
         Generic[_JobTemplateT, _JobT, _CallP, _RetT],
         metaclass=JobBaseMeta):
+    """Provide shared state and lifecycle helpers for all job objects.
+
+    Concrete compute types combine this base with either `JobTemplateMixin` or
+    `JobMixin`. The result is a paired type hierarchy where templates capture
+    immutable configuration, and applied jobs carry engine decoration and runtime
+    execution behavior.
+    """
+
     @property
     def _job_creator(self) -> IsJobCreator:
         return self.__class__.job_creator
 
     @property
     def config(self) -> IsJobConfig:
+        """Return the job configuration shared by this job family."""
         return self.__class__.job_creator.config
 
     @property
     def engine(self) -> IsEngine | None:
+        """Return the currently configured engine for this job family, if any."""
         return self.__class__.job_creator.engine
 
     @property
     def in_flow_context(self) -> bool:
+        """Return whether the job is executing inside a nested flow context."""
         return self.__class__.nested_context_level > 0
 
     def __init__(self, *args: object, **kwargs: object):
@@ -183,6 +205,12 @@ class JobBase(
 
 
 class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
+    """Add the public template API on top of `JobBase`.
+
+    Template instances are configuration objects. They can be refined, applied to
+    produce executable jobs, or run directly when the current context allows it.
+    """
+
     def __init__(self, *args: object, **kwargs: object):
         if JobBase not in self.__class__.__mro__:
             raise TypeError('JobTemplateMixin is not meant to be instantiated outside the context '
@@ -190,6 +218,7 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
 
     @classmethod
     def create_job_template(cls, *args: object, **kwargs: object) -> _JobTemplateT:
+        """Create a new template instance using the shared `JobBase` factory."""
         cls_as_job_base = cast(type[IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT]], cls)
         return cls_as_job_base._create_job_template(*args, **kwargs)
 
@@ -201,15 +230,18 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
             self)
 
     def run(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetT:
+        """Apply the template and execute the resulting job immediately."""
         # TODO: Using JobTemplateMixin.run() inside flows should give error message
         return self._cast_to_job_tmpl().apply()(*args, **kwargs)
 
     def apply(self) -> _JobT:
+        """Return an executable job instance created from this template."""
         job = self._cast_to_job_tmpl()._apply()
         update_wrapper(job, self, updated=[])
         return cast(_JobT, job)
 
     def refine(self, *args: Any, update: bool = True, **kwargs: object) -> _JobTemplateT:
+        """Return a new template with updated positional or keyword configuration."""
         self_as_job_base = cast(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT], self)
         return self_as_job_base._refine(*args, update=update, **kwargs)
 
@@ -219,6 +251,12 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
 
 
 class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
+    """Add the public executable-job API on top of `JobBase`.
+
+    Applied jobs are created from templates and are the place where engine
+    decorators, runtime timestamps, and exception logging are attached.
+    """
+
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
             raise TypeError('JobMixin is not meant to be instantiated outside the context '
@@ -230,15 +268,18 @@ class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT
 
     @property
     def time_of_cur_toplevel_flow_run(self) -> datetime | None:
+        """Return the start time of the current top-level flow run, if any."""
         self_as_job_base = cast(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT], self)
         return self_as_job_base._job_creator.time_of_cur_toplevel_nested_context_run
 
     @classmethod
     def create_job(cls, *args: object, **kwargs: object) -> _JobT:
+        """Create an executable job instance using the shared `JobBase` factory."""
         cls_as_job_base = cast(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT], cls)
         return cls_as_job_base._create_job(*args, **kwargs)
 
     def revise(self) -> _JobTemplateT:
+        """Return a template reconstructed from this applied job instance."""
         self_as_job_base = cast(
             IsJobBase[IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetT], _JobT, _CallP, _RetT],
             self)

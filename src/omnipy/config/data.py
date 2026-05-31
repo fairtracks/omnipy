@@ -1,3 +1,5 @@
+"""Configuration models for data display, UI, and HTTP behavior."""
+
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from pathlib import Path
@@ -74,6 +76,8 @@ class ColorConfig(ConfigBase):
 
 
 class UserInterfaceTypeConfig(ConfigBase):
+    """Shared width, height, and color settings for one UI target."""
+
     width: pyd.NonNegativeInt | None = TERMINAL_DEFAULT_WIDTH
     height: pyd.NonNegativeInt | None = TERMINAL_DEFAULT_HEIGHT
     color: IsColorConfig = pyd.Field(default_factory=ColorConfig)
@@ -95,10 +99,14 @@ class UserInterfaceTypeConfig(ConfigBase):
 
 
 class DimsModeMixin(pyd.BaseModel):
+    """Mixin that adds automatic display-dimension update mode selection."""
+
     dims_mode: DisplayDimensionsUpdateMode.Literals = DisplayDimensionsUpdateMode.AUTO
 
 
 class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
+    """Base config that can refresh width and height from the active display."""
+
     class Config:  # pyright: ignore [reportIncompatibleVariableOverride]
         validate_all = True
         validate_assignment = True
@@ -152,6 +160,8 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
 
 
 class TerminalUserInterfaceConfig(DimsModeConfig):
+    """Terminal-specific UI configuration with live terminal size detection."""
+
     @classmethod
     @override
     def _get_available_display_dims(
@@ -161,6 +171,8 @@ class TerminalUserInterfaceConfig(DimsModeConfig):
 
 
 class FontConfig(ConfigBase):
+    """Font settings for HTML-based display integrations."""
+
     families: tuple[str, ...] = (
         'Menlo',
         'DejaVu Sans Mono',
@@ -174,10 +186,14 @@ class FontConfig(ConfigBase):
 
 
 class HtmlUserInterfaceConfig(UserInterfaceTypeConfig):
+    """Common configuration for browser-like HTML render targets."""
+
     font: IsFontConfig = pyd.Field(default_factory=FontConfig)
 
 
 class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
+    """Jupyter-specific UI configuration with notebook defaults."""
+
     @classmethod
     @override
     def _get_available_display_dims(
@@ -214,6 +230,8 @@ class OverflowConfig(ConfigBase):
 
 
 class TextConfig(ConfigBase):
+    """Text-formatting configuration shared by display renderers."""
+
     overflow: IsOverflowConfig = pyd.Field(default_factory=OverflowConfig)
     tab_size: pyd.NonNegativeInt = 4
     indent_tab_size: pyd.NonNegativeInt = 2
@@ -223,6 +241,8 @@ class TextConfig(ConfigBase):
 
 
 class LayoutConfig(ConfigBase):
+    """Layout-panel configuration for multi-panel display composition."""
+
     overflow: IsOverflowConfig = pyd.Field(default_factory=OverflowConfig)
     panel_design: PanelDesign.Literals = PanelDesign.TABLE
     panel_title_at_top: bool = True
@@ -287,6 +307,8 @@ class HttpRequestsConfig(ConfigBase):
 
 
 class HttpConfig(ConfigBase):
+    """HTTP request defaults together with per-host overrides."""
+
     defaults: IsHttpRequestsConfig = pyd.Field(default_factory=HttpRequestsConfig)
     for_host: defaultdict[str, IsHttpRequestsConfig] = pyd.Field(
         default_factory=lambda: defaultdict(HttpRequestsConfig))

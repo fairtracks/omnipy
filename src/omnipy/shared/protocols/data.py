@@ -1,3 +1,5 @@
+"""Protocols for Omnipy data models, datasets, serializers, and reactive state."""
+
 import asyncio
 from dataclasses import dataclass
 import functools
@@ -45,6 +47,8 @@ IsPathsOrUrlsOneOrMoreOrNone: TypeAlias = 'IsPathsOrUrlsOneOrMore | None'
 @runtime_checkable
 @dataclass(frozen=True, kw_only=True)
 class IsPendingData(Protocol):
+    """Protocol for pending dataset entries tracked by job metadata."""
+
     job_name: str
     job_unique_name: str
 
@@ -52,6 +56,8 @@ class IsPendingData(Protocol):
 @runtime_checkable
 @dataclass(frozen=True, kw_only=True)
 class IsFailedData(Protocol):
+    """Protocol for failed dataset entries tracked by job metadata."""
+
     job_name: str
     job_unique_name: str
     exception: BaseException
@@ -59,11 +65,15 @@ class IsFailedData(Protocol):
 
 @runtime_checkable
 class HasData(Protocol):
+    """Protocol for objects exposing a data mapping."""
+
     data: dict[str, Any | IsPendingData | IsFailedData]
 
 
 @runtime_checkable
 class HasContent(Protocol[ContentT]):
+    """Protocol for objects exposing mutable typed content."""
+
     @property
     def content(self) -> ContentT:
         ...
@@ -75,6 +85,8 @@ class HasContent(Protocol[ContentT]):
 
 @runtime_checkable
 class IsModel(HasContent[_RootT], Protocol[_RootT]):
+    """Protocol for Omnipy model objects with typed content."""
+
     @classmethod
     def full_type(cls) -> type[_RootT]:
         ...
@@ -216,16 +228,21 @@ class IsMultiModelDataset(IsDataset[_ModelOrDatasetT], Protocol[_ModelOrDatasetT
 
 @runtime_checkable
 class IsHttpUrlModel(IsModel, Protocol):
+    """Protocol for models that store HTTP URL content."""
+
     ...
 
 
 @runtime_checkable
 class IsHttpUrlDataset(IsDataset, Protocol):
+    """Protocol for datasets of HTTP URL models."""
+
     ...
 
 
 class IsSerializer(Protocol[_DatasetT]):
-    """"""
+    """Protocol for serializers that convert datasets to and from bytes."""
+
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         ...
@@ -249,11 +266,14 @@ class IsSerializer(Protocol[_DatasetT]):
 
 @runtime_checkable
 class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
+    """Protocol for serializers that package datasets as tar files."""
+
     @classmethod
     def create_tarfile_from_dataset(cls,
                                     dataset: _DatasetT,
                                     data_encode_func: Callable[..., bytes | memoryview]) -> bytes:
-        """"""
+        """Create tarfile bytes from a dataset."""
+
         ...
 
     @classmethod
@@ -269,7 +289,8 @@ class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
 
 @runtime_checkable
 class IsSerializerRegistry(Protocol):
-    """"""
+    """Protocol for registries of dataset serializer classes."""
+
     def __init__(self) -> None:
         ...
 
@@ -319,6 +340,8 @@ class IsSerializerRegistry(Protocol):
 
 @runtime_checkable
 class IsSnapshotWrapper(Protocol[ObjContraT, ContentT]):
+    """Protocol for snapshot records tied to content-bearing objects."""
+
     id: int
     snapshot: ContentT
 
@@ -332,7 +355,8 @@ class IsSnapshotWrapper(Protocol[ObjContraT, ContentT]):
 @runtime_checkable
 class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasContentT, ContentT]],
                        Protocol[HasContentT, ContentT]):
-    """"""
+    """Protocol for storing and comparing object content snapshots."""
+
     def clear(self) -> None:
         ...
 
@@ -362,12 +386,16 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasC
 
 
 class AvailableDisplayDims(TypedDict):
+    """Typed mapping of available display dimensions in pixels."""
+
     width: pyd.NonNegativeInt | None
     height: pyd.NonNegativeInt | None
 
 
 @runtime_checkable
 class IsReactive(Protocol[ContentT]):
+    """Protocol for reactive holders of a typed value."""
+
     @property
     def value(self) -> ContentT:
         ...
@@ -378,6 +406,8 @@ class IsReactive(Protocol[ContentT]):
 
 @runtime_checkable
 class IsReactiveObjects(Protocol):
+    """Protocol for the runtime collection of reactive data objects."""
+
     jupyter_ui_config: IsReactive[IsJupyterUserInterfaceConfig]
     text_config: IsReactive[IsTextConfig]
     layout_config: IsReactive[IsLayoutConfig]
@@ -390,7 +420,8 @@ class IsReactiveObjects(Protocol):
 
 @runtime_checkable
 class IsDataClassCreator(Protocol[HasContentT, ContentT]):
-    """"""
+    """Protocol for factories and helpers that manage Omnipy data classes."""
+
     @property
     def config(self) -> IsDataConfig:
         ...

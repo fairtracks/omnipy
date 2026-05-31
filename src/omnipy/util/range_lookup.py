@@ -1,9 +1,24 @@
+"""Fast membership lookup for collections of non-negative integer ranges.
+
+This module compacts a set of ``range`` objects into a bitarray-backed lookup
+table for repeated containment checks.
+"""
+
 from collections.abc import Iterable
 
 from bitarray import bitarray
 
 
 class RangeLookup:
+    """Provide constant-time containment checks for integer ranges.
+
+    Args:
+        ranges: Ranges to encode into the lookup table.
+
+    Raises:
+        ValueError: If any range contains negative values.
+    """
+
     def __init__(self, ranges: Iterable[range]):
         largest_range_stop = max((r.stop for r in ranges), default=0)
         if largest_range_stop >= 0:

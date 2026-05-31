@@ -1,3 +1,5 @@
+"""Base classes for converting rendered panels into Rich-styled output."""
+
 from abc import ABC, abstractmethod
 from functools import cached_property, lru_cache
 from io import StringIO
@@ -34,6 +36,8 @@ class StylizedMonospacedPanel(
         Generic[PanelT, ContentT, FrameT],
         ABC,
 ):
+    """Fully rendered monospaced panel backed by Rich renderables."""
+
     # TODO: Return to _inner_cropped_dims when Pydantic 2.0 is released
     #
     # Pydantic 1.10 emits a RuntimeWarning for dataclasses with private

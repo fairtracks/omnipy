@@ -1,3 +1,14 @@
+"""Frame objects that bound panel width, height, and fixed-axis behavior.
+
+Type Aliases:
+    GeneralFrame: Frame with optional width and height.
+    UndefinedFrame: Frame with neither width nor height set.
+    FrameWithWidth: Frame with concrete width.
+    FrameWithHeight: Frame with concrete height.
+    FrameWithWidthAndHeight: Frame with both axes concrete.
+    AnyFrame: Union of the public frame specializations.
+"""
+
 from typing import cast, Generic, overload
 
 from typing_extensions import TypeIs
@@ -214,6 +225,8 @@ class Frame(Generic[WidthT, HeightT]):
 
 
 def empty_frame() -> Frame[None, None]:
+    """Return an unconstrained frame with no width or height limits."""
+
     return Frame(Dimensions(width=None, height=None))
 
 
@@ -226,12 +239,18 @@ AnyFrame = GeneralFrame | FrameWithWidth | FrameWithHeight | FrameWithWidthAndHe
 
 
 def frame_has_width(frame: AnyFrame) -> TypeIs[FrameWithWidth | FrameWithWidthAndHeight]:
+    """Return whether the frame has a concrete width."""
+
     return has_width(frame.dims)
 
 
 def frame_has_height(frame: AnyFrame) -> TypeIs[FrameWithHeight | FrameWithWidthAndHeight]:
+    """Return whether the frame has a concrete height."""
+
     return has_height(frame.dims)
 
 
 def frame_has_width_and_height(frame: AnyFrame) -> TypeIs[FrameWithWidthAndHeight]:
+    """Return whether the frame has both width and height."""
+
     return has_width_and_height(frame.dims)

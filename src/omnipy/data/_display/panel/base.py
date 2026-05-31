@@ -1,3 +1,5 @@
+"""Panel base classes defining the staged display rendering pipeline."""
+
 from abc import ABC, abstractmethod
 from dataclasses import asdict
 from functools import cached_property
@@ -23,6 +25,8 @@ import omnipy.util.pydantic as pyd
 
 
 class OutputVariant(ABC):
+    """Container for exporting one rendered panel in multiple output formats."""
+
     @cached_property
     @abstractmethod
     def terminal(self) -> str:
@@ -92,14 +96,20 @@ class Panel(Generic[FrameT]):
 
 
 def panel_is_dimensions_aware(panel: 'Panel') -> TypeIs['DimensionsAwarePanel']:
+    """Return whether the panel has reached the dimensions-aware stage."""
+
     return isinstance(panel, DimensionsAwarePanel)
 
 
 def panel_is_fully_rendered(panel: 'Panel') -> TypeIs['FullyRenderedPanel']:
+    """Return whether the panel has reached the fully rendered stage."""
+
     return isinstance(panel, FullyRenderedPanel)
 
 
 class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
+    """Panel stage that knows its measured dimensions within a frame."""
+
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
@@ -256,6 +266,8 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
 
 
 class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT], ABC):
+    """Panel stage that can export terminal and HTML output variants."""
+
     @override
     def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
         raise NotImplementedError('This panel is fully rendered.')

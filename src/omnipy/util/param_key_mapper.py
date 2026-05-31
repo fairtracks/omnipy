@@ -1,7 +1,23 @@
+"""Utilities for renaming parameter keys between paired vocabularies.
+
+This module provides a small mapping helper that can translate matching keys in
+either direction, drop matched keys, or combine both operations.
+"""
+
 from typing import Any, Iterable, Mapping
 
 
 class ParamKeyMapper:
+    """Translate selected mapping keys using a bidirectional key map.
+
+    Args:
+        key_map: Mapping from source keys to target keys.
+
+    Raises:
+        ValueError: If the mapping is not one-to-one and cannot be inverted
+            without losing keys.
+    """
+
     def __init__(self, key_map: Mapping[str, str] | Iterable[tuple[str, str]]):
         self.key_map = dict(key_map)
         self._inverse_key_map = {val: key for key, val in self.key_map.items()}

@@ -1,3 +1,5 @@
+"""Protocols for model content types with Omnipy-specific typing behavior."""
+
 from collections.abc import Generator, Iterable
 from typing import Any, Literal, overload, Protocol, SupportsIndex
 
@@ -34,6 +36,8 @@ _ConcatColumnModelT = TypeVar(
 
 
 class IsIntContent(IsInt, Protocol):
+    """Protocol for integer-like model content operations."""
+
     def __add__(self, value: ConvertibleToInt, /) -> Self:  # type: ignore [override]
         raise AssumedToBeImplementedException
 
@@ -147,6 +151,8 @@ class IsIntContent(IsInt, Protocol):
 
 
 class IsFloatContent(IsFloat, Protocol):
+    """Protocol for float-like model content operations."""
+
     def __add__(self, value: ConvertibleToFloat, /) -> Self:  # type: ignore [override]
         raise AssumedToBeImplementedException
 
@@ -211,6 +217,8 @@ class IsFloatContent(IsFloat, Protocol):
 
 
 class IsBoolContent(IsBool, Protocol):
+    """Protocol for bool-like model content bitwise operations."""
+
     @overload  # type: ignore [override]
     def __and__(self, value: IsBool, /) -> Self:
         raise AssumedToBeImplementedException
@@ -327,6 +335,8 @@ class IsBoolContent(IsBool, Protocol):
 
 
 class IsStrContent(IsStr, Protocol):
+    """Protocol for string model content concatenation."""
+
     def __add__(self, value: IsStr, /) -> Self:
         raise AssumedToBeImplementedException
 
@@ -338,6 +348,8 @@ class IsStrContent(IsStr, Protocol):
 
 
 class IsBytesContent(IsBytes, Protocol):
+    """Protocol for bytes model content concatenation."""
+
     def __add__(self, value: IsBytes, /) -> Self:  # type: ignore [override]
         raise AssumedToBeImplementedException
 
@@ -349,6 +361,8 @@ class IsBytesContent(IsBytes, Protocol):
 
 
 class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
+    """Protocol for set model content with set-preserving operations."""
+
     @override
     def difference(self, *s: Iterable[object]) -> Self:  # type: ignore [override]
         raise AssumedToBeImplementedException
@@ -492,6 +506,8 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
 
 
 class IsListContent(IsList[_ValT], Protocol[_ValT]):
+    """Protocol for list model content with list-preserving operations."""
+
     @override
     def __add__(  # type: ignore [override]
         self,
@@ -580,6 +596,8 @@ class IsListOfDictsContent(IsListContent[(_ValMappingT
                                           | SupportsKeysAndGetItem[_NestedKeyT, _NestedValT]
                                           | Iterable[tuple[_NestedKeyT, _NestedValT]])],
                            Protocol[_ValMappingT, _NestedKeyT, _NestedValT]):
+    """Protocol for list content whose items are mapping-like values."""
+
     @overload  # type: ignore [override]
     def __getitem__(self, index: SupportsIndex, /) -> _ValMappingT:
         raise AssumedToBeImplementedException
@@ -677,6 +695,8 @@ class IsPairTupleContent(IsHashable, IsTuple[_ValT | _SecondValT], Protocol[_Val
 
 
 class IsDictContent(IsDict[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
+    """Protocol for dict model content with dict-preserving merges."""
+
     @override
     @classmethod
     def fromkeys(  # type: ignore [override]
@@ -734,6 +754,8 @@ class IsDictOfDictsContent(IsDictContent[_KeyT,
                                           | SupportsKeysAndGetItem[_NestedKeyT, _NestedValT]
                                           | Iterable[tuple[_NestedKeyT, _NestedValT]])],
                            Protocol[_KeyT, _ValMappingT, _NestedKeyT, _NestedValT]):
+    """Protocol for dict content whose values are mapping-like values."""
+
     @override
     def __getitem__(self, key: _KeyT, /) -> _ValMappingT:
         raise AssumedToBeImplementedException

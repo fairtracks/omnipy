@@ -10,6 +10,8 @@
 # flake8: noqa
 # isort: skip_file
 
+"""Typing-inspired protocol definitions shared across Omnipy."""
+
 from __future__ import annotations
 
 # import collections  # noqa: F401  # pyright: ignore[reportUnusedImport]
@@ -1170,6 +1172,8 @@ class IsBinaryIO(IsIO[bytes], Protocol):
 
 # class TextIO(IO[str]):
 class IsTextIO(IsIO[str], Protocol):
+    """Protocol with the same interface as the abstract class `typing.TextIO`."""
+
     # See comment regarding the @properties in the `IO` class
     # __slots__ = ()
     @property

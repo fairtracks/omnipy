@@ -1,3 +1,5 @@
+"""Layout reflow algorithm for fitting panel collections into a frame."""
+
 from collections import defaultdict
 import dataclasses
 from typing import Callable

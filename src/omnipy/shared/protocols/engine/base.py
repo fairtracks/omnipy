@@ -1,3 +1,5 @@
+"""Base protocols for Omnipy engine implementations."""
+
 from typing import Protocol, runtime_checkable, Type
 
 from omnipy.shared.protocols.config import IsJobRunnerConfig
@@ -6,7 +8,8 @@ from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
 @runtime_checkable
 class IsEngine(Protocol):
-    """"""
+    """Protocol for execution engines configured with registry state."""
+
     def __init__(self) -> None:
         ...
 

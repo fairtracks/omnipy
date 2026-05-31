@@ -1,3 +1,5 @@
+"""Helper types and utilities shared across Omnipy's data layer internals."""
+
 from collections import defaultdict
 from contextlib import suppress
 from dataclasses import dataclass
@@ -33,38 +35,59 @@ _U = TypeVar('_U')
 
 
 class TypeVarStore(Generic[_T]):
+    """Sentinel generic used to expose a single type variable in helper type plumbing."""
+
     def __init__(self, t: _T) -> None:
         raise ValueError()
 
 
 class DoubleTypeVarStore(Generic[_T, _U]):
+    """Sentinel generic used to expose one of two type variables to internal helpers."""
+
     def __init__(self, t: _T | _U) -> None:
         raise ValueError()
 
 
 class TypeVarStore1(TypeVarStore[_T], Generic[_T]):
+    """Distinct single-type-variable marker used when multiple stores are needed."""
+
     ...
 
 
 class TypeVarStore2(TypeVarStore[_T], Generic[_T]):
+    """Distinct single-type-variable marker used when multiple stores are needed."""
+
     ...
 
 
 class TypeVarStore3(TypeVarStore[_T], Generic[_T]):
+    """Distinct single-type-variable marker used when multiple stores are needed."""
+
     ...
 
 
 class TypeVarStore4(TypeVarStore[_T], Generic[_T]):
+    """Distinct single-type-variable marker used when multiple stores are needed."""
+
     ...
 
 
 class YesNoMaybe(IntEnum):
+    """Tri-state answer used when Omnipy infers special-method behavior."""
+
     NO = 0
     YES = 1
     MAYBE = 2
 
 
 class MethodInfo(NamedTuple):
+    """Metadata describing how a Python special method behaves for wrapped data classes.
+
+    Attributes:
+        state_changing: Whether calling the method mutates the wrapped object.
+        returns_same_type: Whether the method is expected to return the same data-class type.
+    """
+
     state_changing: bool
     returns_same_type: YesNoMaybe
 
@@ -184,15 +207,26 @@ validate_cls_counts: defaultdict[str, int] = defaultdict(int)
 
 
 class ResetSolutionTuple(NamedTuple):
+    """Result from internal reset handling during snapshot-aware operations.
+
+    Attributes:
+        reset_solution: Context manager that applies the chosen reset strategy.
+        snapshot_taken: Whether a fresh snapshot was captured before the operation.
+    """
+
     reset_solution: ContextManager[None]
     snapshot_taken: bool
 
 
 def debug_get_sorted_validate_counts() -> dict[str, int]:
+    """Return validation-call counts sorted from highest to lowest for debugging."""
+
     return dict(reversed(sorted(validate_cls_counts.items(), key=lambda item: item[1])))
 
 
 def debug_get_total_validate_count() -> int:
+    """Return the total number of tracked validation calls for debugging."""
+
     return sum(val for key, val in validate_cls_counts.items())
 
 
@@ -201,6 +235,18 @@ def cleanup_name_qualname_and_module(
     model_or_dataset: type[DataClassBase],
     orig_model: TypeForm,
 ) -> None:
+    """Normalize generated class identity metadata for parametrized data classes.
+
+    Omnipy dynamically creates specialized model and dataset classes. This helper keeps the
+    generated class name, qualified name, and module aligned with the originating class so those
+    classes display predictably in errors, debugging output, and introspection tools.
+
+    Args:
+        cls: The original generic data-class type being specialized.
+        model_or_dataset: The generated specialized class whose metadata should be updated.
+        orig_model: The type parameter representation used to build the specialized class name.
+    """
+
     def _display_as_type(model: TypeForm):
         if isinstance(model, str):  # ForwardRef
             return model
@@ -275,12 +321,27 @@ def build_own_module_and_global_namespace_for_forward_refs(
 
 @dataclass(frozen=True, kw_only=True)
 class PendingData:
+    """Marker payload for dataset items whose producing task has not completed yet.
+
+    Attributes:
+        job_name: Human-readable task name.
+        job_unique_name: Optional unique task identifier when available.
+    """
+
     job_name: str
     job_unique_name: str = ''
 
 
 @dataclass(frozen=True, kw_only=True)
 class FailedData:
+    """Marker payload for dataset items whose producing task failed.
+
+    Attributes:
+        job_name: Human-readable task name.
+        job_unique_name: Optional unique task identifier when available.
+        exception: The captured task failure.
+    """
+
     job_name: str
     job_unique_name: str = ''
     exception: BaseException

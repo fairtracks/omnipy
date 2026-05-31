@@ -1,3 +1,5 @@
+"""Task-state dataset helpers used by Omnipy task-producing datasets."""
+
 from typing import Any, cast, get_args
 
 from typing_extensions import Self
@@ -11,6 +13,13 @@ from omnipy.util.helpers import is_union
 
 
 class TaskDatasetMixin:
+    """Add pending/failed task state handling to dataset-like classes.
+
+    Omnipy uses this mixin for datasets whose entries may temporarily hold ``PendingData`` or
+    ``FailedData`` markers instead of final model values. The mixin provides filtered views and
+    metadata extraction helpers for those task-oriented datasets.
+    """
+
     @call_super_if_available(call_super_before_method=True)
     @classmethod
     def _prepare_params(cls, params: TypeForm) -> TypeForm:
@@ -33,6 +42,8 @@ class TaskDatasetMixin:
 
     @property
     def available_data(self) -> Self:
+        """Return a same-type copy containing only successfully available data entries."""
+
         self_with_data = cast(HasData, self)
         copy = cast(HasData, self.__class__())
         copy.data = {
@@ -44,6 +55,8 @@ class TaskDatasetMixin:
 
     @property
     def pending_data(self) -> Self:
+        """Return a same-type copy containing only entries still waiting on task results."""
+
         self_with_data = cast(HasData, self)
         copy = cast(HasData, self.__class__())
         copy.data = {
@@ -53,6 +66,8 @@ class TaskDatasetMixin:
 
     @property
     def failed_data(self) -> Self:
+        """Return a same-type copy containing only entries whose producing task failed."""
+
         self_with_data = cast(HasData, self)
         copy = cast(HasData, self.__class__())
         copy.data = {
@@ -61,12 +76,16 @@ class TaskDatasetMixin:
         return cast(Self, copy)
 
     def pending_task_details(self) -> dict[str, IsPendingData]:
+        """Return pending task marker payloads keyed by dataset entry name."""
+
         self_with_data = cast(HasData, self)
         return {  # pyright: ignore [reportReturnType]
             key: val for key, val in self_with_data.data.items() if isinstance(val, PendingData)
         }
 
     def failed_task_details(self) -> dict[str, IsFailedData]:
+        """Return failure marker payloads keyed by dataset entry name."""
+
         self_with_data = cast(HasData, self)
         return {  # pyright: ignore [reportReturnType]
             key: val for key, val in self_with_data.data.items() if isinstance(val, FailedData)

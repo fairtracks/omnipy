@@ -1,3 +1,5 @@
+"""Custom logging handlers used by Omnipy root logging configuration."""
+
 from datetime import date, datetime
 import logging
 from logging.handlers import RotatingFileHandler
@@ -5,6 +7,8 @@ from pathlib import Path
 
 
 class DailyRotatingFileHandler(RotatingFileHandler):
+    """Rotate log files on size limits or when the calendar date changes."""
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._last_log_date_file_path: str = str(
@@ -28,6 +32,7 @@ class DailyRotatingFileHandler(RotatingFileHandler):
             return None
 
     def shouldRollover(self, record: logging.LogRecord) -> bool:
+        """Return whether the incoming record should trigger a log rollover."""
         if super().shouldRollover(record):
             return True
 

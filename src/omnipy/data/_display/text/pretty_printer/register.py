@@ -1,3 +1,5 @@
+"""Registry helpers that pick a pretty-printer from config, content, or syntax."""
+
 from typing import Literal, overload
 
 from omnipy.data._display.panel.draft.base import DraftPanel
@@ -14,6 +16,8 @@ from omnipy.shared.exceptions import ShouldNotOccurException
 
 def get_pretty_printer_from_config_value(
         pretty_printer: PrettyPrinterLib.Literals) -> PrettyPrinter | None:
+    """Return an explicit pretty-printer selected by configuration."""
+
     match pretty_printer:
         case PrettyPrinterLib.COMPACT_JSON:
             return CompactJsonPrettyPrinter()
@@ -34,6 +38,8 @@ def get_pretty_printer_from_config_value(
 
 
 def get_debug_pretty_printer_if_debug_mode(debug_mode: bool) -> PrettyPrinter | None:
+    """Return the debug pretty-printer when debug mode is enabled."""
+
     if debug_mode:
         return RichPrettyPrinter()
     else:
@@ -45,6 +51,8 @@ def get_pretty_printer_from_content(
     draft_panel: DraftPanel,
     default: Literal[False],
 ) -> PrettyPrinter | None:
+    """Choose a content-based pretty-printer without requiring a fallback."""
+
     ...
 
 
@@ -53,10 +61,14 @@ def get_pretty_printer_from_content(
     draft_panel: DraftPanel,
     default: Literal[True],
 ) -> PrettyPrinter:
+    """Choose a content-based pretty-printer and require a fallback match."""
+
     ...
 
 
 def get_pretty_printer_from_content(draft_panel: DraftPanel, default: bool) -> PrettyPrinter | None:
+    """Choose a pretty-printer based on the panel content type."""
+
     for pretty_printer in [
             CompactJsonPrettyPrinter(),
             ColumnPrettyPrinter(),
@@ -79,6 +91,8 @@ def get_pretty_printer_from_content(draft_panel: DraftPanel, default: bool) -> P
 
 def get_pretty_printer_from_syntax(
         syntax: SyntaxLanguageSpec.Literals | str) -> PrettyPrinter | None:
+    """Choose a pretty-printer based on the requested syntax language."""
+
     # Note: Python syntax is explicitly not checked for here, as this
     # allows get_pretty_printer_from_content(default=True) to select
     # between CodePrettyPrinter (which displays strings without quotes)

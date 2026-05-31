@@ -1,3 +1,5 @@
+"""Dynamic loading and registration of external Base16-derived color styles."""
+
 from functools import lru_cache
 import os
 from pathlib import Path
@@ -25,12 +27,16 @@ _runtime: IsRuntime | None = None
 
 
 class TintedBase16Style(pygments.style.Style):
+    """Base class for dynamically materialized Base16 Pygments styles."""
+
     name: str  # pyright: ignore[reportIncompatibleVariableOverride]
     author: str
     variant: str
 
 
 def fetch_base16_theme(theme_url: str) -> Base16Theme:
+    """Fetch, cache, and parse a Base16 theme definition from a URL."""
+
     from omnipy.hub.runtime import runtime
     if not runtime:
         assert _runtime, 'Runtime is not initialized, probably due to pytest usage'
@@ -65,6 +71,8 @@ def create_dynamic_base16_style_class(
     theme_key: str,
     base16_theme: Base16Theme,
 ) -> type[TintedBase16Style]:
+    """Create a Pygments style class from a parsed Base16 theme."""
+
     return type(
         _create_base_16_class_name_from_theme_key(theme_key), (TintedBase16Style,),
         {
@@ -129,6 +137,8 @@ def __getattr__(attr: str) -> type[pygments.style.Style]:
 
 
 def resolve_and_fetch_style(style: str | AllColorStyles.Literals) -> str:
+    """Resolve Omnipy style names and install dynamic themes when needed."""
+
     if style in AllColorStyles:
         style = resolve_random_style_name(style)
         cleaned_style = clean_style_name(style)
@@ -144,6 +154,8 @@ def resolve_and_fetch_style(style: str | AllColorStyles.Literals) -> str:
 
 
 def resolve_random_style_name(name: str | AllColorStyles.Literals) -> str:
+    """Resolve random-style selectors into a concrete style name."""
+
     if name.startswith(RANDOM_PREFIX):
         color_style_cls = AllColorStyles.get_supercls_for_random_choice(name)
         if color_style_cls:
@@ -154,6 +166,8 @@ def resolve_random_style_name(name: str | AllColorStyles.Literals) -> str:
 
 
 def clean_style_name(name: str | AllColorStyles.Literals) -> str:
+    """Normalize style names for Rich and Pygments compatibility."""
+
     if name.endswith(PYGMENTS_SUFFIX):
         return name[:-len(PYGMENTS_SUFFIX)]  # Remove suffix for Pygments compatibility
     elif name.startswith(ANSI_PREFIX):
@@ -162,6 +176,8 @@ def clean_style_name(name: str | AllColorStyles.Literals) -> str:
 
 
 def install_base16_theme(theme_key: str) -> None:
+    """Register a dynamic Base16 theme with Pygments internal registries."""
+
     if theme_key not in pygments.styles.STYLES:
         base16_style_cls_name = _create_base_16_class_name_from_theme_key(theme_key)
 

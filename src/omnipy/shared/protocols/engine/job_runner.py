@@ -1,3 +1,5 @@
+"""Protocols for engines that decorate runnable jobs."""
+
 from typing import Callable, Protocol, runtime_checkable
 
 from omnipy.shared.enums.job import JobType

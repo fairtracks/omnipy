@@ -1,3 +1,5 @@
+"""Top-level task and flow protocol definitions."""
+
 from datetime import datetime
 import inspect
 from types import MappingProxyType
@@ -296,17 +298,20 @@ class IsFuncArgJob(IsJob[_JobTemplateT, _JobT, _CallP, _RetCovT],
 
 class IsTask(IsFuncArgJob['IsTaskTemplate[_CallP, _RetT]', 'IsTask[_CallP, _RetT]', _CallP, _RetT],
              Protocol[_CallP, _RetT]):
-    """"""
+    """Protocol for applied Omnipy tasks."""
+
     ...
 
 
 class IsFlowTemplate(Protocol):
-    """"""
+    """Protocol for flow templates."""
+
     ...
 
 
 class IsFlow(Protocol):
-    """"""
+    """Protocol for applied flows with run-state metadata."""
+
     @property
     def flow_context(self) -> IsNestedContext:
         ...
@@ -344,7 +349,8 @@ class IsLinearFlowTemplate(IsChildJobListArgJobTemplate['IsLinearFlowTemplate[_C
                                                         _RetCovT],
                            IsFlowTemplate,
                            Protocol[_CallP, _RetCovT]):
-    """"""
+    """Protocol for linear flow templates."""
+
     ...
 
 
@@ -360,7 +366,8 @@ class IsLinearFlow(IsChildJobListArgJob['IsLinearFlowTemplate[_CallP, _RetCovT]'
                                         _RetCovT],
                    IsFlow,
                    Protocol[_CallP, _RetCovT]):
-    """"""
+    """Protocol for applied linear flows."""
+
     ...
 
 
@@ -380,7 +387,8 @@ class IsDagFlow(IsChildJobListArgJob['IsDagFlowTemplate[_CallP, _RetCovT]',
                                      _RetCovT],
                 IsFlow,
                 Protocol[_CallP, _RetCovT]):
-    """"""
+    """Protocol for applied DAG flows."""
+
     ...
 
 
@@ -390,17 +398,19 @@ class IsFuncFlowTemplate(IsFuncArgJobTemplate['IsFuncFlowTemplate[_CallP, _RetCo
                                               _RetCovT],
                          IsFlowTemplate,
                          Protocol[_CallP, _RetCovT]):
-    """"""
+    """Protocol for callable-backed flow templates."""
+
     ...
 
 
 class IsFuncFlow(IsFuncArgJob['IsFuncFlowTemplate[_CallP, _RetCovT]',
-                              'IsFuncFlow[_CallP, _RetCovT]',
-                              _CallP,
-                              _RetCovT],
+                               'IsFuncFlow[_CallP, _RetCovT]',
+                               _CallP,
+                               _RetCovT],
                  IsFlow,
                  Protocol[_CallP, _RetCovT]):
-    """"""
+    """Protocol for callable-backed applied flows."""
+
     ...
 
 

@@ -1,3 +1,10 @@
+"""Reference-count-aware memo helpers for controlled deep-copy cleanup.
+
+This module provides a custom memo dictionary used during deepcopy operations to
+track copied object ids, keep selected sub-objects alive temporarily, and prune
+memoized entries once their source objects are no longer referenced.
+"""
+
 from collections import defaultdict, UserDict
 import gc
 import sys
@@ -17,6 +24,13 @@ else:
 
 
 class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
+    """Track deepcopy memo entries and their transitive object references.
+
+    The container stores non-atomic memoized objects by id, records which
+    sub-object ids were touched while deep-copying a root object, and supports
+    recursive cleanup of entries whose originals have been deleted.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self._cur_deepcopy_obj_id: int | None = None

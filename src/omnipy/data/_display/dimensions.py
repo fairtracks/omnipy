@@ -1,3 +1,17 @@
+"""Dimension value objects and fit checks for rendered display content.
+
+Type Aliases:
+    WidthT: Width type parameter for dimension-aware objects.
+    HeightT: Height type parameter for dimension-aware objects.
+    UndefinedDimensions: Dimensions with neither width nor height set.
+    GeneralDimensions: Dimensions with optional width and height.
+    DimensionsWithWidth: Dimensions with known width.
+    DimensionsWithHeight: Dimensions with known height.
+    DimensionsWithWidthAndHeight: Dimensions with both axes known.
+    DimensionsWithWidthOrHeight: Dimensions with at least one known axis.
+    AnyDimensions: Union of supported public dimension shapes.
+"""
+
 from typing import Generic, Literal
 
 from typing_extensions import TypeIs, TypeVar
@@ -22,6 +36,8 @@ HeightT = TypeVar(
 
 @pyd.dataclass(frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True))
 class Dimensions(Generic[WidthT, HeightT]):
+    """Immutable width and height pair used across the display pipeline."""
+
     width: WidthT
     height: HeightT
 
@@ -37,22 +53,32 @@ AnyDimensions = (
 
 
 def has_width(dims: AnyDimensions) -> TypeIs[DimensionsWithWidth | DimensionsWithWidthAndHeight]:
+    """Return whether the dimensions object has a concrete width."""
+
     return dims.width is not None
 
 
 def has_height(dims: AnyDimensions) -> TypeIs[DimensionsWithHeight | DimensionsWithWidthAndHeight]:
+    """Return whether the dimensions object has a concrete height."""
+
     return dims.height is not None
 
 
 def has_width_and_height(dims: AnyDimensions) -> TypeIs[DimensionsWithWidthAndHeight]:
+    """Return whether both width and height are concrete."""
+
     return has_width(dims) and has_height(dims)
 
 
 def has_width_or_height(dims: AnyDimensions) -> TypeIs[DimensionsWithWidthOrHeight]:
+    """Return whether at least one dimension is concrete."""
+
     return has_width(dims) or has_height(dims)
 
 
 class Proportionally(LiteralEnum[int]):
+    """Relative shape comparison between content and its containing frame."""
+
     Literals = Literal[-2, -1, 0, 1, 2]
 
     MUCH_THINNER: Literal[-2] = -2
@@ -63,6 +89,8 @@ class Proportionally(LiteralEnum[int]):
 
 
 class DimensionsFit:
+    """Summarize whether rendered dimensions fit a target frame."""
+
     def __init__(self,
                  dims: DimensionsWithWidthAndHeight,
                  frame_dims: Dimensions,

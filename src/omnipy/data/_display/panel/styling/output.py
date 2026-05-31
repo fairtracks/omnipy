@@ -1,3 +1,5 @@
+"""Output-variant implementations that crop and export stylized panels."""
+
 from abc import abstractmethod
 from copy import copy
 from functools import cached_property
@@ -26,6 +28,8 @@ from omnipy.util.literal_enum import LiteralEnum
 
 
 class OutputMode(LiteralEnum[str]):
+    """Export modes for plain, monochrome-stylized, and colorized output."""
+
     Literals = Literal['plain', 'bw_stylized', 'colorized']
 
     PLAIN: Literal['plain'] = 'plain'
@@ -34,6 +38,8 @@ class OutputMode(LiteralEnum[str]):
 
 
 class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
+    """Shared terminal and HTML export logic for stylized panels."""
+
     _CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG: ClassVar[str] = ('color: {foreground}; '
                                                           'background-color: {background}; ')
 
@@ -245,6 +251,8 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
 
 
 class StylizedItem(NamedTuple):
+    """One stylized segment split into prefix, text, and suffix wrappers."""
+
     span_start: str
     content: str
     span_end: str
@@ -254,6 +262,8 @@ class CroppingOutputVariant(
         CommonOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
+    """Output variant that crops stylized content to the panel frame."""
+
     def _crop_top_level_html(self, html: str) -> str:
         return re.sub(
             r'(<code[^>]*>)([\S\s]*)(</code>)',
@@ -435,6 +445,8 @@ class TextCroppingOutputVariant(
         CroppingOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
+    """Cropping strategy for text-like panels with line-preserving output."""
+
     @override
     def _crop_lines_vertically(
         self,
@@ -468,6 +480,8 @@ class TableCroppingOutputVariant(
         CroppingOutputVariant[PanelT, ContentT, FrameT],
         Generic[PanelT, ContentT, FrameT],
 ):
+    """Cropping strategy for outer layout tables and their border structure."""
+
     @override
     def _crop_lines_vertically(
         self,
