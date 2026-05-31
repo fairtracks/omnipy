@@ -1,4 +1,4 @@
-This page has moved. See [Learn/Python typing](../learn/python-typing.md) and [How-to models](../howto/models/define-models.md) respectively.
+This page has moved. See [Learn/Python typing](learn/python-typing.md) and [How-to models](howto/models/define-models.md) respectively.
 
 ## Models parse and operate on structured data
 
@@ -113,12 +113,12 @@ except ValidationError:
 This functionality is especially useful when users are working with Omnipy in an interactive session
 such as a [Jupyter notebook](https://jupyter.org/) or in the Python console, where it is easy to 
 make mistakes and cumbersome to rerun code. Hence, the snapshot and rollback feature of Omnipy 
-`Model` objects can be disabled through the `interactive_mode` configuration, e.g.:
+`Model` objects can be disabled through the interactive configuration, e.g.:
 
 ```python
 from omnipy import Model
 
-Model.config.interactive_mode = False
+Model.config.model.interactive = False
 ```
 
 Or equivalently:
@@ -126,7 +126,7 @@ Or equivalently:
 ```python
 from omnipy import runtime
 
-runtime.config.data.interactive_mode = False
+runtime.config.data.model.interactive = False
 ```
 
 ### Model objects can be operated as the modelled class

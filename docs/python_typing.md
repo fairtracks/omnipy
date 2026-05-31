@@ -1,4 +1,4 @@
-This page has moved. See [Learn/Python typing](../learn/python-typing.md) and [How-to models](../howto/models/define-models.md) respectively.
+This page has moved. See [Learn/Python typing](learn/python-typing.md) and [How-to models](howto/models/define-models.md) respectively.
 
 ## The Duck Test
 
