@@ -14,16 +14,32 @@ from . import comment_schema, ontology_annotation_schema, protocol_parameter_sch
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA process parameter values."""
+    """JSON-LD type labels used for ISA process parameter values.
+
+    Attributes:
+        ParameterValue: Marks a JSON object as an ISA process parameter value.
+    """
 
     ParameterValue = 'ParameterValue'
 
 
 class IsaProcessParameterValueSchema(pyd.BaseModel):
-    """Pydantic schema for a protocol parameter value in a process."""
+    """Schema for protocol parameter values applied in process steps.
+
+    Attributes:
+        category: Protocol parameter definition this value belongs to.
+        value: Scalar or ontology-backed assigned value.
+        unit: Unit ontology annotation for quantitative values.
+        comments: Optional comments attached to the value.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA process-parameter validation."""
+        """Validation settings for ISA process-parameter schema parsing.
+
+        Attributes:
+            extra: Rejects unknown keys in input payloads.
+            use_enum_values: Emits enum members by value string.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -38,6 +54,10 @@ class IsaProcessParameterValueSchema(pyd.BaseModel):
 
 
 class IsaProcessParameterValueModel(Model[IsaProcessParameterValueSchema]):
-    """ISA model representing a protocol parameter value in a process."""
+    """Omnipy model wrapper for ISA process parameter values.
+
+    Wraps :class:`IsaProcessParameterValueSchema` for typed use in ISA process
+    model structures.
+    """
 
     ...

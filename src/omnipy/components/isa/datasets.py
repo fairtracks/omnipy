@@ -6,10 +6,18 @@ from .models import FlattenedIsaJsonModel, IsaJsonModel
 
 
 class IsaJsonDataset(Dataset[IsaJsonModel]):
-    """Store ISA-JSON documents."""
+    """Dataset containing validated ISA-JSON documents.
+
+    Each record in the dataset is validated by :class:`IsaJsonModel`, allowing
+    downstream ISA flows and tasks to operate on a consistent document shape.
+    """
     ...
 
 
 class FlattenedIsaJsonDataset(Dataset[FlattenedIsaJsonModel]):
-    """Store ISA-JSON documents transformed into flattened record structures."""
+    """Dataset containing flattened ISA-JSON records.
+
+    Records in this dataset follow :class:`FlattenedIsaJsonModel` and are
+    intended for tabular-style processing after ISA structures are flattened.
+    """
     ...

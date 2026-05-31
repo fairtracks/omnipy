@@ -14,13 +14,21 @@ from . import comment_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA data files."""
+    """JSON-LD type labels used for ISA data-file entities.
+
+    Attributes:
+        Data: Marks a JSON object as an ISA data file.
+    """
 
     Data = 'Data'
 
 
 class Type(Enum):
-    """Enum of ISA data file categories."""
+    """Allowed ISA data-file category labels.
+
+    These values follow ISA-JSON controlled vocabulary entries for different
+    kinds of data files generated through assay workflows.
+    """
 
     Raw_Data_File = 'Raw Data File'
     Derived_Data_File = 'Derived Data File'
@@ -41,10 +49,21 @@ class Type(Enum):
 
 
 class IsaDataSchema(pyd.BaseModel):
-    """Pydantic schema for a data file in an assay workflow."""
+    """Schema for a data file entry in an ISA assay.
+
+    Attributes:
+        name: Logical or physical filename for the data object.
+        type: Controlled category describing the data file kind.
+        comments: Optional free-form metadata attached to the file.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA data-file validation."""
+        """Validation settings for ISA data-file schema parsing.
+
+        Attributes:
+            extra: Rejects keys not declared by the schema.
+            use_enum_values: Converts enum members to string values.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -58,6 +77,10 @@ class IsaDataSchema(pyd.BaseModel):
 
 
 class IsaDataModel(Model[IsaDataSchema]):
-    """ISA model representing a data file in an assay workflow."""
+    """Omnipy model wrapper for ISA data-file records.
+
+    Provides Omnipy model semantics for values validated by
+    :class:`IsaDataSchema`.
+    """
 
     ...

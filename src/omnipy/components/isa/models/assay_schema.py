@@ -20,7 +20,11 @@ from . import (comment_schema,
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA assays."""
+    """JSON-LD type labels used for ISA assay entities.
+
+    Attributes:
+        Assay: Marks a JSON object as an ISA assay.
+    """
 
     Assay = 'Assay'
 
@@ -35,10 +39,23 @@ class _MaterialsModel(Model[_Materials]):
 
 
 class IsaAssayJsonSchema(pyd.BaseModel):
-    """Pydantic schema for an assay in an investigation."""
+    """Schema describing an assay block in ISA-JSON.
+
+    Attributes:
+        filename: Source filename for the assay metadata.
+        measurementType: Ontology term describing what is measured.
+        technologyType: Ontology term describing the assay technology.
+        dataFiles: Data files produced or referenced by the assay.
+        processSequence: Ordered process applications for the assay workflow.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA assay validation."""
+        """Validation settings for ISA assay schema parsing.
+
+        Attributes:
+            extra: Rejects keys not defined in the schema.
+            use_enum_values: Serializes enum members as their value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -68,6 +85,10 @@ class IsaAssayJsonSchema(pyd.BaseModel):
 
 
 class IsaAssayJsonModel(Model[IsaAssayJsonSchema]):
-    """ISA model representing an assay in a study."""
+    """Omnipy model wrapper for validated ISA assay payloads.
+
+    This model exposes Omnipy ``Model`` behavior on top of
+    :class:`IsaAssayJsonSchema` for use in datasets and flows.
+    """
 
     ...

@@ -14,16 +14,32 @@ from . import comment_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA ontology annotations."""
+    """JSON-LD type labels used for ISA ontology-annotation entities.
+
+    Attributes:
+        OntologyAnnotation: Marks a JSON object as an ontology annotation.
+    """
 
     OntologyAnnotation = 'OntologyAnnotation'
 
 
 class IsaOntologyReferenceSchema(pyd.BaseModel):
-    """Pydantic schema for an ISA ontology annotation."""
+    """Schema for ontology terms referenced in ISA metadata.
+
+    Attributes:
+        annotationValue: Free-text or numeric value associated with the term.
+        termSource: Short name of the ontology source.
+        termAccession: Accession identifier for the ontology term.
+        comments: Optional comments attached to the annotation.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA ontology-annotation validation."""
+        """Validation settings for ISA ontology-annotation parsing.
+
+        Attributes:
+            extra: Rejects keys that are not defined by the schema.
+            use_enum_values: Outputs enum fields as value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -42,6 +58,10 @@ class IsaOntologyReferenceSchema(pyd.BaseModel):
 
 
 class IsaOntologyReferenceModel(Model[IsaOntologyReferenceSchema]):
-    """ISA model representing an ontology annotation or term reference."""
+    """Omnipy model wrapper for ISA ontology annotations.
+
+    Wraps :class:`IsaOntologyReferenceSchema` for typed integration in ISA
+    model graphs.
+    """
 
     ...

@@ -12,16 +12,29 @@ import omnipy.util.pydantic as pyd
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA organizations."""
+    """JSON-LD type labels used for ISA organization entities.
+
+    Attributes:
+        Organization: Marks a JSON object as an ISA organization.
+    """
 
     Organization = 'Organization'
 
 
 class IsaOrganizationSchema(pyd.BaseModel):
-    """Pydantic schema for an organization referenced by ISA metadata."""
+    """Schema for organization entries referenced in ISA metadata.
+
+    Attributes:
+        name: Organization name.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA organization validation."""
+        """Validation settings for ISA organization schema parsing.
+
+        Attributes:
+            extra: Rejects unknown keys.
+            use_enum_values: Emits enum members as value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -33,6 +46,10 @@ class IsaOrganizationSchema(pyd.BaseModel):
 
 
 class IsaOrganizationModel(Model[IsaOrganizationSchema]):
-    """ISA model representing an organization."""
+    """Omnipy model wrapper for ISA organization entries.
+
+    Wraps :class:`IsaOrganizationSchema` so organizations can be embedded as
+    typed ISA model values.
+    """
 
     ...

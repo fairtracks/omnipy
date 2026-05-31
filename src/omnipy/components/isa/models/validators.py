@@ -10,7 +10,17 @@ import omnipy.util.pydantic as pyd
 
 
 def date_to_iso_format(data: Union[datetime, date, pyd.constr(max_length=0)]):
-    """Convert ``date`` and ``datetime`` values to ISO-8601 strings."""
+    """Convert date-like values to their ISO-8601 string form.
+
+    Args:
+        data: Value to normalize. ``date`` and ``datetime`` instances are
+            converted with ``isoformat()``, while empty-string constrained
+            values are returned unchanged.
+
+    Returns:
+        ISO-8601 formatted string for date-like inputs, otherwise the original
+        value.
+    """
 
     if isinstance(data, date) or isinstance(data, datetime):
         return data.isoformat()

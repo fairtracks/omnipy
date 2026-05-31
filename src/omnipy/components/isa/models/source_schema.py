@@ -14,16 +14,31 @@ from . import comment_schema, material_attribute_value_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA sources."""
+    """JSON-LD type labels used for ISA source entities.
+
+    Attributes:
+        Source: Marks a JSON object as an ISA source.
+    """
 
     Source = 'Source'
 
 
 class IsaSourceSchema(pyd.BaseModel):
-    """Pydantic schema for a source material in a study."""
+    """Schema for source materials in ISA study definitions.
+
+    Attributes:
+        name: Source name or identifier.
+        characteristics: Material attribute values describing the source.
+        comments: Optional comments attached to the source entry.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA source validation."""
+        """Validation settings for ISA source schema parsing.
+
+        Attributes:
+            extra: Rejects undeclared keys in payloads.
+            use_enum_values: Serializes enum members to value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -39,6 +54,10 @@ class IsaSourceSchema(pyd.BaseModel):
 
 
 class IsaSourceModel(Model[IsaSourceSchema]):
-    """ISA model representing a study source material."""
+    """Omnipy model wrapper for ISA source records.
+
+    Provides Omnipy model behavior on top of
+    :class:`IsaSourceSchema` validation.
+    """
 
     ...

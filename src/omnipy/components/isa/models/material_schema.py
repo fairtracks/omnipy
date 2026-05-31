@@ -13,23 +13,45 @@ from . import comment_schema, material_attribute_value_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA materials."""
+    """JSON-LD type labels used for ISA material entities.
+
+    Attributes:
+        Material: Marks a JSON object as an ISA material.
+    """
 
     Material = 'Material'
 
 
 class Type(Enum):
-    """Enum of ISA material categories."""
+    """Allowed ISA material category labels.
+
+    Attributes:
+        Extract_Name: Label for an extract material.
+        Labeled_Extract_Name: Label for a labeled extract material.
+    """
 
     Extract_Name = 'Extract Name'
     Labeled_Extract_Name = 'Labeled Extract Name'
 
 
 class IsaMaterialSchema(pyd.BaseModel):
-    """Pydantic schema for a non-sample material in a study."""
+    """Schema for non-sample materials in ISA studies.
+
+    Attributes:
+        name: Material name or identifier.
+        type: Controlled label for material category.
+        characteristics: Assigned material attribute values.
+        derivesFrom: Parent materials from which this material was derived.
+        comments: Optional comments attached to the material.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA material validation."""
+        """Validation settings for ISA material schema parsing.
+
+        Attributes:
+            extra: Rejects unknown fields.
+            use_enum_values: Serializes enum fields by raw values.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -46,7 +68,11 @@ class IsaMaterialSchema(pyd.BaseModel):
 
 
 class IsaMaterialModel(Model[IsaMaterialSchema]):
-    """ISA model representing a non-sample material in a study."""
+    """Omnipy model wrapper for ISA material records.
+
+    Provides Omnipy model semantics on top of
+    :class:`IsaMaterialSchema` validation.
+    """
 
     ...
 

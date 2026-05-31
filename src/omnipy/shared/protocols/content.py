@@ -36,7 +36,8 @@ _ConcatColumnModelT = TypeVar(
 
 
 class IsIntContent(IsInt, Protocol):
-    """Protocol for integer-like model content operations."""
+    """Define the ``IsIntContent`` interface.
+    """
 
     def __add__(self, value: ConvertibleToInt, /) -> Self:  # type: ignore [override]
         raise AssumedToBeImplementedException
@@ -151,7 +152,8 @@ class IsIntContent(IsInt, Protocol):
 
 
 class IsFloatContent(IsFloat, Protocol):
-    """Protocol for float-like model content operations."""
+    """Define the ``IsFloatContent`` interface.
+    """
 
     def __add__(self, value: ConvertibleToFloat, /) -> Self:  # type: ignore [override]
         raise AssumedToBeImplementedException
@@ -217,7 +219,8 @@ class IsFloatContent(IsFloat, Protocol):
 
 
 class IsBoolContent(IsBool, Protocol):
-    """Protocol for bool-like model content bitwise operations."""
+    """Define the ``IsBoolContent`` interface.
+    """
 
     @overload  # type: ignore [override]
     def __and__(self, value: IsBool, /) -> Self:
@@ -335,7 +338,8 @@ class IsBoolContent(IsBool, Protocol):
 
 
 class IsStrContent(IsStr, Protocol):
-    """Protocol for string model content concatenation."""
+    """Define the ``IsStrContent`` interface.
+    """
 
     def __add__(self, value: IsStr, /) -> Self:
         raise AssumedToBeImplementedException
@@ -348,7 +352,8 @@ class IsStrContent(IsStr, Protocol):
 
 
 class IsBytesContent(IsBytes, Protocol):
-    """Protocol for bytes model content concatenation."""
+    """Define the ``IsBytesContent`` interface.
+    """
 
     def __add__(self, value: IsBytes, /) -> Self:  # type: ignore [override]
         raise AssumedToBeImplementedException
@@ -361,22 +366,49 @@ class IsBytesContent(IsBytes, Protocol):
 
 
 class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
-    """Protocol for set model content with set-preserving operations."""
+    """Define the ``IsSetContent`` interface.
+    """
 
     @override
     def difference(self, *s: Iterable[object]) -> Self:  # type: ignore [override]
+        """Difference.
+        
+        Args:
+            s: (Iterable[object]) Argument passed to ``difference()``.
+        
+        Returns:
+            Self: Result produced by ``difference()``.
+        """
         raise AssumedToBeImplementedException
 
     @override
     def difference_update(self, *s: Iterable[object]) -> None:
+        """Difference update.
+        
+        Args:
+            s: (Iterable[object]) Argument passed to ``difference_update()``.
+        """
         raise AssumedToBeImplementedException
 
     @override
     def intersection(self, *s: Iterable[object]) -> Self:  # type: ignore [override]
+        """Intersection.
+        
+        Args:
+            s: (Iterable[object]) Argument passed to ``intersection()``.
+        
+        Returns:
+            Self: Result produced by ``intersection()``.
+        """
         raise AssumedToBeImplementedException
 
     @override
     def intersection_update(self, *s: Iterable[object]) -> None:
+        """Intersection update.
+        
+        Args:
+            s: (Iterable[object]) Argument passed to ``intersection_update()``.
+        """
         raise AssumedToBeImplementedException
 
     @overload
@@ -393,6 +425,14 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
 
     @override
     def symmetric_difference(self, value: Iterable[object], /) -> Self | set[_ValT | _OtherT]:
+        """Symmetric difference.
+        
+        Args:
+            value: (Iterable[object]) Argument passed to ``symmetric_difference()``.
+        
+        Returns:
+            Self | set[_ValT | _OtherT]: Result produced by ``symmetric_difference()``.
+        """
         raise AssumedToBeImplementedException
 
     @overload  # type: ignore [override]
@@ -413,6 +453,14 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
         value: Iterable[object],
         /,
     ) -> Self | set[_ValT | _OtherT]:
+        """Union.
+        
+        Args:
+            value: (Iterable[object]) Argument passed to ``union()``.
+        
+        Returns:
+            Self | set[_ValT | _OtherT]: Result produced by ``union()``.
+        """
         raise AssumedToBeImplementedException
 
     @override
@@ -506,7 +554,8 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
 
 
 class IsListContent(IsList[_ValT], Protocol[_ValT]):
-    """Protocol for list model content with list-preserving operations."""
+    """Define the ``IsListContent`` interface.
+    """
 
     @override
     def __add__(  # type: ignore [override]
@@ -596,7 +645,8 @@ class IsListOfDictsContent(IsListContent[(_ValMappingT
                                           | SupportsKeysAndGetItem[_NestedKeyT, _NestedValT]
                                           | Iterable[tuple[_NestedKeyT, _NestedValT]])],
                            Protocol[_ValMappingT, _NestedKeyT, _NestedValT]):
-    """Protocol for list content whose items are mapping-like values."""
+    """Define the ``IsListOfDictsContent`` interface.
+    """
 
     @overload  # type: ignore [override]
     def __getitem__(self, index: SupportsIndex, /) -> _ValMappingT:
@@ -660,13 +710,7 @@ class IsSameTypeTupleContent(IsHashable, IsTuple[_ValT], Protocol[_ValT]):
 
 
 class IsPairTupleContent(IsHashable, IsTuple[_ValT | _SecondValT], Protocol[_ValT, _SecondValT]):
-    """Protocol for paired-type tuples as Model content, e.g. `Model[tuple[int, str]]`
-
-    IsPairTupleContent is a protocol with the same interface as the builtin class
-    tuple, with exactly two elements (e.g. tuple[int, str]). As it is meant
-    to annotate Omnipy Models for static typing, it does not support `+`
-    and `*` operators (other than for empty tuples and multiplying by 1),
-    as these operations would cause validation to fail.
+    """Define the ``IsPairTupleContent`` interface.
     """
     @override
     def __add__(  # type: ignore [override]
@@ -695,7 +739,8 @@ class IsPairTupleContent(IsHashable, IsTuple[_ValT | _SecondValT], Protocol[_Val
 
 
 class IsDictContent(IsDict[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
-    """Protocol for dict model content with dict-preserving merges."""
+    """Define the ``IsDictContent`` interface.
+    """
 
     @override
     @classmethod
@@ -705,6 +750,15 @@ class IsDictContent(IsDict[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
         value: _ValT | None = None,
         /,
     ) -> Self:
+        """Fromkeys.
+        
+        Args:
+            iterable: (Iterable[_KeyT]) Argument passed to ``fromkeys()``.
+            value: (_ValT | None) Argument passed to ``fromkeys()``.
+        
+        Returns:
+            Self: Result produced by ``fromkeys()``.
+        """
         raise AssumedToBeImplementedException
 
     @overload  # type: ignore [override]
@@ -754,7 +808,8 @@ class IsDictOfDictsContent(IsDictContent[_KeyT,
                                           | SupportsKeysAndGetItem[_NestedKeyT, _NestedValT]
                                           | Iterable[tuple[_NestedKeyT, _NestedValT]])],
                            Protocol[_KeyT, _ValMappingT, _NestedKeyT, _NestedValT]):
-    """Protocol for dict content whose values are mapping-like values."""
+    """Define the ``IsDictOfDictsContent`` interface.
+    """
 
     @override
     def __getitem__(self, key: _KeyT, /) -> _ValMappingT:

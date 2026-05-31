@@ -14,16 +14,32 @@ from . import comment_schema, factor_schema, ontology_annotation_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA factor values."""
+    """JSON-LD type labels used for ISA factor-value entities.
+
+    Attributes:
+        FactorValue: Marks a JSON object as an ISA factor assignment value.
+    """
 
     FactorValue = 'FactorValue'
 
 
 class IsaFactorValueSchema(pyd.BaseModel):
-    """Pydantic schema for a factor value assigned in a study."""
+    """Schema for values assigned to study factors.
+
+    Attributes:
+        category: Factor definition that this value belongs to.
+        value: Actual assigned value, either ontology-backed or scalar.
+        unit: Unit ontology term for numeric values when applicable.
+        comments: Optional comments describing the assignment.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA factor-value validation."""
+        """Validation settings for ISA factor-value schema parsing.
+
+        Attributes:
+            extra: Rejects keys not declared in the schema.
+            use_enum_values: Converts enum members to raw value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -38,6 +54,10 @@ class IsaFactorValueSchema(pyd.BaseModel):
 
 
 class IsaFactorValueModel(Model[IsaFactorValueSchema]):
-    """ISA model representing a factor value assigned within a study."""
+    """Omnipy model wrapper for ISA factor-value assignments.
+
+    Provides Omnipy model behavior around values validated by
+    :class:`IsaFactorValueSchema`.
+    """
 
     ...

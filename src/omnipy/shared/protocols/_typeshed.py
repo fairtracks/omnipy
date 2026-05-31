@@ -97,7 +97,8 @@ _T_contra = TypeVar('_T_contra', contravariant=True)
 
 
 class SupportsBool(Protocol):
-    """Protocol for values that implement truth testing."""
+    """Define the ``SupportsBool`` interface.
+    """
 
     def __bool__(self) -> bool:
         ...
@@ -105,14 +106,16 @@ class SupportsBool(Protocol):
 
 # Comparison protocols
 class SupportsDunderLT(Protocol[_T_contra]):
-    """Protocol for values that implement ``__lt__`` comparisons."""
+    """Define the ``SupportsDunderLT`` interface.
+    """
 
     def __lt__(self, other: _T_contra, /) -> SupportsBool:
         ...
 
 
 class SupportsDunderGT(Protocol[_T_contra]):
-    """Protocol for values that implement ``__gt__`` comparisons."""
+    """Define the ``SupportsDunderGT`` interface.
+    """
 
     def __gt__(self, other: _T_contra, /) -> SupportsBool:
         ...
@@ -219,7 +222,8 @@ SupportsRichComparisonT = TypeVar(
 
 
 class SupportsTrunc(Protocol):
-    """Protocol for values that implement ``__trunc__``."""
+    """Define the ``SupportsTrunc`` interface.
+    """
 
     def __trunc__(self) -> int:
         ...
@@ -235,9 +239,15 @@ class SupportsTrunc(Protocol):
 
 # stable
 class SupportsKeysAndGetItem(Protocol[_KT, _VT_co]):
-    """Protocol for mapping-like objects exposing ``keys`` and ``__getitem__``."""
+    """Define the ``SupportsKeysAndGetItem`` interface.
+    """
 
     def keys(self) -> Iterable[_KT]:
+        """Keys.
+        
+        Returns:
+            Iterable[_KT]: Result produced by ``keys()``.
+        """
         ...
 
     def __getitem__(self, key: _KT, /) -> _VT_co:
@@ -422,7 +432,8 @@ class SupportsGetItem(Protocol[_KT_contra, _VT_co]):
 
 # @runtime_checkable
 class Buffer(Protocol):
-    """Protocol for objects that expose the PEP 688 buffer interface."""
+    """Define the ``Buffer`` interface.
+    """
 
     __slots__ = ()
 

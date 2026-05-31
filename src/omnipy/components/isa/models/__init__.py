@@ -9,10 +9,22 @@ ISA_JSON_MODEL_TOP_LEVEL_KEY: str = 'investigation'
 
 
 class IsaTopLevelSchema(pyd.BaseModel):
-    """Pydantic schema for the top-level ISA investigation wrapper."""
+    """Schema for top-level ISA-JSON documents.
+
+    This schema reflects the common envelope where an ISA investigation is
+    stored below the ``investigation`` key.
+
+    Attributes:
+        investigation: Wrapped investigation payload when present.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA top-level validation."""
+        """Pydantic settings for top-level ISA validation.
+
+        Attributes:
+            extra: Forbids keys that are not part of the schema.
+            use_enum_values: Serializes enum instances as their value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -21,16 +33,28 @@ class IsaTopLevelSchema(pyd.BaseModel):
 
 
 class IsaTopLevelModel(Model[IsaTopLevelSchema]):
-    """ISA model representing the top-level investigation wrapper."""
+    """Omnipy model wrapper for :class:`IsaTopLevelSchema`.
+
+    The wrapper provides Omnipy ``Model`` behavior while preserving the
+    top-level ISA-JSON document shape.
+    """
 
     ...
 
 
 class IsaJsonModel(Model[IsaInvestigationSchema | IsaTopLevelModel]):
-    """ISA JSON model accepting investigation or top-level wrapper input."""
+    """Union model that accepts both common ISA investigation shapes.
+
+    Input can be either a raw :class:`IsaInvestigationSchema` object or a
+    top-level wrapper containing the ``investigation`` field.
+    """
 
     class Config:
-        """Pydantic configuration for ISA JSON union parsing."""
+        """Pydantic settings for ISA union parsing behavior.
+
+        Attributes:
+            smart_union: Keeps explicit branch resolution for union parsing.
+        """
 
         smart_union = False
 

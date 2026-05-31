@@ -20,16 +20,35 @@ from .validators import date_to_iso_format
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA process steps."""
+    """JSON-LD type labels used for ISA process entities.
+
+    Attributes:
+        Process: Marks a JSON object as an ISA process step.
+    """
 
     Process = 'Process'
 
 
 class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
-    """Pydantic schema for a process or protocol application step."""
+    """Schema for process or protocol application steps in ISA workflows.
+
+    Attributes:
+        name: Process step label.
+        executesProtocol: Protocol executed by this step.
+        parameterValues: Parameter assignments used for execution.
+        inputs: Materials or data consumed by the process.
+        outputs: Materials or data produced by the process.
+        previousProcess: Upstream process in a linked process chain.
+        nextProcess: Downstream process in a linked process chain.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA process-step validation."""
+        """Validation settings for ISA process-step schema parsing.
+
+        Attributes:
+            extra: Rejects keys outside the declared schema.
+            use_enum_values: Serializes enum fields as raw values.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -62,7 +81,11 @@ class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
 
 
 class IsaProcessOrProtocolApplicationModel(Model[IsaProcessOrProtocolApplicationSchema]):
-    """ISA model representing a process or protocol application step."""
+    """Omnipy model wrapper for ISA process-step records.
+
+    Provides Omnipy model behavior for values validated by
+    :class:`IsaProcessOrProtocolApplicationSchema`.
+    """
 
     ...
 

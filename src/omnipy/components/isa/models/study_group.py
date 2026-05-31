@@ -14,16 +14,32 @@ from . import comment_schema, factor_value_schema, sample_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA study groups."""
+    """JSON-LD type labels used for ISA study-group entities.
+
+    Attributes:
+        Study_Group: Marks a JSON object as an ISA study group.
+    """
 
     Study_Group = 'Study Group'
 
 
 class IsaStudyGroupSchema(pyd.BaseModel):
-    """Pydantic schema for a study group of related samples."""
+    """Schema for study groups used to organize related samples.
+
+    Attributes:
+        name: Study group label.
+        factor_levels: Factor-value assignments that define the group.
+        study_group_size: Number of members in the group.
+        members: Sample entries assigned to the group.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA study-group validation."""
+        """Validation settings for ISA study-group schema parsing.
+
+        Attributes:
+            extra: Rejects keys not declared by the schema.
+            use_enum_values: Converts enum members to value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -39,6 +55,10 @@ class IsaStudyGroupSchema(pyd.BaseModel):
 
 
 class IsaStudyGroupModel(Model[IsaStudyGroupSchema]):
-    """ISA model representing a study group of related samples."""
+    """Omnipy model wrapper for ISA study-group records.
+
+    Wraps :class:`IsaStudyGroupSchema` for validated use in Omnipy ISA
+    datasets and related metadata structures.
+    """
 
     ...

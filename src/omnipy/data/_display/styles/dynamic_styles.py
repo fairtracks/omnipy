@@ -27,7 +27,13 @@ _runtime: IsRuntime | None = None
 
 
 class TintedBase16Style(pygments.style.Style):
-    """Base class for dynamically materialized Base16 Pygments styles."""
+    """Define the ``TintedBase16Style`` interface.
+    
+    Attributes:
+        name: (str) Public attribute on the protocol/class.
+        author: (str) Public attribute on the protocol/class.
+        variant: (str) Public attribute on the protocol/class.
+    """
 
     name: str  # pyright: ignore[reportIncompatibleVariableOverride]
     author: str
@@ -35,7 +41,14 @@ class TintedBase16Style(pygments.style.Style):
 
 
 def fetch_base16_theme(theme_url: str) -> Base16Theme:
-    """Fetch, cache, and parse a Base16 theme definition from a URL."""
+    """Fetch base16 theme.
+    
+    Args:
+        theme_url: (str) Argument passed to ``fetch_base16_theme()``.
+    
+    Returns:
+        Base16Theme: Result produced by ``fetch_base16_theme()``.
+    """
 
     from omnipy.hub.runtime import runtime
     if not runtime:
@@ -71,7 +84,15 @@ def create_dynamic_base16_style_class(
     theme_key: str,
     base16_theme: Base16Theme,
 ) -> type[TintedBase16Style]:
-    """Create a Pygments style class from a parsed Base16 theme."""
+    """Create dynamic base16 style class.
+    
+    Args:
+        theme_key: (str) Argument passed to ``create_dynamic_base16_style_class()``.
+        base16_theme: (Base16Theme) Argument passed to ``create_dynamic_base16_style_class()``.
+    
+    Returns:
+        type[TintedBase16Style]: Result produced by ``create_dynamic_base16_style_class()``.
+    """
 
     return type(
         _create_base_16_class_name_from_theme_key(theme_key), (TintedBase16Style,),
@@ -137,7 +158,14 @@ def __getattr__(attr: str) -> type[pygments.style.Style]:
 
 
 def resolve_and_fetch_style(style: str | AllColorStyles.Literals) -> str:
-    """Resolve Omnipy style names and install dynamic themes when needed."""
+    """Resolve and fetch style.
+    
+    Args:
+        style: (str | AllColorStyles.Literals) Argument passed to ``resolve_and_fetch_style()``.
+    
+    Returns:
+        str: Result produced by ``resolve_and_fetch_style()``.
+    """
 
     if style in AllColorStyles:
         style = resolve_random_style_name(style)
@@ -154,7 +182,14 @@ def resolve_and_fetch_style(style: str | AllColorStyles.Literals) -> str:
 
 
 def resolve_random_style_name(name: str | AllColorStyles.Literals) -> str:
-    """Resolve random-style selectors into a concrete style name."""
+    """Resolve random style name.
+    
+    Args:
+        name: (str | AllColorStyles.Literals) Argument passed to ``resolve_random_style_name()``.
+    
+    Returns:
+        str: Result produced by ``resolve_random_style_name()``.
+    """
 
     if name.startswith(RANDOM_PREFIX):
         color_style_cls = AllColorStyles.get_supercls_for_random_choice(name)
@@ -166,7 +201,14 @@ def resolve_random_style_name(name: str | AllColorStyles.Literals) -> str:
 
 
 def clean_style_name(name: str | AllColorStyles.Literals) -> str:
-    """Normalize style names for Rich and Pygments compatibility."""
+    """Clean style name.
+    
+    Args:
+        name: (str | AllColorStyles.Literals) Argument passed to ``clean_style_name()``.
+    
+    Returns:
+        str: Result produced by ``clean_style_name()``.
+    """
 
     if name.endswith(PYGMENTS_SUFFIX):
         return name[:-len(PYGMENTS_SUFFIX)]  # Remove suffix for Pygments compatibility
@@ -176,7 +218,11 @@ def clean_style_name(name: str | AllColorStyles.Literals) -> str:
 
 
 def install_base16_theme(theme_key: str) -> None:
-    """Register a dynamic Base16 theme with Pygments internal registries."""
+    """Install base16 theme.
+    
+    Args:
+        theme_key: (str) Argument passed to ``install_base16_theme()``.
+    """
 
     if theme_key not in pygments.styles.STYLES:
         base16_style_cls_name = _create_base_16_class_name_from_theme_key(theme_key)

@@ -37,7 +37,8 @@ from .helpers import Base16Colors, get_styles_from_base16_colors
 
 
 class OmnipySelenizedBlackStyle(pygments.style.Style):
-    """High-contrast dark Selenized variant for black backgrounds."""
+    """Define the ``OmnipySelenizedBlackStyle`` interface.
+    """
 
     name = 'omnipy-selenized-black'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
@@ -68,7 +69,8 @@ class OmnipySelenizedBlackStyle(pygments.style.Style):
 
 
 class OmnipySelenizedDarkStyle(pygments.style.Style):
-    """High-contrast dark Selenized variant for dark backgrounds."""
+    """Define the ``OmnipySelenizedDarkStyle`` interface.
+    """
 
     name = 'omnipy-selenized-dark'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
@@ -99,7 +101,8 @@ class OmnipySelenizedDarkStyle(pygments.style.Style):
 
 
 class OmnipySelenizedLightStyle(pygments.style.Style):
-    """High-contrast light Selenized variant for cream backgrounds."""
+    """Define the ``OmnipySelenizedLightStyle`` interface.
+    """
 
     name = 'omnipy-selenized-light'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
@@ -130,7 +133,8 @@ class OmnipySelenizedLightStyle(pygments.style.Style):
 
 
 class OmnipySelenizedWhiteStyle(pygments.style.Style):
-    """High-contrast light Selenized variant for white backgrounds."""
+    """Define the ``OmnipySelenizedWhiteStyle`` interface.
+    """
 
     name = 'omnipy-selenized-white'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'

@@ -14,16 +14,33 @@ from . import comment_schema, factor_value_schema, material_attribute_value_sche
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA samples."""
+    """JSON-LD type labels used for ISA sample entities.
+
+    Attributes:
+        Sample: Marks a JSON object as an ISA sample.
+    """
 
     Sample = 'Sample'
 
 
 class IsaSampleSchema(pyd.BaseModel):
-    """Pydantic schema for a sample derived from source materials."""
+    """Schema for sample entities in ISA study materials.
+
+    Attributes:
+        name: Sample name or identifier.
+        characteristics: Material attribute values describing the sample.
+        factorValues: Factor assignments associated with the sample.
+        derivesFrom: Source materials from which the sample originates.
+        comments: Optional comments attached to the sample.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA sample validation."""
+        """Validation settings for ISA sample schema parsing.
+
+        Attributes:
+            extra: Rejects unknown keys in input payloads.
+            use_enum_values: Serializes enums to their raw values.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -40,6 +57,10 @@ class IsaSampleSchema(pyd.BaseModel):
 
 
 class IsaSampleModel(Model[IsaSampleSchema]):
-    """ISA model representing a sample derived from one or more sources."""
+    """Omnipy model wrapper for ISA sample records.
+
+    Wraps :class:`IsaSampleSchema` so sample entries can be validated and
+    handled consistently across ISA workflows.
+    """
 
     ...

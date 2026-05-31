@@ -275,7 +275,7 @@ _NegativeInteger: TypeAlias = Literal[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -
 # @disjoint_base
 # class int:
 class IsInt(Protocol):
-    """Protocol with the same interface as the builtin class `int`.
+    """Define the ``IsInt`` interface.
     """
 
     # @overload
@@ -394,7 +394,7 @@ class IsInt(Protocol):
 # @disjoint_base
 # class float:
 class IsFloat(Protocol):
-    """Protocol with the same interface as the builtin class `float`.
+    """Define the ``IsFloat`` interface.
     """
     # def __new__(cls, x: ConvertibleToFloat = 0, /) -> Self: ...
     def as_integer_ratio(self) -> tuple[int, int]: raise AssumedToBeImplementedException
@@ -472,7 +472,7 @@ class IsFloat(Protocol):
 # @disjoint_base
 # class complex:
 class IsComplex(Protocol):
-    """Protocol with the same interface as the builtin class `complex`.
+    """Define the ``IsComplex`` interface.
     """
     # # Python doesn't currently accept SupportsComplex for the second argument
     # @overload
@@ -931,6 +931,16 @@ class IsBytes(IsItemSequence[int], Protocol):
         end: SupportsIndex | None = None,
         /,
     ) -> bool:
+        """Startswith.
+        
+        Args:
+            prefix: (ReadableBuffer | tuple[ReadableBuffer, ...]) Argument passed to ``startswith()``.
+            start: (SupportsIndex | None) Argument passed to ``startswith()``.
+            end: (SupportsIndex | None) Argument passed to ``startswith()``.
+        
+        Returns:
+            bool: Result produced by ``startswith()``.
+        """
         raise AssumedToBeImplementedException
     # def strip(self, bytes: ReadableBuffer | None = None, /) -> bytes: ...
     def strip(self, bytes: ReadableBuffer | None = None, /) -> Self: raise AssumedToBeImplementedException
@@ -990,7 +1000,7 @@ class IsBytes(IsItemSequence[int], Protocol):
 # @disjoint_base
 # class bytearray(MutableSequence[int]):
 class IsByteArray(IsMutableSequence[int], Protocol):
-    """Protocol with the same interface as the builtin class `bytearray`.
+    """Define the ``IsByteArray`` interface.
     """
 
     # @overload
@@ -1217,7 +1227,7 @@ _IntegerFormats: TypeAlias = Literal[
 # @final
 # class bool(int):
 class IsBool(IsInt, Protocol):
-    """Protocol with the same interface as the builtin class `bool`.
+    """Define the ``IsBool`` interface.
     """
     # def __new__(cls, o: object = False, /) -> Self: ...
 
@@ -1396,7 +1406,7 @@ class IsTuple(IsItemSequence[_T_co], Protocol[_T_co]):  # type: ignore[misc]
 # @disjoint_base
 # class list(MutableSequence[_T]):
 class IsList(IsMutableSequence[_T], Protocol[_T]):
-    """Protocol with the same interface as the builtin class `list`.
+    """Define the ``IsList`` interface.
     """
 
     # @overload
@@ -1471,7 +1481,7 @@ class IsList(IsMutableSequence[_T], Protocol[_T]):
 # @disjoint_base
 # class dict(MutableMapping[_KT, _VT]):
 class IsDict(IsMutableMapping[_KT, _VT], Protocol[_KT, _VT]):
-    """Protocol with the same interface as the builtin class `dict`.
+    """Define the ``IsDict`` interface.
     """
     # # __init__ should be kept roughly in line with `collections.UserDict.__init__`, which has similar semantics
     # # Also multiprocessing.managers.SyncManager.dict()
@@ -1626,7 +1636,7 @@ if sys.version_info >= (3, 15):
 # @disjoint_base
 # class set(MutableSet[_T]):
 class IsSet(IsMutableSet[_T], Protocol[_T]):
-    """Protocol with the same interface as the builtin class `set`.
+    """Define the ``IsSet`` interface.
     """
     # @overload
     # def __init__(self) -> None: ...
@@ -1672,7 +1682,7 @@ class IsSet(IsMutableSet[_T], Protocol[_T]):
 # @disjoint_base
 # class frozenset(IsAbstractSet[_T_co]):
 class IsFrozenSet(IsAbstractSet[_T_co], Protocol[_T_co]):  # type: ignore[misc]
-    """Protocol with the same interface as the builtin class `frozenset`.
+    """Define the ``IsFrozenSet`` interface.
     """
     # @overload
     # def __new__(cls) -> Self:

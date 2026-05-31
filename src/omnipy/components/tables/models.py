@@ -243,7 +243,11 @@ class IterRow(Mapping[str, _ColModelT], Generic[_ColModelT, _ColModelItemT]):
 
 
 class PrintableTable:
-    """Marker mixin for table models that support Omnipy table rendering."""
+    """Mark table-like models as printable in Omnipy rendering flows.
+
+    This mixin is intentionally behavior-free and is used only as a semantic marker
+    for models that should be treated as table outputs.
+    """
 
     ...
 
@@ -256,20 +260,32 @@ if TYPE_CHECKING:
             PlainModel[list[list[JsonScalar]]],
             IsListOfListsContent[list[JsonScalar], JsonScalar],
     ):
+        """Represent row-wise tabular data without explicit column names.
+
+        Each row is stored as an ordered list of JSON scalar values where column
+        identity is positional.
+        """
         ...
 
 else:
 
     class RowWiseTableModel(Model[list[list[JsonScalar]]]):
-        """Represent a row-wise table as a list of rows without column names."""
+        """Represent row-wise tabular data without explicit column names.
+
+        Each row is stored as an ordered list of JSON scalar values where column
+        identity is positional.
+        """
         ...
 
 
 class _RowWiseColNamesMixin:
     @property
     def col_names(self) -> tuple[str, ...]:
-        """
-        The column names in the table, in the order they first appear in the rows.
+        """Return discovered column names in first-seen row order.
+
+        Returns:
+            tuple[str, ...]: Distinct column names in the order they are first
+                encountered while iterating over rows.
         """
         col_names = {}
         for row in self:  # type: ignore[attr-defined]
@@ -304,6 +320,11 @@ if TYPE_CHECKING:
             IsListOfDictsContent[IsMapping[str, JsonScalar], str, JsonScalar],
             PrintableTable,
     ):
+        """Represent row-wise tabular data keyed by column name.
+
+        Each row is stored as a dictionary from column names to JSON scalar values.
+        Column-wise inputs are normalized to this row-wise structure.
+        """
         ...
 else:
 
@@ -312,12 +333,20 @@ else:
             _RowWiseTableWithColNamesModel,
             PrintableTable,
     ):
-        """Represent a row-wise table where each row is a mapping from column names to values."""
+        """Represent row-wise tabular data keyed by column name.
+
+        Each row is stored as a dictionary from column names to JSON scalar values.
+        Column-wise inputs are normalized to this row-wise structure.
+        """
         ...
 
 
 class RowWiseTableWithColNamesNoConvertModel(Model[list[dict[str, JsonScalar]]]):
-    """Store row-wise table records without converting from column-wise input."""
+    """Store row-wise table records exactly as provided.
+
+    Unlike conversion-enabled table models, this model keeps incoming row-wise data
+    unchanged and does not convert column-wise structures.
+    """
 
     ...
 
@@ -328,6 +357,11 @@ if TYPE_CHECKING:
             PlainModel[dict[str, Mapping[str, JsonScalar]]],
             IsDictOfDictsContent[str, IsMapping[str, JsonScalar], str, JsonScalar],
     ):
+        """Represent an indexed table keyed by external row identifiers.
+
+        The outer mapping key identifies a row. Each row value maps column names to
+        JSON scalar cell values.
+        """
         ...
 else:
 
@@ -535,6 +569,11 @@ if TYPE_CHECKING:
             PrintableTable,
             Generic[_ColModelT, _ColModelItemT],
     ):
+        """Represent tabular data as column names mapped to ordered value lists.
+
+        Each key is a column name and each value is the ordered sequence of cells for
+        that column.
+        """
         ...
 
 else:
@@ -545,7 +584,11 @@ else:
             PrintableTable,
             Generic[_ColModelT, _ColModelItemT],
     ):
-        """Represent a column-wise table as column names mapped to ordered value lists."""
+        """Represent tabular data as column names mapped to ordered value lists.
+
+        Each key is a column name and each value is the ordered sequence of cells for
+        that column.
+        """
         ...
 
 
@@ -631,6 +674,11 @@ if TYPE_CHECKING:
             IsListOfDictsContent[IsMapping[str, JsonScalar], str, JsonScalar],
             PrintableTable,
     ):
+        """Represent row-wise data where the first row defines the header.
+
+        The first row is interpreted as column names and subsequent rows are mapped to
+        dictionaries keyed by those names.
+        """
         ...
 
 else:
@@ -640,7 +688,11 @@ else:
             _RowWiseTableFirstRowAsColNamesModel,
             PrintableTable,
     ):
-        """Represent a row-wise table that treats the first row as the table header."""
+        """Represent row-wise data where the first row defines the header.
+
+        The first row is interpreted as column names and subsequent rows are mapped to
+        dictionaries keyed by those names.
+        """
         ...
 
 
@@ -658,7 +710,11 @@ class _HeaderInfo(NamedTuple, Generic[_PydBaseModelT, _DataWithoutColNamesModelT
 
 
 class PydanticRecordModelMetaclass(ModelMetaclass):
-    """Provide cached header metadata for Pydantic-backed record models."""
+    """Compute and cache schema-derived header metadata for record models.
+
+    The metaclass resolves the parameterized Pydantic model and exposes reusable
+    header information through :attr:`header_info`.
+    """
 
     def __init__(cls, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
@@ -666,6 +722,16 @@ class PydanticRecordModelMetaclass(ModelMetaclass):
 
     @property
     def header_info(cls) -> _HeaderInfo:
+        """Return cached header metadata for the current record model type.
+
+        Returns:
+            _HeaderInfo: The Pydantic model class, ordered header names, and the
+                number of required leading fields.
+
+        Raises:
+            ValueError: If required fields appear after optional fields in the
+                underlying Pydantic model definition.
+        """
         if cls._header_info is None:
             type_args = get_args(cast(type[Model], cls).outer_type(with_args=True))
             type_var_store = type_args[0]
@@ -702,7 +768,12 @@ class PydanticRecordModelBase(
         Generic[_PydBaseModelT, _DataWithColNamesModelT, _DataWithoutColNamesModelT],
         metaclass=PydanticRecordModelMetaclass,
 ):
-    """Validate tabular record data against a parameterized Pydantic model schema."""
+    """Validate tabular record data against a parameterized Pydantic schema.
+
+    Subclasses define how named-column and positional inputs are transformed into
+    validated records, while this base class handles schema/header lookup and
+    dispatching.
+    """
 
     @classmethod
     @abstractmethod
@@ -769,6 +840,11 @@ if TYPE_CHECKING:
             Model[_PydBaseModelT],
             Generic[_PydBaseModelT],
     ):
+        """Validate a single record against a parameterized Pydantic model.
+
+        Input may be provided either as a dictionary keyed by field names or as an
+        ordered list aligned with model headers.
+        """
         ...
 
 else:
@@ -781,7 +857,11 @@ else:
             ],
             Generic[_PydBaseModelT],
     ):
-        """Validate one tabular record against a Pydantic model schema."""
+        """Validate a single record against a parameterized Pydantic model.
+
+        Input may be provided either as a dictionary keyed by field names or as an
+        ordered list aligned with model headers.
+        """
         @override
         @classmethod
         def _validate_record_model_with_col_names(
@@ -813,6 +893,11 @@ if TYPE_CHECKING:  # noqa: C901
             PrintableTable,
             Generic[_PydBaseModelT, _ColWiseTableModelT, _ColModelT, _ColModelItemT],
     ):
+        """Validate every row in a table against a parameterized Pydantic model.
+
+        Validated values are merged into a column-wise table representation while
+        preserving row ordering.
+        """
         ...
 
 else:
@@ -827,7 +912,11 @@ else:
             PrintableTable,
             Generic[_PydBaseModelT, _ColWiseTableModelT, _ColModelT, _ColModelItemT],
     ):
-        """Validate every row in a table against a Pydantic model and keep table structure."""
+        """Validate every row in a table against a parameterized Pydantic model.
+
+        Validated values are merged into a column-wise table representation while
+        preserving row ordering.
+        """
         @classmethod
         def _validate_over_all_rows(
             cls,
@@ -930,6 +1019,11 @@ if TYPE_CHECKING:
             PrintableTable,
             Generic[_PydRecordT],
     ):
+        """Parse delimited text into validated Pydantic records.
+
+        The model chains line splitting, column splitting, and per-row record
+        validation into one parsing pipeline.
+        """
         ...
 else:
 
@@ -940,7 +1034,11 @@ else:
             PrintableTable,
             Generic[_PydRecordT],
     ):
-        """Parse delimited table text into a list of validated Pydantic records."""
+        """Parse delimited text into validated Pydantic records.
+
+        The model chains line splitting, column splitting, and per-row record
+        validation into one parsing pipeline.
+        """
         ...
 
 
@@ -952,6 +1050,11 @@ if TYPE_CHECKING:
             PrintableTable,
             Generic[_PydRecordT],
     ):
+        """Parse CSV text into validated Pydantic records.
+
+        The model applies CSV column splitting and validates each parsed row against
+        the configured Pydantic record schema.
+        """
         ...
 else:
 
@@ -962,7 +1065,11 @@ else:
             PrintableTable,
             Generic[_PydRecordT],
     ):
-        """Parse CSV text into a list of Pydantic-validated table records."""
+        """Parse CSV text into validated Pydantic records.
+
+        The model applies CSV column splitting and validates each parsed row against
+        the configured Pydantic record schema.
+        """
         ...
 
 
@@ -976,6 +1083,11 @@ if TYPE_CHECKING:
             RowWiseTableFirstRowAsColNamesModel,
             PrintableTable,
     ):
+        """Parse TSV text into row-wise records with header-derived keys.
+
+        Input is split into lines and tab-delimited columns, then transformed so the
+        first row becomes the column-name header for subsequent rows.
+        """
         ...
 else:
 
@@ -987,7 +1099,11 @@ else:
             ],
             PrintableTable,
     ):
-        """Parse TSV text into a row-wise table using the first row as column names."""
+        """Parse TSV text into row-wise records with header-derived keys.
+
+        Input is split into lines and tab-delimited columns, then transformed so the
+        first row becomes the column-name header for subsequent rows.
+        """
         ...
 
 
@@ -997,6 +1113,11 @@ if TYPE_CHECKING:
             RowWiseTableFirstRowAsColNamesModel,
             PrintableTable,
     ):
+        """Parse CSV text into row-wise records with header-derived keys.
+
+        Input is split into lines and comma-delimited columns, then transformed so
+        the first row becomes the column-name header for subsequent rows.
+        """
         ...
 else:
 
@@ -1008,5 +1129,9 @@ else:
             ],
             PrintableTable,
     ):
-        """Parse CSV text into a row-wise table using the first row as column names."""
+        """Parse CSV text into row-wise records with header-derived keys.
+
+        Input is split into lines and comma-delimited columns, then transformed so
+        the first row becomes the column-name header for subsequent rows.
+        """
         ...

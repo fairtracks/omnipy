@@ -14,16 +14,32 @@ from . import comment_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA ontology sources."""
+    """JSON-LD type labels used for ISA ontology-source entities.
+
+    Attributes:
+        OntologySourceReference: Marks a JSON object as an ontology source.
+    """
 
     OntologySourceReference = 'OntologySourceReference'
 
 
 class IsaOntologySourceReferenceSchema(pyd.BaseModel):
-    """Pydantic schema for an ISA ontology source reference."""
+    """Schema for ontology source references in ISA metadata.
+
+    Attributes:
+        name: Short source name used by ontology term references.
+        version: Version string for the ontology source.
+        file: Optional URI or file reference for the ontology.
+        description: Human-readable source description.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA ontology-source validation."""
+        """Validation settings for ISA ontology-source schema parsing.
+
+        Attributes:
+            extra: Rejects undeclared keys in input payloads.
+            use_enum_values: Serializes enum values as strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -39,6 +55,10 @@ class IsaOntologySourceReferenceSchema(pyd.BaseModel):
 
 
 class IsaOntologySourceReferenceModel(Model[IsaOntologySourceReferenceSchema]):
-    """ISA model representing an ontology source reference."""
+    """Omnipy model wrapper for ISA ontology-source metadata.
+
+    Provides Omnipy ``Model`` behavior for values validated by
+    :class:`IsaOntologySourceReferenceSchema`.
+    """
 
     ...

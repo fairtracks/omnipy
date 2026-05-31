@@ -14,16 +14,32 @@ from . import comment_schema, material_attribute_schema, ontology_annotation_sch
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA material attribute values."""
+    """JSON-LD type labels used for ISA material-attribute values.
+
+    Attributes:
+        MaterialAttributeValue: Marks a JSON object as an ISA attribute value.
+    """
 
     MaterialAttributeValue = 'MaterialAttributeValue'
 
 
 class IsaMaterialAttributeValueSchema(pyd.BaseModel):
-    """Pydantic schema for a material attribute value."""
+    """Schema for assigned material attribute values.
+
+    Attributes:
+        category: Attribute definition that this value belongs to.
+        value: Scalar or ontology-backed attribute value.
+        unit: Unit ontology term when the value is quantitative.
+        comments: Optional comments attached to the value.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA material-attribute-value validation."""
+        """Validation settings for ISA attribute-value schema parsing.
+
+        Attributes:
+            extra: Rejects undeclared keys from input data.
+            use_enum_values: Emits enum members as their value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -38,6 +54,10 @@ class IsaMaterialAttributeValueSchema(pyd.BaseModel):
 
 
 class IsaMaterialAttributeValueModel(Model[IsaMaterialAttributeValueSchema]):
-    """ISA model representing a material attribute value."""
+    """Omnipy model wrapper for ISA material attribute values.
+
+    Wraps :class:`IsaMaterialAttributeValueSchema` for consistent Omnipy model
+    behavior across ISA components.
+    """
 
     ...

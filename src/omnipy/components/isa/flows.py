@@ -14,5 +14,16 @@ from .datasets import FlattenedIsaJsonDataset, IsaJsonDataset
     flatten_nested_json,
     convert_dataset.refine(fixed_params=dict(dataset_cls=FlattenedIsaJsonDataset)))
 def flatten_isa_json(dataset: IsaJsonDataset) -> FlattenedIsaJsonDataset:
-    """Flatten ISA-JSON datasets through dictionary transposition and nested JSON flattening."""
+    """Flatten ISA-JSON documents into tabular-like records.
+
+    The flow converts each ISA document to an intermediate dictionary-of-dictionaries
+    representation, transposes that structure into record lists, and then flattens
+    nested keys into scalar columns.
+
+    Args:
+        dataset: Dataset with ISA-JSON documents to flatten.
+
+    Returns:
+        A dataset containing flattened ISA records suitable for tabular workflows.
+    """
     ...

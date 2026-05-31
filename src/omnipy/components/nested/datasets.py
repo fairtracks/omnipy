@@ -17,7 +17,11 @@ NestedAnyUnionT = TypeVar('NestedAnyUnionT', bound='Dataset | Model', default=Js
 
 
 class GenericNestedDataset(Dataset[NestedAnyUnionT], Generic[NestedAnyUnionT]):
-    """Represent datasets whose values may recursively contain nested datasets."""
+    """Represent recursively nested datasets with configurable leaf value type.
+
+    Values may be nested datasets or scalar-like leaf models, depending on the
+    active generic parameter.
+    """
 
     ...
 
@@ -29,7 +33,11 @@ NestedUnion: TypeAlias = (
 
 
 class NestedDataset(GenericNestedDataset[NestedUnion]):
-    """Store nested datasets whose values may themselves be datasets, tables, lists, or scalars."""
+    """Store heterogeneously nested values across dataset, table, list, and scalar forms.
+
+    This concrete nested dataset accepts recursive nested datasets, table models,
+    list-as-dataset models, and JSON scalar models as values.
+    """
     ...
 
 

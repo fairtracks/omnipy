@@ -14,16 +14,31 @@ from . import comment_schema, ontology_annotation_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA factors."""
+    """JSON-LD type labels used for ISA factor entities.
+
+    Attributes:
+        Factor: Marks a JSON object as an ISA study factor.
+    """
 
     Factor = 'Factor'
 
 
 class IsaFactorSchema(pyd.BaseModel):
-    """Pydantic schema for an experimental factor in a study."""
+    """Schema for an experimental factor defined in a study.
+
+    Attributes:
+        factorName: Human-readable factor label.
+        factorType: Ontology term describing the factor category.
+        comments: Optional comments attached to the factor definition.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA factor validation."""
+        """Validation settings for ISA factor schema parsing.
+
+        Attributes:
+            extra: Rejects unknown keys in incoming data.
+            use_enum_values: Serializes enums as value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -37,6 +52,10 @@ class IsaFactorSchema(pyd.BaseModel):
 
 
 class IsaFactorModel(Model[IsaFactorSchema]):
-    """ISA model representing an experimental factor in a study."""
+    """Omnipy model wrapper for ISA study factors.
+
+    Wraps :class:`IsaFactorSchema` for use in Omnipy datasets and nested ISA
+    structures.
+    """
 
     ...

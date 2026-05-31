@@ -27,7 +27,11 @@ from .validators import date_to_iso_format
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA studies."""
+    """JSON-LD type labels used for ISA study entities.
+
+    Attributes:
+        Study: Marks a JSON object as an ISA study.
+    """
 
     Study = 'Study'
 
@@ -43,10 +47,24 @@ class _MaterialsModel(Model[_Materials]):
 
 
 class IsaStudySchema(pyd.BaseModel):
-    """Pydantic schema for a study in an ISA investigation."""
+    """Schema for study entries inside an ISA investigation.
+
+    Attributes:
+        identifier: Stable identifier for the study.
+        title: Human-readable study title.
+        materials: Sources, samples, and other materials in the study.
+        processSequence: Ordered list of process steps.
+        assays: Assay entries defined for the study.
+        factors: Experimental factors used to structure comparisons.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA study validation."""
+        """Validation settings for ISA study schema parsing.
+
+        Attributes:
+            extra: Rejects undeclared keys from input data.
+            use_enum_values: Emits enum fields as value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -89,6 +107,10 @@ class IsaStudySchema(pyd.BaseModel):
 
 
 class IsaStudyModel(Model[IsaStudySchema]):
-    """ISA model representing a study in an investigation."""
+    """Omnipy model wrapper for ISA study records.
+
+    Wraps :class:`IsaStudySchema` for typed integration in investigation-level
+    ISA payloads.
+    """
 
     ...

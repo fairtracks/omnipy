@@ -28,7 +28,26 @@ Base16.Deprecated
 
 
 class Base16Colors(pyd.BaseModel):
-    """Sixteen-color Base16 palette definition."""
+    """Define the ``Base16Colors`` interface.
+    
+    Attributes:
+        base00: (str) Public attribute on the protocol/class.
+        base01: (str) Public attribute on the protocol/class.
+        base02: (str) Public attribute on the protocol/class.
+        base03: (str) Public attribute on the protocol/class.
+        base04: (str) Public attribute on the protocol/class.
+        base05: (str) Public attribute on the protocol/class.
+        base06: (str) Public attribute on the protocol/class.
+        base07: (str) Public attribute on the protocol/class.
+        base08: (str) Public attribute on the protocol/class.
+        base09: (str) Public attribute on the protocol/class.
+        base0A: (str) Public attribute on the protocol/class.
+        base0B: (str) Public attribute on the protocol/class.
+        base0C: (str) Public attribute on the protocol/class.
+        base0D: (str) Public attribute on the protocol/class.
+        base0E: (str) Public attribute on the protocol/class.
+        base0F: (str) Public attribute on the protocol/class.
+    """
 
     base00: str
     base01: str
@@ -49,7 +68,14 @@ class Base16Colors(pyd.BaseModel):
 
 
 class Base16Theme(pyd.BaseModel):
-    """Named Base16 theme with author metadata and a palette."""
+    """Define the ``Base16Theme`` interface.
+    
+    Attributes:
+        name: (str) Public attribute on the protocol/class.
+        author: (str) Public attribute on the protocol/class.
+        variant: (str) Public attribute on the protocol/class.
+        palette: (Base16Colors) Public attribute on the protocol/class.
+    """
 
     name: str
     author: str
@@ -59,7 +85,14 @@ class Base16Theme(pyd.BaseModel):
 
 def get_styles_from_base16_colors(
         base16_colors: Base16Colors) -> dict[pygments.token._TokenType, str]:
-    """Build a Pygments token-style mapping from a Base16 palette."""
+    """Build a Pygments token-style mapping from a Base16 palette.
+
+    Args:
+        base16_colors: Base16 palette values used to derive token styles.
+
+    Returns:
+        Mapping from Pygments tokens to style strings understood by Pygments.
+    """
 
     return {
         pygments.token.Text: base16_colors.base05,

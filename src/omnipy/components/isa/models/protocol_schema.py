@@ -14,7 +14,13 @@ from . import comment_schema, ontology_annotation_schema, protocol_parameter_sch
 
 
 class Component(pyd.BaseModel):
-    """Pydantic schema for a component within an ISA protocol."""
+    """Schema for reusable components declared inside a protocol.
+
+    Attributes:
+        componentName: Name of the protocol component.
+        componentType: Ontology term describing the component type.
+        comments: Optional comments attached to the component.
+    """
 
     componentName: Optional[str] = None
     componentType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
@@ -22,16 +28,33 @@ class Component(pyd.BaseModel):
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA protocols."""
+    """JSON-LD type labels used for ISA protocol entities.
+
+    Attributes:
+        Protocol: Marks a JSON object as an ISA protocol.
+    """
 
     Protocol = 'Protocol'
 
 
 class IsaProtocolSchema(pyd.BaseModel):
-    """Pydantic schema for a protocol used in a study."""
+    """Schema for protocols referenced by ISA process workflows.
+
+    Attributes:
+        name: Protocol name.
+        protocolType: Ontology term describing protocol category.
+        description: Human-readable protocol description.
+        parameters: Parameter definitions accepted by the protocol.
+        components: Reusable protocol components and materials.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA protocol validation."""
+        """Validation settings for ISA protocol schema parsing.
+
+        Attributes:
+            extra: Rejects keys that are not defined in the schema.
+            use_enum_values: Serializes enum members by value.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -50,6 +73,10 @@ class IsaProtocolSchema(pyd.BaseModel):
 
 
 class IsaProtocolModel(Model[IsaProtocolSchema]):
-    """ISA model representing a protocol used in a study."""
+    """Omnipy model wrapper for ISA protocol definitions.
+
+    Wraps :class:`IsaProtocolSchema` for typed, validated protocol objects in
+    Omnipy ISA datasets.
+    """
 
     ...

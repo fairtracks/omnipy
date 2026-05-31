@@ -12,16 +12,30 @@ import omnipy.util.pydantic as pyd
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA comments."""
+    """JSON-LD type labels used for ISA comment entities.
+
+    Attributes:
+        Comment: Marks a JSON object as an ISA comment.
+    """
 
     Comment = 'Comment'
 
 
 class IsaCommentSchema(pyd.BaseModel):
-    """Pydantic schema for a comment attached to an ISA entity."""
+    """Schema for comments attached to ISA objects.
+
+    Attributes:
+        name: Comment key or label.
+        value: Comment text associated with ``name``.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA comment validation."""
+        """Validation settings for ISA comment schema parsing.
+
+        Attributes:
+            extra: Rejects unknown keys in input data.
+            use_enum_values: Emits enum members as raw value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -34,6 +48,10 @@ class IsaCommentSchema(pyd.BaseModel):
 
 
 class IsaCommentModel(Model[IsaCommentSchema]):
-    """ISA model representing a comment attached to an entity."""
+    """Omnipy model wrapper for ISA comment entries.
+
+    Wraps :class:`IsaCommentSchema` so comments can be used as nested Omnipy
+    models in ISA documents.
+    """
 
     ...

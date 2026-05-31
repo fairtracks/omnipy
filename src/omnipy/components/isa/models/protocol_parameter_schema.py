@@ -14,16 +14,30 @@ from . import comment_schema, ontology_annotation_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA protocol parameters."""
+    """JSON-LD type labels used for ISA protocol-parameter entities.
+
+    Attributes:
+        ProtocolParameter: Marks a JSON object as a protocol parameter.
+    """
 
     ProtocolParameter = 'ProtocolParameter'
 
 
 class IsaProtocolParameterSchema(pyd.BaseModel):
-    """Pydantic schema for a protocol parameter."""
+    """Schema for protocol parameters used by ISA process steps.
+
+    Attributes:
+        parameterName: Ontology-backed name of the protocol parameter.
+        comments: Optional comments attached to the parameter definition.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA protocol-parameter validation."""
+        """Validation settings for ISA protocol-parameter schema parsing.
+
+        Attributes:
+            extra: Rejects undeclared keys from input data.
+            use_enum_values: Emits enum fields as their value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -36,6 +50,10 @@ class IsaProtocolParameterSchema(pyd.BaseModel):
 
 
 class IsaProtocolParameterModel(Model[IsaProtocolParameterSchema]):
-    """ISA model representing a protocol parameter."""
+    """Omnipy model wrapper for ISA protocol parameters.
+
+    Wraps :class:`IsaProtocolParameterSchema` for typed, validated use in ISA
+    protocol and process structures.
+    """
 
     ...

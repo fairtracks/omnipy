@@ -14,16 +14,33 @@ from . import comment_schema, ontology_annotation_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA publications."""
+    """JSON-LD type labels used for ISA publication entities.
+
+    Attributes:
+        Publication: Marks a JSON object as an ISA publication.
+    """
 
     Publication = 'Publication'
 
 
 class IsaPublicationSchema(pyd.BaseModel):
-    """Pydantic schema for a publication linked to ISA metadata."""
+    """Schema for publication metadata linked to ISA investigations.
+
+    Attributes:
+        pubMedID: PubMed identifier, when available.
+        doi: DOI string for the publication.
+        authorList: Free-form list of publication authors.
+        title: Publication title.
+        status: Ontology term describing publication status.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA publication validation."""
+        """Validation settings for ISA publication schema parsing.
+
+        Attributes:
+            extra: Rejects undeclared keys from payloads.
+            use_enum_values: Emits enum fields as value strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -40,6 +57,10 @@ class IsaPublicationSchema(pyd.BaseModel):
 
 
 class IsaPublicationModel(Model[IsaPublicationSchema]):
-    """ISA model representing a publication linked to ISA metadata."""
+    """Omnipy model wrapper for ISA publication entries.
+
+    Provides Omnipy ``Model`` integration around
+    :class:`IsaPublicationSchema`.
+    """
 
     ...

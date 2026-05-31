@@ -14,16 +14,33 @@ from . import comment_schema, ontology_annotation_schema
 
 
 class FieldType(Enum):
-    """Enum of JSON-LD type labels for ISA people."""
+    """JSON-LD type labels used for ISA person entities.
+
+    Attributes:
+        Person: Marks a JSON object as an ISA person record.
+    """
 
     Person = 'Person'
 
 
 class IsaPersonSchema(pyd.BaseModel):
-    """Pydantic schema for a person involved in an investigation."""
+    """Schema for people associated with ISA investigations.
+
+    Attributes:
+        firstName: Given name.
+        lastName: Family name.
+        email: Contact email for the person.
+        affiliation: Organizational affiliation text.
+        roles: Ontology terms describing investigation roles.
+    """
 
     class Config:
-        """Pydantic configuration for strict ISA person validation."""
+        """Validation settings for ISA person schema parsing.
+
+        Attributes:
+            extra: Rejects keys not listed in the schema.
+            use_enum_values: Converts enum members to raw strings.
+        """
 
         extra = pyd.Extra.forbid
         use_enum_values = True
@@ -44,6 +61,10 @@ class IsaPersonSchema(pyd.BaseModel):
 
 
 class IsaPersonModel(Model[IsaPersonSchema]):
-    """ISA model representing a person involved in an investigation."""
+    """Omnipy model wrapper for ISA person records.
+
+    Wraps :class:`IsaPersonSchema` so people can be validated and nested as
+    Omnipy model values.
+    """
 
     ...

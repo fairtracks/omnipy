@@ -15,7 +15,11 @@ DatasetT = TypeVar('DatasetT')
 
 
 class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
-    """Model storing an ordered list of index-value tuples."""
+    """Store an ordered list of index/value tuples with strict sequence checks.
+
+    The model asserts that tuple indices are contiguous and start at zero,
+    preserving explicit positional semantics for nested list conversion.
+    """
 
     @classmethod
     def _parse_data(cls, data: list[tuple[int, object]]) -> list[tuple[int, object]]:
@@ -28,7 +32,11 @@ class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
 
 class EnumeratedListModel(Model[EnumeratedListOfTuplesModel | list[object]
                                 | list[dict[str, object]]]):
-    """Model converting plain lists into enumerated tuple lists."""
+    """Convert plain lists into explicitly enumerated index/value tuples.
+
+    Incoming list-like structures are normalized to
+    :class:`EnumeratedListOfTuplesModel` using ``enumerate``.
+    """
 
     @classmethod
     def _parse_data(
@@ -48,12 +56,20 @@ if TYPE_CHECKING:
     from ..json.models import JsonScalarModel  # noqa: F401
 
     class ListAsNestedDatasetModel(Model[Dataset['NestedDataset | JsonScalarModel']]):
-        """Model representing a list as a nested dataset."""
+        """Represent list-like input as a nested dataset structure.
+
+        The model acts as a typed bridge between list representations and recursive
+        nested dataset forms used throughout nested components.
+        """
 
         ...
 else:
 
     class ListAsNestedDatasetModel(_ListAsNestedDatasetModel):
-        """Model representing a list as a nested dataset."""
+        """Represent list-like input as a nested dataset structure.
+
+        The model acts as a typed bridge between list representations and recursive
+        nested dataset forms used throughout nested components.
+        """
 
         ...
