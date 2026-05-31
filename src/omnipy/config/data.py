@@ -116,9 +116,6 @@ class UserInterfaceTypeConfig(ConfigBase):
             height: New UI height in character or pixel units, depending on
                 renderer.
 
-        Returns:
-            None: This method mutates the instance and emits subscriber events.
-
         Raises:
             None: This method does not raise exceptions directly.
 
@@ -150,9 +147,6 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
     def _get_available_display_dims(
             cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         """Fetch currently available display dimensions for a UI target.
-
-        Args:
-            cls: The configuration class querying display capabilities.
 
         Returns:
             tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]: Width

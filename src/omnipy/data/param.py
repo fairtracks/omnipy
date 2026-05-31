@@ -28,9 +28,6 @@ class _ParamsMeta(pyd.ModelMetaclass):
             bases: Base classes used for the params class.
             namespace: Class namespace dictionary with declared attributes.
 
-        Returns:
-            None.
-
         Raises:
             ValueError: If a field uses ``default_factory`` or is missing a required default.
             pyd.ValidationError: If one or more declared default values fail model validation.
@@ -116,9 +113,6 @@ class _ParamsMeta(pyd.ModelMetaclass):
         Args:
             attr: Name of the attribute to set.
             value: Value requested for assignment.
-
-        Returns:
-            None.
 
         Raises:
             AttributeError: If ``attr`` targets a params field or unknown public attribute.
@@ -302,18 +296,12 @@ def bind_adjust_dataset_func(
 def params_dataclass(cls: type[_ParamsT]) -> type[_ParamsT]:
     """Decorate a params declaration as a keyword-only dataclass.
 
-    Args:
-        cls: Class to transform into a keyword-only dataclass.
-
     Returns:
         The same class wrapped by :func:`dataclasses.dataclass` with
         ``kw_only=True``.
     """
     def wrap(cls):
         """Wrap a class using ``dataclass(..., kw_only=True)``.
-
-        Args:
-            cls: Class to transform into a keyword-only dataclass.
 
         Returns:
             The dataclass-decorated class.

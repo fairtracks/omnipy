@@ -102,9 +102,6 @@ class LinearFlowTemplateCore(
         concrete job class that should be instantiated from a linear flow
         template.
 
-        Args:
-            cls: Current linear flow template class.
-
         Returns:
             type[IsLinearFlow[_CallP, _RetT]]: The executable ``LinearFlow``
                 subclass associated with this template.
@@ -178,9 +175,6 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
         Args:
             self: Current linear flow instance.
             engine: Engine candidate supplied during job setup.
-
-        Returns:
-            None: The method updates decorator state in place.
         """
         if self.engine:
             engine = cast(IsJobRunnerEngine, self.engine)
@@ -197,9 +191,6 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
 
         Revision operations use this hook to recover the decorator-backed
         template class corresponding to an executable linear flow instance.
-
-        Args:
-            cls: Current linear flow class.
 
         Returns:
             type[IsLinearFlowTemplate[_CallP, _RetT]]: The ``LinearFlowTemplate``

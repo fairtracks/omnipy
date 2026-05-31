@@ -240,9 +240,6 @@ def _is_dark_from_color_fg_bg_nuanced(color_fg_bg: str) -> bool | None:
         ``True`` if parsed background index is lower than foreground index,
         ``False`` otherwise, or ``None`` when parsing fails.
 
-    Raises:
-        None.
-
     Example:
         >>> _is_dark_from_color_fg_bg_nuanced('15;0')
         True
@@ -322,9 +319,6 @@ def note_mime_bundle(bullet: str,
 
     Returns:
         A MIME bundle suitable for IPython display APIs.
-
-    Raises:
-        None.
 
     Example:
         >>> note_mime_bundle('ℹ️', '<b>Info</b>')['text/html']

@@ -82,9 +82,6 @@ class TaskTemplateCore(
         The template/application machinery calls this hook when it needs the
         concrete job class that should be instantiated from a task template.
 
-        Args:
-            cls: Current task template class.
-
         Returns:
             type[IsTask[_CallP, _RetT]]: The executable ``Task`` subclass
                 associated with this template.
@@ -163,9 +160,6 @@ class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP
         Args:
             self: Current task instance.
             engine: Engine candidate supplied during job setup.
-
-        Returns:
-            None: The method updates decorator state in place.
         """
         if self.engine:
             engine = cast(IsJobRunnerEngine, self.engine)
