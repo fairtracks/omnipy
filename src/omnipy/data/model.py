@@ -189,7 +189,9 @@ class Model(  # type: ignore[misc]
             return value.to_data()
         if is_non_omnipy_pydantic_model(value):
             return cast(pyd.BaseModel, value).model_dump(by_alias=True)
-        return cls._coerce_prepared_value_to_type(value, cls.full_type())
+        if cls._parse_data.__func__ is Model._parse_data.__func__:
+            return cls._coerce_prepared_value_to_type(value, cls.full_type())
+        return value
 
     def _get_default_factory(self) -> Callable[[], _RootT]:
         try:
@@ -1007,7 +1009,7 @@ class Model(  # type: ignore[misc]
 
     @pyd.model_validator(mode='before')
     def _parse_root_object(cls, root_obj: Any) -> Any:
-        root_obj = cls._unwrap_root_input(root_obj)
+        root_obj = cls._normalize_rootmodel_input(root_obj)
 
         def _coerce_mapping_iterable(value: Any) -> Any:
             outer_type = cls.outer_type()
@@ -1019,19 +1021,6 @@ class Model(  # type: ignore[misc]
                 except (TypeError, ValueError):
                     return value
             return value
-
-        if isinstance(root_obj, dict):
-            if ROOT_KEY not in root_obj:
-                return root_obj
-            value = root_obj[ROOT_KEY]
-            value = parse_none_according_to_model(value, root_model=cls)
-            value = _coerce_mapping_iterable(value)
-
-            config = cls.data_class_creator.config  # type: ignore[attr-defined]
-            with hold_and_reset_prev_attrib_value(config.model,
-                                                  'dynamically_convert_elements_to_models'):
-                config.model.dynamically_convert_elements_to_models = False
-                return {ROOT_KEY: cls._parse_data(value)}
 
         value = parse_none_according_to_model(root_obj, root_model=cls)
         value = _coerce_mapping_iterable(value)

@@ -138,6 +138,17 @@ def test_union_matching_accepts_nested_model_root_input() -> None:
     assert model.to_data() == [1, 2]
 
 
+def test_recursive_rootmodel_union_accepts_nested_lists() -> None:
+    class RecursiveModel(Model[str | list['RecursiveModel']]):
+        pass
+
+    RecursiveModel.update_forward_refs(RecursiveModel=RecursiveModel)
+
+    assert RecursiveModel([]).to_data() == []
+    assert RecursiveModel(['a']).to_data() == ['a']
+    assert RecursiveModel(['a', ['b']]).to_data() == ['a', ['b']]
+
+
 def test_init_converting_model_as_input() -> None:
     assert MyFloatObjModel().content == MyFloatObject()
     my_float_model = MyFloatObjModel()

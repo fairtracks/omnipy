@@ -42,6 +42,12 @@ def test_bytes_model() -> None:
         BytesModelMyEncoding('æøå')
 
 
+def test_bytes_model_legacy_root_payload_respects_parse_hook_before_union_coercion() -> None:
+    BytesModelLatin1 = BytesModel.adjust('BytesModelLatin1', encoding='latin-1')
+
+    assert BytesModelLatin1({'__root__': 'æøå'}).content == b'\xe6\xf8\xe5'
+
+
 def test_strict_bytes_model() -> None:
     assert StrictBytesModel(b'').content == b''
     assert StrictBytesModel(b'\xc3\xa6\xc3\xb8\xc3\xa5').content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
