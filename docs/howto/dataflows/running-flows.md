@@ -2,8 +2,8 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Now**
+!!! note
+    **Status: Now**
 
 ## Run with local engine defaults
 
@@ -34,8 +34,8 @@
 
 ## Async note
 
-> [!NOTE]
-> Some task/flow contexts support async usage.
+!!! note
+    Some task/flow contexts support async usage.
 
 ### Try it in a notebook
 

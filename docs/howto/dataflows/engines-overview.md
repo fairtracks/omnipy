@@ -2,10 +2,10 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Preview**
->
-> Local engine is **Now**. Prefect orchestration is usable but evolving.
+!!! note
+    **Status: Preview**
+
+    Local engine is **Now**. Prefect orchestration is usable but evolving.
 
 ## Inspect current engine
 

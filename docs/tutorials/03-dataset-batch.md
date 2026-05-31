@@ -27,11 +27,10 @@ Start with Dataset + Model batch parsing, then apply transformations without exp
 
 ```pycon exec="1" session="tutorial3" source="console"
 >>> incremented = readings.do(lambda value: int(value) + 1)
->>> incremented.to_data()
 ```
 
-```pycon exec="1" session="tutorial3" result="console" html="true"
->>> incremented.to_data()
+```pycon exec="1" session="tutorial3" result="console"
+>>> print(incremented.to_data())
 ```
 
 ## Hierarchical datasets
@@ -49,11 +48,10 @@ Start with Dataset + Model batch parsing, then apply transformations without exp
 
 ```pycon exec="1" session="tutorial3" source="console"
 >>> grouped_incremented = grouped.do(lambda dataset: dataset.do(lambda value: int(value) + 1))
->>> grouped_incremented.to_data()
 ```
 
-```pycon exec="1" session="tutorial3" result="console" html="true"
->>> grouped_incremented.to_data()
+```pycon exec="1" session="tutorial3" result="console"
+>>> print(grouped_incremented.to_data())
 ```
 
 You get batch behavior and hierarchy handling without writing explicit `for` loops.

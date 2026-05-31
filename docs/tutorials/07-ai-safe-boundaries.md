@@ -2,11 +2,11 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Preview**
->
-> This tutorial presents practical patterns for validating and cleaning LLM output with Omnipy
-> models. It is intentionally not a native LLM orchestration feature.
+!!! note
+    **Status: Preview**
+
+    This tutorial presents practical patterns for validating and cleaning LLM output with Omnipy
+    models. It is intentionally not a native LLM orchestration feature.
 
 Omnipy can act as a schema firewall between probabilistic LLM output and deterministic downstream
 dataflows.

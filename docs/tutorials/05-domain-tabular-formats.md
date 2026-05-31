@@ -2,10 +2,10 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Now**
->
-> Row-based parsing is **Now**. Column-based parsing support is **Preview**.
+!!! note
+    **Status: Now**
+
+    Row-based parsing is **Now**. Column-based parsing support is **Preview**.
 
 This tutorial shows BED/GFF-style row parsing using typed model specs.
 

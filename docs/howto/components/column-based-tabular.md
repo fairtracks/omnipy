@@ -2,10 +2,10 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Preview**
->
-> Column-oriented patterns are usable today, but this area is still maturing.
+!!! note
+    **Status: Preview**
+
+    Column-oriented patterns are usable today, but this area is still maturing.
 
 This guide shows how to work with columnar and record-style tables in Omnipy while keeping typed
 validation in the flow.

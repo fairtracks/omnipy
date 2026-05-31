@@ -2,8 +2,8 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Now**
+!!! note
+    **Status: Now**
 
 Factual comparison page for choosing the right tool combination.
 

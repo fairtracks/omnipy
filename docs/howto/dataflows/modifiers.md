@@ -2,8 +2,8 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Now**
+!!! note
+    **Status: Now**
 
 Modifiers let you adapt task/flow templates without rewriting core function bodies.
 

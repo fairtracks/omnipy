@@ -2,10 +2,10 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Preview**
->
-> Prefect execution works today, but Omnipy's orchestration integration is still evolving.
+!!! note
+    **Status: Preview**
+
+    Prefect execution works today, but Omnipy's orchestration integration is still evolving.
 
 This tutorial shows a practical path for running Omnipy flows with the Prefect engine, including
 engine configuration, CLI usage with `--engine prefect`, and opening the Prefect UI.

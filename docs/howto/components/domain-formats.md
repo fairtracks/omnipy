@@ -2,8 +2,8 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Now**
+!!! note
+    **Status: Now**
 
 Model-based tabular parsing for domain formats follows a stable three-step pattern.
 

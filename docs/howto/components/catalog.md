@@ -2,8 +2,8 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Now**
+!!! note
+    **Status: Now**
 
 This page lists the bundled Omnipy component families and what practical problem each one solves.
 

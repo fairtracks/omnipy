@@ -104,12 +104,12 @@ nav:
   - Mental model: learn/mental-model.md
   - Parse, don't validate: learn/parse-dont-validate.md
   - Python typing: learn/python-typing.md
+  - Comparisons: learn/comparisons.md
   - Visual metaphors and story mode: learn/visual-metaphors-story-mode.md
 - Reference:
   - FAQ: reference/faq.md
   - Configuration: reference/configuration.md
   - Glossary: reference/glossary.md
-  - Comparisons: learn/comparisons.md
   - Legacy data models page: data_models.md
   - Legacy python typing page: python_typing.md
   - Code reference: reference/

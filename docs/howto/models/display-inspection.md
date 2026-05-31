@@ -2,8 +2,8 @@
 
 --8<-- "_includes/maturity_labels.md"
 
-> [!NOTE]
-> **Status: Now**
+!!! note
+    **Status: Now**
 
 ## `_docs()` for stable rendered output
 
@@ -24,8 +24,8 @@ m.full()
 m.browse()
 ```
 
-> [!TIP]
-> `browse()` is best for notebook or local GUI sessions.
+!!! tip
+    `browse()` is best for notebook or local GUI sessions.
 
 ## Try it in a notebook
 
