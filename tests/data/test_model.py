@@ -28,9 +28,11 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeForm, TypeVar
 
+from omnipy.components.json.models import is_json_model_instance_hack
 import omnipy.data._display.text.pretty as pretty_module
+import omnipy.data._display.text.pretty_printer.base as pretty_printer_base
 from omnipy.data.helpers import TypeVarStore
-from omnipy.data.model import is_model_instance, Model
+from omnipy.data.model import Model
 from omnipy.shared.enums.display import PrettyPrinterLib
 from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.data import IsModel
@@ -668,16 +670,16 @@ def test_model_json_preview_pruning_triggers_for_large_json_list(
         monkeypatch: pytest.MonkeyPatch) -> None:
     model = Model[list[int]](range(10000))
 
-    observed_pruned_json_panel = False
+    observed_pruned_json_model_panel = False
     original_maybe_prune = getattr(pretty_module, '_maybe_prune_draft_panel')
 
     def _track_json_model_panel_pruning(draft_panel, *, probe_render, memo):
-        nonlocal observed_pruned_json_panel
+        nonlocal observed_pruned_json_model_panel
 
         out_panel = original_maybe_prune(draft_panel, probe_render=probe_render, memo=memo)
-        if draft_panel.title == 'JsonModel' and is_model_instance(draft_panel.content):
+        if is_json_model_instance_hack(draft_panel.content):
             if out_panel is not draft_panel:
-                observed_pruned_json_panel = True
+                observed_pruned_json_model_panel = True
 
         return out_panel
 
@@ -693,23 +695,29 @@ def test_model_json_preview_pruning_triggers_for_large_json_list(
             debug=False,
         ))
 
-    assert observed_pruned_json_panel is True
+    assert observed_pruned_json_model_panel is True
 
 
-def test_model_json_preview_pruning_avoids_full_to_data_conversion(
+def test_model_json_preview_pruning_limits_pretty_printer_prepare_input_size(
         monkeypatch: pytest.MonkeyPatch) -> None:
     model = Model[list[int]](range(10000))
 
-    observed_to_data_sizes: list[int] = []
-    original_to_data = getattr(Model, 'to_data')
+    prepared_content_sizes: list[int] = []
+    original_prepare_draft_panel = getattr(pretty_printer_base.PrettyPrinter,
+                                           'prepare_draft_panel')
 
-    def _track_to_data_size(self: Model) -> object:
-        data = original_to_data(self)
-        if isinstance(data, (dict, list, tuple, str, bytes, bytearray)):
-            observed_to_data_sizes.append(len(data))
-        return data
+    def _track_prepare_draft_panel_size(self, draft_panel):
+        content = draft_panel.content
+        if hasattr(content, '__len__'):
+            prepared_content_sizes.append(len(content))
 
-    monkeypatch.setattr(Model, 'to_data', _track_to_data_size)
+        return original_prepare_draft_panel(self, draft_panel)
+
+    monkeypatch.setattr(
+        pretty_printer_base.PrettyPrinter,
+        'prepare_draft_panel',
+        _track_prepare_draft_panel_size,
+    )
 
     with monkeypatch.context() as patch_ctx:
         patch_ctx.setattr(
@@ -726,10 +734,10 @@ def test_model_json_preview_pruning_avoids_full_to_data_conversion(
                 freedom=0,
                 debug=False,
             ))
-    assert observed_to_data_sizes
-    unpruned_max_to_data_size = max(observed_to_data_sizes)
+    assert prepared_content_sizes
+    unpruned_max_prepared_size = max(prepared_content_sizes)
 
-    observed_to_data_sizes.clear()
+    prepared_content_sizes.clear()
     pruned_output = _render_panel_to_plain_terminal(
         model._json(
             width=24,
@@ -740,12 +748,12 @@ def test_model_json_preview_pruning_avoids_full_to_data_conversion(
             debug=False,
         ))
 
-    assert observed_to_data_sizes
-    pruned_max_to_data_size = max(observed_to_data_sizes)
+    assert prepared_content_sizes
+    pruned_max_prepared_size = max(prepared_content_sizes)
 
     assert unpruned_output == pruned_output
-    assert unpruned_max_to_data_size == 10000
-    assert pruned_max_to_data_size < unpruned_max_to_data_size
+    assert unpruned_max_prepared_size == 10000
+    assert pruned_max_prepared_size < unpruned_max_prepared_size
 
 
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
