@@ -3320,6 +3320,14 @@ class ModelDisplayMixin(BaseDisplayMixin):
         return self._peek(**self._prepare_kwargs_for_full(kwargs))
 
     @_call_dataset_method_if_applicable
+    def _json(self, **kwargs) -> DraftPanel:
+        self_as_model = cast('Model', self)
+        return self._peek_nested_content(
+            {'JsonModel': self_as_model},
+            **self._prepare_kwargs_for_json(kwargs),
+        )
+
+    @_call_dataset_method_if_applicable
     def _browse(self, **kwargs) -> None:
         self_as_model = cast('Model', self)
         self._browse_nested_content({self_as_model.__class__.__name__: self_as_model}, **kwargs)
