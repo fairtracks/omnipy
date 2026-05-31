@@ -312,10 +312,14 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def is_plain_terminal(
             cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[PlainTerminalUserInterfaceType.Literals]:
-        f"""Check whether the UI type refers to a plain terminal.
+        """Check whether a UI type is a plain terminal variant.
 
-        Check whether the user interface type refers to any plain
-        (non-IPython) terminal UI types. {_UNKNOWN_NOTE} {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` is a non-IPython terminal type. ``UNKNOWN``
+            is treated as a terminal type.
         """
         return ui_type in PlainTerminalUserInterfaceType
 
@@ -323,10 +327,13 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def is_ipython_terminal(
             cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[IpythonTerminalUserInterfaceType.Literals]:
-        f"""Check whether the UI type refers to an IPython terminal.
+        """Check whether a UI type is an IPython terminal variant.
 
-        Check whether the user interface type refers to an IPython
-        interactive interpreter (REPL). {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` refers to an IPython terminal UI type.
         """
         return ui_type in IpythonTerminalUserInterfaceType
 
@@ -334,11 +341,14 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def is_terminal(
             cls,
             ui_type: 'UserInterfaceType.Literals') -> TypeIs[TerminalUserInterfaceType.Literals]:
-        f"""Check whether the UI type refers to any terminal variant.
+        """Check whether a UI type is any terminal variant.
 
-        Check whether the user interface type refers to any type of terminal
-        UI types, including IPython and plain terminal.
-         {_UNKNOWN_NOTE} {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` is a plain-terminal or IPython-terminal type.
+            ``UNKNOWN`` is treated as a terminal type.
         """
         return ui_type in TerminalUserInterfaceType
 
@@ -346,11 +356,13 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def is_jupyter_embedded(
             cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[JupyterEmbeddedUserInterfaceType.Literals]:
-        f"""Check whether the UI type refers to embedded Jupyter.
+        """Check whether a UI type is an embedded Jupyter variant.
 
-        Check whether the user interface type refers to a Jupyter notebook
-        embedded within other software, such as an IDE.
-         {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` refers to Jupyter embedded in another app.
         """
         return ui_type in JupyterEmbeddedUserInterfaceType
 
@@ -358,14 +370,14 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def supports_dark_terminal_bg_detection(
             cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[SupportsDarkTerminalBgDetection.Literals]:
-        f"""Check whether the UI type supports dark terminal background detection.
+        """Check whether a UI type supports dark terminal background detection.
 
-        Check whether the user interface type supports detection of dark
-        background color by checking environment variables or using
-        ANSI terminal functionality. This is typically the case for
-        Jupyter notebooks embedded in IDEs, such as PyCharm, or other
-        terminals.
-         {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` supports terminal-style dark background
+            detection.
         """
         return ui_type in SupportsDarkTerminalBgDetection
 
@@ -373,11 +385,13 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def is_jupyter_in_browser(
         cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[JupyterInBrowserUserInterfaceType.Literals]:
-        f"""Check whether the UI type refers to browser-hosted Jupyter.
+        """Check whether a UI type is a browser-hosted Jupyter variant.
 
-        Check whether the user interface type refers to a Jupyter notebook
-        or JupyterLab environment opened from a web browser.
-         {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` refers to Jupyter or JupyterLab in a browser.
         """
         return ui_type in JupyterInBrowserUserInterfaceType
 
@@ -385,11 +399,13 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def is_jupyter(
             cls,
             ui_type: 'UserInterfaceType.Literals') -> TypeIs[JupyterUserInterfaceType.Literals]:
-        f"""Check whether the UI type refers to any Jupyter environment.
+        """Check whether a UI type is any Jupyter variant.
 
-        Check whether the user interface type refers to a Jupyter notebook
-        or JupyterLab environment in any context.
-         {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` refers to Jupyter in embedded or browser form.
         """
         return ui_type in JupyterUserInterfaceType
 
@@ -397,10 +413,13 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def is_browser(
             cls,
             ui_type: 'UserInterfaceType.Literals') -> TypeIs[BrowserUserInterfaceType.Literals]:
-        f"""Check whether the UI type refers to a web browser.
+        """Check whether a UI type is a browser output variant.
 
-        Check whether the user interface type refers to a web browser.
-         {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` maps to one of the browser output types.
         """
         return ui_type in BrowserUserInterfaceType
 
@@ -408,11 +427,13 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def supports_rgb_color_output(
             cls,
             ui_type: 'UserInterfaceType.Literals') -> TypeIs[RgbColorUserInterfaceType.Literals]:
-        f"""Check whether the UI type supports RGB color output.
+        """Check whether a UI type supports RGB color output.
 
-        Check whether the user interface type refers to any UI types that
-        support RGB color output.
-         {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` supports RGB color rendering.
         """
         return ui_type in RgbColorUserInterfaceType
 
@@ -420,14 +441,14 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def requires_terminal_output(
             cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[TerminalOutputUserInterfaceType.Literals]:
-        f"""Check whether the UI type requires terminal-style output.
+        """Check whether a UI type requires ANSI terminal-style output.
 
-        Check whether the user interface type refers to any UI types that
-        require output with ANSI terminal encoding for colors and styles. If
-        user interface type is unknown, we assume it is a terminal and try
-        to autodetect color capabilities, as default for terminals (see
-        `DisplayColorSystem.AUTO`).
-         {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` requires terminal-encoded output. ``UNKNOWN``
+            is treated as terminal output.
         """
         return ui_type in TerminalOutputUserInterfaceType
 
@@ -435,12 +456,13 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def requires_html_tag_output(
             cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[HtmlTagOutputUserInterfaceType.Literals]:
-        f"""Check whether the UI type requires HTML tag output.
+        """Check whether a UI type requires self-contained HTML tag output.
 
-        Check whether the user interface type refers to any UI types that
-        require output as self-contained HTML tags for embedding in other
-        HTML pages.
-         {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` requires embeddable HTML tag output.
         """
         return ui_type in HtmlTagOutputUserInterfaceType
 
@@ -448,10 +470,12 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     def requires_html_page_output(
             cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[HtmlPageOutputUserInterfaceType.Literals]:
-        f"""Check whether the UI type requires full HTML page output.
+        """Check whether a UI type requires full HTML page output.
 
-        Check whether the user interface type refers to any UI types that
-        require output as a full HTML page.
-         {_TYPEIS_NARROW_NOTE}
+        Args:
+            ui_type: User interface type literal to classify.
+
+        Returns:
+            True if ``ui_type`` requires full-page HTML output.
         """
         return ui_type in HtmlPageOutputUserInterfaceType

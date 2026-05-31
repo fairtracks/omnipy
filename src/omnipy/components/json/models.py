@@ -401,6 +401,8 @@ class JsonScalarModel(Model[JsonScalar]):
 if TYPE_CHECKING:
 
     class JsonListModel(PlainModel[_JsonAnyListM], IsListContent[_JsonAnyUnionContent]):
+        """Validate JSON values with a top-level array shape."""
+
         ...
 
 else:
@@ -444,30 +446,40 @@ if TYPE_CHECKING:
             PlainModel[_JsonListOfScalars],
             IsListContent[JsonScalar],
     ):
+        """Validate JSON arrays containing only scalar values."""
+
         ...
 
     class JsonListOfListsModel(
             PlainModel[_JsonListM[_JsonAnyListM]],
             IsListOfListsContent[_JsonAnyListM, _JsonAnyUnionContent],
     ):
+        """Validate JSON arrays whose elements are JSON arrays."""
+
         ...
 
     class JsonListOfListsOfScalarsModel(
             PlainModel[_JsonListM[_JsonListOfScalars]],
             IsListOfListsContent[JsonListOfScalarsModel, JsonScalar],
     ):
+        """Validate JSON arrays of scalar-only JSON arrays."""
+
         ...
 
     class JsonListOfDictsModel(
             PlainModel[_JsonListM[_JsonAnyDictM]],
             IsListOfDictsContent[_JsonAnyDictM, str, _JsonAnyUnionContent],
     ):
+        """Validate JSON arrays whose elements are JSON objects."""
+
         ...
 
     class JsonListOfDictsOfScalarsModel(
             PlainModel[_JsonListM[_JsonDictOfScalars]],
             IsListOfDictsContent['JsonDictOfScalarsModel', str, JsonScalar],
     ):
+        """Validate JSON arrays of objects with scalar-only values."""
+
         ...
 
 else:
@@ -523,6 +535,8 @@ else:
 if TYPE_CHECKING:
 
     class JsonDictModel(PlainModel[_JsonAnyDictM], IsDictContent[str, _JsonAnyUnionContent]):
+        """Validate JSON values with a top-level object shape."""
+
         ...
 
 else:
@@ -565,30 +579,40 @@ if TYPE_CHECKING:
             PlainModel[_JsonDictOfScalars],
             IsDictContent[str, JsonScalar],
     ):
+        """Validate JSON objects whose values are scalar values."""
+
         ...
 
     class JsonDictOfListsModel(
             PlainModel[_JsonDictM[_JsonAnyListM]],
             IsDictOfListsContent[str, _JsonAnyListM, _JsonAnyUnionContent],
     ):
+        """Validate JSON objects whose values are JSON arrays."""
+
         ...
 
     class JsonDictOfListsOfScalarsModel(
             PlainModel[_JsonDictM[_JsonListOfScalars]],
             IsDictOfListsContent[str, JsonListOfScalarsModel, JsonScalar],
     ):
+        """Validate JSON objects whose values are scalar-only JSON arrays."""
+
         ...
 
     class JsonDictOfDictsModel(
             PlainModel[_JsonDictM[_JsonAnyDictM]],
             IsDictOfDictsContent[str, _JsonAnyDictM, str, _JsonAnyUnionContent],
     ):
+        """Validate JSON objects whose values are JSON objects."""
+
         ...
 
     class JsonDictOfDictsOfScalarsModel(
             PlainModel[_JsonDictM[_JsonDictOfScalars]],
             IsDictOfDictsContent[str, JsonDictOfScalarsModel, str, JsonScalar],
     ):
+        """Validate JSON objects of nested objects with scalar-only values."""
+
         ...
 
 else:
@@ -730,12 +754,16 @@ if TYPE_CHECKING:
             PlainModel[_JsonNestedListsM],
             IsListContent[_JsonOnlyListsUnionContent],
     ):
+        """Validate recursively nested JSON arrays with scalar leaves."""
+
         ...
 
     class JsonNestedDictsModel(
             PlainModel[_JsonNestedDictsM],
             IsDictContent[str, _JsonOnlyDictsUnionContent],
     ):
+        """Validate recursively nested JSON objects with scalar leaves."""
+
         ...
 
 else:
@@ -767,18 +795,24 @@ if TYPE_CHECKING:
             PlainModel[_JsonListM[_JsonNestedDictsM]],
             IsListOfDictsContent[JsonNestedDictsModel, str, _JsonOnlyDictsUnionContent],
     ):
+        """Validate JSON arrays whose items are nested JSON objects."""
+
         ...
 
     class JsonDictOfNestedListsModel(
             PlainModel[_JsonDictM[_JsonNestedListsM]],
             IsDictOfListsContent[str, JsonNestedListsModel, _JsonOnlyListsUnionContent],
     ):
+        """Validate JSON objects whose values are nested JSON arrays."""
+
         ...
 
     class JsonDictOfListsOfDictsModel(
             PlainModel[_JsonDictM[_JsonListM[_JsonAnyDictM]]],
             IsDictOfListsContent[str, JsonListOfDictsModel, Mapping[str, '_JsonAnyUnionContent']],
     ):
+        """Validate JSON objects whose values are arrays of JSON objects."""
+
         ...
 
 else:
@@ -820,6 +854,8 @@ if TYPE_CHECKING:
             IsListContent[_JsonBaseT],
             Generic[_JsonBaseT],
     ):
+        """Validate JSON arrays constrained to a custom JSON-compatible item type."""
+
         ...
 
     class JsonCustomDictModel(
@@ -827,6 +863,8 @@ if TYPE_CHECKING:
             IsDictContent[str, _JsonBaseT],
             Generic[_JsonBaseT],
     ):
+        """Validate JSON objects constrained to a custom JSON-compatible value type."""
+
         ...
 
 else:
