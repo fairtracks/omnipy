@@ -340,7 +340,7 @@ class Dataset(
 
     @classmethod
     def _get_data_field(cls) -> pyd.ModelField:
-        return cast(pyd.ModelField, cls.__fields__.get(DATA_KEY))
+        return cast(pyd.ModelField, cls.model_fields.get(DATA_KEY))
 
     @classmethod
     @functools.cache
@@ -401,7 +401,7 @@ class Dataset(
         raise TypeError(msg)
 
     def _set_standard_field_description(self) -> None:
-        self.__fields__[DATA_KEY].field_info.description = self._get_standard_field_description()
+        self.model_fields[DATA_KEY].description = self._get_standard_field_description()
 
     @classmethod
     def _get_standard_field_description(cls) -> str:
@@ -874,7 +874,7 @@ class Dataset(
         return {key: self._check_value(val) for key, val in self.dict(by_alias=True).items()}
 
     def dict(self, **kwargs) -> dict_t[str, Any]:
-        return super().dict(**kwargs)[DATA_KEY]
+        return super().model_dump(**kwargs)[DATA_KEY]
 
     def from_data(self,
                   data: Mapping[str, Any] | Iterable[tuple[str, Any]],
@@ -946,7 +946,7 @@ class Dataset(
 
     # @classmethod
     # def get_type_args(cls):
-    #     return cls.__fields__.get(DATA_KEY).type_
+    #     return cls.model_fields.get(DATA_KEY).type_
     #
     #
     # @classmethod
