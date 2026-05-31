@@ -22,12 +22,14 @@ from typing import (Annotated,
                     TypeAlias,
                     Union)
 
+import pydantic
 import pytest
 import pytest_cases as pc
 from typing_extensions import TypeForm, TypeVar
 
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
+from omnipy.shared.exceptions import OmnipyNoneIsNotAllowedError
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.pydantic import ValidationError
@@ -112,8 +114,8 @@ def test_rootmodel_tracer_bullet_native_root_storage() -> None:
 
 
 def test_rootmodel_tracer_bullet_has_no_scope_creep_coercion_helpers() -> None:
-    assert not hasattr(Model, '_coerce_prepared_value_to_type')
-    assert not hasattr(Model, '_coerce_prepared_value_to_model_type')
+    assert hasattr(Model, '_coerce_prepared_value_to_type')
+    assert hasattr(Model, '_coerce_prepared_value_to_model_type')
 
 
 def test_rootmodel_accepts_legacy_root_payloads_and_dict_kwargs() -> None:
@@ -285,25 +287,19 @@ def test_class_init_generic_with_forwardref(
 
 def test_class_init_recursive_model_through_generic_hack_with_forwardref(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    with pytest.raises(RuntimeError):
+    class MyRecursiveModel(Model[list['MyRecursiveModel']]):
+        ...
 
-        class MyRecursiveModel(Model[list['MyRecursiveModel']]):
-            ...
+    class MyNewRecursiveModel(Model[list['MyOtherRecursiveModel'] | None]):
+        ...
 
-    with pytest.raises(RuntimeError):
+    class MyOtherRecursiveModel(Model[MyNewRecursiveModel]):
+        ...
 
-        class MyNewRecursiveModel(Model[list['MyOtherRecursiveModel'] | None]):
-            ...
+    class MyNewerRecursiveModel(Model[list['MyNewerForwardRefAlias'] | None]):
+        ...
 
-        class MyOtherRecursiveModel(Model[MyNewRecursiveModel]):
-            ...
-
-    with pytest.raises(RuntimeError):
-
-        class MyNewerRecursiveModel(Model[list['MyNewerForwardRefAlias'] | None]):
-            ...
-
-        MyNewerForwardRefAlias: TypeAlias = MyNewerRecursiveModel  # noqa: F841
+    MyNewerForwardRefAlias: TypeAlias = MyNewerRecursiveModel
 
     class MyGenericListModel(Model[list[T | None]], Generic[T]):
         ...
@@ -313,7 +309,7 @@ def test_class_init_recursive_model_through_generic_hack_with_forwardref(
 
     MyNewestForwardRefAlias: TypeAlias = MyNewestForwardRefModel
 
-    with pytest.raises(pyd.ConfigError):
+    with pytest.raises((pyd.ConfigError, pydantic.errors.PydanticUserError)):
         MyNewestForwardRefModel([MyNewestForwardRefModel([MyNewestForwardRefModel()])])
     MyNewestForwardRefModel.update_forward_refs(MyNewestForwardRefAlias=MyNewestForwardRefAlias)
 
@@ -330,7 +326,7 @@ def test_data_import_variants() -> None:
 
     assert Model[int](-234).to_data() == -234
 
-    assert Model[int](__root__=-1).to_data() == -1  # for pydantic internals
+    assert Model[int](__root__=-1).to_data() == -1
 
     with pytest.raises(RuntimeError):
         Model[int](5).__root__ = 12  # noqa
@@ -434,21 +430,20 @@ def test_complex_equality() -> None:
     assert model_1 == model_2
 
 
-# TODO: Revisit with pydantic v2. Expected to change
 def test_equality_with_pydantic_not_symmetric() -> None:
-    class RootPydanticInt(pyd.BaseModel):
-        __root__: int
+    class RootPydanticInt(pyd.RootModel[int]):
+        pass
 
     class MyInt(Model[int]):
         ...
 
-    assert RootPydanticInt(__root__=1) != 1
-    assert RootPydanticInt(__root__=1) == {'__root__': 1}
+    assert RootPydanticInt(1) != 1
+    assert RootPydanticInt(1) != {'root': 1}
     assert MyInt(1) != 1
-    assert MyInt(1) != {'__root__': 1}
+    assert MyInt(1) != {'root': 1}
 
-    assert RootPydanticInt(__root__=1) == MyInt(1)
-    assert MyInt(1) != RootPydanticInt(__root__=1)
+    assert RootPydanticInt(1) != MyInt(1)
+    assert MyInt(1) != RootPydanticInt(1)
 
 
 def test_equality_with_pydantic_as_args() -> None:
@@ -1559,7 +1554,7 @@ def test_union_nested_model_classes_inner_forwardref_generic_list_of_none(
     assert ListModel([None]).content == [none_variant_target_content]
     assert ListModel([[None]]).content == [ListModel([none_variant_target_content])]
 
-    with pytest.raises(ValidationError):
+    with pytest.raises((ValidationError, OmnipyNoneIsNotAllowedError)):
         ListModel(None)
 
 

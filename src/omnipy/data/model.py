@@ -748,26 +748,55 @@ class Model(  # type: ignore[misc]
         own_module_ns, globalns = \
             build_own_module_and_global_namespace_for_forward_refs(cls, calling_module, **localns)
 
+        def _resolve_forward_refs_in_type(type_: TypeForm | UndefinedType) -> TypeForm | UndefinedType:
+            if type_ is Undefined:
+                return Undefined
+
+            if isinstance(type_, str):
+                type_ = cast(TypeForm, ForwardRef(type_))
+
+            origin = get_origin(type_)
+            args = get_args(type_)
+            if origin and args:
+                resolved_args = tuple(_resolve_forward_refs_in_type(arg) for arg in args)
+                if origin in (Union, UnionType):
+                    if len(resolved_args) == 0:
+                        return type_
+                    resolved_union = resolved_args[0]
+                    for arg in resolved_args[1:]:
+                        resolved_union = resolved_union | arg  # type: ignore[operator]
+                    return cast(TypeForm, resolved_union)
+                try:
+                    type_ = cast(TypeForm, origin[resolved_args])
+                except TypeError:
+                    pass
+
+            return evaluate_any_forward_refs_if_possible(type_, **globalns)
+
         root_field = cls._get_root_field()
         prev_annotation = root_field.annotation
         prev_orig_model = cls.get_orig_model()
 
-        # model_rebuild resolves forward refs in field annotations
-        # Use _types_namespace to pass the namespace for forward ref resolution
-        super().model_rebuild(_types_namespace=globalns)
+        # model_rebuild resolves forward refs in field annotations.
+        # Force rebuild to ensure newly passed namespaces are applied for
+        # parametrized RootModel subclasses as well.
+        super().model_rebuild(force=True, _types_namespace=globalns)
 
         # Re-evaluate field annotation and orig_model after rebuild
         root_field = cls._get_root_field()
-        new_annotation = evaluate_any_forward_refs_if_possible(
-            prev_annotation, **globalns)
-        if new_annotation is not prev_annotation:
+        new_annotation = _resolve_forward_refs_in_type(prev_annotation)
+        if new_annotation != prev_annotation:
             root_field.annotation = new_annotation
 
-        cls.set_orig_model(evaluate_any_forward_refs_if_possible(prev_orig_model, **globalns))
+        cls.set_orig_model(_resolve_forward_refs_in_type(prev_orig_model))
         pydantic_root_key = cls._get_pydantic_root_key()
         if pydantic_root_key in cls.__annotations__:
-            cls.__annotations__[pydantic_root_key] = evaluate_any_forward_refs_if_possible(
-                cls.__annotations__[pydantic_root_key], **globalns)
+            cls.__annotations__[pydantic_root_key] = _resolve_forward_refs_in_type(
+                cls.__annotations__[pydantic_root_key])
+
+        # Ensure pydantic's compiled validators pick up any annotation
+        # refinements done above.
+        super().model_rebuild(force=True, _types_namespace=globalns)
 
         cls._clean_type_caches()
 
@@ -930,7 +959,7 @@ class Model(  # type: ignore[misc]
         if validation_error:
             raise validation_error
 
-        return cast(_RootT, values.get(ROOT_KEY, values['__root__']))
+        return cast(_RootT, values[ROOT_KEY])
 
     @property
     def snapshot(self) -> _RootT:
@@ -1024,6 +1053,8 @@ class Model(  # type: ignore[misc]
 
         value = parse_none_according_to_model(root_obj, root_model=cls)
         value = _coerce_mapping_iterable(value)
+        if cls.__module__ == 'omnipy.components.json.models':
+            value = _convert_json_mapping_keys_to_str(value)
         config = cls.data_class_creator.config  # type: ignore[attr-defined]
         with hold_and_reset_prev_attrib_value(config.model,
                                               'dynamically_convert_elements_to_models'):
@@ -1768,10 +1799,38 @@ def _parse_none_in_mapping(plain_outer_type, outer_type_args, inner_val_type, va
             is_model_subclass(_) or _supports_none(_)
             for _ in chain(inner_key_union_types, inner_val_union_types)):
         return plain_outer_type({
-            _parse_none_in_types(inner_key_union_types) if key is None else key:
+            _parse_none_in_types(inner_key_union_types)
+            if key is None
+            else str(key)
+            if _should_parse_mapping_key_as_str(inner_key_union_types, key)
+            else key:
                 _parse_none_in_types(inner_val_union_types) if val is None else val
             for key, val in value.items()
         })
+    return value
+
+
+def _should_parse_mapping_key_as_str(inner_key_union_types: tuple[TypeForm], key: object) -> bool:
+    if type(key) not in (bool, int, float):
+        return False
+
+    supports_str_keys = any(type_ is str for type_ in inner_key_union_types)
+    supports_non_str_scalar_keys = any(type_ in (bool, int, float) for type_ in inner_key_union_types)
+
+    return supports_str_keys and not supports_non_str_scalar_keys
+
+
+def _convert_json_mapping_keys_to_str(value: object) -> object:
+    if isinstance(value, Mapping):
+        return {
+            str(key) if type(key) in (bool, int, float) else key:
+                _convert_json_mapping_keys_to_str(val)
+            for key, val in value.items()
+        }
+    if isinstance(value, MutableSequence):
+        return value.__class__(_convert_json_mapping_keys_to_str(val) for val in value)
+    if isinstance(value, tuple):
+        return tuple(_convert_json_mapping_keys_to_str(val) for val in value)
     return value
 
 
@@ -1790,8 +1849,37 @@ def _parse_none_in_fixed_tuple(plain_outer_type, tuple_of_union_variant_types, v
 def _parse_none_in_union(flattened_union_variant_types, value):
     if value is None:
         return _parse_none_in_types(flattened_union_variant_types)
+    elif isinstance(value, Mapping):
+        return {
+            _parse_mapping_key_in_union(flattened_union_variant_types, key): val
+            for key, val in value.items()
+        }
     else:
         return value
+
+
+def _parse_mapping_key_in_union(flattened_union_variant_types: tuple[TypeForm], key: object) -> object:
+    if type(key) not in (bool, int, float):
+        return key
+
+    mapping_key_union_types: list[tuple[TypeForm]] = []
+    for type_ in flattened_union_variant_types:
+        if not is_model_subclass(type_):
+            continue
+
+        outer_type = type_.outer_type(with_args=True)
+        plain_outer_type = type_.outer_type(with_args=False)
+        outer_args = get_args(outer_type)
+
+        if lenient_issubclass(plain_outer_type, Mapping) and outer_args:
+            mapping_key_union_types.append(split_to_union_variants(outer_args[0]))
+
+    if mapping_key_union_types and all(
+            _should_parse_mapping_key_as_str(inner_key_union_types, key)
+            for inner_key_union_types in mapping_key_union_types):
+        return str(key)
+
+    return key
 
 
 def _parse_none_in_types(inner_union_types: tuple[TypeForm]) -> object:

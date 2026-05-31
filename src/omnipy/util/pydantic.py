@@ -231,23 +231,23 @@ def _is_root_model_cls(model: type[BaseModel]) -> bool:
 def _as_v1_style_input_values(model: type[BaseModel], input_data: dict[str, Any]) -> dict[str, Any]:
     if _is_root_model_cls(model):
         if 'root' in input_data:
-            return {'__root__': input_data['root']}
+            return {'root': input_data['root']}
         if '__root__' in input_data:
-            return {'__root__': input_data['__root__']}
+            return {'root': input_data['__root__']}
     return dict(input_data)
 
 
 def _as_v1_style_input_fields_set(model: type[BaseModel], input_data: dict[str, Any]) -> set[str]:
     if _is_root_model_cls(model):
         if '__root__' in input_data or 'root' in input_data:
-            return {'__root__'}
+            return {'root'}
         return set()
     return set(input_data.keys())
 
 
 def _as_v1_style_values(model: type[BaseModel], validated_obj: BaseModel) -> dict[str, Any]:
     if _is_root_model_cls(model):
-        return {'__root__': validated_obj.root}
+        return {'root': validated_obj.root}
     return validated_obj.model_dump()
 
 
@@ -261,12 +261,7 @@ def _to_v2_validation_input(model: type[BaseModel], input_data: dict[str, Any]) 
 
 
 def _as_v1_style_fields_set(model: type[BaseModel], validated_obj: BaseModel) -> set[str]:
-    fields_set = set(getattr(validated_obj, '__pydantic_fields_set__', set()))
-    if _is_root_model_cls(model):
-        if 'root' in fields_set:
-            fields_set.remove('root')
-            fields_set.add('__root__')
-    return fields_set
+    return set(getattr(validated_obj, '__pydantic_fields_set__', set()))
 
 
 def _exception_to_line_errors(
