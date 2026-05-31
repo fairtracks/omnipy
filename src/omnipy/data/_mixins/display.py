@@ -1892,11 +1892,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     Justification mode for the panel if inside a layout
                     panel. This is only used for the panel content.
 
-            Returns:
-                If the UI type is Jupyter running in browser, the
-                method returns a ReactivelyResizingHtml element which
-                is a Jupyter widget to display HTML output in the
-                browser. Otherwise, the method returns None.
 
             Note:
                 Any default argument value is overridden by the
