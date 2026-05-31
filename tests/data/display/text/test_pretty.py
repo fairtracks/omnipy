@@ -1065,26 +1065,64 @@ def test_pretty_repr_preview_pruning_fail_open_when_probe_raises(
 
 def test_pretty_repr_preview_pruning_fail_open_for_recursive_cycle_content(
         monkeypatch: pytest.MonkeyPatch) -> None:
-    cycle: list[Any] = [1, 2, 3]
-    cycle.append(cycle)
+    class _TrackedItem:
+        touched_indices: set[int] = set()
 
-    panel = DraftPanel(
-        cycle,
-        frame=Frame(Dimensions(22, 6), fixed_width=False, fixed_height=False),
-        config=OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0),
+        def __init__(self, idx: int) -> None:
+            self.idx = idx
+
+        def __repr__(self) -> str:
+            _TrackedItem.touched_indices.add(self.idx)
+            return f'item-{self.idx:03}'
+
+    def _probe_render_with_recursive_width_measure(prefix_panel: DraftPanel) -> tuple[int, int]:
+        def _measure_width(value: Any) -> int:
+            if isinstance(value, list):
+                return 2 + sum(_measure_width(item) for item in value)
+
+            return len(repr(value))
+
+        width = _measure_width(prefix_panel.content)
+        assert isinstance(prefix_panel.content, list)
+        return width, len(prefix_panel.content)
+
+    acyclic_content = [_TrackedItem(i) for i in range(180)]
+    cyclic_content: list[Any] = [None]
+    cyclic_content.extend(_TrackedItem(i) for i in range(179))
+    cyclic_content[0] = cyclic_content
+
+    frame = Frame(Dimensions(26, 7), fixed_width=False, fixed_height=False)
+    config = OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0)
+
+    acyclic_panel = DraftPanel(acyclic_content, frame=frame, config=config)
+    cyclic_panel = DraftPanel(cyclic_content, frame=frame, config=config)
+
+    returned_original_panel_by_content_id: dict[int, bool] = {}
+    original_maybe_prune = getattr(pretty_module, '_maybe_prune_draft_panel')
+
+    def _track_pruning_result(draft_panel, *, probe_render, memo):
+        out_panel = original_maybe_prune(draft_panel, probe_render=probe_render, memo=memo)
+        returned_original_panel_by_content_id[id(draft_panel.content)] = out_panel is draft_panel
+        return out_panel
+
+    monkeypatch.setattr(
+        pretty_module,
+        '_probe_render_candidate_prefix',
+        _probe_render_with_recursive_width_measure,
     )
+    monkeypatch.setattr(pretty_module, '_maybe_prune_draft_panel', _track_pruning_result)
 
-    with monkeypatch.context() as patch_ctx:
-        patch_ctx.setattr(
-            pretty_module,
-            '_maybe_prune_draft_panel',
-            lambda draft_panel, *, probe_render, memo: draft_panel,
-        )
-        unpruned_output_panel = pretty_repr_of_draft_output(panel)
+    _TrackedItem.touched_indices.clear()
+    pretty_repr_of_draft_output(acyclic_panel)
+    acyclic_touched_count = len(_TrackedItem.touched_indices)
 
-    pruned_output_panel = pretty_repr_of_draft_output(panel)
+    _TrackedItem.touched_indices.clear()
+    pretty_repr_of_draft_output(cyclic_panel)
+    cyclic_touched_count = len(_TrackedItem.touched_indices)
 
-    assert pruned_output_panel.content == unpruned_output_panel.content
+    assert returned_original_panel_by_content_id[id(acyclic_content)] is False
+    assert returned_original_panel_by_content_id[id(cyclic_content)] is True
+    assert cyclic_touched_count > acyclic_touched_count
 
 
 def test_pretty_repr_preview_pruning_fail_open_when_width_unstable_at_probe_cap(

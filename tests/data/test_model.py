@@ -634,11 +634,11 @@ def test_model_peek_preview_pruning_memo_is_per_top_level_render_call(
         monkeypatch: pytest.MonkeyPatch) -> None:
     model = Model[list[int]](list(range(180)))
 
-    observed_memo_ids: list[int] = []
+    observed_memos: list[object] = []
     original_maybe_prune = getattr(pretty_module, '_maybe_prune_draft_panel')
 
     def _track_memo(draft_panel, *, probe_render, memo):
-        observed_memo_ids.append(id(memo))
+        observed_memos.append(memo)
         return original_maybe_prune(draft_panel, probe_render=probe_render, memo=memo)
 
     monkeypatch.setattr(pretty_module, '_maybe_prune_draft_panel', _track_memo)
@@ -660,8 +660,8 @@ def test_model_peek_preview_pruning_memo_is_per_top_level_render_call(
             freedom=0,
         ))
 
-    assert len(observed_memo_ids) >= 2
-    assert len(set(observed_memo_ids)) >= 2
+    assert len(observed_memos) >= 2
+    assert observed_memos[0] is not observed_memos[1]
 
 
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
