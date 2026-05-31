@@ -2,20 +2,21 @@ Title: Per-panel pruning before pretty-printers — renderer-guided rendered-pre
 
 Overview
 - Purpose: reduce the amount of model/dataset content prepared and sent to pretty-printers for `peek()`/`full()`/`json()`/`list()` displays by returning a slightly-more-than-visible front prefix for each panel. The pruner does not add ellipses or otherwise change final rendering; it only supplies less input. Rendering, cropping, and ellipsis behavior remain the responsibility of existing pretty-print and display layers.
-- Key design decision (adopted): use a renderer-guided rendered-prefix superset strategy (C). For a bounded panel, probe incremental prefixes under the actual panel frame and stop once the prefix provably covers the visible viewport with a bounded, practical probe window. Cap probes to avoid worst-case full scans.
+- Key design decision (adopted): use a renderer-guided rendered-prefix superset strategy (C). For a safely gated bounded panel, probe incremental prefixes under the actual panel frame and stop once a bounded heuristic probe window suggests the prefix is sufficient for the visible viewport. Cap probes to avoid worst-case full scans, and fail open whenever safety cannot be established.
 
 Goals & constraints
 - Goals
   - Avoid preparing or converting large tails of model or dataset data when those tails cannot affect the visible preview for that panel.
   - Prune from the front only by returning the minimal slightly-more-than-visible whole-item prefix needed to preserve the visible viewport.
-  - Preserve current rendering architecture and public methods.
-  - Keep the optimization exact with respect to the current renderer whenever dimensions are bounded.
+- Preserve current rendering architecture and public methods.
+- Keep the optimization best-effort and safe by fail-open; do not claim exactness beyond the current heuristic stopping rules.
 - Constraints
-  - Only ordered or sequence-like and insertion-ordered mapping types are guaranteed to be prunable in v1.
-  - For unbounded-height `full()` calls, pruning gains are limited; do not change semantics.
-  - The pruner must fail open: any error or unsupported case falls back to current behavior.
-  - The pruner must not insert ellipses.
-  - Strings and bytes are treated as sequences in pruner logic.
+- Only ordered or sequence-like and insertion-ordered mapping types are guaranteed to be prunable in v1.
+- For general container pretty-printing in v1, pruning is only enabled when width is bounded. Width-unbounded pruning remains disabled unless a future allowlist proves a content shape is prefix-stable.
+- For unbounded-height `full()` calls, pruning gains are limited; do not change semantics.
+- The pruner must fail open: any error or unsupported case falls back to current behavior.
+- The pruner must not insert ellipses.
+- Strings and bytes are treated as sequences in pruner logic.
 
 Architecture & components
 - Primary hook location (recommended)
@@ -40,22 +41,24 @@ Data flow & algorithms
 - When pruning runs
   - Pruning runs for a `DraftPanel` when:
     - content is sequence-like or mapping-like and ordered enough to slice safely;
-    - the panel frame has at least bounded width and or bounded height;
+    - the panel viewport is safely bounded for the content shape being rendered; in v1 this means bounded width for general container pretty-printing, with bounded height used as an additional stopping signal when available;
     - the pruner recognizes the content shape as safe to slice into whole logical items or chunks.
   - Pruning is skipped and the original `DraftPanel` is forwarded if:
     - the content type is unsupported, such as unordered sets or opaque objects;
+    - width is unbounded for a general container renderer path where later items could reflow earlier visible output;
     - a probe or render error occurs;
     - recursion or cycles cannot be handled safely;
     - both width and height are effectively unbounded.
 - `PanelPreviewBudget` derivation
-  - Derive from `draft_panel.frame.dims` and `draft_panel.config`:
-    - `width_budget`: panel width in characters, if available;
-    - `height_budget`: panel height in lines, if available; if `None`, treat height as unbounded and do not apply a vertical cutoff;
+  - Derive viewport budgets from `draft_panel.inner_frame.dims` and `draft_panel.config`, i.e. from the title-adjusted content area already assigned by layout and panel machinery:
+    - `width_budget`: panel content width in characters, if available;
+    - `height_budget`: panel content height in lines, if available; if `None`, treat height as unbounded and do not apply a vertical cutoff;
+    - do not subtract title height or panel chrome again here; the layout engine has already accounted for that before the panel reaches the pruner;
     - formatting inputs needed for faithful probe renders, including indentation, tab size, and pretty-printer choice.
 - Probe orchestration (renderer-guided rendered-prefix superset with bounded probes)
-  - Goal: return a prefix of the input such that rendering that prefix under the same frame, config, and pretty-printer produces enough content to fill the visible viewport, while keeping probes bounded.
+  - Goal: return a best-effort front prefix such that, in safely gated cases, rendering that prefix under the same frame, config, and pretty-printer appears sufficient to fill the visible viewport, while keeping probes bounded. If the heuristic cannot establish this safely, return the original input.
   - Steps:
-    1. Quick checks: if `height_budget` is `None` and nothing meaningfully constrains width, or the user requested effectively unbounded `full()` semantics, skip pruning.
+    1. Quick checks: if width is unbounded for a general container path, if `height_budget` is `None` and nothing meaningfully constrains width, or if the user requested effectively unbounded `full()` semantics, skip pruning.
     2. Start with a small prefix (`n = 1` or the smallest logical chunk).
     3. Use progressive probing with exponential growth: `n := 1, 2, 4, 8, ...` until one of the following happens:
        - `rendered_height(prefix_n) >= height_budget`, if height is bounded;
@@ -63,13 +66,16 @@ Data flow & algorithms
        - `n >= max_probe_items` cap;
        - the end of the data is reached.
     4. Each `rendered_*` observation is obtained by a probe render of the candidate prefix using the same pretty-printer and frame, but with pruning disabled for the probe so the probe observes faithful rendering for that candidate prefix.
-    5. If probing stopped because height was reached or width stabilized, binary search downward between the previous lower bound and current `n` to find the minimal `n` that still satisfies the stopping condition.
+    5. If probing stopped because height was reached or width stabilized, binary search downward between the previous lower bound and current `n` to find the minimal `n` that still satisfies the heuristic stopping condition.
     6. Return that minimal whole-item or whole-chunk prefix. Do not add ellipses in the pruner.
 - Width-window behavior
   - Because `peek()` currently uses rendering to determine effective panel width, the pruner should not keep scanning distant items solely to discover a far-away outlier line that would widen the panel.
-  - Instead, width is considered stable when the rendered width no longer changes across a small forward window of probe extensions, or when extending by a small delta does not change rendered width.
+  - Width stabilization is heuristic: width is considered stable when the rendered width no longer changes across a small forward window of probe extensions, or when extending by a small delta does not change rendered width.
   - Recommended internal default: a width stabilization window of 2 to 3 forward checks.
-  - If width does not stabilize before the probe cap, choose the best prefix found by the height-based stopping rule or the probe cap, whichever comes first.
+  - If width does not stabilize before the probe cap, fail open and return the full unpruned content.
+- Safe/unsafe gating for width-unbounded pruning
+  - For general container types whose pretty-printers can globally reformat earlier output based on later items — including Rich, Devtools, and CompactJSON rendering over sequences, mappings, and model-shaped containers — width-unbounded pruning is unsafe in v1 and must be skipped.
+  - Known prefix-stable content shapes, such as line-appending text or fixed-column output, could support width-unbounded pruning in a future allowlisted path, but that is out of scope for v1.
 - Caps, caching, and fallbacks
   - `max_probe_items` is a private internal cap to prevent worst-case scans; an initial design target is on the order of `1024` logical items or chunks.
   - An optional `max_probe_time` internal cap may be added if needed to bound slow probe loops.
@@ -131,7 +137,7 @@ Testing plan
     - `test_probe_cache_effectiveness`: repeated pruning on the same object within a single display call should reuse probe results.
 - Integration tests for display behavior
   - `tests/data/test_model.py`
-    - `test_model_peek_prunes_large_sequence_before_pretty_printing`: assert heavy tails are not prepared beyond the returned prefix using instrumentation or mocks.
+    - `test_model_peek_prunes_large_sequence_before_pretty_printing`: assert heavy tails are not prepared beyond the returned prefix using real/instrumented checks.
     - `test_model_json_pruner_respects_width_and_height`: ensure visible preview rows are preserved and width behavior follows strategy C.
     - `test_model_full_unbounded_height_skips_vertical_pruning`: `full()` semantics remain unchanged for `height=None`.
   - `tests/data/test_dataset.py`
@@ -147,8 +153,8 @@ Testing plan
   - Pre-commit:
     - `uv run pre-commit run --hook-stage manual --all-files`
 - Expected assertions
-  - The visible viewport contains the same content as would be produced by rendering the full model and cropping to the viewport, because the pruner removes only invisible tail input and does not change rendering behavior.
-  - Adding items beyond the pruned prefix does not change the non-scrolling visible viewport rendered from the pruned prefix.
+  - In safe bounded-width cases where pruning runs and the probe stopping criteria stabilize, the visible viewport contains the same content as would be produced by rendering the full model and cropping to the viewport.
+  - If width does not stabilize before the probe cap, pruning is skipped and rendering falls back to the full unpruned content.
   - Hidden top-level dataset panels are not materialized.
   - `list()` computes metadata only for visible rows plus the chosen safety margin.
 
@@ -164,6 +170,8 @@ Decisions
 - Pruning strategy adopted: renderer-guided rendered-prefix superset (C). Probes use the actual assigned panel frame.
 - Probe strategy adopted: progressive probing with bounded cap (B). Use exponential growth followed by binary search with bounded probe count.
 - Pruner behavior: return a slightly-more-than-visible prefix only.
+- Correctness posture adopted: best-effort heuristic with fail-open fallback, not exact/provable pruning.
+- Safety gating adopted: v1 general-container pruning requires bounded width; width-unbounded support is reserved for future explicitly prefix-stable content types.
 - The pruner must not insert ellipses. Existing rendering layers remain responsible for cropping and ellipsis behavior.
 - Strings and bytes are treated as sequences, using line-aware chunking first and fixed-size chunks for long single-line content.
 
