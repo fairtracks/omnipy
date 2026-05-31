@@ -438,8 +438,6 @@ class PanelResizeHelper:
             context: Layout flow context containing minimum width
                      constraints
 
-        Returns:
-            None: Updates the frame_width attribute in-place
         """
         frame_width = max(
             self.dim_aware_panel.cropped_dims.width + frame_width_delta,

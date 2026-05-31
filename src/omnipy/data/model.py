@@ -850,9 +850,6 @@ class Model(  # type: ignore[misc]
     def __del__(self):
         """Schedule snapshot cleanup when the model instance is garbage-collected.
 
-        Returns:
-            None: Cleanup is delegated to the snapshot holder.
-        """
         content_id = id(self.content)
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id)
 
