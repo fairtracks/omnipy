@@ -116,6 +116,13 @@ def test_rootmodel_tracer_bullet_has_no_scope_creep_coercion_helpers() -> None:
     assert not hasattr(Model, '_coerce_prepared_value_to_model_type')
 
 
+def test_rootmodel_accepts_legacy_root_payloads_and_dict_kwargs() -> None:
+    assert Model[int]({'__root__': '12'}).to_data() == 12
+    assert Model[int]({'root': '13'}).to_data() == 13
+    assert Model[dict[str, int]](a='1', b=2).to_data() == {'a': 1, 'b': 2}
+    assert Model[list[int]](range(3)).to_data() == [0, 1, 2]
+
+
 def test_init_model_as_input() -> None:
     assert Model[int](Model[float](4.5)).to_data() == 4
     assert Model[tuple[int, ...]](Model[list[float]]([4.5, 2.3])).to_data() == (4, 2)

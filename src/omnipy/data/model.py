@@ -938,10 +938,21 @@ class Model(  # type: ignore[misc]
     def _parse_data(cls, data: Any) -> _RootT:
         return data
 
+    @classmethod
+    def _unwrap_root_input(cls, value: Any) -> Any:
+        if isinstance(value, Mapping):
+            if '__root__' in value:
+                return value['__root__']
+            if 'root' in value and len(value) == 1:
+                return value['root']
+        return value
+
     # TODO: See if it is possible to support general mappings similarly to iterables (in Model)
     #       (note: this is an old TODO, it is unclear what exactly is not supported...)
     @pyd.model_validator(mode='before')
     def _generous_iterable_support(cls, root_obj: Any) -> Any:
+        root_obj = cls._unwrap_root_input(root_obj)
+
         if isinstance(root_obj, dict) and ROOT_KEY in root_obj:
             value = root_obj[ROOT_KEY]
             outer_type = cls.outer_type()
@@ -968,6 +979,8 @@ class Model(  # type: ignore[misc]
 
     @pyd.model_validator(mode='before')
     def _parse_root_object(cls, root_obj: Any) -> Any:
+        root_obj = cls._unwrap_root_input(root_obj)
+
         def _coerce_mapping_iterable(value: Any) -> Any:
             outer_type = cls.outer_type()
             if (lenient_issubclass(outer_type, Mapping)
