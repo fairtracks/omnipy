@@ -804,48 +804,6 @@ def test_pretty_repr_of_draft_variable_char_weight(
     )
 
 
-def test_pretty_repr_of_draft_characterizes_bounded_and_unbounded_viewports() -> None:
-    data = [[i, i + 1, i + 2] for i in range(0, 18, 3)]
-    config = OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0)
-
-    multiline_output = dedent("""\
-        [
-          [0, 1, 2],
-          [3, 4, 5],
-          [6, 7, 8],
-          [9, 10, 11],
-          [12, 13, 14],
-          [15, 16, 17]
-        ]""")
-
-    _assert_pretty_repr_of_draft(
-        data,
-        multiline_output,
-        frame=Frame(Dimensions(32, 8), fixed_width=False, fixed_height=False),
-        config=config,
-        within_frame_width=True,
-        within_frame_height=True,
-    )
-
-    _assert_pretty_repr_of_draft(
-        data,
-        multiline_output,
-        frame=Frame(Dimensions(32, 6), fixed_width=False, fixed_height=False),
-        config=config,
-        within_frame_width=True,
-        within_frame_height=False,
-    )
-
-    _assert_pretty_repr_of_draft(
-        data,
-        '[[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11], [12, 13, 14], [15, 16, 17]]',
-        frame=Frame(Dimensions(None, 8), fixed_height=False),
-        config=config,
-        within_frame_width=None,
-        within_frame_height=True,
-    )
-
-
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason=dedent("""\

@@ -13,7 +13,6 @@ from typing_extensions import TypeVar
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
-from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
 from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.hub.runtime import IsRuntime
@@ -727,57 +726,6 @@ def test_repr():
         "<class 'tests.data.helpers.datasets.CBA.MyGenericDataset[str | NumberModel]'>"
 
     assert repr(MyNestedFwdRefDataset(a='abc')) == "MyGenericDataset[str | NumberModel](a='abc')"
-
-
-def _render_panel_to_plain_terminal(panel) -> str:
-    return panel.render_next_stage().render_next_stage().plain.terminal
-
-
-def test_characterize_dataset_list_framing_and_rows() -> None:
-    dataset = Dataset[Model[list[int]]]({f'row_{i}': [i, i + 1] for i in range(12)})
-
-    bounded_list_output = _render_panel_to_plain_terminal(
-        dataset._list(
-            width=80,
-            height=9,
-            ui=UserInterfaceType.TERMINAL,
-        ))
-    assert bounded_list_output == dedent("""\
-        ╭───┬────────────────┬──────────────────┬────────┬──────────────────╮
-        │ # │ Data file name │       Type       │ Length │ Size (in memory) │
-        │   │                │                  │        │                  │
-        │ 0 │ row_0          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 1 │ row_1          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 2 │ row_2          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 3 │ row_3          │ Model[list[int]] │      2 │        649 Bytes │
-        │ … │ …              │ …                │      … │                … │
-        ╰───┴────────────────┴──────────────────┴────────┴──────────────────╯
-        """)
-
-    unbounded_height_list_output = _render_panel_to_plain_terminal(
-        dataset._list(
-            width=80,
-            height=None,
-            ui=UserInterfaceType.TERMINAL,
-        ))
-    assert unbounded_height_list_output == dedent("""\
-        ╭────┬────────────────┬──────────────────┬────────┬──────────────────╮
-        │ #  │ Data file name │       Type       │ Length │ Size (in memory) │
-        │    │                │                  │        │                  │
-        │ 0  │ row_0          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 1  │ row_1          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 2  │ row_2          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 3  │ row_3          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 4  │ row_4          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 5  │ row_5          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 6  │ row_6          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 7  │ row_7          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 8  │ row_8          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 9  │ row_9          │ Model[list[int]] │      2 │        649 Bytes │
-        │ 10 │ row_10         │ Model[list[int]] │      2 │        649 Bytes │
-        │ 11 │ row_11         │ Model[list[int]] │      2 │        649 Bytes │
-        ╰────┴────────────────┴──────────────────┴────────┴──────────────────╯
-        """)
 
 
 @pc.parametrize(

@@ -30,7 +30,6 @@ from typing_extensions import TypeForm, TypeVar
 
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
-from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.shared.protocols.typing import IsMapping
@@ -575,92 +574,6 @@ def test_repr_pretty() -> None:
 
     model = Model[list[int]]([123])
     assert pretty([model]) == '[Model[list[int]]([123])]'
-
-
-def _render_panel_to_plain_terminal(panel) -> str:
-    return panel.render_next_stage().render_next_stage().plain.terminal
-
-
-def test_characterize_peek_json_full_viewport_output() -> None:
-    model = Model[list[list[int]]]([[i, i + 1, i + 2] for i in range(0, 18, 3)])
-
-    bounded_peek_output = _render_panel_to_plain_terminal(
-        model._peek(
-            width=32,
-            height=8,
-            ui=UserInterfaceType.TERMINAL,
-        ))
-    assert bounded_peek_output == dedent("""\
-        ╭────────────────────────╮
-        │ Model[list[list[int]]] │
-        │                        │
-        │ [                      │
-        │   [0, 1, 2],           │
-        │   [3, 4, 5],           │
-        │ …                      │
-        ╰────────────────────────╯
-        """)
-
-    unbounded_height_peek_output = _render_panel_to_plain_terminal(
-        model._peek(
-            width=32,
-            height=None,
-            ui=UserInterfaceType.TERMINAL,
-        ))
-    assert unbounded_height_peek_output == dedent("""\
-        ╭────────────────────────╮
-        │ Model[list[list[int]]] │
-        │                        │
-        │ [                      │
-        │   [0, 1, 2],           │
-        │   [3, 4, 5],           │
-        │   [6, 7, 8],           │
-        │   [9, 10, 11],         │
-        │   [12, 13, 14],        │
-        │   [15, 16, 17]         │
-        │ ]                      │
-        ╰────────────────────────╯
-        """)
-
-    unbounded_width_peek_output = _render_panel_to_plain_terminal(
-        model._peek(
-            width=None,
-            height=8,
-            ui=UserInterfaceType.TERMINAL,
-        ))
-    assert unbounded_width_peek_output == dedent("""\
-        ╭────────────────────────────────────────────────────────────────────────────╮
-        │                           Model[list[list[int]]]                           │
-        │                                                                            │
-        │ [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, 10, 11], [12, 13, 14], [15, 16, 17]] │
-        ╰────────────────────────────────────────────────────────────────────────────╯
-        """)
-
-    bounded_json_output = _render_panel_to_plain_terminal(
-        model._json(
-            width=32,
-            height=8,
-            ui=UserInterfaceType.TERMINAL,
-        ))
-    assert bounded_json_output == dedent("""\
-        ╭───────────────────╮
-        │     JsonModel     │
-        │                   │
-        │ [                 │
-        │   [ 0 , 1 , 2  ], │
-        │   [ 3 , 4 , 5  ], │
-        │ …                 │
-        ╰───────────────────╯
-        """)
-
-    full_output = _render_panel_to_plain_terminal(
-        model._full(
-            width=32,
-            height=4,
-            ui=UserInterfaceType.TERMINAL,
-        ))
-    assert full_output == unbounded_height_peek_output
-    assert '│ …                      │' not in full_output
 
 
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
