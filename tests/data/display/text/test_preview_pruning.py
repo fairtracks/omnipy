@@ -5,6 +5,7 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.text.preview_pruning import _maybe_prune_draft_panel, _PreviewPruningMemo
+from omnipy.shared.enums.display import PrettyPrinterLib
 
 
 @dataclass(frozen=True)
@@ -92,12 +93,14 @@ def test_probe_caps_and_fallback() -> None:
     )
 
     probe_calls = 0
+    unstable_probe_sizes: list[int] = []
 
     def _unstable_probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
         nonlocal probe_calls
         probe_calls += 1
         assert isinstance(prefix_panel.content, list)
         size = len(prefix_panel.content)
+        unstable_probe_sizes.append(size)
         return size, size
 
     unbounded_result = _maybe_prune_draft_panel(
@@ -117,6 +120,28 @@ def test_probe_caps_and_fallback() -> None:
 
     assert bounded_result is bounded_width_panel
     assert probe_calls > 0
+    assert max(unstable_probe_sizes) <= 16
+
+    binary_search_probe_sizes: list[int] = []
+
+    def _binary_search_probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
+        assert isinstance(prefix_panel.content, list)
+        size = len(prefix_panel.content)
+        binary_search_probe_sizes.append(size)
+        if size in (4, 8, 16):
+            return 10, 1
+        return size, 1
+
+    _maybe_prune_draft_panel(
+        DraftPanel(
+            list(range(1000)),
+            frame=Frame(Dimensions(width=20, height=None)),
+        ),
+        probe_render=_binary_search_probe_render,
+        max_probe_items=16,
+    )
+
+    assert max(binary_search_probe_sizes) <= 16
 
 
 def test_probe_cache_effectiveness() -> None:
@@ -147,3 +172,47 @@ def test_probe_cache_effectiveness() -> None:
     _maybe_prune_draft_panel(panel, probe_render=_probe_render, memo=_PreviewPruningMemo())
 
     assert probe_calls > calls_after_first_run
+
+
+def test_panel_cache_distinguishes_configs_for_same_content_and_frame() -> None:
+    content = [f'item-{i}' for i in range(20)]
+    frame = Frame(Dimensions(width=80, height=4))
+
+    rich_panel = _FakeDraftPanel(
+        content=content,
+        frame=frame,
+        inner_frame=frame,
+        config=OutputConfig(printer=PrettyPrinterLib.RICH),
+    )
+    devtools_panel = _FakeDraftPanel(
+        content=content,
+        frame=frame,
+        inner_frame=frame,
+        config=OutputConfig(printer=PrettyPrinterLib.DEVTOOLS),
+    )
+
+    probe_sizes: dict[str, list[int]] = {
+        PrettyPrinterLib.RICH: [],
+        PrettyPrinterLib.DEVTOOLS: [],
+    }
+
+    def _probe_render(prefix_panel: _FakeDraftPanel) -> tuple[int, int]:
+        assert isinstance(prefix_panel.content, list)
+        size = len(prefix_panel.content)
+        printer = prefix_panel.config.printer
+        probe_sizes[printer].append(size)
+
+        if printer == PrettyPrinterLib.RICH:
+            return 1, size
+
+        return 1, size // 2
+
+    memo = _PreviewPruningMemo()
+    rich_result = _maybe_prune_draft_panel(rich_panel, probe_render=_probe_render, memo=memo)
+    devtools_result = _maybe_prune_draft_panel(devtools_panel, probe_render=_probe_render, memo=memo)
+
+    assert isinstance(rich_result.content, list)
+    assert isinstance(devtools_result.content, list)
+    assert rich_result.content != devtools_result.content
+    assert probe_sizes[PrettyPrinterLib.RICH]
+    assert probe_sizes[PrettyPrinterLib.DEVTOOLS]

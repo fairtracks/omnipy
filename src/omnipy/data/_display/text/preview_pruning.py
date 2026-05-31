@@ -17,8 +17,8 @@ class _PanelPreviewBudget:
 @dataclass
 class _PreviewPruningMemo:
     probe_cache: dict[tuple[int, int, int, int, int], tuple[int, int]] = field(default_factory=dict)
-    panel_cache: dict[tuple[int, _PanelPreviewBudget, int, int, int],
-                      int | None] = field(default_factory=dict)
+    panel_cache: dict[tuple[int, _PanelPreviewBudget, int, int, int, int, int],
+                       int | None] = field(default_factory=dict)
     active_object_ids: set[int] = field(default_factory=set)
 
 
@@ -108,7 +108,7 @@ def _requires_bounded_width(content: object) -> bool:
 def _cached_panel_if_any(
     draft_panel: Any,
     memo: _PreviewPruningMemo,
-    panel_key: tuple[int, _PanelPreviewBudget, int, int, int],
+    panel_key: tuple[int, _PanelPreviewBudget, int, int, int, int, int],
     plan: _ChunkPlan,
 ) -> Any | None:
     if panel_key not in memo.panel_cache:
@@ -282,6 +282,7 @@ def _find_prefix_size(
                 budget=budget,
                 plan=plan,
                 prefix_size=mid,
+                max_prefix_size=cap,
                 stop_reason=stop_reason,
                 probe_render=probe_render,
                 memo=memo,
@@ -299,6 +300,7 @@ def _prefix_satisfies_stop_condition(
     budget: _PanelPreviewBudget,
     plan: _ChunkPlan,
     prefix_size: int,
+    max_prefix_size: int,
     stop_reason: str,
     probe_render: Callable[[Any], tuple[int, int]],
     memo: _PreviewPruningMemo,
@@ -318,7 +320,7 @@ def _prefix_satisfies_stop_condition(
 
     width_history: list[int] = []
     for offset in range(width_stabilization_window + 1):
-        probe_size = min(prefix_size + offset, plan.total_chunks)
+        probe_size = min(prefix_size + offset, max_prefix_size, plan.total_chunks)
         rendered_width, _ = _probe_prefix(
             draft_panel=draft_panel,
             plan=plan,
@@ -377,11 +379,15 @@ def _panel_cache_key(
     budget: _PanelPreviewBudget,
     max_probe_items: int,
     width_stabilization_window: int,
-) -> tuple[int, _PanelPreviewBudget, int, int, int]:
+) -> tuple[int, _PanelPreviewBudget, int, int, int, int, int]:
+    config_hash = hash(draft_panel.config)
+    printer_hash = hash(getattr(draft_panel.config, 'printer', None))
     return (
         id(draft_panel.content),
         budget,
         hash(draft_panel.frame),
+        config_hash,
+        printer_hash,
         max_probe_items,
         width_stabilization_window,
     )
