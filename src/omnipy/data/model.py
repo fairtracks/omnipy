@@ -78,7 +78,7 @@ _ClassOrTupleT = TypeVar('_ClassOrTupleT')
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 
 
-class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
+class ModelMetaclass(DataClassBaseMeta, pyd.RootModelMetaclass):
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -105,7 +105,7 @@ undefined_default_factory: Callable[[], Any] = lambda: Undefined
 class Model(  # type: ignore[misc]
         ModelDisplayMixin,
         DataClassBase[_RootT],
-        pyd.GenericModel,
+        pyd.RootModel[_RootT],
         metaclass=ModelMetaclass,
 ):
     """A data model containing a value parsed according to the model.
@@ -142,7 +142,7 @@ class Model(  # type: ignore[misc]
     See also docs of the Dataset class for more usage examples.
     """
 
-    __root__: _RootT = pyd.Field(default_factory=undefined_default_factory)
+    root: _RootT = pyd.Field(default_factory=undefined_default_factory)
 
     _PYDANTIC_ROOT_KEY = 'root'
 
@@ -162,6 +162,20 @@ class Model(  # type: ignore[misc]
     @classmethod
     def _supports_v1_field_attrs(cls, field: pyd.ModelField | None) -> bool:
         return field is not None and hasattr(field, 'sub_fields') and hasattr(field, 'outer_type_')
+
+    @staticmethod
+    def _coerce_protocol_type_for_pydantic(model: type[_RootT] | TypeVar) -> object:
+        origin = get_origin(model)
+        protocol_type = origin if origin is not None else model
+
+        if (getattr(protocol_type, '__module__', None) == 'omnipy.shared.protocols.typing'
+                and getattr(protocol_type, '__name__', None) == 'IsMapping'):
+            args = get_args(model)
+            if len(args) == 2:
+                return Mapping[args[0], args[1]]
+            return Mapping
+
+        return model
 
     def _get_default_factory(self) -> Callable[[], _RootT]:
         try:
@@ -282,6 +296,7 @@ class Model(  # type: ignore[misc]
         model = cls._prepare_params(params)
 
         orig_model: type[_RootT] | TypeVar = model
+        model_for_pydantic = cls._coerce_protocol_type_for_pydantic(model)
 
         # Populating the root field at runtime instead of providing a __root__ Field explicitly
         # is needed due to the inability of typing/pydantic to provide a dynamic default based on
@@ -294,7 +309,8 @@ class Model(  # type: ignore[misc]
         from pydantic import BaseModel as _PydBaseModel
         created_model = cast(
             type[Model],
-            _PydBaseModel.__class_getitem__.__func__(cls, model if cls is Model else params),  # type: ignore
+            _PydBaseModel.__class_getitem__.__func__(
+                cls, model_for_pydantic if cls is Model else params),  # type: ignore
         )
         pydantic_root_key = created_model._get_pydantic_root_key()
         created_model.model_fields[pydantic_root_key] = deepcopy(
@@ -503,71 +519,23 @@ class Model(  # type: ignore[misc]
             root_field.json_schema_extra = {}
         root_field.json_schema_extra['orig_model'] = orig_model
 
-    def __init__(  # noqa: C901
+    def __init__(
         self,
         value: _RootT | object | UndefinedType = Undefined,
         *,
         __root__: _RootT | object | UndefinedType = Undefined,
         **kwargs: _RootT | object,
     ) -> None:
-        super_kwargs: dict[str, _RootT] = {}
-        num_root_vals = 0
-
         if value is not Undefined:
-            super_kwargs[ROOT_KEY] = cast(_RootT, value)
-            num_root_vals += 1
+            root_value = value
+        elif __root__ is not Undefined:
+            root_value = __root__
+        elif kwargs:
+            root_value = kwargs
+        else:
+            root_value = self._get_default_value()
 
-        if __root__ is not Undefined:
-            super_kwargs[ROOT_KEY] = cast(_RootT, __root__)
-            num_root_vals += 1
-
-        if kwargs:
-            super_kwargs[ROOT_KEY] = cast(_RootT, kwargs)
-            kwargs = {}
-            num_root_vals += 1
-
-        assert num_root_vals <= 1, 'Not allowed to provide root data in more than one argument'
-
-        if self._get_root_field().default_factory is undefined_default_factory:
-            self._get_root_field().default_factory = self._get_default_factory()
-
-        dataset_or_model_as_input = False
-        
-        # In pydantic v2, the compiled validator must always receive a root value.
-        # If none is provided, generate a default here instead of relying on the
-        # undefined_default_factory (which returns PydanticUndefined and causes
-        # a hang/crash in pydantic-core when validate_default=True).
-        if ROOT_KEY not in super_kwargs:
-            try:
-                super_kwargs[ROOT_KEY] = self._get_default_value()
-            except (ValidationError, TypeError, ValueError):
-                super_kwargs[ROOT_KEY] = self._get_default_value()
-
-        if ROOT_KEY in super_kwargs:
-            try:
-                dataset_or_model_as_input, value = \
-                    self._prepare_value_for_validation_if_dataset_or_model(super_kwargs[ROOT_KEY])
-            except Exception as exc:
-                val_exc = ValueError(f'Failed to prepare value for validation: {exc}')
-                raise pyd.validation_error_from_wrappers(
-                    [
-                        pyd.ErrorWrapper(exc, loc=ROOT_KEY),
-                        pyd.ErrorWrapper(val_exc, loc=ROOT_KEY),
-                    ],
-                    self.__class__,
-                )
-            if dataset_or_model_as_input:
-                super_kwargs[ROOT_KEY] = cast(_RootT, value)
-
-        self._init(super_kwargs, **kwargs)
-
-        try:
-            self._primary_validation(super_kwargs)
-        except ValidationError:
-            if dataset_or_model_as_input:
-                self._secondary_validation_from_data(super_kwargs)
-            else:
-                raise
+        super().__init__(root=cast(_RootT, root_value))
 
         if not self.__class__.__doc__:
             self._set_standard_field_description()
@@ -604,7 +572,9 @@ class Model(  # type: ignore[misc]
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id)
 
     def __copy__(self) -> Self:
-        return self.copy(deep=False)
+        pydantic_copy = cast(Self, pyd.RootModel.__copy__(self))
+        pydantic_copy.content = copy(pydantic_copy.__dict__[ROOT_KEY])
+        return pydantic_copy
 
     if TYPE_CHECKING:
 
@@ -658,7 +628,7 @@ class Model(  # type: ignore[misc]
             @contextmanager
             def temporary_set_value_iter_to_pydantic_method() -> Iterator[None]:
                 prev_iter = value.__class__.__iter__
-                value.__class__.__iter__ = pyd.GenericModel.__iter__  # type: ignore[method-assign]
+                value.__class__.__iter__ = pyd.RootModel.__iter__  # type: ignore[method-assign]
 
                 try:
                     yield
@@ -875,7 +845,7 @@ class Model(  # type: ignore[misc]
         if validation_error:
             raise validation_error
 
-        return values[ROOT_KEY]
+        return cast(_RootT, values.get(ROOT_KEY, values['__root__']))
 
     @property
     def snapshot(self) -> _RootT:
@@ -916,8 +886,8 @@ class Model(  # type: ignore[misc]
     # TODO: See if it is possible to support general mappings similarly to iterables (in Model)
     #       (note: this is an old TODO, it is unclear what exactly is not supported...)
     @pyd.model_validator(mode='before')
-    def _generous_iterable_support(cls, root_obj: dict[str, _RootT | None]) -> Any:
-        if ROOT_KEY in root_obj:
+    def _generous_iterable_support(cls, root_obj: Any) -> Any:
+        if isinstance(root_obj, dict) and ROOT_KEY in root_obj:
             value = root_obj[ROOT_KEY]
             outer_type = cls.outer_type()
             if (lenient_issubclass(outer_type, Iterable)
@@ -928,20 +898,52 @@ class Model(  # type: ignore[misc]
                     # Also, exclude mappings
                     and not isinstance(value, Mapping)):
                 return {ROOT_KEY: (_ for _ in value)}
+        elif not isinstance(root_obj, dict):
+            value = root_obj
+            outer_type = cls.outer_type()
+            if (lenient_issubclass(outer_type, Iterable)
+                    and not lenient_isinstance(value, outer_type)  # type: ignore[arg-type]
+                    and is_non_str_byte_iterable(value)
+                    # Leave the types below for pydantic to handle
+                    and not pyd.sequence_like(value)
+                    # Also, exclude mappings
+                    and not isinstance(value, Mapping)):
+                return (_ for _ in value)
         return root_obj
 
     @pyd.model_validator(mode='before')
-    def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
-        if ROOT_KEY not in root_obj:
-            return root_obj
-        value = root_obj[ROOT_KEY]
-        value = parse_none_according_to_model(value, root_model=cls)
+    def _parse_root_object(cls, root_obj: Any) -> Any:
+        def _coerce_mapping_iterable(value: Any) -> Any:
+            outer_type = cls.outer_type()
+            if (lenient_issubclass(outer_type, Mapping)
+                    and not isinstance(value, Mapping)
+                    and is_non_str_byte_iterable(value)):
+                try:
+                    return dict(value)
+                except (TypeError, ValueError):
+                    return value
+            return value
 
+        if isinstance(root_obj, dict):
+            if ROOT_KEY not in root_obj:
+                return root_obj
+            value = root_obj[ROOT_KEY]
+            value = parse_none_according_to_model(value, root_model=cls)
+            value = _coerce_mapping_iterable(value)
+
+            config = cls.data_class_creator.config  # type: ignore[attr-defined]
+            with hold_and_reset_prev_attrib_value(config.model,
+                                                  'dynamically_convert_elements_to_models'):
+                config.model.dynamically_convert_elements_to_models = False
+                return {ROOT_KEY: cls._parse_data(value)}
+
+        value = parse_none_according_to_model(root_obj, root_model=cls)
+        value = _coerce_mapping_iterable(value)
         config = cls.data_class_creator.config  # type: ignore[attr-defined]
         with hold_and_reset_prev_attrib_value(config.model,
                                               'dynamically_convert_elements_to_models'):
             config.model.dynamically_convert_elements_to_models = False
-            return {ROOT_KEY: cls._parse_data(value)}
+            return cls._parse_data(value)
 
     # TODO: Rename Model.content to Model.content as it may be a single value, while "content"
     #       implies a countable collection of values
@@ -956,7 +958,7 @@ class Model(  # type: ignore[misc]
         `from_json()` methods, the content are not validated automatically. To validate the
         content, call the `validate_content()` method explicitly.
         """
-        super().__setattr__(ROOT_KEY, value)
+        super().__setattr__('root', value)
 
     def to(self, model_cls: type[_OtherModelT]) -> _OtherModelT:
         return model_cls(self)
@@ -977,7 +979,7 @@ class Model(  # type: ignore[misc]
     #          ...
     #       ```
     def to_data(self) -> object:
-        return super().model_dump(by_alias=True)[ROOT_KEY]
+        return super().model_dump(by_alias=True)
 
     def _empty_from_data(self, value: object) -> None:
         @contextmanager
@@ -1562,7 +1564,7 @@ def is_pure_pydantic_model(obj: object):
 def is_non_omnipy_pydantic_model(obj: object):
     mro = type(obj).__mro__
     return mro[0] != pyd.BaseModel \
-        and (pyd.BaseModel in mro or pyd.GenericModel in mro) \
+        and (pyd.BaseModel in mro or pyd.RootModel in mro or pyd.GenericModel in mro) \
         and Model not in mro \
         and Dataset not in mro
 

@@ -18,6 +18,8 @@ pyd = pydantic
 
 BaseConfig = pyd.BaseConfig
 BaseModel = pyd.BaseModel
+RootModel = pyd.RootModel
+RootModelMetaclass = type(RootModel)
 ConfigDict = pyd.ConfigDict
 conint = pyd.conint
 constr = pyd.constr
@@ -301,6 +303,8 @@ def _exception_to_line_errors(
 __all__ = [
     'BaseConfig',
     'BaseModel',
+    'RootModel',
+    'RootModelMetaclass',
     'ConfigDict',
     'ConfigError',
     'conint',

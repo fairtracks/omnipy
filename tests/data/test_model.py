@@ -103,6 +103,15 @@ def test_init_and_data() -> None:
     assert Model[dict]((('a', 2), ('b', True))).to_data() == {'a': 2, 'b': True}
 
 
+def test_rootmodel_tracer_bullet_native_root_storage() -> None:
+    model = Model[int](12)
+
+    assert model.__class__.__pydantic_root_model__ is True
+    assert model.content == 12
+    assert model.root == 12
+    assert model.to_data() == 12
+
+
 def test_init_model_as_input() -> None:
     assert Model[int](Model[float](4.5)).to_data() == 4
     assert Model[tuple[int, ...]](Model[list[float]]([4.5, 2.3])).to_data() == (4, 2)
@@ -653,6 +662,12 @@ def test_copy(
     assert not model_copy.has_snapshot()
 
     assert model_copy.__fields_set__ == {'__root__'}
+
+
+def test_model_copy_tracks_rootmodel_fields_set() -> None:
+    model_copy = copy(Model[list[int]]([1, 2, 3]))
+
+    assert model_copy.model_fields_set == {'root'}
 
 
 def test_parse_convertible_data() -> None:
