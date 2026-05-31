@@ -83,18 +83,40 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def persist_outputs(self) -> PersistOutputsOptions.Literals:
+        """Return the configured persistence option for this job.
+
+        Returns:
+            Effective per-job persistence setting before config fallback
+            resolution.
+        """
         return self._persist_outputs
 
     @property
     def restore_outputs(self) -> RestoreOutputsOptions.Literals:
+        """Return the configured restore option for this job.
+
+        Returns:
+            Effective per-job restore setting before config fallback resolution.
+        """
         return self._restore_outputs
 
     @property
     def output_storage_protocol(self) -> OutputStorageProtocolOptions.Literals:
+        """Return the configured output storage protocol option.
+
+        Returns:
+            Per-job protocol setting before config fallback resolution.
+        """
         return self._output_storage_protocol
 
     @property
     def will_persist_outputs(self) -> PersistOutputsOptions.Literals:
+        """Resolve whether outputs should be persisted for this run.
+
+        Returns:
+            ``PersistOpts.ENABLED`` or ``PersistOpts.DISABLED`` after applying
+            config-following rules.
+        """
         if self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
             return self._persist_outputs
         else:
@@ -115,6 +137,11 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def will_restore_outputs(self) -> RestoreOutputsOptions.Literals:
+        """Resolve whether persisted outputs should be restored.
+
+        Returns:
+            Restore behavior for this run after applying config-following rules.
+        """
         if self._restore_outputs is RestoreOpts.FOLLOW_CONFIG:
             return self._job_config.output_storage.restore_outputs
         else:
@@ -122,6 +149,11 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions.Literals:
+        """Resolve the output storage protocol to use for persistence.
+
+        Returns:
+            Protocol option for this run after applying config-following rules.
+        """
         if self._output_storage_protocol is ProtocolOpts.FOLLOW_CONFIG:
             return self._job_config.output_storage.protocol
         else:

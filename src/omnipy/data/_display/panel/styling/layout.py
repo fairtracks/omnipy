@@ -52,7 +52,11 @@ class StylizedLayoutPanel(
                                 FrameInvT],
         Generic[FrameInvT],
 ):
-    """Styled layout panel that renders nested panels inside a table shell."""
+    """Styled layout panel that renders nested panels inside a table shell.
+
+    The panel ensures child panels are fully rendered before composing them into
+    a Rich table with consistent border, title, and cropping behavior.
+    """
 
     def __init__(self, panel: DraftPanel[Layout, FrameInvT] | ResizedLayoutDraftPanel[FrameInvT]):
         if not panel_is_dimensions_aware(panel):
@@ -93,6 +97,14 @@ class StylizedLayoutPanel(
         cls,
         content: Layout[DimensionsAwarePanel],
     ) -> FullyRenderedDraftPanelLayout:
+        """Render all panels in the layout to their fully rendered stage.
+
+        Args:
+            content: Layout containing dimensions-aware child panels.
+
+        Returns:
+            Layout where every child panel is fully rendered.
+        """
         return FullyRenderedDraftPanelLayout(**content.render_fully())
 
     @staticmethod
@@ -124,6 +136,11 @@ class StylizedLayoutPanel(
 
     @cached_property
     def table_cell_height(self) -> int:
+        """Return effective table-cell height used for inner panel placement.
+
+        Returns:
+            Height limited by rendered content and optional frame cropping.
+        """
         table_cell_height = self.content.total_subpanel_outer_dims.height
 
         if has_height(self.frame.dims):
@@ -138,22 +155,41 @@ class StylizedLayoutPanel(
     @cached_property
     @override
     def plain(self) -> OutputVariant:
+        """Return plain-text table output for this layout panel.
+
+        Returns:
+            Output variant with formatting/cropping but no styling.
+        """
         return TableCroppingOutputVariant(self, OutputMode.PLAIN)
 
     @cached_property
     @override
     def bw_stylized(self) -> OutputVariant:
+        """Return black-and-white stylized output for this layout panel.
+
+        Returns:
+            Output variant with style attributes but without color.
+        """
         return TableCroppingOutputVariant(self, OutputMode.BW_STYLIZED)
 
     @cached_property
     @override
     def colorized(self) -> OutputVariant:
+        """Return colorized output for this layout panel.
+
+        Returns:
+            Output variant with full color and style information.
+        """
         return TableCroppingOutputVariant(self, OutputMode.COLORIZED)
 
 
 @dataclass
 class PanelElementStyles:
-    """Resolved Rich styles for layout borders, titles, and auxiliary text."""
+    """Resolved Rich styles for layout borders, titles, and auxiliary text.
+
+    Instances precompute title, border, and info styles from panel config so
+    inner and outer stylers can render consistently.
+    """
 
     title_style: rich.style.Style
     table_style: rich.style.Style
@@ -201,7 +237,7 @@ class PanelElementStyles:
 
 
 class InnerPanelStyler:
-    """Styles one rendered inner panel for placement inside an outer layout."""
+    """Style one rendered inner panel for placement inside an outer layout."""
 
     def __init__(
         self,
@@ -304,6 +340,11 @@ class InnerPanelStyler:
         return linesep_text.join(content_lines)
 
     def style_inner_panel(self) -> rich.table.Table:
+        """Build a Rich table representing one styled inner panel cell.
+
+        Returns:
+            Single-column table containing optional title and cropped content.
+        """
         styled_title = self._style_title()
         styled_and_cropped_content = self._style_and_crop_content()
         column_width = self._frame_width_else_outer_dims_width
@@ -347,6 +388,11 @@ class OuterLayoutPanelStyler:
         self._styles = styles
 
     def style_outer_panel(self) -> rich.table.Table:
+        """Style the outer panel using the configured panel design.
+
+        Returns:
+            Rich table containing all styled inner panel cells.
+        """
         assert self._outer_panel.config.panel in [PanelDesign.TABLE, PanelDesign.TABLE_SHOW_STYLE]
         return self._style_outer_panel_as_table()
 
@@ -361,6 +407,11 @@ class OuterLayoutPanelStyler:
             return full_style_text
 
     def style_color_style_line(self) -> rich.text.Text | None:
+        """Return optional caption text describing the active color style.
+
+        Returns:
+            Styled caption text when style reporting is enabled, else ``None``.
+        """
         if self._outer_panel.config.panel == PanelDesign.TABLE_SHOW_STYLE:
             return rich.text.Text(
                 self._get_style_text(),

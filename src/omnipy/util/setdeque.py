@@ -69,44 +69,96 @@ class SetDeque(deque, Generic[_ObjT]):
         self._set.remove(el)
 
     def append(self, el: _ObjT) -> None:
-        """Append ``el`` to the right side if it is not already present."""
+        """Append a new element to the right side.
+
+        Args:
+            el: Element to append when it is not already present.
+        """
         self._add_element('append', el=el)
 
     def appendleft(self, el: _ObjT) -> None:
-        """Append ``el`` to the left side if it is not already present."""
+        """Append a new element to the left side.
+
+        Args:
+            el: Element to append when it is not already present.
+        """
         self._add_element('appendleft', el=el)
 
     def extend(self, el_iter: Iterable[_ObjT]) -> None:
-        """Append each new unique element from ``el_iter`` to the right side."""
+        """Append unique elements from an iterable to the right side.
+
+        Args:
+            el_iter: Source iterable. Duplicate values are ignored.
+        """
         self._add_elements('extend', el_iter)
 
     def extendleft(self, el_iter: Iterable[_ObjT]) -> None:
-        """Append each new unique element from ``el_iter`` to the left side."""
+        """Append unique elements from an iterable to the left side.
+
+        Args:
+            el_iter: Source iterable. Duplicate values are ignored.
+        """
         self._add_elements('extendleft', el_iter)
 
     def insert(self, __i: int, __x: _ObjT) -> None:
-        """Insert ``__x`` at ``__i`` when it is not already present."""
+        """Insert a new element at a position.
+
+        Args:
+            __i: Index at which to insert.
+            __x: Element to insert when it is not already present.
+        """
         self._add_element('insert', __i, el=__x)
 
     def pop(self) -> _ObjT:  # type: ignore[override]
-        """Remove and return the rightmost element."""
+        """Remove and return the rightmost element.
+
+        Returns:
+            The removed element.
+
+        Raises:
+            IndexError: If the deque is empty.
+        """
         return self._remove_returned_element('pop')
 
     def popleft(self) -> _ObjT:
-        """Remove and return the leftmost element."""
+        """Remove and return the leftmost element.
+
+        Returns:
+            The removed element.
+
+        Raises:
+            IndexError: If the deque is empty.
+        """
         return self._remove_returned_element('popleft')
 
     def remove(self, __value) -> None:
-        """Remove ``__value`` from both the deque order and membership set."""
+        """Remove an element from the deque and membership set.
+
+        Args:
+            __value: Element to remove.
+
+        Raises:
+            ValueError: If the element is not present.
+        """
         self._remove_explicit_element('remove', el=__value, add_el_to_args=True)
 
     def clear(self) -> None:
-        """Remove all elements and reset the backing membership set."""
+        """Remove all elements and reset membership bookkeeping.
+
+        This keeps deque contents and the internal uniqueness set synchronized.
+        """
         super().clear()
         self._set.clear()
 
     def count(self, __x: _ObjT) -> int:
-        """Return ``1`` when ``__x`` is present, otherwise ``0``."""
+        """Return whether an element is present.
+
+        Args:
+            __x: Element to check for membership.
+
+        Returns:
+            ``1`` if the element is present, otherwise ``0``.
+        """
         return 1 if __x in self._set else 0
 
     def __setitem__(self, __key: SupportsIndex, __value: _ObjT) -> None:  # type: ignore[override]

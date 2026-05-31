@@ -20,7 +20,15 @@ import omnipy.util.pydantic as pyd
 
 
 class RootLogObjects(DataPublisher):
-    """Own the formatter and handlers attached to the process root logger."""
+    """Own the formatter and handlers attached to the process root logger.
+
+    Attributes:
+        formatter: Formatter shared across configured root handlers, or ``None``
+            when no format string is configured.
+        stdout_handler: Handler for standard-output logging, when enabled.
+        stderr_handler: Handler for standard-error logging, when enabled.
+        file_handler: Rotating file handler for persisted logs, when enabled.
+    """
 
     _config: IsRootLogConfig = pyd.PrivateAttr(default_factory=RootLogConfig)
 
@@ -34,13 +42,21 @@ class RootLogObjects(DataPublisher):
         self._configure_all_objects()
 
     def set_config(self, config: IsRootLogConfig):
-        """Replace the root logging configuration and rebuild all logging objects."""
+        """Replace root logging configuration and rebuild logging objects.
+
+        Args:
+            config: New root logger configuration to apply.
+        """
         self._config = config
         self._configure_all_objects()
 
     @property
     def config(self) -> IsRootLogConfig:
-        """Return the configuration currently driving root logger setup."""
+        """Return the active root logging configuration.
+
+        Returns:
+            Configuration currently used to construct formatter and handlers.
+        """
         return self._config
 
     def _configure_all_objects(self):

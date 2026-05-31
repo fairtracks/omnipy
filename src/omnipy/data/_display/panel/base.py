@@ -25,30 +25,37 @@ import omnipy.util.pydantic as pyd
 
 
 class OutputVariant(ABC):
-    """Container for exporting one rendered panel in multiple output formats."""
+    """Container for exporting one rendered panel in multiple output formats.
+
+    Implementations provide plain terminal text plus HTML fragments/pages for
+    the same rendered panel content.
+    """
 
     @cached_property
     @abstractmethod
     def terminal(self) -> str:
-        """
-        Returns the terminal representation of the output, encoded according
-        to the current console color system.
+        """Return terminal representation of the rendered output.
+
+        Returns:
+            Terminal text encoded for the active console color system.
         """
 
     @cached_property
     @abstractmethod
     def html_tag(self) -> str:
-        """
-        Returns a representation of the output as an HTML tag for inclusion
-        in a web page.
+        """Return rendered output as embeddable HTML markup.
+
+        Returns:
+            HTML snippet suitable for embedding in a larger page.
         """
 
     @cached_property
     @abstractmethod
     def html_page(self) -> str:
-        """
-        Returns a representation of the output as an independent HTML page,
-        for viewing in a web browser.
+        """Return rendered output as a standalone HTML page.
+
+        Returns:
+            Complete HTML document suitable for direct browser viewing.
         """
 
 
@@ -58,7 +65,11 @@ class OutputVariant(ABC):
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_assignment=True),
 )
 class Panel(Generic[FrameT]):
-    """Base panel class that contains frame and title"""
+    """Base panel carrying title, frame, constraints, and output config.
+
+    Panels move through rendering stages, where each stage refines content from
+    draft form to dimensions-aware and eventually fully rendered output.
+    """
     title: str
     frame: FrameT
     constraints: Constraints
@@ -92,43 +103,74 @@ class Panel(Generic[FrameT]):
 
     @abstractmethod
     def render_next_stage(self) -> 'DimensionsAwarePanel[FrameT] | FullyRenderedPanel[FrameT]':
+        """Render this panel to the next stage in the pipeline.
+
+        Returns:
+            A dimensions-aware panel or fully rendered panel, depending on the
+            current stage and panel type.
+        """
         ...
 
 
 def panel_is_dimensions_aware(panel: 'Panel') -> TypeIs['DimensionsAwarePanel']:
-    """Return whether the panel has reached the dimensions-aware stage."""
+    """Return whether the panel has reached the dimensions-aware stage.
+
+    Args:
+        panel: Panel instance to check.
+
+    Returns:
+        ``True`` when the panel is a :class:`DimensionsAwarePanel`.
+    """
 
     return isinstance(panel, DimensionsAwarePanel)
 
 
 def panel_is_fully_rendered(panel: 'Panel') -> TypeIs['FullyRenderedPanel']:
-    """Return whether the panel has reached the fully rendered stage."""
+    """Return whether the panel has reached the fully rendered stage.
+
+    Args:
+        panel: Panel instance to check.
+
+    Returns:
+        ``True`` when the panel is a :class:`FullyRenderedPanel`.
+    """
 
     return isinstance(panel, FullyRenderedPanel)
 
 
 class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
-    """Panel stage that knows its measured dimensions within a frame."""
+    """Panel stage that knows its measured dimensions within a frame.
+
+    This stage can evaluate cropping, title placement, and frame fitness before
+    final style-specific output is produced.
+    """
 
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
+        """Return measured panel dimensions before frame cropping.
+
+        Returns:
+            Width and height of the panel's content at this stage.
+        """
         ...
 
     @cached_property
     def cropped_dims(self,) -> DimensionsWithWidthAndHeight:
-        """
-        Returns the dimensions of the panel, cropped to fit within the
-        frame dimensions.
+        """Return panel dimensions cropped to the frame limits.
+
+        Returns:
+            Cropped width and height according to frame constraints.
         """
         return self.frame.crop_dims(self.dims)
 
     @cached_property
     def outer_dims(self) -> DimensionsWithWidthAndHeight:
-        """
-        Returns the outer dimensions of the panel, which includes the title
-        height if applicable, and the width of the cropped dimensions or
-        the title width, whichever is larger.
+        """Return outer dimensions including title contribution.
+
+        Returns:
+            Width/height after combining cropped content and visible title
+            lines, then applying frame height cropping rules.
         """
         if self.title_height > 0:
             dims_width = max(self.cropped_dims.width, self.title_width)
@@ -142,10 +184,10 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
 
     @cached_property
     def inner_frame(self) -> FrameT:
-        """
-        Returns the inner panel frame, which is the same as
-        the outer panel frame, but adjusted for the title height if
-        applicable.
+        """Return frame available to panel content after title reservation.
+
+        Returns:
+            Frame with reduced height when title lines consume vertical space.
         """
         if has_height(self.frame.dims) and self.title_height > 0:
             return cast(
@@ -157,9 +199,10 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
 
     @cached_property
     def within_frame(self) -> DimensionsFit:
-        """
-        Returns a summary of how well the panel's content fit within the
-        frame's dimensions (minus the title height, if any).
+        """Return fitness summary of content dimensions vs. frame limits.
+
+        Returns:
+            ``DimensionsFit`` describing fit/cropping relationship.
         """
         return DimensionsFit(
             self.dims,
@@ -168,9 +211,10 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
         )
 
     def overly_cropped(self) -> bool:
-        """
-        Returns True if the panel width has been overly cropped, according
-        to the `min_crop_width` defined in the config.
+        """Return whether width cropping violates configured minimum width.
+
+        Returns:
+            ``True`` when width is cropped below ``config.min_crop_width``.
         """
         width_cropped = self.dims.width > self.cropped_dims.width
         width_less_than_min_crop = self.cropped_dims.width < self.config.min_crop_width
@@ -178,11 +222,11 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
         return overly_cropped
 
     def width_missing_to_not_be_overly_cropped(self) -> pyd.NonNegativeInt:
-        """
-        Calculates the width that needs to be added to the panel frame in
-        order for the panel to be considered overly_cropped according to
-        the `min_crop_width` defined in the config. If the panel is not
-        currently considered overly cropped, this function returns 0.
+        """Return additional width needed to avoid being overly cropped.
+
+        Returns:
+            Missing width to reach minimum crop width, or ``0`` when already
+            acceptable.
         """
         if not self.overly_cropped():
             return 0
@@ -224,8 +268,11 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
 
     @cached_property
     def title_overlaps_panel(self) -> bool:
-        """
-        Returns True if the title overlaps with the panel content.
+        """Return whether title lines consume content area in the frame.
+
+        Returns:
+            ``True`` when available title space is less than one full title
+            line.
         """
         if self._available_height_for_title is None:
             return False
@@ -233,6 +280,11 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
 
     @cached_property
     def resized_title(self) -> list[str]:
+        """Return title lines wrapped to fit frame/content constraints.
+
+        Returns:
+            Wrapped title lines respecting maximum visible title height.
+        """
         if self.title == '':
             return []
         else:
@@ -249,19 +301,40 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
 
     @cached_property
     def title_width(self) -> int:
+        """Return width of the widest visible title line.
+
+        Returns:
+            Maximum title-line width in characters.
+        """
         return max((len(line) for line in self.resized_title), default=0)
 
     @cached_property
     def title_height(self) -> int:
+        """Return number of visible title lines.
+
+        Returns:
+            Title line count capped by available title space.
+        """
         return min(self._max_title_height, len(self.resized_title))
 
     @cached_property
     def title_height_with_blank_lines(self) -> int:
+        """Return title height including configured blank spacer lines.
+
+        Returns:
+            Visible title height plus blank separator lines, or ``0`` when no
+            title is shown.
+        """
         return self.title_height + TITLE_BLANK_LINES if self.title_height > 0 else 0
 
     @abstractmethod
     @override
     def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
+        """Render this dimensions-aware panel to fully rendered stage.
+
+        Returns:
+            Fully rendered panel that can export output variants.
+        """
         ...
 
 
@@ -270,32 +343,40 @@ class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT], ABC):
 
     @override
     def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
+        """Raise because fully rendered panels are terminal in the pipeline.
+
+        Returns:
+            This method does not return; it always raises.
+
+        Raises:
+            NotImplementedError: Always, because no further render stage exists.
+        """
         raise NotImplementedError('This panel is fully rendered.')
 
     @cached_property
     @abstractmethod
     def plain(self) -> OutputVariant:
-        """
-        Returns an OutputVariant object serving plain text representations
-        of the output, without any styling or color. The output is also
-        cropped to fit the frame dimensions.
+        """Return plain-text output variant.
+
+        Returns:
+            Output variant without styling or color, cropped to frame bounds.
         """
 
     @cached_property
     @abstractmethod
     def bw_stylized(self) -> OutputVariant:
-        """
-        Returns an OutputVariant object serving a black-and-white stylized
-        representation of the output, allowing formatting such as bold or
-        italic, but with no color. The output is also cropped to fit the
-        frame dimensions.
+        """Return black-and-white stylized output variant.
+
+        Returns:
+            Output variant with text styling but no color, cropped to frame
+            bounds.
         """
 
     @cached_property
     @abstractmethod
     def colorized(self) -> OutputVariant:
-        """
-        Returns an OutputVariant object serving a colorized representation
-        of the output, with color and styling. The output is also cropped
-        to fit the frame dimensions.
+        """Return full-color stylized output variant.
+
+        Returns:
+            Output variant with color and style, cropped to frame bounds.
         """

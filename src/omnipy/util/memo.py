@@ -29,6 +29,14 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
     The container stores non-atomic memoized objects by id, records which
     sub-object ids were touched while deep-copying a root object, and supports
     recursive cleanup of entries whose originals have been deleted.
+
+    Attributes:
+        _cur_deepcopy_obj_id: Id for the root object currently being deep-copied,
+            or ``None`` when no deepcopy is active.
+        _cur_keep_alive_list: Temporary keep-alive list used by deepcopy internals.
+        _keep_alive_dict: Persistent keep-alive storage keyed by object id.
+        _sub_obj_ids: Mapping from root object id to the ordered ids of sub-objects
+            touched while copying that root.
     """
 
     def __init__(self) -> None:
@@ -39,6 +47,16 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         self._sub_obj_ids: defaultdict[int, SetDeque[int]] = defaultdict(SetDeque)
 
     def all_are_empty(self, debug: bool = False) -> bool:
+        """Check whether all memo and bookkeeping structures are empty.
+
+        Args:
+            debug: When ``True``, print a detailed diagnostic report of current
+                internal state and object referrers.
+
+        Returns:
+            ``True`` when memo data, keep-alive state, and active-copy state are
+            all empty; otherwise ``False``.
+        """
         _all_are_empty = (
             len(self) == 0 and len(self._keep_alive_dict) == 0 and len(self._sub_obj_ids) == 0
             and self._cur_deepcopy_obj_id is None and len(self._cur_keep_alive_list) == 0)
@@ -82,17 +100,41 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         return _all_are_empty
 
     def clear(self):
+        """Clear memoized entries and all internal bookkeeping maps."""
         super().clear()
         self._keep_alive_dict.clear()
         self._sub_obj_ids.clear()
 
     def in_deepcopy_object_ids(self, key: int) -> bool:
+        """Check whether an object id is registered as a deepcopy root.
+
+        Args:
+            key: Object id to check.
+
+        Returns:
+            ``True`` when the id exists in the deepcopy root registry.
+        """
         return key in self._sub_obj_ids
 
     def get_deepcopy_object_ids(self) -> SetDeque[int]:
+        """Return all registered deepcopy root object ids.
+
+        Returns:
+            Object ids currently tracked as deepcopy roots, in insertion order.
+        """
         return SetDeque(self._sub_obj_ids.keys())
 
     def setup_deepcopy(self, obj):
+        """Initialize bookkeeping for a new root-object deepcopy.
+
+        Args:
+            obj: Root object about to be deep-copied.
+
+        Raises:
+            AssertionError: If a deepcopy is already in progress, temporary
+                keep-alive state is not empty, or this object id is already
+                registered in the memo state.
+        """
         assert self._cur_deepcopy_obj_id is None, \
             f'self._cur_deepcopy_obj_id is not None, but {self._cur_deepcopy_obj_id}'
         assert len(self._cur_keep_alive_list) == 0, \
@@ -112,6 +154,11 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         self._cur_deepcopy_obj_id = id(obj)
 
     def keep_alive_after_deepcopy(self):
+        """Persist objects captured by deepcopy keep-alive bookkeeping.
+
+        Non-atomic objects are retained directly in ``_keep_alive_dict`` while
+        atomic objects are represented by ``None`` placeholders.
+        """
         # old_sub_obj_ids = self._sub_obj_ids[self._cur_deepcopy_obj_id]
         # assert len(old_sub_obj_ids) == len(self._cur_keep_alive_list)
         #
@@ -130,6 +177,11 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 self._keep_alive_dict[id(keep_alive_obj)] = None
 
     def teardown_deepcopy(self):
+        """Finalize bookkeeping state after a deepcopy attempt.
+
+        This clears active-copy markers and removes root-id tracking if the
+        current root was not preserved in keep-alive storage.
+        """
         # Also seems to be unnecessary now. This is for recovering from exceptions during deepcopy
         # that would leave the memo dict in an inconsistent state. This should now be handled by
         # SnapshotHolder.take_snapshot().
@@ -192,6 +244,17 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         self,
         keys_for_deleted_objs: SetDeque[int],
     ):
+        """Recursively remove memo entries whose source objects were deleted.
+
+        Args:
+            keys_for_deleted_objs: Initial candidate object ids for deletion. The
+                deque is updated in place with ids that could not be removed in the
+                current pass.
+
+        Raises:
+            Exception: Re-raises unexpected exceptions from internal removal logic
+                after printing debugging details.
+        """
         try:
             # print(f'keys_for_deleted_objs: {keys_for_deleted_objs}')
             # print(f'self.get_deepcopy_object_ids(): {self.get_deepcopy_object_ids()}')

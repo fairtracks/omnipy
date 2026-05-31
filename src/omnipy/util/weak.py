@@ -43,6 +43,14 @@ class WeakKeyRefContainer(Generic[_AnyKeyT, _ValT]):
         return KeyRef(key) in self._value_dict
 
     def get(self, key: _AnyKeyT) -> _ValT | None:
+        """Return the value associated with a live key object.
+
+        Args:
+            key: Key object to look up by identity.
+
+        Returns:
+            The stored value for the key, or ``None`` when no entry exists.
+        """
         key_ref = KeyRef(key)
         if key_ref in self._value_dict:
             return self._value_dict[key_ref]
@@ -65,5 +73,6 @@ class WeakKeyRefContainer(Generic[_AnyKeyT, _ValT]):
         return len(self._value_dict)
 
     def clear(self) -> None:
+        """Remove all key and value references from the container."""
         self._key_dict.clear()
         self._value_dict.clear()

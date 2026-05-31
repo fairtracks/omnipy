@@ -19,13 +19,22 @@ RenderedPanelT = TypeVar('RenderedPanelT', bound=Panel)
 
 
 class Grid(Generic[PanelT]):
-    """Class to represent a grid of panels with coordinate-based access."""
+    """Single-row grid view over a :class:`Layout`.
+
+    The grid provides coordinate-style access for layout rendering code while
+    preserving insertion order from the underlying mapping.
+    """
     def __init__(self, layout: 'Layout[PanelT]'):
         self._layout = layout
 
     @property
     def dims(self) -> DimensionsWithWidthAndHeight:
-        """Return the dimensions of the grid (width, height)."""
+        """Return dimensions of the grid coordinate space.
+
+        Returns:
+            Width equals number of panels in the row and height is ``1`` when
+            panels exist, otherwise ``0``.
+        """
         return DimensionsWithWidthAndHeight(
             width=len(self._layout), height=1 if len(self._layout) > 0 else 0)
 
@@ -45,6 +54,14 @@ class Grid(Generic[PanelT]):
         return keys[y]
 
     def get_row(self, row_index: int) -> Iterable[PanelT]:
+        """Yield all panels in the requested row.
+
+        Args:
+            row_index: Row index in the single-row grid.
+
+        Returns:
+            Iterable over panels in insertion order for the row.
+        """
         return (self._layout[self[(row_index, i)]] for i in range(self.dims.width))
 
 
@@ -65,7 +82,11 @@ class Layout(UserDict[str, PanelT], Generic[PanelT]):
 
     @property
     def grid(self) -> Grid:
-        """Return a Grid object for coordinate-based access."""
+        """Return the coordinate-based grid accessor for this layout.
+
+        Returns:
+            ``Grid`` wrapper exposing row/column style access.
+        """
         return self._grid
 
     def __hash__(self) -> int:
@@ -89,17 +110,29 @@ class Layout(UserDict[str, PanelT], Generic[PanelT]):
         return {key: finished_panels[key] for key in self.data.keys()}
 
     def render_until_dimensions_aware(self) -> dict[str, DimensionsAwarePanel]:
-        """Render all panels in the layout until they have calculated their dimensions."""
+        """Render each panel until it reaches dimensions-aware stage.
+
+        Returns:
+            Mapping from panel key to dimensions-aware panel in original order.
+        """
         return self._render_until_criteria_holds(panel_is_dimensions_aware)
 
     def render_fully(self) -> Mapping[str, FullyRenderedPanel]:
-        """Render all panels in the layout until they are fully rendered."""
+        """Render each panel until it reaches fully rendered stage.
+
+        Returns:
+            Mapping from panel key to fully rendered panel in original order.
+        """
         return self._render_until_criteria_holds(panel_is_fully_rendered)
 
 
 @dataclass
 class PanelDesignDims:
-    """Border and spacing overhead associated with a panel design."""
+    """Border and spacing overhead associated with a panel design.
+
+    Instances capture per-panel and terminal-edge overhead used when converting
+    content dimensions to full rendered table dimensions.
+    """
 
     num_horizontal_chars_per_panel: int
     num_horizontal_end_chars: int
@@ -111,6 +144,14 @@ class PanelDesignDims:
         return num_panels * chars_per_panel + end_chars
 
     def num_extra_horizontal_chars(self, num_horizontal_panels: int) -> int:
+        """Return horizontal border/separator overhead for a panel row.
+
+        Args:
+            num_horizontal_panels: Number of panels rendered horizontally.
+
+        Returns:
+            Number of non-content characters added by the panel design.
+        """
         return self._extra_chars(
             self.num_horizontal_chars_per_panel,
             self.num_horizontal_end_chars,
@@ -118,6 +159,14 @@ class PanelDesignDims:
         )
 
     def num_extra_vertical_chars(self, num_vertical_panels: int) -> int:
+        """Return vertical border/separator overhead for panel rows.
+
+        Args:
+            num_vertical_panels: Number of panel rows.
+
+        Returns:
+            Number of non-content lines added by the panel design.
+        """
         return self._extra_chars(
             self.num_vertical_lines_per_panel,
             self.num_vertical_end_lines,
@@ -136,6 +185,15 @@ class PanelDesignDims:
         return available_dim_val // dim_val_per_panel
 
     def num_panels_within_frame_width(self, frame_width: int, width_per_panel: int) -> int:
+        """Return how many panels fit within a frame width.
+
+        Args:
+            frame_width: Available frame width in characters.
+            width_per_panel: Content width allocated per panel.
+
+        Returns:
+            Maximum number of full panels that fit horizontally.
+        """
         return self._num_panels_within_frame_dim(
             self.num_horizontal_chars_per_panel,
             self.num_horizontal_end_chars,
@@ -144,6 +202,15 @@ class PanelDesignDims:
         )
 
     def num_panels_within_frame_height(self, frame_height: int, height_per_panel: int) -> int:
+        """Return how many panel rows fit within a frame height.
+
+        Args:
+            frame_height: Available frame height in lines.
+            height_per_panel: Content height allocated per panel row.
+
+        Returns:
+            Maximum number of full panel rows that fit vertically.
+        """
         return self._num_panels_within_frame_dim(
             self.num_vertical_lines_per_panel,
             self.num_vertical_end_lines,
@@ -156,6 +223,17 @@ class PanelDesignDims:
         cls,
         panel_design: PanelDesign.Literals = PanelDesign.TABLE,
     ) -> 'PanelDesignDims':
+        """Build design-overhead values for a specific panel style.
+
+        Args:
+            panel_design: Panel design enum to translate into overhead values.
+
+        Returns:
+            ``PanelDesignDims`` configured for the requested design.
+
+        Raises:
+            ValueError: If the panel design is unsupported.
+        """
         match panel_design:
             case PanelDesign.TABLE:
                 return PanelDesignDims(
@@ -188,10 +266,20 @@ class DimensionsAwarePanelLayoutMixin:
 
     @property
     def total_subpanel_cropped_dims(self) -> DimensionsWithWidthAndHeight:
+        """Return combined cropped dimensions of all subpanels.
+
+        Returns:
+            Width as sum of cropped widths and height as maximum cropped height.
+        """
         return self._total_dims_over_subpanels('cropped_dims')
 
     @property
     def total_subpanel_outer_dims(self) -> DimensionsWithWidthAndHeight:
+        """Return combined outer dimensions of all subpanels.
+
+        Returns:
+            Width as sum of outer widths and height as maximum outer height.
+        """
         return self._total_dims_over_subpanels('outer_dims')
 
     def calc_dims(
@@ -199,6 +287,16 @@ class DimensionsAwarePanelLayoutMixin:
         panel_design: PanelDesign.Literals = PanelDesign.TABLE,
         use_outer_dims_for_subpanels: bool = True,
     ) -> DimensionsWithWidthAndHeight:
+        """Calculate overall layout dimensions including panel design overhead.
+
+        Args:
+            panel_design: Table/panel design used to compute border overhead.
+            use_outer_dims_for_subpanels: Whether subpanel dimensions should
+                include title/border-aware outer sizes.
+
+        Returns:
+            Calculated dimensions for the composed layout.
+        """
         self_as_layout = cast(Layout, self)
 
         if len(self_as_layout) > 0:

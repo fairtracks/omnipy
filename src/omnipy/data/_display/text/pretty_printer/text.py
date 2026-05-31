@@ -13,11 +13,20 @@ from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 
 class PlainTextPrettyPrinter(PrettyPrinter[str]):
-    """Format string content as plain text without code-style defaults."""
+    """Format string-like content as plain text.
+
+    This printer favors text-safe defaults to avoid accidental syntax
+    highlighting when content originates from generic string models.
+    """
 
     @override
     @classmethod
     def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
+        """Return the enum value identifying this pretty-printer backend.
+
+        Returns:
+            ``PrettyPrinterLib.TEXT``.
+        """
         return PrettyPrinterLib.TEXT
 
     @override
@@ -27,6 +36,15 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
         draft_panel: DraftPanel[object, AnyFrame],
         default: bool = False,
     ) -> bool:
+        """Return whether the panel content should use plain-text formatting.
+
+        Args:
+            draft_panel: Draft panel whose content type is evaluated.
+            default: Whether selection runs as default fallback logic.
+
+        Returns:
+            ``True`` if this printer is the best match for the content.
+        """
 
         content = draft_panel.content
 
@@ -42,6 +60,11 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
     @override
     @classmethod
     def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
+        """Return the default syntax language used by this printer.
+
+        Returns:
+            ``SyntaxLanguageSpec.TEXT`` to avoid incorrect code highlighting.
+        """
         # By default, we use TEXT syntax to avoid incorrect highlighting
         # or non-Python string content, such as Markdown, being
         # highlighted as Python code. For plain str content, such as e.g.
@@ -54,6 +77,14 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
         self,
         draft_panel: DraftPanel[str, FrameT],
     ) -> ReflowedTextDraftPanel[FrameT]:
+        """Wrap prepared text content in a reflowed draft panel.
+
+        Args:
+            draft_panel: Prepared draft panel containing string content.
+
+        Returns:
+            Reflowed text draft panel preserving frame, constraints, and config.
+        """
         return ReflowedTextDraftPanel.create_from_draft_panel(draft_panel)
 
     @override
@@ -71,11 +102,20 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
 
 
 class CodePrettyPrinter(PlainTextPrettyPrinter):
-    """Format generic string content as code-highlighted text."""
+    """Format generic string content as code-highlighted text.
+
+    This printer primarily acts as a default for plain ``str`` content when a
+    richer syntax-highlighted representation is preferred.
+    """
 
     @override
     @classmethod
     def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
+        """Return the enum value identifying this pretty-printer backend.
+
+        Returns:
+            ``PrettyPrinterLib.CODE``.
+        """
         return PrettyPrinterLib.CODE
 
     @override
@@ -85,6 +125,15 @@ class CodePrettyPrinter(PlainTextPrettyPrinter):
         draft_panel: DraftPanel[object, AnyFrame],
         default: bool = False,
     ) -> bool:
+        """Return whether the panel should be treated as code-like text.
+
+        Args:
+            draft_panel: Draft panel whose content is evaluated.
+            default: Whether selection runs in fallback/default mode.
+
+        Returns:
+            ``True`` for default handling of plain ``str`` content.
+        """
         # To allow plain str content, such as e.g. in Dataset.list() output,
         # to be automatically highlighted as Python code.
         if default and isinstance(draft_panel.content, str):
@@ -95,6 +144,11 @@ class CodePrettyPrinter(PlainTextPrettyPrinter):
     @override
     @classmethod
     def get_default_syntax_language(cls) -> SyntaxLanguageSpec.Literals:
+        """Return the default syntax language used by this printer.
+
+        Returns:
+            ``SyntaxLanguageSpec.PYTHON`` for code-oriented highlighting.
+        """
         # Python syntax is provided as default. This is among others used
         # to support highlighting of numbers, types etc. in tables and
         # elsewhere, such as Dataset.list() output. For str-based Models,

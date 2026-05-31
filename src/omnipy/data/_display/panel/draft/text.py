@@ -30,7 +30,11 @@ class ReflowedTextDraftPanel(
         MonospacedDraftPanel[str, FrameT],
         Generic[FrameT],
 ):
-    """Draft panel containing text reflowed to match frame and title constraints."""
+    """Draft panel containing text reflowed to frame/title constraints.
+
+    The panel computes dimensions from cropped display lines while keeping
+    access to original content dimensions for fit heuristics.
+    """
 
     @classmethod
     @overload
@@ -56,6 +60,17 @@ class ReflowedTextDraftPanel(
         draft_panel: DraftPanel[str | object, FrameInvT],
         other_content: str | None = None,
     ) -> 'ReflowedTextDraftPanel[FrameInvT]':
+        """Create a reflowed text panel from an existing draft panel.
+
+        Args:
+            draft_panel: Source panel that contributes metadata and default
+                content.
+            other_content: Optional replacement string content.
+
+        Returns:
+            Reflowed text draft panel with copied title, frame, constraints,
+            and config.
+        """
         content = (draft_panel.content if other_content is None else other_content)
         return ReflowedTextDraftPanel(
             content,  # type: ignore[arg-type]
@@ -93,6 +108,11 @@ class ReflowedTextDraftPanel(
     @cached_property
     @override
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
+        """Compute dimensions while resolving title-height dependencies.
+
+        Returns:
+            Content dimensions calculated after title-aware reflow.
+        """
         def _del_attrs_if_defined(*attrs: str):
             for attr in attrs:
                 try:
@@ -149,10 +169,10 @@ class ReflowedTextDraftPanel(
 
     @cached_property
     def orig_dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
-        """
-        Original dimensions of the panel, without any cropping applied.
-        This is used to determine the original size of the content before
-        any transformations or cropping.
+        """Return original dimensions before any frame-based cropping.
+
+        Returns:
+            Width/height measured from raw content lines.
         """
         orig_content_lines = strip_newlines(split_all_content_to_lines(self.content))
         orig_width = max((self._line_width(line) for line in orig_content_lines), default=0)
@@ -162,13 +182,11 @@ class ReflowedTextDraftPanel(
     @cached_property
     @override
     def within_frame(self) -> DimensionsFit:
-        """
-        Returns a summary of how well the panel's content fit within the
-        frame's dimensions (minus the title height, if any).
+        """Return fit summary using original (non-cropped) content dimensions.
 
-        Overrides the base class method to ensure that the fitness is
-        calculated based on the dimensions of the original, non-cropped
-        content.
+        Returns:
+            ``DimensionsFit`` comparing original content size against inner
+            frame dimensions.
         """
         return DimensionsFit(
             self.orig_dims,
@@ -178,6 +196,11 @@ class ReflowedTextDraftPanel(
 
     @cached_property
     def max_inline_container_width_incl(self) -> int:
+        """Return widest inline bracketed container width in visible lines.
+
+        Returns:
+            Maximum width of ``{...}``, ``[...]``, or ``(...)`` matches.
+        """
         def _max_inline_container_width_incl_for_line(line):
             # Find all containers in the line using regex
             containers = re.findall(r'\{.*\}|\[.*\]|\(.*\)', line)
@@ -191,6 +214,11 @@ class ReflowedTextDraftPanel(
 
     @cached_property
     def max_inline_list_or_dict_width_excl(self) -> int:  # noqa: C901
+        """Return widest inline list/dict payload width without outer braces.
+
+        Returns:
+            Maximum detected width of inline list/dict content segments.
+        """
         def _as_json_dict_with_line_as_single_el(_line: str) -> JsonDict | None:
             _dict_with_line_as_elements = parse_line_as_elements_of_dict(_line)
             if not isinstance(_dict_with_line_as_elements, pyd.UndefinedType):
@@ -296,6 +324,11 @@ class ReflowedTextDraftPanel(
 
     @cached_property
     def satisfies(self) -> ConstraintsSatisfaction:  # pyright: ignore
+        """Return constraint satisfaction with text-specific inline metrics.
+
+        Returns:
+            ``ConstraintsSatisfaction`` enriched with inline container widths.
+        """
         return ConstraintsSatisfaction(
             self.constraints,
             max_inline_container_width_incl=self.max_inline_container_width_incl,
@@ -304,6 +337,11 @@ class ReflowedTextDraftPanel(
 
     @override
     def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
+        """Render this reflowed text panel into syntax-stylized output.
+
+        Returns:
+            Fully rendered panel with syntax-aware styling applied.
+        """
         from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
         panel: SyntaxStylizedTextPanel[FrameT] = SyntaxStylizedTextPanel(self)
         return panel
