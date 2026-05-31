@@ -573,7 +573,7 @@ class Model(  # type: ignore[misc]
                     self.__class__,
                 )
             if dataset_or_model_as_input:
-                super_kwargs[ROOT_KEY] = cast(_RootT, self._coerce_prepared_value_to_model_type(value))
+                super_kwargs[ROOT_KEY] = cast(_RootT, value)
 
         self._init(super_kwargs, **kwargs)
 
@@ -611,29 +611,6 @@ class Model(  # type: ignore[misc]
         elif is_non_omnipy_pydantic_model(value):
             return True, cast(pyd.BaseModel, value).model_dump(by_alias=True)
         return False, value
-
-    @classmethod
-    def _coerce_prepared_value_to_type(cls, value: object, target_type: TypeForm) -> object:
-        if is_model_instance(value):
-            value = value.to_data()
-        elif is_dataset_instance(value):
-            value = value.to_data()
-        elif is_non_omnipy_pydantic_model(value):
-            value = cast(pyd.BaseModel, value).model_dump(by_alias=True)
-
-        try:
-            import pydantic.v1 as pyd_v1
-            return pyd_v1.parse_obj_as(target_type, value)
-        except Exception:
-            return value
-
-    def _coerce_prepared_value_to_model_type(self, value: object) -> object:
-        target_type = self.full_type()
-        if is_model_subclass(target_type):
-            inner_target_type = target_type.full_type()
-            coerced_value = self._coerce_prepared_value_to_type(value, inner_target_type)
-            return target_type(coerced_value)
-        return self._coerce_prepared_value_to_type(value, target_type)
 
     def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
         ...
