@@ -645,8 +645,8 @@ class Model(  # type: ignore[misc]
             value = cast(pyd.BaseModel, value).model_dump(by_alias=True)
 
         try:
-            from pydantic import TypeAdapter
-            return TypeAdapter(target_type).validate_python(value)
+            import pydantic.v1 as pyd_v1
+            return pyd_v1.parse_obj_as(target_type, value)
         except Exception:
             return value
 
