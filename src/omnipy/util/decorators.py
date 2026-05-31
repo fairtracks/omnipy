@@ -76,7 +76,8 @@ def apply_decorator_to_property(prop: property, decorator: Callable[[Callable], 
 def call_super_if_available(call_super_before_method: bool):
     class SuperCaller(Generic[_SelfOrClsT, _ArgT]):
         def __init__(self, method: Callable[[_SelfOrClsT, _ArgT], _ArgT]):
-            self._method = method
+            method_obj: Any = method
+            self._method = method_obj.__func__ if hasattr(method_obj, '__func__') else method
             self._calling_obj_or_cls: _SelfOrClsT
             self._cls_of_decorated_method: type
 
@@ -93,7 +94,7 @@ def call_super_if_available(call_super_before_method: bool):
             return self
 
         def __call__(self, arg: _ArgT) -> _ArgT:
-            method = self._method.__func__ if hasattr(self._method, '__func__') else self._method
+            method = self._method
             super_method: Callable[[_ArgT], _ArgT] | None = getattr(
                 super(self._cls_of_decorated_method, self._calling_obj_or_cls),
                 self._method.__name__,

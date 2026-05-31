@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Callable
 
 import pytest
@@ -229,6 +230,21 @@ def test_call_super_if_available() -> None:
     assert MyClassWithSuper().my_method(1) == 20
     assert MyClassWithSuper().my_other_method(1) == 11
     assert MyClassWithSuper.my_class_method(1) == 6
+
+
+def test_call_super_if_available_descriptor_is_deepcopy_safe_for_classmethod() -> None:
+    class MyClass:
+        @call_super_if_available(call_super_before_method=False)
+        @classmethod
+        def my_class_method(cls, number: int) -> int:
+            return number + 1
+
+    descriptor = MyClass.__dict__['my_class_method']
+
+    copied_descriptor = deepcopy(descriptor)
+
+    assert isinstance(copied_descriptor, type(descriptor))
+    assert MyClass.my_class_method(1) == 2
 
 
 def test_class_or_instance_method() -> None:
