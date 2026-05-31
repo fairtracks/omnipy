@@ -395,11 +395,11 @@ class PydanticRecordModelMetaclass(ModelMetaclass):
             if hasattr(pydantic_model, '__pydantic_model__'):
                 pydantic_model = pydantic_model.__pydantic_model__
 
-            headers = pydantic_model.__fields__
+            headers = pydantic_model.model_fields
 
             num_required_fields = -1
             for i, header_field in enumerate(headers.values()):
-                if not header_field.required:
+                if not header_field.is_required():
                     if num_required_fields == -1:
                         num_required_fields = i
                     continue
@@ -539,11 +539,11 @@ else:
                     key: str,
                     col_len: int = len(input_model),
             ) -> None:
-                content[key] = [pyd_model.__fields__[key].get_default()] * col_len
+                content[key] = [pyd_model.model_fields[key].get_default(call_default_factory=True)] * col_len
 
             content = output_model.content
-            for key, field in pyd_model.__fields__.items():
-                if field.required and key not in content:
+            for key, field in pyd_model.model_fields.items():
+                if field.is_required() and key not in content:
                     _init_col(content, pyd_model, key)
 
             for i, row in enumerate(input_model):

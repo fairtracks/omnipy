@@ -138,7 +138,7 @@ class UrlDataclassModel(pyd.BaseModel):
 
     def __str__(self) -> str:
         kwargs: dict[str, str | int] = {}
-        for key, val in self.dict().items():
+        for key, val in self.model_dump().items():
             if val is None:
                 continue
             match key:
@@ -176,7 +176,7 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
         url_obj = pyd.Url(str(data) if isinstance(data, UrlDataclassModel) else data)
 
         parts: dict[str, str | int | None] = {}
-        for key in UrlDataclassModel.__fields__.keys():
+        for key in UrlDataclassModel.model_fields.keys():
             match key:
                 case 'scheme':
                     val = url_obj.scheme
