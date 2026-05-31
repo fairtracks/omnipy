@@ -628,12 +628,26 @@ class Model(  # type: ignore[misc]
         value: object,
     ) -> tuple[bool, object]:
         if is_dataset_instance(value):
-            return True, value.to_data()
+            return True, self._convert_dataset_input_to_data(cast(Dataset, value))
         if is_model_instance(value):
             return True, value.to_data()
         elif is_non_omnipy_pydantic_model(value):
             return True, cast(pyd.BaseModel, value).model_dump(by_alias=True)
         return False, value
+
+    @classmethod
+    def _convert_dataset_input_to_data(cls, dataset_value: Dataset) -> dict[str, object]:
+        converted_data: dict[str, object] = {}
+
+        for key, data_item in dataset_value.data.items():
+            if is_model_instance(data_item):
+                converted_data[key] = data_item.to_data()
+            elif is_dataset_instance(data_item):
+                converted_data[key] = cls._convert_dataset_input_to_data(cast(Dataset, data_item))
+            else:
+                converted_data[key] = data_item
+
+        return converted_data
 
     @classmethod
     def _coerce_prepared_value_to_type(cls, value: object, target_type: TypeForm) -> object:
@@ -645,8 +659,8 @@ class Model(  # type: ignore[misc]
             value = cast(pyd.BaseModel, value).model_dump(by_alias=True)
 
         try:
-            import pydantic.v1 as pyd_v1
-            return pyd_v1.parse_obj_as(target_type, value)
+            from pydantic import TypeAdapter
+            return TypeAdapter(target_type).validate_python(value)
         except Exception:
             return value
 
