@@ -357,6 +357,15 @@ def test_get_inner_outer_type() -> None:
     assert inner_optional_model.is_nested_type() is True
 
 
+def test_rootmodel_class_getitem_preserves_nested_specialization_metadata() -> None:
+    model_cls = Model[dict[str, Model[None]]]
+
+    assert model_cls.__pydantic_root_model__ is True
+    assert model_cls.get_orig_model() == dict[str, Model[None]]
+    assert model_cls.outer_type(with_args=True) == dict[str, Model[None]]
+    assert model_cls.__name__ == 'Model[dict[str, Model[None]]]'
+
+
 def test_equality_other_models() -> None:
     assert Model[int]() == Model[int]()
 

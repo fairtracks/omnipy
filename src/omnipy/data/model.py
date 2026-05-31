@@ -280,7 +280,6 @@ class Model(  # type: ignore[misc]
     ) -> 'type[Model[_RootT]]':
 
         model = cls._prepare_params(params)
-
         orig_model: type[_RootT] | TypeVar = model
 
         # Populating the root field at runtime instead of providing a __root__ Field explicitly
@@ -288,21 +287,20 @@ class Model(  # type: ignore[misc]
         # the actual type. The following issue in mypy seems relevant:
         # https://github.com/python/mypy/issues/3737 (as well as linked issues)
 
-        # Use pydantic's BaseModel.__class_getitem__ unbound function directly since
+        # Use pydantic's RootModel.__class_getitem__ unbound function directly since
         # super() may resolve to Generic.__class_getitem__ (which returns a _GenericAlias)
-        # when DataClassBase/Generic appears before GenericModel in the MRO.
-        from pydantic import BaseModel as _PydBaseModel
+        # when DataClassBase/Generic appears before RootModel in the MRO.
         created_model = cast(
             type[Model],
-            _PydBaseModel.__class_getitem__.__func__(
+            pyd.RootModel.__class_getitem__.__func__(
                 cls, model if cls is Model else params),  # type: ignore
         )
+
         pydantic_root_key = created_model._get_pydantic_root_key()
-        created_model.model_fields[pydantic_root_key] = deepcopy(
-            created_model.model_fields[pydantic_root_key])
+        root_field = deepcopy(created_model.model_fields[pydantic_root_key])
+        created_model.model_fields[pydantic_root_key] = root_field
 
         if cls is Model and orig_model is not _RootT:  # type: ignore[misc]
-            root_field = created_model.model_fields[pydantic_root_key]
             root_field.json_schema_extra = {'orig_model': orig_model}
 
         created_model._inherit_first_orig_model_in_bases_if_missing()
@@ -319,6 +317,7 @@ class Model(  # type: ignore[misc]
             cleanup_name_qualname_and_module(cls, created_model, orig_model)
 
         cls._prepare_cls_members_to_mimic_model(created_model)
+        cls._clean_type_caches()
 
         return created_model
 
@@ -1099,18 +1098,37 @@ class Model(  # type: ignore[misc]
         return cast(pyd.ModelField, cls.model_fields.get(cls._get_pydantic_root_key()))
 
     @classmethod
+    def _derive_inner_root_type(cls, root_type: TypeForm) -> TypeForm:
+        origin = get_origin(root_type)
+        args = get_args(root_type)
+
+        if origin in (Union, UnionType) or not args:
+            return root_type
+
+        if lenient_issubclass(origin, Mapping):
+            return cast(TypeForm, args[1]) if len(args) >= 2 else root_type
+
+        if lenient_issubclass(origin, tuple):
+            return cast(TypeForm, args[0]) if len(args) == 2 and args[1] is Ellipsis else root_type
+
+        if lenient_issubclass(origin, Iterable) and not lenient_issubclass(origin, (str, bytes)):
+            return cast(TypeForm, args[0])
+
+        return root_type
+
+    @classmethod
     @functools.cache
     def _get_root_type(cls, outer: bool, with_args: bool) -> TypeForm:
         root_field = cls._get_root_field()
-        root_type = root_field.annotation
+        root_type: TypeForm = root_field.annotation
 
         orig_model = cls.get_orig_model()
         if orig_model != Undefined:
             if not is_optional(root_type) and is_optional(orig_model):
-                if outer:
-                    root_type = Optional[root_type]
-                else:
-                    root_type = Optional[root_type]
+                root_type = Optional[root_type]
+
+        if not outer:
+            root_type = cls._derive_inner_root_type(root_type)
 
         return root_type if with_args else ensure_plain_type(root_type)
 
