@@ -37,11 +37,6 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
     Raises:
         Exception: Propagates conversion and validation errors raised while
             parsing input data.
-
-    Example:
-        >>> model = PandasModel([{'id': 1, 'value': 'a'}])
-        >>> model.to_data()
-        [{'id': 1, 'value': 'a'}]
     """
 
     if TYPE_CHECKING:
@@ -63,13 +58,8 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
         Returns:
             Parsed pandas ``DataFrame`` or ``Series``.
 
-        Raises:
-            Exception: Propagates conversion errors raised by pandas.
-
-        Example:
-            >>> parsed = PandasModel._parse_data([{'a': 1}, {'a': 2}])
-            >>> parsed.shape[0]
-            2
+    Raises:
+        Exception: Propagates conversion errors raised by pandas.
         """
 
         from .lazy_import import pd
@@ -99,14 +89,9 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
         Returns:
             DataFrame with pandas nullable dtypes inferred.
 
-        Raises:
-            Exception: Propagates DataFrame construction errors raised by
-                pandas.
-
-        Example:
-            >>> df = PandasModel._from_iterable([{'a': 1}, {'a': None}])
-            >>> tuple(df.columns)
-            ('a',)
+    Raises:
+        Exception: Propagates DataFrame construction errors raised by
+            pandas.
         """
 
         from .lazy_import import pd
@@ -115,9 +100,6 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
     def to_data(self) -> Any:
         """Convert pandas content to plain Python data structures.
 
-        Args:
-            self: Model instance to serialize.
-
         Returns:
             For DataFrames, a list of row dictionaries. For Series, a key-value
             dictionary.
@@ -125,10 +107,6 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
         Raises:
             Exception: Propagates serialization errors raised by pandas.
 
-        Example:
-            >>> model = PandasModel([{'a': 1}])
-            >>> model.to_data()
-            [{'a': 1}]
         """
 
         from .lazy_import import pd
@@ -146,18 +124,9 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
         Args:
             data: Iterable rows that can be converted to a pandas DataFrame.
 
-        Returns:
-            None: Updates model content in place.
-
         Raises:
             Exception: Propagates validation or conversion errors raised during
                 update.
-
-        Example:
-            >>> model = PandasModel([{'a': 1}])
-            >>> model.from_data([{'a': 2}])
-            >>> model.to_data()
-            [{'a': 2}]
         """
 
         self._validate_and_set_value(self._from_iterable(data))
@@ -168,18 +137,9 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
         Args:
             json_content: JSON string accepted by ``pandas.read_json``.
 
-        Returns:
-            None: Updates model content in place.
-
         Raises:
             ValueError: If ``json_content`` cannot be parsed as a table.
             Exception: Propagates pandas parsing or validation errors.
-
-        Example:
-            >>> model = PandasModel([{'a': 1}])
-            >>> model.from_json('[{"a": 3}]')
-            >>> model.to_data()
-            [{'a': 3}]
         """
 
         from .lazy_import import pd
@@ -196,14 +156,9 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
         Returns:
             JSON string representation of the underlying pandas object.
 
-        Raises:
-            ShouldNotOccurException: If model content is neither DataFrame nor
-                Series.
-
-        Example:
-            >>> model = PandasModel([{'a': 1}])
-            >>> model.to_json()
-            '[{"a":1}]'
+    Raises:
+        ShouldNotOccurException: If model content is neither DataFrame nor
+            Series.
         """
 
         from .lazy_import import pd
@@ -217,21 +172,6 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
 
 
 def _update_forward_refs():
-    """Resolve postponed type references for ``PandasModel``.
-
-    Args:
-        None.
-
-    Returns:
-        None: Updates type references in place.
-
-    Raises:
-        Exception: Propagates forward-reference resolution errors.
-
-    Example:
-        >>> _update_forward_refs()
-    """
-
     from .lazy_import import pd
 
     PandasModel.update_forward_refs(pd=pd, AnyJsonTableType=AnyJsonTableType)

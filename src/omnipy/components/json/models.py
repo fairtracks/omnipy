@@ -280,30 +280,6 @@ class JsonModel(ParseStrAsJsonMixin[_JsonAnyUnion], Model[_JsonAnyUnion]):
 class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_JsonListOfDictUnion]):
     """JsonListOrDictModel is a general JSON model supporting any JSON
     content except scalar data.
-
-    Examples:
-        >>> my_json = JsonListOrDictModel([True, {'a': None, 'b': [1, 12.5, 'abc']}])
-        >>> my_json.to_data()
-        [True, {'a': None, 'b': [1, 12.5, 'abc']}]
-        >>> my_json.to_json()
-        '[true, {"a": null, "b": [1, 12.5, "abc"]}]'
-        >>> print(my_json.to_json(pretty=True))
-        [
-          true,
-          {
-            "a": null,
-            "b": [
-              1,
-              12.5,
-              "abc"
-            ]
-          }
-        ]
-        >>> try:
-        ...     my_json = JsonListOrDictModel(123)  # scalars not supported
-        ... except Exception as e:
-        ...     print(str(e).splitlines()[0])
-        34 validation errors for JsonListOrDictModel
     """
     @classmethod
     def start_chars_for_json_content(cls) -> str:
@@ -342,27 +318,6 @@ class JsonScalarModel(Model[JsonScalar]):
     Supports only ``None``, ``int``, ``float``, ``str``, and ``bool``.
     Lists and dicts (JSON objects) are not supported.
 
-    Examples:
-        >>> my_none = JsonScalarModel(None)
-        >>> my_none.to_data(), my_none.to_json()
-        (None, 'null')
-        >>> my_int = JsonScalarModel(123)
-        >>> my_int.to_data(), my_int.to_json()
-        (123, '123')
-        >>> my_float = JsonScalarModel(12.3)
-        >>> my_float.to_data(), my_float.to_json()
-        (12.3, '12.3')
-        >>> my_str = JsonScalarModel('abc')
-        >>> my_str.to_data(), my_str.to_json()
-        ('abc', '"abc"')
-        >>> my_bool = JsonScalarModel(False)
-        >>> my_bool.to_data(), my_bool.to_json()
-        (False, 'false')
-        >>> try:
-        ...     my_json = JsonScalarModel([123])
-        ... except Exception as e:
-        ...     print(str(e).splitlines()[0])
-        6 validation errors for JsonScalarModel
     """
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
@@ -418,29 +373,6 @@ else:
         content of the top-level list can be any JSON content, though, any
         levels deep.
 
-        Examples:
-            >>> my_json = JsonListModel([True, {'a': None, 'b': [1, 12.5, 'abc']}])
-            >>> my_json.to_data()
-            [True, {'a': None, 'b': [1, 12.5, 'abc']}]
-            >>> my_json.to_json()
-            '[true, {"a": null, "b": [1, 12.5, "abc"]}]'
-            >>> print(my_json.to_json(pretty=True))
-            [
-              true,
-              {
-                "a": null,
-                "b": [
-                  1,
-                  12.5,
-                  "abc"
-                ]
-              }
-            ]
-            >>> try:
-            ...     my_json = JsonListModel({'a': None, 'b': [1, 12.5, {'abc': 123}]})
-            ... except Exception as e:
-            ...     print(str(e).splitlines()[0])
-            3 validation errors for JsonListModel
         """
 
 
@@ -577,28 +509,6 @@ else:
         The values of the top-level dict can be any JSON content, though,
         any levels deep.
 
-        Examples:
-            >>> my_json = JsonDictModel({'a': None, 'b': [1, 12.5, {'abc': 123}]})
-            >>> my_json.to_data()
-            {'a': None, 'b': [1, 12.5, {'abc': 123}]}
-            >>> my_json.to_json()
-            '{"a": null, "b": [1, 12.5, {"abc": 123}]}'
-            >>> print(my_json.to_json(pretty=True))
-            {
-              "a": null,
-              "b": [
-                1,
-                12.5,
-                {
-                  "abc": 123
-                }
-              ]
-            }
-            >>> try:
-            ...     my_json = JsonDictModel([True, {'a': None, 'b': [1, 12.5, 'abc']}])
-            ... except Exception as e:
-            ...     print(str(e).splitlines()[0])
-            3 validation errors for JsonDictModel
         """
 
 

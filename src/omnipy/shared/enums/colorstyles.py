@@ -138,14 +138,6 @@ class RecommendedColorStyles(LiteralEnum[str]):
 
         Raises:
             AssertionError: If an impossible pattern-match state is reached.
-
-        Example:
-            >>> RecommendedColorStyles.get_default_style(
-            ...     color_system=DisplayColorSystem.ANSI_RGB,
-            ...     dark_background=True,
-            ...     solid_background=True,
-            ... )
-            'omnipy-selenized-dark'
         """
         match (color_system, dark_background, solid_background):
             case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, False, False):
@@ -186,21 +178,7 @@ _COLOR_CONTRAST_TEXT = dedent("""\
 
 
 class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
-    """High-contrast dark Base16 themes from Tinted Theming.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> DarkHighContrastTintedThemingBase16ColorStyles.RANDOM_DARK_HIGH_CONTRAST_T16
-        'random-dark-high-t16'
-    """
+    """High-contrast dark Base16 themes from Tinted Theming."""
     Literals = Literal['0x96f-t16',
                        '3024-t16',
                        'apathy-t16',
@@ -2731,21 +2709,7 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 
 
 class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
-    """Lower-contrast dark Base16 themes from Tinted Theming.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> DarkLowContrastTintedThemingBase16ColorStyles.RANDOM_DARK_LOW_CONTRAST_T16
-        'random-dark-low-t16'
-    """
+    """Lower-contrast dark Base16 themes from Tinted Theming."""
     Literals = Literal['apprentice-t16',
                        'brogrammer-t16',
                        'brushtrees-dark-t16',
@@ -2988,21 +2952,7 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 
 
 class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
-    """High-contrast light Base16 themes from Tinted Theming.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> LightHighContrastTintedThemingBase16ColorStyles.RANDOM_LIGHT_HIGH_CONTRAST_T16
-        'random-light-high-t16'
-    """
+    """High-contrast light Base16 themes from Tinted Theming."""
 
     Literals = Literal['atelier-cave-light-t16',
                        'atelier-dune-light-t16',
@@ -4050,21 +4000,7 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 
 
 class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
-    """Lower-contrast light Base16 themes from Tinted Theming.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> LightLowContrastTintedThemingBase16ColorStyles.RANDOM_LIGHT_LOW_CONTRAST_T16
-        'random-light-low-t16'
-    """
+    """Lower-contrast light Base16 themes from Tinted Theming."""
 
     Literals = Literal['brushtrees-t16',
                        'cupcake-t16',
@@ -4140,21 +4076,7 @@ class DarkTintedThemingBase16ColorStyles(
         DarkHighContrastTintedThemingBase16ColorStyles,
         DarkLowContrastTintedThemingBase16ColorStyles,
 ):
-    """All dark Tinted Theming Base16 styles.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> DarkTintedThemingBase16ColorStyles.RANDOM_DARK_T16
-        'random-dark-t16'
-    """
+    """All dark Tinted Theming Base16 styles."""
 
     Literals = Literal[DarkHighContrastTintedThemingBase16ColorStyles.Literals,
                        DarkLowContrastTintedThemingBase16ColorStyles.Literals,
@@ -4167,21 +4089,7 @@ class LightTintedThemingBase16ColorStyles(
         LightHighContrastTintedThemingBase16ColorStyles,
         LightLowContrastTintedThemingBase16ColorStyles,
 ):
-    """All light Tinted Theming Base16 styles.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> LightTintedThemingBase16ColorStyles.RANDOM_LIGHT_T16
-        'random-light-t16'
-    """
+    """All light Tinted Theming Base16 styles."""
 
     Literals = Literal[LightHighContrastTintedThemingBase16ColorStyles.Literals,
                        LightLowContrastTintedThemingBase16ColorStyles.Literals,
@@ -4194,21 +4102,7 @@ class TintedThemingBase16ColorStyles(
         DarkTintedThemingBase16ColorStyles,
         LightTintedThemingBase16ColorStyles,
 ):
-    """All Tinted Theming Base16 styles across dark and light sets.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> TintedThemingBase16ColorStyles.RANDOM_T16
-        'random-t16'
-    """
+    """All Tinted Theming Base16 styles across dark and light sets."""
 
     Literals = Literal[DarkTintedThemingBase16ColorStyles.Literals,
                        LightTintedThemingBase16ColorStyles.Literals,
@@ -4225,21 +4119,7 @@ _GENERAL_PYGMENTS_COLOR_STYLE_DOCSTRING = dedent("""
 
 
 class DarkHighContrastPygmentsColorStyles(LiteralEnum[str]):
-    """High-contrast dark styles provided by Pygments.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> DarkHighContrastPygmentsColorStyles.MONOKAI_PYGMENTS
-        'monokai-pygments'
-    """
+    """High-contrast dark styles provided by Pygments."""
 
     Literals = Literal[
         'github-dark-pygments',
@@ -4255,21 +4135,7 @@ class DarkHighContrastPygmentsColorStyles(LiteralEnum[str]):
 
 
 class DarkLowContrastPygmentsColorStyles(LiteralEnum[str]):
-    """Lower-contrast dark styles provided by Pygments.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> DarkLowContrastPygmentsColorStyles.DRACULA_PYGMENTS
-        'dracula-pygments'
-    """
+    """Lower-contrast dark styles provided by Pygments."""
 
     Literals = Literal[
         'coffee-pygments',
@@ -4307,21 +4173,7 @@ class DarkLowContrastPygmentsColorStyles(LiteralEnum[str]):
 
 
 class LightHighContrastPygmentsColorStyles(LiteralEnum[str]):
-    """High-contrast light styles provided by Pygments.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> LightHighContrastPygmentsColorStyles.DEFAULT_PYGMENTS
-        'default-pygments'
-    """
+    """High-contrast light styles provided by Pygments."""
 
     Literals = Literal[
         'bw-pygments',
@@ -4339,21 +4191,7 @@ class LightHighContrastPygmentsColorStyles(LiteralEnum[str]):
 
 
 class LightLowContrastPygmentsColorStyles(LiteralEnum[str]):
-    """Lower-contrast light styles provided by Pygments.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> LightLowContrastPygmentsColorStyles.FRIENDLY_PYGMENTS
-        'friendly-pygments'
-    """
+    """Lower-contrast light styles provided by Pygments."""
 
     Literals = Literal[
         'abap-pygments',
@@ -4413,21 +4251,7 @@ class DarkHighContrastColorStyles(
         DarkHighContrastTintedThemingBase16ColorStyles,
         DarkHighContrastPygmentsColorStyles,
 ):
-    """All dark high-contrast syntax-highlighting styles.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> DarkHighContrastColorStyles.RANDOM_DARK_HIGH_CONTRAST
-        'random-dark-high'
-    """
+    """All dark high-contrast syntax-highlighting styles."""
 
     Literals = Literal[DarkHighContrastTintedThemingBase16ColorStyles.Literals,
                        DarkHighContrastPygmentsColorStyles.Literals,
@@ -4440,21 +4264,7 @@ class DarkLowContrastColorStyles(
         DarkLowContrastTintedThemingBase16ColorStyles,
         DarkLowContrastPygmentsColorStyles,
 ):
-    """All dark lower-contrast syntax-highlighting styles.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> DarkLowContrastColorStyles.RANDOM_DARK_LOW_CONTRAST
-        'random-dark-low'
-    """
+    """All dark lower-contrast syntax-highlighting styles."""
 
     Literals = Literal[DarkLowContrastTintedThemingBase16ColorStyles.Literals,
                        DarkLowContrastPygmentsColorStyles.Literals,
@@ -4467,21 +4277,7 @@ class LightHighContrastColorStyles(
         LightHighContrastTintedThemingBase16ColorStyles,
         LightHighContrastPygmentsColorStyles,
 ):
-    """All light high-contrast syntax-highlighting styles.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> LightHighContrastColorStyles.RANDOM_LIGHT_HIGH_CONTRAST
-        'random-light-high'
-    """
+    """All light high-contrast syntax-highlighting styles."""
 
     Literals = Literal[LightHighContrastTintedThemingBase16ColorStyles.Literals,
                        LightHighContrastPygmentsColorStyles.Literals,
@@ -4494,21 +4290,7 @@ class LightLowContrastColorStyles(
         LightLowContrastTintedThemingBase16ColorStyles,
         LightLowContrastPygmentsColorStyles,
 ):
-    """All light lower-contrast syntax-highlighting styles.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> LightLowContrastColorStyles.RANDOM_LIGHT_LOW_CONTRAST
-        'random-light-low'
-    """
+    """All light lower-contrast syntax-highlighting styles."""
 
     Literals = Literal[LightLowContrastTintedThemingBase16ColorStyles.Literals,
                        LightLowContrastPygmentsColorStyles.Literals,
@@ -4521,21 +4303,7 @@ class DarkColorStyles(
         DarkHighContrastColorStyles,
         DarkLowContrastColorStyles,
 ):
-    """All dark syntax-highlighting styles.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> DarkColorStyles.RANDOM_DARK
-        'random-dark'
-    """
+    """All dark syntax-highlighting styles."""
 
     Literals = Literal[DarkHighContrastColorStyles.Literals,
                        DarkLowContrastColorStyles.Literals,
@@ -4548,21 +4316,7 @@ class LightColorStyles(
         LightHighContrastColorStyles,
         LightLowContrastColorStyles,
 ):
-    """All light syntax-highlighting styles.
-
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> LightColorStyles.RANDOM_LIGHT
-        'random-light'
-    """
+    """All light syntax-highlighting styles."""
 
     Literals = Literal[LightHighContrastColorStyles.Literals,
                        LightLowContrastColorStyles.Literals,

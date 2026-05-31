@@ -42,11 +42,6 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
 
     Raises:
         AssertionError: If tuple-like input does not contain key-value pairs.
-
-    Example:
-        >>> params = QueryParamsModel('name=alice&lang=en')
-        >>> str(params)
-        'name=alice&lang=en'
     """
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
@@ -65,13 +60,6 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
 
         Returns:
             bool: ``True`` when every element is a two-item list ``[key, value]``.
-
-        Raises:
-            None.
-
-        Example:
-            >>> QueryParamsModel._validate_tuple_of_pairs([['a', '1'], ['b', '2']])
-            True
         """
         # The validated type is really a list of lists of two items, but we can't express that with
         # Python type hints, so we use a list of tuple pairs instead.
@@ -89,12 +77,8 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
         Returns:
             dict[str, str]: Decoded query parameters.
 
-        Raises:
-            AssertionError: If non-mapping input does not split into key-value pairs.
-
-        Example:
-            >>> QueryParamsModel._parse_data('name=alice&lang=en')
-            {'name': 'alice', 'lang': 'en'}
+    Raises:
+        AssertionError: If non-mapping input does not split into key-value pairs.
         """
         if isinstance(data, dict):
             return data
@@ -109,18 +93,11 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
     def to_data(self) -> str:
         """Serialize query parameters back to a URL-encoded query string.
 
-        Args:
-            None.
-
         Returns:
             str: URL-encoded query string without a leading ``?``.
 
         Raises:
             AssertionError: If model content is not a dictionary at serialization time.
-
-        Example:
-            >>> QueryParamsModel({'name': 'alice smith'}).to_data()
-            'name=alice%20smith'
         """
         with hold_and_reset_prev_attrib_value(self.config.model,
                                               'dynamically_convert_elements_to_models'):
@@ -159,11 +136,6 @@ class UrlPathModel(Model[PurePosixPath | str]):
 
     Raises:
         TypeError: If input cannot be converted to ``PurePosixPath``.
-
-    Example:
-        >>> path = UrlPathModel('/api')
-        >>> str(path / 'users')
-        '/api/users'
     """
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
@@ -181,12 +153,8 @@ class UrlPathModel(Model[PurePosixPath | str]):
         Returns:
             PurePosixPath: Normalized path value.
 
-        Raises:
-            TypeError: If ``data`` is neither ``str`` nor ``PurePosixPath``.
-
-        Example:
-            >>> UrlPathModel._parse_data('/v1/users')
-            PurePosixPath('/v1/users')
+    Raises:
+        TypeError: If ``data`` is neither ``str`` nor ``PurePosixPath``.
         """
         return PurePosixPath(data) if isinstance(data, str) else data
 
@@ -254,11 +222,6 @@ class UrlDataclassModel(pyd.BaseModel):
 
     Raises:
         pyd.ValidationError: If any URL part violates model field constraints.
-
-    Example:
-        >>> parts = UrlDataclassModel(scheme='https', host='example.com')
-        >>> str(parts)
-        'https://example.com/'
     """
     # Mutable fields
     scheme: str
@@ -315,11 +278,6 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
     Raises:
         AssertionError: If the URL scheme is not ``http`` or ``https``.
         pyd.ValidationError: If URL parsing fails.
-
-    Example:
-        >>> url = HttpUrlModel('https://example.com/path?q=1')
-        >>> str(url)
-        'https://example.com/path?q=1'
     """
 
     if TYPE_CHECKING:
@@ -337,14 +295,9 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
         Returns:
             UrlDataclassModel: Parsed URL parts with normalized decoded fields.
 
-        Raises:
-            AssertionError: If the URL scheme is unsupported.
-            pyd.ValidationError: If the URL cannot be parsed.
-
-        Example:
-            >>> parsed = HttpUrlModel._parse_data('http://localhost/')
-            >>> parsed.host
-            'localhost'
+    Raises:
+        AssertionError: If the URL scheme is unsupported.
+        pyd.ValidationError: If the URL cannot be parsed.
         """
         if data == '':
             data = 'http://localhost/'
@@ -416,16 +369,6 @@ class ModelFriendlyMimeType(pyd.BaseModel):
 
     Raises:
         pyd.ValidationError: If supplied fields do not match expected types.
-
-    Example:
-        >>> mime = ModelFriendlyMimeType(
-        ...     type='application',
-        ...     subtype='json',
-        ...     suffix='',
-        ...     parameters=(),
-        ... )
-        >>> mime.subtype
-        'json'
     """
     type: str
     subtype: str
@@ -445,14 +388,6 @@ class ResponseContentPydModel(pyd.BaseModel):
 
     Raises:
         pyd.ValidationError: If the MIME type cannot be parsed.
-
-    Example:
-        >>> model = ResponseContentPydModel(
-        ...     content_type='application/json',
-        ...     response={'ok': True},
-        ... )
-        >>> model.content_type.type
-        'application'
     """
     content_type: ModelFriendlyMimeType | str
     response: object
@@ -476,12 +411,8 @@ class ResponseContentPydModel(pyd.BaseModel):
         Returns:
             ModelFriendlyMimeType: Parsed MIME type model.
 
-        Raises:
-            ValueError: If MIME parsing fails for a string input.
-
-        Example:
-            >>> ResponseContentPydModel.parse_content_type('text/plain').subtype
-            'plain'
+    Raises:
+        ValueError: If MIME parsing fails for a string input.
         """
         from .lazy_import import MimeType, parse_mimetype
 
@@ -511,14 +442,6 @@ class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel 
 
     Raises:
         AssertionError: If wrapped response metadata is missing parsed MIME type data.
-
-    Example:
-        >>> wrapped = ResponseContentPydModel(
-        ...     content_type='text/plain',
-        ...     response='hello',
-        ... )
-        >>> str(AutoResponseContentModel(wrapped))
-        'hello'
     """
     class Config(Model.Config):
         """Configure union parsing for automatic response-content decoding.
@@ -545,14 +468,6 @@ class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel 
 
         Raises:
             AssertionError: If wrapped input is missing parsed MIME type data.
-
-        Example:
-            >>> wrapped = ResponseContentPydModel(
-            ...     content_type='application/json',
-            ...     response={'ok': True},
-            ... )
-            >>> AutoResponseContentModel._parse_data(wrapped)
-            JsonListOrDictModel({'ok': True})
         """
         if isinstance(data, ResponseContentPydModel):
             assert isinstance(data.content_type, ModelFriendlyMimeType)

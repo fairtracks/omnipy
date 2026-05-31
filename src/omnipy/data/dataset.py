@@ -132,28 +132,15 @@ class Dataset(
     integer positions, slices, and iterables of keys or positions. Singular selection returns one
     validated item; plural selection returns a new dataset of the same specialized class.
 
-    Args:
-        None: Specialize the class first and provide instance initialization data through
-            :meth:`__init__`.
-
     Attributes:
         data: Mapping from data-file names to validated model or nested dataset instances.
 
-    Example:
-        >>> from omnipy.data.model import Model
-        >>> Numbers = Dataset[Model[int]]
-        >>> Numbers({'one': 1}).to_data()
-        {'one': 1}
     """
     class Config:
         """Configure Pydantic behavior for dataset instances.
 
         The nested config enables assignment-time validation and permits arbitrary runtime types
         needed by Omnipy's dataset internals.
-
-        Args:
-            None: This nested config class is consumed by Pydantic rather than instantiated
-                directly.
 
         Attributes:
             validate_assignment: Re-validate fields whenever attributes are reassigned.
@@ -371,9 +358,6 @@ class Dataset(
         Args:
             super_kwargs: Keyword arguments containing the prepared dataset payload.
 
-        Returns:
-            ``None``.
-
         Raises:
             ValidationError: If parsing the prepared payload still fails validation.
         """
@@ -390,8 +374,6 @@ class Dataset(
             super_kwargs: Keyword arguments prepared for the base Pydantic initializer.
             **kwargs: Remaining keyword arguments passed to dataset construction.
 
-        Returns:
-            ``None``.
         """
         ...
 
@@ -407,19 +389,8 @@ class Dataset(
         The copied dataset receives a new top-level mapping while reusing the same validated item
         objects.
 
-        Args:
-            self: Dataset instance to copy.
-
         Returns:
             A new dataset instance with a shallow copy of the backing mapping.
-
-        Example:
-            >>> from copy import copy
-            >>> from omnipy.data.model import Model
-            >>> Numbers = Dataset[Model[int]]
-            >>> copied = copy(Numbers({'one': 1}))
-            >>> copied.to_data()
-            {'one': 1}
         """
         return self.copy(deep=False)
 
@@ -465,9 +436,6 @@ class Dataset(
     def _get_data_field(cls) -> pyd.ModelField:
         """Return the Pydantic field object that stores dataset contents.
 
-        Args:
-            cls: Specialized dataset class.
-
         Returns:
             The Pydantic model field representing the ``data`` attribute.
         """
@@ -478,16 +446,8 @@ class Dataset(
     def get_type(cls) -> type[_ModelOrDatasetT]:
         """Return the concrete item type stored by this dataset class.
 
-        Args:
-            cls: Specialized dataset class.
-
         Returns:
             The specialized model or nested dataset class used for every item in the dataset.
-
-        Example:
-            >>> from omnipy.data.model import Model
-            >>> Dataset[Model[int]].get_type().__name__
-            'Model[int]'
         """
         # Part of pydantic v1 hack to stop coercing of e.g.
         # [{'a': 'b', 'c': 'd'}] to {'a': 'c'}
@@ -496,14 +456,6 @@ class Dataset(
 
     @classmethod
     def _clean_type_caches(cls):
-        """Clear cached type metadata for this dataset class.
-
-        Args:
-            cls: Dataset class whose cached type information should be invalidated.
-
-        Returns:
-            ``None``.
-        """
         cls.get_type.cache_clear()
 
     @staticmethod
@@ -512,9 +464,6 @@ class Dataset(
 
         Args:
             prefix_msg: Optional message prepended before the standard guidance text.
-
-        Returns:
-            ``None``.
 
         Raises:
             TypeError: Always raised to explain how a dataset must be specialized.
@@ -552,22 +501,11 @@ class Dataset(
         raise TypeError(msg)
 
     def _set_standard_field_description(self) -> None:
-        """Populate the ``data`` field description with the standard dataset text.
-
-        Args:
-            self: Dataset instance whose field metadata should be updated.
-
-        Returns:
-            ``None``.
-        """
         self.__fields__[DATA_KEY].field_info.description = self._get_standard_field_description()
 
     @classmethod
     def _get_standard_field_description(cls) -> str:
         """Return the default description text used for the dataset ``data`` field.
-
-        Args:
-            cls: Dataset class requesting the field description.
 
         Returns:
             The standard descriptive text for the dataset backing field.
@@ -929,8 +867,6 @@ class Dataset(
             selector: Data-file key or positional index selecting one item.
             data_obj: Single value assigned to the selected item.
 
-        Returns:
-            ``None``.
         """
         ...
 
@@ -944,8 +880,6 @@ class Dataset(
             selector: Slice or iterable selecting multiple items.
             data_obj: Mapping or iterable providing replacement values.
 
-        Returns:
-            ``None``.
         """
         ...
 
@@ -1006,9 +940,6 @@ class Dataset(
             key_2_data_item: Replacement values keyed directly by data-file name.
             index_2_data_item: Replacement values keyed by positional index.
 
-        Returns:
-            ``None``.
-
         Raises:
             ValidationError: If the updated dataset contents fail validation.
         """
@@ -1023,9 +954,6 @@ class Dataset(
 
         Args:
             updated_mapping: Candidate full mapping to validate and install.
-
-        Returns:
-            ``None``.
 
         Raises:
             ValidationError: If the replacement mapping does not validate for this dataset type.
@@ -1043,9 +971,6 @@ class Dataset(
         Args:
             key: Data-file name to insert or replace.
             val: Candidate validated or raw item value.
-
-        Returns:
-            ``None``.
 
         Raises:
             ValidationError: If the inserted value does not validate for this dataset type.
@@ -1223,9 +1148,6 @@ class Dataset(
         Args:
             data_file: Key of the item that should be revalidated.
 
-        Returns:
-            ``None``.
-
         Raises:
             ValidationError: If the stored item does not validate for this dataset type.
         """
@@ -1290,12 +1212,6 @@ class Dataset(
     def _force_full_validation(self):
         """Trigger assignment-based validation for the full dataset mapping.
 
-        Args:
-            self: Dataset instance to revalidate.
-
-        Returns:
-            ``None``.
-
         Raises:
             ValidationError: If any stored item fails full dataset validation.
         """
@@ -1304,9 +1220,6 @@ class Dataset(
     @override
     def __iter__(self) -> Iterator[str]:  # type: ignore[override]
         """Iterate over dataset keys.
-
-        Args:
-            self: Dataset instance to iterate over.
 
         Returns:
             An iterator over data-file names in the backing mapping.
@@ -1319,9 +1232,6 @@ class Dataset(
         Args:
             attr: Attribute name being assigned.
             value: Value to store on the dataset instance.
-
-        Returns:
-            ``None``.
 
         Raises:
             RuntimeError: If assignment targets an undeclared extra attribute.
@@ -1409,16 +1319,8 @@ class Dataset(
     def to_data(self) -> dict_t[str, Any]:
         """Return the dataset as plain Python contents.
 
-        Args:
-            self: Dataset instance to serialize.
-
         Returns:
             A mapping from data-file name to plain Python data extracted from each validated item.
-
-        Example:
-            >>> from omnipy.data.model import Model
-            >>> Dataset[Model[int]]({'one': 1}).to_data()
-            {'one': 1}
         """
         return {key: self._check_value(val) for key, val in self.dict(by_alias=True).items()}
 
@@ -1449,8 +1351,6 @@ class Dataset(
                 type_variant: Newly created model or dataset instance to populate.
                 content: Plain Python content to load into the instance.
 
-            Returns:
-                ``None``.
             """
             type_variant.from_data(content)
 
@@ -1466,9 +1366,6 @@ class Dataset(
             data: Mapping or iterable of ``(key, value)`` pairs to ingest.
             update: Whether to merge with current contents instead of clearing first.
             callback_func: Callback that populates one newly created item instance from raw input.
-
-        Returns:
-            ``None``.
 
         Raises:
             ValidationError: If any generated item fails dataset validation.
@@ -1564,8 +1461,6 @@ class Dataset(
                 type_variant: Newly created model or dataset instance to populate.
                 content: JSON content to load into the instance.
 
-            Returns:
-                ``None``.
             """
             type_variant.from_json(content)
 
@@ -1916,9 +1811,6 @@ class Dataset(
     def _get_serializer_registry():
         """Return the global serializer registry used for dataset I/O.
 
-        Args:
-            None: This helper reads global serializer configuration only.
-
         Returns:
             The serializer registry singleton from :mod:`omnipy.components`.
         """
@@ -1927,9 +1819,6 @@ class Dataset(
 
     def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelOrDatasetT]':
         """Return a multi-model view of this dataset.
-
-        Args:
-            self: Dataset instance to convert.
 
         Returns:
             A ``MultiModelDataset`` initialized with the same item type and current contents.
@@ -1959,9 +1848,6 @@ class Dataset(
 
     def __repr_args__(self):
         """Return key-value pairs used by Pydantic when building ``repr()`` output.
-
-        Args:
-            self: Dataset instance being represented.
 
         Returns:
             A list of ``(key, value)`` pairs formatted for concise dataset representation.

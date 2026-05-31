@@ -17,20 +17,9 @@ import omnipy.util.pydantic as pyd
 def _subscribers_factory():
     """Create the default subscription mapping for publisher instances.
 
-    Args:
-        None.
-
     Returns:
         A ``defaultdict(list)`` keyed by attribute name where each value is a
         list of subscriber callbacks.
-
-    Raises:
-        None.
-
-    Example:
-        >>> subs = _subscribers_factory()
-        >>> type(subs).__name__
-        'defaultdict'
     """
     return defaultdict(list)
 
@@ -40,40 +29,9 @@ class DataPublisher(pyd.BaseModel):
 
     Subscribers can watch a single public attribute or the whole model. Nested
     ``DataPublisher`` attributes propagate their changes to parent subscribers.
-
-    Args:
-        **data: Field values accepted by the concrete publisher model.
-
-    Returns:
-        A configured publisher instance.
-
-    Raises:
-        pyd.ValidationError: If provided field values fail model validation.
-
-    Example:
-        >>> class DemoPublisher(DataPublisher):
-        ...     value: int = 0
-        >>> demo = DemoPublisher(value=1)
-        >>> demo.value
-        1
     """
     class Config:
-        """Pydantic settings for ``DataPublisher`` models.
-
-        Args:
-            None.
-
-        Returns:
-            None. This class defines configuration attributes consumed by
-            Pydantic during model construction.
-
-        Raises:
-            None.
-
-        Example:
-            ``validate_assignment = True`` ensures subscribers are triggered after
-            validated attribute updates.
-        """
+        """Pydantic settings for ``DataPublisher`` models."""
         arbitrary_types_allowed = True
         validate_assignment = True
 
@@ -90,20 +48,8 @@ class DataPublisher(pyd.BaseModel):
             attr_name: Public attribute name to observe.
             callback_fun: Callback receiving the current/new attribute value.
 
-        Returns:
-            None.
-
         Raises:
             AttributeError: If ``attr_name`` does not exist or is private.
-
-        Example:
-            >>> class DemoPublisher(DataPublisher):
-            ...     value: int = 0
-            >>> values = []
-            >>> demo = DemoPublisher()
-            >>> demo.subscribe_attr('value', values.append)
-            >>> values[-1]
-            0
         """
         if not hasattr(self, attr_name):
             raise AttributeError(f'No attribute named "{attr_name}"')
@@ -127,56 +73,12 @@ class DataPublisher(pyd.BaseModel):
             do_callback: When ``True``, call the callback immediately after
                 registration.
 
-        Returns:
-            None.
-
-        Raises:
-            None.
-
-        Example:
-            >>> class DemoPublisher(DataPublisher):
-            ...     value: int = 0
-            >>> updates = []
-            >>> demo = DemoPublisher()
-            >>> demo.subscribe(lambda obj: updates.append(obj.value))
-            >>> updates[-1]
-            0
         """
         self._self_subscriptions.append(callback_fun)
 
         def _get_attr_callback_for_publisher_child(
                 attr_name: str) -> Callable[[DataPublisher], None]:
-            """Build a child-publisher callback forwarding updates to parent subscribers.
-
-            Args:
-                attr_name: Child attribute name for which the callback is created.
-
-            Returns:
-                A callback that triggers ``callback_fun(self)`` when the child
-                publisher emits an update.
-
-            Raises:
-                None.
-
-            Example:
-                Constructed internally while registering nested
-                ``DataPublisher`` attributes.
-            """
             def _attr_callback_for_publisher_child(value: object) -> None:
-                """Forward child updates as parent-object updates.
-
-                Args:
-                    value: Updated child value (unused by the forwarding logic).
-
-                Returns:
-                    None.
-
-                Raises:
-                    None.
-
-                Example:
-                    Called by nested publishers to notify parent subscribers.
-                """
                 callback_fun(self)
 
             return _attr_callback_for_publisher_child
@@ -192,24 +94,7 @@ class DataPublisher(pyd.BaseModel):
             callback_fun(self)
 
     def unsubscribe_all(self) -> None:
-        """Remove all subscriptions from this publisher and nested publishers.
-
-        Args:
-            None.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-
-        Example:
-            >>> class DemoPublisher(DataPublisher):
-            ...     value: int = 0
-            >>> demo = DemoPublisher()
-            >>> demo.subscribe(lambda obj: None)
-            >>> demo.unsubscribe_all()
-        """
+        """Remove all subscriptions from this publisher and nested publishers."""
         self._self_subscriptions.clear()
         self._attr_subscriptions.clear()
 
@@ -220,68 +105,15 @@ class DataPublisher(pyd.BaseModel):
                     attr.unsubscribe_all()
 
     def _call_subscribers(self, attr_name: str, value: object) -> None:
-        """Notify callbacks subscribed to a specific attribute.
-
-        Args:
-            attr_name: Name of the changed attribute.
-            value: New value assigned to the attribute.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-
-        Example:
-            >>> class DemoPublisher(DataPublisher):
-            ...     value: int = 0
-            >>> demo = DemoPublisher()
-            >>> demo._call_subscribers('value', 1)
-        """
         if attr_name in self._attr_subscriptions:
             for callback_fun in self._attr_subscriptions[attr_name]:
                 callback_fun(value)
 
     def _call_self_subscribers(self) -> None:
-        """Notify callbacks subscribed to whole-object updates.
-
-        Args:
-            None.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-
-        Example:
-            >>> class DemoPublisher(DataPublisher):
-            ...     value: int = 0
-            >>> demo = DemoPublisher()
-            >>> demo._call_self_subscribers()
-        """
         for callback_fun in self._self_subscriptions:
             callback_fun(self)
 
     def _call_all_subscribers(self, attr_name: str, value: object) -> None:
-        """Notify both attribute-specific and model-wide subscribers.
-
-        Args:
-            attr_name: Name of the changed attribute.
-            value: New value assigned to the attribute.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-
-        Example:
-            >>> class DemoPublisher(DataPublisher):
-            ...     value: int = 0
-            >>> demo = DemoPublisher()
-            >>> demo._call_all_subscribers('value', 1)
-        """
         self._call_subscribers(attr_name, value)
         self._call_self_subscribers()
 
@@ -292,20 +124,6 @@ class DataPublisher(pyd.BaseModel):
             attr_name: Attribute name being assigned.
             value: New value to store.
 
-        Returns:
-            None.
-
-        Raises:
-            Exception: Propagates any validation or assignment errors from
-                ``pyd.BaseModel.__setattr__``.
-
-        Example:
-            >>> class DemoPublisher(DataPublisher):
-            ...     value: int = 0
-            >>> demo = DemoPublisher()
-            >>> demo.value = 2
-            >>> demo.value
-            2
         """
         super().__setattr__(attr_name, value)
 
@@ -315,22 +133,8 @@ class DataPublisher(pyd.BaseModel):
     def deepcopy(self) -> Self:
         """Create a deep copy with subscriptions reset on the copied object.
 
-        Args:
-            None.
-
         Returns:
             A deep-copied publisher with empty subscription registries.
-
-        Raises:
-            None.
-
-        Example:
-            >>> class DemoPublisher(DataPublisher):
-            ...     value: int = 0
-            >>> demo = DemoPublisher()
-            >>> clone = demo.deepcopy()
-            >>> clone is demo
-            False
         """
         self_copy = self.copy()
         self_copy._self_subscriptions = []
@@ -344,21 +148,6 @@ class RuntimeEntryPublisher(DataPublisher):
     When a public attribute is rebound to a different object and a runtime
     backend is attached, the runtime subscription graph is rebuilt.
 
-    Args:
-        **data: Field values accepted by the concrete runtime entry model.
-
-    Returns:
-        A runtime-aware publisher instance.
-
-    Raises:
-        pyd.ValidationError: If provided field values fail model validation.
-
-    Example:
-        >>> class DemoRuntimeEntry(RuntimeEntryPublisher):
-        ...     value: int = 0
-        >>> entry = DemoRuntimeEntry()
-        >>> entry.value
-        0
     """
 
     _back: IsRuntime | None = pyd.PrivateAttr(default=None)
@@ -370,20 +159,6 @@ class RuntimeEntryPublisher(DataPublisher):
             attr_name: Attribute name being assigned.
             value: New value to store.
 
-        Returns:
-            None.
-
-        Raises:
-            Exception: Propagates assignment or validation errors from parent
-                ``__setattr__`` implementations.
-
-        Example:
-            >>> class DemoRuntimeEntry(RuntimeEntryPublisher):
-            ...     value: int = 0
-            >>> entry = DemoRuntimeEntry()
-            >>> entry.value = 3
-            >>> entry.value
-            3
         """
         new_value = hasattr(self, attr_name) and getattr(self, attr_name) is not value
 

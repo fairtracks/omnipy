@@ -87,19 +87,6 @@ def pydantic_v1_hack():
     helpers for broader Python-version support, so this function rebinds them to
     stdlib implementations within the Pydantic modules Omnipy uses.
 
-    Args:
-        None.
-
-    Returns:
-        None. The function mutates imported Pydantic module attributes in place.
-
-    Raises:
-        None.
-
-    Example:
-        >>> pydantic_v1_hack()
-        >>> True
-        True
     """
 
     import typing

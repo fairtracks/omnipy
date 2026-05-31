@@ -91,13 +91,6 @@ def as_dictable(obj: object) -> Dictable | None:
 
         Returns:
             ``True`` when every iterated element is a 2-item tuple.
-
-        Raises:
-            None.
-
-        Example:
-            >>> _is_iterable_of_tuple_pairs([('a', 1), ('b', 2)])
-            True
         """
         return isinstance(obj_inner, Iterable) and \
             all(isinstance(el, tuple) and len(el) == 2 for el in obj_inner)
@@ -571,13 +564,6 @@ def is_literal_type(value: Any) -> bool:
     Returns:
         ``True`` when ``get_origin(value)`` resolves to ``typing.Literal``.
 
-    Raises:
-        None.
-
-    Example:
-        >>> from typing import Literal
-        >>> is_literal_type(Literal['ready'])
-        True
     """
     return get_origin(value) is Literal
 
@@ -591,12 +577,6 @@ def is_type_specialization(value: Any) -> bool:
     Returns:
         ``True`` when ``get_origin(value)`` resolves to ``type``.
 
-    Raises:
-        None.
-
-    Example:
-        >>> is_type_specialization(type[int])
-        True
     """
     return get_origin(value) is type
 
@@ -671,15 +651,6 @@ def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):
     Returns:
         ``True`` when the module name starts with ``omnipy`` and the module is
         not already present in ``imported_modules``.
-
-    Raises:
-        None.
-
-    Example:
-        >>> import types
-        >>> mod = types.ModuleType('omnipy.example')
-        >>> _is_internal_module(mod, [])
-        True
     """
     return module not in imported_modules and module.__name__.startswith('omnipy')
 
