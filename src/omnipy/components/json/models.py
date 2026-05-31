@@ -46,6 +46,12 @@ else:
 
 
 class _JsonListM(Model[list[_JsonBaseT]], Generic[_JsonBaseT]):
+    """Model wrapper for JSON-compatible lists used in internal type composition.
+
+    This internal model represents list-shaped JSON content where each item is
+    constrained to a JSON-compatible type parameter.
+    """
+
     ...
 
 
@@ -53,6 +59,12 @@ class _JsonDictM(
         Model[dict[str, _JsonBaseT]],
         Generic[_JsonBaseT],
 ):
+    """Model wrapper for JSON-compatible dicts used in internal type composition.
+
+    This internal model represents dict-shaped JSON content where keys are
+    strings and values are constrained to a JSON-compatible type parameter.
+    """
+
     ...
 
 
@@ -160,7 +172,12 @@ _RootT = TypeVar('_RootT')
 
 
 class ParseStrAsJsonMixin(Generic[_RootT]):
-    """Mixin that parses JSON-like strings into model content before validation."""
+    """Provide JSON-string pre-parsing behavior for model classes.
+
+    Classes using this mixin can transparently accept serialized JSON in string
+    form and convert it into parsed model content before the regular validation
+    pipeline runs.
+    """
 
     @classmethod
     def start_chars_for_json_content(cls) -> str:
@@ -174,6 +191,16 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
 
     @classmethod
     def _parse_data(cls, data: Any) -> _RootT:
+        """Parse potential JSON-string input into model content.
+
+        Args:
+            data: Raw input value that may be plain content or serialized JSON.
+
+        Returns:
+            Parsed model content when ``data`` is a JSON-like string that can be
+            decoded, otherwise the original input content.
+        """
+
         cls_as_model = cast(type[Model[_RootT]], cls)
         if isinstance(data, str):
             if len(data) > 0 and data[0] in cls.start_chars_for_json_content():
@@ -188,38 +215,10 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
 
 
 class JsonModel(ParseStrAsJsonMixin[_JsonAnyUnion], Model[_JsonAnyUnion]):
-    """
-    JsonModel is a general JSON model supporting any JSON content, any
-    levels deep.
+    """Model for validated JSON data.
 
-    Examples:
-        >>> my_int_json = JsonModel(123)
-        >>> my_int_json.to_data()
-        123
-        >>> my_int_json.to_json()
-        '123'
-        >>> my_json = JsonModel([True, {'a': None, 'b': [1, 12.5, 'abc']}])
-        >>> my_json.to_data()
-        [True, {'a': None, 'b': [1, 12.5, 'abc']}]
-        >>> my_json.to_json()
-        '[true, {"a": null, "b": [1, 12.5, "abc"]}]'
-        >>> print(my_json.to_json(pretty=True))
-        [
-          true,
-          {
-            "a": null,
-            "b": [
-              1,
-              12.5,
-              "abc"
-            ]
-          }
-        ]
-        >>> try:
-        ...     my_json = JsonModel([{'a': [1, 2, 1+2j]}])  # nested complex number
-        ... except Exception as e:
-        ...     print(str(e).splitlines()[0])
-        34 validation errors for JsonModel
+    This model accepts and validates any JSON-compatible value, including
+    scalars, arrays, and objects with arbitrary nesting depth.
     """
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
@@ -254,6 +253,29 @@ class JsonModel(ParseStrAsJsonMixin[_JsonAnyUnion], Model[_JsonAnyUnion]):
 
         def __new__(cls, value: _JsonAnyUnionContent | object) -> AnyJsonModel:
             ...
+
+    def to_json_str(self, pretty: bool = True) -> str:
+        """Serialize validated JSON content to a JSON string.
+
+        Args:
+            pretty: Whether to return indented human-readable JSON.
+
+        Returns:
+            JSON string representation of this model's content.
+        """
+        return self.to_json(pretty=pretty)
+
+    @classmethod
+    def from_json_str(cls, json_content: str) -> 'JsonModel':
+        """Parse a JSON string into a validated ``JsonModel`` instance.
+
+        Args:
+            json_content: Serialized JSON document to parse and validate.
+
+        Returns:
+            JsonModel: New model instance containing the parsed JSON content.
+        """
+        return cast(JsonModel, cls.parse_raw(json_content, proto=pyd.Protocol.json))
 
 
 class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_JsonListOfDictUnion]):
@@ -451,27 +473,47 @@ if TYPE_CHECKING:
 else:
 
     class JsonListOfScalarsModel(Model[_JsonListOfScalars]):
-        """Model for JSON arrays containing only scalar values."""
+        """Validate JSON arrays that contain only scalar values.
+
+        This model accepts top-level JSON arrays where each item is one of the
+        JSON scalar types (`null`, number, string, or boolean).
+        """
 
         ...
 
     class JsonListOfListsModel(Model[_JsonListM[_JsonAnyListM]]):
-        """Model for JSON arrays whose items are JSON arrays."""
+        """Validate JSON arrays whose items are JSON arrays.
+
+        This model enforces one array nesting level at the top level, while
+        allowing each nested array to contain general JSON-compatible content.
+        """
 
         ...
 
     class JsonListOfListsOfScalarsModel(Model[_JsonListM[_JsonListOfScalars]]):
-        """Model for JSON arrays whose items are scalar-only JSON arrays."""
+        """Validate JSON arrays of scalar-only JSON arrays.
+
+        This model requires a top-level array where each nested array contains
+        only JSON scalar values.
+        """
 
         ...
 
     class JsonListOfDictsModel(Model[_JsonListM[_JsonAnyDictM]]):
-        """Model for JSON arrays whose items are JSON objects."""
+        """Validate JSON arrays whose items are JSON objects.
+
+        This model accepts a top-level array and enforces that every element is
+        a JSON object with string keys and JSON-compatible values.
+        """
 
         ...
 
     class JsonListOfDictsOfScalarsModel(Model[_JsonListM[_JsonDictOfScalars]]):
-        """Model for JSON arrays whose items are scalar-only JSON objects."""
+        """Validate JSON arrays of scalar-only JSON objects.
+
+        This model accepts top-level arrays where each object value is limited
+        to JSON scalar types.
+        """
 
         ...
 
@@ -552,27 +594,47 @@ if TYPE_CHECKING:
 else:
 
     class JsonDictOfScalarsModel(Model[_JsonDictOfScalars]):
-        """Model for JSON objects whose values are scalar values."""
+        """Validate JSON objects whose values are scalar values.
+
+        This model accepts top-level JSON objects and requires all values to be
+        JSON scalar types.
+        """
 
         ...
 
     class JsonDictOfListsModel(Model[_JsonDictM[_JsonAnyListM]]):
-        """Model for JSON objects whose values are JSON arrays."""
+        """Validate JSON objects whose values are JSON arrays.
+
+        This model enforces a top-level object shape where each value is a JSON
+        array containing JSON-compatible content.
+        """
 
         ...
 
     class JsonDictOfListsOfScalarsModel(Model[_JsonDictM[_JsonListOfScalars]]):
-        """Model for JSON objects whose values are scalar-only JSON arrays."""
+        """Validate JSON objects whose values are scalar-only JSON arrays.
+
+        This model accepts top-level objects where each value is an array of
+        JSON scalar values.
+        """
 
         ...
 
     class JsonDictOfDictsModel(Model[_JsonDictM[_JsonAnyDictM]]):
-        """Model for JSON objects whose values are JSON objects."""
+        """Validate JSON objects whose values are JSON objects.
+
+        This model enforces a top-level object where each value is another JSON
+        object containing JSON-compatible values.
+        """
 
         ...
 
     class JsonDictOfDictsOfScalarsModel(Model[_JsonDictM[_JsonDictOfScalars]]):
-        """Model for JSON objects whose values are scalar-only JSON objects."""
+        """Validate JSON objects whose values are scalar-only JSON objects.
+
+        This model accepts top-level objects where each nested object contains
+        only JSON scalar values.
+        """
 
         ...
 
@@ -581,7 +643,11 @@ else:
 
 
 class JsonOnlyListsModel(Model[_JsonOnlyListsUnion]):
-    """Model for JSON content composed only of scalars and nested arrays."""
+    """Model for JSON content composed only of scalars and nested arrays.
+
+    This model accepts JSON scalars and recursively nested JSON arrays, but it
+    rejects JSON objects anywhere in the structure.
+    """
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
@@ -618,7 +684,11 @@ class JsonOnlyListsModel(Model[_JsonOnlyListsUnion]):
 
 
 class JsonOnlyDictsModel(Model[_JsonOnlyDictsUnion]):
-    """Model for JSON content composed only of scalars and nested objects."""
+    """Model for JSON content composed only of scalars and nested objects.
+
+    This model accepts JSON scalars and recursively nested JSON objects, but it
+    rejects JSON arrays anywhere in the structure.
+    """
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
@@ -671,12 +741,20 @@ if TYPE_CHECKING:
 else:
 
     class JsonNestedListsModel(Model[_JsonNestedListsM]):
-        """Model for nested JSON arrays whose leaves are scalar values."""
+        """Validate nested JSON arrays whose leaves are scalar values.
+
+        This model captures recursively nested JSON arrays that eventually
+        terminate in JSON scalar values.
+        """
 
         ...
 
     class JsonNestedDictsModel(Model[_JsonNestedDictsM]):
-        """Model for nested JSON objects whose leaves are scalar values."""
+        """Validate nested JSON objects whose leaves are scalar values.
+
+        This model captures recursively nested JSON objects that eventually
+        terminate in JSON scalar values.
+        """
 
         ...
 
@@ -706,17 +784,29 @@ if TYPE_CHECKING:
 else:
 
     class JsonListOfNestedDictsModel(Model[_JsonListM[_JsonNestedDictsM]]):
-        """Model for JSON arrays whose items are nested-dict JSON objects."""
+        """Validate JSON arrays whose items are nested JSON objects.
+
+        This model accepts top-level arrays where each element is a recursively
+        nested JSON object structure.
+        """
 
         ...
 
     class JsonDictOfNestedListsModel(Model[_JsonDictM[_JsonNestedListsM]]):
-        """Model for JSON objects whose values are nested-list JSON arrays."""
+        """Validate JSON objects whose values are nested JSON arrays.
+
+        This model accepts top-level objects where each value is a recursively
+        nested JSON array structure.
+        """
 
         ...
 
     class JsonDictOfListsOfDictsModel(Model[_JsonDictM[_JsonListM[_JsonAnyDictM]]]):
-        """Model for JSON objects whose values are arrays of JSON objects."""
+        """Validate JSON objects whose values are arrays of JSON objects.
+
+        This model enforces top-level object values to be arrays where each
+        element is a JSON object.
+        """
 
         ...
 
@@ -742,12 +832,20 @@ if TYPE_CHECKING:
 else:
 
     class JsonCustomListModel(Model[_JsonListM[_JsonBaseT]], Generic[_JsonBaseT]):
-        """Generic model for JSON arrays constrained to a JSON-compatible item type."""
+        """Validate JSON arrays constrained to a JSON-compatible item type.
+
+        This generic model supports defining list-shaped JSON models with a
+        caller-specified JSON-compatible item constraint.
+        """
 
         ...
 
     class JsonCustomDictModel(Model[_JsonDictM[_JsonBaseT]], Generic[_JsonBaseT]):
-        """Generic model for JSON objects constrained to a JSON-compatible value type."""
+        """Validate JSON objects constrained to a JSON-compatible value type.
+
+        This generic model supports defining object-shaped JSON models with a
+        caller-specified JSON-compatible value constraint.
+        """
 
         ...
 

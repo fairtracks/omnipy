@@ -39,7 +39,11 @@ else:
 
 
 class BytesModel(_BytesModel):
-    """Store binary content, encoding strings to bytes with the configured encoding."""
+    """Store binary content with optional string-to-bytes coercion.
+
+    This model accepts either ``bytes`` or ``str`` input. String input is
+    encoded using the configured ``encoding`` parameter before storage.
+    """
 
     adjust = bind_adjust_model_func(
         _BytesModel.clone_model_cls,
@@ -54,7 +58,11 @@ if TYPE_CHECKING:
 else:
 
     class StrictBytesModel(Model[pyd.StrictBytes]):
-        """Store binary content without coercing strings to bytes."""
+        """Store binary content without string coercion.
+
+        Unlike :class:`BytesModel`, this model only accepts values already
+        provided as bytes-compatible input.
+        """
 
         ...
 
@@ -77,7 +85,11 @@ else:
 
 
 class StrModel(_StrModel):
-    """Store text content, decoding bytes with the configured encoding when needed."""
+    """Store text content with optional bytes-to-string coercion.
+
+    This model accepts either ``str`` or ``bytes`` input. Bytes input is
+    decoded using the configured ``encoding`` parameter before storage.
+    """
 
     adjust = bind_adjust_model_func(
         _StrModel.clone_model_cls,
@@ -92,7 +104,11 @@ if TYPE_CHECKING:
 else:
 
     class StrictStrModel(Model[pyd.StrictStr]):
-        """Store text content without implicit byte decoding or coercion."""
+        """Store text content without implicit coercion.
+
+        Unlike :class:`StrModel`, this model only accepts strict string input
+        and does not decode bytes automatically.
+        """
 
         ...
 
@@ -159,6 +175,12 @@ if TYPE_CHECKING:
 else:
 
     class SplitToItemsModelBase(Model[list[str] | str]):
+        """Normalize text input into a flat list of string items.
+
+        Input may already be a list of strings or a single delimited string,
+        which is split according to the active split-parameter mixin.
+        """
+
         @classmethod
         def _parse_data(cls: type[_HasSplitParams], data: list[str] | str) -> list[str]:
             if isinstance(data, list):
@@ -168,7 +190,11 @@ else:
 
 
 class SplitToItemsModel(_SplitByCommaParamsMixin, SplitToItemsModelBase):
-    """Split a delimiter-separated string into a list of items, trimming fields by default."""
+    """Split a delimiter-separated string into items.
+
+    By default this variant uses commas as delimiters and strips surrounding
+    whitespace from each item.
+    """
 
     adjust = bind_adjust_model_func(
         SplitToItemsModelBase.clone_model_cls,
@@ -177,7 +203,11 @@ class SplitToItemsModel(_SplitByCommaParamsMixin, SplitToItemsModelBase):
 
 
 class SplitToItemsByTabModel(_SplitByTabParamsMixin, SplitToItemsModelBase):
-    """Split a tab-delimited string into a list of items."""
+    """Split tab-delimited text into a flat list of items.
+
+    This variant uses tab delimiters and optional stripping behavior inherited
+    from shared split parameters.
+    """
 
     adjust = bind_adjust_model_func(
         SplitToItemsModelBase.clone_model_cls,
@@ -186,7 +216,11 @@ class SplitToItemsByTabModel(_SplitByTabParamsMixin, SplitToItemsModelBase):
 
 
 class SplitToLinesModel(_SplitByNewlineParamsMixin, SplitToItemsModelBase):
-    """Split a string into a list of lines using the configured newline delimiter."""
+    """Split text into a list of lines.
+
+    This variant uses newline delimiters by default and can optionally strip
+    each line.
+    """
 
     adjust = bind_adjust_model_func(
         SplitToItemsModelBase.clone_model_cls,
@@ -205,6 +239,12 @@ if TYPE_CHECKING:
 else:
 
     class SplitItemsToSubitemsModelBase(Model[list[list[str]] | list[str] | list[StrModel]]):
+        """Normalize input into a two-dimensional list of string items.
+
+        Input may be provided as already nested lists or as a list of strings
+        that should each be split into subitems.
+        """
+
         @classmethod
         def _parse_data(cls: type[_HasSplitParams],
                         data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
@@ -215,6 +255,12 @@ else:
 
 
 class SplitItemsToSubitemsModel(_SplitByCommaParamsMixin, SplitItemsToSubitemsModelBase):
+    """Split each item into comma-delimited subitems.
+
+    This model accepts either pre-split nested lists or a list of text items
+    and returns a two-dimensional list representation.
+    """
+
     adjust = bind_adjust_model_func(
         SplitItemsToSubitemsModelBase.clone_model_cls,
         _SplitByCommaParamsMixin.Params,
@@ -222,7 +268,11 @@ class SplitItemsToSubitemsModel(_SplitByCommaParamsMixin, SplitItemsToSubitemsMo
 
 
 class SplitLinesToColumnsModel(_SplitByTabParamsMixin, SplitItemsToSubitemsModelBase):
-    """Split each text line into a list of tab-delimited columns."""
+    """Split each line of text into tab-delimited columns.
+
+    This model is useful for parsing TSV-like line collections into row/column
+    structures.
+    """
 
     adjust = bind_adjust_model_func(
         SplitItemsToSubitemsModelBase.clone_model_cls,
@@ -231,7 +281,11 @@ class SplitLinesToColumnsModel(_SplitByTabParamsMixin, SplitItemsToSubitemsModel
 
 
 class SplitLinesToColumnsByCommaModel(_SplitByCommaParamsMixin, SplitItemsToSubitemsModelBase):
-    """Split each text line into a list of comma-delimited columns."""
+    """Split each line of text into comma-delimited columns.
+
+    This model is useful for parsing CSV-like line collections into row/column
+    structures.
+    """
 
     adjust = bind_adjust_model_func(
         SplitItemsToSubitemsModelBase.clone_model_cls,
@@ -285,6 +339,12 @@ if TYPE_CHECKING:
 else:
 
     class JoinItemsModelBase(Model[str | list[str]]):
+        """Normalize string lists into a single joined string.
+
+        Input may already be a string or a list of strings that should be
+        joined according to the active join-parameter mixin.
+        """
+
         @classmethod
         def _parse_data(cls: type[_HasJoinParams], data: str | list[str]) -> str:
             if isinstance(data, str):
@@ -294,7 +354,10 @@ else:
 
 
 class JoinItemsModel(_JoinByCommaParamsMixin, JoinItemsModelBase):
-    """Join a list of items into a delimiter-separated string."""
+    """Join a list of items into one string.
+
+    This variant uses commas as delimiters by default.
+    """
 
     adjust = bind_adjust_model_func(
         JoinItemsModelBase.clone_model_cls,
@@ -303,7 +366,11 @@ class JoinItemsModel(_JoinByCommaParamsMixin, JoinItemsModelBase):
 
 
 class JoinLinesModel(_JoinByNewlineParamsMixin, JoinItemsModelBase):
-    """Join a list of strings into newline-delimited text."""
+    """Join items into newline-delimited text.
+
+    This variant is useful for reconstructing multi-line text from an ordered
+    list of line fragments.
+    """
 
     adjust = bind_adjust_model_func(
         JoinItemsModelBase.clone_model_cls,
@@ -319,6 +386,12 @@ if TYPE_CHECKING:
 else:
 
     class JoinSubitemsToItemsModelBase(Model[list[str] | list[list[str]]]):
+        """Normalize nested string lists into a flat list of joined items.
+
+        Input may already be a flat list of strings or nested lists where each
+        sublist should be joined into one string item.
+        """
+
         @classmethod
         def _parse_data(cls: type[_HasJoinParams], data: list[str] | list[list[str]]) -> list[str]:
             if isinstance(data, list) and (len(data) == 0 or not isinstance(data[0], list)):
@@ -328,6 +401,12 @@ else:
 
 
 class JoinSubitemsToItemsModel(_JoinByCommaParamsMixin, JoinSubitemsToItemsModelBase):
+    """Join nested subitem lists into flat comma-delimited items.
+
+    This model accepts a list of lists and joins each inner list into one
+    string item.
+    """
+
     adjust = bind_adjust_model_func(
         JoinSubitemsToItemsModelBase.clone_model_cls,
         _JoinByCommaParamsMixin.Params,
@@ -335,7 +414,10 @@ class JoinSubitemsToItemsModel(_JoinByCommaParamsMixin, JoinSubitemsToItemsModel
 
 
 class JoinColumnsToLinesModel(_JoinByTabParamsMixin, JoinSubitemsToItemsModelBase):
-    """Join column lists into tab-delimited text lines."""
+    """Join column lists into tab-delimited lines.
+
+    This model turns row/column table fragments into TSV-like line strings.
+    """
 
     adjust = bind_adjust_model_func(
         JoinSubitemsToItemsModelBase.clone_model_cls,
@@ -344,7 +426,10 @@ class JoinColumnsToLinesModel(_JoinByTabParamsMixin, JoinSubitemsToItemsModelBas
 
 
 class JoinColumnsByCommaToLinesModel(_JoinByCommaParamsMixin, JoinSubitemsToItemsModelBase):
-    """Join column lists into comma-delimited text lines."""
+    """Join column lists into comma-delimited lines.
+
+    This model turns row/column table fragments into CSV-like line strings.
+    """
 
     adjust = bind_adjust_model_func(
         JoinSubitemsToItemsModelBase.clone_model_cls,
@@ -368,6 +453,12 @@ else:
             Model[list[_NestedListsOfStrT]],
             Generic[_NestedListsOfStrT],
     ):
+        """Represent lists that recursively contain nested string lists.
+
+        This generic wrapper supports recursive string-list type composition
+        used by nested split/join models.
+        """
+
         ...
 
 
@@ -375,6 +466,12 @@ NestedListsOfStr: TypeAlias = str | ListOfNestedListsOfStrModel
 
 
 class NestedListsOfStrModel(Model[NestedListsOfStr]):
+    """Represent either a string or recursively nested lists of strings.
+
+    This union model normalizes recursive list/string input before nested split
+    and join transformations.
+    """
+
     ...
 
 
@@ -469,7 +566,11 @@ else:
 
 
 class NestedSplitToItemsModel(_NestedSplitToItemsModel):
-    """Recursively split nested string content with a configured delimiter sequence."""
+    """Recursively split string content using a delimiter hierarchy.
+
+    Delimiters are applied level by level so text can be transformed into a
+    nested list shape.
+    """
 
     adjust = bind_adjust_model_func(
         cast(Callable[..., type[_NestedSplitToItemsModel]],
@@ -526,7 +627,11 @@ else:
 
 
 class NestedJoinItemsModel(_NestedJoinItemsModel):
-    """Recursively join nested string lists with a configured delimiter sequence."""
+    """Recursively join nested string lists using a delimiter hierarchy.
+
+    Delimiters are applied by nesting level to collapse structured list content
+    into a single string.
+    """
 
     adjust = bind_adjust_model_func(
         cast(Callable[..., type[_NestedJoinItemsModel]], _NestedJoinItemsModel.clone_model_cls),
@@ -577,7 +682,11 @@ else:
 
 
 class MatchItemsModel(_MatchItemsModel):
-    """Filter a list of strings with configurable match functions."""
+    """Filter a list of strings with configurable predicate functions.
+
+    Matching behavior is controlled by configured predicate callables, optional
+    inversion, and all-vs-any composition semantics.
+    """
 
     adjust = bind_adjust_model_func(
         _MatchItemsModel.clone_model_cls,

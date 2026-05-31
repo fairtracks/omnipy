@@ -10,7 +10,16 @@ from .models import PandasModel
 
 
 class PandasDataset(Dataset[PandasModel]):
-    """Store named pandas-backed tables as a dataset of ``PandasModel`` data files."""
+    """Store named pandas-backed tables as ``PandasModel`` data files.
+
+    This dataset maps each data file name to a table represented by
+    :class:`~omnipy.components.pandas.models.PandasModel`.
+
+    Example:
+        >>> dataset = PandasDataset({'table': [{'id': 1, 'value': 'a'}]})
+        >>> tuple(dataset.keys())
+        ('table',)
+    """
 
     ...
 
@@ -19,11 +28,23 @@ if TYPE_CHECKING:
     from omnipy.data._typing.mimic_models import Model_list
 
     class ListOfPandasDatasetsWithSameNumberOfFiles(Model_list[PandasDataset]):
+        """Represent a list of aligned ``PandasDataset`` instances.
+
+        The list is expected to contain at least two datasets and each dataset
+        must contain one or more files.
+        """
+
         ...
 
 else:
 
     class ListOfPandasDatasetsWithSameNumberOfFiles(Model[list[PandasDataset]]):
+        """Validate a list of aligned ``PandasDataset`` instances.
+
+        The list is expected to contain at least two datasets and each dataset
+        must contain one or more files.
+        """
+
         @classmethod
         def _parse_data(cls, data: list[PandasDataset]) -> Any:
             dataset_list = data
