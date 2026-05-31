@@ -2,7 +2,11 @@
 #   filename:  ontology_source_reference_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing an ontology source reference."""
+"""ISA model representing an ontology source reference.
+
+ISA means Investigation/Study/Assay, and these generated models represent ISA-JSON
+JSON-LD source metadata.
+"""
 
 from enum import Enum
 from typing import List, Optional

@@ -2,7 +2,11 @@
 #   filename:  process_parameter_value_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a process parameter value in an investigation."""
+"""ISA model representing a process parameter value in an investigation.
+
+These types model ISA-JSON Investigation/Study/Assay metadata and its JSON-LD field
+structure.
+"""
 
 from enum import Enum
 from typing import List, Optional, Union

@@ -296,85 +296,26 @@ def ensure_plain_type(  # pyright: ignore [reportOverlappingOverload]
 
 @overload
 def ensure_plain_type(in_type: TypeVar) -> TypeVar:
-    """Type overload for ``TypeVar`` inputs.
-
-    Args:
-        in_type: Type variable preserved by the overload contract.
-
-    Returns:
-        The same ``TypeVar`` value.
-
-    Raises:
-        None.
-
-    Example:
-        >>> from typing_extensions import TypeVar
-        >>> t = TypeVar('t')
-        >>> ensure_plain_type(t) is t
-        True
-    """
+    """Type overload for ``TypeVar`` inputs."""
     ...
 
 
 @overload
 def ensure_plain_type(in_type: type | GenericAlias | UnionType) -> type:
-    """Type overload for runtime classes and generic aliases.
-
-    Args:
-        in_type: Runtime type form accepted by ``ensure_plain_type``.
-
-    Returns:
-        The plain runtime class type.
-
-    Raises:
-        None.
-
-    Example:
-        >>> ensure_plain_type(list[int]) is list
-        True
-    """
+    """Type overload for runtime classes and generic aliases."""
     ...
 
 
 @overload
 def ensure_plain_type(in_type: _SpecialForm) -> _SpecialForm:
-    """Type overload for special typing forms.
-
-    Args:
-        in_type: Special form such as ``typing.Any``.
-
-    Returns:
-        The same special form value.
-
-    Raises:
-        None.
-
-    Example:
-        >>> from typing import Any
-        >>> ensure_plain_type(Any) is Any
-        True
-    """
+    """Type overload for special typing forms."""
     ...
 
 
 @overload
-def ensure_plain_type(in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias) -> type:
-    """Type overload for literal/union/annotated aliases.
-
-    Args:
-        in_type: Alias type expression accepted by ``ensure_plain_type``.
-
-    Returns:
-        The plain runtime origin type.
-
-    Raises:
-        None.
-
-    Example:
-        >>> from typing import Literal
-        >>> ensure_plain_type(Literal[1])
-        typing.Literal
-    """
+def ensure_plain_type(  # pyright: ignore [reportOverlappingOverload]
+        in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias) -> type:
+    """Type overload for literal/union/annotated aliases."""
     ...
 
 
@@ -811,22 +752,7 @@ def recursive_module_import(module: ModuleType,
 
 
 def get_calling_module_name() -> str | None:
-    """Return the first caller module name found above the helper frame.
-
-    Args:
-        None.
-
-    Returns:
-        The detected module name, or ``None`` when inspection cannot resolve one.
-
-    Raises:
-        None.
-
-    Example:
-        >>> name = get_calling_module_name()
-        >>> name is None or isinstance(name, str)
-        True
-    """
+    """Return the first caller module name found above the helper frame."""
     stack = inspect.stack()
     start_frame_index = 2
     while len(stack) > start_frame_index:
@@ -838,22 +764,7 @@ def get_calling_module_name() -> str | None:
 
 
 def called_from_omnipy_tests() -> bool:
-    """Return whether the current call stack originates from Omnipy tests.
-
-    Args:
-        None.
-
-    Returns:
-        ``True`` when a stack frame belongs to a module under ``tests`` inside the
-        Omnipy repository.
-
-    Raises:
-        None.
-
-    Example:
-        >>> isinstance(called_from_omnipy_tests(), bool)
-        True
-    """
+    """Return whether the current call stack originates from Omnipy tests."""
     stack = inspect.stack()
     for index in range(len(stack)):
         frame = stack[index][0]
@@ -877,13 +788,8 @@ def is_package_editable(package_name):
         ``True`` when ``direct_url.json`` exists and its ``dir_info.editable``
         flag is set, otherwise ``False``.
 
-    Raises:
-        None. Metadata lookup and JSON parsing failures are handled and return
-        ``False``.
-
-    Example:
-        >>> is_package_editable('pip') in (True, False)
-        True
+    Notes:
+        Metadata lookup and JSON parsing failures are handled and return ``False``.
     """
     try:
         dist = distribution(package_name)
@@ -900,21 +806,13 @@ def is_package_editable(package_name):
 def get_event_loop_and_check_if_loop_is_running() -> tuple[asyncio.AbstractEventLoop | None, bool]:
     """Get the current event loop and whether it is already running.
 
-    Args:
-        None.
-
     Returns:
         A tuple of ``(loop, is_running)``. ``loop`` is ``None`` when no current
         loop exists in the active thread.
 
-    Raises:
-        None. ``RuntimeError`` from ``asyncio.get_event_loop()`` is handled and
+    Notes:
+        ``RuntimeError`` from ``asyncio.get_event_loop()`` is handled and
         converted to ``(None, False)`` semantics.
-
-    Example:
-        >>> loop, running = get_event_loop_and_check_if_loop_is_running()
-        >>> running in (True, False)
-        True
     """
     loop_is_running: bool
     loop: asyncio.AbstractEventLoop | None = None

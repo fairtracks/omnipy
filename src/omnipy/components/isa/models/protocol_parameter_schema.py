@@ -2,7 +2,11 @@
 #   filename:  protocol_parameter_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a protocol parameter in an investigation."""
+"""ISA model representing a protocol parameter in an investigation.
+
+ISA-JSON uses JSON-LD to encode Investigation/Study/Assay metadata, and these classes
+provide typed Omnipy wrappers.
+"""
 
 from enum import Enum
 from typing import List, Optional

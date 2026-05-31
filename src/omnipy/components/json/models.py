@@ -338,10 +338,10 @@ class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_Json
 
 
 class JsonScalarModel(Model[JsonScalar]):
-    """
-    JsonScalarModel is a limited JSON model supporting only scalar JSON
-    content, e.g. the basic types: `None`, `int`, `float`, `str`, and
-    `bool`. Lists and dicts (or "objects") are not supported.
+    """JSON model restricted to scalar JSON values.
+
+    Supports only ``None``, ``int``, ``float``, ``str``, and ``bool``.
+    Lists and dicts (JSON objects) are not supported.
 
     Examples:
         >>> my_none = JsonScalarModel(None)
@@ -355,10 +355,10 @@ class JsonScalarModel(Model[JsonScalar]):
         (12.3, '12.3')
         >>> my_str = JsonScalarModel('abc')
         >>> my_str.to_data(), my_str.to_json()
-        (abc, '"abc"')
+        ('abc', '"abc"')
         >>> my_bool = JsonScalarModel(False)
         >>> my_bool.to_data(), my_bool.to_json()
-        (False, '"false"')
+        (False, 'false')
         >>> try:
         ...     my_json = JsonScalarModel([123])
         ... except Exception as e:

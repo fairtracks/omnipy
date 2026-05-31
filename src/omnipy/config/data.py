@@ -451,15 +451,9 @@ class LayoutConfig(ConfigBase):
 def _get_cache_dir_path() -> str:
     """Build the default cache directory path beneath the working directory.
 
-    Args:
-        None: This helper takes no arguments.
-
     Returns:
         str: Absolute path to the ``_cache`` directory in the current working
             directory.
-
-    Raises:
-        None: This helper does not raise exceptions directly.
 
     Example:
         >>> _get_cache_dir_path().endswith('/_cache')
@@ -485,18 +479,16 @@ class UserInterfaceConfig(ConfigBase):
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
     ) -> IsUserInterfaceTypeConfig:  # pyright: ignore [reportReturnType]
-        """Return the UI-specific configuration object for a given UI type.
+        """Return UI-specific configuration for a supported UI type.
 
         Args:
             ui_type: UI type discriminator used to select terminal, Jupyter,
                 or browser settings.
 
         Returns:
-            IsUserInterfaceTypeConfig: The matching configuration model for the
-                requested UI type.
-
-        Raises:
-            None: This method does not raise exceptions directly.
+            IsUserInterfaceTypeConfig: Matching configuration model when
+                ``ui_type`` is recognized as terminal, Jupyter, or browser.
+            ``None``: Returned implicitly when ``ui_type`` is unsupported.
 
         Example:
             >>> cfg = UserInterfaceConfig()

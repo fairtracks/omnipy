@@ -32,16 +32,6 @@ def detect_and_setup_user_interface(runtime: 'Runtime') -> None:
 
     Args:
         runtime: Runtime whose UI configuration should be updated.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> from omnipy.hub.ui import detect_and_setup_user_interface
-        >>> detect_and_setup_user_interface(runtime)
     """
     ui_type: AutoDetectableUserInterfaceType.Literals = detect_ui_type()
     runtime.config.data.ui.detected_type = ui_type
@@ -61,18 +51,11 @@ def detect_and_setup_user_interface(runtime: 'Runtime') -> None:
 def running_in_ipython_terminal() -> bool:
     """Return whether the current session is running in an IPython terminal.
 
-    Args:
-        None.
-
     Returns:
         ``True`` when running inside ``TerminalInteractiveShell``, else ``False``.
 
-    Raises:
-        None.
-
-    Example:
-        >>> running_in_ipython_terminal()
-        False
+    Notes:
+        Depends on the active Python execution environment.
     """
     try:
         ipython = get_ipython()  # type: ignore[name-defined]
@@ -84,18 +67,11 @@ def running_in_ipython_terminal() -> bool:
 def running_in_ipython_pycharm() -> bool:
     """Return whether the current session is running in PyCharm's IPython console.
 
-    Args:
-        None.
-
     Returns:
         ``True`` when running inside ``PyDevTerminalInteractiveShell``, else ``False``.
 
-    Raises:
-        None.
-
-    Example:
-        >>> running_in_ipython_pycharm()
-        False
+    Notes:
+        Depends on the active Python execution environment.
     """
     try:
         ipython = get_ipython()  # type: ignore[name-defined]
@@ -107,18 +83,11 @@ def running_in_ipython_pycharm() -> bool:
 def running_in_any_jupyter() -> bool:
     """Return whether the current session is running in any Jupyter kernel.
 
-    Args:
-        None.
-
     Returns:
         ``True`` when running inside ``ZMQInteractiveShell``, else ``False``.
 
-    Raises:
-        None.
-
-    Example:
-        >>> running_in_any_jupyter()
-        False
+    Notes:
+        Depends on the active Python execution environment.
     """
     try:
         ipython = get_ipython()  # type: ignore[name-defined]
@@ -130,18 +99,11 @@ def running_in_any_jupyter() -> bool:
 def running_in_jupyter_in_browser() -> bool:
     """Return whether the current session is running in browser-hosted Jupyter.
 
-    Args:
-        None.
-
     Returns:
         ``True`` when running in a browser-hosted Jupyter session, else ``False``.
 
-    Raises:
-        None.
-
-    Example:
-        >>> running_in_jupyter_in_browser()
-        False
+    Notes:
+        Depends on the active Python execution environment.
     """
     return running_in_any_jupyter() and not running_in_jupyter_in_pycharm()
 
@@ -149,18 +111,11 @@ def running_in_jupyter_in_browser() -> bool:
 def running_in_jupyter_in_pycharm() -> bool:
     """Return whether the current session is running in PyCharm-hosted Jupyter.
 
-    Args:
-        None.
-
     Returns:
         ``True`` when running in a PyCharm-hosted Jupyter session, else ``False``.
 
-    Raises:
-        None.
-
-    Example:
-        >>> running_in_jupyter_in_pycharm()
-        False
+    Notes:
+        Depends on the active Python execution environment.
     """
     return running_in_any_jupyter() and 'pydev_jupyter_utils' in sys.modules
 
@@ -168,18 +123,11 @@ def running_in_jupyter_in_pycharm() -> bool:
 def running_in_pycharm_console() -> bool:
     """Return whether the current process is hosted by a PyCharm console.
 
-    Args:
-        None.
-
     Returns:
         ``True`` when the ``PYCHARM_HOSTED`` environment variable is set.
 
-    Raises:
-        None.
-
-    Example:
-        >>> running_in_pycharm_console()
-        False
+    Notes:
+        Depends on the active process environment variables.
     """
     return os.getenv('PYCHARM_HOSTED') is not None
 
@@ -187,18 +135,11 @@ def running_in_pycharm_console() -> bool:
 def running_in_atty_terminal() -> bool:
     """Return whether standard output is attached to an interactive terminal.
 
-    Args:
-        None.
-
     Returns:
         ``True`` when ``sys.stdout`` is attached to a TTY, else ``False``.
 
-    Raises:
-        None.
-
-    Example:
-        >>> running_in_atty_terminal()
-        True
+    Notes:
+        Depends on the active standard-output stream.
     """
     return sys.stdout.isatty()
 
@@ -206,18 +147,8 @@ def running_in_atty_terminal() -> bool:
 def detect_ui_type() -> AutoDetectableUserInterfaceType.Literals:
     """Detect the current Omnipy user-interface type from the execution environment.
 
-    Args:
-        None.
-
     Returns:
         The detected user-interface type literal.
-
-    Raises:
-        None.
-
-    Example:
-        >>> detect_ui_type()
-        'terminal'
     """
     if running_in_jupyter_in_pycharm():
         return UserInterfaceType.PYCHARM_JUPYTER
@@ -245,13 +176,6 @@ def detect_display_color_system(
 
     Returns:
         The detected display color system.
-
-    Raises:
-        None.
-
-    Example:
-        >>> detect_display_color_system(UserInterfaceType.TERMINAL)
-        'standard'
     """
     if UserInterfaceType.supports_rgb_color_output(ui_type):
         return DisplayColorSystem.ANSI_RGB
@@ -276,13 +200,6 @@ def detect_dark_background(ui_type: UserInterfaceType.Literals) -> bool:
 
     Returns:
         ``True`` if the background should be treated as dark, otherwise ``False``.
-
-    Raises:
-        None.
-
-    Example:
-        >>> detect_dark_background(UserInterfaceType.TERMINAL)
-        True
     """
     if UserInterfaceType.supports_dark_terminal_bg_detection(ui_type):
         return detect_dark_terminal_background()
@@ -293,18 +210,14 @@ def detect_dark_background(ui_type: UserInterfaceType.Literals) -> bool:
 def detect_dark_terminal_background() -> bool:
     """Detect whether the current terminal background is dark.
 
-    Args:
-        None.
-
     Returns:
         ``True`` if the terminal background is detected as dark, otherwise ``False``.
 
     Raises:
         ModuleNotFoundError: If the optional ``term_background`` dependency is unavailable.
 
-    Example:
-        >>> detect_dark_terminal_background()
-        True
+    Notes:
+        Detection depends on terminal capabilities and environment variables.
     """
     from term_background import is_dark_background
 
@@ -356,13 +269,6 @@ def get_terminal_prompt_height(
 
     Returns:
         The prompt height in rendered terminal rows.
-
-    Raises:
-        None.
-
-    Example:
-        >>> get_terminal_prompt_height(UserInterfaceType.TERMINAL)
-        2
     """
     match ui_type:
         case x if UserInterfaceType.is_plain_terminal(x):
@@ -378,15 +284,6 @@ def setup_displayhook_if_plain_terminal(ui_type: TerminalOutputUserInterfaceType
 
     Args:
         ui_type: Terminal-oriented user-interface type for rendering output.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> setup_displayhook_if_plain_terminal(UserInterfaceType.TERMINAL)
     """
     from omnipy.config import ConfigBase
     from omnipy.data.dataset import Dataset
@@ -397,15 +294,6 @@ def setup_displayhook_if_plain_terminal(ui_type: TerminalOutputUserInterfaceType
 
         Args:
             obj: Object produced by expression evaluation.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-
-        Example:
-            >>> _omnipy_displayhook(my_dataset)
         """
 
         if obj is not None:
@@ -484,9 +372,6 @@ def display_jupyter_setup_note(detected_ui_type: JupyterUserInterfaceType.Litera
 
     Raises:
         AssertionError: If a non-Jupyter-in-browser type reaches the browser-only branch.
-
-    Example:
-        >>> display_jupyter_setup_note(UserInterfaceType.JUPYTER)
     """
     from IPython.display import display
 
@@ -558,19 +443,9 @@ def setup_jupyter_ui():
     changes and available display size, so notebook outputs render and resize
     correctly.
 
-    Args:
-        None.
-
-    Returns:
-        None.
-
     Raises:
         AssertionError: If the active runtime is not configured for a Jupyter
             interface.
-
-    Example:
-        >>> import omnipy as om
-        >>> om.setup_jupyter_ui()
     """
 
     from IPython.display import display

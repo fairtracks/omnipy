@@ -2,7 +2,11 @@
 #   filename:  person_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a person in an investigation."""
+"""ISA model representing a person in an investigation.
+
+ISA denotes Investigation/Study/Assay metadata, represented here through ISA-JSON
+JSON-LD schema models.
+"""
 
 from enum import Enum
 from typing import List, Optional

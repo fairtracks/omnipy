@@ -2,7 +2,11 @@
 #   filename:  ontology_annotation_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing an ontology annotation in an investigation."""
+"""ISA model representing an ontology annotation in an investigation.
+
+ISA is the Investigation/Study/Assay metadata standard, serialized here as ISA-JSON
+with JSON-LD conventions.
+"""
 
 from enum import Enum
 from typing import List, Optional, Union

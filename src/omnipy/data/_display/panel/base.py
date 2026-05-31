@@ -80,6 +80,7 @@ class Panel(Generic[FrameT]):
                  frame: FrameT | None = None,
                  constraints: Constraints | None = None,
                  config: OutputConfig | None = None):
+        """Initialize a panel with optional title, frame, constraints, and output config."""
         object.__setattr__(self, 'title', title)
         object.__setattr__(self, 'frame', frame or cast(FrameT, empty_frame()))
         object.__setattr__(self, 'constraints', constraints or Constraints())

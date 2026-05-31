@@ -1,4 +1,7 @@
-"""Validation helpers shared by ISA schema models."""
+"""Validation helpers shared by ISA schema models.
+
+These helpers support ISA-JSON Investigation/Study/Assay metadata parsing in Omnipy.
+"""
 
 from datetime import date, datetime
 from typing import Union

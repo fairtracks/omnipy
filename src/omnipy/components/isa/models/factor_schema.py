@@ -2,7 +2,11 @@
 #   filename:  factor_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing an experimental factor in an investigation."""
+"""ISA model representing an experimental factor in an investigation.
+
+These generated schemas map ISA-JSON (Investigation/Study/Assay) JSON-LD metadata into
+typed Omnipy models.
+"""
 
 from enum import Enum
 from typing import List, Optional

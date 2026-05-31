@@ -2,7 +2,11 @@
 #   filename:  protocol_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a protocol in an investigation."""
+"""ISA model representing a protocol in an investigation.
+
+ISA means Investigation/Study/Assay, and this module maps ISA-JSON JSON-LD protocol
+objects into Omnipy models.
+"""
 
 from enum import Enum
 from typing import List, Optional

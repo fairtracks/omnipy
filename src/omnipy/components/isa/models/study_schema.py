@@ -2,7 +2,11 @@
 #   filename:  study_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a study in an investigation."""
+"""ISA model representing a study in an investigation.
+
+ISA means Investigation/Study/Assay, and this module maps ISA-JSON JSON-LD study
+payloads into typed Omnipy models.
+"""
 
 from datetime import date, datetime
 from enum import Enum

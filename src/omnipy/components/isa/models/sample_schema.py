@@ -2,7 +2,11 @@
 #   filename:  sample_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a sample in an investigation."""
+"""ISA model representing a sample in an investigation.
+
+ISA stands for Investigation/Study/Assay, and this schema mirrors ISA-JSON JSON-LD
+sample metadata.
+"""
 
 from enum import Enum
 from typing import List, Optional

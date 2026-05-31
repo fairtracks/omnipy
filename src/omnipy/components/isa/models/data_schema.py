@@ -2,7 +2,11 @@
 #   filename:  data_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a data file in an investigation."""
+"""ISA model representing a data file in an investigation.
+
+ISA is the Investigation/Study/Assay metadata model, represented here in ISA-JSON
+JSON-LD form.
+"""
 
 from enum import Enum
 from typing import List, Optional

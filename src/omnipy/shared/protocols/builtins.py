@@ -275,8 +275,7 @@ _NegativeInteger: TypeAlias = Literal[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -
 # @disjoint_base
 # class int:
 class IsInt(Protocol):
-    """Define the ``IsInt`` interface.
-    """
+    """Protocol for the subset of built-in ``int`` behavior used by Omnipy typing."""
 
     # @overload
     # def __new__(cls, x: ConvertibleToInt = 0, /) -> Self: ...
@@ -472,8 +471,7 @@ class IsFloat(Protocol):
 # @disjoint_base
 # class complex:
 class IsComplex(Protocol):
-    """Define the ``IsComplex`` interface.
-    """
+    """Protocol for the subset of built-in ``complex`` behavior used by Omnipy typing."""
     # # Python doesn't currently accept SupportsComplex for the second argument
     # @overload
     # def __new__(
@@ -1000,8 +998,7 @@ class IsBytes(IsItemSequence[int], Protocol):
 # @disjoint_base
 # class bytearray(MutableSequence[int]):
 class IsByteArray(IsMutableSequence[int], Protocol):
-    """Define the ``IsByteArray`` interface.
-    """
+    """Protocol for the subset of built-in ``bytearray`` behavior used by Omnipy typing."""
 
     # @overload
     # def __init__(self) -> None: ...
@@ -1406,8 +1403,7 @@ class IsTuple(IsItemSequence[_T_co], Protocol[_T_co]):  # type: ignore[misc]
 # @disjoint_base
 # class list(MutableSequence[_T]):
 class IsList(IsMutableSequence[_T], Protocol[_T]):
-    """Define the ``IsList`` interface.
-    """
+    """Protocol for the subset of built-in ``list`` behavior used by Omnipy typing."""
 
     # @overload
     # def __init__(self) -> None: ...

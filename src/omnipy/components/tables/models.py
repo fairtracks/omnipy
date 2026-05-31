@@ -717,6 +717,7 @@ class PydanticRecordModelMetaclass(ModelMetaclass):
     """
 
     def __init__(cls, *args, **kwargs) -> None:
+        """Initialize the per-class cache for resolved header metadata."""
         super().__init__(*args, **kwargs)
         cls._header_info: _HeaderInfo | None = None
 

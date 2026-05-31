@@ -47,11 +47,9 @@ IsPathsOrUrlsOneOrMoreOrNone: TypeAlias = 'IsPathsOrUrlsOneOrMore | None'
 @runtime_checkable
 @dataclass(frozen=True, kw_only=True)
 class IsPendingData(Protocol):
-    """Define the ``IsPendingData`` interface.
-    
-    Attributes:
-        job_name: (str) Public attribute on the protocol/class.
-        job_unique_name: (str) Public attribute on the protocol/class.
+    """Metadata describing a dataset entry that is still processing.
+
+    Used for items backed by asynchronous work that has not completed yet.
     """
 
     job_name: str
@@ -61,13 +59,7 @@ class IsPendingData(Protocol):
 @runtime_checkable
 @dataclass(frozen=True, kw_only=True)
 class IsFailedData(Protocol):
-    """Define the ``IsFailedData`` interface.
-    
-    Attributes:
-        job_name: (str) Public attribute on the protocol/class.
-        job_unique_name: (str) Public attribute on the protocol/class.
-        exception: (BaseException) Public attribute on the protocol/class.
-    """
+    """Metadata describing a dataset entry whose asynchronous load failed."""
 
     job_name: str
     job_unique_name: str
@@ -76,19 +68,14 @@ class IsFailedData(Protocol):
 
 @runtime_checkable
 class HasData(Protocol):
-    """Define the ``HasData`` interface.
-    
-    Attributes:
-        data: (dict[str, Any | IsPendingData | IsFailedData]) Public attribute on the protocol/class.
-    """
+    """Object exposing an internal mapping of loaded, pending, and failed items."""
 
     data: dict[str, Any | IsPendingData | IsFailedData]
 
 
 @runtime_checkable
 class HasContent(Protocol[ContentT]):
-    """Define the ``HasContent`` interface.
-    """
+    """Object with a typed ``content`` value that can be read or replaced."""
 
     @property
     def content(self) -> ContentT:
@@ -111,8 +98,7 @@ class HasContent(Protocol[ContentT]):
 
 @runtime_checkable
 class IsModel(HasContent[_RootT], Protocol[_RootT]):
-    """Define the ``IsModel`` interface.
-    """
+    """Single-value data wrapper with typed content and conversion support."""
 
     @classmethod
     def full_type(cls) -> type[_RootT]:
@@ -126,7 +112,10 @@ class IsModel(HasContent[_RootT], Protocol[_RootT]):
 
 @runtime_checkable
 class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatasetT]):
-    """Define the ``IsDataset`` interface.
+    """Dictionary-like collection of named models or nested datasets.
+
+    Datasets expose conversion helpers for plain data, JSON, and file-based
+    load/save operations.
     """
     def __init__(
         self,
@@ -330,8 +319,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
 
 @runtime_checkable
 class IsMultiModelDataset(IsDataset[_ModelOrDatasetT], Protocol[_ModelOrDatasetT]):
-    """Define the ``IsMultiModelDataset`` interface.
-    """
+    """Dataset protocol that can assign different model classes per item."""
     def set_model(self, data_file: str, model: type[IsModel]) -> None:
         """Set model.
         
@@ -355,23 +343,20 @@ class IsMultiModelDataset(IsDataset[_ModelOrDatasetT], Protocol[_ModelOrDatasetT
 
 @runtime_checkable
 class IsHttpUrlModel(IsModel, Protocol):
-    """Define the ``IsHttpUrlModel`` interface.
-    """
+    """Model protocol representing a validated HTTP URL value."""
 
     ...
 
 
 @runtime_checkable
 class IsHttpUrlDataset(IsDataset, Protocol):
-    """Define the ``IsHttpUrlDataset`` interface.
-    """
+    """Dataset protocol for collections of HTTP URL model entries."""
 
     ...
 
 
 class IsSerializer(Protocol[_DatasetT]):
-    """Define the ``IsSerializer`` interface.
-    """
+    """Serializer interface for converting datasets to and from bytes."""
 
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
@@ -431,8 +416,7 @@ class IsSerializer(Protocol[_DatasetT]):
 
 @runtime_checkable
 class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
-    """Define the ``IsTarFileSerializer`` interface.
-    """
+    """Serializer extension that stores dataset entries inside tar archives."""
 
     @classmethod
     def create_tarfile_from_dataset(cls,
@@ -473,8 +457,7 @@ class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
 
 @runtime_checkable
 class IsSerializerRegistry(Protocol):
-    """Define the ``IsSerializerRegistry`` interface.
-    """
+    """Registry that tracks serializers and selects suitable ones for datasets."""
 
     def __init__(self) -> None:
         ...
@@ -592,12 +575,7 @@ class IsSerializerRegistry(Protocol):
 
 @runtime_checkable
 class IsSnapshotWrapper(Protocol[ObjContraT, ContentT]):
-    """Define the ``IsSnapshotWrapper`` interface.
-    
-    Attributes:
-        id: (int) Public attribute on the protocol/class.
-        snapshot: (ContentT) Public attribute on the protocol/class.
-    """
+    """Snapshot record linking an object identity to captured content."""
 
     id: int
     snapshot: ContentT
@@ -628,8 +606,7 @@ class IsSnapshotWrapper(Protocol[ObjContraT, ContentT]):
 @runtime_checkable
 class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasContentT, ContentT]],
                        Protocol[HasContentT, ContentT]):
-    """Define the ``IsSnapshotHolder`` interface.
-    """
+    """Container protocol managing snapshots used for deepcopy/reactive tracking."""
 
     def clear(self) -> None:
         """Clear.
@@ -696,12 +673,7 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasC
 
 
 class AvailableDisplayDims(TypedDict):
-    """Define the ``AvailableDisplayDims`` interface.
-    
-    Attributes:
-        width: (pyd.NonNegativeInt | None) Public attribute on the protocol/class.
-        height: (pyd.NonNegativeInt | None) Public attribute on the protocol/class.
-    """
+    """Display-space dimensions available for rendering, in pixels."""
 
     width: pyd.NonNegativeInt | None
     height: pyd.NonNegativeInt | None
@@ -709,8 +681,7 @@ class AvailableDisplayDims(TypedDict):
 
 @runtime_checkable
 class IsReactive(Protocol[ContentT]):
-    """Define the ``IsReactive`` interface.
-    """
+    """Mutable reactive value wrapper used for config/state propagation."""
 
     @property
     def value(self) -> ContentT:
@@ -732,14 +703,7 @@ class IsReactive(Protocol[ContentT]):
 
 @runtime_checkable
 class IsReactiveObjects(Protocol):
-    """Define the ``IsReactiveObjects`` interface.
-    
-    Attributes:
-        jupyter_ui_config: (IsReactive[IsJupyterUserInterfaceConfig]) Public attribute on the protocol/class.
-        text_config: (IsReactive[IsTextConfig]) Public attribute on the protocol/class.
-        layout_config: (IsReactive[IsLayoutConfig]) Public attribute on the protocol/class.
-        available_display_dims_in_px: (IsReactive[AvailableDisplayDims]) Public attribute on the protocol/class.
-    """
+    """Bundle of reactive objects shared by display and configuration layers."""
 
     jupyter_ui_config: IsReactive[IsJupyterUserInterfaceConfig]
     text_config: IsReactive[IsTextConfig]
@@ -753,8 +717,7 @@ class IsReactiveObjects(Protocol):
 
 @runtime_checkable
 class IsDataClassCreator(Protocol[HasContentT, ContentT]):
-    """Define the ``IsDataClassCreator`` interface.
-    """
+    """Factory/service protocol that wires config, reactive state, and snapshots."""
 
     @property
     def config(self) -> IsDataConfig:

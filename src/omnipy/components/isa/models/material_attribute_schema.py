@@ -2,7 +2,11 @@
 #   filename:  material_attribute_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a material attribute category."""
+"""ISA model representing a material attribute category.
+
+ISA refers to Investigation/Study/Assay, and these models encode ISA-JSON JSON-LD
+metadata fields.
+"""
 
 from enum import Enum
 from typing import Optional

@@ -25,6 +25,7 @@ class Grid(Generic[PanelT]):
     preserving insertion order from the underlying mapping.
     """
     def __init__(self, layout: 'Layout[PanelT]'):
+        """Initialize a single-row grid wrapper for a panel layout."""
         self._layout = layout
 
     @property
@@ -39,7 +40,7 @@ class Grid(Generic[PanelT]):
             width=len(self._layout), height=1 if len(self._layout) > 0 else 0)
 
     def __getitem__(self, key: tuple[int, int]) -> str:
-        """Get panel from the grid at specific coordinates."""
+        """Return the panel key located at the given ``(x, y)`` coordinates."""
         if not isinstance(key, tuple) or len(key) != 2:
             raise TypeError('Grid coordinates must be a tuple of (x, y)')
 
@@ -66,13 +67,9 @@ class Grid(Generic[PanelT]):
 
 
 class Layout(UserDict[str, PanelT], Generic[PanelT]):
-    """A class representing a layout of panels.
-
-    This class inherits from `UserDict` to provide a dictionary-like
-    interface for managing panels in a layout. It allows adding, removing,
-    and accessing panels by their names, and other dictionary operations.
-    """
+    """Ordered mapping from panel keys to panel objects."""
     def __init__(self, *args, **kwargs):
+        """Initialize layout storage and its coordinate-style grid accessor."""
         super().__init__(*args, **kwargs)
         self._grid = Grid(self)
 

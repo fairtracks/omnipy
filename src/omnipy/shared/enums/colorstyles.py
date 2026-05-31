@@ -40,18 +40,11 @@ class RecommendedColorStyles(LiteralEnum[str]):
     The ANSI variants broaden compatibility for terminals with limited color
     support, while Omnipy Selenized variants are preferred for long-term use.
 
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> RecommendedColorStyles.AUTO
-        'auto'
+    Selection guidance:
+        - Start with ``AUTO`` unless you need deterministic styling.
+        - Choose ``ANSI_*`` for low-color terminals or maximum compatibility.
+        - Choose ``OMNIPY_SELENIZED_*`` for 256/RGB terminals and better
+          long-session readability.
     """
 
     Literals = Literal['auto',
@@ -4586,18 +4579,9 @@ class AllColorStyles(
 ):
     """All syntax-highlighting styles exposed by Omnipy.
 
-    Args:
-        None.
-
-    Returns:
-        None.
-
-    Raises:
-        None.
-
-    Example:
-        >>> AllColorStyles.RANDOM_ALL
-        'random'
+    Use ``RecommendedColorStyles`` for stable defaults that adapt to the
+    runtime display. Use ``AllColorStyles`` when you want explicit control over
+    any available style, including non-recommended and random variants.
     """
 
     Literals = Literal[RecommendedColorStyles.Literals,
@@ -4618,13 +4602,6 @@ class AllColorStyles(
 
         Returns:
             type[LiteralEnum[str]] | None: Matching superclass, or ``None`` if not found.
-
-        Raises:
-            None.
-
-        Example:
-            >>> AllColorStyles.get_supercls_for_random_choice('random-dark')
-            <class 'omnipy.shared.enums.colorstyles.DarkColorStyles'>
         """
         for supercls in reversed(cls.__mro__):
             if (issubclass(supercls, LiteralEnum) and supercls is not LiteralEnum

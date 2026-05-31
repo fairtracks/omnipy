@@ -2,7 +2,11 @@
 #   filename:  material_attribute_value_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a material attribute value in an investigation."""
+"""ISA model representing a material attribute value in an investigation.
+
+ISA-JSON captures Investigation/Study/Assay metadata as JSON-LD, which these Omnipy
+models validate.
+"""
 
 from enum import Enum
 from typing import List, Optional, Union

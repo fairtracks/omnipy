@@ -36,18 +36,6 @@ def add_callback_if_exception(
 
     Returns:
         A wrapped callable with exception-triggered fallback behavior.
-
-    Raises:
-        None. Matching exceptions are handled by calling ``callback_func``.
-
-    Example:
-        >>> def main(x):
-        ...     return 10 // x
-        >>> def fallback(x):
-        ...     return 0
-        >>> safe_main = add_callback_if_exception(main, fallback, (ZeroDivisionError,))
-        >>> safe_main(0)
-        0
     """
     def _inner(*args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs) -> _DecoratedR:
         """Invoke primary callable and fall back on handled exceptions.
@@ -62,15 +50,6 @@ def add_callback_if_exception(
 
         Raises:
             Exception: Propagates exceptions not listed in ``exception_types``.
-
-        Example:
-            >>> def main(x):
-            ...     return 10 // x
-            >>> def fallback(x):
-            ...     return 0
-            >>> wrapped = add_callback_if_exception(main, fallback, (ZeroDivisionError,))
-            >>> wrapped(5)
-            2
         """
         try:
             return decorated_func(*args, **kwargs)
@@ -98,34 +77,9 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
     Returns:
         A wrapped callable that runs ``callback_func`` only when the decorated
         call succeeds without raising an exception.
-
-    Raises:
-        None. Exceptions from ``decorated_func`` are propagated unchanged.
-
-    Example:
-        >>> def parse_int(text):
-        ...     return int(text)
-        >>> def clamp(value, lower):
-        ...     return max(value, lower)
-        >>> wrapped = add_callback_after_call(parse_int, clamp, None, 0)
-        >>> wrapped('-2')
-        0
     """
     class CallbackAfterCall(AbstractContextManager):
-        """Context manager running callback only after successful call completion.
-
-        Args:
-            None.
-
-        Returns:
-            None. Instances are created for scoped call handling.
-
-        Raises:
-            None.
-
-        Example:
-            Used internally by ``add_callback_after_call``.
-        """
+        """Context manager running callback only after successful call completion."""
 
         def __init__(self, dec_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
             """Store callable and invocation arguments for deferred execution.
@@ -135,14 +89,6 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
                 *args: Positional arguments forwarded to ``dec_func``.
                 **kwargs: Keyword arguments forwarded to ``dec_func``.
 
-            Returns:
-                None.
-
-            Raises:
-                None.
-
-            Example:
-                Constructed internally by ``_callback_after_call``.
             """
             self._decorated_func = dec_func
             self._args = args
@@ -152,17 +98,8 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
         def __enter__(self):
             """Execute the decorated callable and cache its return value.
 
-            Args:
-                None.
-
             Returns:
                 ``self`` with ``return_value`` populated.
-
-            Raises:
-                Exception: Propagates exceptions from the decorated callable.
-
-            Example:
-                Called by ``with CallbackAfterCall(...):``.
             """
             self.return_value = self._decorated_func(*self._args, **self._kwargs)
             return self
@@ -177,14 +114,7 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
 
             Returns:
                 ``None`` to preserve normal exception propagation behavior.
-
-            Raises:
-                Exception: Propagates callback exceptions and any context
-                    exception by returning ``None``.
-
-            Example:
-                Triggered automatically at context-manager exit.
-            """
+        """
             ret = None
 
             if exc_val is None:
@@ -202,13 +132,6 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
         Returns:
             Return value captured by the context manager, potentially transformed
             by ``callback_func``.
-
-        Raises:
-            Exception: Propagates exceptions from ``dec_func`` or
-                ``callback_func``.
-
-        Example:
-            Used internally to centralize callback-after-call sequencing.
         """
         with CallbackAfterCall(dec_func, *args, **kwargs) as callback:
             ...
@@ -223,14 +146,6 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
 
         Returns:
             The callback-processed return value.
-
-        Raises:
-            Exception: Propagates exceptions from context manager, decorated
-                callable, or callback callable.
-
-        Example:
-            Returned as the callable wrapper from
-            ``add_callback_after_call(...)``.
         """
         if with_context:
             with with_context:
@@ -250,20 +165,6 @@ def apply_decorator_to_property(prop: property, decorator: Callable[[Callable], 
 
     Returns:
         A new property with decorated accessors and the original docstring.
-
-    Raises:
-        None.
-
-    Example:
-        >>> def passthrough(func):
-        ...     return func
-        >>> class Demo:
-        ...     @property
-        ...     def value(self):
-        ...         return 1
-        >>> Demo.value = apply_decorator_to_property(Demo.value, passthrough)
-        >>> Demo().value
-        1
     """
     return property(
         fget=decorator(prop.fget) if prop.fget is not None else None,
@@ -283,39 +184,12 @@ def call_super_if_available(call_super_before_method: bool):
     Returns:
         A descriptor class wrapping a single-argument instance or class method.
 
-    Raises:
-        None.
-
     Notes:
         If the parent class has no same-named callable, the original method is
         executed directly.
-
-    Example:
-        >>> class Base:
-        ...     def normalize(self, value):
-        ...         return value + 1
-        >>> class Child(Base):
-        ...     @call_super_if_available(call_super_before_method=True)
-        ...     def normalize(self, value):
-        ...         return value * 2
-        >>> Child().normalize(3)
-        8
     """
     class SuperCaller(Generic[_SelfOrClsT, _ArgT]):
-        """Descriptor binding method calls and optional ``super()`` delegation.
-
-        Args:
-            None.
-
-        Returns:
-            None. Instances are descriptor objects returned by the decorator.
-
-        Raises:
-            None.
-
-        Example:
-            Created internally by ``call_super_if_available``.
-        """
+        """Descriptor binding method calls and optional ``super()`` delegation."""
 
         def __init__(self, method: Callable[[_SelfOrClsT, _ArgT], _ArgT]):
             """Store the decorated method and descriptor state placeholders.
@@ -323,14 +197,6 @@ def call_super_if_available(call_super_before_method: bool):
             Args:
                 method: Method that may be composed with a parent implementation.
 
-            Returns:
-                None.
-
-            Raises:
-                None.
-
-            Example:
-                Invoked by Python at decoration time.
             """
             self._method = method
             self._calling_obj_or_cls: _SelfOrClsT
@@ -343,14 +209,6 @@ def call_super_if_available(call_super_before_method: bool):
                 cls: Class owning this descriptor.
                 name: Attribute name assigned on ``cls``.
 
-            Returns:
-                None.
-
-            Raises:
-                None.
-
-            Example:
-                Called automatically by Python descriptor protocol.
             """
             self._cls_of_decorated_method = cls
             # return self._call_methods_if_callable(arg)
@@ -367,9 +225,6 @@ def call_super_if_available(call_super_before_method: bool):
 
             Raises:
                 AssertionError: If both ``obj`` and ``cls`` are ``None``.
-
-            Example:
-                Triggered when accessing the decorated attribute.
             """
             if obj is not None:
                 self._calling_obj_or_cls = obj
@@ -387,15 +242,8 @@ def call_super_if_available(call_super_before_method: bool):
             Returns:
                 Result from the decorated method alone or composed with
                 ``super()`` based on ``call_super_before_method``.
-
-            Raises:
-                Exception: Propagates any exception from decorated or parent
-                    method calls.
-
-            Example:
-                Executed when calling the decorated attribute like a function.
-            """
-            method = self._method.__func__ if hasattr(self._method, '__func__') else self._method
+        """
+            method = getattr(self._method, '__func__', self._method)
             super_method: Callable[[_ArgT], _ArgT] | None = getattr(
                 super(self._cls_of_decorated_method, self._calling_obj_or_cls),
                 self._method.__name__,
@@ -418,22 +266,6 @@ class class_or_instance_method(Generic[T, _DecoratedP, _DecoratedR], object):
     branch behavior depending on whether it was called via ``obj.method(...)`` or
     ``Cls.method(...)``.
 
-    Args:
-        None.
-
-    Returns:
-        None. This class is used as a descriptor/decorator type.
-
-    Raises:
-        None.
-
-    Example:
-        >>> class Demo:
-        ...     @class_or_instance_method
-        ...     def whoami(self, cls):
-        ...         return cls.__name__ if self is None else type(self).__name__
-        >>> Demo.whoami()
-        'Demo'
     """
 
     # TODO: Properly attribute Stackoverflow contributions here and elsewhere,
@@ -450,18 +282,6 @@ class class_or_instance_method(Generic[T, _DecoratedP, _DecoratedR], object):
             decorated_func: Callable receiving ``(instance_or_none, cls, *args,
                 **kwargs)``.
 
-        Returns:
-            None.
-
-        Raises:
-            None.
-
-        Example:
-            >>> def impl(instance, cls):
-            ...     return cls.__name__
-            >>> wrapper = class_or_instance_method(impl)
-            >>> isinstance(wrapper, class_or_instance_method)
-            True
         """
         self._decorated_func = decorated_func
 
@@ -476,17 +296,6 @@ class class_or_instance_method(Generic[T, _DecoratedP, _DecoratedR], object):
         Returns:
             A callable that forwards arguments to the wrapped implementation with
             both ``instance`` and ``cls``.
-
-        Raises:
-            None.
-
-        Example:
-            >>> class Demo:
-            ...     @class_or_instance_method
-            ...     def name(self, cls):
-            ...         return cls.__name__
-            >>> Demo().name()
-            'Demo'
         """
         def _func(*args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs) -> _DecoratedR:
             """Forward invocation to the stored dual-bound implementation.
@@ -497,14 +306,7 @@ class class_or_instance_method(Generic[T, _DecoratedP, _DecoratedR], object):
 
             Returns:
                 Result produced by ``self._decorated_func``.
-
-            Raises:
-                Exception: Propagates exceptions raised by the decorated
-                    implementation.
-
-            Example:
-                Returned by ``__get__`` and called as the bound method.
-            """
+        """
             return self._decorated_func(instance, cls, *args, **kwargs)
 
         return _func

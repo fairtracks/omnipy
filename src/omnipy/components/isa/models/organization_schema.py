@@ -2,7 +2,11 @@
 #   filename:  organization_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing an organization in an investigation."""
+"""ISA model representing an organization in an investigation.
+
+ISA-JSON (Investigation/Study/Assay) stores metadata as JSON-LD, which these classes
+model for Omnipy.
+"""
 
 from enum import Enum
 from typing import Optional

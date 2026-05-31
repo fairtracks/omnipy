@@ -2,7 +2,11 @@
 #   filename:  study_group.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing a study group in an investigation."""
+"""ISA model representing a study group in an investigation.
+
+ISA-JSON expresses Investigation/Study/Assay metadata using JSON-LD fields that these
+classes validate.
+"""
 
 from enum import Enum
 from typing import List, Optional

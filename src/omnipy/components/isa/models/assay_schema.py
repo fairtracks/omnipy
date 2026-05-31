@@ -2,7 +2,11 @@
 #   filename:  assay_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-"""ISA model representing an assay in an investigation."""
+"""ISA model representing an assay in an investigation.
+
+ISA stands for Investigation/Study/Assay, and these schemas map ISA-JSON JSON-LD fields
+into Omnipy models.
+"""
 
 from enum import Enum
 from typing import List, Optional

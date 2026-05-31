@@ -11,7 +11,7 @@ Attributes:
         UI integration outside the test environment.
 """
 
-from typing import Any
+from typing import Any, cast
 
 from omnipy.components.prefect.engine.prefect import PrefectEngine
 from omnipy.compute._job import JobBase
@@ -52,14 +52,6 @@ def _job_creator_factory() -> IsJobCreator:
 
     Returns:
         IsJobCreator: Shared job creator owned by ``JobBase``.
-
-    Raises:
-        None.
-
-    Example:
-        >>> creator = _job_creator_factory()
-        >>> creator is JobBase.job_creator
-        True
     """
 
     return JobBase.job_creator
@@ -70,14 +62,6 @@ def _job_config_factory() -> IsJobConfig:
 
     Returns:
         IsJobConfig: Runtime job configuration object.
-
-    Raises:
-        None.
-
-    Example:
-        >>> config = _job_config_factory()
-        >>> config is _job_creator_factory().config
-        True
     """
 
     return _job_creator_factory().config
@@ -89,14 +73,6 @@ def _data_class_creator_factory() -> IsDataClassCreator:
     Returns:
         IsDataClassCreator: Shared data class creator owned by
             ``DataClassBase``.
-
-    Raises:
-        None.
-
-    Example:
-        >>> creator = _data_class_creator_factory()
-        >>> creator is DataClassBase.data_class_creator
-        True
     """
 
     return DataClassBase.data_class_creator
@@ -107,14 +83,6 @@ def _data_config_factory() -> IsDataConfig:
 
     Returns:
         IsDataConfig: Runtime data configuration object.
-
-    Raises:
-        None.
-
-    Example:
-        >>> config = _data_config_factory()
-        >>> config is _data_class_creator_factory().config
-        True
     """
 
     return _data_class_creator_factory().config
@@ -129,9 +97,6 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
         job: Job creation and execution settings.
         root_log: Root logger integration settings.
 
-    Example:
-        >>> runtime_config = RuntimeConfig()
-        >>> runtime_config.reset_to_defaults()
     """
 
     data: IsDataConfig = pyd.Field(default_factory=_data_config_factory)
@@ -141,29 +106,15 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
 
     def reset_to_defaults(self) -> None:
         """Reset all runtime configuration sections to their default values.
-
-        Args:
-            None.
-
-        Returns:
-            None: Updates ``data``, ``engine``, ``job``, and ``root_log`` in
-                place, then re-establishes subscriptions if available.
-
-        Raises:
-            None.
-
-        Example:
-            >>> runtime_config = RuntimeConfig()
-            >>> runtime_config.reset_to_defaults()
         """
 
         prev_back = self._back
         self._back = None
 
-        self.data = DataConfig()
-        self.engine = EngineConfig()
-        self.job = JobConfig()
-        self.root_log = RootLogConfig()
+        self.data = cast(IsDataConfig, DataConfig())
+        self.engine = cast(IsEngineConfig, EngineConfig())
+        self.job = cast(IsJobConfig, JobConfig())
+        self.root_log = cast(IsRootLogConfig, RootLogConfig())
 
         self._back = prev_back
         if self._back is not None:
@@ -184,9 +135,6 @@ class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
         serializers: Dataset serializer registry.
         root_log: Root logging integration objects.
 
-    Example:
-        >>> runtime_objects = RuntimeObjects()
-        >>> runtime_objects.setup_reactive(UserInterfaceType.NONE)
     """
 
     job_creator: IsJobConfigHolder = pyd.Field(default_factory=_job_creator_factory)
@@ -203,19 +151,6 @@ class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
 
         Args:
             ui_type: Detected user-interface type for the current runtime.
-
-        Returns:
-            None: Mutates ``reactive`` to either a notebook integration object
-                or ``None``.
-
-        Raises:
-            None.
-
-        Example:
-            >>> objects = RuntimeObjects()
-            >>> objects.setup_reactive(UserInterfaceType.NONE)
-            >>> objects.reactive is None
-            True
         """
 
         if UserInterfaceType.is_jupyter_in_browser(ui_type):
@@ -240,10 +175,6 @@ class Runtime(DataPublisher):
         config: Runtime configuration object.
         objects: Runtime service and registry container.
 
-    Example:
-        >>> rt = Runtime()
-        >>> isinstance(rt.config, RuntimeConfig)
-        True
     """
 
     config: IsRuntimeConfig = pyd.Field(default_factory=RuntimeConfig)
@@ -254,17 +185,6 @@ class Runtime(DataPublisher):
 
         Args:
             **data: Optional initialization data passed to ``DataPublisher``.
-
-        Returns:
-            None.
-
-        Raises:
-            Exception: Propagates exceptions raised during UI detection or
-                subscription initialization.
-
-        Example:
-            >>> rt = Runtime()
-            >>> rt.reset_subscriptions()
         """
 
         super().__init__(**data)
@@ -278,19 +198,9 @@ class Runtime(DataPublisher):
         engines, registries, logging, and reactive UI objects synchronized.
         Call it after replacing runtime subobjects manually.
 
-        Args:
-            None.
-
-        Returns:
-            None: Rebinds all runtime subscription callbacks in place.
-
         Raises:
             AssertionError: If a Jupyter UI is detected but reactive objects
                 are unexpectedly missing.
-
-        Example:
-            >>> rt = Runtime()
-            >>> rt.reset_subscriptions()
         """
 
         self.reset_backlinks()
@@ -350,21 +260,7 @@ class Runtime(DataPublisher):
         self.objects.subscribe_attr('prefect', self._update_prefect_engine_config)
 
     def reset_backlinks(self) -> None:
-        """Set parent backlinks from runtime sub-objects to this runtime.
-
-        Args:
-            None.
-
-        Returns:
-            None: Mutates private ``_back`` references on runtime members.
-
-        Raises:
-            None.
-
-        Example:
-            >>> rt = Runtime()
-            >>> rt.reset_backlinks()
-        """
+        """Set parent backlinks from runtime sub-objects to this runtime."""
 
         self.config._back = self  # type: ignore[attr-defined]
         self.objects._back = self  # type: ignore[attr-defined]
@@ -380,10 +276,6 @@ class Runtime(DataPublisher):
 
         Raises:
             AttributeError: If ``choice`` does not exist on ``config.engine``.
-
-        Example:
-            >>> rt = Runtime()
-            >>> _ = rt._get_engine_config(EngineChoice.LOCAL)
         """
 
         return getattr(self.config.engine, choice)
@@ -399,16 +291,8 @@ class Runtime(DataPublisher):
             choice: Engine identifier whose configuration should be updated.
             engine_config: New engine configuration object.
 
-        Returns:
-            None.
-
         Raises:
             AttributeError: If ``choice`` does not exist on ``config.engine``.
-
-        Example:
-            >>> rt = Runtime()
-            >>> cfg = rt._get_engine_config(EngineChoice.LOCAL)
-            >>> rt._set_engine_config(EngineChoice.LOCAL, cfg)
         """
 
         setattr(self.config.engine, choice, engine_config)
@@ -424,10 +308,6 @@ class Runtime(DataPublisher):
 
         Raises:
             AttributeError: If ``choice`` does not exist on ``objects``.
-
-        Example:
-            >>> rt = Runtime()
-            >>> _ = rt._get_engine(EngineChoice.LOCAL)
         """
 
         return getattr(self.objects, choice)
@@ -442,16 +322,6 @@ class Runtime(DataPublisher):
         Args:
             engine: Engine instance to inspect for config class changes.
             choice: Engine identifier whose config may need replacement.
-
-        Returns:
-            None: Replaces the per-engine config when class types differ.
-
-        Raises:
-            None.
-
-        Example:
-            >>> rt = Runtime()
-            >>> rt._new_engine_config_if_new_cls(rt.objects.local, EngineChoice.LOCAL)
         """
 
         # TODO: when parsing config from file is implemented, make sure that the new engine
@@ -465,16 +335,6 @@ class Runtime(DataPublisher):
 
         Args:
             local_runner: New local engine instance.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-
-        Example:
-            >>> rt = Runtime()
-            >>> rt._update_local_runner_config(rt.objects.local)
         """
 
         self._new_engine_config_if_new_cls(local_runner, EngineChoice.LOCAL)
@@ -484,16 +344,6 @@ class Runtime(DataPublisher):
 
         Args:
             prefect_engine: New Prefect engine instance.
-
-        Returns:
-            None.
-
-        Raises:
-            None.
-
-        Example:
-            >>> rt = Runtime()
-            >>> rt._update_prefect_engine_config(rt.objects.prefect)
         """
 
         self._new_engine_config_if_new_cls(prefect_engine, EngineChoice.PREFECT)
@@ -504,16 +354,9 @@ class Runtime(DataPublisher):
         Args:
             _item_changed: Subscription payload for the triggering change.
 
-        Returns:
-            None.
-
         Raises:
             AttributeError: If the configured engine choice has no matching
                 runtime engine object.
-
-        Example:
-            >>> rt = Runtime()
-            >>> rt._update_job_creator_engine(None)
         """
 
         self.objects.job_creator.set_engine(self._get_engine(self.config.engine.choice))
