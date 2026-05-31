@@ -64,6 +64,15 @@ class HasOuterType(Protocol):
 
     @classmethod
     def outer_type(cls, with_args: bool = False) -> TypeForm:
+        """Return the model's declared outer type.
+
+        Args:
+            with_args: Whether to include resolved generic arguments in the
+                returned type form.
+
+        Returns:
+            TypeForm: The outer type associated with the model class.
+        """
         ...
 
 

@@ -96,6 +96,12 @@ class DynamicMixinAcceptor:
 
     @classmethod
     def accept_mixin(cls, mixin_cls: Type) -> None:
+        """Register a mixin class for dynamic composition.
+
+        Args:
+            mixin_cls: Mixin class whose ``__init__`` keyword-only parameters
+                should be merged into the acceptor signature.
+        """
         cls._accept_mixin(mixin_cls, update=True)
 
     @classmethod
@@ -148,6 +154,7 @@ class DynamicMixinAcceptor:
 
     @classmethod
     def reset_mixins(cls):
+        """Clear all accepted mixins and restore the original init signature."""
         cls._mixin_classes.clear()
         cls._init_params_per_mixin_cls.clear()
         cls.__init__.__signature__ = cls._orig_init_signature

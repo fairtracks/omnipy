@@ -149,18 +149,42 @@ class DimensionsFit:
 
     @property
     def width(self) -> bool | None:
+        """Return whether the content width fits inside the frame width.
+
+        Returns:
+            bool | None: ``True`` when width fits, ``False`` when it exceeds the
+            frame, or ``None`` when width fit cannot be evaluated.
+        """
         return self._width
 
     @property
     def height(self) -> bool | None:
+        """Return whether the content height fits inside the frame height.
+
+        Returns:
+            bool | None: ``True`` when height fits, ``False`` when it exceeds the
+            frame, or ``None`` when height fit cannot be evaluated.
+        """
         return self._height
 
     @property
     def proportionality(self) -> Proportionally.Literals | None:
+        """Return proportional shape comparison between content and frame.
+
+        Returns:
+            Proportionally.Literals | None: Relative width/height ratio category,
+            or ``None`` when proportionality was not computed.
+        """
         return self._proportionality
 
     @property
     def both(self) -> bool | None:
+        """Return combined fit status across width and height.
+
+        Returns:
+            bool | None: ``True`` when both axes fit, ``False`` when at least one
+            axis does not fit, or ``None`` when either axis fit status is unknown.
+        """
         if self.width is None or self.height is None:
             return None
         else:

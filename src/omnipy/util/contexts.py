@@ -71,6 +71,15 @@ class LastErrorHolder(AbstractContextManager):
         return True
 
     def raise_derived(self, exc: Exception):
+        """Raise an exception, chained from the last captured one when available.
+
+        Args:
+            exc: Exception to raise.
+
+        Raises:
+            Exception: ``exc``, with ``__cause__`` set to the most recently
+                captured exception when present.
+        """
         if self._last_error is not None:
             raise exc from self._last_error
         else:
