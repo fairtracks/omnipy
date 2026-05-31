@@ -155,6 +155,9 @@ class Model(  # type: ignore[misc]
         validate_default=True,
         union_mode='smart',
         use_enum_values=True,
+        # TEMPORARY local shim for dataset-migration unblocking.
+        # Remove after model-owner lands final v2 coercion strategy.
+        coerce_numbers_to_str=True,
     )
 
     @classmethod
@@ -662,7 +665,14 @@ class Model(  # type: ignore[misc]
             from pydantic import TypeAdapter
             return TypeAdapter(target_type).validate_python(value)
         except Exception:
-            return value
+            # TEMPORARY local shim for v1-like numeric coercion behavior.
+            # There is no direct v2 ConfigDict key equivalent to
+            # "coerce_numbers_to_int".
+            try:
+                from pydantic.v1 import parse_obj_as
+                return parse_obj_as(target_type, value)
+            except Exception:
+                return value
 
     def _coerce_prepared_value_to_model_type(self, value: object) -> object:
         target_type = self.full_type()

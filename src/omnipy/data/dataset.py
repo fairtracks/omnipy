@@ -255,11 +255,11 @@ class Dataset(
             _model_or_dataset_as_input: bool = False
 
             for key, val in iterable_data:
+                hash(key)
+                key = str(key)
                 if is_model_instance(val):
                     _model_or_dataset_as_input = True
-                    prepared_data[key] = self._validate_value_for_data_file(key, val)
-                else:
-                    prepared_data[key] = val
+                prepared_data[key] = self._validate_value_for_data_file(key, val)
             return prepared_data, _model_or_dataset_as_input
 
         model_or_dataset_as_input = False
@@ -804,13 +804,16 @@ class Dataset(
         cls._clean_type_caches()
 
     def _validate_data_file(self, data_file: str) -> None:
+        from omnipy.data.helpers import FailedData, PendingData
         from omnipy.data.model import is_model_instance
 
         val = self.data[data_file]
         if is_model_instance(val):
             self.data[data_file] = self._validate_value_for_data_file(data_file, val)
+        elif isinstance(val, (PendingData, FailedData)):
+            return
         else:
-            self._force_full_validation()
+            self.data[data_file] = self._validate_value_for_data_file(data_file, val)
 
     @staticmethod
     def _basic_validation_func(type_variant: 'type[Model | Dataset]',
