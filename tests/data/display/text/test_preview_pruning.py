@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 
+from omnipy.components.json.models import JsonModel
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
@@ -217,3 +218,31 @@ def test_panel_cache_distinguishes_configs_for_same_content_and_frame() -> None:
     assert rich_result.content != devtools_result.content
     assert probe_sizes[PrettyPrinterLib.RICH]
     assert probe_sizes[PrettyPrinterLib.DEVTOOLS]
+
+
+def test_json_model_with_nested_model_wrapper_is_prunable() -> None:
+    panel = DraftPanel(
+        JsonModel(list(range(10000))),
+        frame=Frame(Dimensions(width=20, height=4)),
+    )
+
+    probe_calls = 0
+
+    def _probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
+        nonlocal probe_calls
+        probe_calls += 1
+
+        assert isinstance(prefix_panel.content, JsonModel)
+        pruned_content = prefix_panel.content.to_data()
+        assert isinstance(pruned_content, list)
+        return 10, len(pruned_content)
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert probe_calls > 0
+    assert pruned_panel is not panel
+    assert isinstance(pruned_panel.content, JsonModel)
+    assert isinstance(pruned_panel.content.content, type(panel.content.content))
+    pruned_data = pruned_panel.content.to_data()
+    assert isinstance(pruned_data, list)
+    assert len(pruned_data) == 4

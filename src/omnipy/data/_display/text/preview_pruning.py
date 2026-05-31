@@ -91,26 +91,47 @@ def _derive_budget(draft_panel: Any) -> _PanelPreviewBudget:
 
 
 def _content_for_pruning(draft_panel: Any) -> object:
-    if _content_is_non_debug_model_with_supported_inner_content(draft_panel):
-        return draft_panel.content.content
+    model_chain_and_leaf = _model_chain_and_supported_leaf_content(draft_panel)
+    if model_chain_and_leaf is not None:
+        _, leaf_content = model_chain_and_leaf
+        return leaf_content
 
     return draft_panel.content
 
 
 def _content_is_non_debug_model_with_supported_inner_content(draft_panel: Any) -> bool:
+    return _model_chain_and_supported_leaf_content(draft_panel) is not None
+
+
+def _model_chain_and_supported_leaf_content(draft_panel: Any) -> tuple[list[Any], object] | None:
     if getattr(draft_panel.config, 'debug', False):
-        return False
+        return None
 
     try:
         from omnipy.data.model import is_model_instance
     except Exception:
-        return False
+        return None
 
     content = draft_panel.content
-    if not is_model_instance(content):
-        return False
+    model_chain: list[Any] = []
+    seen_model_ids: set[int] = set()
 
-    return _is_supported_content(getattr(content, 'content', None))
+    while is_model_instance(content):
+        content_id = id(content)
+        if content_id in seen_model_ids:
+            return None
+
+        seen_model_ids.add(content_id)
+        model_chain.append(content)
+        content = getattr(content, 'content', None)
+
+    if not model_chain:
+        return None
+
+    if not _is_supported_content(content):
+        return None
+
+    return model_chain, content
 
 
 def _is_probe_render_active() -> bool:
@@ -260,10 +281,17 @@ def _restore_bytes_type(original: object, value: bytes) -> bytes | bytearray:
 def _panel_with_prefix(draft_panel: Any, plan: _ChunkPlan, prefix_size: int) -> Any:
     prefix_content = plan.prefix_builder(prefix_size)
 
-    if _content_is_non_debug_model_with_supported_inner_content(draft_panel):
-        model_copy = draft_panel.content.copy(deep=False)
-        model_copy.content = prefix_content
-        return draft_panel.create_modified_copy(content=model_copy)
+    model_chain_and_leaf = _model_chain_and_supported_leaf_content(draft_panel)
+    if model_chain_and_leaf is not None:
+        model_chain, _ = model_chain_and_leaf
+
+        updated_content = prefix_content
+        for model in reversed(model_chain):
+            model_copy = model.copy(deep=False)
+            model_copy.content = updated_content
+            updated_content = model_copy
+
+        return draft_panel.create_modified_copy(content=updated_content)
 
     return draft_panel.create_modified_copy(content=prefix_content)
 

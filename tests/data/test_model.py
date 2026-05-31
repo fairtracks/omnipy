@@ -29,6 +29,7 @@ import pytest_cases as pc
 from typing_extensions import TypeForm, TypeVar
 
 import omnipy.data._display.text.pretty as pretty_module
+from omnipy.components.json.models import is_json_model_instance_hack
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
 from omnipy.shared.enums.display import PrettyPrinterLib
@@ -662,6 +663,38 @@ def test_model_peek_preview_pruning_memo_is_per_top_level_render_call(
 
     assert len(observed_memos) >= 2
     assert observed_memos[0] is not observed_memos[1]
+
+
+def test_model_json_preview_pruning_triggers_for_large_json_list(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    model = Model[list[int]](range(10000))
+
+    observed_pruned_json_model_panel = False
+    original_maybe_prune = getattr(pretty_module, '_maybe_prune_draft_panel')
+
+    def _track_json_model_panel_pruning(draft_panel, *, probe_render, memo):
+        nonlocal observed_pruned_json_model_panel
+
+        out_panel = original_maybe_prune(draft_panel, probe_render=probe_render, memo=memo)
+        if is_json_model_instance_hack(draft_panel.content):
+            if out_panel is not draft_panel:
+                observed_pruned_json_model_panel = True
+
+        return out_panel
+
+    monkeypatch.setattr(pretty_module, '_maybe_prune_draft_panel', _track_json_model_panel_pruning)
+
+    _render_panel_to_plain_terminal(
+        model._json(
+            width=24,
+            height=8,
+            ui=UserInterfaceType.TERMINAL,
+            printer=PrettyPrinterLib.RICH,
+            freedom=0,
+            debug=False,
+        ))
+
+    assert observed_pruned_json_model_panel is True
 
 
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
