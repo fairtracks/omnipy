@@ -7,6 +7,9 @@ to pandas-backed types.
 
 ```pycon exec="1" session="tutorial2" source="console"
 >>> import omnipy as om
+```
+
+```pycon exec="1" session="tutorial2" source="hidden"
 >>> om.runtime.config.root_log.log_to_stdout = False
 >>> om.runtime.config.root_log.log_to_stderr = False
 >>> om.runtime.config.root_log.log_to_file = False

@@ -6,6 +6,9 @@ Start with Dataset + Model batch parsing, then apply transformations without exp
 
 ```pycon exec="1" session="tutorial3" source="console"
 >>> import omnipy as om
+```
+
+```pycon exec="1" session="tutorial3" source="hidden"
 >>> om.runtime.config.root_log.log_to_stdout = False
 >>> om.runtime.config.root_log.log_to_stderr = False
 >>> om.runtime.config.root_log.log_to_file = False

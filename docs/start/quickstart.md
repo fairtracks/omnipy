@@ -10,11 +10,17 @@ Follow [Install](install.md).
 
 ```pycon exec="1" session="quickstart" source="console"
 >>> import omnipy as om
+```
+
+```pycon exec="1" session="quickstart" source="hidden"
 >>> om.runtime.config.root_log.log_to_stdout = False
 >>> om.runtime.config.root_log.log_to_stderr = False
 >>> om.runtime.config.root_log.log_to_file = False
 >>> om.runtime.config.job.output_storage.persist_outputs = 'disabled'
 >>> om.runtime.config.data.model.interactive = True
+```
+
+```pycon exec="1" session="quickstart" source="console"
 >>> readings = om.Model[list[int]]((101, '102', 103.0))
 >>> readings
 ```

@@ -11,11 +11,14 @@ Omnipy models continuously validate data and type-mimic the wrapped Python type.
 
 ```pycon exec="1" session="tutorial1" source="console"
 >>> import omnipy as om
+>>> om.runtime.config.data.model.interactive = True
+```
+
+```pycon exec="1" session="tutorial1" source="hidden"
 >>> om.runtime.config.root_log.log_to_stdout = False
 >>> om.runtime.config.root_log.log_to_stderr = False
 >>> om.runtime.config.root_log.log_to_file = False
 >>> om.runtime.config.job.output_storage.persist_outputs = 'disabled'
->>> om.runtime.config.data.model.interactive = True
 ```
 
 ## Parse and inspect
