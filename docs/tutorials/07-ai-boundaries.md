@@ -1,5 +1,4 @@
-# Tutorial 7: AI-safe boundaries
+# Tutorial 7 moved
 
-Use typed models as safe boundaries around AI-generated outputs.
-
-This section is coming soon — check back as Omnipy evolves.
+This page has moved to
+[Tutorial 7: AI-safe boundaries](07-ai-safe-boundaries.md).

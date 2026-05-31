@@ -35,6 +35,7 @@ extra_javascript:
   - javascripts/extra.js
 markdown_extensions:
 #  - pymdownx.details
+  - admonition
   - pymdownx.highlight:
       default_lang: python
       anchor_linenums: true
@@ -53,20 +54,21 @@ markdown_extensions:
 #  - footnotes
 
 nav:
-- Omnipy: index.md
-- Learn:
-  - Python typing: python_typing.md
-  - Data models: data_models.md
-  - Comparisons: learn/comparisons.md
+- Start here:
+  - Home: index.md
+  - Install: start/install.md
+  - 10-minute Quickstart: start/quickstart.md
+  - Concepts: start/concepts.md
 - Tutorials:
+  - 'Tutorial 1: Interactive safety': tutorials/01-interactive-safety.md
+  - 'Tutorial 2: Nested JSON to tables': tutorials/02-json-to-tables.md
+  - 'Tutorial 3: Dataset batch': tutorials/03-dataset-batch.md
+  - 'Tutorial 4: Compute dataflow': tutorials/04-compute-dataflow.md
   - 'Tutorial 5: Domain tabular formats': tutorials/05-domain-tabular-formats.md
+  - 'Tutorial 6: Resilient API': tutorials/06-resilient-api.md
   - 'Tutorial 7: AI-safe boundaries': tutorials/07-ai-safe-boundaries.md
   - 'Tutorial 8: Prefect orchestration': tutorials/08-prefect-orchestration.md
-- How-to Guides:
-  - Components:
-    - Catalog: howto/components/catalog.md
-    - Domain formats: howto/components/domain-formats.md
-    - Column-based tabular: howto/components/column-based-tabular.md
+- How-to guides:
   - Models:
     - Define models: howto/models/define-models.md
     - Pydantic compatibility: howto/models/pydantic-compatibility.md
@@ -82,7 +84,15 @@ nav:
     - Engines overview: howto/dataflows/engines-overview.md
     - Running flows: howto/dataflows/running-flows.md
     - Mapping over datasets: howto/dataflows/mapping-over-datasets.md
-- Feature Overview:
+  - Components:
+    - Catalog: howto/components/catalog.md
+    - Domain formats: howto/components/domain-formats.md
+    - Column-based tabular: howto/components/column-based-tabular.md
+  - Datasets:
+    - Basics: howto/datasets/basics.md
+    - Hierarchies and blueprints: howto/datasets/hierarchies-blueprints.md
+    - Serialization: howto/datasets/serialization.md
+- Feature overview:
   - Continuous validation: feature/continuous-validation.md
   - Snapshots and rollbacks: feature/snapshots-rollbacks.md
   - Declarative conversions: feature/declarative-conversions.md
@@ -90,9 +100,19 @@ nav:
   - Display and visualization: feature/display-visualization.md
   - Components catalog: feature/components-catalog.md
   - Engines and orchestration: feature/engines-orchestration.md
+- Learn:
+  - Mental model: learn/mental-model.md
+  - Parse, don't validate: learn/parse-dont-validate.md
+  - Python typing: learn/python-typing.md
+  - Visual metaphors and story mode: learn/visual-metaphors-story-mode.md
 - Reference:
   - FAQ: reference/faq.md
-  - Code Reference: reference/
+  - Configuration: reference/configuration.md
+  - Glossary: reference/glossary.md
+  - Comparisons: learn/comparisons.md
+  - Legacy data models page: data_models.md
+  - Legacy python typing page: python_typing.md
+  - Code reference: reference/
 - Contributing: contributing.md
 - Release notes: release_notes.md
 

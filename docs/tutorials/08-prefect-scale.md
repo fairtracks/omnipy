@@ -1,5 +1,4 @@
-# Tutorial 8: Orchestrate with Prefect (scale-up path)
+# Tutorial 8 moved
 
-Scale local typed dataflows to orchestrated runs with Prefect.
-
-This section is coming soon — check back as Omnipy evolves.
+This page has moved to
+[Tutorial 8: Prefect orchestration](08-prefect-orchestration.md).

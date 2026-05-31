@@ -1,5 +1,4 @@
-# Tutorial 5: Domain tabular formats (e.g. BED/GFF) via model specs
+# Tutorial 5 moved
 
-Parse domain-specific tabular formats into typed, reusable structures.
-
-This section is coming soon — check back as Omnipy evolves.
+This page has moved to
+[Tutorial 5: Domain tabular formats](05-domain-tabular-formats.md).
