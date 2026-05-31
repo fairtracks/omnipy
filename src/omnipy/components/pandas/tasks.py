@@ -17,7 +17,27 @@ from .models import PandasModel
 def convert_dataset_list_of_dicts_to_pandas(
         dataset: Dataset[Model[list[dict[str, NotIterableExceptStrOrBytesModel]]]]) \
         -> PandasDataset:
-    """Convert each list-of-dicts data file in a dataset into a pandas-backed table."""
+    """Convert list-of-dicts files to a pandas-backed dataset.
+
+    Args:
+        dataset: Dataset where each file contains a list of row dictionaries.
+
+    Returns:
+        A dataset with the same file keys, where each file is represented as a
+        ``PandasModel`` table.
+
+    Raises:
+        Exception: Propagates validation or conversion errors raised while
+            constructing pandas-backed files.
+
+    Example:
+        >>> from omnipy.data.dataset import Dataset
+        >>> from omnipy.data.model import Model
+        >>> input_ds = Dataset[Model[list[dict[str, int]]]]({'rows': [{'a': 1}, {'a': 2}]})
+        >>> out_ds = convert_dataset_list_of_dicts_to_pandas.run(input_ds)
+        >>> tuple(out_ds.keys())
+        ('rows',)
+    """
 
     pandas_dataset = PandasDataset()
     pandas_dataset.from_data(dataset.to_data())
@@ -31,7 +51,31 @@ def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
                                   col_names: list[str] | None = None,
                                   ignore_comments: bool = True,
                                   comments_char: str = '#') -> PandasDataset:
-    """Parse each CSV-like data file into a pandas-backed table in a ``PandasDataset``."""
+    """Parse CSV-like files into a pandas-backed dataset.
+
+    Args:
+        dataset: Dataset with CSV content in each file.
+        delimiter: Field delimiter used in the CSV content.
+        first_row_as_col_names: Whether to infer column names from the first
+            row.
+        col_names: Explicit column names to use when parsing.
+        ignore_comments: Whether to ignore comment lines.
+        comments_char: Character marking the beginning of comment lines.
+
+    Returns:
+        A ``PandasDataset`` with one parsed table per input file.
+
+    Raises:
+        Exception: Propagates parsing errors raised by ``pandas.read_csv``.
+
+    Example:
+        >>> from omnipy.data.dataset import Dataset
+        >>> from omnipy.data.model import Model
+        >>> ds = Dataset[Model[bytes]]({'table.csv': b'a,b\n1,2\n'})
+        >>> out_ds = convert_dataset_csv_to_pandas.run(ds)
+        >>> tuple(out_ds.keys())
+        ('table.csv',)
+    """
 
     from .lazy_import import pd
 
@@ -56,7 +100,26 @@ def convert_dataset_pandas_to_csv(
     first_row_as_col_names=True,
     col_names: list[str] | None = None,
 ) -> Dataset[Model[str]]:
-    """Serialize each pandas-backed table in a dataset to CSV text."""
+    """Serialize pandas-backed files in a dataset to CSV text files.
+
+    Args:
+        dataset: Dataset containing pandas-backed table files.
+        delimiter: Field delimiter to use in output CSV text.
+        first_row_as_col_names: Whether to include column names in the output
+            header row.
+        col_names: Explicit header names to write when provided.
+
+    Returns:
+        Dataset mapping each input file key to CSV text.
+
+    Raises:
+        Exception: Propagates serialization errors raised by pandas.
+
+    Example:
+        >>> csv_ds = convert_dataset_pandas_to_csv.run(pandas_dataset)
+        >>> isinstance(csv_ds, Dataset)
+        True
+    """
 
     out_dataset = Dataset[Model[str]]()
     for key, df in dataset.items():
@@ -73,7 +136,24 @@ def convert_dataset_pandas_to_csv(
 
 @TaskTemplate()
 def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> PandasDataset:
-    """Split selected columns into separate one-column data files."""
+    """Split selected columns into separate one-column files.
+
+    Args:
+        dataset: Input dataset with tabular files.
+        col_names: Column names to extract into their own files.
+
+    Returns:
+        A new dataset containing modified original tables (without extracted
+        columns) plus additional one-column files named ``<file>.<column>``.
+
+    Raises:
+        KeyError: If one or more requested columns do not exist in a file.
+
+    Example:
+        >>> out_ds = extract_columns_as_files.run(pandas_dataset, ['name'])
+        >>> any(key.endswith('.name') for key in out_ds.keys())
+        True
+    """
 
     from .lazy_import import pd
 
@@ -90,7 +170,26 @@ def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> Pa
 @TaskTemplate()
 def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSameNumberOfFiles,
                                       vertical=True) -> PandasDataset:
-    """Concatenate aligned pandas data files across datasets by rows or columns."""
+    """Concatenate aligned files across multiple pandas datasets.
+
+    Args:
+        dataset_list: List model containing at least two datasets with aligned
+            file counts and ordering.
+        vertical: When ``True``, concatenate by rows. When ``False``,
+            concatenate by columns.
+
+    Returns:
+        A dataset whose files are concatenations of corresponding files from
+        each input dataset.
+
+    Raises:
+        Exception: Propagates concatenation errors raised by pandas.
+
+    Example:
+        >>> combined = concat_dataframes_across_datasets.run(dataset_list)
+        >>> isinstance(combined, PandasDataset)
+        True
+    """
 
     from .lazy_import import pd
 
@@ -111,7 +210,29 @@ def join_tables(table_1: PandasModel,
                 table_2: PandasModel,
                 join_type: str = 'outer',
                 on_cols: Sequence[str] | Mapping[str, str] | None = None) -> PandasModel:
-    """Join two pandas-backed tables on shared or explicitly mapped columns."""
+    """Join two tables by shared or explicitly mapped columns.
+
+    Args:
+        table_1: Left input table.
+        table_2: Right input table.
+        join_type: Join strategy. Supported values are ``inner``, ``outer``,
+            ``left``, and ``right``.
+        on_cols: Optional join columns. Provide a sequence for same-name
+            columns or a mapping from left to right column names.
+
+    Returns:
+        A merged table wrapped in ``PandasModel``.
+
+    Raises:
+        ValueError: If ``join_type`` is ``cross`` or if no join columns can be
+            determined.
+        AssertionError: If ``join_type`` is not one of the supported values.
+
+    Example:
+        >>> joined = join_tables.run(left_table, right_table, join_type='inner', on_cols=['id'])
+        >>> isinstance(joined, PandasModel)
+        True
+    """
 
     from .lazy_import import pd
 
@@ -159,7 +280,23 @@ def join_tables(table_1: PandasModel,
 
 @TaskTemplate()
 def cartesian_product(table_1: PandasModel, table_2: PandasModel) -> PandasModel:
-    """Return the cross join of two pandas-backed tables."""
+    """Return the cartesian product of two tables.
+
+    Args:
+        table_1: Left input table.
+        table_2: Right input table.
+
+    Returns:
+        A ``PandasModel`` containing the cross join result.
+
+    Raises:
+        Exception: Propagates merge errors raised by pandas.
+
+    Example:
+        >>> result = cartesian_product.run(left_table, right_table)
+        >>> isinstance(result, PandasModel)
+        True
+    """
 
     from .lazy_import import pd
 

@@ -17,13 +17,61 @@ class LocalRunner(JobRunnerEngine):
     })
 
     def _init_engine(self) -> None:
+        """Initialize local-runner-specific engine state.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+
+        Raises:
+            None.
+
+        Example:
+            >>> # LocalRunner currently has no extra initialization.
+            >>> True
+            True
+        """
         ...
 
     def _update_from_config(self) -> None:
+        """Apply updates when local runner config changes.
+
+        Args:
+            None.
+
+        Returns:
+            None.
+
+        Raises:
+            None.
+
+        Example:
+            >>> # LocalRunner currently has no config-dependent state.
+            >>> True
+            True
+        """
         ...
 
     @classmethod
     def get_config_cls(cls) -> Type[IsLocalRunnerConfig]:
+        """Return the config class used by the local runner engine.
+
+        Args:
+            cls: Local runner class.
+
+        Returns:
+            Type[IsLocalRunnerConfig]: Concrete local-runner config class.
+
+        Raises:
+            None.
+
+        Example:
+            >>> from omnipy.engine.local import LocalRunner
+            >>> LocalRunner.get_config_cls().__name__
+            'LocalRunnerConfig'
+        """
         return LocalRunnerConfig
 
     def _init_task(self, task: TaskRunSpec) -> object:

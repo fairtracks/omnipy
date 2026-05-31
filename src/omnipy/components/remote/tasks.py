@@ -30,6 +30,23 @@ _JsonDatasetT = TypeVar('_JsonDatasetT', bound=Dataset)
 
 async def _call_get(url: HttpUrlModel,
                     session: 'ClientSession') -> 'AsyncGenerator[ClientResponse, None]':
+    """Perform a GET request and yield the validated successful response.
+
+    Args:
+        url: URL to request.
+        session: Active aiohttp-compatible session used to execute the request.
+
+    Returns:
+        AsyncGenerator[ClientResponse, None]: Async generator yielding one successful response.
+
+    Raises:
+        ConnectionError: If the response status code is not ``200``.
+
+    Example:
+        >>> # async for response in _call_get(HttpUrlModel('https://example.com'), session):
+        >>> #     data = await response.read()
+        >>> pass
+    """
     async with session.get(str(url)) as response:
         yield response
 
@@ -47,6 +64,25 @@ def get_retry_client(
     retry_attempts: int = DEFAULT_RETRIES,
     retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
 ) -> 'RetryClient':
+    """Build a retry-enabled HTTP client wrapper.
+
+    Args:
+        client_session: Existing client session to wrap.
+        retry_http_statuses: Status codes that should trigger retries.
+        retry_attempts: Maximum number of retry attempts.
+        retry_backoff_strategy: Backoff strategy identifier.
+
+    Returns:
+        RetryClient: Configured retry client instance.
+
+    Raises:
+        KeyError: If ``retry_backoff_strategy`` is not registered.
+
+    Example:
+        >>> # retry_client = _get_retry_client(session, (429, 503), 5, 'exponential')
+        >>> # type(retry_client).__name__
+        >>> 'RetryClient'
+    """
     from .helpers import BACKOFF_STRATEGY_2_RETRY_CLS
     from .lazy_import import RetryClient
 
@@ -89,6 +125,15 @@ async def get_json_from_api_endpoint(
 
     Returns:
         The decoded JSON response for the requested URL.
+
+    Raises:
+        ConnectionError: If the endpoint response status is not ``200``.
+        ValueError: If the response body cannot be decoded as JSON.
+
+    Example:
+        >>> # result = await get_json_from_api_endpoint(HttpUrlModel('https://api.example.com'))
+        >>> # isinstance(result, JsonModel)
+        >>> True
     """
     from .lazy_import import ClientSession
 
@@ -116,6 +161,14 @@ async def get_str_from_api_endpoint(
 
     Returns:
         The response body as plain text.
+
+    Raises:
+        ConnectionError: If the endpoint response status is not ``200``.
+
+    Example:
+        >>> # text = await get_str_from_api_endpoint(HttpUrlModel('https://example.com'))
+        >>> # isinstance(text, StrModel)
+        >>> True
     """
     from .lazy_import import ClientSession
 
@@ -143,6 +196,14 @@ async def get_bytes_from_api_endpoint(
 
     Returns:
         The response body as bytes.
+
+    Raises:
+        ConnectionError: If the endpoint response status is not ``200``.
+
+    Example:
+        >>> # blob = await get_bytes_from_api_endpoint(HttpUrlModel('https://example.com/file'))
+        >>> # isinstance(blob, BytesModel)
+        >>> True
     """
     from .lazy_import import ClientSession
 
@@ -172,6 +233,15 @@ async def get_auto_from_api_endpoint(
 
     Returns:
         The response content wrapped together with its effective content type.
+
+    Raises:
+        AssertionError: If the response has no ``Content-Type`` header and no override is given.
+        ConnectionError: If the endpoint response status is not ``200``.
+
+    Example:
+        >>> # data = await get_auto_from_api_endpoint(HttpUrlModel('https://example.com/data'))
+        >>> # isinstance(data, AutoResponseContentModel)
+        >>> True
     """
     from .lazy_import import ClientSession, CONTENT_TYPE
 
@@ -214,6 +284,14 @@ def load_urls_into_new_dataset(
 
     Returns:
         A newly loaded dataset of type ``dataset_cls``.
+
+    Raises:
+        TypeError: If fetched data cannot be parsed by ``dataset_cls``.
+
+    Example:
+        >>> # loaded = load_urls_into_new_dataset(HttpUrlDataset({'a': 'https://example.com'}))
+        >>> # isinstance(loaded, JsonDataset)
+        >>> True
     """
     return dataset_cls.load(urls, as_mime_type=as_mime_type)
 
@@ -233,19 +311,40 @@ async def async_load_urls_into_new_dataset(
 
     Returns:
         A newly loaded dataset of type ``dataset_cls``.
+
+    Raises:
+        TypeError: If fetched data cannot be parsed by ``dataset_cls``.
+
+    Example:
+        >>> # loaded = await async_load_urls_into_new_dataset(
+        >>> #     HttpUrlDataset({'a': 'https://example.com'}),
+        >>> # )
+        >>> # isinstance(loaded, JsonDataset)
+        >>> True
     """
     return await dataset_cls.load(urls, as_mime_type=as_mime_type)
 
 
 @dataclass
 class GithubRepoContext:
-    """Describe a GitHub repository location used for raw-content URL generation.
+    """Describe a GitHub repository location used for URL generation.
 
-    Attributes:
+    Args:
         owner: GitHub repository owner or organization.
         repo: Repository name.
-        branch: Branch or ref to read from.
+        branch: Branch or reference to read from.
         path: File or directory path inside the repository.
+
+    Returns:
+        GithubRepoContext: Repository context container.
+
+    Raises:
+        TypeError: If field values do not match declared types.
+
+    Example:
+        >>> ctx = GithubRepoContext('octocat', 'hello-world', 'main', 'docs')
+        >>> ctx.repo
+        'hello-world'
     """
 
     owner: str
@@ -273,6 +372,14 @@ def get_github_repo_urls(
 
     Returns:
         A dataset of raw-content URLs keyed by file name.
+
+    Raises:
+        TypeError: If any input cannot be converted to expected model types.
+
+    Example:
+        >>> # urls = get_github_repo_urls('octocat', 'hello-world', 'main', 'README.md')
+        >>> # isinstance(urls, HttpUrlDataset)
+        >>> True
     """
 
     repo_context = GithubRepoContext(owner=owner, repo=repo, branch=branch, path=path)
@@ -284,6 +391,23 @@ def get_github_repo_urls(
 
 
 def _get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext, file_suffix: str):
+    """Build raw-content URLs for files in a repository directory filtered by suffix.
+
+    Args:
+        ctx: Repository context describing owner, repo, branch, and path.
+        file_suffix: Filename suffix used to filter listed files.
+
+    Returns:
+        HttpUrlDataset: URL dataset containing matching files.
+
+    Raises:
+        TypeError: If fetched GitHub API listing cannot be parsed as JSON list data.
+
+    Example:
+        >>> # dataset = _get_urls_for_files_in_dir_with_suffix(ctx, '.py')
+        >>> # isinstance(dataset, HttpUrlDataset)
+        >>> True
+    """
     api_url = _create_api_url_for_file_list(ctx)
     file_list = cast(JsonListOfDictsDataset, JsonListOfDictsDataset.load(api_url))
     return _create_url_dataset_for_files_with_suffix(file_list, file_suffix, ctx)
@@ -308,6 +432,14 @@ async def async_get_github_repo_urls(
 
     Returns:
         A dataset of raw-content URLs keyed by file name.
+
+    Raises:
+        TypeError: If any input cannot be converted to expected model types.
+
+    Example:
+        >>> # urls = await async_get_github_repo_urls('octocat', 'hello-world', 'main', 'README.md')
+        >>> # isinstance(urls, HttpUrlDataset)
+        >>> True
     """
 
     repo_context = GithubRepoContext(owner=owner, repo=repo, branch=branch, path=path)
@@ -319,6 +451,23 @@ async def async_get_github_repo_urls(
 
 
 async def _async_get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext, file_suffix: str):
+    """Asynchronously build filtered raw-content URLs for a repository directory.
+
+    Args:
+        ctx: Repository context describing owner, repo, branch, and path.
+        file_suffix: Filename suffix used to filter listed files.
+
+    Returns:
+        HttpUrlDataset: URL dataset containing matching files.
+
+    Raises:
+        TypeError: If fetched GitHub API listing cannot be parsed as JSON list data.
+
+    Example:
+        >>> # dataset = await _async_get_urls_for_files_in_dir_with_suffix(ctx, '.py')
+        >>> # isinstance(dataset, HttpUrlDataset)
+        >>> True
+    """
     api_url = _create_api_url_for_file_list(ctx)
     file_list = await cast(asyncio.Task[JsonListOfDictsDataset],
                            JsonListOfDictsDataset.load(api_url))
@@ -326,6 +475,22 @@ async def _async_get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext, f
 
 
 def _create_api_url_for_file_list(ctx: GithubRepoContext) -> HttpUrlModel:
+    """Create GitHub Contents API URL for listing files under ``ctx.path``.
+
+    Args:
+        ctx: Repository context with path and branch details.
+
+    Returns:
+        HttpUrlModel: URL pointing to the GitHub Contents API endpoint.
+
+    Raises:
+        TypeError: If context fields cannot be embedded in URL path/query values.
+
+    Example:
+        >>> # api_url = _create_api_url_for_file_list(ctx)
+        >>> # 'api.github.com' in str(api_url)
+        >>> True
+    """
     api_url = HttpUrlModel('https://api.github.com')
     api_url.path // 'repos' // ctx.owner // ctx.repo // 'contents' // ctx.path
     api_url.query['ref'] = ctx.branch
@@ -337,18 +502,68 @@ def _create_url_dataset_for_files_with_suffix(
     file_suffix: str,
     ctx: GithubRepoContext,
 ):
+    """Convert GitHub file metadata to raw-content URLs filtered by suffix.
+
+    Args:
+        file_list: JSON dataset from GitHub Contents API response.
+        file_suffix: Filename suffix used to filter entries.
+        ctx: Repository context used to build the raw-content URL prefix.
+
+    Returns:
+        HttpUrlDataset: Dataset mapping matching file names to raw-content URLs.
+
+    Raises:
+        KeyError: If expected ``name`` keys are missing in API response items.
+
+    Example:
+        >>> # urls = _create_url_dataset_for_files_with_suffix(file_list, '.py', ctx)
+        >>> # isinstance(urls, HttpUrlDataset)
+        >>> True
+    """
     url_prefix = _get_url_prefix_for_download(ctx)
     names = Model[list[str]]([f['name'] for f in file_list[0] if f['name'].endswith(file_suffix)])
     return HttpUrlDataset({name: f'{url_prefix}/{name}' for name in names})
 
 
 def _get_url_prefix_for_download(ctx: GithubRepoContext):
+    """Create raw-content base URL prefix for downloading files from GitHub.
+
+    Args:
+        ctx: Repository context containing owner, repository, branch, and path.
+
+    Returns:
+        HttpUrlModel: Raw-content URL prefix ending at the configured path.
+
+    Raises:
+        TypeError: If context values cannot be composed into a URL path.
+
+    Example:
+        >>> # prefix = _get_url_prefix_for_download(ctx)
+        >>> # 'raw.githubusercontent.com' in str(prefix)
+        >>> True
+    """
     url_pre = HttpUrlModel('https://raw.githubusercontent.com')
     url_pre.path // ctx.owner // ctx.repo // ctx.branch // ctx.path
     return url_pre
 
 
 def _get_url_for_single_file(repo_context):
+    """Create a one-item URL dataset for a single repository file path.
+
+    Args:
+        repo_context: Repository context whose path points to a single file.
+
+    Returns:
+        HttpUrlDataset: Dataset mapping the filename to its raw-content URL.
+
+    Raises:
+        ValueError: If ``repo_context.path`` does not resolve to a filename.
+
+    Example:
+        >>> # urls = _get_url_for_single_file(ctx)
+        >>> # isinstance(urls, HttpUrlDataset)
+        >>> True
+    """
     url_pre = _get_url_prefix_for_download(repo_context)
     name = url_pre.path.name
     return HttpUrlDataset({name: url_pre})
