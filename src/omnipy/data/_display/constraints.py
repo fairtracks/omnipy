@@ -28,7 +28,6 @@ class Constraints:
 
 class ConstraintsSatisfaction:
     """Reports whether measured output satisfied configured formatting constraints."""
-
     def __init__(self,
                  constraints: Constraints,
                  *,

@@ -8,7 +8,6 @@ from omnipy.util.mixin import strip_mixins_suffix
 
 class NameJobBaseMixin:
     """Provide base support for job names and generated unique names."""
-
     def __init__(self, *, name: str | None = None):
         self._name: str | None = name
 
@@ -60,7 +59,6 @@ class NameJobBaseMixin:
 
 class NameJobMixin:
     """Expose public helpers for refreshing generated job names."""
-
     def regenerate_unique_name(self) -> None:
         """{{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY}}
 

@@ -35,7 +35,6 @@ __all__ = [
 _T = TypeVar('_T')
 _U = TypeVar('_U')
 
-
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_TYPEVAR_STORE_MARKER_SUMMARY'] = dedent("""\
         Distinct single-type-variable marker used when multiple stores are needed.
@@ -44,14 +43,12 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
 class TypeVarStore(Generic[_T]):
     """Sentinel generic used to expose a single type variable in helper type plumbing."""
-
     def __init__(self, t: _T) -> None:
         raise ValueError()
 
 
 class DoubleTypeVarStore(Generic[_T, _U]):
     """Sentinel generic used to expose one of two type variables to internal helpers."""
-
     def __init__(self, t: _T | _U) -> None:
         raise ValueError()
 
@@ -254,7 +251,6 @@ def cleanup_name_qualname_and_module(
         model_or_dataset: The generated specialized class whose metadata should be updated.
         orig_model: The type parameter representation used to build the specialized class name.
     """
-
     def _display_as_type(model: TypeForm):
         if isinstance(model, str):  # ForwardRef
             return model

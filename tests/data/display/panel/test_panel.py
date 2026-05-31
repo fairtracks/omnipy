@@ -93,7 +93,6 @@ def test_panel_hashable():
 
 # noinspection PyDataclass
 def test_fail_panel_no_assignments():
-
     """Test fail panel no assignments."""
     panel = SimplePanel()
 

@@ -210,7 +210,6 @@ def _assert_runtime_objects_default(
     objects: RuntimeObjects,
     ui_type: SpecifiedUserInterfaceType.Literals,
 ):
-
     """Assert runtime objects default."""
     assert isinstance(objects.job_creator, JobCreator)
     assert objects.job_creator is JobBase.job_creator
@@ -308,7 +307,6 @@ def test_data_config_display_dimensions(runtime: Annotated[IsRuntime, pytest.fix
 
 def test_init_runtime_config_after_data_class_creator(
         runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
-
     """Test init runtime config after data class creator."""
     DataClassBase.data_class_creator.config.model.dynamically_convert_elements_to_models = True
     runtime = runtime_cls()
@@ -324,7 +322,6 @@ def test_init_runtime_config_after_data_class_creator(
 
 def test_init_runtime_config_after_job_creator(
         runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
-
     """Test init runtime config after job creator."""
     JobBase.job_creator.config.output_storage.persist_outputs = ConfigPersistOutputsOptions.DISABLED
     runtime = runtime_cls()
@@ -533,7 +530,6 @@ def test_basic_runtime_subscriptions(  # noqa: C901
 
 def test_job_creator_subscribes_to_selected_engine(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-
     """Test job creator subscribes to selected engine."""
     local_runner = runtime.objects.local
     prefect_engine = runtime.objects.prefect

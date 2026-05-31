@@ -54,7 +54,6 @@ def _create_dataset_cls(data_file_type: _InputTypeT) -> type[IsDataset]:
 
 class IterateFuncJobBaseMixin:
     """Adapt a job function to run once per dataset item."""
-
     def __init__(  # noqa: C901
         self,
         *,

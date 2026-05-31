@@ -99,7 +99,6 @@ _T_contra = TypeVar('_T_contra', contravariant=True)
 class SupportsBool(Protocol):
     """Define the ``SupportsBool`` interface.
     """
-
     def __bool__(self) -> bool:
         ...
 
@@ -108,7 +107,6 @@ class SupportsBool(Protocol):
 class SupportsDunderLT(Protocol[_T_contra]):
     """Define the ``SupportsDunderLT`` interface.
     """
-
     def __lt__(self, other: _T_contra, /) -> SupportsBool:
         ...
 
@@ -116,7 +114,6 @@ class SupportsDunderLT(Protocol[_T_contra]):
 class SupportsDunderGT(Protocol[_T_contra]):
     """Define the ``SupportsDunderGT`` interface.
     """
-
     def __gt__(self, other: _T_contra, /) -> SupportsBool:
         ...
 
@@ -224,7 +221,6 @@ SupportsRichComparisonT = TypeVar(
 class SupportsTrunc(Protocol):
     """Define the ``SupportsTrunc`` interface.
     """
-
     def __trunc__(self) -> int:
         ...
 
@@ -241,7 +237,6 @@ class SupportsTrunc(Protocol):
 class SupportsKeysAndGetItem(Protocol[_KT, _VT_co]):
     """Define the ``SupportsKeysAndGetItem`` interface.
     """
-
     def keys(self) -> Iterable[_KT]:
         """Keys.
         

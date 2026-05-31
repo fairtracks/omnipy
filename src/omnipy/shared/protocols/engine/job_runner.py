@@ -9,7 +9,6 @@ from omnipy.shared.protocols.compute.job import IsFuncArgJob
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.util.helpers import is_package_editable
 
-
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISTASKRUNNERENGINE_APPLY_TASK_DECORATOR_SUMMARY'] = (
         'Attach a state-aware decorator to a task callback endpoint.')

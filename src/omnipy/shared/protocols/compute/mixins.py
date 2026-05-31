@@ -6,7 +6,6 @@ from typing import Protocol
 
 from omnipy.util.helpers import is_package_editable
 
-
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_NAME_SUMMARY'] = (
         'Return the configured base name for the job.')
@@ -32,7 +31,6 @@ if is_package_editable('omnipy'):
 
 class IsUniquelyNamedJob(Protocol):
     """Protocol for jobs with stable and regenerated names."""
-
     @property
     def name(self) -> str:
         """{{ISUNIQUELYNAMEDJOB_NAME_SUMMARY}}
@@ -63,7 +61,6 @@ class IsUniquelyNamedJob(Protocol):
 
 class IsNestedContext(Protocol):
     """Protocol for objects that manage nested execution contexts."""
-
     def __enter__(self):
         ...
 

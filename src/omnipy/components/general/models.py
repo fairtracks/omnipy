@@ -61,7 +61,6 @@ _Z = TypeVar('_Z', bound=Model | Dataset, default=Model[object])
 
 class HasOuterType(Protocol):
     """Protocol for generic model classes that expose their outer type form."""
-
     @classmethod
     def outer_type(cls, with_args: bool = False) -> TypeForm:
         """Return the model's declared outer type.

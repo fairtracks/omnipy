@@ -13,7 +13,6 @@ from .datasets import StrictBytesDataset, StrictStrDataset
 
 class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
     """Serialize raw string datasets to and from gzipped tar archives."""
-
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         """Return whether a dataset stores raw strings."""
@@ -36,7 +35,6 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
     @classmethod
     def serialize(cls, dataset: StrictStrDataset) -> bytes | memoryview:
         """{{SERIALIZE_GZIPPED_TAR_SUMMARY}}"""
-
         def raw_encode_func(content: str) -> bytes:
             return content.encode('utf8')
 
@@ -68,7 +66,6 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
 
 class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
     """Serialize raw bytes datasets to and from gzipped tar archives."""
-
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         """Return whether a dataset stores raw bytes."""
@@ -91,7 +88,6 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
     @classmethod
     def serialize(cls, dataset: StrictBytesDataset) -> bytes | memoryview:
         """{{SERIALIZE_GZIPPED_TAR_SUMMARY}}"""
-
         def raw_encode_func(content: bytes) -> bytes:
             return content
 

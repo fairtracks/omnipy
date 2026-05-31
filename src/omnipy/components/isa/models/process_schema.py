@@ -41,7 +41,6 @@ class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
         previousProcess: Upstream process in a linked process chain.
         nextProcess: Downstream process in a linked process chain.
     """
-
     class Config:
         """Validation settings for ISA process-step schema parsing.
 

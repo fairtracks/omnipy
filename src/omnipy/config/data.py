@@ -140,7 +140,6 @@ class DimsModeMixin(pyd.BaseModel):
 
 class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
     """Base config that can refresh width and height from the active display."""
-
     class Config:  # pyright: ignore [reportIncompatibleVariableOverride]
         """Pydantic model configuration: validates all fields and validates on assignment."""
         validate_all = True
@@ -286,7 +285,6 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
 
 class TerminalUserInterfaceConfig(DimsModeConfig):
     """Terminal-specific UI configuration with live terminal size detection."""
-
     @classmethod
     @override
     def _get_available_display_dims(
@@ -334,7 +332,6 @@ class HtmlUserInterfaceConfig(UserInterfaceTypeConfig):
 
 class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
     """Jupyter-specific UI configuration with notebook defaults."""
-
     @classmethod
     @override
     def _get_available_display_dims(

@@ -7,7 +7,6 @@ from omnipy.shared.typedefs import TypeForm
 
 class AssertModelOrValFunc(Protocol):
     """Callable protocol for asserting models or plain values."""
-
     def __call__(
         self,
         model_or_val: object,

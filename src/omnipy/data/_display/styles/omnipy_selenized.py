@@ -28,7 +28,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 """Bundled Selenized-derived color styles used by the display subsystem."""
 
 import os
@@ -39,7 +38,6 @@ import pygments.style
 from omnipy.util.helpers import is_package_editable
 
 from .helpers import Base16Colors, get_styles_from_base16_colors
-
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_SELENIZED_STYLE_INTERFACE_SUMMARY'] = dedent("""\

@@ -36,7 +36,6 @@ _CallP = ParamSpec('_CallP')
 _CallableT = TypeVar('_CallableT')
 _RetT = TypeVar('_RetT')
 
-
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_TASK_CORE_TEMPLATE_SUMMARY'] = 'Implement the core template behavior.'
 
@@ -154,7 +153,6 @@ class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP
 
     Instances are typically produced by calling a ``TaskTemplate``.
     """
-
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         """Register the engine decorator for task execution.
 

@@ -52,7 +52,6 @@ class TableWithColNamesDataset(Dataset[RowWiseTableFirstRowAsColNamesModel]):
     Entries are normalized into :class:`RowWiseTableFirstRowAsColNamesModel` values,
     where the first row becomes the header for subsequent row dictionaries.
     """
-
     @property
     def col_names(self) -> tuple[str]:
         """Return distinct column names seen across all dataset entries.

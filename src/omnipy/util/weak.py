@@ -19,7 +19,6 @@ class KeyRef(list):
     Args:
         obj: Object whose identity should be used as the key value.
     """
-
     def __init__(self, obj: object) -> None:
         super().__init__([id(obj)])
 
@@ -34,7 +33,6 @@ class WeakKeyRefContainer(Generic[_AnyKeyT, _ValT]):
     stable identity wrapper so callers can retrieve values with the original
     object instance while automatic cleanup still works when keys are collected.
     """
-
     def __init__(self) -> None:
         self._key_dict: WeakValueDictionary[KeyRef, _AnyKeyT] = WeakValueDictionary()
         self._value_dict: WeakKeyDictionary[KeyRef, _ValT] = WeakKeyDictionary()

@@ -44,7 +44,6 @@ else:
         The list is expected to contain at least two datasets and each dataset
         must contain one or more files.
         """
-
         @classmethod
         def _parse_data(cls, data: list[PandasDataset]) -> Any:
             dataset_list = data

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Internal FAIRtracks helper for fetching GDC payloads from saved filters."""
 
 import json

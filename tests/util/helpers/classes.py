@@ -1,5 +1,6 @@
 """Helper classes for utility tests."""
 
+
 class SomeObject:
     def __init__(self, name: str) -> None:
         self.name = name

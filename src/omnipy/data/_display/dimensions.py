@@ -90,7 +90,6 @@ class Proportionally(LiteralEnum[int]):
 
 class DimensionsFit:
     """Summarize whether rendered dimensions fit a target frame."""
-
     def __init__(self,
                  dims: DimensionsWithWidthAndHeight,
                  frame_dims: Dimensions,

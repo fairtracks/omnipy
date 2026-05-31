@@ -10,7 +10,6 @@ from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 class Engine(ABC):
     """Base class for runtime engine implementations.
     """
-
     def __init__(self) -> None:
         """Initialize engine config, registry holder, and subclass state."""
         config_cls = self.get_config_cls()

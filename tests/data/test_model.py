@@ -657,7 +657,6 @@ def test_copy(
     deep_copy: bool,
     skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ) -> None:
-
     """Test copy."""
     model_copy = copy_func(model)
 
@@ -841,7 +840,6 @@ def test_import_inconvertible_data_nested_type() -> None:
 
 
 def test_error_invalid_model() -> None:
-
     """Test error invalid model."""
     with pytest.raises(TypeError):
 
@@ -917,7 +915,6 @@ def test_basic_union() -> None:
     # The requirements for omnipy is Python 3.10, and there have been some hashin issues with mostly
     # the older form of this notation, so the newer should be preferred. The old form are kept
     # several places in this file tests related to the notation.
-
     """Test basic union."""
     class UnionModel(Model[int | str | list]):
         ...
@@ -1887,7 +1884,6 @@ def test_model_of_pydantic_model_with_model_of_pydantic_model_children(
 
 def test_model_of_pydantic_model_with_pydantic_model_children(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-
     """Test model of pydantic model with pydantic model children."""
     invalid_child_model = PydanticChildModel(**{'@id': 12, 'value': 2})
     invalid_child_model.value = '2.22'
@@ -1982,7 +1978,6 @@ def _assert_no_snapshot(model: Model[T]):
 
 def test_weakly_referenced_snapshot_after_validation(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-
     """Test weakly referenced snapshot after validation."""
     Model.data_class_creator.snapshot_holder.clear()
     assert len(Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0
@@ -2011,7 +2006,6 @@ def test_weakly_referenced_snapshot_after_validation(
 
 def test_weakly_referenced_snapshot_deepcopy_memo_entry(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-
     """Test weakly referenced snapshot deepcopy memo entry."""
     model = Model[list[int]]([123])
     snapshot_holder = model.snapshot_holder
@@ -2199,7 +2193,6 @@ def test_snapshot_deepcopy_reuse_ids_crash(
     #         model = Model[list[int]]([])
     #         model.validate_content()
     #         model_list.append(model)
-
     """Test snapshot deepcopy reuse ids crash."""
     class MyModel(Model[list[list[int]]]):
         ...
@@ -2211,7 +2204,6 @@ def test_snapshot_deepcopy_reuse_ids_crash(
 
 def test_lazy_snapshot_not_triggered_by_empty_from_data(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-
     """Test lazy snapshot not triggered by empty from data."""
     model = Model[list[int]]()
     _assert_no_snapshot(model)
@@ -2222,7 +2214,6 @@ def test_lazy_snapshot_not_triggered_by_empty_from_data(
 
 def test_lazy_snapshot_not_triggered_by_set_content(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-
     """Test lazy snapshot not triggered by set content."""
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -2247,7 +2238,6 @@ def test_lazy_snapshot_not_triggered_by_set_content(
 
 def test_lazy_snapshot_not_triggered_by_state_keeping_operator(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-
     """Test lazy snapshot not triggered by state keeping operator."""
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -2263,7 +2253,6 @@ def test_lazy_snapshot_not_triggered_by_state_keeping_operator(
 
 def test_lazy_snapshot_triggered_by_state_changing_operator(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-
     """Test lazy snapshot triggered by state changing operator."""
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -2280,7 +2269,6 @@ def test_lazy_snapshot_not_triggered_by_getitem(
     skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
     skip_test_if_not_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ) -> None:
-
     """Test lazy snapshot not triggered by getitem."""
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -2302,7 +2290,6 @@ def test_lazy_snapshot_not_triggered_by_getitem(
 
 def test_lazy_snapshot_triggered_by_setitem(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-
     """Test lazy snapshot triggered by setitem."""
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -2317,7 +2304,6 @@ def test_lazy_snapshot_triggered_by_setitem(
 
 def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-
     """Test lazy snapshot triggered by state keeping mimicked methods."""
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -2329,7 +2315,6 @@ def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
 
 def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-
     """Test lazy snapshot triggered by state changing mimicked methods."""
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -2442,7 +2427,6 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
 
 def test_snapshot_with_mimic_special_method(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-
     """Test snapshot with mimic special method."""
     model = Model[list[int]]([123])
 
@@ -2496,7 +2480,6 @@ def test_snapshot_with_mimic_special_method(
 
 def test_repeated_validation_should_not_change_content_or_snapshot(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-
     """Test repeated validation should not change content or snapshot."""
     model = Model[list[int]]([123])
 
@@ -2517,7 +2500,6 @@ def test_mimic_special_method(
     runtime: Annotated[IsRuntime, pytest.fixture],
     skip_test_if_interactive_mode: Annotated[None, pytest.fixture],
 ) -> None:
-
     """Test mimic special method."""
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -2610,7 +2592,6 @@ def test_mimic_validation_failure_recovery_with_interactive_mode(
 def test_mimic_simple_list_operations(
         runtime: Annotated[IsRuntime, pytest.fixture],
         assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]) -> None:
-
     """Test mimic simple list operations."""
     model = Model[list[int]]()
     assert len(model) == 0
@@ -2672,7 +2653,6 @@ def test_mimic_simple_dict_operations(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-
     """Test mimic simple dict operations."""
     model = Model[dict[str, int]]({'abc': 123})
 
@@ -2723,7 +2703,6 @@ def test_mimic_simple_list_operator_with_auto_convert(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-
     """Test mimic simple list operator with auto convert."""
     model = Model[list[int]]([0])
 
@@ -2893,7 +2872,6 @@ def test_mimic_sequence_convert_for_concat(
 
     # TODO: Revise the need for to_data() method when explicit conversion types are supported
     #       Should in this case be something like Model[SetDeque, list]
-
     """Test mimic sequence convert for concat."""
     class SetDequeModel(Model[SetDeque[int] | list[int]]):
         @classmethod
@@ -3013,7 +2991,6 @@ def test_mimic_concatenation_for_strings(
     runtime: Annotated[IsRuntime, pytest.fixture],
     skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ) -> None:
-
     """Test mimic concatenation for strings."""
     help = UppercaseModel('help')
     assert help.content == 'HELP'
@@ -3029,7 +3006,6 @@ def test_mimic_concatenation_for_converted_models(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-
     """Test mimic concatenation for converted models."""
     please_help = WordSplitterModel('please help')
     assert please_help.content == ['please', 'help']
@@ -3100,7 +3076,6 @@ def test_mimic_concatenation_for_converted_models_with_incompatible_content_exce
 def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
         skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture]):
     # Only __add__
-
     """Test mimic str concat iadd and radd overrides add if defined."""
     class ConcatChallengedStr:
         def __init__(self, data: str = ''):
@@ -3550,7 +3525,6 @@ def test_mimic_nested_list_operations_models_at_all_levels(
 ) -> None:
     # Compare with `test_mimic_nested_dict_operations_only_model_at_top`. It is recommended to
     # insert a model at every level except the last when working with nested structures.
-
     """Test mimic nested list operations models at all levels."""
     NestedModelType: TypeAlias = list[int | Model[list[int]]]
     model = Model[NestedModelType]([123, 234, [345]])
@@ -3655,7 +3629,6 @@ def test_mimic_nested_dict_operations_models_at_all_levels(
 ) -> None:
     # Compare with `test_mimic_nested_dict_operations_only_model_at_top`. It is recommended to
     # insert a model at every level except the last when working with nested structures.
-
     """Test mimic nested dict operations models at all levels."""
     NestedModelType: TypeAlias = dict[str, Model[dict[int, int]] | int]
     model = Model[NestedModelType]({'a': {14: 456}})
@@ -3681,7 +3654,6 @@ def test_mimic_list_and_dict_iterators(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-
     """Test mimic list and dict iterators."""
     list_model = Model[list[int]]([0, 1, 2])
 
@@ -3713,7 +3685,6 @@ def test_mimic_list_like_classes(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-
     """Test mimic list like classes."""
     mylist_int_model = Model[MyList[int]](MyList(0, 1, 2))
     assert_model_if_dyn_conv_else_val(mylist_int_model[0], int, 0)
@@ -3791,7 +3762,6 @@ def test_mimic_doubly_nested_dyn_converted_containers_are_copies(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-
     """Test mimic doubly nested dyn converted containers are copies."""
     list_model = Model[list[list[int]]]([[4]])
     assert_model_if_dyn_conv_else_val(list_model[0], list[int], [4])  # type: ignore[index]
@@ -4100,7 +4070,6 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
 ) -> None:
     # See test_mimic_doubly_nested_dyn_converted_containers_are_copies()
     # Explicit Model containers fixes this issue.
-
     """Test mimic nested list operations with model subclass containers."""
     class MyListOrIntModel(Model[list[int] | int]):
         ...
@@ -4135,7 +4104,6 @@ def test_mimic_nested_dict_operations_with_model_containers(
 
     # See test_mimic_doubly_nested_dyn_converted_containers_are_copies()
     # Explicit Model containers fixes this issue.
-
     """Test mimic nested dict operations with model containers."""
     ThirdLvl: TypeAlias = dict[int, int]
     SecondLvl: TypeAlias = dict[int, Model[ThirdLvl] | int] | int
@@ -4228,7 +4196,6 @@ def test_mimic_nested_dict_operations_with_model_containers(
 
 
 def test_mimic_doubly_nested_union(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-
     """Test mimic doubly nested union."""
     runtime.config.data.model.dynamically_convert_elements_to_models = True
 
@@ -4399,7 +4366,6 @@ def test_mimic_operations_on_pydantic_models() -> None:
 
 def test_mimic_callable_property() -> None:
     # Example of previously failing callable property is pandas.DataFrame.loc
-
     """Test mimic callable property."""
     class MyCallable:
         def __init__(self):
@@ -4926,7 +4892,6 @@ def test_pandas_dataframe_non_builtin_direct() -> None:
     #  example to remove dependency, to prepare splitting of pandas module to separate repo
     #
     # SetDeque() is a good candidate.
-
     """Test pandas dataframe non builtin direct."""
     from omnipy.components.pandas.lazy_import import pd
 

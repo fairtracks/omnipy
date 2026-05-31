@@ -286,6 +286,7 @@ _NegativeInteger: TypeAlias = Literal[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -
 # protocols/typing.py for similar stdlib-derived stubs.
 #
 
+
 class IsInt(Protocol):
     """Protocol for the subset of built-in ``int`` behavior used by Omnipy typing."""
 

@@ -15,7 +15,6 @@ import omnipy.util.pydantic as pyd
 
 class RichPrettyPrinter(PythonStatsTighteningPrettyPrinter, WidthReducingPrettyPrinter[object]):
     """Format generic Python objects with Rich's pretty representation."""
-
     @override
     @classmethod
     def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:

@@ -147,7 +147,6 @@ class ParamsBase(pyd.BaseModel, metaclass=_ParamsMeta):
     objects. Omnipy reads parameter values directly from the class and can clone
     the parameter class with selected defaults overridden.
     """
-
     class Config:
         """Pydantic model configuration: allows arbitrary types and enables smart union matching."""
         arbitrary_types_allowed = True

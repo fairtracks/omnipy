@@ -8,7 +8,6 @@ from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.util.helpers import is_package_editable
 
-
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISENGINE_GET_CONFIG_CLS_SUMMARY'] = (
         'Return the config class associated with this engine type.')
@@ -53,7 +52,6 @@ if is_package_editable('omnipy'):
 @runtime_checkable
 class IsEngine(Protocol):
     """Protocol for execution engines configured with registry state."""
-
     def __init__(self) -> None:
         ...
 

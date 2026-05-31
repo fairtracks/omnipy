@@ -49,7 +49,6 @@ def mock_config_publisher_with_attr_subscribers(
     attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
 ) -> MockDataPublisher:
-
     """Provide the mock configuration publisher with attr subscribers fixture."""
     config = MockDataPublisher()
 

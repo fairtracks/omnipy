@@ -7,7 +7,6 @@ import time
 
 class LogMixin:
     """Provide a module-scoped logger and timestamp-aware convenience logging."""
-
     def __init__(self) -> None:
         self._logger: Logger = getLogger(f'{self.__class__.__module__}.{self.__class__.__name__}')
         self._logger.setLevel(INFO)

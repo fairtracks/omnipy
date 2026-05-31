@@ -134,7 +134,6 @@ def test_ref_count_memo_dict_deepcopy_obj() -> None:
 
 def test_ref_count_memo_dict_complex_object_deletion() -> None:
     # Note: WeakValueDictionary cannot be used here, as most basic types do not support weak refs.
-
     """Test ref count memo dict complex object deletion."""
     ref_count_memo_dict: RefCountMemoDict = RefCountMemoDict()
 

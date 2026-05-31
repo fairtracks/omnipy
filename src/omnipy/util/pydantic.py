@@ -1,5 +1,4 @@
 # flake8: noqa
-
 """Compatibility wrapper around Pydantic APIs used by Omnipy.
 
 Omnipy imports Pydantic through this module so the rest of the codebase can rely

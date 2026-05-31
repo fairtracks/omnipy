@@ -15,7 +15,6 @@ from .datasets import PandasDataset
 
 class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
     """Serialize pandas datasets to and from gzipped tar archives."""
-
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         """Return whether a dataset is a pandas dataset."""

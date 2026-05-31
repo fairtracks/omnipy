@@ -18,7 +18,6 @@ from omnipy.util.pydantic import ValidationError
 
 _DatasetT = TypeVar('_DatasetT', bound=IsDataset)
 
-
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY'] = dedent("""\
         Return the dataset class created during deserialization.""")
@@ -35,7 +34,6 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
 class Serializer(ABC, Generic[_DatasetT]):
     """Abstract base class for dataset serializers used by Omnipy import/export flows."""
-
     @classmethod
     @abstractmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
@@ -74,7 +72,6 @@ class Serializer(ABC, Generic[_DatasetT]):
 
 class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
     """Serializer base class for datasets stored as gzipped tar archives of item files."""
-
     @classmethod
     def create_tarfile_from_dataset(cls,
                                     dataset: _DatasetT,
@@ -131,7 +128,6 @@ class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
 
 class SerializerRegistry:
     """Registry and auto-detection helper for the serializers available to Omnipy."""
-
     def __init__(self) -> None:
         self._serializer_classes: list[Type[IsSerializer]] = []
 

@@ -758,7 +758,6 @@ def case_join_two_tables_two_common_colnames_on_last_col_quadruple_plus_double_m
 def case_cross_two_tables_two_common_colnames_complete_match_plus_extra(
         table_age_firstname_lastname,
         table_firstname_lastname_adult_all_match_plus_extra) -> TablePairCase:
-
     """Return the cross two tables two common colnames complete match plus extra case."""
     result_cartesian: JsonListOfListsOfScalars = [
         ['age', 'firstname_1', 'lastname_1', 'firstname_2', 'lastname_2', 'adult'],

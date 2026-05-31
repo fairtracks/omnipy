@@ -11,7 +11,6 @@ import webbrowser
 
 class OmnipyMacOSXOSAScript(webbrowser.BaseBrowser):
     """Browser controller that opens URLs via AppleScript on macOS."""
-
     def __init__(self, name='default'):
         super().__init__(name)
 

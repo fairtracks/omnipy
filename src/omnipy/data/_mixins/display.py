@@ -429,7 +429,6 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         >>> def show(*, ui=UserInterfaceType.AUTO, **kwargs) -> Element | None:
         ...     return None
     """
-
     @override
     def __call__(
         self,
@@ -484,7 +483,6 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         >>> def open_browser(*, ui=UserInterfaceType.AUTO, **kwargs) -> None:
         ...     return None
     """
-
     @override
     def __call__(
         self,
@@ -539,7 +537,6 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         >>> def docs(*, ui=UserInterfaceType.BROWSER_TAG, **kwargs) -> str:
         ...     return '<pre>...</pre>'
     """
-
     @override
     def __call__(
         self,
@@ -649,7 +646,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ...     def _default_panel(self, **kwargs) -> DraftPanel:
         ...         return DraftPanel('example')
     """
-
     @abstractmethod
     def _default_panel(self, **kwargs) -> DraftPanel:
         ...
@@ -3266,7 +3262,6 @@ def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
         ... def _peek(self, **kwargs):
         ...     return self._peek_nested_content({}, **kwargs)
     """
-
     def wrapper(self, **kwargs) -> _RetT:
         """Call dataset or model display implementation for wrapped content.
 
@@ -3319,7 +3314,6 @@ class ModelDisplayMixin(BaseDisplayMixin):
     Example:
         >>> model.peek(width=100)
     """
-
     @_call_dataset_method_if_applicable
     def _default_panel(self, **kwargs) -> DraftPanel:
         return self._peek(**kwargs)
@@ -3374,7 +3368,6 @@ class DatasetDisplayMixin(BaseDisplayMixin):
     Example:
         >>> dataset.list(height=20)
     """
-
     def _default_panel(self, **kwargs) -> DraftPanel:
         return self._list(**kwargs)
 

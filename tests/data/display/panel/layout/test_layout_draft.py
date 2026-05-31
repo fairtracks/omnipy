@@ -108,7 +108,6 @@ def test_resized_layout_draft_panel_hashable() -> None:
 
 
 def test_fail_resized_layout_draft_panel_if_extra_params() -> None:
-
     """Test fail resized layout draft panel if extra parameters."""
     with pytest.raises(TypeError):
         ResizedLayoutDraftPanel(Layout(), extra=123)  # type: ignore[call-arg]
@@ -116,7 +115,6 @@ def test_fail_resized_layout_draft_panel_if_extra_params() -> None:
 
 # noinspection PyDataclass
 def test_fail_resized_layout_draft_panel_no_assignments() -> None:
-
     """Test fail resized layout draft panel no assignments."""
     resized_layout_panel = ResizedLayoutDraftPanel(Layout())
 

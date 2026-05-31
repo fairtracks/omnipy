@@ -20,7 +20,6 @@ class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
     The model asserts that tuple indices are contiguous and start at zero,
     preserving explicit positional semantics for nested list conversion.
     """
-
     @classmethod
     def _parse_data(cls, data: list[tuple[int, object]]) -> list[tuple[int, object]]:
         for expected_index, (actual_index, _) in enumerate(data):
@@ -37,7 +36,6 @@ class EnumeratedListModel(Model[EnumeratedListOfTuplesModel | list[object]
     Incoming list-like structures are normalized to
     :class:`EnumeratedListOfTuplesModel` using ``enumerate``.
     """
-
     @classmethod
     def _parse_data(
         cls, data: EnumeratedListOfTuplesModel | list[object] | list[dict[str, object]]

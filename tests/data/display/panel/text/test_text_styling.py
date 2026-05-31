@@ -203,7 +203,6 @@ def test_syntax_stylized_text_panel_overflow_modes(
     case: PanelOutputTestCase,
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> None:
-
     """Test syntax stylized text panel overflow modes."""
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(case.content, frame=case.frame, config=case.config))
@@ -232,7 +231,6 @@ def test_output_properties_of_syntax_stylized_text_panel(
     output_test_case_setup: Annotated[StylizedPanelTestCaseSetup, pc.fixture],
     output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
 ) -> None:
-
     """Test output properties of syntax stylized text panel."""
     case_id, content, title, frame, config = output_test_case_setup
     get_output_property, exp_plain_output_for_case_id = output_prop_expectations

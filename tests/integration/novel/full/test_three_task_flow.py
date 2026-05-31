@@ -44,7 +44,6 @@ def test_run_three_task_flow(
 def test_refine_three_task_flow(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-
     """Test refine three task flow."""
     pos_square_root_tmpl = case.flow_template.refine(
         name='pos_sqrt',
@@ -70,7 +69,6 @@ def test_refine_three_task_flow(
 def test_revise_refine_three_task_flow(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-
     """Test revise refine three task flow."""
     pos_square_root = case.flow_template.refine(
         name='pos_sqrt',
@@ -92,7 +90,6 @@ def test_revise_refine_three_task_flow(
 def test_revise_refine_three_task_dagflow_alternative(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-
     """Test revise refine three task dag flow alternative."""
     pos_square_root = case.flow_template.refine(
         name='pos_sqrt',

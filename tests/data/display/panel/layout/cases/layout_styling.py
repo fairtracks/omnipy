@@ -576,7 +576,6 @@ def case_layout_styling_expectations_colorized_html_tag(
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
     """Return the layout styling expectations colorized HTML tag case."""
     def _exp_plain_output_for_case_id(case_id: str) -> str:
-
         """Return exp plain output for case id."""
         lightbulb_dark_color_style_with_bg = 'color: #d4d2c8; background-color: #1d2331; '
         lightbulb_dark_color_style_no_bg = 'color: #d4d2c8; '
@@ -882,7 +881,6 @@ def case_layout_styling_expectations_plain_html_page(
 def case_layout_styling_expectations_bw_stylized_html_page(
     bw_stylized_html_page: Annotated[OutputPropertyType, pc.fixture]
 ) -> StylizedPanelOutputExpectations:
-
     """Return the layout styling expectations black-and-white stylized HTML page case."""
     bold_style = '\n'.join([
         '.r2 {font-weight: bold}',

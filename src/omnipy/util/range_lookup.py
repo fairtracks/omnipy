@@ -18,7 +18,6 @@ class RangeLookup:
     Raises:
         ValueError: If any range contains negative values.
     """
-
     def __init__(self, ranges: Iterable[range]):
         largest_range_stop = max((r.stop for r in ranges), default=0)
         if largest_range_stop >= 0:

@@ -35,7 +35,6 @@ class ReflowedTextDraftPanel(
     The panel computes dimensions from cropped display lines while keeping
     access to original content dimensions for fit heuristics.
     """
-
     @classmethod
     @overload
     def create_from_draft_panel(

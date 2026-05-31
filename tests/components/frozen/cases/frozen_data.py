@@ -50,7 +50,6 @@ def case_test_frozen_tuples() -> CaseInfo:
         #
         # NestedFrozenTuplesModel, NestedFrozenTuplesModel[FSV]
         #
-
         """Define FrozenTuplesDataPoints."""
         err_ft_none: None = f_none
         err_ft_int: int = f_int
@@ -92,7 +91,6 @@ def case_test_frozen_tuples_no_type_args() -> CaseInfo:
         #
         # NestedFrozenTuplesModel
         #
-
         """Define FrozenTuplesNoTypeArgsDataPoints."""
         ft_tuple_wrong_scalar: tuple = ej_tuple_wrong_scalar
 
@@ -112,7 +110,6 @@ def case_frozen_dicts() -> CaseInfo:
         #
         # NestedFrozenDictsModel, NestedFrozenDictsModel[FSK, FSV]
         #
-
         """Define FrozenDictsDataPoints."""
         err_fd_none: None = f_none
         err_fd_int: int = f_int
@@ -179,7 +176,6 @@ def case_frozen_dicts_known_issue() -> CaseInfo:
         #
         # NestedFrozenDictsModel, NestedFrozenDictsModel[FSK, FSV]
         #
-
         """Define FrozenDictsDataPoints."""
         err_fd_empty_tuple: tuple[FSV, ...] = f_empty_tuple
         err_fd_frozendict_iterable_scalar_empty: FrozenDict[FSK, FSV] = (
@@ -205,7 +201,6 @@ def case_frozen_dicts_or_tuples() -> CaseInfo:
         #
         # NestedFrozenDictsOrTuplesModel, NestedFrozenDictsOrTuplesModel[FSK, FSV]
         #
-
         """Define FrozenDictsOrTuplesDataPoints."""
         ftd_none: None = f_none
         ftd_int: int = f_int
@@ -333,7 +328,6 @@ def case_nested_frozen_tuples() -> CaseInfo:
         #
         # NestedFrozenTuplesModel, NestedFrozenTuplesModel[FSV]
         #
-
         """Define NestedFrozenTuplesDataPoints."""
         nft_list_of_none: list[None] = \
             field(default_factory=lambda: [f_none])
@@ -381,7 +375,6 @@ def case_nested_frozen_dicts() -> CaseInfo:
         #
         # NestedFrozenDictsModel, NestedFrozenDictsModel[FSK, FSV]
         #
-
         """Define NestedFrozenDictsDataPoints."""
         err_nfd_list_of_none: list[None] = \
             field(default_factory=lambda: [f_none])
@@ -452,7 +445,6 @@ def case_nested_frozen_dicts_known_issue() -> CaseInfo:
         #
         # NestedFrozenDictsModel, NestedFrozenDictsModel[FSK, FSV]
         #
-
         """Define NestedFrozenDictsDataPoints."""
         err_nfd_empty_tuple_level_three: dict[str, dict[str, FSV | tuple[FSV, ...]]] = \
             field(default_factory=lambda: {'a': dict(f_dict), 'b': {'x': f_empty_tuple}})

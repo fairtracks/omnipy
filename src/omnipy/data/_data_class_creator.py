@@ -24,7 +24,6 @@ class DataClassCreator:
     The data layer keeps configuration, reactive-object tracking, snapshot handling, and deepcopy
     nesting state on a creator object that is shared by related generated classes.
     """
-
     def __init__(self) -> None:
         self._config: IsDataConfig = cast(IsDataConfig, DataConfig())
         self._reactive_objects: IsReactiveObjects | None = None
@@ -77,7 +76,6 @@ class DataClassCreator:
         Returns:
             A context manager yielding the current deepcopy nesting depth.
         """
-
         @contextmanager
         def _call_exit_func_if_top_level(*args, **kwds) -> Iterator[int]:
             if self._deepcopy_context_level == 0:
@@ -114,7 +112,6 @@ class DataClassBase(Generic[ContentT], metaclass=DataClassBaseMeta):
     Model and dataset implementations inherit this class to reach the shared creator state
     managed by ``DataClassCreator`` while keeping instance APIs small.
     """
-
     @call_super_if_available(call_super_before_method=False)
     @classmethod
     def _prepare_params(cls, params: TypeForm) -> TypeForm:

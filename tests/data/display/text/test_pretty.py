@@ -925,7 +925,6 @@ def case_list_of_strings() -> ColumnPrettyPrintCase:
 
 @pc.parametrize_with_cases('case', cases='.', has_tag='column_pretty_print')
 def test_column_pretty_print(case: ColumnPrettyPrintCase) -> None:
-
     """Test column pretty print."""
     _assert_pretty_repr_of_draft(
         case.data,

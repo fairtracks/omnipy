@@ -390,7 +390,6 @@ def test_setdeque_copy_deepcopy() -> None:
 
 
 def test_setdeque_count() -> None:
-
     """Test SetDeque count."""
     setdeque = SetDeque[int]()
 
@@ -455,7 +454,6 @@ def test_setdeque_index() -> None:
 def test_setdeque_index_missing_speed() -> None:
     # Surprisingly, the default implementation of `deque.index()` for missing values is faster than
     # a set-based implementation based on `__contains__`
-
     """Test SetDeque index missing speed."""
     stmt_prefix = 'with suppress(ValueError): '
     define_numbers = 'numbers = tuple(range(10000))'

@@ -57,7 +57,6 @@ class StylizedLayoutPanel(
     The panel ensures child panels are fully rendered before composing them into
     a Rich table with consistent border, title, and cropping behavior.
     """
-
     def __init__(self, panel: DraftPanel[Layout, FrameInvT] | ResizedLayoutDraftPanel[FrameInvT]):
         if not panel_is_dimensions_aware(panel):
             resized_panel: ResizedLayoutDraftPanel[FrameInvT] = cast(
@@ -238,7 +237,6 @@ class PanelElementStyles:
 
 class InnerPanelStyler:
     """Style one rendered inner panel for placement inside an outer layout."""
-
     def __init__(
         self,
         inner_panel: FullyRenderedDraftPanel,
@@ -378,7 +376,6 @@ class InnerPanelStyler:
 
 class OuterLayoutPanelStyler:
     """Build the outer Rich table that hosts styled inner panels."""
-
     def __init__(
         self,
         outer_panel: 'StylizedLayoutPanel[FrameInvT]',

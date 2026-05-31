@@ -48,7 +48,6 @@ class SnapshotHolder(WeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasConte
     The holder keeps snapshot copies alongside memoized deepcopy state so Omnipy can compare
     current content against prior state without permanently retaining deleted objects.
     """
-
     def __init__(self) -> None:
         super().__init__()
         self._deepcopy_memo = RefCountMemoDict[ContentT]()

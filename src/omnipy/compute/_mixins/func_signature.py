@@ -10,7 +10,6 @@ from omnipy.shared.protocols.compute.job import IsPlainFuncArgJobBase
 
 class SignatureFuncJobBaseMixin:
     """Cache a job function signature and expose signature helpers."""
-
     def __init__(self):
         self_as_plain_func_arg_job_base = cast(IsPlainFuncArgJobBase, self)
         self._func_signature = inspect.signature(self_as_plain_func_arg_job_base._job_func)

@@ -10,7 +10,6 @@ from omnipy.shared.protocols.config import IsJobConfig
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.util.helpers import is_package_editable
 
-
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISJOBCONFIGHOLDER_CONFIG_SUMMARY'] = (
         'Return the shared job configuration associated with the holder.')
@@ -61,7 +60,6 @@ if is_package_editable('omnipy'):
 @runtime_checkable
 class IsJobConfigHolder(Protocol):
     """Protocol for objects that hold mutable job config and engine state."""
-
     @property
     def config(self) -> IsJobConfig:
         """{{ISJOBCONFIGHOLDER_CONFIG_SUMMARY}}
@@ -92,7 +90,6 @@ class IsJobConfigHolder(Protocol):
 @runtime_checkable
 class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
     """Protocol for nested-context job creators."""
-
     @property
     def nested_context_level(self) -> int:
         """{{ISJOBCREATOR_NESTED_CONTEXT_LEVEL_SUMMARY}}

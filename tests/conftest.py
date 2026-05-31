@@ -101,7 +101,6 @@ def mock_datetime() -> datetime:
     """Provide a datetime object with a stable now() value."""
     class MockDatetime(datetime):
         """Datetime subclass that freezes now() per instance."""
-
         def __init__(self, *args: object, **kwargs: object):
             self._now = datetime.now()
 

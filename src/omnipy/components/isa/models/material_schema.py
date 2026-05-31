@@ -1,6 +1,5 @@
 #   filename:  material_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
-
 """ISA model representing a material in an investigation.
 
 ISA stands for Investigation/Study/Assay, and this module mirrors ISA-JSON JSON-LD
@@ -48,7 +47,6 @@ class IsaMaterialSchema(pyd.BaseModel):
         derivesFrom: Parent materials from which this material was derived.
         comments: Optional comments attached to the material.
     """
-
     class Config:
         """Validation settings for ISA material schema parsing.
 

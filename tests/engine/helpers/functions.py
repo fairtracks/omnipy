@@ -113,7 +113,6 @@ def create_task_with_func(
     engine: IsJobRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsTask:
-
     """Provide create task with func for test reuse."""
     task_template = task_template_cls(name=name)(func)
 
@@ -172,7 +171,6 @@ def create_dag_flow_with_two_func_tasks(
     engine: IsJobRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsDagFlow:
-
     """Provide create dag flow with two func tasks for test reuse."""
     task_template = task_template_cls(name=name)(func)
     dag_flow_template = dag_flow_template_cls(task_template, task_template, name=name)(func)

@@ -22,6 +22,5 @@ RetT = TypeVar('RetT', covariant=True)
 
 class Method(Protocol, Generic[P, RetT]):
     """Protocol for bound methods with preserved parameter and return types."""
-
     def __call__(self: Self, *args: P.args, **kwargs: P.kwargs) -> RetT:
         ...

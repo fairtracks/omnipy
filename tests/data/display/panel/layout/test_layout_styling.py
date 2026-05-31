@@ -26,7 +26,6 @@ from ..helpers.panel_assert import assert_dims_aware_panel, strip_all_styling_fr
 
 
 def test_stylized_layout_panel_init() -> None:
-
     """Test stylized layout panel init."""
     layout: Layout = Layout()
     layout['panel'] = MockStylablePlainCropPanel(content='Some Content')
@@ -59,7 +58,6 @@ def test_stylized_layout_panel_init() -> None:
 
 
 def test_fail_stylized_layout_panel_if_extra_params() -> None:
-
     """Test fail stylized layout panel if extra parameters."""
     with pytest.raises(TypeError):
         StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()), extra=123)  # type: ignore[call-arg]
@@ -67,7 +65,6 @@ def test_fail_stylized_layout_panel_if_extra_params() -> None:
 
 # noinspection PyDataclass
 def test_stylized_layout_panel_immutable_properties() -> None:
-
     """Test stylized layout panel immutable properties."""
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()))
 
@@ -134,7 +131,6 @@ def test_output_properties_of_stylized_layout_panel(
     output_test_case_setup: Annotated[StylizedPanelTestCaseSetup, pc.fixture],
     output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
 ) -> None:
-
     """Test output properties of stylized layout panel."""
     case_id, content, title, frame, config = output_test_case_setup
     get_output_property, exp_plain_output_for_case_id = output_prop_expectations

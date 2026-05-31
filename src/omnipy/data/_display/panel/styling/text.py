@@ -31,7 +31,6 @@ class SyntaxStylizedTextPanel(
         Generic[FrameT],
 ):
     """Styled text panel that renders reflowed text with Rich syntax themes."""
-
     @staticmethod
     @lru_cache(maxsize=1024)
     def _get_stylized_content_common(

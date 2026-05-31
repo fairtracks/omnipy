@@ -252,7 +252,6 @@ class PanelDesignDims:
 
 class DimensionsAwarePanelLayoutMixin:
     """Layout mixin that derives aggregate dimensions from rendered subpanels."""
-
     def _total_dims_over_subpanels(self, dims_property: str) -> DimensionsWithWidthAndHeight:
         self_as_layout = cast(Layout, self)
 

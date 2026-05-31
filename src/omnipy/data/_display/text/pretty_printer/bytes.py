@@ -14,7 +14,6 @@ from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 class HexdumpPrettyPrinter(PrettyPrinter[str]):
     """Format byte content using a hexdump representation."""
-
     @override
     @classmethod
     def is_suitable_content(

@@ -8,7 +8,6 @@ from typing_extensions import Self
 class IsDataPublisher(Protocol):
     """Define the ``IsDataPublisher`` interface.
     """
-
     def subscribe_attr(self, attr_name: str, callback_fun: Callable[..., None]):
         """Subscribe attr.
         

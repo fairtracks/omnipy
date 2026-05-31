@@ -919,7 +919,6 @@ def test_nested_validation_level_two_models_at_both_levels(runtime: Annotated[Is
                                                                               pytest.fixture]):
     # Compare with test_nested_validation_level_two_only_model_at_top. It is recommended to insert
     # a model at every level except the last when working with nested structures.
-
     """Test nested validation level two models at both levels."""
     dataset = Dataset[Model[list[Model[list[int]]]]](data_file_1=[[123]])
 
@@ -1256,7 +1255,6 @@ def test_complex_models():
     #
     # Model subclass
     #
-
     """Test complex models."""
     class MyRangeList(Model[list[pyd.PositiveInt]]):
         """

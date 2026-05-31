@@ -16,7 +16,6 @@ from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
     """Format table-column content as newline-separated scalar values."""
-
     @override
     @classmethod
     def is_suitable_content(

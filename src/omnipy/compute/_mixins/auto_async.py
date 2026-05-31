@@ -10,7 +10,6 @@ from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
 class AutoAsyncJobBaseMixin:
     """Add optional automatic execution of coroutine jobs."""
-
     def __init__(
         self,
         *,

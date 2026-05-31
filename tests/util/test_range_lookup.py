@@ -9,7 +9,6 @@ from omnipy.util.range_lookup import RangeLookup
 
 def test_range_lookup(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-
     """Test range lookup."""
     range_lookup = RangeLookup((range(0, 5), range(10, 15)))
     assert 0 in range_lookup

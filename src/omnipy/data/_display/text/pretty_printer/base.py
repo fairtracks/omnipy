@@ -25,7 +25,6 @@ class PrettyPrinter(ABC, Generic[ContentT]):
     Subclasses define how content is selected, normalized, and formatted into a
     ``ReflowedTextDraftPanel`` that can continue through the rendering pipeline.
     """
-
     @classmethod
     @abstractmethod
     def is_suitable_content(
@@ -177,7 +176,6 @@ class StatsTighteningPrettyPrinter(
     detect whether successive formatting attempts moved in the expected
     direction.
     """
-
     def __init__(self) -> None:
         super().__init__()
         self._prev_stat_requirements: dict[str, pyd.NonNegativeInt | None] = {}
@@ -304,7 +302,6 @@ class WidthReducingPrettyPrinter(StatsTighteningPrettyPrinter[ContentT], Generic
     Each iteration lowers frame width and checks whether both required and
     observed width statistics tightened.
     """
-
     def _init_prev_frame_width(
         self,
         cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],

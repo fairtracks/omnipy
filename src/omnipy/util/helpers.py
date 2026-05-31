@@ -314,7 +314,7 @@ def ensure_plain_type(in_type: _SpecialForm) -> _SpecialForm:
 
 @overload
 def ensure_plain_type(  # pyright: ignore [reportOverlappingOverload]
-        in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias) -> type:
+    in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias) -> type:
     """Type overload for literal/union/annotated aliases."""
     ...
 

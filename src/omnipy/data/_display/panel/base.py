@@ -30,7 +30,6 @@ class OutputVariant(ABC):
     Implementations provide plain terminal text plus HTML fragments/pages for
     the same rendered panel content.
     """
-
     @cached_property
     @abstractmethod
     def terminal(self) -> str:
@@ -145,7 +144,6 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
     This stage can evaluate cropping, title placement, and frame fitness before
     final style-specific output is produced.
     """
-
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
@@ -341,7 +339,6 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
 
 class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT], ABC):
     """Panel stage that can export terminal and HTML output variants."""
-
     @override
     def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
         """Raise because fully rendered panels are terminal in the pipeline.

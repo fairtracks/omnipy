@@ -212,7 +212,6 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
     color_system: DisplayColorSystem.Literals,
     solid_background: bool,
 ) -> StylizedPanelTestCaseSetup[str]:
-
     """Return the syntax styling setup small frame color and overflow config case."""
     case_id = f'w-frame-dark-color-w-wrap-{color_system}' + \
               ('-no-bg' if not solid_background else '')
@@ -515,7 +514,6 @@ def case_syntax_styling_expectations_bw_stylized_html_tag(
 def case_syntax_styling_expectations_colorized_html_tag(
     colorized_html_tag: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
-
     """Return the syntax styling expectations colorized HTML tag case."""
     no_frame_default_color_exp_output = (
         'MyClass({'

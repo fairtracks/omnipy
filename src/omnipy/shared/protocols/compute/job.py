@@ -278,7 +278,6 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
     ) -> _JobTemplateT:
         ...
 
-
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISFLOW_FLOW_CONTEXT_SUMMARY'] = (
         'Return a context manager that enters and exits the shared flow context.')
@@ -328,7 +327,6 @@ class IsFlowTemplate(Protocol):
 
 class IsFlow(Protocol):
     """Protocol for applied flows with run-state metadata."""
-
     @property
     def flow_context(self) -> IsNestedContext:
         """{{ISFLOW_FLOW_CONTEXT_SUMMARY}}
@@ -427,9 +425,9 @@ class IsFuncFlowTemplate(IsFuncArgJobTemplate['IsFuncFlowTemplate[_CallP, _RetCo
 
 
 class IsFuncFlow(IsFuncArgJob['IsFuncFlowTemplate[_CallP, _RetCovT]',
-                               'IsFuncFlow[_CallP, _RetCovT]',
-                               _CallP,
-                               _RetCovT],
+                              'IsFuncFlow[_CallP, _RetCovT]',
+                              _CallP,
+                              _RetCovT],
                  IsFlow,
                  Protocol[_CallP, _RetCovT]):
     """Protocol for callable-backed applied flows."""

@@ -201,9 +201,9 @@ class BrowserUserInterfaceType(BrowserPageUserInterfaceType, BrowserTagUserInter
 
 
 class RgbColorUserInterfaceType(PlainTerminalEmbeddedUserInterfaceType,
-                                 IpythonEmbeddedTerminalUserInterfaceType,
-                                 JupyterUserInterfaceType,
-                                 BrowserUserInterfaceType):
+                                IpythonEmbeddedTerminalUserInterfaceType,
+                                JupyterUserInterfaceType,
+                                BrowserUserInterfaceType):
     """UI enum values that support RGB color output."""
 
     Literals = Literal[

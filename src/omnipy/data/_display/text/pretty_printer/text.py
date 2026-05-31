@@ -18,7 +18,6 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
     This printer favors text-safe defaults to avoid accidental syntax
     highlighting when content originates from generic string models.
     """
-
     @override
     @classmethod
     def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:
@@ -107,7 +106,6 @@ class CodePrettyPrinter(PlainTextPrettyPrinter):
     This printer primarily acts as a default for plain ``str`` content when a
     richer syntax-highlighted representation is preferred.
     """
-
     @override
     @classmethod
     def get_pretty_printer_lib(cls) -> PrettyPrinterLib.Literals:

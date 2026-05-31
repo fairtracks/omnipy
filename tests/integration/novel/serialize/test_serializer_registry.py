@@ -15,7 +15,6 @@ from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 @pytest.fixture
 def registry(runtime: Annotated[IsRuntime, pytest.fixture]) -> IsSerializerRegistry:
-
     """Provide registry."""
     registry = SerializerRegistry()
 

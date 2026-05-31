@@ -19,7 +19,6 @@ from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.shared.protocols.util import IsDataPublisher
 from omnipy.util.helpers import is_package_editable
 
-
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISROOTLOGOBJECTS_SET_CONFIG_SUMMARY'] = (
         'Replace root logging configuration and rebuild logging objects.')

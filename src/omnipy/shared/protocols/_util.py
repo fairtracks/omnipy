@@ -12,7 +12,6 @@ _ValT = TypeVar('_ValT', bound=object)
 class IsCallableParamAfterSelf(Protocol):
     """Define the ``IsCallableParamAfterSelf`` interface.
     """
-
     def __call__(self, callable_arg: Callable, /, *args: object, **kwargs: object) -> None:
         ...
 
@@ -20,7 +19,6 @@ class IsCallableParamAfterSelf(Protocol):
 class IsWeakKeyRefContainer(Protocol[_AnyKeyT, _ValT]):
     """Define the ``IsWeakKeyRefContainer`` interface.
     """
-
     def __contains__(self, key: _AnyKeyT) -> bool:
         ...
 

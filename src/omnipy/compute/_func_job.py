@@ -18,7 +18,6 @@ _RetT = TypeVar('_RetT')
 class PlainFuncArgJobBase(JobBase[_JobTemplateT, _JobT, _CallP, _RetT],
                           Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
     """Store the callable backing a task or function-flow job."""
-
     def __init__(self, job_func: Callable[_CallP, _RetT], /, *args: object,
                  **kwargs: object) -> None:
         self._job_func = job_func

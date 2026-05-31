@@ -132,7 +132,6 @@ class FullyRenderedDraftPanel(FullyRenderedPanel[FrameT],
                               Generic[ContentT, FrameT],
                               ABC):
     """Draft panel that has completed rendering and can export output variants."""
-
     @override
     def render_next_stage(self) -> 'FullyRenderedDraftPanel[ContentT, FrameT]':
         """Raise because fully rendered draft panels have no further stage.

@@ -111,7 +111,6 @@ def test_fail_draft_panel_no_assignments() -> None:
 
 
 def test_draft_panel_constraints_satisfaction() -> None:
-
     """Test draft panel constraints satisfaction."""
     draft_panel = DraftPanel('Some text')
     assert draft_panel.satisfies.max_inline_container_width_incl is None

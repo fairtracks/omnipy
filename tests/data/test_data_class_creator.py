@@ -55,7 +55,6 @@ def test_set_reactive_objects() -> None:
 
 
 def test_singular_mock(teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
-
     """Test singular mock."""
     assert isinstance(DataClassBase.data_class_creator, DataClassCreator)
 

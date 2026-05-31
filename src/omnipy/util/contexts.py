@@ -58,7 +58,6 @@ def setup_and_teardown_callback_context(
 
 class LastErrorHolder(AbstractContextManager):
     """Context manager that stores the latest suppressed exception for later chaining."""
-
     def __init__(self):
         self._last_error = None
 
@@ -121,7 +120,6 @@ def nothing(*args, **kwds) -> Iterator[None]:
 
 class PrintExceptionContext(AbstractContextManager):
     """Context manager that prints and suppresses the first line of an exception."""
-
     def __enter__(self):
         ...
 

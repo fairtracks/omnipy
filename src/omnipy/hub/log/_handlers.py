@@ -8,7 +8,6 @@ from pathlib import Path
 
 class DailyRotatingFileHandler(RotatingFileHandler):
     """Rotate log files on size limits or when the calendar date changes."""
-
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self._last_log_date_file_path: str = str(

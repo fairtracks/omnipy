@@ -9,7 +9,6 @@ from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute.mixins import IsUniquelyNamedJob
 from omnipy.util.helpers import is_package_editable
 
-
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISRUNSTATEREGISTRY_GET_JOB_STATE_SUMMARY'] = (
         'Return the current run state registered for a job.')
@@ -54,7 +53,6 @@ if is_package_editable('omnipy'):
 @runtime_checkable
 class IsRunStateRegistry(Protocol):
     """Protocol for registries that track job run states."""
-
     def __init__(self) -> None:
         ...
 

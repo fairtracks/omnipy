@@ -89,7 +89,6 @@ def calculate_bg_color_from_color_style(
     force_autodetect: ForceAutodetect.Literals,
 ) -> rich.color.Color | None:
     """Calculate the effective background color for a style."""
-
     def _auto_detect_bw_background_color(
             fg_color_triplet: rich.color_triplet.ColorTriplet) -> rich.color.Color:
         """

@@ -12,7 +12,6 @@ from omnipy.util.param_key_mapper import ParamKeyMapper
 
 class ParamsFuncJobBaseMixin:
     """Apply fixed parameters and keyword remapping before job execution."""
-
     def __init__(
         self,
         *,

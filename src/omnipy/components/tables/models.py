@@ -715,7 +715,6 @@ class PydanticRecordModelMetaclass(ModelMetaclass):
     The metaclass resolves the parameterized Pydantic model and exposes reusable
     header information through :attr:`header_info`.
     """
-
     def __init__(cls, *args, **kwargs) -> None:
         """Initialize the per-class cache for resolved header metadata."""
         super().__init__(*args, **kwargs)
@@ -775,7 +774,6 @@ class PydanticRecordModelBase(
     validated records, while this base class handles schema/header lookup and
     dispatching.
     """
-
     @classmethod
     @abstractmethod
     def _validate_record_model_with_col_names(

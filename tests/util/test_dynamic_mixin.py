@@ -172,7 +172,6 @@ def _assert_args_and_kwargs(mock_obj: object,
                             mixin_init_kwarg_params: dict[str, Parameter] = {},
                             mixin_init_kwarg_params_including_bases: dict[str, Parameter] = {},
                             args_in_signature=True):
-
     """Provide assert arguments and keyword arguments for test reuse."""
     if mixin_init_kwarg_params and not mixin_init_kwarg_params_including_bases:
         mixin_init_kwarg_params_including_bases = mixin_init_kwarg_params

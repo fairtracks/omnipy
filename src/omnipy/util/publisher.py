@@ -57,7 +57,6 @@ class DataPublisher(pyd.BaseModel):
         >>> demo.value
         1
     """
-
     class Config:
         """Pydantic settings for ``DataPublisher`` models.
 

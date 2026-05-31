@@ -74,7 +74,6 @@ def case_json_scalar() -> CaseInfo:
         #
         # JsonScalarModel
         #
-
         """Define ScalarDataPoints."""
         s_none: None = b_none
         s_int: int = b_int
@@ -102,7 +101,6 @@ def case_json_list() -> CaseInfo:
         #
         # JsonListModel
         #
-
         """Define JsonListDataPoints."""
         err_l_none: None = b_none
         err_l_int: int = b_int
@@ -131,7 +129,6 @@ def case_json_dict() -> CaseInfo:
         #
         # JsonDictModel
         #
-
         """Define JsonDictDataPoints."""
         err_d_none: None = b_none
         err_d_int: int = b_int
@@ -170,7 +167,6 @@ def case_json_list_or_dict() -> CaseInfo:
         #
         # JsonListOrDictModel
         #
-
         """Define JsonListOrDictDataPoints."""
         err_l_none: None = b_none
         err_l_int: int = b_int
@@ -199,7 +195,6 @@ def case_json() -> CaseInfo:
         #
         # JsonModel
         #
-
         """Define JsonDataPoints."""
         j_none: None = b_none
         j_int: int = b_int
@@ -324,7 +319,6 @@ def case_json_list_on_top() -> CaseInfo:
         #
         # JsonListOfScalarsModel
         #
-
         """Define JsonListOnTopDataPoints."""
         err_l_list_of_scalars_none: None = b_none
         err_l_list_of_scalars_int: int = b_int
@@ -446,7 +440,6 @@ def case_json_dict_on_top() -> CaseInfo:
         #
         # JsonDictOfScalarsModel
         #
-
         """Define JsonDictOnTopDataPoints."""
         err_d_dict_of_scalars_none: None = b_none
         err_d_dict_of_scalars_int: int = b_int
@@ -599,7 +592,6 @@ def case_json_nested_lists() -> CaseInfo:
         #
         # JsonOnlyListsModel
         #
-
         """Define JsonNestedListsDataPoints."""
         v_no_dicts_none: None = b_none
         v_no_dicts_int: int = b_int
@@ -683,7 +675,6 @@ def case_json_nested_dicts() -> CaseInfo:
         #
         # JsonOnlyDictsModel
         #
-
         """Define JsonNestedDictsDataPoints."""
         v_no_lists_none: None = b_none
         v_no_lists_int: int = b_int
@@ -788,7 +779,6 @@ def case_json_more_specific_types() -> CaseInfo:
         #
         # JsonListOfNestedDictsModel
         #
-
         """Define JsonMoreSpecificTypesDataPoints."""
         err_m_list_of_nested_dicts_none: None = b_none
         err_m_list_of_nested_dicts_int: int = b_int

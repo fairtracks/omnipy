@@ -19,7 +19,6 @@ import omnipy.util.pydantic as pyd
 if TYPE_CHECKING:
     from omnipy.data._typing.mimic_models import PlainModel
 
-
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_SPLIT_PARAMS_VARIANT_SUMMARY'] = dedent("""\
         Split-parameter variant.
@@ -237,7 +236,6 @@ else:
         Input may already be a list of strings or a single delimited string,
         which is split according to the active split-parameter mixin.
         """
-
         @classmethod
         def _parse_data(cls: type[_HasSplitParams], data: list[str] | str) -> list[str]:
             if isinstance(data, list):
@@ -307,7 +305,6 @@ else:
         Input may be provided as already nested lists or as a list of strings
         that should each be split into subitems.
         """
-
         @classmethod
         def _parse_data(cls: type[_HasSplitParams],
                         data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
@@ -425,7 +422,6 @@ else:
         Input may already be a string or a list of strings that should be
         joined according to the active join-parameter mixin.
         """
-
         @classmethod
         def _parse_data(cls: type[_HasJoinParams], data: str | list[str]) -> str:
             if isinstance(data, str):
@@ -478,7 +474,6 @@ else:
         Input may already be a flat list of strings or nested lists where each
         sublist should be joined into one string item.
         """
-
         @classmethod
         def _parse_data(cls: type[_HasJoinParams], data: list[str] | list[list[str]]) -> list[str]:
             if isinstance(data, list) and (len(data) == 0 or not isinstance(data[0], list)):

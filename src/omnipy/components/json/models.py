@@ -178,7 +178,6 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
     form and convert it into parsed model content before the regular validation
     pipeline runs.
     """
-
     @classmethod
     def start_chars_for_json_content(cls) -> str:
         """Return leading characters that should trigger JSON-string parsing.

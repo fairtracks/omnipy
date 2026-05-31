@@ -16,7 +16,6 @@ from omnipy.shared.protocols.compute.mixins import IsNestedContext
 
 class FlowContextJobMixin:
     """Add flow-context tracking to executable flow jobs."""
-
     def __init__(self) -> None:
         self._time_of_last_run: datetime | None = None
 

@@ -55,7 +55,6 @@ _CallP = ParamSpec('_CallP')
 _CallableT = TypeVar('_CallableT')
 _RetT = TypeVar('_RetT')
 
-
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_FLOW_CORE_TEMPLATE_SUMMARY'] = dedent("""\
         Implement the core template behavior for flows.""")
@@ -169,7 +168,6 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
     Instances are typically produced by calling a ``LinearFlowTemplate``
     rather than by constructing ``LinearFlow`` directly.
     """
-
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         """Register the engine decorator for linear-flow execution.
 
@@ -325,15 +323,15 @@ class DagFlow(
 
 
 class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
-                                           IsFuncFlow[_CallP, _RetT],
-                                           _CallP,
-                                           _RetT],
-                            JobTemplateMixin[IsFuncFlowTemplate[_CallP, _RetT],
-                                             IsFuncFlow[_CallP, _RetT],
-                                             _CallP,
-                                             _RetT],
-                            FlowBase,
-                            Generic[_CallP, _RetT]):
+                                          IsFuncFlow[_CallP, _RetT],
+                                          _CallP,
+                                          _RetT],
+                           JobTemplateMixin[IsFuncFlowTemplate[_CallP, _RetT],
+                                            IsFuncFlow[_CallP, _RetT],
+                                            _CallP,
+                                            _RetT],
+                           FlowBase,
+                           Generic[_CallP, _RetT]):
     """{{FLOW_CORE_TEMPLATE_SUMMARY}}
 
     A function flow template wraps a Python callable that orchestrates work as
@@ -343,7 +341,6 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
     Instances are normally produced through the ``FuncFlowTemplate`` decorator
     factory rather than by direct construction.
     """
-
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsFuncFlow[_CallP, _RetT]]:
         """Return the executable function flow type produced by this template.

@@ -17,7 +17,6 @@ class IsaTopLevelSchema(pyd.BaseModel):
     Attributes:
         investigation: Wrapped investigation payload when present.
     """
-
     class Config:
         """Pydantic settings for top-level ISA validation.
 
@@ -48,7 +47,6 @@ class IsaJsonModel(Model[IsaInvestigationSchema | IsaTopLevelModel]):
     Input can be either a raw :class:`IsaInvestigationSchema` object or a
     top-level wrapper containing the ``investigation`` field.
     """
-
     class Config:
         """Pydantic settings for ISA union parsing behavior.
 

@@ -263,7 +263,6 @@ class CroppingOutputVariant(
         Generic[PanelT, ContentT, FrameT],
 ):
     """Output variant that crops stylized content to the panel frame."""
-
     def _crop_top_level_html(self, html: str) -> str:
         return re.sub(
             r'(<code[^>]*>)([\S\s]*)(</code>)',
@@ -446,7 +445,6 @@ class TextCroppingOutputVariant(
         Generic[PanelT, ContentT, FrameT],
 ):
     """Cropping strategy for text-like panels with line-preserving output."""
-
     @override
     def _crop_lines_vertically(
         self,
@@ -481,7 +479,6 @@ class TableCroppingOutputVariant(
         Generic[PanelT, ContentT, FrameT],
 ):
     """Cropping strategy for outer layout tables and their border structure."""
-
     @override
     def _crop_lines_vertically(
         self,

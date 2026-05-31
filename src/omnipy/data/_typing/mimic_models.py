@@ -11,7 +11,6 @@ from textwrap import dedent
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util.helpers import is_package_editable
 
-
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_MIMIC_MODEL_TYPED_STANDIN_SUMMARY'] = dedent("""\
         Typed stand-in for a concrete ``Model[...]`` subclass.

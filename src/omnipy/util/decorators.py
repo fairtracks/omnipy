@@ -80,7 +80,6 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
     """
     class CallbackAfterCall(AbstractContextManager):
         """Context manager running callback only after successful call completion."""
-
         def __init__(self, dec_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
             """Store callable and invocation arguments for deferred execution.
 
@@ -190,7 +189,6 @@ def call_super_if_available(call_super_before_method: bool):
     """
     class SuperCaller(Generic[_SelfOrClsT, _ArgT]):
         """Descriptor binding method calls and optional ``super()`` delegation."""
-
         def __init__(self, method: Callable[[_SelfOrClsT, _ArgT], _ArgT]):
             """Store the decorated method and descriptor state placeholders.
 

@@ -468,7 +468,6 @@ def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl_border_cas
     #         "key:": "value"
     #     }
     # """),).max_inline_list_or_dict_width_excl == 0
-
     """Test reflowed text draft panel max inline list or dict width excl border cases."""
     assert ReflowedTextDraftPanel(
         dedent("""

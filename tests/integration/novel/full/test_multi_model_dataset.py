@@ -141,7 +141,6 @@ def test_run_specialize_record_models_consistent_types(
 def test_fail_run_specialize_record_models_inconsistent_types(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-
     """Test fail run specialize record models inconsistent types."""
     specialize_record_models = case.flow_template.apply()
 

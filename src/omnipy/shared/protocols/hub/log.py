@@ -8,7 +8,6 @@ from typing import Protocol
 
 from omnipy.util.helpers import is_package_editable
 
-
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_CANLOG_LOGGER_SUMMARY'] = (
         'Return the logger bound to the concrete instance type.')
@@ -29,7 +28,6 @@ if is_package_editable('omnipy'):
 
 class CanLog(Protocol):
     """Protocol for objects that expose a logger and log helper."""
-
     @property
     def logger(self) -> Logger:
         """{{CANLOG_LOGGER_SUMMARY}}

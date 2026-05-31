@@ -304,7 +304,6 @@ def case_async_wait_a_bit_multithreaded_futures() -> JobCase[[float], Awaitable[
     id='fail-sync-function-multiproc-futures-wait_a_bit(0.005)==0.005',
     tags=['sync', 'function', 'multiprocess', 'fail'])
 def case_sync_wait_a_bit_multiprocessing_futures() -> JobCase[[float], float]:
-
     """Provide the sync wait a bit multiprocessing futures case."""
     pytest.xfail("Can't pickle function")
 
@@ -325,7 +324,6 @@ def case_sync_wait_a_bit_multiprocessing_futures() -> JobCase[[float], float]:
 )
 @pytest.mark.asyncio
 def case_async_wait_a_bit_multiprocessing() -> JobCase[[float], Awaitable[float]]:
-
     """Provide the async wait a bit multiprocessing case."""
     pytest.xfail("Can't pickle function")
 

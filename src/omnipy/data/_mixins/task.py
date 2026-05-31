@@ -19,7 +19,6 @@ class TaskDatasetMixin:
     ``FailedData`` markers instead of final model values. The mixin provides filtered views and
     metadata extraction helpers for those task-oriented datasets.
     """
-
     @call_super_if_available(call_super_before_method=True)
     @classmethod
     def _prepare_params(cls, params: TypeForm) -> TypeForm:

@@ -38,7 +38,6 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         _sub_obj_ids: Mapping from root object id to the ordered ids of sub-objects
             touched while copying that root.
     """
-
     def __init__(self) -> None:
         super().__init__()
         self._cur_deepcopy_obj_id: int | None = None

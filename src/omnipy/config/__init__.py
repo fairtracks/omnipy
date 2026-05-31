@@ -16,7 +16,6 @@ if TYPE_CHECKING:
 
 class ConfigBase(DataPublisher):
     """Base class for Omnipy configuration models."""
-
     def as_model(self) -> 'JsonDictModel':
         """Return a JSON model representation of the current configuration.
 

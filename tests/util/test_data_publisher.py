@@ -18,7 +18,6 @@ def test_subscribe_attr_defaults(
     attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
 ) -> None:
-
     """Test subscribe attr defaults."""
     config = MockDataPublisher()
 
@@ -44,7 +43,6 @@ def test_subscribe_attr_init_values(
     attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
 ) -> None:
-
     """Test subscribe attr initialization values."""
     foo = MockFoo()
     config = MockDataPublisher(foo=foo, text='foobar', number=0)
@@ -70,7 +68,6 @@ def test_fail_subscribe_attr_incorrect_config_item(
     attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
-
     """Test fail subscribe attr incorrect configuration item."""
     config = mock_config_publisher_with_attr_subscribers
 
@@ -82,7 +79,6 @@ def test_fail_subscribe_attr_private_config_item(
     attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
-
     """Test fail subscribe attr private configuration item."""
     config = mock_config_publisher_with_attr_subscribers
 
@@ -94,7 +90,6 @@ def test_subscribe_attr_setattr_no_subscribers(
     attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
-
     """Test subscribe attr setattr no subscribers."""
     config = mock_config_publisher_with_attr_subscribers
 
@@ -108,7 +103,6 @@ def test_subscribe_attr_setattr_single_subscriber(
     attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
-
     """Test subscribe attr setattr single subscriber."""
     config = mock_config_publisher_with_attr_subscribers
 
@@ -131,7 +125,6 @@ def test_subscribe_attr_setattr_two_subscribers(
     attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
-
     """Test subscribe attr setattr two subscribers."""
     config = mock_config_publisher_with_attr_subscribers
 
@@ -152,7 +145,6 @@ def test_subscribe_attr_setattr_two_subscribers(
 
 def test_subscribe_defaults(
         config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
-
     """Test subscribe defaults."""
     config = MockDataPublisher()
 
@@ -167,7 +159,6 @@ def test_subscribe_defaults(
 
 def test_subscribe_init_values(
         config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
-
     """Test subscribe initialization values."""
     foo = MockFoo()
     config = MockDataPublisher(foo=foo, text='foobar', number=0)
@@ -183,7 +174,6 @@ def test_subscribe_init_values(
 
 def test_subscribe_setattr_with_subscriber(
         config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
-
     """Test subscribe setattr with subscriber."""
     config = MockDataPublisher()
     config.subscribe(config_subscriber.set_config)
@@ -204,7 +194,6 @@ def test_subscribe_setattr_with_subscriber(
 
 def test_parent_subscribe_attr_defaults(
         config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
-
     """Test parent subscribe attr defaults."""
     parent = MockDataPublisherParent()
 
@@ -221,7 +210,6 @@ def test_parent_subscribe_attr_defaults(
 
 def test_parent_subscribe_attr_with_subscriber(
         config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
-
     """Test parent subscribe attr with subscriber."""
     parent = MockDataPublisherParent()
     parent.subscribe_attr('config', config_subscriber.set_config)
@@ -242,7 +230,6 @@ def test_parent_subscribe_attr_with_subscriber(
 
 def test_nested_parent_subscribe_attr_defaults(
         parent_config_subscriber: Annotated[MockParentConfigSubscriberCls, pytest.fixture]) -> None:
-
     """Test nested parent subscribe attr defaults."""
     grandparent = MockDataPublisherGrandParent()
 
@@ -261,7 +248,6 @@ def test_nested_parent_subscribe_attr_defaults(
 
 def test_nested_parent_subscribe_attr_with_subscriber(
         parent_config_subscriber: Annotated[MockParentConfigSubscriberCls, pytest.fixture]) -> None:
-
     """Test nested parent subscribe attr with subscriber."""
     grandparent = MockDataPublisherGrandParent()
     grandparent.subscribe_attr('parent_config', parent_config_subscriber.set_parent_config)
@@ -290,7 +276,6 @@ def test_unsubscribe_all(
     config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture],
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
 ) -> None:
-
     """Test unsubscribe all."""
     config = MockDataPublisher()
 
@@ -318,7 +303,6 @@ def test_change_subscribers_revert(
     list_appender_subscriber_func: Annotated[Callable[[str], None], pytest.fixture],
     mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:
-
     """Test change subscribers revert."""
     config = mock_config_publisher_with_attr_subscribers
 

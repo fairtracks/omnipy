@@ -44,7 +44,6 @@ class JobBase(
     immutable configuration, and applied jobs carry engine decoration and runtime
     execution behavior.
     """
-
     @property
     def _job_creator(self) -> IsJobCreator:
         return self.__class__.job_creator
@@ -214,7 +213,6 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
     Template instances are configuration objects. They can be refined, applied to
     produce executable jobs, or run directly when the current context allows it.
     """
-
     def __init__(self, *args: object, **kwargs: object):
         if JobBase not in self.__class__.__mro__:
             raise TypeError('JobTemplateMixin is not meant to be instantiated outside the context '
@@ -260,7 +258,6 @@ class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT
     Applied jobs are created from templates and are the place where engine
     decorators, runtime timestamps, and exception logging are attached.
     """
-
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
             raise TypeError('JobMixin is not meant to be instantiated outside the context '
