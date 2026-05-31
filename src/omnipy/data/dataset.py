@@ -352,15 +352,29 @@ class Dataset(
         :return: The concrete type (Model or Dataset class) used for all
                  data files in the dataset.
         """
-        # Pydantic v2: FieldInfo has no sub_fields. Extract dict value type from annotation.
-        from typing import get_args as _get_args
+        # Pydantic v2: FieldInfo has no sub_fields. The runtime annotation for
+        # Dataset.data may be `dict[str, T]` or
+        # `list[dict[str, T]] | dict[str, T]` (legacy anti-coercion hack).
+        # Extract T from whichever variant is present.
+        from typing import get_args as _get_args, get_origin as _get_origin
+
         field_annotation = cls._get_data_field().annotation
-        if field_annotation is not None:
-            field_args = _get_args(field_annotation)
-            value_type = field_args[1] if len(field_args) >= 2 else field_annotation
-        else:
-            value_type = cls._get_data_field().annotation
-        return cls._clean_type(value_type)
+
+        for variant in split_to_union_variants(field_annotation):
+            variant_origin = _get_origin(variant)
+            variant_args = _get_args(variant)
+
+            if variant_origin in (dict, Mapping) and len(variant_args) >= 2:
+                return cls._clean_type(variant_args[1])
+
+            if variant_origin in (list, tuple, set, frozenset) and variant_args:
+                nested_variant = variant_args[0]
+                nested_origin = _get_origin(nested_variant)
+                nested_args = _get_args(nested_variant)
+                if nested_origin in (dict, Mapping) and len(nested_args) >= 2:
+                    return cls._clean_type(nested_args[1])
+
+        return cls._clean_type(field_annotation)
 
     @classmethod
     def _clean_type_caches(cls):
@@ -816,10 +830,13 @@ class Dataset(
         for type_variant in split_to_union_variants(cls.get_type()):
             try:
                 return validation_func(cast('type[Model | Dataset]', type_variant), value)
-            except (ValidationError, ValueError, TypeError) as exp:
+            except (ValidationError, ValueError, TypeError, AttributeError) as exp:
                 errors.append(exp)
         assert errors
-        raise ValidationError([pyd.ErrorWrapper(exc, loc=data_file) for exc in errors], cls)
+        raise pyd.validation_error_from_wrappers(
+            [pyd.ErrorWrapper(exc, loc=data_file) for exc in errors],
+            cls,
+        )
 
     def _force_full_validation(self):
         self.data = self.data  # Triggers pydantic validation, as validate_assignment=True
@@ -846,17 +863,9 @@ class Dataset(
         data_dict = root_obj[DATA_KEY]
         for data_file, val in data_dict.items():
             if val is None:
-
-                def validation_by_parse_obj(
-                    type_variant: 'type[Model | Dataset]',
-                    value: UndefinedType | object,
-                ) -> _ModelOrDatasetT:
-                    return cast(_ModelOrDatasetT, type_variant.parse_obj(value))
-
                 data_dict[data_file] = cls._validate_value_for_data_file(
                     data_file,
                     val,
-                    validation_by_parse_obj,
                 )
 
         return {DATA_KEY: data_dict}
