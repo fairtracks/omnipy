@@ -75,8 +75,6 @@ class ColorConfig(ConfigBase):
             _ColorConfigTypedDict: Updated values where ``style`` is replaced with
                 a concrete style when a recommended preset is used.
 
-        Raises:
-            None: This validator does not raise exceptions directly.
 
         Example:
             >>> ColorConfig.default_style({
@@ -116,8 +114,6 @@ class UserInterfaceTypeConfig(ConfigBase):
             height: New UI height in character or pixel units, depending on
                 renderer.
 
-        Raises:
-            None: This method does not raise exceptions directly.
 
         Example:
             >>> ui_cfg = UserInterfaceTypeConfig()
@@ -178,8 +174,6 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
             pyd.NonNegativeInt: Auto-detected width when available, otherwise
                 the provided ``value``.
 
-        Raises:
-            None: This validator does not raise exceptions directly.
 
         Example:
             >>> DimsModeConfig.check_and_set_auto_width(80, {'dims_mode': DisplayDimensionsUpdateMode.AUTO})
@@ -203,8 +197,6 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
             pyd.NonNegativeInt: Auto-detected height when available, otherwise
                 the provided ``value``.
 
-        Raises:
-            None: This validator does not raise exceptions directly.
 
         Example:
             >>> DimsModeConfig.check_and_set_auto_height(24, {'dims_mode': DisplayDimensionsUpdateMode.AUTO})
@@ -231,8 +223,6 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
             pyd.NonNegativeInt: Auto-detected dimension value when available,
                 otherwise the provided ``value``.
 
-        Raises:
-            None: This helper does not raise exceptions directly.
 
         Example:
             >>> DimsModeConfig._get_available_display_dim_if_auto_dims_mode(
@@ -289,8 +279,6 @@ class TerminalUserInterfaceConfig(DimsModeConfig):
             tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
                 Terminal width and height, or ``None`` for unavailable values.
 
-        Raises:
-            None: This method does not raise exceptions directly.
 
         Example:
             >>> TerminalUserInterfaceConfig._get_available_display_dims()
@@ -334,8 +322,6 @@ class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
                 ``(None, None)`` because dimensions are currently pushed from
                 Jupyter frontend code.
 
-        Raises:
-            None: This method does not raise exceptions directly.
 
         Example:
             >>> JupyterUserInterfaceConfig._get_available_display_dims()
