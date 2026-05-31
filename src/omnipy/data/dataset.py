@@ -880,7 +880,19 @@ class Dataset(
         return new_dataset
 
     def to_data(self) -> dict_t[str, Any]:
-        return {key: self._check_value(val) for key, val in self.dict(by_alias=True).items()}
+        from omnipy.data.model import is_model_instance
+
+        data: dict_t[str, Any] = {}
+
+        for key, val in self.data.items():
+            checked_val = self._check_value(val)
+
+            if is_model_instance(checked_val) or is_dataset_instance(checked_val):
+                data[key] = checked_val.to_data()
+            else:
+                data[key] = checked_val
+
+        return data
 
     def dict(self, **kwargs) -> dict_t[str, Any]:
         return super().model_dump(**kwargs)[DATA_KEY]
