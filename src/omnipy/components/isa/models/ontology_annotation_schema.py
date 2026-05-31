@@ -34,4 +34,6 @@ class IsaOntologyReferenceSchema(pyd.BaseModel):
 
 
 class IsaOntologyReferenceModel(Model[IsaOntologyReferenceSchema]):
+    """ISA model representing an ontology annotation or term reference."""
+
     ...

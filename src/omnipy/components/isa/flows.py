@@ -1,3 +1,5 @@
+"""Flows for transforming ISA-JSON datasets into flattened tabular-like structures."""
+
 from omnipy.compute.flow import LinearFlowTemplate
 
 from ..general.tasks import convert_dataset
@@ -12,4 +14,5 @@ from .datasets import FlattenedIsaJsonDataset, IsaJsonDataset
     flatten_nested_json,
     convert_dataset.refine(fixed_params=dict(dataset_cls=FlattenedIsaJsonDataset)))
 def flatten_isa_json(dataset: IsaJsonDataset) -> FlattenedIsaJsonDataset:
+    """Flatten ISA-JSON datasets through dictionary transposition and nested JSON flattening."""
     ...

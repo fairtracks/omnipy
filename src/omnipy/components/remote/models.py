@@ -1,3 +1,5 @@
+"""Models for HTTP URLs, URL parts, query strings, and automatic response decoding."""
+
 from pathlib import PurePosixPath
 from typing import Any, cast, TypeGuard
 from urllib.parse import quote, unquote
@@ -28,6 +30,8 @@ QueryParamsJoinerModel = NestedJoinItemsModel.adjust(
 
 
 class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tuple[str, ...] | str]):
+    """Represent URL query parameters as a decoded string-to-string mapping."""
+
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         def __new__(cls, *args: Any, **kwargs: Any) -> 'QueryParamsModel_dict':
@@ -74,6 +78,8 @@ if TYPE_CHECKING:
 
 
 class UrlPathModel(Model[PurePosixPath | str]):
+    """Represent a URL path with path-like joining helpers for slash-separated segments."""
+
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         def __new__(cls, *args: Any, **kwargs: Any) -> 'UrlPathModel_PurePosixPath':
@@ -160,6 +166,8 @@ class UrlDataclassModel(pyd.BaseModel):
 
 
 class HttpUrlModel(Model[UrlDataclassModel | str]):
+    """Represent a validated HTTP or HTTPS URL as a structured model."""
+
     if TYPE_CHECKING:
 
         def __new__(cls, *args: Any, **kwargs: Any) -> 'HttpUrlModel_UrlDataclassModel':
@@ -243,6 +251,7 @@ class ResponseContentPydModel(pyd.BaseModel):
 
 class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel | StrictStrModel
                                      | JsonListOrDictModel]):
+    """Decode HTTP response content to bytes, text, or JSON from its MIME type."""
     class Config(Model.Config):
         smart_union = False
 

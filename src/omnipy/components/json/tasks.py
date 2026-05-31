@@ -1,3 +1,5 @@
+"""JSON tasks for parsing datasets and reshaping nested JSON structures."""
+
 from collections import defaultdict
 from typing import cast
 
@@ -23,6 +25,10 @@ from .typedefs import (Json,
 
 @TaskTemplate()
 def convert_dataset_string_to_json(dataset: Dataset[Model[str]]) -> JsonDataset:
+    """Convert a dataset of JSON strings into parsed JSON items.
+
+    Each input string is parsed and loaded into the corresponding ``JsonDataset`` entry.
+    """
     json_dataset = JsonDataset()
     json_dataset.from_json(dataset.to_data())
     return json_dataset
@@ -30,6 +36,11 @@ def convert_dataset_string_to_json(dataset: Dataset[Model[str]]) -> JsonDataset:
 
 @TaskTemplate()
 def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> JsonListDataset:
+    """Transpose dictionary-valued dataset items into list-valued dataset items.
+
+    Groups values by inner key and injects the original item name into dictionary records under
+    ``id_key``.
+    """
     input_dataset: dict[str, JsonDict] = dataset.to_data()
     output_dataset: dict[str, JsonList] = {}
 
@@ -58,6 +69,10 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
 def _flatten_outer_level_of_all_data_files(
         dataset: JsonListOfDictsDataset, id_key: str, ref_key: str,
         default_key: str) -> tuple[JsonListOfDictsOfScalarsDataset, JsonListOfDictsDataset]:
+    """Flatten one outer nesting level for every record in a dataset.
+
+    Returns scalar-only records for the current level together with any remaining nested records.
+    """
 
     data_files_of_scalar_records: defaultdict[str, JsonListOfDictsOfScalars] = \
         defaultdict(JsonListOfDictsOfScalars)

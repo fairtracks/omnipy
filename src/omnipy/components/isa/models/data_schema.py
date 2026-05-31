@@ -48,4 +48,6 @@ class IsaDataSchema(pyd.BaseModel):
 
 
 class IsaDataModel(Model[IsaDataSchema]):
+    """ISA model representing a data file in an assay workflow."""
+
     ...

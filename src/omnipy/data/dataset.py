@@ -1,3 +1,10 @@
+"""Typed dataset containers and dataset type predicates.
+
+This module defines :class:`Dataset`, the core Omnipy container for named data items that all
+share the same model or nested dataset type. It also provides helper predicates for checking
+dataset instances and subclasses in a lenient way that works with the library's generic types.
+"""
+
 import asyncio
 from collections import defaultdict, UserDict
 from collections.abc import Iterable, Mapping, MutableMapping
@@ -97,51 +104,20 @@ class Dataset(
         UserDict[str, _ModelOrDatasetT],
         Generic[_ModelOrDatasetT],
         metaclass=_DatasetMetaclass):
-    """
-    Dict-based container of data files that follow a specific Model
+    """Store named, typed data items in a dict-like container.
 
-    Dataset is a generic class that cannot be instantiated directly. Instead, a Dataset class needs
-    to be specialized with a data model before Dataset objects can be instantiated. A data model
-    functions as a data parser and guarantees that the parsed data follows the specified model.
+    ``Dataset`` is Omnipy's core container for collections of data items that all conform to the
+    same model type, or to the same nested dataset type. The class must be specialized before use,
+    for example as ``Dataset[Model[list[int]]]`` or ``Dataset[MyModel]``.
 
-    The specialization must be done through the use of Model, either directly, e.g.::
+    Instances behave much like mutable dictionaries whose keys are data-file names and whose values
+    are validated model or dataset objects. The validated backing contents live in :attr:`data`,
+    while convenience methods such as :meth:`from_data`, :meth:`to_data`, :meth:`to_json`, and
+    :meth:`load` expose plain-Python, JSON, and serialized representations.
 
-        MyDataset = Dataset[Model[dict[str, list[int]]])
-
-    ... or indirectly, using a Model subclass, e.g.::
-
-        class MyModel(Model[dict[str, list[int]]):
-            pass
-
-        MyDataset = Dataset[MyModel]
-
-    ... alternatively through the specification of a Dataset subclass::
-
-        class MyDataset(Dataset[MyModel]):
-            pass
-
-    The specialization can also be done in a more deeply nested structure, e.g.::
-
-        class MyNumberList(Model[list[int]]):
-            pass
-
-        class MyToplevelDict(Model[dict[str, MyNumberList]]):
-            pass
-
-        class MyDataset(Dataset[MyToplevelDict]):
-            pass
-
-    Once instantiated, a dataset object functions as a dict of data files, with the keys
-    referring to the data file names and the content to the data file content, e.g.::
-
-        MyNumberListDataset = Dataset[Model[list[int]]]
-
-        my_dataset = MyNumberListDataset({'file_1': [1,2,3]})
-        my_dataset['file_2'] = [2,3,4]
-
-        print(my_dataset.keys())
-
-    The Dataset class is a wrapper class around the powerful `GenericModel` class from pydantic.
+    Item access supports both ordinary dictionary-style keys and dataset-specific selectors such as
+    integer positions, slices, and iterables of keys or positions. Singular selection returns one
+    validated item; plural selection returns a new dataset of the same specialized class.
     """
     class Config:
         validate_assignment = True
@@ -171,6 +147,18 @@ class Dataset(
         | tuple[type[_ModelOrDatasetT], Any] | TypeVar
         | tuple[TypeVar, ...],
     ) -> Self:
+        """Specialize the dataset class with a concrete model or nested dataset type.
+
+        Args:
+            params: The model type, dataset type, union of such types, or type variable used to
+                parameterize the dataset.
+
+        Returns:
+            A specialized ``Dataset`` subclass bound to the supplied item type.
+
+        Raises:
+            TypeError: If the supplied type argument is not a supported model or dataset type.
+        """
         # TODO: change model type to params: Type[Any] | tuple[Type[Any], ...]
         #       as in GenericModel.
 
@@ -320,9 +308,23 @@ class Dataset(
     #       the Rust backend.
 
     def __copy__(self):
+        """Return a shallow copy of the dataset.
+
+        Returns:
+            A new dataset instance with a shallow copy of the backing mapping.
+        """
         return self.copy(deep=False)
 
     def copy(self, *, deep: bool = False, **kwargs) -> Self:
+        """Copy the dataset.
+
+        Args:
+            deep: Whether to deep-copy nested values as well as the dataset object.
+            **kwargs: Additional keyword arguments forwarded to Pydantic's ``copy()``.
+
+        Returns:
+            A copied dataset instance of the same specialized class.
+        """
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             object.__setattr__(pydantic_copy, DATA_KEY, pydantic_copy.__dict__[DATA_KEY].copy())
@@ -333,6 +335,15 @@ class Dataset(
     def clone_dataset_cls(cls,
                           new_dataset_cls_name: str,
                           model_cls: type[_NewModelT] | None = None) -> type[Self]:
+        """Create a new dataset subclass based on this dataset class.
+
+        Args:
+            new_dataset_cls_name: Name of the generated dataset subclass.
+            model_cls: Optional replacement item model for the generated subclass.
+
+        Returns:
+            A newly created dataset subclass.
+        """
         if model_cls:
             generic_dataset_cls = cls.__bases__[0]
             new_base_cls = generic_dataset_cls[model_cls]  # type: ignore[index]
@@ -349,12 +360,10 @@ class Dataset(
     @classmethod
     @functools.cache
     def get_type(cls) -> type[_ModelOrDatasetT]:
-        """
-        Returns the concrete type (Model or Dataset class) used for all
-        data files in the dataset, e.g.: `Model[list[int]]`, or
-        `Dataset[Model[dict[str, float]]]` for nested datasets.
-        :return: The concrete type (Model or Dataset class) used for all
-                 data files in the dataset.
+        """Return the concrete item type stored by this dataset class.
+
+        Returns:
+            The specialized model or nested dataset class used for every item in the dataset.
         """
         # Part of pydantic v1 hack to stop coercing of e.g.
         # [{'a': 'b', 'c': 'd'}] to {'a': 'c'}
@@ -562,6 +571,16 @@ class Dataset(
         self,
         selector: str | int | slice | Iterable[str | int],
     ) -> '_DatasetT | _ModelOrDatasetT | Model | Self':
+        """Return one item or a selected subset of the dataset.
+
+        Args:
+            selector: A data-file key, positional index, slice, or iterable of keys and/or
+                indices.
+
+        Returns:
+            The selected validated item for singular selection, or a new dataset containing the
+            selected items for plural selection.
+        """
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
@@ -576,6 +595,12 @@ class Dataset(
         return value
 
     def __delitem__(self, selector: str | int | slice | Iterable[str | int]) -> None:
+        """Delete one or more items selected from the dataset.
+
+        Args:
+            selector: A data-file key, positional index, slice, or iterable of keys and/or
+                indices.
+        """
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
@@ -605,6 +630,19 @@ class Dataset(
         selector: str | int | slice | Iterable[str | int],
         data_obj: object | Mapping[str, object] | Iterable[object],
     ) -> None:
+        """Assign one or more items and validate them against the dataset type.
+
+        Args:
+            selector: A data-file key, positional index, slice, or iterable of keys and/or
+                indices.
+            data_obj: A single replacement item for singular selection, or mapping/iterable data
+                for plural selection.
+
+        Raises:
+            TypeError: If plural assignment receives a value that is neither a mapping nor an
+                iterable.
+            ValidationError: If any assigned item fails dataset validation.
+        """
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
@@ -691,9 +729,16 @@ class Dataset(
 
     @classmethod
     def validate(cls, value: Any) -> Self:
-        """
-        Hack to allow overwriting of __iter__ method without compromising pydantic validation. Part
-        of the pydantic API and not the Omnipy API.
+        """Validate arbitrary input as an instance of this dataset class.
+
+        This method is primarily part of the Pydantic integration layer and preserves dataset
+        validation behavior when iterables are accepted as input.
+
+        Args:
+            value: The value to validate.
+
+        Returns:
+            A validated dataset instance.
         """
         # TODO: Doublecheck if validate() method is still needed for pydantic v2
 
@@ -828,6 +873,11 @@ class Dataset(
 
     @override
     def __iter__(self) -> Iterator[str]:  # type: ignore[override]
+        """Iterate over dataset keys.
+
+        Returns:
+            An iterator over data-file names in the backing mapping.
+        """
         return UserDict.__iter__(self)
 
     def __setattr__(self, attr: str, value: Any) -> None:
@@ -864,23 +914,59 @@ class Dataset(
         return {DATA_KEY: data_dict}
 
     def to(self, model_or_dataset_cls: type[_OtherModelOrDatasetT]) -> '_OtherModelOrDatasetT':
+        """Convert this dataset to another model or dataset class.
+
+        Args:
+            model_or_dataset_cls: Target model or dataset class that can be constructed from this
+                dataset.
+
+        Returns:
+            An instance of the requested target class.
+        """
         return model_or_dataset_cls(self)
 
     def do(self, placeholder: F) -> 'Dataset[_ModelOrDatasetT]':
+        """Apply a callable placeholder to each item and collect the results in a new dataset.
+
+        Args:
+            placeholder: Callable wrapper used to transform each validated dataset item.
+
+        Returns:
+            A new dataset of the same class containing the transformed items.
+        """
         new_dataset = self.__class__()
         for data_file, val in self.items():
             new_dataset[data_file] = placeholder(val)
         return new_dataset
 
     def to_data(self) -> dict_t[str, Any]:
+        """Return the dataset as plain Python contents.
+
+        Returns:
+            A mapping from data-file name to plain Python data extracted from each validated item.
+        """
         return {key: self._check_value(val) for key, val in self.dict(by_alias=True).items()}
 
     def dict(self, **kwargs) -> dict_t[str, Any]:
+        """Return the dataset backing mapping as a plain dictionary.
+
+        Args:
+            **kwargs: Keyword arguments forwarded to Pydantic's ``dict()`` implementation.
+
+        Returns:
+            The serialized value of the dataset's ``data`` field.
+        """
         return super().dict(**kwargs)[DATA_KEY]
 
     def from_data(self,
                   data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                   update: bool = True) -> None:
+        """Populate the dataset from plain Python contents.
+
+        Args:
+            data: Mapping or iterable of ``(key, value)`` pairs to parse into validated items.
+            update: Whether to merge into existing contents instead of replacing them first.
+        """
         def callback_func(type_variant: 'Model | Dataset', content: Any):
             type_variant.from_data(content)
 
@@ -925,12 +1011,30 @@ class Dataset(
             )
 
     def absorb(self, other: 'Dataset'):
+        """Merge another dataset's contents into this dataset.
+
+        Args:
+            other: Dataset whose plain-Python contents should be added or overwrite matching keys.
+        """
         self.from_data(other.to_data(), update=True)
 
     def absorb_and_replace(self, other: 'Dataset'):
+        """Replace this dataset's contents with another dataset's contents.
+
+        Args:
+            other: Dataset whose contents should replace the current contents.
+        """
         self.from_data(other.to_data(), update=False)
 
     def to_json(self, pretty=True) -> dict_t[str, str]:
+        """Serialize each dataset item to JSON.
+
+        Args:
+            pretty: Whether to pretty-print the JSON for each item.
+
+        Returns:
+            A mapping from data-file name to JSON string.
+        """
         result = {}
 
         for key, val in self.data.items():
@@ -941,6 +1045,12 @@ class Dataset(
     def from_json(self,
                   data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
+        """Populate the dataset from per-item JSON strings.
+
+        Args:
+            data: Mapping or iterable of ``(key, json_string)`` pairs.
+            update: Whether to merge into existing contents instead of replacing them first.
+        """
         def callback_func(type_variant: 'Model | Dataset', content: Any):
             type_variant.from_json(content)
 
@@ -965,6 +1075,14 @@ class Dataset(
 
     @classmethod
     def to_json_schema(cls, pretty: bool = True) -> str | dict_t[str, str]:
+        """Return a JSON schema for the dataset's serialized contents.
+
+        Args:
+            pretty: Whether to return pretty-printed JSON text instead of compact JSON text.
+
+        Returns:
+            A JSON schema string describing the dataset contents.
+        """
         result = {}
         clean_dataset = super(Dataset, Dataset).__class_getitem__(cls.get_type())
         schema = clean_dataset.schema()
@@ -997,6 +1115,11 @@ class Dataset(
         return json.dumps(json_content, indent=2)
 
     def save(self, path: str):
+        """Serialize the dataset to a ``.tar.gz`` archive and extract a directory copy.
+
+        Args:
+            path: Destination path with or without the ``.tar.gz`` suffix.
+        """
         serializer_registry = self._get_serializer_registry()
 
         parsed_dataset, serializer = serializer_registry.auto_detect_tar_file_serializer(self)
@@ -1030,6 +1153,18 @@ class Dataset(
         as_mime_type: None | str = None,
         **kwargs: IsPathOrUrl,
     ) -> Self | asyncio.Task[Self]:
+        """Create a dataset and load serialized contents into it.
+
+        Args:
+            paths_or_urls: Path, URL, iterable of paths or URLs, or dataset/model of HTTP URLs to
+                load from.
+            by_file_suffix: Whether serializer lookup should prefer file-suffix detection.
+            as_mime_type: Optional MIME type hint for HTTP loading.
+            **kwargs: Alternate keyed path or URL arguments when ``paths_or_urls`` is omitted.
+
+        Returns:
+            A loaded dataset, or an ``asyncio.Task`` when called inside a running event loop.
+        """
         dataset = cls()
         return dataset.load_into(
             paths_or_urls, by_file_suffix=by_file_suffix, as_mime_type=as_mime_type, **kwargs)
@@ -1041,6 +1176,24 @@ class Dataset(
         as_mime_type: None | str = None,
         **kwargs: IsPathOrUrl,
     ) -> Self | asyncio.Task[Self]:
+        """Load serialized contents into this dataset instance.
+
+        Args:
+            paths_or_urls: Path, URL, iterable of paths or URLs, or dataset/model of HTTP URLs to
+                load from.
+            by_file_suffix: Whether serializer lookup should prefer file-suffix detection.
+            as_mime_type: Optional MIME type hint for HTTP loading.
+            **kwargs: Alternate keyed path or URL arguments when ``paths_or_urls`` is omitted.
+
+        Returns:
+            This dataset instance after loading, or an ``asyncio.Task`` when called inside a
+            running event loop.
+
+        Raises:
+            AssertionError: If the input forms are combined incorrectly.
+            TypeError: If ``paths_or_urls`` has an unsupported type.
+            NotImplementedError: If keyed local-path loading is requested.
+        """
         from omnipy.components.remote.datasets import HttpUrlDataset
         from omnipy.components.remote.models import HttpUrlModel
 
@@ -1202,6 +1355,11 @@ class Dataset(
         return get_serializer_registry()
 
     def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelOrDatasetT]':
+        """Return a multi-model view of this dataset.
+
+        Returns:
+            A ``MultiModelDataset`` initialized with the same item type and current contents.
+        """
         from omnipy.data.multi import MultiModelDataset
 
         multi_model_dataset = MultiModelDataset[self.get_type()]()
@@ -1210,6 +1368,15 @@ class Dataset(
         return multi_model_dataset
 
     def __eq__(self, other: object) -> bool:
+        """Compare datasets by specialized class and contents.
+
+        Args:
+            other: Object to compare against.
+
+        Returns:
+            ``True`` when both objects are datasets of the same specialized class with equal
+            validated contents.
+        """
         # return self.__class__ == other.__class__ and super().__eq__(other)
         return isinstance(other, Dataset) \
             and self.__class__ == other.__class__ \
@@ -1223,9 +1390,25 @@ class Dataset(
 
 
 def is_dataset_instance(__obj: object) -> 'TypeIs[Dataset]':
+    """Return whether an object is a dataset instance.
+
+    Args:
+        __obj: Object to test.
+
+    Returns:
+        ``True`` if the object is recognized as a ``Dataset`` instance.
+    """
     return lenient_isinstance(__obj, Dataset)
 
 
 @functools.cache
 def is_dataset_subclass(__cls: TypeForm) -> 'TypeIs[type[Dataset]]':
+    """Return whether a type form is a dataset subclass.
+
+    Args:
+        __cls: Type or type-like form to test.
+
+    Returns:
+        ``True`` if the argument is recognized as a ``Dataset`` subclass.
+    """
     return lenient_issubclass(__cls, Dataset)

@@ -30,4 +30,6 @@ class IsaFactorValueSchema(pyd.BaseModel):
 
 
 class IsaFactorValueModel(Model[IsaFactorValueSchema]):
+    """ISA model representing a factor value assigned within a study."""
+
     ...

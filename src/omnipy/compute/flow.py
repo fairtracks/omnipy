@@ -1,3 +1,18 @@
+"""Flow definitions for composing tasks and subflows.
+
+This module exposes Omnipy's public flow types. Use ``LinearFlowTemplate`` for
+sequential pipelines, ``DagFlowTemplate`` for dependency-driven directed
+acyclic graphs, and ``FuncFlowTemplate`` for flows expressed as a single
+coordinating callable.
+
+Attributes:
+    LinearFlowTemplate: Decorator-style template factory for sequential flows.
+    DagFlowTemplate: Decorator-style template factory for directed acyclic
+        graph flows.
+    FuncFlowTemplate: Decorator-style template factory for callable-backed
+        coordinating flows.
+"""
+
 from typing import Callable, cast, Concatenate, Generic, ParamSpec
 
 from typing_extensions import TypeVar
@@ -39,6 +54,8 @@ _RetT = TypeVar('_RetT')
 
 
 class FlowBase:
+    """Marker base class for Omnipy flow objects."""
+
     ...
 
 
@@ -67,6 +84,14 @@ class LinearFlowTemplateCore(
 def linear_flow_template_as_callable_decorator(
     decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsLinearFlowTemplate]) -> \
         Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsLinearFlowTemplate[_CallP, _RetT]]]:
+    """Wrap a linear-flow initializer as a callable decorator factory.
+
+    Args:
+        decorated_cls: Linear-flow template initializer to adapt.
+
+    Returns:
+        A decorator factory that converts a Python callable into a linear flow template.
+    """
     return callable_decorator_cls(
         cast(
             Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
@@ -85,6 +110,11 @@ def to_linear_flow_template_init_protocol(
 
 LinearFlowTemplate = linear_flow_template_as_callable_decorator(
     to_linear_flow_template_init_protocol(LinearFlowTemplateCore))
+"""Decorator-style factory for defining sequential flows.
+
+Use ``@LinearFlowTemplate(...)`` when a flow should execute tasks in a fixed,
+step-by-step order.
+"""
 
 
 class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
@@ -97,6 +127,13 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
                                         _CallP,
                                         _RetT],
                  Generic[_CallP, _RetT]):
+    """Executable sequential flow.
+
+    A ``LinearFlow`` runs its constituent tasks in declaration order, making
+    each step wait for the previous one to finish. Use it for pipelines where
+    every stage depends on the output or side effects of the stage before it.
+    """
+
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         if self.engine:
             engine = cast(IsJobRunnerEngine, self.engine)
@@ -131,6 +168,14 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
 def dag_flow_template_as_callable_decorator(
     decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsDagFlowTemplate]) -> \
         Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsDagFlowTemplate[_CallP, _RetT]]]:
+    """Wrap a DAG-flow initializer as a callable decorator factory.
+
+    Args:
+        decorated_cls: DAG-flow template initializer to adapt.
+
+    Returns:
+        A decorator factory that converts a Python callable into a DAG flow template.
+    """
     return callable_decorator_cls(
         cast(
             Callable[Concatenate[Callable[_CallP, _RetT], _InitP], IsDagFlowTemplate[_CallP,
@@ -148,6 +193,11 @@ def to_dag_flow_template_init_protocol(
 
 DagFlowTemplate = dag_flow_template_as_callable_decorator(
     to_dag_flow_template_init_protocol(DagFlowTemplateCore))
+"""Decorator-style factory for defining directed acyclic graph flows.
+
+Use ``@DagFlowTemplate(...)`` when task dependencies form a DAG with possible
+branching and joining, but no cycles.
+"""
 
 
 class DagFlow(
@@ -186,6 +236,13 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
                                             _RetT],
                            FlowBase,
                            Generic[_CallP, _RetT]):
+    """Core implementation for callable-backed flow templates.
+
+    A function flow template wraps a Python callable that orchestrates work as
+    a flow. Use this when the control flow is easiest to express directly in
+    Python instead of as an explicit task list or dependency graph.
+    """
+
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsFuncFlow[_CallP, _RetT]]:
         return cast(type[IsFuncFlow[_CallP, _RetT]], FuncFlow[_CallP, _RetT])
@@ -195,6 +252,14 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
 def func_flow_template_as_callable_decorator(
     decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsFuncFlowTemplate]) -> \
         Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsFuncFlowTemplate[_CallP, _RetT]]]:
+    """Wrap a function-flow initializer as a callable decorator factory.
+
+    Args:
+        decorated_cls: Function-flow template initializer to adapt.
+
+    Returns:
+        A decorator factory that converts a Python callable into a function flow template.
+    """
     return callable_decorator_cls(
         cast(
             Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
@@ -206,12 +271,25 @@ def to_func_flow_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
                             FuncFlowTemplateCore[_CallP, _RetT]]
 ) -> HasFuncArgJobTemplateInit[IsFuncFlowTemplate[_CallP, _RetT], _CallP, _RetT]:
+    """Cast a function-flow initializer to the shared init protocol.
+
+    Args:
+        decorated_cls: Function-flow template initializer to cast.
+
+    Returns:
+        The initializer typed as ``HasFuncArgJobTemplateInit``.
+    """
     return cast(HasFuncArgJobTemplateInit[IsFuncFlowTemplate[_CallP, _RetT], _CallP, _RetT],
                 decorated_cls)
 
 
 FuncFlowTemplate = func_flow_template_as_callable_decorator(
     to_func_flow_template_init_protocol(FuncFlowTemplateCore))
+"""Decorator-style factory for defining callable-backed coordinating flows.
+
+Use ``@FuncFlowTemplate()`` when a Python callable should orchestrate the flow
+imperatively.
+"""
 
 
 class FuncFlow(

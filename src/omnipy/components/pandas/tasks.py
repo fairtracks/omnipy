@@ -1,3 +1,5 @@
+"""Tasks for converting, combining, and reshaping pandas-backed datasets."""
+
 from io import StringIO
 from typing import Mapping, Sequence
 
@@ -15,6 +17,8 @@ from .models import PandasModel
 def convert_dataset_list_of_dicts_to_pandas(
         dataset: Dataset[Model[list[dict[str, NotIterableExceptStrOrBytesModel]]]]) \
         -> PandasDataset:
+    """Convert each list-of-dicts data file in a dataset into a pandas-backed table."""
+
     pandas_dataset = PandasDataset()
     pandas_dataset.from_data(dataset.to_data())
     return pandas_dataset
@@ -27,6 +31,8 @@ def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
                                   col_names: list[str] | None = None,
                                   ignore_comments: bool = True,
                                   comments_char: str = '#') -> PandasDataset:
+    """Parse each CSV-like data file into a pandas-backed table in a ``PandasDataset``."""
+
     from .lazy_import import pd
 
     out_dataset = PandasDataset()
@@ -50,6 +56,8 @@ def convert_dataset_pandas_to_csv(
     first_row_as_col_names=True,
     col_names: list[str] | None = None,
 ) -> Dataset[Model[str]]:
+    """Serialize each pandas-backed table in a dataset to CSV text."""
+
     out_dataset = Dataset[Model[str]]()
     for key, df in dataset.items():
         csv_stream = StringIO()
@@ -65,6 +73,8 @@ def convert_dataset_pandas_to_csv(
 
 @TaskTemplate()
 def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> PandasDataset:
+    """Split selected columns into separate one-column data files."""
+
     from .lazy_import import pd
 
     out_dataset = PandasDataset()
@@ -80,6 +90,8 @@ def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> Pa
 @TaskTemplate()
 def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSameNumberOfFiles,
                                       vertical=True) -> PandasDataset:
+    """Concatenate aligned pandas data files across datasets by rows or columns."""
+
     from .lazy_import import pd
 
     # We know from the data type that there are at least two datasets and that there is an equal
@@ -99,6 +111,8 @@ def join_tables(table_1: PandasModel,
                 table_2: PandasModel,
                 join_type: str = 'outer',
                 on_cols: Sequence[str] | Mapping[str, str] | None = None) -> PandasModel:
+    """Join two pandas-backed tables on shared or explicitly mapped columns."""
+
     from .lazy_import import pd
 
     if join_type == 'cross':
@@ -145,6 +159,8 @@ def join_tables(table_1: PandasModel,
 
 @TaskTemplate()
 def cartesian_product(table_1: PandasModel, table_2: PandasModel) -> PandasModel:
+    """Return the cross join of two pandas-backed tables."""
+
     from .lazy_import import pd
 
     merged_df = pd.merge(

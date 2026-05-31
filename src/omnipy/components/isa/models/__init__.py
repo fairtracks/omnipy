@@ -17,10 +17,14 @@ class IsaTopLevelSchema(pyd.BaseModel):
 
 
 class IsaTopLevelModel(Model[IsaTopLevelSchema]):
+    """ISA model representing the top-level investigation wrapper."""
+
     ...
 
 
 class IsaJsonModel(Model[IsaInvestigationSchema | IsaTopLevelModel]):
+    """ISA JSON model accepting investigation or top-level wrapper input."""
+
     class Config:
         smart_union = False
 

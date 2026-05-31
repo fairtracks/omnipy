@@ -28,4 +28,6 @@ class IsaProtocolParameterSchema(pyd.BaseModel):
 
 
 class IsaProtocolParameterModel(Model[IsaProtocolParameterSchema]):
+    """ISA model representing a protocol parameter."""
+
     ...

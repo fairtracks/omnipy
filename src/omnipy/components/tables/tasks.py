@@ -1,3 +1,5 @@
+"""Tasks for reshaping and relabeling tabular datasets."""
+
 from copy import copy, deepcopy
 from typing import cast
 
@@ -14,6 +16,15 @@ from .models import (ColumnWiseTableWithColNamesAndIndexModel,
 @TaskTemplate()
 def remove_columns(json_dataset: JsonListOfDictsDataset,
                    column_keys_for_data_items: dict[str, list[str]]) -> JsonListOfDictsDataset:
+    """Build a JSON list-of-dicts dataset using a per-item column-removal mapping.
+
+    Args:
+        json_dataset: Dataset containing row-wise records keyed by data item name.
+        column_keys_for_data_items: Column names to target for each named data item.
+
+    Returns:
+        A JSON list-of-dicts dataset with the same item structure as the input.
+    """
     # TODO: implement general solution to make sure that one does not modify input data by
     #       automatically copying or otherwise. Perhaps setting immutable/frozen option in pydantic,
     #       if available?
@@ -30,6 +41,15 @@ def remove_columns(json_dataset: JsonListOfDictsDataset,
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TableWithColNamesDataset)
 def rename_col_names(data_file: RowWiseTableFirstRowAsColNamesModel,
                      prev2new_keymap: dict[str, str]) -> RowWiseTableFirstRowAsColNamesModel:
+    """Rename selected column names in a row-wise table.
+
+    Args:
+        data_file: Table whose rows are keyed by column name.
+        prev2new_keymap: Mapping from existing column names to replacement names.
+
+    Returns:
+        A new table with renamed column keys.
+    """
     return RowWiseTableFirstRowAsColNamesModel([{
         prev2new_keymap[key] if key in prev2new_keymap else key: val for key, val in row.items()
     } for row in data_file])
@@ -38,6 +58,15 @@ def rename_col_names(data_file: RowWiseTableFirstRowAsColNamesModel,
 @TaskTemplate()
 def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
                                       exclude_cols: tuple[str]) -> None:
+    """Transpose table columns so data-file names become nested keys.
+
+    Args:
+        dataset: Dataset of row-wise tables with column names.
+        exclude_cols: Column names to keep shared across all transposed rows.
+
+    Returns:
+        A JSON dataset whose top-level items are former column names.
+    """
     output_dataset = JsonListOfDictsDataset()
 
     max_len = max(len(data_file) for data_file in dataset.values())
@@ -74,6 +103,15 @@ def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
 @TaskTemplate(iterate_over_data_files=True)
 def create_row_index_from_column(list_of_dicts: RowWiseTableWithColNamesModel,
                                  column_key: str) -> ColumnWiseTableWithColNamesAndIndexModel:
+    """Re-key a row-wise table by promoting one column to the row index.
+
+    Args:
+        list_of_dicts: Table represented as a list of row mappings.
+        column_key: Name of the column whose values become the outer row keys.
+
+    Returns:
+        An indexed table where each outer key is taken from ``column_key``.
+    """
     output_dict = {}
     input_table = cast(list[dict[str, JsonScalar]], list_of_dicts.to_data())
     for item in input_table:

@@ -1,3 +1,10 @@
+"""Pydantic-backed Omnipy models and model inspection helpers.
+
+This module defines :class:`Model`, Omnipy's central typed container for a single
+validated root value, together with helper predicates for recognizing Omnipy
+models, plain pydantic models, and related class relationships.
+"""
+
 from collections.abc import Callable, Iterable, Mapping, MutableSequence
 from contextlib import contextmanager
 from copy import copy, deepcopy
@@ -86,6 +93,15 @@ dict_t = dict
 
 
 class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
+    """Metaclass for :class:`Model` with relaxed ``None`` handling.
+
+    Omnipy uses this metaclass as a workaround for a pydantic v1 bug affecting
+    nested root models. During certain validation paths, pydantic may check
+    ``None`` against the model class too early. Treating ``None`` as a temporary
+    instance match lets Omnipy defer the actual ``None`` decision to the model's
+    declared type.
+    """
+
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
     #
     # if origin is None or origin is CollectionsHashable:
@@ -101,6 +117,15 @@ class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
     #
     # TODO: Revisit the need for _ModelMetaclass hack in pydantic v2
     def __instancecheck__(self, instance: Any) -> bool:
+        """Report ``None`` as temporarily instance-compatible.
+
+        Args:
+            instance: Object being checked against the model class.
+
+        Returns:
+            ``True`` when ``instance`` is ``None`` or when the normal metaclass
+            instance check succeeds.
+        """
         if instance is None:
             return True
         return super().__instancecheck__(instance)
@@ -116,38 +141,17 @@ class Model(  # type: ignore[misc]
         Generic[_RootT],
         metaclass=ModelMetaclass,
 ):
-    """A data model containing a value parsed according to the model.
+    """Typed pydantic-backed container for a single validated value.
 
-    If no value is provided, the value is set to the default value of the data model, found by
-    calling the model class without parameters, e.g. `int()`.
+    ``Model[T]`` is Omnipy's central data container. Each concrete
+    specialization wraps one root value of type ``T``, validates incoming data
+    with pydantic, and exposes the parsed value through :attr:`content`. Models
+    also proxy many operations on the wrapped object so they can often be used
+    like the underlying value while still preserving Omnipy validation,
+    conversion helpers, and interactive snapshot semantics.
 
-    Model is a generic class that cannot be instantiated directly. Instead, a Model class needs
-    to be specialized with a data type before Model objects can be instantiated. A data model
-    functions as a data parser and guarantees that the parsed data follows the specified model.
-
-    Example data model specialized as a class alias::
-
-        MyNumberList = Model[list[int]]
-
-    ... alternatively as a Model subclass::
-
-        class MyNumberList(Model[list[int]]):
-            pass
-
-    Once instantiated, a Model object functions as a parser, e.g.::
-
-        my_number_list = MyNumberList([2,3,4])
-
-        my_number_list.content = ['3', 4, True]
-        assert my_number_list.content == [3,4,1]
-
-    While the following should raise a `ValidationError`::
-
-        my_number_list.content = ['abc', 'def']
-
-    The Model class is a wrapper class around the powerful `GenericModel` class from pydantic.
-
-    See also docs of the Dataset class for more usage examples.
+    Concrete models are created either as type aliases such as
+    ``Model[list[int]]`` or by subclassing an already-specialized model class.
     """
     @classmethod
     def _get_special_methods_info_dict(cls) -> dict_t[str, MethodInfo]:
@@ -294,6 +298,14 @@ class Model(  # type: ignore[misc]
         cls,
         params: type[_RootT] | tuple[type[_RootT]] | TypeVar | tuple[TypeVar],
     ) -> 'type[Model[_RootT]]':
+        """Create a concrete ``Model[T]`` specialization.
+
+        Args:
+            params: Type expression describing the wrapped root value.
+
+        Returns:
+            A concrete :class:`Model` subclass bound to ``params``.
+        """
 
         model = cls._prepare_params(params)
 
@@ -479,6 +491,19 @@ class Model(  # type: ignore[misc]
                 *args: Any,
                 **kwargs: Any,
         ) -> Self:
+            """Create an instance only for concrete ``Model[T]`` specializations.
+
+            Args:
+                *args: Positional arguments forwarded to instance creation.
+                **kwargs: Keyword arguments forwarded to instance creation.
+
+            Returns:
+                A new instance of the concrete model class.
+
+            Raises:
+                TypeError: If ``Model`` is instantiated without first binding a
+                    concrete root type.
+            """
             model_not_specified = ROOT_KEY not in cls.__fields__
             if model_not_specified:
                 cls._raise_no_model_exception()
@@ -487,12 +512,23 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def get_orig_model(cls) -> type[_RootT] | UndefinedType:
+        """Return the original declared model type before internal normalization.
+
+        Returns:
+            The original type expression supplied for this model specialization,
+            or :data:`Undefined` when no original type has been recorded.
+        """
         if cls.__fields__[ROOT_KEY].field_info and cls.__fields__[ROOT_KEY].field_info.extra:
             return cls.__fields__[ROOT_KEY].field_info.extra.get('orig_model', Undefined)
         return Undefined
 
     @classmethod
     def set_orig_model(cls, orig_model: TypeForm) -> None:
+        """Store the original declared model type on the root field metadata.
+
+        Args:
+            orig_model: Original type expression to associate with the model.
+        """
         cls.__fields__[ROOT_KEY].field_info.extra['orig_model'] = orig_model
 
     def __init__(  # noqa: C901
@@ -502,6 +538,24 @@ class Model(  # type: ignore[misc]
         __root__: _RootT | object | UndefinedType = Undefined,
         **kwargs: _RootT | object,
     ) -> None:
+        """Parse input into the concrete model's root value.
+
+        The constructor accepts either a direct root value, the pydantic-style
+        ``__root__`` keyword, or keyword pairs for dict-like models. Omnipy also
+        accepts datasets, other models, and plain pydantic models as input and
+        converts them to raw data before validation.
+
+        Args:
+            value: Root value to parse.
+            __root__: Alternative explicit root value.
+            **kwargs: Mapping-style root content for dict-like models.
+
+        Raises:
+            AssertionError: If root data is supplied through more than one input
+                path.
+            ValidationError: If the provided data cannot be parsed as this
+                model's declared type.
+        """
         super_kwargs: dict[str, _RootT] = {}
         num_root_vals = 0
 
@@ -569,6 +623,12 @@ class Model(  # type: ignore[misc]
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id)
 
     def __copy__(self) -> Self:
+        """Return a shallow copy using Omnipy's custom copy semantics.
+
+        Returns:
+            A shallow-copied model instance whose mutable content is not shared
+            with the original.
+        """
         return self.copy(deep=False)
 
     if TYPE_CHECKING:
@@ -578,6 +638,19 @@ class Model(  # type: ignore[misc]
             ...
 
     def copy(self, *, deep: bool = False, **kwargs) -> Self:
+        """Copy the model while avoiding shared mutable content by default.
+
+        Omnipy overrides pydantic's copy semantics so a shallow copy still gets
+        a shallow-copied root value instead of sharing the same mutable object.
+
+        Args:
+            deep: When ``True``, perform a deep copy.
+            **kwargs: Additional keyword arguments forwarded to pydantic's
+                ``copy()`` implementation.
+
+        Returns:
+            A copied model instance.
+        """
         pydantic_copy = pyd.GenericModel.copy(self, deep=deep, **kwargs)
         if not deep:
             # Shallow copying of the model should not share the same
@@ -588,6 +661,14 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def clone_model_cls(cls, new_model_cls_name: str) -> type[Self]:
+        """Create a subclass clone of this concrete model class.
+
+        Args:
+            new_model_cls_name: Name to assign to the cloned class.
+
+        Returns:
+            A new subclass with the same behavior and type binding.
+        """
         new_model_cls = type(new_model_cls_name, (cls,), {})
         return cast(type[Self], new_model_cls)
 
@@ -610,9 +691,18 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def validate(cls: type['Model'], value: Any) -> 'Model':
-        """
-        Hack to allow overwriting of __iter__ method without compromising pydantic validation. Part
-        of the pydantic API and not the Omnipy API.
+        """Validate a value while preserving Omnipy iterator overrides.
+
+        This method is primarily an internal compatibility shim for pydantic's
+        validation API. Omnipy temporarily restores pydantic's original
+        ``__iter__`` behavior when validating model instances so custom iterator
+        proxying does not interfere with validation.
+
+        Args:
+            value: Value to validate as an instance of ``cls``.
+
+        Returns:
+            A validated model instance.
         """
         # TODO: Doublecheck if validate() method is still needed for pydantic v2
 
@@ -641,6 +731,21 @@ class Model(  # type: ignore[misc]
         prev_visited_classes: set[type] | None = None,
         **localns: Any,
     ) -> None:
+        """Resolve forward references for this model and related model bases.
+
+        Omnipy extends pydantic's behavior by merging namespaces from both the
+        defining module and the calling module, then propagating the same context
+        through parent model classes. This keeps forward references working when
+        specialized models are defined in one module and used from another.
+
+        Args:
+            calling_module: Module name to use as the caller context. When not
+                provided, Omnipy infers it from the call stack.
+            prev_visited_classes: Set used internally to avoid revisiting model
+                classes during recursive propagation.
+            **localns: Additional local names available while resolving forward
+                references.
+        """
         if prev_visited_classes is None:
             prev_visited_classes = set()
         elif cls in prev_visited_classes:
@@ -714,6 +819,12 @@ class Model(  # type: ignore[misc]
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
     def validate_content(self) -> None:
+        """Re-validate the current :attr:`content` value in place.
+
+        Raises:
+            ValidationError: If the current content no longer satisfies the
+                model's declared type.
+        """
         self._validate_and_set_value(self.content)
 
     def _validate_and_set_value(
@@ -836,11 +947,24 @@ class Model(  # type: ignore[misc]
 
     @property
     def snapshot(self) -> _RootT:
+        """Return the validated snapshot currently tracked for this model.
+
+        Returns:
+            The snapshot value stored for the current model instance.
+
+        Raises:
+            AssertionError: If no snapshot has been taken yet.
+        """
         snapshot_wrapper = self._get_snapshot_wrapper()
         assert snapshot_wrapper.id == id(self)
         return snapshot_wrapper.snapshot
 
     def has_snapshot(self) -> bool:
+        """Check whether this model currently has a stored snapshot.
+
+        Returns:
+            ``True`` if interactive snapshot state exists for this model.
+        """
         return self in self.snapshot_holder
 
     def _get_snapshot_wrapper(self) -> IsSnapshotWrapper[IsModel, _RootT]:
@@ -848,14 +972,37 @@ class Model(  # type: ignore[misc]
         return self.snapshot_holder[self]
 
     def snapshot_taken_of_same_model(self, model: 'Model') -> bool:
+        """Check whether the stored snapshot was taken from ``model`` itself.
+
+        Args:
+            model: Model instance to compare against the snapshot origin.
+
+        Returns:
+            ``True`` if the snapshot was recorded from the same object identity.
+        """
         snapshot_wrapper = self._get_snapshot_wrapper()
         return snapshot_wrapper.taken_of_same_obj(model)
 
     def snapshot_differs_from_model(self, model: 'Model') -> bool:
+        """Check whether the stored snapshot differs from another model's content.
+
+        Args:
+            model: Model whose current content should be compared with the
+                snapshot.
+
+        Returns:
+            ``True`` if the snapshot content differs from ``model.content``.
+        """
         snapshot_wrapper = self._get_snapshot_wrapper()
         return snapshot_wrapper.differs_from(model.content)
 
     def content_validated_according_to_snapshot(self) -> bool:
+        """Report whether current content still matches the validated snapshot.
+
+        Returns:
+            ``True`` when the current content is still represented by the stored
+            snapshot and does not need re-validation.
+        """
         needs_validation = self.snapshot_differs_from_model(self) \
             or not self.snapshot_taken_of_same_model(self)
         return not needs_validation
@@ -903,21 +1050,47 @@ class Model(  # type: ignore[misc]
     #       implies a countable collection of values
     @property
     def content(self) -> _RootT:
+        """Access the parsed root value stored by the model.
+
+        Returns:
+            The current validated root value.
+        """
         return cast(_RootT, self.__dict__.get(ROOT_KEY))
 
     @content.setter
     def content(self, value: _RootT) -> None:
-        """
-        Sets the content of the model. Note: in contrast to the `__init__()`, `from_data()` and
-        `from_json()` methods, the content are not validated automatically. To validate the
-        content, call the `validate_content()` method explicitly.
+        """Set the root value without triggering automatic validation.
+
+        Args:
+            value: New root value to assign directly.
+
+        Note:
+            Unlike :meth:`__init__`, :meth:`from_data`, and :meth:`from_json`,
+            direct assignment does not validate the value automatically. Call
+            :meth:`validate_content` when you need the assignment checked.
         """
         super().__setattr__(ROOT_KEY, value)
 
     def to(self, model_cls: type[_OtherModelT]) -> _OtherModelT:
+        """Convert this model into another model class by reparsing its data.
+
+        Args:
+            model_cls: Destination model class.
+
+        Returns:
+            A new instance of ``model_cls`` initialized from this model.
+        """
         return model_cls(self)
 
     def do(self, placeholder: F) -> Any:
+        """Apply a placeholder-style callable to this model.
+
+        Args:
+            placeholder: Callable placeholder from Omnipy's ``F`` helper.
+
+        Returns:
+            Whatever value ``placeholder`` returns for this model instance.
+        """
         return placeholder(self)
 
     def dict(self, *args, **kwargs) -> dict_t[str, object]:
@@ -933,6 +1106,12 @@ class Model(  # type: ignore[misc]
     #          ...
     #       ```
     def to_data(self) -> object:
+        """Serialize the model into raw Python data.
+
+        Returns:
+            The wrapped value converted to plain data, including recursive
+            conversion of nested Omnipy models.
+        """
         return super().dict(by_alias=True)[ROOT_KEY]
 
     def _empty_from_data(self, value: object) -> None:
@@ -945,15 +1124,36 @@ class Model(  # type: ignore[misc]
             value, reset_solution=_reset_to_default(), lazy_snapshot_if_possible=True)
 
     def from_data(self, data: Any) -> None:
+        """Parse raw Python data into this existing model instance.
+
+        Args:
+            data: Raw data to validate and store as the model's content.
+
+        Raises:
+            ValidationError: If ``data`` cannot be parsed as this model's type.
+        """
         if self.content == self._get_default_value_from_model(self.full_type()):
             self._empty_from_data(data)
         else:
             self._validate_and_set_value(data)
 
     def absorb_and_replace(self, other: 'Model'):
+        """Replace this model's content with data parsed from another model.
+
+        Args:
+            other: Source model whose serialized data should be absorbed.
+        """
         self.from_data(other.to_data())
 
     def to_json(self, pretty=True) -> str:
+        """Serialize the model to JSON.
+
+        Args:
+            pretty: When ``True``, return indented human-readable JSON.
+
+        Returns:
+            JSON representation of the model content.
+        """
         json_content = pyd.BaseModel.json(self)
         if pretty:
             return self._pretty_print_json(json.loads(json_content))
@@ -961,27 +1161,62 @@ class Model(  # type: ignore[misc]
             return json_content
 
     def from_json(self, json_content: str) -> None:
+        """Parse JSON into this existing model instance.
+
+        Args:
+            json_content: JSON document to parse.
+
+        Raises:
+            ValidationError: If the JSON content does not match the model type.
+        """
         new_model = self.parse_raw(json_content, proto=pyd.Protocol.json)
         self.content = new_model.content
 
     @classmethod
     @functools.cache
     def inner_type(cls, with_args: bool = False) -> TypeForm:
+        """Return the inner validated root type for this model class.
+
+        Args:
+            with_args: When ``True``, preserve type arguments such as ``list[int]``.
+
+        Returns:
+            The inner root type used after pydantic normalization.
+        """
         return cls._get_root_type(outer=False, with_args=with_args)
 
     @classmethod
     @functools.cache
     def outer_type(cls, with_args: bool = False) -> TypeForm:
+        """Return the declared outer root type for this model class.
+
+        Args:
+            with_args: When ``True``, preserve type arguments such as ``list[int]``.
+
+        Returns:
+            The outer root type exposed by the model.
+        """
         return cls._get_root_type(outer=True, with_args=with_args)
 
     @classmethod
     @functools.cache
     def full_type(cls) -> type[_RootT]:
+        """Return the model's full declared root type including type arguments.
+
+        Returns:
+            The complete concrete type bound to this model.
+        """
         return cast(type[_RootT], cls.outer_type(with_args=True))
 
     @classmethod
     @functools.cache
     def is_nested_type(cls) -> bool:
+        """Check whether this model wraps a nested or transformed root type.
+
+        Returns:
+            ``True`` when the inner validated type differs from the declared
+            outer type.
+        """
         return not cls.inner_type(with_args=True) == cls.outer_type(with_args=True)
 
     @classmethod
@@ -1026,6 +1261,15 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def to_json_schema(cls, pretty=True) -> str:
+        """Render the model's JSON schema.
+
+        Args:
+            pretty: When ``True``, return indented human-readable JSON.
+
+        Returns:
+            JSON schema for the model with Omnipy's ``orig_model`` metadata
+            removed.
+        """
         schema = cls.schema()
         if 'orig_model' in schema:
             del schema['orig_model']
@@ -1048,6 +1292,20 @@ class Model(  # type: ignore[misc]
                             '\t"class MyNumberList(Model[list[int]]): ..."')
 
     def __setattr__(self, attr: str, value: Any) -> None:
+        """Set model attributes while protecting Omnipy's root-value invariants.
+
+        ``content`` assignments are handled specially so Omnipy can keep
+        snapshot bookkeeping in sync. For wrapped non-Omnipy pydantic models,
+        unknown attributes are delegated to the underlying content object.
+
+        Args:
+            attr: Attribute name to assign.
+            value: Value to assign.
+
+        Raises:
+            RuntimeError: If attempting to assign an unsupported extra
+                attribute on a normal Omnipy model.
+        """
         if attr in ['__module__'] + list(self.__dict__.keys()) and attr not in [ROOT_KEY]:
             super().__setattr__(attr, value)
         else:
@@ -1423,6 +1681,23 @@ class Model(  # type: ignore[misc]
     if not TYPE_CHECKING:
 
         def __getattr__(self, attr: str) -> Any:
+            """Proxy missing attributes and methods to the wrapped content object.
+
+            Omnipy uses this hook to expose operations of the wrapped root value
+            while still validating state-changing calls and converting returned
+            elements back into models when appropriate.
+
+            Args:
+                attr: Attribute name requested on the model.
+
+            Returns:
+                The proxied attribute or wrapped method from the underlying
+                content object.
+
+            Raises:
+                AttributeError: If the wrapped content object does not define
+                    ``attr``.
+            """
             if self._is_non_omnipy_pydantic_model() and self._content_obj_hasattr(attr):
                 self._validate_and_set_value(self.content)
 
@@ -1486,6 +1761,15 @@ class Model(  # type: ignore[misc]
     #         return self.content
 
     def __eq__(self, other: object) -> bool:
+        """Compare two models by concrete class and wrapped content.
+
+        Args:
+            other: Object to compare with this model.
+
+        Returns:
+            ``True`` when ``other`` is the same concrete model class and its
+            content compares equal.
+        """
         if is_model_instance(other):
             return (self.__class__ == other.__class__ and all_equals(self.content, other.content))
             # and self.to_data() == other.to_data()  # last line is just in case
@@ -1508,6 +1792,11 @@ class Model(  # type: ignore[misc]
             **kwargs)
 
     def __repr_args__(self):
+        """Provide the root value to pydantic's representation machinery.
+
+        Returns:
+            Representation arguments describing the wrapped content.
+        """
         return [(None, self.content)]
 
 
@@ -1522,12 +1811,28 @@ def prepare_value_for_validation_if_dataset_or_model(value: object,) -> tuple[bo
 
 
 def is_model_instance(__obj: object) -> 'TypeIs[Model]':
+    """Check whether an object is an Omnipy model instance.
+
+    Args:
+        __obj: Object to test.
+
+    Returns:
+        ``True`` when ``__obj`` is an instance of :class:`Model`.
+    """
     return lenient_isinstance(__obj, Model) \
         and not is_none_type(__obj)  # Consequence of _ModelMetaclass hack
 
 
 @functools.cache
 def is_model_subclass(__cls: TypeForm) -> 'TypeIs[type[Model]]':
+    """Check whether a type is an Omnipy model subclass.
+
+    Args:
+        __cls: Type expression to test.
+
+    Returns:
+        ``True`` when ``__cls`` is a subclass of :class:`Model`.
+    """
     return lenient_issubclass(__cls, Model) \
         and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
 
@@ -1536,14 +1841,43 @@ def obj_or_model_content_isinstance(
     __obj: object,
     __class_or_tuple: type[_ClassOrTupleT] | tuple[type[_ClassOrTupleT], ...],
 ) -> TypeIs[_ClassOrTupleT]:
+    """Check a plain object or a model's content against a target type.
+
+    Args:
+        __obj: Plain object or model instance to inspect.
+        __class_or_tuple: Accepted type or tuple of accepted types.
+
+    Returns:
+        ``True`` when ``__obj`` itself, or ``__obj.content`` for a model,
+        matches ``__class_or_tuple``.
+    """
     return isinstance(__obj.content if is_model_instance(__obj) else __obj, __class_or_tuple)
 
 
 def is_pure_pydantic_model(obj: object):
+    """Check whether an object is a direct ``pydantic.BaseModel`` subclass instance.
+
+    Args:
+        obj: Object to test.
+
+    Returns:
+        ``True`` when the object's immediate base class is exactly
+        ``pydantic.BaseModel``.
+    """
     return type(obj).__bases__ == (pyd.BaseModel,)
 
 
 def is_non_omnipy_pydantic_model(obj: object):
+    """Check whether an object is a pydantic model outside Omnipy's wrappers.
+
+    Args:
+        obj: Object to test.
+
+    Returns:
+        ``True`` when ``obj`` is a pydantic or generic pydantic model instance
+        that is neither an Omnipy :class:`Model` nor an Omnipy
+        :class:`~omnipy.data.dataset.Dataset`.
+    """
     mro = type(obj).__mro__
     return mro[0] != pyd.BaseModel \
         and (pyd.BaseModel in mro or pyd.GenericModel in mro) \
@@ -1558,6 +1892,24 @@ def is_non_omnipy_pydantic_model(obj: object):
 # together with hacks setting allow_none=True (_ModelMetaclass and _recursively_set_allow_none).
 # See series of relevant tests in test_model.py starting with  test_list_of_none_variants().
 def parse_none_according_to_model(value, root_model):  # IsModel
+    """Convert ``None`` values according to a model's nested type rules.
+
+    This helper works around pydantic v1 limitations around nested ``None``
+    handling. It walks the declared model type and injects ``None`` or nested
+    model wrappers where Omnipy's type semantics allow them.
+
+    Args:
+        value: Candidate value that may contain ``None`` entries.
+        root_model: Model class whose root type should govern the conversion.
+
+    Returns:
+        The original value or a transformed structure with ``None`` values
+        normalized according to ``root_model``.
+
+    Raises:
+        OmnipyNoneIsNotAllowedError: If ``None`` appears where the model type
+            does not allow it.
+    """
     outer_type = root_model.outer_type(with_args=True)
     plain_outer_type = root_model.outer_type(with_args=False)
     outer_args = get_args(outer_type)

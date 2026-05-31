@@ -1,3 +1,9 @@
+"""Literal-backed enum utilities for typed choice sets with direct value usage.
+
+Use ``LiteralEnum`` by declaring a ``Literals`` type alias and matching uppercase
+class attributes for each allowed value.
+"""
+
 from collections import ChainMap
 import random
 from typing import Any, cast, ClassVar, Generic, get_args, get_type_hints, Iterator, overload

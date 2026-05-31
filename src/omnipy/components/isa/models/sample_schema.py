@@ -32,4 +32,6 @@ class IsaSampleSchema(pyd.BaseModel):
 
 
 class IsaSampleModel(Model[IsaSampleSchema]):
+    """ISA model representing a sample derived from one or more sources."""
+
     ...

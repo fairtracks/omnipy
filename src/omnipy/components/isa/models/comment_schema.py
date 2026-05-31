@@ -26,4 +26,6 @@ class IsaCommentSchema(pyd.BaseModel):
 
 
 class IsaCommentModel(Model[IsaCommentSchema]):
+    """ISA model representing a comment attached to an entity."""
+
     ...

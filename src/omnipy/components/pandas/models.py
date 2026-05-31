@@ -1,3 +1,5 @@
+"""Pandas-backed data models for tabular Omnipy data files."""
+
 from collections.abc import Iterable
 from io import StringIO
 from typing import Any
@@ -23,6 +25,8 @@ AnyJsonTableType = (
 
 
 class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], PrintableTable):
+    """Wrap a pandas DataFrame or Series as an Omnipy model for tabular data files."""
+
     if TYPE_CHECKING:
 
         def __new__(cls, *args: Any, **kwargs: Any) -> 'PandasModel_DataFrame':

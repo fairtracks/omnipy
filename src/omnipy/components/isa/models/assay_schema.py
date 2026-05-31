@@ -60,4 +60,6 @@ class IsaAssayJsonSchema(pyd.BaseModel):
 
 
 class IsaAssayJsonModel(Model[IsaAssayJsonSchema]):
+    """ISA model representing an assay in a study."""
+
     ...

@@ -1,3 +1,5 @@
+"""Table models for row-wise, column-wise, CSV, TSV, and Pydantic-backed data."""
+
 from abc import abstractmethod
 from collections import defaultdict
 from collections.abc import Generator, Iterator, Mapping
@@ -241,6 +243,8 @@ class IterRow(Mapping[str, _ColModelT], Generic[_ColModelT, _ColModelItemT]):
 
 
 class PrintableTable:
+    """Marker mixin for table models that support Omnipy table rendering."""
+
     ...
 
 
@@ -257,6 +261,7 @@ if TYPE_CHECKING:
 else:
 
     class RowWiseTableModel(Model[list[list[JsonScalar]]]):
+        """Represent a row-wise table as a list of rows without column names."""
         ...
 
 
@@ -307,10 +312,13 @@ else:
             _RowWiseTableWithColNamesModel,
             PrintableTable,
     ):
+        """Represent a row-wise table where each row is a mapping from column names to values."""
         ...
 
 
 class RowWiseTableWithColNamesNoConvertModel(Model[list[dict[str, JsonScalar]]]):
+    """Store row-wise table records without converting from column-wise input."""
+
     ...
 
 
@@ -537,6 +545,7 @@ else:
             PrintableTable,
             Generic[_ColModelT, _ColModelItemT],
     ):
+        """Represent a column-wise table as column names mapped to ordered value lists."""
         ...
 
 
@@ -631,6 +640,7 @@ else:
             _RowWiseTableFirstRowAsColNamesModel,
             PrintableTable,
     ):
+        """Represent a row-wise table that treats the first row as the table header."""
         ...
 
 
@@ -648,6 +658,8 @@ class _HeaderInfo(NamedTuple, Generic[_PydBaseModelT, _DataWithoutColNamesModelT
 
 
 class PydanticRecordModelMetaclass(ModelMetaclass):
+    """Provide cached header metadata for Pydantic-backed record models."""
+
     def __init__(cls, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         cls._header_info: _HeaderInfo | None = None
@@ -690,6 +702,8 @@ class PydanticRecordModelBase(
         Generic[_PydBaseModelT, _DataWithColNamesModelT, _DataWithoutColNamesModelT],
         metaclass=PydanticRecordModelMetaclass,
 ):
+    """Validate tabular record data against a parameterized Pydantic model schema."""
+
     @classmethod
     @abstractmethod
     def _validate_record_model_with_col_names(
@@ -767,6 +781,7 @@ else:
             ],
             Generic[_PydBaseModelT],
     ):
+        """Validate one tabular record against a Pydantic model schema."""
         @override
         @classmethod
         def _validate_record_model_with_col_names(
@@ -812,6 +827,7 @@ else:
             PrintableTable,
             Generic[_PydBaseModelT, _ColWiseTableModelT, _ColModelT, _ColModelItemT],
     ):
+        """Validate every row in a table against a Pydantic model and keep table structure."""
         @classmethod
         def _validate_over_all_rows(
             cls,
@@ -924,6 +940,7 @@ else:
             PrintableTable,
             Generic[_PydRecordT],
     ):
+        """Parse delimited table text into a list of validated Pydantic records."""
         ...
 
 
@@ -945,6 +962,7 @@ else:
             PrintableTable,
             Generic[_PydRecordT],
     ):
+        """Parse CSV text into a list of Pydantic-validated table records."""
         ...
 
 
@@ -969,6 +987,7 @@ else:
             ],
             PrintableTable,
     ):
+        """Parse TSV text into a row-wise table using the first row as column names."""
         ...
 
 
@@ -989,4 +1008,5 @@ else:
             ],
             PrintableTable,
     ):
+        """Parse CSV text into a row-wise table using the first row as column names."""
         ...

@@ -40,4 +40,6 @@ class IsaProtocolSchema(pyd.BaseModel):
 
 
 class IsaProtocolModel(Model[IsaProtocolSchema]):
+    """ISA model representing a protocol used in a study."""
+
     ...

@@ -1,3 +1,10 @@
+"""User-interface detection and Jupyter display setup helpers.
+
+This module detects the active execution environment and provides the
+user-facing ``setup_jupyter_ui()`` helper for enabling Omnipy's richer
+notebook display integration.
+"""
+
 import builtins
 import os
 import sys
@@ -21,11 +28,10 @@ if TYPE_CHECKING:
 
 
 def detect_and_setup_user_interface(runtime: 'Runtime') -> None:
-    """
-    Detects the user interface type based on the current environment and
-    sets up the default configuration for that user interface type. This
-    includes setting up color systems, display hooks, and CSS styles and
-    other functionality as needed.
+    """Detect the active user interface and configure runtime display defaults.
+
+    Args:
+        runtime: Runtime whose UI configuration should be updated.
     """
     ui_type: AutoDetectableUserInterfaceType.Literals = detect_ui_type()
     runtime.config.data.ui.detected_type = ui_type
@@ -43,6 +49,7 @@ def detect_and_setup_user_interface(runtime: 'Runtime') -> None:
 
 
 def running_in_ipython_terminal() -> bool:
+    """Return whether the current session is running in an IPython terminal."""
     try:
         ipython = get_ipython()  # type: ignore[name-defined]
         return ipython.__class__.__name__ == 'TerminalInteractiveShell'
@@ -51,6 +58,7 @@ def running_in_ipython_terminal() -> bool:
 
 
 def running_in_ipython_pycharm() -> bool:
+    """Return whether the current session is running in PyCharm's IPython console."""
     try:
         ipython = get_ipython()  # type: ignore[name-defined]
         return ipython.__class__.__name__ == 'PyDevTerminalInteractiveShell'
@@ -59,6 +67,7 @@ def running_in_ipython_pycharm() -> bool:
 
 
 def running_in_any_jupyter() -> bool:
+    """Return whether the current session is running in any Jupyter kernel."""
     try:
         ipython = get_ipython()  # type: ignore[name-defined]
         return ipython.__class__.__name__ == 'ZMQInteractiveShell'
@@ -67,22 +76,27 @@ def running_in_any_jupyter() -> bool:
 
 
 def running_in_jupyter_in_browser() -> bool:
+    """Return whether the current session is running in browser-hosted Jupyter."""
     return running_in_any_jupyter() and not running_in_jupyter_in_pycharm()
 
 
 def running_in_jupyter_in_pycharm() -> bool:
+    """Return whether the current session is running in PyCharm-hosted Jupyter."""
     return running_in_any_jupyter() and 'pydev_jupyter_utils' in sys.modules
 
 
 def running_in_pycharm_console() -> bool:
+    """Return whether the current process is hosted by a PyCharm console."""
     return os.getenv('PYCHARM_HOSTED') is not None
 
 
 def running_in_atty_terminal() -> bool:
+    """Return whether standard output is attached to an interactive terminal."""
     return sys.stdout.isatty()
 
 
 def detect_ui_type() -> AutoDetectableUserInterfaceType.Literals:
+    """Detect the current Omnipy user-interface type from the execution environment."""
     if running_in_jupyter_in_pycharm():
         return UserInterfaceType.PYCHARM_JUPYTER
     elif running_in_jupyter_in_browser():
@@ -102,6 +116,14 @@ def detect_ui_type() -> AutoDetectableUserInterfaceType.Literals:
 
 def detect_display_color_system(
         ui_type: SpecifiedUserInterfaceType.Literals) -> DisplayColorSystem.Literals:
+    """Detect the display color system available for a specific UI type.
+
+    Args:
+        ui_type: User-interface type to inspect.
+
+    Returns:
+        The detected display color system.
+    """
     if UserInterfaceType.supports_rgb_color_output(ui_type):
         return DisplayColorSystem.ANSI_RGB
     else:
@@ -118,6 +140,14 @@ def detect_display_color_system(
 
 
 def detect_dark_background(ui_type: UserInterfaceType.Literals) -> bool:
+    """Detect whether the active UI should be treated as using a dark background.
+
+    Args:
+        ui_type: User-interface type to inspect.
+
+    Returns:
+        ``True`` if the background should be treated as dark, otherwise ``False``.
+    """
     if UserInterfaceType.supports_dark_terminal_bg_detection(ui_type):
         return detect_dark_terminal_background()
     else:
@@ -125,6 +155,7 @@ def detect_dark_background(ui_type: UserInterfaceType.Literals) -> bool:
 
 
 def detect_dark_terminal_background() -> bool:
+    """Detect whether the current terminal background is dark."""
     from term_background import is_dark_background
 
     color_fg_bg = os.environ.get('COLORFGBG', None)
@@ -152,9 +183,13 @@ def _is_dark_from_color_fg_bg_nuanced(color_fg_bg: str) -> bool | None:
 def get_terminal_prompt_height(
     ui_type: TerminalOutputUserInterfaceType.Literals,
 ) -> int:  # pyright: ignore [reportReturnType]
-    """
-    Get the height of the terminal prompt (including blank lines) based on
-    the display type.
+    """Return the prompt height for a terminal-oriented UI type.
+
+    Args:
+        ui_type: Terminal-oriented user-interface type.
+
+    Returns:
+        The prompt height in rendered terminal rows.
     """
     match ui_type:
         case x if UserInterfaceType.is_plain_terminal(x):
@@ -166,19 +201,17 @@ def get_terminal_prompt_height(
 
 
 def setup_displayhook_if_plain_terminal(ui_type: TerminalOutputUserInterfaceType.Literals) -> None:
-    """
-    Sets up the display hook for plain terminal environments to ensure that
-    Model instances, Datasets, and ConfigBase objects are displayed using
-    Omnipy's syntax highlighting and formatting.
+    """Install Omnipy's display hook for plain-terminal environments.
+
+    Args:
+        ui_type: Terminal-oriented user-interface type for rendering output.
     """
     from omnipy.config import ConfigBase
     from omnipy.data.dataset import Dataset
     from omnipy.data.model import is_model_instance
 
     def _omnipy_displayhook(obj: object) -> None:
-        """
-        Custom display hook for plain terminal environments.
-        """
+        """Render supported Omnipy objects with terminal-aware formatting."""
 
         if obj is not None:
             if (is_model_instance(obj) or isinstance(obj, Dataset) or isinstance(obj, ConfigBase)):
@@ -195,6 +228,18 @@ def note_mime_bundle(bullet: str,
                      plain_text_content: str = '',
                      styling: str = '',
                      noscript: bool = False) -> dict[str, str]:
+    """Build a MIME bundle for displaying a note in rich frontends.
+
+    Args:
+        bullet: Leading marker shown beside the note.
+        html_content: HTML body to render.
+        plain_text_content: Optional plain-text fallback.
+        styling: Optional CSS to embed with the note.
+        noscript: Whether to wrap the HTML content in ``<noscript>``.
+
+    Returns:
+        A MIME bundle suitable for IPython display APIs.
+    """
 
     note_html = dedent(f"""\
         <div style="display: flex;">
@@ -227,6 +272,11 @@ def note_mime_bundle(bullet: str,
 
 
 def display_jupyter_setup_note(detected_ui_type: JupyterUserInterfaceType.Literals):
+    """Display setup guidance after Omnipy detects a Jupyter environment.
+
+    Args:
+        detected_ui_type: Detected Jupyter user-interface type.
+    """
     from IPython.display import display
 
     display(
@@ -290,19 +340,18 @@ def display_jupyter_setup_note(detected_ui_type: JupyterUserInterfaceType.Litera
 
 
 def setup_jupyter_ui():
-    """
-    Sets up the Jupyter user interface by displaying the CSS styles and
-    adding hidden reactive elements for Jupyter Notebook or JupyterLab.
-    Hidden reactive elements include:
+    """Set up Omnipy's rich Jupyter display integration.
 
-      - A reactive element monitoring background color changes to detect
-        changes in theme (dark/light)
-      - A reactive element monitoring the available display size to
-        auto-scale Omnipy outputs accordingly.
+    Call this once per Jupyter kernel after importing Omnipy. The function
+    injects CSS and hidden reactive widgets that Omnipy uses to track theme
+    changes and available display size, so notebook outputs render and resize
+    correctly.
 
-    This function is typically called in a Jupyter environment to ensure
-    proper display and interaction with Omnipy components.
+    Raises:
+        AssertionError: If the active runtime is not configured for a Jupyter
+            interface.
     """
+
     from IPython.display import display
 
     from omnipy import runtime

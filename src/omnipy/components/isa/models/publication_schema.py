@@ -32,4 +32,6 @@ class IsaPublicationSchema(pyd.BaseModel):
 
 
 class IsaPublicationModel(Model[IsaPublicationSchema]):
+    """ISA model representing a publication linked to ISA metadata."""
+
     ...

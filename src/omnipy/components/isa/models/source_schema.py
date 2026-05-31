@@ -31,4 +31,6 @@ class IsaSourceSchema(pyd.BaseModel):
 
 
 class IsaSourceModel(Model[IsaSourceSchema]):
+    """ISA model representing a study source material."""
+
     ...

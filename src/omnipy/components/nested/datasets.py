@@ -1,3 +1,5 @@
+"""Datasets for recursively nested data structures that can contain tables or scalar values."""
+
 from typing import Generic
 
 from typing_extensions import TypeAlias, TypeVar
@@ -15,6 +17,8 @@ NestedAnyUnionT = TypeVar('NestedAnyUnionT', bound='Dataset | Model', default=Js
 
 
 class GenericNestedDataset(Dataset[NestedAnyUnionT], Generic[NestedAnyUnionT]):
+    """Represent datasets whose values may recursively contain nested datasets."""
+
     ...
 
 
@@ -25,6 +29,7 @@ NestedUnion: TypeAlias = (
 
 
 class NestedDataset(GenericNestedDataset[NestedUnion]):
+    """Store nested datasets whose values may themselves be datasets, tables, lists, or scalars."""
     ...
 
 

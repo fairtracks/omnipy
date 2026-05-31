@@ -1,3 +1,5 @@
+"""Display-related literal enums for formatting, syntax highlighting, and layout."""
+
 from typing import Literal
 
 from typing_extensions import TypeIs
@@ -6,14 +8,13 @@ from omnipy.util.literal_enum import LiteralEnum
 
 
 class DisplayDimensionsUpdateMode(LiteralEnum[str]):
-    """
-    Specifies how display dimensions should be updated.
-    """
+    """Specify how display dimensions should be updated."""
 
     Literals = Literal['auto', 'fixed']
 
     AUTO: Literal['auto'] = 'auto'
-    """
+    """Automatically update display dimensions.
+
     Automatically updates the `width` and `height` dimension configs of the
     relevant interface output based on the currently available display area
     every time some output renders or (in some cases) when there is a change
@@ -26,7 +27,8 @@ class DisplayDimensionsUpdateMode(LiteralEnum[str]):
     """
 
     FIXED: Literal['fixed'] = 'fixed'
-    """
+    """Keep display dimensions fixed after initial detection.
+
     Updates the `width` and `height` dimension config according to the
     available display area only once at the start of the program. Default
     values are defined for each type of user interface. The default values
@@ -38,8 +40,7 @@ class DisplayDimensionsUpdateMode(LiteralEnum[str]):
 
 
 class DarkBackground(LiteralEnum[str | bool]):
-    """
-    Specifies whether the background color of the output is dark or light.
+    """Specify whether the output background is dark or light.
 
     This is used for selecting the appropriate color scheme for syntax
     highlighting and other color styles. The dark background mode is
@@ -60,8 +61,7 @@ class DarkBackground(LiteralEnum[str | bool]):
 
 
 class PrettyPrinterLib(LiteralEnum[str]):
-    """
-    Supported libraries for pretty printing of various data structures.
+    """Supported libraries for pretty printing various data structures.
 
     Comparison of RICH and DEVTOOLS for Python structures: the outputs are
     more or less the same. However, the RICH library formats the width of
@@ -165,6 +165,8 @@ class PrettyPrinterLib(LiteralEnum[str]):
 
 
 class JsonSyntaxLanguage(LiteralEnum[str]):
+    """JSON-family syntax language enum values for syntax highlighting."""
+
     Literals = Literal['json', 'json5', 'json-ld']
 
     JSON: Literal['json'] = 'json'
@@ -173,6 +175,8 @@ class JsonSyntaxLanguage(LiteralEnum[str]):
 
 
 class TextSyntaxLanguage(LiteralEnum[str]):
+    """General text syntax language enum values for syntax highlighting."""
+
     Literals = Literal['text',
                        'yaml',
                        'xml',
@@ -201,12 +205,16 @@ class TextSyntaxLanguage(LiteralEnum[str]):
 
 
 class HexdumpSyntaxLanguage(LiteralEnum[str]):
+    """Hexdump syntax language enum values for binary output highlighting."""
+
     Literals = Literal['hexdump']
 
     HEXDUMP: Literal['hexdump'] = 'hexdump'
 
 
 class PythonSyntaxLanguage(LiteralEnum[str]):
+    """Python syntax language enum values for code highlighting."""
+
     Literals = Literal['python']
 
     PYTHON: Literal['python'] = 'python'
@@ -216,8 +224,7 @@ class SyntaxLanguage(JsonSyntaxLanguage,
                      TextSyntaxLanguage,
                      HexdumpSyntaxLanguage,
                      PythonSyntaxLanguage):
-    """
-    Supported languages for syntax recognition and highlighting.
+    """Supported languages for syntax recognition and highlighting.
 
     A selected subset of the lexer languages supported by the Pygments
     library (https://pygments.org/languages/), assumed to be the ones most
@@ -250,7 +257,7 @@ class SyntaxLanguageSpec(SyntaxLanguage):
     """
     @classmethod
     def is_syntax_language_spec(cls, syntax: str) -> 'TypeIs[SyntaxLanguageSpec.Literals]':
-        """Checks for a valid syntax language specification.
+        """Check for a valid syntax language specification.
 
         This checks whether the syntax string is one of the supported
         options for syntax language specification (including `AUTO`).
@@ -262,32 +269,27 @@ class SyntaxLanguageSpec(SyntaxLanguage):
         cls,
         syntax: str,
     ) -> 'TypeIs[SyntaxLanguage.Literals]':
-        """Checks if the given syntax is a supported syntax language.
-        """
+        """Check whether the given syntax is a supported syntax language."""
         return syntax in SyntaxLanguage
 
     @classmethod
     def is_json_syntax(cls, syntax: str) -> TypeIs[JsonSyntaxLanguage.Literals]:
-        """Checks if the given syntax is a JSON syntax.
-        """
+        """Check whether the given syntax is a JSON syntax."""
         return syntax in JsonSyntaxLanguage
 
     @classmethod
     def is_text_syntax(cls, syntax: str) -> TypeIs[TextSyntaxLanguage.Literals]:
-        """Checks if the given syntax is a general text syntax.
-        """
+        """Check whether the given syntax is a general text syntax."""
         return syntax in TextSyntaxLanguage
 
     @classmethod
     def is_hexdump_syntax(cls, syntax: str) -> TypeIs[HexdumpSyntaxLanguage.Literals]:
-        """Checks if the given syntax is a binary hexdump variant.
-        """
+        """Check whether the given syntax is a binary hexdump variant."""
         return syntax in HexdumpSyntaxLanguage
 
     @classmethod
     def is_python_syntax(cls, syntax: str) -> TypeIs[PythonSyntaxLanguage.Literals]:
-        """Checks if the given syntax is a Python variant.
-        """
+        """Check whether the given syntax is a Python variant."""
         return syntax in PythonSyntaxLanguage
 
 
@@ -303,37 +305,37 @@ class DisplayColorSystem(LiteralEnum[str]):
     Literals = Literal['auto', 'standard', '256', 'truecolor', 'windows']
 
     AUTO: Literal['auto'] = 'auto'
-    """
+    """Automatically detect the display color system.
+
     The default color system, which is automatically detected based on the
     terminal capabilities. This is the default value.
     """
 
     ANSI_16: Literal['standard'] = 'standard'
-    """
-    The standard ANSI color system, which supports 16 colors.
-    """
+    """Use the standard ANSI color system with 16 colors."""
 
     ANSI_256: Literal['256'] = '256'
-    """
-    The extended ANSI color system, which supports 256 colors.
-    """
+    """Use the extended ANSI color system with 256 colors."""
 
     ANSI_RGB: Literal['truecolor'] = 'truecolor'
-    """
+    """Use the ANSI truecolor system.
+
     The truecolor ANSI color system, which supports 16 million colors. Most
     modern terminals support this color system.
     """
 
     WINDOWS_LEGACY: Literal['windows'] = 'windows'
-    """
+    """Use the legacy Windows color system.
+
     The legacy Windows color system, for backwards compatibility with older
     Windows terminals.
     """
 
 
 class HorizontalOverflowMode(LiteralEnum[str]):
-    """
-    Horizontal overflow modes for the output. Horizontal overflow modes have
+    """Horizontal overflow modes for rendered output.
+
+    Horizontal overflow modes have
     no effect on layout panels.
 
     The horizontal overflow modes are:
@@ -356,8 +358,7 @@ class HorizontalOverflowMode(LiteralEnum[str]):
 
 
 class PanelDesign(LiteralEnum[str]):
-    """
-    Visual design for the layout of the output.
+    """Visual design for rendered output layouts.
 
     The layout designs are:
     - `TABLE`: The output is displayed as a simple table grid
@@ -373,8 +374,9 @@ class PanelDesign(LiteralEnum[str]):
 
 
 class VerticalOverflowMode(LiteralEnum[str]):
-    """
-    Vertical overflow modes for the output. Vertical overflow modes have
+    """Vertical overflow modes for rendered output.
+
+    Vertical overflow modes have
     no effect on layout panels.
 
     The vertical overflow modes are:
@@ -392,6 +394,8 @@ class VerticalOverflowMode(LiteralEnum[str]):
 
 
 class MaxTitleHeight(LiteralEnum[int]):
+    """Maximum title height enum values for rendered display panels."""
+
     Literals = Literal[-1, 0, 1, 2]
 
     AUTO: Literal[-1] = -1
@@ -401,8 +405,7 @@ class MaxTitleHeight(LiteralEnum[int]):
 
 
 class Justify(LiteralEnum[str]):
-    """
-    Justification modes for the output.
+    """Justification modes for rendered output.
 
     The justification modes are:
     - `LEFT`: Left-justified text.

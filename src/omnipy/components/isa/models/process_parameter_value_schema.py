@@ -30,4 +30,6 @@ class IsaProcessParameterValueSchema(pyd.BaseModel):
 
 
 class IsaProcessParameterValueModel(Model[IsaProcessParameterValueSchema]):
+    """ISA model representing a protocol parameter value in a process."""
+
     ...

@@ -1,3 +1,9 @@
+"""JSON model classes for validating and serializing JSON-compatible content.
+
+This module defines Omnipy's public JSON model variants, ranging from scalar-only
+models to specialized list/dict containers and generic custom container models.
+"""
+
 from typing import Any, cast, Generic, Mapping, overload, Sequence, Type, TypeAlias
 
 from typing_extensions import TypeVar
@@ -154,8 +160,16 @@ _RootT = TypeVar('_RootT')
 
 
 class ParseStrAsJsonMixin(Generic[_RootT]):
+    """Mixin that parses JSON-like strings into model content before validation."""
+
     @classmethod
     def start_chars_for_json_content(cls) -> str:
+        """Return leading characters that should trigger JSON-string parsing.
+
+        Returns:
+            Characters that mark a string as candidate serialized JSON content.
+        """
+
         return '[{0123456789-tfn'  # not [{"0123456789-tfn'
 
     @classmethod
@@ -272,6 +286,12 @@ class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_Json
     """
     @classmethod
     def start_chars_for_json_content(cls) -> str:
+        """Return leading characters for non-scalar JSON-string parsing.
+
+        Returns:
+            Characters that mark a string as candidate serialized JSON lists or dicts.
+        """
+
         return '[{'
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
@@ -431,18 +451,28 @@ if TYPE_CHECKING:
 else:
 
     class JsonListOfScalarsModel(Model[_JsonListOfScalars]):
+        """Model for JSON arrays containing only scalar values."""
+
         ...
 
     class JsonListOfListsModel(Model[_JsonListM[_JsonAnyListM]]):
+        """Model for JSON arrays whose items are JSON arrays."""
+
         ...
 
     class JsonListOfListsOfScalarsModel(Model[_JsonListM[_JsonListOfScalars]]):
+        """Model for JSON arrays whose items are scalar-only JSON arrays."""
+
         ...
 
     class JsonListOfDictsModel(Model[_JsonListM[_JsonAnyDictM]]):
+        """Model for JSON arrays whose items are JSON objects."""
+
         ...
 
     class JsonListOfDictsOfScalarsModel(Model[_JsonListM[_JsonDictOfScalars]]):
+        """Model for JSON arrays whose items are scalar-only JSON objects."""
+
         ...
 
 
@@ -522,18 +552,28 @@ if TYPE_CHECKING:
 else:
 
     class JsonDictOfScalarsModel(Model[_JsonDictOfScalars]):
+        """Model for JSON objects whose values are scalar values."""
+
         ...
 
     class JsonDictOfListsModel(Model[_JsonDictM[_JsonAnyListM]]):
+        """Model for JSON objects whose values are JSON arrays."""
+
         ...
 
     class JsonDictOfListsOfScalarsModel(Model[_JsonDictM[_JsonListOfScalars]]):
+        """Model for JSON objects whose values are scalar-only JSON arrays."""
+
         ...
 
     class JsonDictOfDictsModel(Model[_JsonDictM[_JsonAnyDictM]]):
+        """Model for JSON objects whose values are JSON objects."""
+
         ...
 
     class JsonDictOfDictsOfScalarsModel(Model[_JsonDictM[_JsonDictOfScalars]]):
+        """Model for JSON objects whose values are scalar-only JSON objects."""
+
         ...
 
 
@@ -541,6 +581,8 @@ else:
 
 
 class JsonOnlyListsModel(Model[_JsonOnlyListsUnion]):
+    """Model for JSON content composed only of scalars and nested arrays."""
+
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         @overload
@@ -576,6 +618,8 @@ class JsonOnlyListsModel(Model[_JsonOnlyListsUnion]):
 
 
 class JsonOnlyDictsModel(Model[_JsonOnlyDictsUnion]):
+    """Model for JSON content composed only of scalars and nested objects."""
+
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         @overload
@@ -627,9 +671,13 @@ if TYPE_CHECKING:
 else:
 
     class JsonNestedListsModel(Model[_JsonNestedListsM]):
+        """Model for nested JSON arrays whose leaves are scalar values."""
+
         ...
 
     class JsonNestedDictsModel(Model[_JsonNestedDictsM]):
+        """Model for nested JSON objects whose leaves are scalar values."""
+
         ...
 
 
@@ -658,12 +706,18 @@ if TYPE_CHECKING:
 else:
 
     class JsonListOfNestedDictsModel(Model[_JsonListM[_JsonNestedDictsM]]):
+        """Model for JSON arrays whose items are nested-dict JSON objects."""
+
         ...
 
     class JsonDictOfNestedListsModel(Model[_JsonDictM[_JsonNestedListsM]]):
+        """Model for JSON objects whose values are nested-list JSON arrays."""
+
         ...
 
     class JsonDictOfListsOfDictsModel(Model[_JsonDictM[_JsonListM[_JsonAnyDictM]]]):
+        """Model for JSON objects whose values are arrays of JSON objects."""
+
         ...
 
 
@@ -688,9 +742,13 @@ if TYPE_CHECKING:
 else:
 
     class JsonCustomListModel(Model[_JsonListM[_JsonBaseT]], Generic[_JsonBaseT]):
+        """Generic model for JSON arrays constrained to a JSON-compatible item type."""
+
         ...
 
     class JsonCustomDictModel(Model[_JsonDictM[_JsonBaseT]], Generic[_JsonBaseT]):
+        """Generic model for JSON objects constrained to a JSON-compatible value type."""
+
         ...
 
 

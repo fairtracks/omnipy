@@ -29,4 +29,6 @@ class IsaFactorSchema(pyd.BaseModel):
 
 
 class IsaFactorModel(Model[IsaFactorSchema]):
+    """ISA model representing an experimental factor in a study."""
+
     ...

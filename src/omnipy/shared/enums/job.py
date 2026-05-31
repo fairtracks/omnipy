@@ -1,9 +1,13 @@
+"""Job-related literal enums for execution, persistence, and restoration settings."""
+
 from typing import Literal
 
 from omnipy.util.literal_enum import LiteralEnum
 
 
 class PersistOutputsOptions(LiteralEnum[str]):
+    """Per-run options for whether to persist outputs."""
+
     Literals = Literal['disabled', 'config', 'enabled']
 
     DISABLED: Literal['disabled'] = 'disabled'
@@ -12,6 +16,8 @@ class PersistOutputsOptions(LiteralEnum[str]):
 
 
 class RestoreOutputsOptions(LiteralEnum[str]):
+    """Per-run options for whether to restore persisted outputs."""
+
     Literals = Literal['disabled', 'config', 'auto_ignore_params', 'force_ignore_params']
 
     DISABLED: Literal['disabled'] = 'disabled'
@@ -21,6 +27,8 @@ class RestoreOutputsOptions(LiteralEnum[str]):
 
 
 class OutputStorageProtocolOptions(LiteralEnum[str]):
+    """Per-run options for which output storage protocol to use."""
+
     Literals = Literal['local', 's3', 'config']
 
     LOCAL: Literal['local'] = 'local'
@@ -29,6 +37,8 @@ class OutputStorageProtocolOptions(LiteralEnum[str]):
 
 
 class ConfigPersistOutputsOptions(LiteralEnum[str]):
+    """Configuration defaults for persisting flow and task outputs."""
+
     Literals = Literal['disabled', 'flow', 'all']
 
     DISABLED: Literal['disabled'] = 'disabled'
@@ -37,6 +47,8 @@ class ConfigPersistOutputsOptions(LiteralEnum[str]):
 
 
 class ConfigRestoreOutputsOptions(LiteralEnum[str]):
+    """Configuration defaults for restoring persisted outputs."""
+
     Literals = Literal['disabled', 'auto_ignore_params']
 
     DISABLED: Literal['disabled'] = 'disabled'
@@ -44,6 +56,8 @@ class ConfigRestoreOutputsOptions(LiteralEnum[str]):
 
 
 class ConfigOutputStorageProtocolOptions(LiteralEnum[str]):
+    """Configuration defaults for output storage protocols."""
+
     Literals = Literal['local', 's3']
 
     LOCAL: Literal['local'] = 'local'
@@ -51,6 +65,8 @@ class ConfigOutputStorageProtocolOptions(LiteralEnum[str]):
 
 
 class EngineChoice(LiteralEnum[str]):
+    """Execution engine enum values for running jobs."""
+
     Literals = Literal['local', 'prefect']
 
     LOCAL: Literal['local'] = 'local'
@@ -76,6 +92,8 @@ class JobType(TaskJobType, FlowJobType):
 
 
 class RunState(LiteralEnum[int]):
+    """Lifecycle state enum values for a running job."""
+
     Literals = Literal[1, 2, 3]
 
     INITIALIZED: Literal[1] = 1
@@ -84,6 +102,8 @@ class RunState(LiteralEnum[int]):
 
 
 class RunStateLogMessages(LiteralEnum[str]):
+    """Default log message templates associated with each run state."""
+
     Literals = Literal['Initialized "{}"', 'Started running "{}"...', 'Finished running "{}"!']
 
     INITIALIZED: Literal['Initialized "{}"'] = 'Initialized "{}"'

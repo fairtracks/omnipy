@@ -1,3 +1,5 @@
+"""Tasks for decoding, editing, concatenating, and unioning raw datasets."""
+
 from collections import deque
 from copy import deepcopy
 from functools import reduce
@@ -20,6 +22,8 @@ from .protocols import IsModifyAllLinesCallable, IsModifyContentCallable, IsModi
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=StrDataset)
 def decode_bytes(data: Model[bytes], encoding: str | None = None) -> str:
+    """Decode each binary data file to text, auto-detecting encoding when none is supplied."""
+
     if encoding is None:
         detector = UniversalDetector()
         for line in data.splitlines():
@@ -52,6 +56,8 @@ def modify_datafile_content(
     modify_content_func: IsModifyContentCallable,
     **kwargs: object,
 ) -> str:
+    """Apply a callable to each full text data file."""
+
     return modify_content_func(str(data_file), **kwargs)
 
 
@@ -61,6 +67,8 @@ def modify_each_line(
     modify_line_func: IsModifyEachLineCallable,
     **kwargs: object,
 ) -> str:
+    """Apply a callable to each line and rebuild the text from returned lines."""
+
     output_data = StringIO()
     for i, line in enumerate(StringIO(str(data_file))):
         modified_line = modify_line_func(i, line, **kwargs)
@@ -75,6 +83,8 @@ def modify_all_lines(
     modify_all_lines_func: IsModifyAllLinesCallable,
     **kwargs: object,
 ) -> str:
+    """Apply a callable to stripped lines and join the result with OS-specific newlines."""
+
     all_lines = [line.strip() for line in StringIO(str(data_file))]
     modified_lines = modify_all_lines_func(all_lines, **kwargs)
     return os.linesep.join(modified_lines)
@@ -86,6 +96,8 @@ _SequenceModelT = TypeVar(
 
 @TaskTemplate()
 def concat_all(dataset: Dataset[_SequenceModelT]) -> _SequenceModelT:
+    """Concatenate all dataset values using their native addition semantics."""
+
     return reduce(add, (val for val in dataset.values()))
 
 
@@ -94,6 +106,8 @@ _UniqueModelT = TypeVar('_UniqueModelT', bound=Model, default=Model[dict | set |
 
 @TaskTemplate()
 def union_all(dataset: Dataset[_UniqueModelT]) -> _UniqueModelT:
+    """Union all dataset values using their native set-like merge semantics."""
+
     all_vals = tuple(val for val in dataset.values())
     assert len(all_vals) > 0
     first_val = deepcopy(all_vals[0])

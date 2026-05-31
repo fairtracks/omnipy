@@ -1,3 +1,10 @@
+"""Dataset variants that allow per-item model specialization.
+
+This module defines :class:`MultiModelDataset`, a ``Dataset`` variant that still enforces one
+general dataset item type but can additionally assign more specific models to individual data-file
+keys.
+"""
+
 from typing import Any, Generic, Iterable, Mapping
 
 from typing_extensions import TypeVar
@@ -11,11 +18,12 @@ _GeneralModelT = TypeVar('_GeneralModelT', bound='Model')
 
 
 class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
-    """
-        Variant of Dataset that allows custom models to be set on individual data files
+    """Store typed dataset items with optional per-key model overrides.
 
-        Note that the general model still needs to hold for all data files, in addition to any
-        custom models.
+    ``MultiModelDataset`` extends :class:`~omnipy.data.dataset.Dataset` by allowing individual
+    data-file keys to use custom models, while still requiring every item to satisfy the dataset's
+    general model type. This is useful when most items share one schema but selected items need a
+    stricter or more specialized model.
     """
 
     # Custom field models should really be a subtype of _GeneralModelT,
@@ -26,6 +34,15 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
     _custom_field_models: 'dict[str, type[Model]]' = pyd.PrivateAttr(default={})
 
     def set_model(self, data_file: str, model: 'type[Model]') -> None:
+        """Assign a custom model to one data-file key.
+
+        Args:
+            data_file: Dataset key that should use the custom model.
+            model: Model class to validate that key against.
+
+        Raises:
+            ValidationError: If the existing item for the key does not satisfy the custom model.
+        """
         try:
             self._custom_field_models[data_file] = model
             if data_file in self.data:
@@ -37,6 +54,14 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
             raise
 
     def get_model(self, data_file: str) -> type[Model]:
+        """Return the model currently used for a data-file key.
+
+        Args:
+            data_file: Dataset key to inspect.
+
+        Returns:
+            The custom model for the key, or the dataset's general model when no override exists.
+        """
         if data_file in self._custom_field_models:
             return self._custom_field_models[data_file]
         else:
@@ -45,6 +70,12 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
     def from_data(self,
                   data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                   update: bool = True) -> None:
+        """Populate the dataset and then enforce any per-key custom models.
+
+        Args:
+            data: Mapping or iterable of ``(key, value)`` pairs to parse into validated items.
+            update: Whether to merge into existing contents instead of replacing them first.
+        """
         super().from_data(data, update)
         for data_file in self:
             self._validate_data_file_according_to_custom_field_model(data_file)

@@ -30,4 +30,6 @@ class IsaMaterialAttributeValueSchema(pyd.BaseModel):
 
 
 class IsaMaterialAttributeValueModel(Model[IsaMaterialAttributeValueSchema]):
+    """ISA model representing a material attribute value."""
+
     ...

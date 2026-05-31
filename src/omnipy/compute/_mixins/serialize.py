@@ -1,3 +1,19 @@
+"""Serialization and persisted-output options for compute jobs.
+
+This module provides the mixin that persists and restores dataset outputs,
+along with the public option enums used to control that behavior.
+
+Attributes:
+    ConfigPersistOpts: Runtime configuration enum that defines the default
+        persistence policy for flows and tasks.
+    PersistOpts: Enum that controls whether a job persists its outputs after a
+        successful run.
+    RestoreOpts: Enum that controls whether a job restores previously
+        persisted outputs instead of recomputing them.
+    ProtocolOpts: Enum that selects the storage and serialization protocol used
+        for persisted outputs.
+"""
+
 from datetime import datetime
 import os
 from pathlib import Path
@@ -18,11 +34,23 @@ from omnipy.util.helpers import get_job_name_slug
 from omnipy.util.mixin import strip_mixins_suffix
 
 PersistOpts = PersistOutputsOptions
+"""Options enum for controlling whether job outputs are persisted."""
+
 RestoreOpts = RestoreOutputsOptions
+"""Options enum for controlling whether persisted outputs are restored."""
+
 ProtocolOpts = OutputStorageProtocolOptions
+"""Options enum for selecting the output storage and serialization protocol."""
 
 
 class SerializerFuncJobBaseMixin:
+    """Mixin that adds automatic dataset output persistence and restoration.
+
+    Jobs using this mixin can restore previously serialized dataset outputs
+    before execution and persist new dataset outputs after execution according
+    to the selected option enums and runtime configuration.
+    """
+
     _serializer_registry: IsSerializerRegistry | None = None
 
     def __init__(

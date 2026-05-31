@@ -1,3 +1,5 @@
+"""Color style enums for syntax highlighting and themed text rendering."""
+
 from textwrap import dedent
 from typing import Literal
 
@@ -33,7 +35,8 @@ _SELENIZED_TEXT = dedent("""
 
 
 class RecommendedColorStyles(LiteralEnum[str]):
-    """
+    """Recommended color styles for syntax highlighting.
+
     Recommended color styles for syntax highlighting, provided through the
     Pygments and Rich libraries.
 
@@ -52,7 +55,8 @@ class RecommendedColorStyles(LiteralEnum[str]):
                        'omnipy-selenized-white']
 
     AUTO: Literal['auto'] = 'auto'
-    """
+    """Automatically select a recommended color style.
+
     The default color style, which is automatically replaced with one of the
     other recommended styles based on the color system, dark background
     and transparent background settings.
@@ -68,40 +72,46 @@ class RecommendedColorStyles(LiteralEnum[str]):
     """
 
     ANSI_DARK: Literal['ansi-dark'] = 'ansi-dark'
-    f"""
+    f"""ANSI dark color style.
+
     {_ANSI_TEXT.format(variant='dark')}
     """
 
     ANSI_LIGHT: Literal['ansi-light'] = 'ansi-light'
-    f"""
+    f"""ANSI light color style.
+
     {_ANSI_TEXT.format(variant='light')}Even though the light variant is
     defined for light backgrounds, you may find the ANSI dark variant
     slightly more readable across both light and dark terminal themes.
     """
 
     OMNIPY_SELENIZED_BLACK: Literal['omnipy-selenized-black'] = 'omnipy-selenized-black'
-    f"""
+    f"""Omnipy Selenized black color style.
+
     {_SELENIZED_TEXT}
     Black variant: A slightly soft dark theme with an almost black
     background, suitable also on a fully black background.
     """
 
     OMNIPY_SELENIZED_DARK: Literal['omnipy-selenized-dark'] = 'omnipy-selenized-dark'
-    f"""
+    f"""Omnipy Selenized dark color style.
+
     {_SELENIZED_TEXT}
     Dark variant: A dark theme on a dark bluish background, a bit harsh on a
     fully black background.
     """
 
     OMNIPY_SELENIZED_LIGHT: Literal['omnipy-selenized-light'] = 'omnipy-selenized-light'
-    f"""
+    f"""Omnipy Selenized light color style.
+
     {_SELENIZED_TEXT}
     Light variant: A soft light theme on an off-white background, suitable
     also on a fully white background for a softer feel.
     """
 
     OMNIPY_SELENIZED_WHITE: Literal['omnipy-selenized-white'] = 'omnipy-selenized-white'
-    f"""
+    f"""Omnipy Selenized white color style.
+
     {_SELENIZED_TEXT}
     White variant: A light theme on a fully white background.
     """
@@ -115,9 +125,7 @@ class RecommendedColorStyles(LiteralEnum[str]):
         dark_background: bool,
         solid_background: bool,
     ) -> 'RecommendedColorStyles.Literals':
-        """
-        Returns the default color style for the given color system.
-        """
+        """Return the default recommended color style for the given display settings."""
         match (color_system, dark_background, solid_background):
             case (DisplayColorSystem.ANSI_256 | DisplayColorSystem.ANSI_RGB, False, False):
                 return cls.OMNIPY_SELENIZED_WHITE
@@ -157,11 +165,7 @@ _COLOR_CONTRAST_TEXT = dedent("""\
 
 
 class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
-    f"""
-    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='Dark, high-contrast')}
-
-    These styles have high-level contrast that conform to {_COLOR_CONTRAST_TEXT}
-    """
+    """High-contrast dark background themes using the Tinted Theming Base16 color scheme."""
     Literals = Literal['0x96f-t16',
                        '3024-t16',
                        'apathy-t16',
@@ -2692,11 +2696,7 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 
 
 class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
-    f"""
-    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='Dark, lower contrast')}
-
-    These styles have lower-level contrast that did not meet {_COLOR_CONTRAST_TEXT}
-    """
+    """Lower-contrast dark background themes using the Tinted Theming Base16 color scheme."""
     Literals = Literal['apprentice-t16',
                        'brogrammer-t16',
                        'brushtrees-dark-t16',
@@ -2939,11 +2939,7 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 
 
 class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
-    f"""
-    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='Light, high-contrast')}
-
-    These styles have high-level contrast that conform to {_COLOR_CONTRAST_TEXT}
-    """
+    """High-contrast light background themes using the Tinted Theming Base16 color scheme."""
 
     Literals = Literal['atelier-cave-light-t16',
                        'atelier-dune-light-t16',
@@ -3991,11 +3987,7 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 
 
 class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
-    f"""
-    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='Light, lower contrast')}
-
-    These styles have lower-level contrast that did not meet {_COLOR_CONTRAST_TEXT}
-    """
+    """Lower-contrast light background themes using the Tinted Theming Base16 color scheme."""
 
     Literals = Literal['brushtrees-t16',
                        'cupcake-t16',
@@ -4071,9 +4063,7 @@ class DarkTintedThemingBase16ColorStyles(
         DarkHighContrastTintedThemingBase16ColorStyles,
         DarkLowContrastTintedThemingBase16ColorStyles,
 ):
-    f"""
-    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='All dark')}
-    """
+    """Dark background themes using the Tinted Theming Base16 color scheme."""
 
     Literals = Literal[DarkHighContrastTintedThemingBase16ColorStyles.Literals,
                        DarkLowContrastTintedThemingBase16ColorStyles.Literals,
@@ -4086,9 +4076,7 @@ class LightTintedThemingBase16ColorStyles(
         LightHighContrastTintedThemingBase16ColorStyles,
         LightLowContrastTintedThemingBase16ColorStyles,
 ):
-    f"""
-    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='All light')}
-    """
+    """Light background themes using the Tinted Theming Base16 color scheme."""
 
     Literals = Literal[LightHighContrastTintedThemingBase16ColorStyles.Literals,
                        LightLowContrastTintedThemingBase16ColorStyles.Literals,
@@ -4101,9 +4089,7 @@ class TintedThemingBase16ColorStyles(
         DarkTintedThemingBase16ColorStyles,
         LightTintedThemingBase16ColorStyles,
 ):
-    f"""
-    {_GENERAL_T16_COLOR_STYLE_DOCSTRING.format(description='All')}
-    """
+    """Themes using the Tinted Theming Base16 color scheme."""
 
     Literals = Literal[DarkTintedThemingBase16ColorStyles.Literals,
                        LightTintedThemingBase16ColorStyles.Literals,
@@ -4120,10 +4106,7 @@ _GENERAL_PYGMENTS_COLOR_STYLE_DOCSTRING = dedent("""
 
 
 class DarkHighContrastPygmentsColorStyles(LiteralEnum[str]):
-    __doc__ = (
-        dedent("""
-        High contrast dark color styles for syntax highlighting, """)
-        + _GENERAL_PYGMENTS_COLOR_STYLE_DOCSTRING)
+    """High-contrast dark background styles provided by Pygments."""
 
     Literals = Literal[
         'github-dark-pygments',
@@ -4139,9 +4122,7 @@ class DarkHighContrastPygmentsColorStyles(LiteralEnum[str]):
 
 
 class DarkLowContrastPygmentsColorStyles(LiteralEnum[str]):
-    __doc__ = dedent("""
-        Lower contrast dark color styles for syntax highlighting.
-        """) + _GENERAL_PYGMENTS_COLOR_STYLE_DOCSTRING
+    """Lower-contrast dark background styles provided by Pygments."""
 
     Literals = Literal[
         'coffee-pygments',
@@ -4179,9 +4160,7 @@ class DarkLowContrastPygmentsColorStyles(LiteralEnum[str]):
 
 
 class LightHighContrastPygmentsColorStyles(LiteralEnum[str]):
-    __doc__ = dedent("""
-        High contrast light color styles for syntax highlighting.
-        """) + _GENERAL_PYGMENTS_COLOR_STYLE_DOCSTRING
+    """High-contrast light background styles provided by Pygments."""
 
     Literals = Literal[
         'bw-pygments',
@@ -4199,9 +4178,7 @@ class LightHighContrastPygmentsColorStyles(LiteralEnum[str]):
 
 
 class LightLowContrastPygmentsColorStyles(LiteralEnum[str]):
-    __doc__ = dedent("""
-        Lower contrast dark color styles for syntax highlighting.
-        """) + _GENERAL_PYGMENTS_COLOR_STYLE_DOCSTRING
+    """Lower-contrast light background styles provided by Pygments."""
 
     Literals = Literal[
         'abap-pygments',
@@ -4261,8 +4238,9 @@ class DarkHighContrastColorStyles(
         DarkHighContrastTintedThemingBase16ColorStyles,
         DarkHighContrastPygmentsColorStyles,
 ):
-    """
-    All dark, high contrast color styles for syntax highlighting. See
+    """All dark, high-contrast color styles for syntax highlighting.
+
+    See
     subclasses for more details on the color styles.
     """
 
@@ -4277,8 +4255,9 @@ class DarkLowContrastColorStyles(
         DarkLowContrastTintedThemingBase16ColorStyles,
         DarkLowContrastPygmentsColorStyles,
 ):
-    """
-    All dark, lower contrast color styles for syntax highlighting. See
+    """All dark, lower-contrast color styles for syntax highlighting.
+
+    See
     superclasses for more details on the color styles.
     """
 
@@ -4293,8 +4272,9 @@ class LightHighContrastColorStyles(
         LightHighContrastTintedThemingBase16ColorStyles,
         LightHighContrastPygmentsColorStyles,
 ):
-    """
-    All light, high contrast color styles for syntax highlighting. See
+    """All light, high-contrast color styles for syntax highlighting.
+
+    See
     superclasses for more details on the color styles.
     """
 
@@ -4309,8 +4289,9 @@ class LightLowContrastColorStyles(
         LightLowContrastTintedThemingBase16ColorStyles,
         LightLowContrastPygmentsColorStyles,
 ):
-    """
-    All light, lower contrast color styles for syntax highlighting. See
+    """All light, lower-contrast color styles for syntax highlighting.
+
+    See
     superclasses for more details on the color styles.
     """
 
@@ -4325,8 +4306,9 @@ class DarkColorStyles(
         DarkHighContrastColorStyles,
         DarkLowContrastColorStyles,
 ):
-    """
-    All dark color styles for syntax highlighting. See subclasses for more
+    """All dark color styles for syntax highlighting.
+
+    See subclasses for more
     details on the color styles.
     """
 
@@ -4341,8 +4323,9 @@ class LightColorStyles(
         LightHighContrastColorStyles,
         LightLowContrastColorStyles,
 ):
-    """
-    All light color styles for syntax highlighting. See subclasses for more
+    """All light color styles for syntax highlighting.
+
+    See subclasses for more
     details on the color styles.
     """
 
@@ -4359,8 +4342,9 @@ class AllColorStyles(
         LightColorStyles,
         TintedThemingBase16ColorStyles,
 ):
-    """
-    All color styles available for syntax highlighting. See superclasses for
+    """All color styles available for syntax highlighting.
+
+    See superclasses for
     more details on the color styles.
     """
 

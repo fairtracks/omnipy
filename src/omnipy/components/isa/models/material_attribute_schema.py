@@ -27,4 +27,6 @@ class IsaMaterialAttributeSchema(pyd.BaseModel):
 
 
 class IsaMaterialAttributeModel(Model[IsaMaterialAttributeSchema]):
+    """ISA model representing a material attribute category."""
+
     ...

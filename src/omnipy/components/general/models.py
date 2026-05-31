@@ -14,10 +14,10 @@ from omnipy.util.helpers import is_iterable, is_non_str_byte_iterable
 
 
 class NotIterableExceptStrOrBytesModel(Model[object | None]):
-    """
-    Model describing any object that is not iterable, except for `str` and `bytes` types.
-    As strings and bytes are iterable (over the characters/bytes) but also generally useful and
-    often considered singular (or scalar) types, they are specifically allowed by this model.
+    """Represent a non-iterable value while still allowing ``str`` and ``bytes``.
+
+    Strings and bytes are accepted even though they are technically iterable because they are often
+    used as scalar values.
 
     Examples:
         >>> from omnipy import NotIterableExceptStrOrBytesModel, print_exception
@@ -31,8 +31,8 @@ class NotIterableExceptStrOrBytesModel(Model[object | None]):
         ValidationError: 1 validation error for NotIterableExceptStrOrBytesModel
 
     Note:
-        JsonScalarModel is a strict submodel of NotIterableExceptStrOrBytesModel in that all objects
-        allowed by JsonScalarModel are also allowed by NotIterableExceptStrOrBytesModel.
+        ``JsonScalarModel`` is a strict submodel because every JSON scalar also satisfies this
+        model.
     """
     @classmethod
     def _parse_data(cls, data: object) -> object:
@@ -60,6 +60,8 @@ _Z = TypeVar('_Z', bound=Model | Dataset, default=Model[object])
 
 
 class HasOuterType(Protocol):
+    """Protocol for generic model classes that expose their outer type form."""
+
     @classmethod
     def outer_type(cls, with_args: bool = False) -> TypeForm:
         ...
@@ -117,14 +119,17 @@ if TYPE_CHECKING:
 else:
 
     class Chain2(_ChainMixin, Model[_V | _U], Generic[_U, _V]):
+        """Convert data through a two-type chain from the first type argument to the second."""
         ...
 
     class Chain3(_ChainMixin, Model[_W | TypeVarStore1[_V] | _U], Generic[_U, _V, _W]):
+        """Convert data through a three-type chain ending in the third type argument."""
         ...
 
     class Chain4(_ChainMixin,
                  Model[_X | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
                  Generic[_U, _V, _W, _X]):
+        """Convert data through a four-type chain ending in the fourth type argument."""
         ...
 
     class Chain5(
@@ -132,6 +137,7 @@ else:
             Model[_Y | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
             Generic[_U, _V, _W, _X, _Y],
     ):
+        """Convert data through a five-type chain ending in the fifth type argument."""
         ...
 
     class Chain6(
@@ -140,6 +146,7 @@ else:
                   | _U],
             Generic[_U, _V, _W, _X, _Y, _Z],
     ):
+        """Convert data through a six-type chain ending in the sixth type argument."""
         ...
 
 

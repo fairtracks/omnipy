@@ -1,3 +1,9 @@
+"""Helpers for generating ``LiteralEnum`` source code from value collections.
+
+Use ``generate_literal_enum_code()`` to scaffold a ``LiteralEnum`` class from a
+sequence of values or a mapping of names to values.
+"""
+
 from collections.abc import KeysView
 from enum import Enum
 import re
@@ -20,45 +26,28 @@ def generate_literal_enum_code(
     include_imports: bool = True,
     class_name: str = 'NewLiteralEnum',
 ) -> str:
-    """
-    Generate code for a LiteralEnum class based on a tuple of string values.
+    """Generate Python source code for a ``LiteralEnum`` subclass.
 
-    Parameters:
-        values: Either one of the following:
-            1. Tuple of objects that define the literal values for the enum,
-               where each value will be converted to a valid attribute name
-            2. Dict of string keys to values, where the keys are used as
-               attribute names
-        docstrings: Optional dictionary mapping values to their
-            corresponding docstrings. If provided, the docstrings will be
-            added to the generated class attributes. The keys should match
-            the values in `values`. If None, no docstrings are added
-            (default: None)
-        include_imports: If True, includes necessary imports for Literal and
-            LiteralEnum (default: True)
-        class_name: The name of the generated class (default:
-            'GeneratedEnum')
+    Args:
+        values: Sequence of literal values or mapping of attribute names to
+            literal values.
+        docstrings: Optional mapping from literal values to attribute
+            docstring paragraphs.
+        include_imports: Whether to include the required ``Literal`` and
+            ``LiteralEnum`` imports in the generated source.
+        class_name: Name of the generated ``LiteralEnum`` subclass.
 
     Returns:
-        A string containing the complete Python code for a LiteralEnum class
+        Python source code for the generated ``LiteralEnum`` class.
 
     Raises:
-        ValueError: If no values are provided or if class_name is not a
-            valid identifier
+        ValueError: If no values are provided, if ``class_name`` is invalid,
+            or if ``docstrings`` contains values that are not present in
+            ``values``.
 
-    Example:
-        >>> code = generate_literal_enum_code(('active', 'inactive', 'pending'))
-        >>> print(code)
-        from typing import Literal
-
-        from omnipy.util.literal_enum import LiteralEnum
-
-
-        class GeneratedEnum(LiteralEnum[str]):
-            Literals = Literal['active', 'inactive', 'pending']
-            ACTIVE: Literal['active'] = 'active'
-            INACTIVE: Literal['inactive'] = 'inactive'
-            PENDING: Literal['pending'] = 'pending'
+    Examples:
+        A typical call generates a ready-to-paste class definition from a
+        sequence of values or a mapping of names to values.
     """
     enum_mappings = _generate_attrib_names(values)
     _check_params(values, docstrings, class_name, enum_mappings)

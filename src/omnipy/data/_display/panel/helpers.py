@@ -13,6 +13,8 @@ from omnipy.util.literal_enum import LiteralEnum
 
 
 class ForceAutodetect(LiteralEnum[str]):
+    """Control when panel helpers auto-detect a background color."""
+
     Literals = Literal['never', 'if_no_bg_color_in_style', 'always']
 
     NEVER: Literal['never'] = 'never'

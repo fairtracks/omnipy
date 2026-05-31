@@ -36,6 +36,8 @@ class IsaMaterialSchema(pyd.BaseModel):
 
 
 class IsaMaterialModel(Model[IsaMaterialSchema]):
+    """ISA model representing a non-sample material in a study."""
+
     ...
 
 

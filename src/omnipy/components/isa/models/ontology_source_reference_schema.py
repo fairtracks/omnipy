@@ -31,4 +31,6 @@ class IsaOntologySourceReferenceSchema(pyd.BaseModel):
 
 
 class IsaOntologySourceReferenceModel(Model[IsaOntologySourceReferenceSchema]):
+    """ISA model representing an ontology source reference."""
+
     ...

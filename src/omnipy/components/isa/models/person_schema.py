@@ -36,4 +36,6 @@ class IsaPersonSchema(pyd.BaseModel):
 
 
 class IsaPersonModel(Model[IsaPersonSchema]):
+    """ISA model representing a person involved in an investigation."""
+
     ...

@@ -1,3 +1,5 @@
+"""Datasets that map file names to pandas-backed table models."""
+
 from typing import Any
 
 from omnipy.data.dataset import Dataset
@@ -8,6 +10,8 @@ from .models import PandasModel
 
 
 class PandasDataset(Dataset[PandasModel]):
+    """Store named pandas-backed tables as a dataset of ``PandasModel`` data files."""
+
     ...
 
 

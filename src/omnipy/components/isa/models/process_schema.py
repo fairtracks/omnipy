@@ -56,6 +56,8 @@ class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
 
 
 class IsaProcessOrProtocolApplicationModel(Model[IsaProcessOrProtocolApplicationSchema]):
+    """ISA model representing a process or protocol application step."""
+
     ...
 
 

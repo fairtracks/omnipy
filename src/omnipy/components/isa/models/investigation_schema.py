@@ -48,4 +48,6 @@ class IsaInvestigationSchema(pyd.BaseModel):
 
 
 class IsaInvestigationModel(Model[IsaInvestigationSchema]):
+    """ISA model representing an investigation containing studies."""
+
     ...

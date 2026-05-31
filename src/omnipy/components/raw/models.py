@@ -1,3 +1,5 @@
+"""Raw text and binary models for encoding, splitting, joining, and filtering content."""
+
 from typing import Callable, cast, Generic, Protocol, TypeAlias
 
 from typing_extensions import TypeVar
@@ -37,6 +39,8 @@ else:
 
 
 class BytesModel(_BytesModel):
+    """Store binary content, encoding strings to bytes with the configured encoding."""
+
     adjust = bind_adjust_model_func(
         _BytesModel.clone_model_cls,
         _EncodingParamsMixin.Params,
@@ -50,6 +54,8 @@ if TYPE_CHECKING:
 else:
 
     class StrictBytesModel(Model[pyd.StrictBytes]):
+        """Store binary content without coercing strings to bytes."""
+
         ...
 
 
@@ -71,6 +77,8 @@ else:
 
 
 class StrModel(_StrModel):
+    """Store text content, decoding bytes with the configured encoding when needed."""
+
     adjust = bind_adjust_model_func(
         _StrModel.clone_model_cls,
         _EncodingParamsMixin.Params,
@@ -84,6 +92,8 @@ if TYPE_CHECKING:
 else:
 
     class StrictStrModel(Model[pyd.StrictStr]):
+        """Store text content without implicit byte decoding or coercion."""
+
         ...
 
 
@@ -158,6 +168,8 @@ else:
 
 
 class SplitToItemsModel(_SplitByCommaParamsMixin, SplitToItemsModelBase):
+    """Split a delimiter-separated string into a list of items, trimming fields by default."""
+
     adjust = bind_adjust_model_func(
         SplitToItemsModelBase.clone_model_cls,
         _SplitByCommaParamsMixin.Params,
@@ -165,6 +177,8 @@ class SplitToItemsModel(_SplitByCommaParamsMixin, SplitToItemsModelBase):
 
 
 class SplitToItemsByTabModel(_SplitByTabParamsMixin, SplitToItemsModelBase):
+    """Split a tab-delimited string into a list of items."""
+
     adjust = bind_adjust_model_func(
         SplitToItemsModelBase.clone_model_cls,
         _SplitByTabParamsMixin.Params,
@@ -172,6 +186,8 @@ class SplitToItemsByTabModel(_SplitByTabParamsMixin, SplitToItemsModelBase):
 
 
 class SplitToLinesModel(_SplitByNewlineParamsMixin, SplitToItemsModelBase):
+    """Split a string into a list of lines using the configured newline delimiter."""
+
     adjust = bind_adjust_model_func(
         SplitToItemsModelBase.clone_model_cls,
         _SplitByNewlineParamsMixin.Params,
@@ -206,6 +222,8 @@ class SplitItemsToSubitemsModel(_SplitByCommaParamsMixin, SplitItemsToSubitemsMo
 
 
 class SplitLinesToColumnsModel(_SplitByTabParamsMixin, SplitItemsToSubitemsModelBase):
+    """Split each text line into a list of tab-delimited columns."""
+
     adjust = bind_adjust_model_func(
         SplitItemsToSubitemsModelBase.clone_model_cls,
         _SplitByTabParamsMixin.Params,
@@ -213,6 +231,8 @@ class SplitLinesToColumnsModel(_SplitByTabParamsMixin, SplitItemsToSubitemsModel
 
 
 class SplitLinesToColumnsByCommaModel(_SplitByCommaParamsMixin, SplitItemsToSubitemsModelBase):
+    """Split each text line into a list of comma-delimited columns."""
+
     adjust = bind_adjust_model_func(
         SplitItemsToSubitemsModelBase.clone_model_cls,
         _SplitByCommaParamsMixin.Params,
@@ -274,6 +294,8 @@ else:
 
 
 class JoinItemsModel(_JoinByCommaParamsMixin, JoinItemsModelBase):
+    """Join a list of items into a delimiter-separated string."""
+
     adjust = bind_adjust_model_func(
         JoinItemsModelBase.clone_model_cls,
         _JoinByCommaParamsMixin.Params,
@@ -281,6 +303,8 @@ class JoinItemsModel(_JoinByCommaParamsMixin, JoinItemsModelBase):
 
 
 class JoinLinesModel(_JoinByNewlineParamsMixin, JoinItemsModelBase):
+    """Join a list of strings into newline-delimited text."""
+
     adjust = bind_adjust_model_func(
         JoinItemsModelBase.clone_model_cls,
         _JoinByNewlineParamsMixin.Params,
@@ -311,6 +335,8 @@ class JoinSubitemsToItemsModel(_JoinByCommaParamsMixin, JoinSubitemsToItemsModel
 
 
 class JoinColumnsToLinesModel(_JoinByTabParamsMixin, JoinSubitemsToItemsModelBase):
+    """Join column lists into tab-delimited text lines."""
+
     adjust = bind_adjust_model_func(
         JoinSubitemsToItemsModelBase.clone_model_cls,
         _JoinByTabParamsMixin.Params,
@@ -318,6 +344,8 @@ class JoinColumnsToLinesModel(_JoinByTabParamsMixin, JoinSubitemsToItemsModelBas
 
 
 class JoinColumnsByCommaToLinesModel(_JoinByCommaParamsMixin, JoinSubitemsToItemsModelBase):
+    """Join column lists into comma-delimited text lines."""
+
     adjust = bind_adjust_model_func(
         JoinSubitemsToItemsModelBase.clone_model_cls,
         _JoinByCommaParamsMixin.Params,
@@ -441,6 +469,8 @@ else:
 
 
 class NestedSplitToItemsModel(_NestedSplitToItemsModel):
+    """Recursively split nested string content with a configured delimiter sequence."""
+
     adjust = bind_adjust_model_func(
         cast(Callable[..., type[_NestedSplitToItemsModel]],
              _NestedSplitToItemsModel.clone_model_cls),
@@ -496,6 +526,8 @@ else:
 
 
 class NestedJoinItemsModel(_NestedJoinItemsModel):
+    """Recursively join nested string lists with a configured delimiter sequence."""
+
     adjust = bind_adjust_model_func(
         cast(Callable[..., type[_NestedJoinItemsModel]], _NestedJoinItemsModel.clone_model_cls),
         _NestedItemsParamsMixin.Params,
@@ -545,6 +577,8 @@ else:
 
 
 class MatchItemsModel(_MatchItemsModel):
+    """Filter a list of strings with configurable match functions."""
+
     adjust = bind_adjust_model_func(
         _MatchItemsModel.clone_model_cls,
         _MatchItemsModel.Params,

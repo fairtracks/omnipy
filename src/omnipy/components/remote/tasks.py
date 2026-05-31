@@ -1,3 +1,5 @@
+"""Tasks for fetching remote resources and building URL datasets."""
+
 import asyncio
 from dataclasses import dataclass
 from pathlib import Path
@@ -76,6 +78,18 @@ async def get_json_from_api_endpoint(
     url: HttpUrlModel,
     retry_client: 'RetryClient | None' = None,
 ) -> JsonModel:
+    """Fetch a JSON API endpoint and decode the response body as JSON.
+
+    Args:
+        url: HTTP URL to request.
+        client_session: Optional shared aiohttp client session.
+        retry_http_statuses: HTTP status codes that trigger retries.
+        retry_attempts: Maximum number of retry attempts.
+        retry_backoff_strategy: Backoff policy used between retries.
+
+    Returns:
+        The decoded JSON response for the requested URL.
+    """
     from .lazy_import import ClientSession
 
     async for retry_session in _ensure_retry_session(retry_client,):
@@ -91,6 +105,18 @@ async def get_str_from_api_endpoint(
     url: HttpUrlModel,
     retry_client: 'RetryClient | None' = None,
 ) -> StrModel:
+    """Fetch an API endpoint and decode the response body as text.
+
+    Args:
+        url: HTTP URL to request.
+        client_session: Optional shared aiohttp client session.
+        retry_http_statuses: HTTP status codes that trigger retries.
+        retry_attempts: Maximum number of retry attempts.
+        retry_backoff_strategy: Backoff policy used between retries.
+
+    Returns:
+        The response body as plain text.
+    """
     from .lazy_import import ClientSession
 
     async for retry_session in _ensure_retry_session(retry_client,):
@@ -106,6 +132,18 @@ async def get_bytes_from_api_endpoint(
     url: HttpUrlModel,
     retry_client: 'RetryClient | None' = None,
 ) -> BytesModel:
+    """Fetch an API endpoint and decode the response body as raw bytes.
+
+    Args:
+        url: HTTP URL to request.
+        client_session: Optional shared aiohttp client session.
+        retry_http_statuses: HTTP status codes that trigger retries.
+        retry_attempts: Maximum number of retry attempts.
+        retry_backoff_strategy: Backoff policy used between retries.
+
+    Returns:
+        The response body as bytes.
+    """
     from .lazy_import import ClientSession
 
     async for retry_session in _ensure_retry_session(retry_client,):
@@ -122,6 +160,19 @@ async def get_auto_from_api_endpoint(
     retry_client: 'RetryClient | None' = None,
     as_mime_type: str | None = None,
 ) -> AutoResponseContentModel:
+    """Fetch an API endpoint and decode the response from its MIME type.
+
+    Args:
+        url: HTTP URL to request.
+        client_session: Optional shared aiohttp client session.
+        retry_http_statuses: HTTP status codes that trigger retries.
+        retry_attempts: Maximum number of retry attempts.
+        retry_backoff_strategy: Backoff policy used between retries.
+        as_mime_type: Optional MIME type override for response decoding.
+
+    Returns:
+        The response content wrapped together with its effective content type.
+    """
     from .lazy_import import ClientSession, CONTENT_TYPE
 
     async for retry_session in _ensure_retry_session(retry_client):
@@ -154,6 +205,16 @@ def load_urls_into_new_dataset(
     dataset_cls: type[_JsonDatasetT] = JsonDataset,
     as_mime_type: str | None = None,
 ) -> _JsonDatasetT:
+    """Load remote URLs into a newly created dataset instance.
+
+    Args:
+        urls: Dataset containing the URLs to load.
+        dataset_cls: Dataset type to populate from the fetched content.
+        as_mime_type: Optional MIME type override for response decoding.
+
+    Returns:
+        A newly loaded dataset of type ``dataset_cls``.
+    """
     return dataset_cls.load(urls, as_mime_type=as_mime_type)
 
 
@@ -163,11 +224,30 @@ async def async_load_urls_into_new_dataset(
     dataset_cls: type[_JsonDatasetT] = JsonDataset,
     as_mime_type: str | None = None,
 ) -> _JsonDatasetT:
+    """Asynchronously load remote URLs into a newly created dataset instance.
+
+    Args:
+        urls: Dataset containing the URLs to load.
+        dataset_cls: Dataset type to populate from the fetched content.
+        as_mime_type: Optional MIME type override for response decoding.
+
+    Returns:
+        A newly loaded dataset of type ``dataset_cls``.
+    """
     return await dataset_cls.load(urls, as_mime_type=as_mime_type)
 
 
 @dataclass
 class GithubRepoContext:
+    """Describe a GitHub repository location used for raw-content URL generation.
+
+    Attributes:
+        owner: GitHub repository owner or organization.
+        repo: Repository name.
+        branch: Branch or ref to read from.
+        path: File or directory path inside the repository.
+    """
+
     owner: str
     repo: str
     branch: str
@@ -182,6 +262,18 @@ def get_github_repo_urls(
     path: str | Path,
     file_suffix: str | None = None,
 ) -> HttpUrlDataset:
+    """Create raw GitHub content URLs for one file or matching files in a repository path.
+
+    Args:
+        owner: GitHub repository owner or organization.
+        repo: Repository name.
+        branch: Branch or ref to read from.
+        path: File or directory path inside the repository.
+        file_suffix: Optional suffix filter when ``path`` points to a directory.
+
+    Returns:
+        A dataset of raw-content URLs keyed by file name.
+    """
 
     repo_context = GithubRepoContext(owner=owner, repo=repo, branch=branch, path=path)
 
@@ -205,6 +297,18 @@ async def async_get_github_repo_urls(
     path: str | Path,
     file_suffix: str | None = None,
 ) -> HttpUrlDataset:
+    """Asynchronously create raw GitHub content URLs for repository files.
+
+    Args:
+        owner: GitHub repository owner or organization.
+        repo: Repository name.
+        branch: Branch or ref to read from.
+        path: File or directory path inside the repository.
+        file_suffix: Optional suffix filter when ``path`` points to a directory.
+
+    Returns:
+        A dataset of raw-content URLs keyed by file name.
+    """
 
     repo_context = GithubRepoContext(owner=owner, repo=repo, branch=branch, path=path)
 

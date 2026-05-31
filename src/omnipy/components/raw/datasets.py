@@ -1,3 +1,5 @@
+"""Datasets for raw binary, text, and delimited-content data files."""
+
 from typing import Generic
 
 from typing_extensions import TypeVar
@@ -35,6 +37,8 @@ class _BytesDataset(Dataset[_BytesModelT], Generic[_BytesModelT]):
 
 
 class BytesDataset(_BytesDataset[BytesModel]):
+    """Store named binary data files as ``BytesModel`` items."""
+
     adjust = bind_adjust_dataset_func(
         _BytesDataset[BytesModel].clone_dataset_cls,
         BytesModel,
@@ -43,6 +47,8 @@ class BytesDataset(_BytesDataset[BytesModel]):
 
 
 class StrictBytesDataset(Dataset[StrictBytesModel]):
+    """Store named binary data files without coercing incoming values."""
+
     ...
 
 
@@ -51,6 +57,8 @@ class _StrDataset(Dataset[_StrModelT], Generic[_StrModelT]):
 
 
 class StrDataset(_StrDataset[StrModel]):
+    """Store named text data files as ``StrModel`` items."""
+
     adjust = bind_adjust_dataset_func(
         _StrDataset[StrModel].clone_dataset_cls,
         StrModel,
@@ -59,6 +67,8 @@ class StrDataset(_StrDataset[StrModel]):
 
 
 class StrictStrDataset(Dataset[StrictStrModel]):
+    """Store named text data files without implicit decoding or coercion."""
+
     ...
 
 
@@ -67,6 +77,8 @@ class _SplitToItemsDataset(Dataset[_SplitToItemsModelT], Generic[_SplitToItemsMo
 
 
 class SplitToItemsDataset(_SplitToItemsDataset[SplitToItemsModel]):
+    """Store named lists of delimiter-split text items."""
+
     adjust = bind_adjust_dataset_func(
         _SplitToItemsDataset[SplitToItemsModel].clone_dataset_cls,
         SplitToItemsModel,
@@ -75,6 +87,8 @@ class SplitToItemsDataset(_SplitToItemsDataset[SplitToItemsModel]):
 
 
 class SplitToLinesDataset(_SplitToItemsDataset[SplitToLinesModel]):
+    """Store named lists of text lines."""
+
     adjust = bind_adjust_dataset_func(
         _SplitToItemsDataset[SplitToLinesModel].clone_dataset_cls,
         SplitToLinesModel,
@@ -87,6 +101,8 @@ class _JoinItemsDataset(Dataset[_JoinItemsModelT], Generic[_JoinItemsModelT]):
 
 
 class JoinItemsDataset(_JoinItemsDataset[JoinItemsModel]):
+    """Store named delimiter-joined text items."""
+
     adjust = bind_adjust_dataset_func(
         _JoinItemsDataset[JoinItemsModel].clone_dataset_cls,
         JoinItemsModel,
@@ -95,6 +111,8 @@ class JoinItemsDataset(_JoinItemsDataset[JoinItemsModel]):
 
 
 class JoinLinesDataset(_JoinItemsDataset[JoinLinesModel]):
+    """Store named newline-joined text files."""
+
     adjust = bind_adjust_dataset_func(
         _JoinItemsDataset[JoinLinesModel].clone_dataset_cls,
         JoinLinesModel,
@@ -108,6 +126,8 @@ class _SplitItemsToSubitemsDataset(Dataset[_SplitItemsToSubitemsModelT],
 
 
 class SplitLinesToColumnsDataset(_SplitItemsToSubitemsDataset[SplitLinesToColumnsModel]):
+    """Store named line-oriented tables as lists of tab-delimited columns."""
+
     adjust = bind_adjust_dataset_func(
         _SplitItemsToSubitemsDataset[SplitLinesToColumnsModel].clone_dataset_cls,
         SplitLinesToColumnsModel,
@@ -121,6 +141,8 @@ class _JoinSubitemsToItemsDataset(Dataset[_JoinSubitemsToItemsModelT],
 
 
 class JoinColumnsToLinesDataset(_JoinSubitemsToItemsDataset[JoinColumnsToLinesModel]):
+    """Store named text lines created by joining column lists with tabs."""
+
     adjust = bind_adjust_dataset_func(
         _JoinSubitemsToItemsDataset[JoinColumnsToLinesModel].clone_dataset_cls,
         JoinColumnsToLinesModel,

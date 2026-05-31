@@ -1,3 +1,5 @@
+"""Context managers and context helper utilities used across Omnipy."""
+
 from contextlib import AbstractContextManager, contextmanager
 from copy import deepcopy
 from typing import Callable, Iterator
@@ -23,6 +25,23 @@ def setup_and_teardown_callback_context(
     teardown_func_args: tuple[object, ...] = (),
     teardown_func_kwargs: dict[str, object] = {},
 ) -> Iterator[_ValT | None]:
+    """Run optional setup, exception, and teardown callbacks around a context block.
+
+    Args:
+        setup_func: Optional callback invoked before entering the context.
+        setup_func_args: Positional arguments passed to ``setup_func``.
+        setup_func_kwargs: Keyword arguments passed to ``setup_func``.
+        exception_func: Optional callback invoked if the context raises.
+        exception_func_args: Positional arguments passed to ``exception_func``.
+        exception_func_kwargs: Keyword arguments passed to ``exception_func``.
+        teardown_func: Optional callback invoked when leaving the context.
+        teardown_func_args: Positional arguments passed to ``teardown_func``.
+        teardown_func_kwargs: Keyword arguments passed to ``teardown_func``.
+
+    Yields:
+        The value returned by ``setup_func``, if any.
+    """
+
     setup_val: _ValT | None = None
     if setup_func is not None:
         setup_val = setup_func(*setup_func_args, **setup_func_kwargs)
@@ -38,6 +57,8 @@ def setup_and_teardown_callback_context(
 
 
 class LastErrorHolder(AbstractContextManager):
+    """Context manager that stores the latest suppressed exception for later chaining."""
+
     def __init__(self):
         self._last_error = None
 
@@ -62,6 +83,17 @@ def hold_and_reset_prev_attrib_value(
     attr_name: str,
     copy_attr: bool = False,
 ) -> Iterator[None]:
+    """Restore an object's attribute to its previous value when the context exits.
+
+    Args:
+        obj: Object whose attribute should be restored.
+        attr_name: Name of the attribute to preserve and restore.
+        copy_attr: Whether to deep-copy the original value before storing it.
+
+    Yields:
+        ``None`` while the caller temporarily mutates the attribute.
+    """
+
     attr_value = getattr(obj, attr_name)
     prev_value = deepcopy(attr_value) if copy_attr else attr_value
 
@@ -73,10 +105,14 @@ def hold_and_reset_prev_attrib_value(
 
 @contextmanager
 def nothing(*args, **kwds) -> Iterator[None]:
+    """Yield a no-op context value."""
+
     yield None
 
 
 class PrintExceptionContext(AbstractContextManager):
+    """Context manager that prints and suppresses the first line of an exception."""
+
     def __enter__(self):
         ...
 
@@ -86,3 +122,4 @@ class PrintExceptionContext(AbstractContextManager):
 
 
 print_exception = PrintExceptionContext()
+"""Context manager instance that prints and suppresses the first line of an exception."""

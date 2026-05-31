@@ -31,4 +31,6 @@ class IsaStudyGroupSchema(pyd.BaseModel):
 
 
 class IsaStudyGroupModel(Model[IsaStudyGroupSchema]):
+    """ISA model representing a study group of related samples."""
+
     ...

@@ -1,3 +1,16 @@
+"""Runtime configuration and the global Omnipy runtime singleton.
+
+The runtime wires together configuration, engines, serializers, registries,
+and user-interface integration for the current process. Most user code works
+with the module-level ``runtime`` object rather than constructing a
+``Runtime`` manually.
+
+Attributes:
+    runtime: Global ``Runtime`` singleton for the current Python process. It
+        owns shared configuration and runtime objects, and it auto-initializes
+        UI integration outside the test environment.
+"""
+
 from typing import Any
 
 from omnipy.components.prefect.engine.prefect import PrefectEngine
@@ -51,12 +64,16 @@ def _data_config_factory() -> IsDataConfig:
 
 
 class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
+    """Configuration tree owned by a ``Runtime`` instance."""
+
     data: IsDataConfig = pyd.Field(default_factory=_data_config_factory)
     engine: IsEngineConfig = pyd.Field(default_factory=EngineConfig)
     job: IsJobConfig = pyd.Field(default_factory=_job_config_factory)
     root_log: IsRootLogConfig = pyd.Field(default_factory=RootLogConfig)
 
     def reset_to_defaults(self) -> None:
+        """Reset all runtime configuration sections to their default values."""
+
         prev_back = self._back
         self._back = None
 
@@ -71,6 +88,8 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
 
 
 class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
+    """Concrete services and registries owned by a ``Runtime`` instance."""
+
     job_creator: IsJobConfigHolder = pyd.Field(default_factory=_job_creator_factory)
     data_class_creator: IsDataClassCreator = pyd.Field(default_factory=_data_class_creator_factory)
     reactive: IsReactiveObjects | None = None
@@ -81,6 +100,12 @@ class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
     root_log: IsRootLogObjects = pyd.Field(default_factory=RootLogObjects)
 
     def setup_reactive(self, ui_type: UserInterfaceType.Literals) -> None:
+        """Create or remove reactive UI helpers for the detected interface.
+
+        Args:
+            ui_type: Detected user-interface type for the current runtime.
+        """
+
         if UserInterfaceType.is_jupyter_in_browser(ui_type):
             from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
 
@@ -92,6 +117,14 @@ class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
 
 
 class Runtime(DataPublisher):
+    """Application-level runtime object coordinating shared Omnipy services.
+
+    A ``Runtime`` keeps configuration and runtime objects in sync, selects the
+    active execution engine, and initializes display-related integration for
+    the current environment. Most applications should use the module-level
+    ``runtime`` singleton.
+    """
+
     config: IsRuntimeConfig = pyd.Field(default_factory=RuntimeConfig)
     objects: IsRuntimeObjects = pyd.Field(default_factory=RuntimeObjects)
 
@@ -101,11 +134,11 @@ class Runtime(DataPublisher):
         self.reset_subscriptions()
 
     def reset_subscriptions(self) -> None:
-        """
-        Resets all subscriptions for the current instance.
+        """Reset runtime subscriptions between config and runtime objects.
 
-        This function unsubscribes all existing subscriptions and then sets up new subscriptions
-        for the `config` and `objects` members.
+        This method rebuilds the callback graph that keeps configuration,
+        engines, registries, logging, and reactive UI objects synchronized.
+        Call it after replacing runtime subobjects manually.
         """
 
         self.reset_backlinks()

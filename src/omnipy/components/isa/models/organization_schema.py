@@ -25,4 +25,6 @@ class IsaOrganizationSchema(pyd.BaseModel):
 
 
 class IsaOrganizationModel(Model[IsaOrganizationSchema]):
+    """ISA model representing an organization."""
+
     ...
