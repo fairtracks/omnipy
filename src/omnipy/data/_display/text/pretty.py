@@ -1,5 +1,6 @@
 """Draft-to-text formatting pipeline for non-layout display content."""
 
+from contextvars import ContextVar
 from typing import cast
 
 from cachebox import cached, FIFOCache
@@ -11,29 +12,67 @@ from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT, OtherFrameT
 from omnipy.data._display.text.pretty_printer.base import (PrettyPrinter,
                                                            StatsTighteningPrettyPrinter)
+from omnipy.data._display.text.preview_pruning import (_is_probe_render_active,
+                                                       _maybe_prune_draft_panel,
+                                                       _PreviewPruningMemo,
+                                                       _set_probe_render_active)
+
+_preview_pruning_memo_ctx_var: ContextVar[_PreviewPruningMemo | None] = ContextVar(
+    '_preview_pruning_memo_ctx_var',
+    default=None,
+)
 
 
 def pretty_repr_of_draft_output(
         in_draft_panel: DraftPanel[object, FrameT]) -> ReflowedTextDraftPanel[FrameT]:
     """Format one draft panel into reflowed text using the selected printer."""
 
-    pretty_printer = PrettyPrinter.get_pretty_printer_for_draft_panel(in_draft_panel)
-    orig_draft_content_id = id(in_draft_panel.content)
-    draft_panel = pretty_printer.prepare_draft_panel(in_draft_panel)
-    formatted_draft_panel = pretty_printer.format_prepared_draft(draft_panel)
-    if frame_has_width(formatted_draft_panel.frame):
-        reflowed_text_panel = cast(ReflowedTextDraftPanel[FrameWithWidth], formatted_draft_panel)
-        if (isinstance(pretty_printer, StatsTighteningPrettyPrinter)
-                and _should_reduce_width(reflowed_text_panel)):
-            return _iteratively_reduce_width(
-                pretty_printer=pretty_printer,
-                draft_panel=draft_panel,
-                cur_reflowed_text_panel=reflowed_text_panel,
-                orig_draft_content_id=orig_draft_content_id,
-                should_follow_proportionality=_should_follow_proportionality(reflowed_text_panel),
+    memo = _preview_pruning_memo_ctx_var.get()
+    owns_memo_context = memo is None
+    if memo is None:
+        memo = _PreviewPruningMemo()
+
+    memo_token = _preview_pruning_memo_ctx_var.set(memo)
+
+    try:
+        if _is_probe_render_active():
+            draft_panel = in_draft_panel
+        else:
+            draft_panel = _maybe_prune_draft_panel(
+                in_draft_panel,
+                probe_render=_probe_render_candidate_prefix,
+                memo=memo,
             )
 
-    return formatted_draft_panel
+        pretty_printer = PrettyPrinter.get_pretty_printer_for_draft_panel(draft_panel)
+        orig_draft_content_id = id(draft_panel.content)
+        draft_panel = pretty_printer.prepare_draft_panel(draft_panel)
+        formatted_draft_panel = pretty_printer.format_prepared_draft(draft_panel)
+        if frame_has_width(formatted_draft_panel.frame):
+            reflowed_text_panel = cast(ReflowedTextDraftPanel[FrameWithWidth],
+                                       formatted_draft_panel)
+            if (isinstance(pretty_printer, StatsTighteningPrettyPrinter)
+                    and _should_reduce_width(reflowed_text_panel)):
+                return _iteratively_reduce_width(
+                    pretty_printer=pretty_printer,
+                    draft_panel=draft_panel,
+                    cur_reflowed_text_panel=reflowed_text_panel,
+                    orig_draft_content_id=orig_draft_content_id,
+                    should_follow_proportionality=_should_follow_proportionality(
+                        reflowed_text_panel),
+                )
+
+        return formatted_draft_panel
+    finally:
+        if owns_memo_context:
+            _preview_pruning_memo_ctx_var.reset(memo_token)
+
+
+def _probe_render_candidate_prefix(panel: DraftPanel[object, FrameT]) -> tuple[int, int]:
+    with _set_probe_render_active():
+        probe_rendered_panel = pretty_repr_of_draft_output(panel)
+
+    return probe_rendered_panel.orig_dims.width, probe_rendered_panel.orig_dims.height
 
 
 def _should_follow_proportionality(

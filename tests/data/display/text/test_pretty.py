@@ -18,6 +18,8 @@ from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.text.pretty import pretty_repr_of_draft_output
+import omnipy.data._display.text.pretty as pretty_module
+import omnipy.data._display.text.preview_pruning as preview_pruning_module
 from omnipy.data.model import Model
 from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
@@ -85,6 +87,10 @@ def _assert_pretty_repr_of_draft(
     assert out_draft_panel.frame == in_draft_panel.frame
     assert out_draft_panel.within_frame.width is within_frame_width
     assert out_draft_panel.within_frame.height is within_frame_height
+
+
+def _render_reflowed_text_panel_to_plain_terminal(panel: ReflowedTextDraftPanel,) -> str:
+    return panel.render_next_stage().plain.terminal
 
 
 @pytest.mark.parametrize(
@@ -937,3 +943,157 @@ def test_column_pretty_print(case: ColumnPrettyPrintCase) -> None:
         within_frame_width=True,
         within_frame_height=True,
     )
+
+
+def test_pretty_repr_preview_pruning_preserves_viewport_and_skips_heavy_tail(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    class _TrackedItem:
+        touched_indices: set[int] = set()
+
+        def __init__(self, idx: int) -> None:
+            self.idx = idx
+
+        def __repr__(self) -> str:
+            _TrackedItem.touched_indices.add(self.idx)
+            return f'item-{self.idx:03}'
+
+    model = Model[list[_TrackedItem]]([_TrackedItem(i) for i in range(180)])
+    panel = DraftPanel(
+        model,
+        frame=Frame(Dimensions(26, 7), fixed_width=False, fixed_height=False),
+        config=OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0),
+    )
+
+    _TrackedItem.touched_indices.clear()
+    with monkeypatch.context() as patch_ctx:
+        patch_ctx.setattr(
+            pretty_module,
+            '_maybe_prune_draft_panel',
+            lambda draft_panel, *, probe_render, memo: draft_panel,
+        )
+        unpruned_output_panel = pretty_repr_of_draft_output(panel)
+    unpruned_viewport = _render_reflowed_text_panel_to_plain_terminal(unpruned_output_panel)
+    unpruned_max_index = max(_TrackedItem.touched_indices)
+
+    _TrackedItem.touched_indices.clear()
+    pruned_output_panel = pretty_repr_of_draft_output(panel)
+    pruned_viewport = _render_reflowed_text_panel_to_plain_terminal(pruned_output_panel)
+    pruned_max_index = max(_TrackedItem.touched_indices)
+
+    assert pruned_viewport == unpruned_viewport
+    assert unpruned_max_index == 179
+    assert pruned_max_index < unpruned_max_index
+
+
+def test_pretty_repr_probe_renders_do_not_reenter_pruning(monkeypatch: pytest.MonkeyPatch) -> None:
+    panel = DraftPanel(
+        [f'item-{i}' for i in range(96)],
+        frame=Frame(Dimensions(18, 6), fixed_width=False, fixed_height=False),
+        config=OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0),
+    )
+
+    nested_probe_prune_calls = 0
+    total_prune_calls = 0
+    original_maybe_prune = getattr(pretty_module, '_maybe_prune_draft_panel')
+
+    def _track_probe_reentry(draft_panel, *, probe_render, memo):
+        nonlocal nested_probe_prune_calls, total_prune_calls
+        total_prune_calls += 1
+        if getattr(preview_pruning_module, '_is_probe_render_active')():
+            nested_probe_prune_calls += 1
+        return original_maybe_prune(draft_panel, probe_render=probe_render, memo=memo)
+
+    monkeypatch.setattr(pretty_module, '_maybe_prune_draft_panel', _track_probe_reentry)
+
+    pretty_repr_of_draft_output(panel)
+
+    assert total_prune_calls >= 1
+    assert nested_probe_prune_calls == 0
+
+
+def test_pretty_repr_preview_pruning_fail_open_for_unbounded_width_containers() -> None:
+    class _TrackedItem:
+        touched_indices: set[int] = set()
+
+        def __init__(self, idx: int) -> None:
+            self.idx = idx
+
+        def __repr__(self) -> str:
+            _TrackedItem.touched_indices.add(self.idx)
+            return f'item-{self.idx:03}'
+
+    content = [_TrackedItem(i) for i in range(90)]
+    panel = DraftPanel(
+        content,
+        frame=Frame(Dimensions(None, 6), fixed_height=False),
+        config=OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0),
+    )
+
+    pretty_repr_of_draft_output(panel)
+
+    assert max(_TrackedItem.touched_indices) == len(content) - 1
+
+
+def test_pretty_repr_preview_pruning_fail_open_when_probe_raises(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    class _TrackedItem:
+        touched_indices: set[int] = set()
+
+        def __init__(self, idx: int) -> None:
+            self.idx = idx
+
+        def __repr__(self) -> str:
+            _TrackedItem.touched_indices.add(self.idx)
+            return f'item-{self.idx:03}'
+
+    content = [_TrackedItem(i) for i in range(90)]
+    panel = DraftPanel(
+        content,
+        frame=Frame(Dimensions(22, 6), fixed_width=False, fixed_height=False),
+        config=OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0),
+    )
+
+    def _raise_probe_error(*_args, **_kwargs) -> tuple[int, int]:
+        raise RuntimeError('probe failed')
+
+    monkeypatch.setattr(pretty_module, '_probe_render_candidate_prefix', _raise_probe_error)
+
+    pretty_repr_of_draft_output(panel)
+
+    assert max(_TrackedItem.touched_indices) == len(content) - 1
+
+
+def test_pretty_repr_preview_pruning_fail_open_when_width_unstable_at_probe_cap(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    class _GrowingWidthItem:
+        touched_indices: set[int] = set()
+
+        def __init__(self, idx: int) -> None:
+            self.idx = idx
+
+        def __repr__(self) -> str:
+            _GrowingWidthItem.touched_indices.add(self.idx)
+            return f'v-{self.idx}-' + ('x' * (self.idx + 1))
+
+    content = [_GrowingWidthItem(i) for i in range(40)]
+    panel = DraftPanel(
+        content,
+        frame=Frame(Dimensions(120, 5), fixed_width=False, fixed_height=False),
+        config=OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0),
+    )
+
+    original_maybe_prune = getattr(preview_pruning_module, '_maybe_prune_draft_panel')
+
+    def _small_probe_cap_maybe_prune(draft_panel, *, probe_render, memo):
+        return original_maybe_prune(
+            draft_panel,
+            probe_render=probe_render,
+            memo=memo,
+            max_probe_items=8,
+        )
+
+    monkeypatch.setattr(pretty_module, '_maybe_prune_draft_panel', _small_probe_cap_maybe_prune)
+
+    pretty_repr_of_draft_output(panel)
+
+    assert max(_GrowingWidthItem.touched_indices) == len(content) - 1

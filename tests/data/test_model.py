@@ -28,8 +28,11 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeForm, TypeVar
 
+import omnipy.data._display.text.pretty as pretty_module
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
+from omnipy.shared.enums.display import PrettyPrinterLib
+from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.shared.protocols.typing import IsMapping
@@ -574,6 +577,91 @@ def test_repr_pretty() -> None:
 
     model = Model[list[int]]([123])
     assert pretty([model]) == '[Model[list[int]]([123])]'
+
+
+def _render_panel_to_plain_terminal(panel: Any) -> str:
+    return panel.render_next_stage().render_next_stage().plain.terminal
+
+
+def test_model_peek_preview_pruning_preserves_viewport_and_skips_hidden_tail(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    class _TrackedItem:
+        touched_indices: set[int] = set()
+
+        def __init__(self, idx: int) -> None:
+            self.idx = idx
+
+        def __repr__(self) -> str:
+            _TrackedItem.touched_indices.add(self.idx)
+            return f'item-{self.idx:03}'
+
+    model = Model[list[_TrackedItem]]([_TrackedItem(i) for i in range(180)])
+
+    _TrackedItem.touched_indices.clear()
+    with monkeypatch.context() as patch_ctx:
+        patch_ctx.setattr(
+            pretty_module,
+            '_maybe_prune_draft_panel',
+            lambda draft_panel, *, probe_render, memo: draft_panel,
+        )
+        unpruned_output = _render_panel_to_plain_terminal(
+            model._peek(
+                width=26,
+                height=7,
+                ui=UserInterfaceType.TERMINAL,
+                printer=PrettyPrinterLib.RICH,
+                freedom=0,
+            ))
+    unpruned_max_touched_idx = max(_TrackedItem.touched_indices)
+
+    _TrackedItem.touched_indices.clear()
+    pruned_output = _render_panel_to_plain_terminal(
+        model._peek(
+            width=26,
+            height=7,
+            ui=UserInterfaceType.TERMINAL,
+            printer=PrettyPrinterLib.RICH,
+            freedom=0,
+        ))
+    pruned_max_touched_idx = max(_TrackedItem.touched_indices)
+
+    assert pruned_output == unpruned_output
+    assert unpruned_max_touched_idx == 179
+    assert pruned_max_touched_idx < unpruned_max_touched_idx
+
+
+def test_model_peek_preview_pruning_memo_is_per_top_level_render_call(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    model = Model[list[int]](list(range(180)))
+
+    observed_memo_ids: list[int] = []
+    original_maybe_prune = getattr(pretty_module, '_maybe_prune_draft_panel')
+
+    def _track_memo(draft_panel, *, probe_render, memo):
+        observed_memo_ids.append(id(memo))
+        return original_maybe_prune(draft_panel, probe_render=probe_render, memo=memo)
+
+    monkeypatch.setattr(pretty_module, '_maybe_prune_draft_panel', _track_memo)
+
+    _render_panel_to_plain_terminal(
+        model._peek(
+            width=26,
+            height=7,
+            ui=UserInterfaceType.TERMINAL,
+            printer=PrettyPrinterLib.RICH,
+            freedom=0,
+        ))
+    _render_panel_to_plain_terminal(
+        model._peek(
+            width=26,
+            height=7,
+            ui=UserInterfaceType.TERMINAL,
+            printer=PrettyPrinterLib.RICH,
+            freedom=0,
+        ))
+
+    assert len(observed_memo_ids) >= 2
+    assert len(set(observed_memo_ids)) >= 2
 
 
 def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:

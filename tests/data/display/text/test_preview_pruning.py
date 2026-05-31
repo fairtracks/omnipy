@@ -63,7 +63,7 @@ def test_string_chunking_and_pruning() -> None:
     pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
 
     assert isinstance(pruned_panel.content, str)
-    assert pruned_panel.content == content[:256]
+    assert pruned_panel.content == content[:512]
 
 
 def test_mapping_pruning_insertion_order() -> None:
@@ -79,7 +79,7 @@ def test_mapping_pruning_insertion_order() -> None:
     pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
 
     assert isinstance(pruned_panel.content, dict)
-    assert list(pruned_panel.content.items()) == list(content.items())[:3]
+    assert list(pruned_panel.content.items()) == list(content.items())[:4]
 
 
 def test_probe_caps_and_fallback() -> None:
@@ -209,7 +209,8 @@ def test_panel_cache_distinguishes_configs_for_same_content_and_frame() -> None:
 
     memo = _PreviewPruningMemo()
     rich_result = _maybe_prune_draft_panel(rich_panel, probe_render=_probe_render, memo=memo)
-    devtools_result = _maybe_prune_draft_panel(devtools_panel, probe_render=_probe_render, memo=memo)
+    devtools_result = _maybe_prune_draft_panel(
+        devtools_panel, probe_render=_probe_render, memo=memo)
 
     assert isinstance(rich_result.content, list)
     assert isinstance(devtools_result.content, list)

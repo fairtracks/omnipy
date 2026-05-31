@@ -1,11 +1,18 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
 _DEFAULT_MAX_PROBE_ITEMS = 1024
 _DEFAULT_STRING_CHUNK_SIZE = 256
 _DEFAULT_WIDTH_STABILIZATION_WINDOW = 2
+
+_probe_render_active_ctx_var: ContextVar[bool] = ContextVar(
+    '_probe_render_active_ctx_var',
+    default=False,
+)
 
 
 @dataclass(frozen=True)
@@ -18,7 +25,7 @@ class _PanelPreviewBudget:
 class _PreviewPruningMemo:
     probe_cache: dict[tuple[int, int, int, int, int], tuple[int, int]] = field(default_factory=dict)
     panel_cache: dict[tuple[int, _PanelPreviewBudget, int, int, int, int, int],
-                       int | None] = field(default_factory=dict)
+                      int | None] = field(default_factory=dict)
     active_object_ids: set[int] = field(default_factory=set)
 
 
@@ -36,8 +43,13 @@ def _maybe_prune_draft_panel(
     max_probe_items: int = _DEFAULT_MAX_PROBE_ITEMS,
     width_stabilization_window: int = _DEFAULT_WIDTH_STABILIZATION_WINDOW,
 ) -> Any:
+    if _is_probe_render_active():
+        return draft_panel
+
+    prunable_content = _content_for_pruning(draft_panel)
+
     budget = _derive_budget(draft_panel)
-    plan = _build_prunable_chunk_plan(draft_panel.content, budget)
+    plan = _build_prunable_chunk_plan(prunable_content, budget)
     if plan is None:
         return draft_panel
 
@@ -56,6 +68,7 @@ def _maybe_prune_draft_panel(
 
     prefix_size = _compute_prefix_size_fail_open(
         draft_panel=draft_panel,
+        prunable_content=prunable_content,
         budget=budget,
         plan=plan,
         probe_render=probe_render,
@@ -75,6 +88,42 @@ def _derive_budget(draft_panel: Any) -> _PanelPreviewBudget:
     inner_frame = getattr(draft_panel, 'inner_frame', draft_panel.frame)
     dims = inner_frame.dims
     return _PanelPreviewBudget(width_budget=dims.width, height_budget=dims.height)
+
+
+def _content_for_pruning(draft_panel: Any) -> object:
+    if _content_is_non_debug_model_with_supported_inner_content(draft_panel):
+        return draft_panel.content.content
+
+    return draft_panel.content
+
+
+def _content_is_non_debug_model_with_supported_inner_content(draft_panel: Any) -> bool:
+    if getattr(draft_panel.config, 'debug', False):
+        return False
+
+    try:
+        from omnipy.data.model import is_model_instance
+    except Exception:
+        return False
+
+    content = draft_panel.content
+    if not is_model_instance(content):
+        return False
+
+    return _is_supported_content(getattr(content, 'content', None))
+
+
+def _is_probe_render_active() -> bool:
+    return _probe_render_active_ctx_var.get()
+
+
+@contextmanager
+def _set_probe_render_active() -> Any:
+    token = _probe_render_active_ctx_var.set(True)
+    try:
+        yield
+    finally:
+        _probe_render_active_ctx_var.reset(token)
 
 
 def _is_supported_content(content: object) -> bool:
@@ -124,6 +173,7 @@ def _cached_panel_if_any(
 def _compute_prefix_size_fail_open(
     *,
     draft_panel: Any,
+    prunable_content: object,
     budget: _PanelPreviewBudget,
     plan: _ChunkPlan,
     probe_render: Callable[[Any], tuple[int, int]],
@@ -131,7 +181,7 @@ def _compute_prefix_size_fail_open(
     max_probe_items: int,
     width_stabilization_window: int,
 ) -> int | None:
-    object_id = id(draft_panel.content)
+    object_id = id(prunable_content)
     if object_id in memo.active_object_ids:
         return None
 
@@ -208,7 +258,14 @@ def _restore_bytes_type(original: object, value: bytes) -> bytes | bytearray:
 
 
 def _panel_with_prefix(draft_panel: Any, plan: _ChunkPlan, prefix_size: int) -> Any:
-    return draft_panel.create_modified_copy(content=plan.prefix_builder(prefix_size))
+    prefix_content = plan.prefix_builder(prefix_size)
+
+    if _content_is_non_debug_model_with_supported_inner_content(draft_panel):
+        model_copy = draft_panel.content.copy(deep=False)
+        model_copy.content = prefix_content
+        return draft_panel.create_modified_copy(content=model_copy)
+
+    return draft_panel.create_modified_copy(content=prefix_content)
 
 
 def _find_prefix_size(
@@ -241,11 +298,13 @@ def _find_prefix_size(
         growth_history.append((n, rendered_width, rendered_height))
 
         height_reached = (
-            budget.height_budget is not None and rendered_height >= budget.height_budget)
+            budget.height_budget is not None and rendered_height > budget.height_budget)
         width_stable = _width_stabilized(
             width_history=[width for _, width, _ in growth_history],
             width_stabilization_window=width_stabilization_window,
         )
+        width_stable_allowed = (
+            budget.height_budget is None or rendered_height >= budget.height_budget)
         reached_end = n >= plan.total_chunks
         reached_cap = n >= cap
 
@@ -253,7 +312,7 @@ def _find_prefix_size(
             stop_reason = 'height'
             break
 
-        if width_stable:
+        if width_stable and width_stable_allowed:
             stop_reason = 'width'
             break
 
@@ -316,9 +375,21 @@ def _prefix_satisfies_stop_condition(
             probe_render=probe_render,
             memo=memo,
         )
-        return rendered_height >= budget.height_budget
+        return rendered_height > budget.height_budget
 
     width_history: list[int] = []
+
+    if budget.height_budget is not None:
+        _, rendered_height = _probe_prefix(
+            draft_panel=draft_panel,
+            plan=plan,
+            prefix_size=prefix_size,
+            probe_render=probe_render,
+            memo=memo,
+        )
+        if rendered_height < budget.height_budget:
+            return False
+
     for offset in range(width_stabilization_window + 1):
         probe_size = min(prefix_size + offset, max_prefix_size, plan.total_chunks)
         rendered_width, _ = _probe_prefix(
