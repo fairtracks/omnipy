@@ -4,14 +4,16 @@ from collections import defaultdict
 from contextlib import suppress
 from dataclasses import dataclass
 from enum import IntEnum
+import os
 import sys
+from textwrap import dedent
 from typing import Any, ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
 
 from typing_extensions import TypeIs, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.shared.typedefs import TypeForm
-from omnipy.util.helpers import format_classname_with_params, is_union
+from omnipy.util.helpers import format_classname_with_params, is_package_editable, is_union
 
 __all__ = [
     'TypeVarStore',
@@ -34,6 +36,12 @@ _T = TypeVar('_T')
 _U = TypeVar('_U')
 
 
+if is_package_editable('omnipy'):  # Only define environment variables when developing
+    os.environ['OMNIPY_MACRO_TYPEVAR_STORE_MARKER_SUMMARY'] = dedent("""\
+        Distinct single-type-variable marker used when multiple stores are needed.
+    """)
+
+
 class TypeVarStore(Generic[_T]):
     """Sentinel generic used to expose a single type variable in helper type plumbing."""
 
@@ -49,25 +57,25 @@ class DoubleTypeVarStore(Generic[_T, _U]):
 
 
 class TypeVarStore1(TypeVarStore[_T], Generic[_T]):
-    """Distinct single-type-variable marker used when multiple stores are needed."""
+    """{{TYPEVAR_STORE_MARKER_SUMMARY}}"""
 
     ...
 
 
 class TypeVarStore2(TypeVarStore[_T], Generic[_T]):
-    """Distinct single-type-variable marker used when multiple stores are needed."""
+    """{{TYPEVAR_STORE_MARKER_SUMMARY}}"""
 
     ...
 
 
 class TypeVarStore3(TypeVarStore[_T], Generic[_T]):
-    """Distinct single-type-variable marker used when multiple stores are needed."""
+    """{{TYPEVAR_STORE_MARKER_SUMMARY}}"""
 
     ...
 
 
 class TypeVarStore4(TypeVarStore[_T], Generic[_T]):
-    """Distinct single-type-variable marker used when multiple stores are needed."""
+    """{{TYPEVAR_STORE_MARKER_SUMMARY}}"""
 
     ...
 

@@ -2,7 +2,7 @@
 
 from abc import ABCMeta
 from contextlib import contextmanager
-from typing import Callable, ContextManager, Generic, Iterator
+from typing import Callable, cast, ContextManager, Generic, Iterator
 
 from omnipy.config.data import DataConfig
 from omnipy.data.snapshot import SnapshotHolder
@@ -26,19 +26,23 @@ class DataClassCreator:
     """
 
     def __init__(self) -> None:
-        self._config: IsDataConfig = DataConfig()
+        self._config: IsDataConfig = cast(IsDataConfig, DataConfig())
         self._reactive_objects: IsReactiveObjects | None = None
         self._snapshot_holder = SnapshotHolder[HasContent, object]()
         self._deepcopy_context_level = 0
 
     @property
     def config(self) -> IsDataConfig:
-        """Return the data configuration shared by the owning data-class family."""
+        """{{ISDATACLASSCREATOR_CONFIG_SUMMARY}}
+
+        {{ISDATACLASSCREATOR_CONFIG_DETAILS}}"""
 
         return self._config
 
     def set_config(self, config: IsDataConfig) -> None:
-        """Replace the shared data configuration for the owning data-class family."""
+        """{{ISDATACLASSCREATOR_SET_CONFIG_SUMMARY}}
+
+        {{ISDATACLASSCREATOR_SET_CONFIG_DETAILS}}"""
 
         self._config = config
 
@@ -143,7 +147,9 @@ class DataClassBase(Generic[ContentT], metaclass=DataClassBaseMeta):
 
     @property
     def config(self) -> IsDataConfig:
-        """Return the configuration shared by this data class and its siblings."""
+        """{{ISDATACLASSCREATOR_CONFIG_SUMMARY}}
+
+        {{ISDATACLASSCREATOR_CONFIG_DETAILS}}"""
 
         return self.__class__.data_class_creator.config
 

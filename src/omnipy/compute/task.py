@@ -9,6 +9,8 @@ Attributes:
         as a reusable Omnipy task.
 """
 
+import os
+from textwrap import dedent
 from typing import Callable, cast, Generic, ParamSpec, TypeVar
 
 from typing_extensions import Concatenate
@@ -20,6 +22,7 @@ from omnipy.shared.protocols.compute.job import HasFuncArgJobTemplateInit, IsTas
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
+from omnipy.util.helpers import is_package_editable
 
 __all__ = [
     'Task',
@@ -32,6 +35,16 @@ _InitP = ParamSpec('_InitP')
 _CallP = ParamSpec('_CallP')
 _CallableT = TypeVar('_CallableT')
 _RetT = TypeVar('_RetT')
+
+
+if is_package_editable('omnipy'):  # Only define environment variables when developing
+    os.environ['OMNIPY_MACRO_TASK_CORE_TEMPLATE_SUMMARY'] = 'Implement the core template behavior.'
+
+    os.environ['OMNIPY_MACRO_TASK_WRAP_INITIALIZER_DECORATOR_SUMMARY'] = dedent("""\
+        Wrap a template initializer as a callable decorator factory.""")
+
+    os.environ['OMNIPY_MACRO_TASK_CAST_INIT_PROTOCOL_SUMMARY'] = dedent("""\
+        Cast a template initializer to the shared init protocol.""")
 
 
 class TaskBase:
@@ -84,7 +97,7 @@ class TaskTemplateCore(
 def task_template_as_callable_decorator(
     decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsTaskTemplate]) -> \
         Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsTaskTemplate[_CallP, _RetT]]]:
-    """Wrap a task-template initializer as a callable decorator factory.
+    """{{TASK_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
 
     Args:
         decorated_cls: Task-template initializer to adapt.
@@ -101,7 +114,7 @@ def to_task_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
                             TaskTemplateCore[_CallP, _RetT]]
 ) -> HasFuncArgJobTemplateInit[IsTaskTemplate[_CallP, _RetT], _CallP, _RetT]:
-    """Cast a task-template initializer to the shared init protocol.
+    """{{TASK_CAST_INIT_PROTOCOL_SUMMARY}}
 
     Args:
         decorated_cls: Task-template initializer to cast.

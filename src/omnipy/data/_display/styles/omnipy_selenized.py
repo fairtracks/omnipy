@@ -31,14 +31,24 @@
 
 """Bundled Selenized-derived color styles used by the display subsystem."""
 
+import os
+from textwrap import dedent
+
 import pygments.style
+
+from omnipy.util.helpers import is_package_editable
 
 from .helpers import Base16Colors, get_styles_from_base16_colors
 
 
+if is_package_editable('omnipy'):  # Only define environment variables when developing
+    os.environ['OMNIPY_MACRO_SELENIZED_STYLE_INTERFACE_SUMMARY'] = dedent("""\
+        Define the interface for one of the Omnipy Selenized style variants.
+    """)
+
+
 class OmnipySelenizedBlackStyle(pygments.style.Style):
-    """Define the ``OmnipySelenizedBlackStyle`` interface.
-    """
+    """{{SELENIZED_STYLE_INTERFACE_SUMMARY}}"""
 
     name = 'omnipy-selenized-black'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
@@ -69,8 +79,7 @@ class OmnipySelenizedBlackStyle(pygments.style.Style):
 
 
 class OmnipySelenizedDarkStyle(pygments.style.Style):
-    """Define the ``OmnipySelenizedDarkStyle`` interface.
-    """
+    """{{SELENIZED_STYLE_INTERFACE_SUMMARY}}"""
 
     name = 'omnipy-selenized-dark'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
@@ -101,8 +110,7 @@ class OmnipySelenizedDarkStyle(pygments.style.Style):
 
 
 class OmnipySelenizedLightStyle(pygments.style.Style):
-    """Define the ``OmnipySelenizedLightStyle`` interface.
-    """
+    """{{SELENIZED_STYLE_INTERFACE_SUMMARY}}"""
 
     name = 'omnipy-selenized-light'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
@@ -133,8 +141,7 @@ class OmnipySelenizedLightStyle(pygments.style.Style):
 
 
 class OmnipySelenizedWhiteStyle(pygments.style.Style):
-    """Define the ``OmnipySelenizedWhiteStyle`` interface.
-    """
+    """{{SELENIZED_STYLE_INTERFACE_SUMMARY}}"""
 
     name = 'omnipy-selenized-white'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'

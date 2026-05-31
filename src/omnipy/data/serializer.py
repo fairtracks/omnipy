@@ -5,6 +5,7 @@ from io import BytesIO
 import os
 import tarfile
 from tarfile import TarInfo
+from textwrap import dedent
 from typing import Any, Callable, cast, Generic, IO, Type
 
 from typing_extensions import TypeVar
@@ -12,9 +13,24 @@ from typing_extensions import TypeVar
 from omnipy.shared.protocols.data import HasData, IsDataset, IsSerializer, IsTarFileSerializer
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
+from omnipy.util.helpers import is_package_editable
 from omnipy.util.pydantic import ValidationError
 
 _DatasetT = TypeVar('_DatasetT', bound=IsDataset)
+
+
+if is_package_editable('omnipy'):  # Only define environment variables when developing
+    os.environ['OMNIPY_MACRO_SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY'] = dedent("""\
+        Return the dataset class created during deserialization.""")
+
+    os.environ['OMNIPY_MACRO_SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY'] = dedent("""\
+        Return the file suffix used for serialized dataset members.""")
+
+    os.environ['OMNIPY_MACRO_SERIALIZE_GZIPPED_TAR_SUMMARY'] = dedent("""\
+        Serialize a dataset into a gzipped tar archive.""")
+
+    os.environ['OMNIPY_MACRO_DESERIALIZE_GZIPPED_TAR_SUMMARY'] = dedent("""\
+        Deserialize a gzipped tar archive back into a dataset.""")
 
 
 class Serializer(ABC, Generic[_DatasetT]):

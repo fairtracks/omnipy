@@ -14,17 +14,15 @@ class LogMixin:
 
     @property
     def logger(self) -> Logger:
-        """Return the logger bound to the concrete instance type."""
+        """{{CANLOG_LOGGER_SUMMARY}}
+
+        {{CANLOG_LOGGER_DETAILS}}"""
         return self._logger
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None):
-        """Emit a log message, optionally using an explicit event timestamp.
+        """{{CANLOG_LOG_SUMMARY}}
 
-        Args:
-            log_msg: Message text to send to the logger.
-            level: Standard library logging level.
-            datetime_obj: Timestamp to attach to the record instead of wall-clock time.
-        """
+        {{CANLOG_LOG_DETAILS}}"""
         if self._logger is not None:
             create_time = datetime_obj.timestamp() if datetime_obj else time.time()
             self._logger.log(level, log_msg, extra=dict(timestamp=create_time))

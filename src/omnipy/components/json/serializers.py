@@ -21,19 +21,19 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
-        """Return the dataset class created during deserialization."""
+        """{{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}"""
 
         return JsonDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        """Return the file suffix used for serialized dataset members."""
+        """{{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}"""
 
         return 'json'
 
     @classmethod
     def serialize(cls, dataset: JsonBaseDataset) -> bytes | memoryview:
-        """Serialize a JSON dataset into a gzipped tar archive."""
+        """{{SERIALIZE_GZIPPED_TAR_SUMMARY}}"""
 
         def json_encode_func(json_data: JsonModel) -> bytes:
             return json_data.to_json().encode('utf8')
@@ -42,7 +42,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> JsonDataset:
-        """Deserialize a gzipped tar archive into a JSON dataset."""
+        """{{DESERIALIZE_GZIPPED_TAR_SUMMARY}}"""
 
         json_dataset = JsonDataset()
 

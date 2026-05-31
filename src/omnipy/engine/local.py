@@ -26,14 +26,9 @@ class LocalRunner(JobRunnerEngine):
 
     @classmethod
     def get_config_cls(cls) -> Type[IsLocalRunnerConfig]:
-        """Return the config class used by the local runner engine.
+        """{{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
 
-        Args:
-            cls: Local runner class.
-
-        Returns:
-            Type[IsLocalRunnerConfig]: Concrete local-runner config class.
-        """
+        {{ISENGINE_GET_CONFIG_CLS_DETAILS}}"""
         return cast(Type[IsLocalRunnerConfig], LocalRunnerConfig)
 
     def _init_task(self, task: TaskRunSpec) -> object:

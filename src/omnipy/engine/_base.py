@@ -30,40 +30,33 @@ class Engine(ABC):
     @classmethod
     @abstractmethod
     def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
-        """Return the config class associated with the engine type.
+        """{{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
 
-        Args:
-            cls: Engine subclass that provides the configuration mapping.
-
-        Returns:
-            Type[IsJobRunnerConfig]: Configuration class used to create engine config instances.
-        """
+        {{ISENGINE_GET_CONFIG_CLS_DETAILS}}"""
 
     def set_config(self, config: IsJobRunnerConfig) -> None:
-        """Replace the active config and refresh config-dependent state.
+        """{{ISENGINE_SET_CONFIG_SUMMARY}}
 
-        Args:
-            config: Runtime configuration object for the engine.
-        """
+        {{ISENGINE_SET_CONFIG_DETAILS}}"""
         self._config = config
         self._update_from_config()
 
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
-        """Attach or clear the run-state registry used for job state reporting.
+        """{{ISENGINE_SET_REGISTRY_SUMMARY}}
 
-        Args:
-            registry: Registry implementation, or ``None`` to disable state reporting.
-        """
+        {{ISENGINE_SET_REGISTRY_DETAILS}}"""
         self._registry = registry
 
     @property
     def config(self) -> IsJobRunnerConfig:
-        """Return the currently active engine configuration.
-        """
+        """{{ISENGINE_CONFIG_SUMMARY}}
+
+        {{ISENGINE_CONFIG_DETAILS}}"""
         return self._config
 
     @property
     def registry(self) -> IsRunStateRegistry | None:
-        """Return the registry currently used for run-state reporting.
-        """
+        """{{ISENGINE_REGISTRY_SUMMARY}}
+
+        {{ISENGINE_REGISTRY_DETAILS}}"""
         return self._registry

@@ -29,15 +29,21 @@ class RunStateRegistry(LogMixin):
         super().__init__()
 
     def get_job_state(self, job: IsUniquelyNamedJob) -> RunState.Literals:
-        """Return the current run state registered for a job."""
+        """{{ISRUNSTATEREGISTRY_GET_JOB_STATE_SUMMARY}}
+
+        {{ISRUNSTATEREGISTRY_GET_JOB_STATE_DETAILS}}"""
         return self._job_states[job.unique_name]
 
     def get_job_state_datetime(self, job: IsUniquelyNamedJob, state: RunState.Literals) -> datetime:
-        """Return when the job was recorded in a specific run state."""
+        """{{ISRUNSTATEREGISTRY_GET_JOB_STATE_DATETIME_SUMMARY}}
+
+        {{ISRUNSTATEREGISTRY_GET_JOB_STATE_DATETIME_DETAILS}}"""
         return self._job_state_datetime[(job.unique_name, state)]
 
     def all_jobs(self, state: RunState.Literals | None = None) -> tuple[IsUniquelyNamedJob, ...]:
-        """Return all registered jobs, optionally filtered by their current state."""
+        """{{ISRUNSTATEREGISTRY_ALL_JOBS_SUMMARY}}
+
+        {{ISRUNSTATEREGISTRY_ALL_JOBS_DETAILS}}"""
         if state is not None:
             job_unique_names = self._state_jobs[state]
             return tuple(self._jobs[unique_name] for unique_name in job_unique_names)
@@ -45,7 +51,9 @@ class RunStateRegistry(LogMixin):
             return tuple(self._jobs.values())
 
     def set_job_state(self, job: IsUniquelyNamedJob, state: RunState.Literals) -> None:
-        """Register a job transition, update indexes, and emit the matching log event."""
+        """{{ISRUNSTATEREGISTRY_SET_JOB_STATE_SUMMARY}}
+
+        {{ISRUNSTATEREGISTRY_SET_JOB_STATE_DETAILS}}"""
         cur_datetime = datetime.now()
 
         if job.unique_name in self._jobs:

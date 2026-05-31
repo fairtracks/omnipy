@@ -2,6 +2,8 @@
 
 import logging
 from logging.handlers import RotatingFileHandler
+import os
+from textwrap import dedent
 from typing import Protocol, runtime_checkable
 
 from omnipy.shared.enums.ui import UserInterfaceType
@@ -15,6 +17,49 @@ from omnipy.shared.protocols.data import IsDataClassCreator, IsReactiveObjects, 
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.shared.protocols.util import IsDataPublisher
+from omnipy.util.helpers import is_package_editable
+
+
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_ISROOTLOGOBJECTS_SET_CONFIG_SUMMARY'] = (
+        'Replace root logging configuration and rebuild logging objects.')
+    os.environ['OMNIPY_MACRO_ISROOTLOGOBJECTS_SET_CONFIG_DETAILS'] = dedent("""\
+        Args:
+            config: New root logger configuration to apply.
+    """)
+
+    os.environ['OMNIPY_MACRO_ISROOTLOGOBJECTS_CONFIG_SUMMARY'] = (
+        'Return the active root logging configuration.')
+    os.environ['OMNIPY_MACRO_ISROOTLOGOBJECTS_CONFIG_DETAILS'] = dedent("""\
+        Returns:
+            IsRootLogConfig: Configuration currently used to construct formatter and handlers.
+    """)
+
+    os.environ['OMNIPY_MACRO_ISRUNTIMECONFIG_RESET_TO_DEFAULTS_SUMMARY'] = (
+        'Reset all runtime configuration sections to their default values.')
+    os.environ['OMNIPY_MACRO_ISRUNTIMECONFIG_RESET_TO_DEFAULTS_DETAILS'] = dedent("""\
+        Rebuilds the data, engine, job, and root-log config sections and then refreshes runtime
+        subscriptions when the config is attached to a runtime object.
+    """)
+
+    os.environ['OMNIPY_MACRO_ISRUNTIMEOBJECTS_SETUP_REACTIVE_SUMMARY'] = (
+        'Create or remove reactive UI helpers for the detected interface.')
+    os.environ['OMNIPY_MACRO_ISRUNTIMEOBJECTS_SETUP_REACTIVE_DETAILS'] = dedent("""\
+        Args:
+            ui_type: Detected user-interface type for the current runtime.
+    """)
+
+    os.environ['OMNIPY_MACRO_ISRUNTIME_RESET_SUBSCRIPTIONS_SUMMARY'] = (
+        'Reset runtime subscriptions between config and runtime objects.')
+    os.environ['OMNIPY_MACRO_ISRUNTIME_RESET_SUBSCRIPTIONS_DETAILS'] = dedent("""\
+        This method rebuilds the callback graph that keeps configuration, engines, registries,
+        logging, and reactive UI objects synchronized. Call it after replacing runtime subobjects
+        manually.
+
+        Raises:
+            AssertionError: If a Jupyter UI is detected but reactive objects are unexpectedly
+                missing.
+    """)
 
 
 @runtime_checkable
@@ -27,10 +72,16 @@ class IsRootLogObjects(Protocol):
     file_handler: RotatingFileHandler | None = None
 
     def set_config(self, config: IsRootLogConfig) -> None:
+        """{{ISROOTLOGOBJECTS_SET_CONFIG_SUMMARY}}
+
+        {{ISROOTLOGOBJECTS_SET_CONFIG_DETAILS}}"""
         ...
 
     @property
     def config(self) -> IsRootLogConfig:
+        """{{ISROOTLOGOBJECTS_CONFIG_SUMMARY}}
+
+        {{ISROOTLOGOBJECTS_CONFIG_DETAILS}}"""
         ...
 
 
@@ -44,6 +95,9 @@ class IsRuntimeConfig(IsConfigBase, Protocol):
     root_log: IsRootLogConfig
 
     def reset_to_defaults(self) -> None:
+        """{{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_SUMMARY}}
+
+        {{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_DETAILS}}"""
         ...
 
 
@@ -61,6 +115,9 @@ class IsRuntimeObjects(IsDataPublisher, Protocol):
     root_log: IsRootLogObjects
 
     def setup_reactive(self, ui_type: UserInterfaceType.Literals) -> None:
+        """{{ISRUNTIMEOBJECTS_SETUP_REACTIVE_SUMMARY}}
+
+        {{ISRUNTIMEOBJECTS_SETUP_REACTIVE_DETAILS}}"""
         ...
 
 
@@ -72,4 +129,7 @@ class IsRuntime(Protocol):
     objects: IsRuntimeObjects
 
     def reset_subscriptions(self):
+        """{{ISRUNTIME_RESET_SUBSCRIPTIONS_SUMMARY}}
+
+        {{ISRUNTIME_RESET_SUBSCRIPTIONS_DETAILS}}"""
         ...

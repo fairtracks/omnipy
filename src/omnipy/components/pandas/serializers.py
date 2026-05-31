@@ -24,19 +24,19 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
-        """Return the dataset class created during deserialization."""
+        """{{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}"""
 
         return PandasDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        """Return the file suffix used for serialized dataset members."""
+        """{{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}"""
 
         return 'csv'
 
     @classmethod
     def serialize(cls, dataset: PandasDataset) -> bytes | memoryview:
-        """Serialize a pandas dataset into a gzipped tar archive."""
+        """{{SERIALIZE_GZIPPED_TAR_SUMMARY}}"""
 
         assert isinstance(dataset, PandasDataset)
 
@@ -49,7 +49,7 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> PandasDataset:
-        """Deserialize a gzipped tar archive into a pandas dataset."""
+        """{{DESERIALIZE_GZIPPED_TAR_SUMMARY}}"""
 
         pandas_dataset = PandasDataset()
 

@@ -5,7 +5,17 @@ Type Aliases:
     type checkers can reason about container-specialized content more precisely.
 """
 
+import os
+from textwrap import dedent
+
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
+from omnipy.util.helpers import is_package_editable
+
+
+if is_package_editable('omnipy'):  # Only define environment variables when developing
+    os.environ['OMNIPY_MACRO_MIMIC_MODEL_TYPED_STANDIN_SUMMARY'] = dedent("""\
+        Typed stand-in for a concrete ``Model[...]`` subclass.
+    """)
 
 if TYPE_CHECKING:
     from typing import Any, Generic
@@ -41,27 +51,27 @@ if TYPE_CHECKING:
                 ...
 
     class Model_int(PlainModel[int], IsIntContent):
-        """Typed stand-in for ``Model[int]``."""
+        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
 
         ...
 
     class Model_float(PlainModel[float], IsFloatContent):
-        """Typed stand-in for ``Model[float]``."""
+        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
 
         ...
 
     class Model_bool(PlainModel[bool], IsBoolContent):
-        """Typed stand-in for ``Model[bool]``."""
+        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
 
         ...
 
     class Model_str(PlainModel[str], IsStrContent):
-        """Typed stand-in for ``Model[str]``."""
+        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
 
         ...
 
     class Model_bytes(PlainModel[bytes], IsBytesContent):
-        """Typed stand-in for ``Model[bytes]``."""
+        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
 
         ...
 
@@ -70,7 +80,7 @@ if TYPE_CHECKING:
             IsSetContent[_ValT],
             Generic[_ValT],
     ):
-        """Typed stand-in for ``Model[set[T]]``."""
+        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
 
         ...
 
@@ -79,7 +89,7 @@ if TYPE_CHECKING:
             IsListContent[_ValT],
             Generic[_ValT],
     ):
-        """Typed stand-in for ``Model[list[T]]``."""
+        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
 
         ...
 
@@ -106,7 +116,7 @@ if TYPE_CHECKING:
             IsDictContent[_KeyT, _ValT],
             Generic[_KeyT, _ValT],
     ):
-        """Typed stand-in for ``Model[dict[K, V]]``."""
+        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
 
         ...
 

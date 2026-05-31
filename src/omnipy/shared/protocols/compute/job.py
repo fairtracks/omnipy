@@ -279,6 +279,23 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
         ...
 
 
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_ISFLOW_FLOW_CONTEXT_SUMMARY'] = (
+        'Return a context manager that enters and exits the shared flow context.')
+    os.environ['OMNIPY_MACRO_ISFLOW_FLOW_CONTEXT_DETAILS'] = dedent("""\
+        Returns:
+            IsNestedContext: Context manager that tracks top-level flow execution state.
+    """)
+
+    os.environ['OMNIPY_MACRO_ISFLOW_TIME_OF_LAST_RUN_SUMMARY'] = (
+        'Return the timestamp captured for the most recent top-level flow run.')
+    os.environ['OMNIPY_MACRO_ISFLOW_TIME_OF_LAST_RUN_DETAILS'] = dedent("""\
+        Returns:
+            datetime | None: Timestamp from the latest top-level flow run, or ``None`` if the
+                flow has not completed one yet.
+    """)
+
+
 class IsTaskTemplate(IsFuncArgJobTemplate['IsTaskTemplate[_CallP, _RetT]',
                                           'IsTask[_CallP, _RetT]',
                                           _CallP,
@@ -314,10 +331,16 @@ class IsFlow(Protocol):
 
     @property
     def flow_context(self) -> IsNestedContext:
+        """{{ISFLOW_FLOW_CONTEXT_SUMMARY}}
+
+        {{ISFLOW_FLOW_CONTEXT_DETAILS}}"""
         ...
 
     @property
     def time_of_last_run(self) -> datetime | None:
+        """{{ISFLOW_TIME_OF_LAST_RUN_SUMMARY}}
+
+        {{ISFLOW_TIME_OF_LAST_RUN_DETAILS}}"""
         ...
 
 

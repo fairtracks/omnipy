@@ -51,12 +51,16 @@ class JobBase(
 
     @property
     def config(self) -> IsJobConfig:
-        """Return the job configuration shared by this job family."""
+        """{{ISJOBBASE_CONFIG_SUMMARY}}
+
+        {{ISJOBBASE_CONFIG_DETAILS}}"""
         return self.__class__.job_creator.config
 
     @property
     def engine(self) -> IsEngine | None:
-        """Return the currently configured engine for this job family, if any."""
+        """{{ISJOBBASE_ENGINE_SUMMARY}}
+
+        {{ISJOBBASE_ENGINE_DETAILS}}"""
         return self.__class__.job_creator.engine
 
     @property

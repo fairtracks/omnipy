@@ -1,5 +1,7 @@
 """Raw text and binary models for encoding, splitting, joining, and filtering content."""
 
+import os
+from textwrap import dedent
 from typing import Callable, cast, Generic, Protocol, TypeAlias
 
 from typing_extensions import TypeVar
@@ -11,10 +13,27 @@ from omnipy.shared.protocols.content import (IsBytesContent,
                                              IsListOfListsContent,
                                              IsStrContent)
 from omnipy.shared.typing import TYPE_CHECKING
+from omnipy.util.helpers import is_package_editable
 import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
     from omnipy.data._typing.mimic_models import PlainModel
+
+
+if is_package_editable('omnipy'):  # Only define environment variables when developing
+    os.environ['OMNIPY_MACRO_SPLIT_PARAMS_VARIANT_SUMMARY'] = dedent("""\
+        Split-parameter variant.
+
+        Attributes:
+            delimiter: Delimiter used when splitting item strings.
+    """)
+
+    os.environ['OMNIPY_MACRO_JOIN_PARAMS_VARIANT_SUMMARY'] = dedent("""\
+        Join-parameter variant.
+
+        Attributes:
+            delimiter: Delimiter used when joining item strings.
+    """)
 
 
 class _EncodingParamsMixin:
@@ -176,11 +195,7 @@ class _SplitParamsBase(ParamsBase):
 class _SplitByCommaParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
-        """Split-parameter variant using comma delimiters.
-
-        Attributes:
-            delimiter: Delimiter used when splitting item strings.
-        """
+        """{{SPLIT_PARAMS_VARIANT_SUMMARY}}"""
 
         delimiter: str = ','
 
@@ -188,11 +203,7 @@ class _SplitByCommaParamsMixin:
 class _SplitByTabParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
-        """Split-parameter variant using tab delimiters.
-
-        Attributes:
-            delimiter: Delimiter used when splitting item strings.
-        """
+        """{{SPLIT_PARAMS_VARIANT_SUMMARY}}"""
 
         delimiter: str = '\t'
 
@@ -200,11 +211,7 @@ class _SplitByTabParamsMixin:
 class _SplitByNewlineParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
-        """Split-parameter variant using newline delimiters.
-
-        Attributes:
-            delimiter: Delimiter used when splitting item strings.
-        """
+        """{{SPLIT_PARAMS_VARIANT_SUMMARY}}"""
 
         delimiter: str = '\n'
 
@@ -376,11 +383,7 @@ def _join_items(model_cls: type[_HasJoinParams], data: list[str]) -> str:
 class _JoinByCommaParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
-        """Join-parameter variant using comma delimiters.
-
-        Attributes:
-            delimiter: Delimiter used when joining item strings.
-        """
+        """{{JOIN_PARAMS_VARIANT_SUMMARY}}"""
 
         delimiter: str = ','
 
@@ -388,11 +391,7 @@ class _JoinByCommaParamsMixin:
 class _JoinByTabParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
-        """Join-parameter variant using tab delimiters.
-
-        Attributes:
-            delimiter: Delimiter used when joining item strings.
-        """
+        """{{JOIN_PARAMS_VARIANT_SUMMARY}}"""
 
         delimiter: str = '\t'
 
@@ -400,11 +399,7 @@ class _JoinByTabParamsMixin:
 class _JoinByNewlineParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
-        """Join-parameter variant using newline delimiters.
-
-        Attributes:
-            delimiter: Delimiter used when joining item strings.
-        """
+        """{{JOIN_PARAMS_VARIANT_SUMMARY}}"""
 
         delimiter: str = '\n'
 

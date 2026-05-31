@@ -30,7 +30,9 @@ class NameJobBaseMixin:
 
     @property
     def name(self) -> str | None:
-        """Return the configured job name."""
+        """{{ISUNIQUELYNAMEDJOB_NAME_SUMMARY}}
+
+        {{ISUNIQUELYNAMEDJOB_NAME_DETAILS}}"""
 
         return self._name
 
@@ -60,7 +62,9 @@ class NameJobMixin:
     """Expose public helpers for refreshing generated job names."""
 
     def regenerate_unique_name(self) -> None:
-        """Regenerate the unique job name from the current base name."""
+        """{{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY}}
+
+        {{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_DETAILS}}"""
 
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
         self_as_name_job_base_mixin._regenerate_unique_slugs()

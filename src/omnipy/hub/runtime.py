@@ -105,8 +105,9 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
     root_log: IsRootLogConfig = pyd.Field(default_factory=RootLogConfig)
 
     def reset_to_defaults(self) -> None:
-        """Reset all runtime configuration sections to their default values.
-        """
+        """{{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_SUMMARY}}
+
+        {{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_DETAILS}}"""
 
         prev_back = self._back
         self._back = None
@@ -147,11 +148,9 @@ class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
     root_log: IsRootLogObjects = pyd.Field(default_factory=RootLogObjects)
 
     def setup_reactive(self, ui_type: UserInterfaceType.Literals) -> None:
-        """Create or remove reactive UI helpers for the detected interface.
+        """{{ISRUNTIMEOBJECTS_SETUP_REACTIVE_SUMMARY}}
 
-        Args:
-            ui_type: Detected user-interface type for the current runtime.
-        """
+        {{ISRUNTIMEOBJECTS_SETUP_REACTIVE_DETAILS}}"""
 
         if UserInterfaceType.is_jupyter_in_browser(ui_type):
             from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
@@ -192,16 +191,9 @@ class Runtime(DataPublisher):
         self.reset_subscriptions()
 
     def reset_subscriptions(self) -> None:
-        """Reset runtime subscriptions between config and runtime objects.
+        """{{ISRUNTIME_RESET_SUBSCRIPTIONS_SUMMARY}}
 
-        This method rebuilds the callback graph that keeps configuration,
-        engines, registries, logging, and reactive UI objects synchronized.
-        Call it after replacing runtime subobjects manually.
-
-        Raises:
-            AssertionError: If a Jupyter UI is detected but reactive objects
-                are unexpectedly missing.
-        """
+        {{ISRUNTIME_RESET_SUBSCRIPTIONS_DETAILS}}"""
 
         self.reset_backlinks()
 

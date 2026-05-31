@@ -42,21 +42,17 @@ class RootLogObjects(DataPublisher):
         self._configure_all_objects()
 
     def set_config(self, config: IsRootLogConfig):
-        """Replace root logging configuration and rebuild logging objects.
+        """{{ISROOTLOGOBJECTS_SET_CONFIG_SUMMARY}}
 
-        Args:
-            config: New root logger configuration to apply.
-        """
+        {{ISROOTLOGOBJECTS_SET_CONFIG_DETAILS}}"""
         self._config = config
         self._configure_all_objects()
 
     @property
     def config(self) -> IsRootLogConfig:
-        """Return the active root logging configuration.
+        """{{ISROOTLOGOBJECTS_CONFIG_SUMMARY}}
 
-        Returns:
-            Configuration currently used to construct formatter and handlers.
-        """
+        {{ISROOTLOGOBJECTS_CONFIG_DETAILS}}"""
         return self._config
 
     def _configure_all_objects(self):
@@ -115,15 +111,17 @@ class RootLogObjects(DataPublisher):
     def _configure_common_filters(self):
         class ExtractEngineFilter(logging.Filter):
             def filter(self, record):
-                record.engine = f"{record.name.split('.')[0].upper()}"
-                if len(record.engine) < 7:
-                    record.engine += ' '
+                engine = f"{record.name.split('.')[0].upper()}"
+                if len(engine) < 7:
+                    engine += ' '
+                setattr(record, 'engine', engine)
                 return True
 
         class SetTimestampFilter(logging.Filter):
             def filter(self, record):
-                if hasattr(record, 'timestamp'):
-                    record.created = record.timestamp
+                timestamp = getattr(record, 'timestamp', None)
+                if timestamp is not None:
+                    record.created = timestamp
                 return True
 
         return [ExtractEngineFilter(), SetTimestampFilter()]

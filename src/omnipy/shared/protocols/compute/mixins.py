@@ -1,6 +1,33 @@
 """Shared mixin protocols for compute contracts."""
 
+import os
+from textwrap import dedent
 from typing import Protocol
+
+from omnipy.util.helpers import is_package_editable
+
+
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_NAME_SUMMARY'] = (
+        'Return the configured base name for the job.')
+    os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_NAME_DETAILS'] = dedent("""\
+        Returns:
+            str: Human-readable name used as the basis for display and registration.
+    """)
+
+    os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_UNIQUE_NAME_SUMMARY'] = (
+        'Return the generated unique name used to identify the job instance.')
+    os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_UNIQUE_NAME_DETAILS'] = dedent("""\
+        Returns:
+            str: Unique job identifier suitable for registry lookups and logging.
+    """)
+
+    os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY'] = (
+        'Regenerate the unique job name from the current base name.')
+    os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_DETAILS'] = dedent("""\
+        Updates the stored unique identifier so later registry entries and log messages use a
+        fresh value.
+    """)
 
 
 class IsUniquelyNamedJob(Protocol):
@@ -8,6 +35,9 @@ class IsUniquelyNamedJob(Protocol):
 
     @property
     def name(self) -> str:
+        """{{ISUNIQUELYNAMEDJOB_NAME_SUMMARY}}
+
+        {{ISUNIQUELYNAMEDJOB_NAME_DETAILS}}"""
         ...
 
     @property
@@ -16,12 +46,18 @@ class IsUniquelyNamedJob(Protocol):
 
     @property
     def unique_name(self) -> str:
+        """{{ISUNIQUELYNAMEDJOB_UNIQUE_NAME_SUMMARY}}
+
+        {{ISUNIQUELYNAMEDJOB_UNIQUE_NAME_DETAILS}}"""
         ...
 
     def __init__(self, *args, name: str | None = None):
         ...
 
     def regenerate_unique_name(self) -> None:
+        """{{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY}}
+
+        {{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_DETAILS}}"""
         ...
 
 

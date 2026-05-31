@@ -9,6 +9,7 @@ state.
 from abc import ABCMeta
 from contextlib import AbstractContextManager
 from datetime import datetime
+from typing import cast
 
 from omnipy.config.job import JobConfig
 from omnipy.shared.protocols.compute.job_creator import IsJobCreator
@@ -21,16 +22,20 @@ class JobCreator(AbstractContextManager):
 
     def __init__(self) -> None:
         self._engine: IsEngine | None = None
-        self._config: IsJobConfig = JobConfig()
+        self._config: IsJobConfig = cast(IsJobConfig, JobConfig())
         self._nested_context_level: int = 0
         self._time_of_cur_toplevel_nested_context_run: datetime | None = None
 
     def set_engine(self, engine: IsEngine) -> None:
-        """Set the engine used when newly applied jobs are decorated."""
+        """{{ISJOBCONFIGHOLDER_SET_ENGINE_SUMMARY}}
+
+        {{ISJOBCONFIGHOLDER_SET_ENGINE_DETAILS}}"""
         self._engine = engine
 
     def set_config(self, config: IsJobConfig) -> None:
-        """Replace the shared job configuration object."""
+        """{{ISJOBCONFIGHOLDER_SET_CONFIG_SUMMARY}}
+
+        {{ISJOBCONFIGHOLDER_SET_CONFIG_DETAILS}}"""
         self._config = config
 
     def __enter__(self):
@@ -49,22 +54,30 @@ class JobCreator(AbstractContextManager):
 
     @property
     def engine(self) -> IsEngine | None:
-        """Return the engine currently configured for this job family."""
+        """{{ISJOBCONFIGHOLDER_ENGINE_SUMMARY}}
+
+        {{ISJOBCONFIGHOLDER_ENGINE_DETAILS}}"""
         return self._engine
 
     @property
     def config(self) -> IsJobConfig:
-        """Return the configuration currently configured for this job family."""
+        """{{ISJOBCONFIGHOLDER_CONFIG_SUMMARY}}
+
+        {{ISJOBCONFIGHOLDER_CONFIG_DETAILS}}"""
         return self._config
 
     @property
     def nested_context_level(self) -> int:
-        """Return the current depth of nested job-execution contexts."""
+        """{{ISJOBCREATOR_NESTED_CONTEXT_LEVEL_SUMMARY}}
+
+        {{ISJOBCREATOR_NESTED_CONTEXT_LEVEL_DETAILS}}"""
         return self._nested_context_level
 
     @property
     def time_of_cur_toplevel_nested_context_run(self) -> datetime | None:
-        """Return the start time for the active top-level execution context, if any."""
+        """{{ISJOBCREATOR_TIME_OF_CUR_TOPLEVEL_NESTED_CONTEXT_RUN_SUMMARY}}
+
+        {{ISJOBCREATOR_TIME_OF_CUR_TOPLEVEL_NESTED_CONTEXT_RUN_DETAILS}}"""
         return self._time_of_cur_toplevel_nested_context_run
 
 
@@ -80,5 +93,7 @@ class JobBaseMeta(ABCMeta):
 
     @property
     def nested_context_level(self) -> int:
-        """Return the nested execution depth tracked by the shared creator."""
+        """{{ISJOBCREATOR_NESTED_CONTEXT_LEVEL_SUMMARY}}
+
+        {{ISJOBCREATOR_NESTED_CONTEXT_LEVEL_DETAILS}}"""
         return self.job_creator.nested_context_level

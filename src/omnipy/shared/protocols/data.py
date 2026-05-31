@@ -3,6 +3,8 @@
 import asyncio
 from dataclasses import dataclass
 import functools
+import os
+from textwrap import dedent
 from typing import (Any,
                     Callable,
                     ContextManager,
@@ -26,6 +28,7 @@ from omnipy.shared.protocols.config import (IsDataConfig,
                                             IsTextConfig)
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.shared.protocols.typing import IsMutableMapping
+from omnipy.util.helpers import is_package_editable
 from omnipy.util.pydantic import Undefined, UndefinedType
 import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
@@ -37,6 +40,22 @@ _ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound='IsModel | IsDataset')
 ContentT = TypeVar('ContentT', bound=object)
 HasContentT = TypeVar('HasContentT', bound='HasContent')
 ObjContraT = TypeVar('ObjContraT', contravariant=True, bound=object)
+
+
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_ISDATACLASSCREATOR_CONFIG_SUMMARY'] = (
+        'Return the data configuration shared by the owning data-class family.')
+    os.environ['OMNIPY_MACRO_ISDATACLASSCREATOR_CONFIG_DETAILS'] = dedent("""\
+        Returns:
+            IsDataConfig: Shared configuration object used by related models and datasets.
+    """)
+
+    os.environ['OMNIPY_MACRO_ISDATACLASSCREATOR_SET_CONFIG_SUMMARY'] = (
+        'Replace the shared data configuration for the owning data-class family.')
+    os.environ['OMNIPY_MACRO_ISDATACLASSCREATOR_SET_CONFIG_DETAILS'] = dedent("""\
+        Args:
+            config: Data configuration object to store for related models and datasets.
+    """)
 
 IsPathOrUrl: TypeAlias = 'str | IsHttpUrlModel'
 IsPathsOrUrls: TypeAlias = 'Iterable[str] | IsHttpUrlDataset | Mapping[str, IsPathOrUrl]'
@@ -721,19 +740,15 @@ class IsDataClassCreator(Protocol[HasContentT, ContentT]):
 
     @property
     def config(self) -> IsDataConfig:
-        """Config.
-        
-        Returns:
-            IsDataConfig: Result produced by ``config()``.
-        """
+        """{{ISDATACLASSCREATOR_CONFIG_SUMMARY}}
+
+        {{ISDATACLASSCREATOR_CONFIG_DETAILS}}"""
         ...
 
     def set_config(self, config: IsDataConfig) -> None:
-        """Set config.
-        
-        Args:
-            config: (IsDataConfig) Argument passed to ``set_config()``.
-        """
+        """{{ISDATACLASSCREATOR_SET_CONFIG_SUMMARY}}
+
+        {{ISDATACLASSCREATOR_SET_CONFIG_DETAILS}}"""
         ...
 
     @property
