@@ -325,6 +325,53 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
 
 class IsDisplayMethod(Protocol):
+    """Protocol for Omnipy display entry points with shared keyword arguments.
+
+    The callback signature mirrors the public display methods on
+    :class:`BaseDisplayMixin` and its concrete subclasses.
+
+    Args:
+        width: Optional output width in characters.
+        height: Optional output height in lines.
+        tab: Tab width used by pretty printers.
+        indent: Indentation width used by pretty printers.
+        printer: Pretty-printer backend selection.
+        syntax: Syntax-highlighting language selection.
+        freedom: Proportional layout flexibility for formatting.
+        debug: Enables debug-oriented display details when supported.
+        ui: Target user-interface type.
+        system: Terminal/browser color-system selection.
+        style: Color style or theme.
+        dark: Dark-background preference mode.
+        bg: Whether to draw an explicit background.
+        fonts: Preferred font families for HTML output.
+        font_size: Font size for HTML output.
+        font_weight: Font weight for HTML output.
+        line_height: Line-height multiplier for HTML output.
+        h_overflow: Horizontal-overflow handling mode.
+        v_overflow: Vertical-overflow handling mode.
+        panel: Panel-design mode.
+        title_at_top: Whether panel titles are rendered above content.
+        max_title_height: Maximum number of title lines.
+        min_panel_width: Minimum panel width.
+        min_crop_width: Minimum cropping width for constrained layouts.
+        use_min_crop_width: Whether ``min_crop_width`` should be enforced.
+        max_panels_hor: Maximum number of horizontal panels.
+        max_nesting_depth: Maximum nested panel depth.
+        justify: Panel-content justification mode.
+
+    Returns:
+        A UI-specific display result. Narrower protocols define the concrete
+        return type for each display variant.
+
+    Raises:
+        NotImplementedError: Raised by concrete implementations when the
+            protocol contract is not implemented.
+
+    Example:
+        >>> def preview(*, ui=UserInterfaceType.AUTO, **kwargs) -> object:
+        ...     return None
+    """
 
     # Forward references for the non-trivial __call__ parameters are needed
     # for mkdocstrings/griffe extension (omnipy.util.griffe_extension:
@@ -366,6 +413,23 @@ class IsDisplayMethod(Protocol):
 
 
 class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
+    """Display callback protocol for methods returning HTML element or ``None``.
+
+    Args:
+        Same keyword-only arguments as :class:`IsDisplayMethod`.
+
+    Returns:
+        ``Element | None`` depending on UI backend and execution context.
+
+    Raises:
+        NotImplementedError: Raised by concrete implementations when this
+            callback protocol is not implemented.
+
+    Example:
+        >>> def show(*, ui=UserInterfaceType.AUTO, **kwargs) -> Element | None:
+        ...     return None
+    """
+
     @override
     def __call__(
         self,
@@ -404,6 +468,23 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
 
 
 class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
+    """Display callback protocol for methods with side effects only.
+
+    Args:
+        Same keyword-only arguments as :class:`IsDisplayMethod`.
+
+    Returns:
+        ``None``.
+
+    Raises:
+        NotImplementedError: Raised by concrete implementations when this
+            callback protocol is not implemented.
+
+    Example:
+        >>> def open_browser(*, ui=UserInterfaceType.AUTO, **kwargs) -> None:
+        ...     return None
+    """
+
     @override
     def __call__(
         self,
@@ -442,6 +523,23 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
 
 
 class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
+    """Display callback protocol for methods returning terminal/browser text.
+
+    Args:
+        Same keyword-only arguments as :class:`IsDisplayMethod`.
+
+    Returns:
+        Rendered textual output as a ``str``.
+
+    Raises:
+        NotImplementedError: Raised by concrete implementations when this
+            callback protocol is not implemented.
+
+    Example:
+        >>> def docs(*, ui=UserInterfaceType.BROWSER_TAG, **kwargs) -> str:
+        ...     return '<pre>...</pre>'
+    """
+
     @override
     def __call__(
         self,
@@ -480,6 +578,24 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
 
 
 class IsBaseDisplayMixin(Protocol):
+    """Protocol for the shared public display API of models and datasets.
+
+    Args:
+        Not applicable. This protocol specifies attributes and call
+        signatures for mixin implementers.
+
+    Returns:
+        Not applicable.
+
+    Raises:
+        AttributeError: When a required display method attribute is missing on
+            a concrete implementation.
+
+    Example:
+        >>> def render_preview(data: IsBaseDisplayMixin) -> None:
+        ...     data.peek()
+    """
+
     peek: IsDisplayMethodMaybeReturnElement
     full: IsDisplayMethodMaybeReturnElement
     json: IsDisplayMethodMaybeReturnElement
@@ -488,6 +604,24 @@ class IsBaseDisplayMixin(Protocol):
 
 
 class IsDatasetDisplayMixin(IsBaseDisplayMixin, Protocol):
+    """Protocol extension for dataset-specific display behavior.
+
+    Args:
+        Not applicable. This protocol extends :class:`IsBaseDisplayMixin`
+        with dataset-specific display entry points.
+
+    Returns:
+        Not applicable.
+
+    Raises:
+        AttributeError: When dataset-specific display members are missing on
+            a concrete implementation.
+
+    Example:
+        >>> def render_summary(dataset: IsDatasetDisplayMixin) -> None:
+        ...     dataset.list()
+    """
+
     list: IsDisplayMethodMaybeReturnElement
 
 
@@ -498,6 +632,22 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     datasets and funnels them through a common configuration and UI-dispatch
     pipeline. Subclasses only need to provide the object-specific panel
     builders for preview, full-height, and browser rendering.
+
+    Args:
+        Not applicable. Instances receive display configuration through
+        per-method keyword arguments and ``DataClassBase.config``.
+
+    Returns:
+        Not applicable.
+
+    Raises:
+        NotImplementedError: If subclasses do not implement required abstract
+            panel builders.
+
+    Example:
+        >>> class ConcreteDisplayMixin(BaseDisplayMixin):
+        ...     def _default_panel(self, **kwargs) -> DraftPanel:
+        ...         return DraftPanel('example')
     """
 
     @abstractmethod
@@ -3106,9 +3256,35 @@ def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
     Returns:
         A wrapper that dispatches to the wrapped dataset method when the model
         content is itself a dataset.
+
+    Raises:
+        AttributeError: If the wrapped dataset does not implement the forwarded
+            display method name.
+
+    Example:
+        >>> @_call_dataset_method_if_applicable
+        ... def _peek(self, **kwargs):
+        ...     return self._peek_nested_content({}, **kwargs)
     """
 
     def wrapper(self, **kwargs) -> _RetT:
+        """Call dataset or model display implementation for wrapped content.
+
+        Args:
+            self: Model instance potentially wrapping a dataset instance.
+            **kwargs: Display keyword arguments forwarded unchanged.
+
+        Returns:
+            The delegated display output from either dataset or model method.
+
+        Raises:
+            AttributeError: If the wrapped dataset is missing the delegated
+                display method.
+
+        Example:
+            >>> # Called transparently by decorated model display helpers.
+            >>> _ = wrapper(model_instance, ui=UserInterfaceType.AUTO)
+        """
         from omnipy.data.dataset import is_dataset_instance
 
         self_as_model = cast('Model', self)
@@ -3129,6 +3305,19 @@ class ModelDisplayMixin(BaseDisplayMixin):
     panels from this mixin. When a model wraps dataset content, selected helpers
     transparently delegate to ``DatasetDisplayMixin`` so the richer dataset view
     is shown instead of a plain model preview.
+
+    Args:
+        Not applicable. Method-level keyword arguments control rendering.
+
+    Returns:
+        Not applicable.
+
+    Raises:
+        AttributeError: If dataset delegation is requested for a wrapped
+            dataset that does not expose a matching display method.
+
+    Example:
+        >>> model.peek(width=100)
     """
 
     @_call_dataset_method_if_applicable
@@ -3171,6 +3360,19 @@ class DatasetDisplayMixin(BaseDisplayMixin):
     Datasets use the shared display pipeline from :class:`BaseDisplayMixin` but
     provide dataset-oriented panels such as side-by-side previews, summary lists,
     and recursive browser output for each contained model.
+
+    Args:
+        Not applicable. Method-level keyword arguments control rendering.
+
+    Returns:
+        Not applicable.
+
+    Raises:
+        RuntimeError: If dataset browsing/rendering fails in a downstream
+            output backend.
+
+    Example:
+        >>> dataset.list(height=20)
     """
 
     def _default_panel(self, **kwargs) -> DraftPanel:

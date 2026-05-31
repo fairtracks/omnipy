@@ -80,12 +80,27 @@ sequence_like = pyd_utils.sequence_like
 
 
 def pydantic_v1_hack():
-    """
-    Pydantic v1 needed to redefine typing.get_origin and typing.get_args
-    for earlier Python versions not supported by Omnipy. This cause issues
-    for Omnipy models like: `Model[type | typing.GenericAlias](list[int])`
+    """Patch Pydantic v1 compatibility modules to use stdlib typing helpers.
 
-    TODO: Remove pydantic_v1_hack for Pydantic v2
+    Omnipy relies on runtime behavior where ``typing.get_origin`` and
+    ``typing.get_args`` correctly handle modern type forms such as
+    ``type | typing.GenericAlias``. Older Pydantic v1 internals override these
+    helpers for broader Python-version support, so this function rebinds them to
+    stdlib implementations within the Pydantic modules Omnipy uses.
+
+    Args:
+        None.
+
+    Returns:
+        None. The function mutates imported Pydantic module attributes in place.
+
+    Raises:
+        None.
+
+    Example:
+        >>> pydantic_v1_hack()
+        >>> True
+        True
     """
 
     import typing

@@ -84,6 +84,21 @@ def as_dictable(obj: object) -> Dictable | None:
         be consumed by the tuple-pair check.
     """
     def _is_iterable_of_tuple_pairs(obj_inner: object) -> bool:
+        """Return whether ``obj_inner`` is an iterable of ``(key, value)`` pairs.
+
+        Args:
+            obj_inner: Candidate object to validate.
+
+        Returns:
+            ``True`` when every iterated element is a 2-item tuple.
+
+        Raises:
+            None.
+
+        Example:
+            >>> _is_iterable_of_tuple_pairs([('a', 1), ('b', 2)])
+            True
+        """
         return isinstance(obj_inner, Iterable) and \
             all(isinstance(el, tuple) and len(el) == 2 for el in obj_inner)
 
@@ -281,21 +296,85 @@ def ensure_plain_type(  # pyright: ignore [reportOverlappingOverload]
 
 @overload
 def ensure_plain_type(in_type: TypeVar) -> TypeVar:
+    """Type overload for ``TypeVar`` inputs.
+
+    Args:
+        in_type: Type variable preserved by the overload contract.
+
+    Returns:
+        The same ``TypeVar`` value.
+
+    Raises:
+        None.
+
+    Example:
+        >>> from typing_extensions import TypeVar
+        >>> t = TypeVar('t')
+        >>> ensure_plain_type(t) is t
+        True
+    """
     ...
 
 
 @overload
 def ensure_plain_type(in_type: type | GenericAlias | UnionType) -> type:
+    """Type overload for runtime classes and generic aliases.
+
+    Args:
+        in_type: Runtime type form accepted by ``ensure_plain_type``.
+
+    Returns:
+        The plain runtime class type.
+
+    Raises:
+        None.
+
+    Example:
+        >>> ensure_plain_type(list[int]) is list
+        True
+    """
     ...
 
 
 @overload
 def ensure_plain_type(in_type: _SpecialForm) -> _SpecialForm:
+    """Type overload for special typing forms.
+
+    Args:
+        in_type: Special form such as ``typing.Any``.
+
+    Returns:
+        The same special form value.
+
+    Raises:
+        None.
+
+    Example:
+        >>> from typing import Any
+        >>> ensure_plain_type(Any) is Any
+        True
+    """
     ...
 
 
 @overload
 def ensure_plain_type(in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias) -> type:
+    """Type overload for literal/union/annotated aliases.
+
+    Args:
+        in_type: Alias type expression accepted by ``ensure_plain_type``.
+
+    Returns:
+        The plain runtime origin type.
+
+    Raises:
+        None.
+
+    Example:
+        >>> from typing import Literal
+        >>> ensure_plain_type(Literal[1])
+        typing.Literal
+    """
     ...
 
 
@@ -543,12 +622,41 @@ def is_optional(cls_or_type: type | UnionType | None | object) -> bool:
 
 
 def is_literal_type(value: Any) -> bool:
-    """Return whether ``value`` is a ``typing.Literal`` specialization."""
+    """Return whether ``value`` is a ``typing.Literal`` specialization.
+
+    Args:
+        value: Type form or value to inspect.
+
+    Returns:
+        ``True`` when ``get_origin(value)`` resolves to ``typing.Literal``.
+
+    Raises:
+        None.
+
+    Example:
+        >>> from typing import Literal
+        >>> is_literal_type(Literal['ready'])
+        True
+    """
     return get_origin(value) is Literal
 
 
 def is_type_specialization(value: Any) -> bool:
-    """Return whether ``value`` is a specialization of ``type[...]``."""
+    """Return whether ``value`` is a specialization of ``type[...]``.
+
+    Args:
+        value: Type form or value to inspect.
+
+    Returns:
+        ``True`` when ``get_origin(value)`` resolves to ``type``.
+
+    Raises:
+        None.
+
+    Example:
+        >>> is_type_specialization(type[int])
+        True
+    """
     return get_origin(value) is type
 
 
@@ -613,6 +721,25 @@ def format_classname_with_params(cls_name: str, params_str: str) -> str:
 
 
 def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):
+    """Return whether ``module`` is an Omnipy internal module not yet visited.
+
+    Args:
+        module: Module candidate discovered during recursive import traversal.
+        imported_modules: Modules already processed in the current traversal.
+
+    Returns:
+        ``True`` when the module name starts with ``omnipy`` and the module is
+        not already present in ``imported_modules``.
+
+    Raises:
+        None.
+
+    Example:
+        >>> import types
+        >>> mod = types.ModuleType('omnipy.example')
+        >>> _is_internal_module(mod, [])
+        True
+    """
     return module not in imported_modules and module.__name__.startswith('omnipy')
 
 
@@ -686,8 +813,19 @@ def recursive_module_import(module: ModuleType,
 def get_calling_module_name() -> str | None:
     """Return the first caller module name found above the helper frame.
 
+    Args:
+        None.
+
     Returns:
         The detected module name, or ``None`` when inspection cannot resolve one.
+
+    Raises:
+        None.
+
+    Example:
+        >>> name = get_calling_module_name()
+        >>> name is None or isinstance(name, str)
+        True
     """
     stack = inspect.stack()
     start_frame_index = 2
@@ -702,9 +840,19 @@ def get_calling_module_name() -> str | None:
 def called_from_omnipy_tests() -> bool:
     """Return whether the current call stack originates from Omnipy tests.
 
+    Args:
+        None.
+
     Returns:
         ``True`` when a stack frame belongs to a module under ``tests`` inside the
         Omnipy repository.
+
+    Raises:
+        None.
+
+    Example:
+        >>> isinstance(called_from_omnipy_tests(), bool)
+        True
     """
     stack = inspect.stack()
     for index in range(len(stack)):
@@ -720,7 +868,23 @@ def called_from_omnipy_tests() -> bool:
 
 @functools.cache
 def is_package_editable(package_name):
-    """Check if package is installed in editable mode using metadata."""
+    """Return whether an installed package is marked editable in metadata.
+
+    Args:
+        package_name: Distribution name resolved via ``importlib.metadata``.
+
+    Returns:
+        ``True`` when ``direct_url.json`` exists and its ``dir_info.editable``
+        flag is set, otherwise ``False``.
+
+    Raises:
+        None. Metadata lookup and JSON parsing failures are handled and return
+        ``False``.
+
+    Example:
+        >>> is_package_editable('pip') in (True, False)
+        True
+    """
     try:
         dist = distribution(package_name)
         # Get the location where package is installed
@@ -736,9 +900,21 @@ def is_package_editable(package_name):
 def get_event_loop_and_check_if_loop_is_running() -> tuple[asyncio.AbstractEventLoop | None, bool]:
     """Get the current event loop and whether it is already running.
 
+    Args:
+        None.
+
     Returns:
         A tuple of ``(loop, is_running)``. ``loop`` is ``None`` when no current
         loop exists in the active thread.
+
+    Raises:
+        None. ``RuntimeError`` from ``asyncio.get_event_loop()`` is handled and
+        converted to ``(None, False)`` semantics.
+
+    Example:
+        >>> loop, running = get_event_loop_and_check_if_loop_is_running()
+        >>> running in (True, False)
+        True
     """
     loop_is_running: bool
     loop: asyncio.AbstractEventLoop | None = None
