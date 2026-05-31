@@ -131,6 +131,13 @@ def test_init_model_as_input() -> None:
     assert Model[Model[int]](Model[float](4.5)).to_data() == 4
 
 
+def test_union_matching_accepts_nested_model_root_input() -> None:
+    model = Model[str | Model[list[int]]]([1.2, 2.9])
+
+    assert isinstance(model.content, Model[list[int]])
+    assert model.to_data() == [1, 2]
+
+
 def test_init_converting_model_as_input() -> None:
     assert MyFloatObjModel().content == MyFloatObject()
     my_float_model = MyFloatObjModel()
@@ -147,6 +154,19 @@ def test_init_converting_dataset_as_input() -> None:
     dataset_of_float_objs = Dataset[Model[MyFloatObjModel]](
         a=MyFloatObject(int_part=4, float_part=0.5))
     assert Model[dict[str, float]](dataset_of_float_objs).to_data() == {'a': 4.5}
+
+
+def test_init_converting_dataset_as_input_cross_model() -> None:
+    from omnipy.data.dataset import Dataset
+
+    dataset = Dataset[Model[int] | Model[str] | Dataset[Model[int]]](
+        data_file_1=123,
+        data_file_2='abc',
+        data_file_3={'data_file_inner': '456'},
+    )
+    assert dataset.data_file_1.to_data() == 123
+    assert dataset.data_file_2.to_data() == 'abc'
+    assert dataset.data_file_3.data_file_inner.to_data() == 456
 
 
 @pc.parametrize_with_cases(

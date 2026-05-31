@@ -21,6 +21,8 @@ from typing import (Annotated,
                     overload,
                     Union)
 
+from pydantic import GetCoreSchemaHandler
+from pydantic_core import CoreSchema, core_schema
 from typing_extensions import get_original_bases, override, Self, TypeIs, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
@@ -162,6 +164,32 @@ class Model(  # type: ignore[misc]
     @classmethod
     def _supports_v1_field_attrs(cls, field: pyd.ModelField | None) -> bool:
         return field is not None and hasattr(field, 'sub_fields') and hasattr(field, 'outer_type_')
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        source: type[Any],
+        handler: GetCoreSchemaHandler,
+    ) -> CoreSchema:
+        schema = handler(source)
+        return core_schema.no_info_before_validator_function(
+            cls._normalize_rootmodel_input,
+            schema,
+        )
+
+    @classmethod
+    def _normalize_rootmodel_input(cls, value: Any) -> Any:
+        value = cls._unwrap_root_input(value)
+
+        if is_model_instance(value):
+            if isinstance(value, cls):
+                return value
+            return value.to_data()
+        if is_dataset_instance(value):
+            return value.to_data()
+        if is_non_omnipy_pydantic_model(value):
+            return cast(pyd.BaseModel, value).model_dump(by_alias=True)
+        return cls._coerce_prepared_value_to_type(value, cls.full_type())
 
     def _get_default_factory(self) -> Callable[[], _RootT]:
         try:
