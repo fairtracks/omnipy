@@ -140,14 +140,14 @@ def test_probe_caps_and_fallback() -> None:
         assert isinstance(prefix_panel.content, list)
         size = len(prefix_panel.content)
         binary_search_probe_sizes.append(size)
-        if size in (4, 8, 16):
-            return 10, 1
-        return size, 1
+        return size, size
 
+    # With height=5, probe stops by height at n=8 (height=8 > 5),
+    # binary searches between 4 and 8.
     _maybe_prune_draft_panel(
         DraftPanel(
             list(range(1000)),
-            frame=Frame(Dimensions(width=20, height=None)),
+            frame=Frame(Dimensions(width=20, height=5)),
         ),
         probe_render=_binary_search_probe_render,
     )

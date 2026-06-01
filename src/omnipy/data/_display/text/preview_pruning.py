@@ -143,6 +143,8 @@ def _build_prunable_chunk_plan(
 ) -> _ChunkPlan | None:
     if budget.width_budget is None and budget.height_budget is None:
         return None
+    if budget.height_budget is None:
+        return None
 
     if not _is_sliceable(content):
         return None
@@ -157,6 +159,8 @@ def _build_prunable_chunk_plan(
 def _pruning_skip_reason(content: object, budget: _PanelPreviewBudget) -> str:
     if budget.width_budget is None and budget.height_budget is None:
         return 'unbounded width and height budget'
+    if budget.height_budget is None:
+        return 'full view (unbounded height budget)'
 
     if not _is_sliceable(content):
         return f'unsupported (not sliceable) content type {type(content)!r}'
