@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from itertools import islice
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any, Callable
@@ -129,12 +130,14 @@ def _is_sliceable(content: object) -> bool:
         return True
     except (TypeError, KeyError):
         pass
-    # Mapping-like: has items()
-    try:
-        list(content.items())  # type: ignore[union-attr]
+    # Mapping-like: has keys() and __getitem__
+    if hasattr(content, 'keys') and hasattr(content, '__getitem__'):
+        try:
+            content[0]  # type: ignore[operator]
+            return True  # is sequence-like after all
+        except (TypeError, KeyError):
+            pass
         return True
-    except (TypeError, AttributeError):
-        pass
     return False
 
 
@@ -243,15 +246,23 @@ def _build_chunk_plan(content: object) -> _ChunkPlan | None:
     except (TypeError, KeyError):
         pass
 
-    # Duck-typing: try mapping-like (supports items())
+    # Duck-typing: try mapping-like
     try:
-        items = list(content.items())  # type: ignore[union-attr]
-        return _ChunkPlan(
-            total_chunks=len(items),
-            prefix_builder=lambda n: type(content)(items[:n]),  # type: ignore[arg-type]
-        )
+        pairs = list(islice(content.items(), 1))  # type: ignore[union-attr]
     except (TypeError, AttributeError):
         pass
+    else:
+        total = len(content)  # type: ignore[arg-type]
+        if total > 0:
+            return _ChunkPlan(
+                total_chunks=total,
+                prefix_builder=lambda n: type(content)(  # type: ignore[call-arg]
+                    islice(content.items(), n)  # type: ignore[arg-type]
+                ),
+            )
+        return None
+
+    return None
 
     return None
 
