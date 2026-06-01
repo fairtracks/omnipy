@@ -13,25 +13,41 @@ for the current limits.
 - **Declarative conversions** with `.to(...)` reduce custom conversion glue code.
 - **Dataset batch semantics** apply typed parsing and transformations across many records.
 
-## Parse messy input → safe edit → visible output
+## Parse messy input → safe edit → pretty-printed output
 
 ```pycon exec="1" session="landing" source="console"
 >>> import omnipy as om
 --8<-- "_includes/pycon_hidden_runtime_setup.md"
->>> om.runtime.config.data.model.interactive = True  # markdown-exec: hide
 ```
 
 ```pycon exec="1" session="landing" source="console"
->>> readings = om.Model[list[int]]((101, '102', 103.0))
->>> try:
-...     readings.append('invalid')
-... except Exception as err:
-...     print(type(err).__name__)
->>> readings
+>>> my_integers = om.Model[list[int]]((101, '102', 103.0))
+>>> my_integers
 ```
 
 ```pycon exec="1" session="landing" result="console" html="true"
->>> print(readings._docs())
+>>> print(my_integers._docs())
+```
+
+```pycon
+>>> my_integers.append('invalid')
+```
+
+
+```pycon exec="1" session="landing" result="console"
+>>> import omnipy.util.pydantic as pyd
+>>> try:
+>>>     my_integers.append('invalid')
+>>> except pyd.ValidationError as e:
+>>>     print(e)
+```
+
+```pycon
+>>> my_integers
+```
+
+```pycon exec="1" session="landing" result="console" html="true"
+>>> print(my_integers._docs())
 ```
 
 <p>

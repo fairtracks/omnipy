@@ -11,7 +11,6 @@ Follow [Install](install.md).
 ```pycon exec="1" session="quickstart" source="console"
 >>> import omnipy as om
 --8<-- "_includes/pycon_hidden_runtime_setup.md"
->>> om.runtime.config.data.model.interactive = True  # markdown-exec: hide
 ```
 
 ```pycon exec="1" session="quickstart" source="console"
