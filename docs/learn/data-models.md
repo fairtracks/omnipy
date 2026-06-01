@@ -1,14 +1,10 @@
-This page has moved. See [Learn/Python typing](learn/python-typing.md) and [How-to models](howto/models/define-models.md) respectively.
-
-## Models parse and operate on structured data
-
 The Model class is the most basic building block of the Omnipy library. It is a generic class that
 has several important features:
 
 
-### Omnipy makes use of Python type hinting to  define structured data models
+## Omnipy makes use of Python type hinting to define structured data models
 
-To define a data model, simply provide a type hint as a type parameter to the Model class.
+To define a data model, you provide a type hint as a type parameter to the Model class.
 For example, to define a data model that represents a list of integers, you would write:
 
 ```python
@@ -43,7 +39,7 @@ print(nested_data)  # prints: NestedModel({'a': IntListModel([-1, 2, 4]), 'b': I
 
 
 
-### "Parse, don't validate" with Omnipy Model objects
+## "Parse, don't validate" with Omnipy Model objects
 
 While `pydantic` is focusing mostly on data validation, Omnipy `Model` objects are designed to 
 be parsers, rather than just validators. (Please read _Technical note #2: "Parse, don't validate"_ 
@@ -94,7 +90,7 @@ class OnlyPosIntListModel(om.Model[list[int]]):
         return [i for i in data if i > 0]
 ```
 
-### Model objects provide snapshots and automatic rollbacks
+## Model objects provide snapshots and automatic rollbacks
 
 If an Omnipy `Model` model contains invalid data, a `ValidationError` will be raised. However, since
 the model object is now in an invalid state, Omnipy will automatically roll back the contents to the
@@ -132,7 +128,7 @@ import omnipy as om
 om.runtime.config.data.model.interactive = False
 ```
 
-### Model objects can be operated as the modelled class
+## Model objects can be operated as the modelled class
 
 One potentially groundbreaking feature of Omnipy is the capability of model objects to automatically
 mimic behaviour of the modelled class. A `Model` object  So e.g.

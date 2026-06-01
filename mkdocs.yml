@@ -104,16 +104,15 @@ nav:
   - Engines and orchestration: feature/engines-orchestration.md
 - Learn:
   - Mental model: learn/mental-model.md
-  - Parse, don't validate: learn/parse-dont-validate.md
   - Python typing: learn/python-typing.md
+  - "Omnipy Models: parse and operate on structured data": learn/data-models.md
+  - Parse, don't validate: learn/parse-dont-validate.md
   - Comparisons: learn/comparisons.md
   - Visual metaphors and story mode: learn/visual-metaphors-story-mode.md
 - Reference:
   - FAQ: reference/faq.md
   - Configuration: reference/configuration.md
   - Glossary: reference/glossary.md
-  - Legacy data models page: data_models.md
-  - Legacy python typing page: python_typing.md
   - Code reference: reference/
 - Contributing: contributing.md
 - Release notes: release_notes.md
