@@ -102,15 +102,61 @@ class _ChainMixin:
 if TYPE_CHECKING:
 
     class Chain2(_ChainMixin, Model[_V], Generic[_U, _V]):
-        """{{CHAIN_DOC_2}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_2}}
+        """Convert data through a two-model chain.
+
+``Chain2[U, V]`` transforms data of type ``U`` into type ``V``
+by creating a model instance of the first type, then recasting the
+result into the second model type.  This provides a lightweight
+inline dataflow pipeline within a single model object.
+
+Type Args:
+    U: The input model type.
+    V: The output model type.
+
+Examples:
+    >>> from omnipy import Chain2
+    >>> from omnipy.components.json.models import JsonScalarModel
+    >>> chain = Chain2[str, int]
+    >>> chain('42')
+    Chain2[str, int](42)
+
+"""
         ...
 
     class Chain3(_ChainMixin, Model[_W], Generic[_U, _V, _W]):
-        """{{CHAIN_DOC_3}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_3}}
+        """Convert data through a three-model chain.
+
+``Chain3[U, V, W]`` transforms data of type ``U`` into type ``W``
+by sequentially creating model instances of ``U``, then ``V``, then
+``W``.  Each step recasts the previous result into the next model type.
+
+Type Args:
+    U: The input model type.
+    V: The first intermediate model type.
+    W: The output model type.
+
+"""
         ...
 
     class Chain4(_ChainMixin, Model[_X], Generic[_U, _V, _W, _X]):
-        """{{CHAIN_DOC_4}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_4}}
+        """Convert data through a four-model chain.
+
+``Chain4[U, V, W, X]`` transforms data of type ``U`` into type ``X``
+through two intermediate model types ``V`` and ``W``.
+
+Type Args:
+    U: The input model type.
+    V: The first intermediate model type.
+    W: The second intermediate model type.
+    X: The output model type.
+
+"""
         ...
 
     class Chain5(
@@ -118,7 +164,21 @@ if TYPE_CHECKING:
             Model[_Y],
             Generic[_U, _V, _W, _X, _Y],
     ):
-        """{{CHAIN_DOC_5}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_5}}
+        """Convert data through a five-model chain.
+
+``Chain5[U, V, W, X, Y]`` transforms data of type ``U`` into type ``Y``
+through three intermediate model types.
+
+Type Args:
+    U: The input model type.
+    V: The first intermediate model type.
+    W: The second intermediate model type.
+    X: The third intermediate model type.
+    Y: The output model type.
+
+"""
         ...
 
     class Chain6(
@@ -126,23 +186,84 @@ if TYPE_CHECKING:
             Model[_Z],
             Generic[_U, _V, _W, _X, _Y, _Z],
     ):
-        """{{CHAIN_DOC_6}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_6}}
+        """Convert data through a six-model chain.
+
+``Chain6[U, V, W, X, Y, Z]`` transforms data of type ``U`` into type
+``Z`` through four intermediate model types.
+
+Type Args:
+    U: The input model type.
+    V: The first intermediate model type.
+    W: The second intermediate model type.
+    X: The third intermediate model type.
+    Y: The fourth intermediate model type.
+    Z: The output model type.
+
+"""
         ...
 
 else:
 
     class Chain2(_ChainMixin, Model[_V | _U], Generic[_U, _V]):
-        """{{CHAIN_DOC_2}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_2}}
+        """Convert data through a two-model chain.
+
+``Chain2[U, V]`` transforms data of type ``U`` into type ``V``
+by creating a model instance of the first type, then recasting the
+result into the second model type.  This provides a lightweight
+inline dataflow pipeline within a single model object.
+
+Type Args:
+    U: The input model type.
+    V: The output model type.
+
+Examples:
+    >>> from omnipy import Chain2
+    >>> from omnipy.components.json.models import JsonScalarModel
+    >>> chain = Chain2[str, int]
+    >>> chain('42')
+    Chain2[str, int](42)
+
+"""
         ...
 
     class Chain3(_ChainMixin, Model[_W | TypeVarStore1[_V] | _U], Generic[_U, _V, _W]):
-        """{{CHAIN_DOC_3}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_3}}
+        """Convert data through a three-model chain.
+
+``Chain3[U, V, W]`` transforms data of type ``U`` into type ``W``
+by sequentially creating model instances of ``U``, then ``V``, then
+``W``.  Each step recasts the previous result into the next model type.
+
+Type Args:
+    U: The input model type.
+    V: The first intermediate model type.
+    W: The output model type.
+
+"""
         ...
 
     class Chain4(_ChainMixin,
                  Model[_X | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
                  Generic[_U, _V, _W, _X]):
-        """{{CHAIN_DOC_4}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_4}}
+        """Convert data through a four-model chain.
+
+``Chain4[U, V, W, X]`` transforms data of type ``U`` into type ``X``
+through two intermediate model types ``V`` and ``W``.
+
+Type Args:
+    U: The input model type.
+    V: The first intermediate model type.
+    W: The second intermediate model type.
+    X: The output model type.
+
+"""
         ...
 
     class Chain5(
@@ -150,7 +271,21 @@ else:
             Model[_Y | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
             Generic[_U, _V, _W, _X, _Y],
     ):
-        """{{CHAIN_DOC_5}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_5}}
+        """Convert data through a five-model chain.
+
+``Chain5[U, V, W, X, Y]`` transforms data of type ``U`` into type ``Y``
+through three intermediate model types.
+
+Type Args:
+    U: The input model type.
+    V: The first intermediate model type.
+    W: The second intermediate model type.
+    X: The third intermediate model type.
+    Y: The output model type.
+
+"""
         ...
 
     class Chain6(
@@ -159,7 +294,22 @@ else:
                   | _U],
             Generic[_U, _V, _W, _X, _Y, _Z],
     ):
-        """{{CHAIN_DOC_6}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CHAIN_DOC_6}}
+        """Convert data through a six-model chain.
+
+``Chain6[U, V, W, X, Y, Z]`` transforms data of type ``U`` into type
+``Z`` through four intermediate model types.
+
+Type Args:
+    U: The input model type.
+    V: The first intermediate model type.
+    W: The second intermediate model type.
+    X: The third intermediate model type.
+    Y: The fourth intermediate model type.
+    Z: The output model type.
+
+"""
         ...
 
 

@@ -105,9 +105,15 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
     root_log: IsRootLogConfig = pyd.Field(default_factory=RootLogConfig)
 
     def reset_to_defaults(self) -> None:
-        """{{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_SUMMARY}}
+        #
+        # {{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_DETAILS}}
+        """Reset all runtime configuration sections to their default values.
 
-        {{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_DETAILS}}"""
+        Rebuilds the data, engine, job, and root-log config sections and then refreshes runtime
+        subscriptions when the config is attached to a runtime object.
+"""
 
         prev_back = self._back
         self._back = None
@@ -148,9 +154,15 @@ class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
     root_log: IsRootLogObjects = pyd.Field(default_factory=RootLogObjects)
 
     def setup_reactive(self, ui_type: UserInterfaceType.Literals) -> None:
-        """{{ISRUNTIMEOBJECTS_SETUP_REACTIVE_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNTIMEOBJECTS_SETUP_REACTIVE_SUMMARY}}
+        #
+        # {{ISRUNTIMEOBJECTS_SETUP_REACTIVE_DETAILS}}
+        """Create or remove reactive UI helpers for the detected interface.
 
-        {{ISRUNTIMEOBJECTS_SETUP_REACTIVE_DETAILS}}"""
+        Args:
+            ui_type: Detected user-interface type for the current runtime.
+"""
 
         if UserInterfaceType.is_jupyter_in_browser(ui_type):
             from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
@@ -191,9 +203,20 @@ class Runtime(DataPublisher):
         self.reset_subscriptions()
 
     def reset_subscriptions(self) -> None:
-        """{{ISRUNTIME_RESET_SUBSCRIPTIONS_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNTIME_RESET_SUBSCRIPTIONS_SUMMARY}}
+        #
+        # {{ISRUNTIME_RESET_SUBSCRIPTIONS_DETAILS}}
+        """Reset runtime subscriptions between config and runtime objects.
 
-        {{ISRUNTIME_RESET_SUBSCRIPTIONS_DETAILS}}"""
+        This method rebuilds the callback graph that keeps configuration, engines, registries,
+        logging, and reactive UI objects synchronized. Call it after replacing runtime subobjects
+        manually.
+        
+        Raises:
+            AssertionError: If a Jupyter UI is detected but reactive objects are unexpectedly
+                missing.
+"""
 
         self.reset_backlinks()
 

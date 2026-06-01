@@ -1899,7 +1899,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 is a Jupyter widget to display HTML output in the
                 browser. Otherwise, the method returns None.
 
-
             Note:
                 Any default argument value is overridden by the
                 corresponding value in the relevant subsection of the

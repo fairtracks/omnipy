@@ -81,12 +81,9 @@ def expand_macros(text: str, macros: dict[str, str]) -> str:
                     replace_value += line
                 else:
                     if macro_index == 0:
-                        raise ValueError(
-                            'Cannot indent macro expansion when macro is '
-                            'placed at the start of the docstring. Please '
-                            'break up multi-line macros placed at the '
-                            'start of the docstring into smaller parts.',)
-                    replace_value += indent + line
+                        replace_value += line
+                    else:
+                        replace_value += indent + line
 
             result = (
                 result[:macro_index] + replace_value

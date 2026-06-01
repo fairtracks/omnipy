@@ -12,11 +12,23 @@ Authors:
 Created: January 2026
 """
 
+import importlib
 from pathlib import Path
 import sys
 import traceback
 
 from omnipy.util.docstr_macros import get_macros_from_env, process_content
+
+
+def load_macros() -> dict[str, str]:
+    """
+    Load macros after importing omnipy to trigger macro env-var registration.
+
+    Returns:
+        Dict of macro definitions read from the process environment
+    """
+    importlib.import_module('omnipy')
+    return get_macros_from_env()
 
 
 def process_file(filepath: Path, macros: dict[str, str], verbose: bool = False) -> bool:
@@ -54,7 +66,7 @@ def main():
         sys.exit(0)
 
     # Load macros from environment variables
-    macros = get_macros_from_env()
+    macros = load_macros()
 
     if verbose:
         print(f'Loaded {len(macros)} macros from environment variables:')

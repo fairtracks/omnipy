@@ -30,13 +30,27 @@ class CanLog(Protocol):
     """Protocol for objects that expose a logger and log helper."""
     @property
     def logger(self) -> Logger:
-        """{{CANLOG_LOGGER_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CANLOG_LOGGER_SUMMARY}}
+        #
+        # {{CANLOG_LOGGER_DETAILS}}
+        """Return the logger bound to the concrete instance type.
 
-        {{CANLOG_LOGGER_DETAILS}}"""
+        Returns:
+            Logger: Logger used by the object for Omnipy log messages.
+"""
         ...
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None):
-        """{{CANLOG_LOG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{CANLOG_LOG_SUMMARY}}
+        #
+        # {{CANLOG_LOG_DETAILS}}
+        """Emit a log message, optionally using an explicit event timestamp.
 
-        {{CANLOG_LOG_DETAILS}}"""
+        Args:
+            log_msg: Message text to send to the logger.
+            level: Standard library logging level.
+            datetime_obj: Timestamp to attach to the record instead of wall-clock time.
+"""
         ...

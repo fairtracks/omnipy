@@ -113,7 +113,16 @@ class LinearFlowTemplateCore(
 def linear_flow_template_as_callable_decorator(
     decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsLinearFlowTemplate]) -> \
         Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsLinearFlowTemplate[_CallP, _RetT]]]:
-    """{{FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # {{FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    #
+    # Args:
+    #     decorated_cls: Linear-flow template initializer to adapt.
+    #
+    # Returns:
+    #     A decorator factory that converts a Python callable into a linear flow template.
+    #
+    """Wrap a template initializer as a callable decorator factory.
 
     Args:
         decorated_cls: Linear-flow template initializer to adapt.
@@ -227,7 +236,16 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
 def dag_flow_template_as_callable_decorator(
     decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsDagFlowTemplate]) -> \
         Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsDagFlowTemplate[_CallP, _RetT]]]:
-    """{{FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # {{FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    #
+    # Args:
+    #     decorated_cls: DAG-flow template initializer to adapt.
+    #
+    # Returns:
+    #     A decorator factory that converts a Python callable into a DAG flow template.
+    #
+    """Wrap a template initializer as a callable decorator factory.
 
     Args:
         decorated_cls: DAG-flow template initializer to adapt.
@@ -314,7 +332,17 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
                                             _RetT],
                            FlowBase,
                            Generic[_CallP, _RetT]):
-    """{{FLOW_CORE_TEMPLATE_SUMMARY}}
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # {{FLOW_CORE_TEMPLATE_SUMMARY}}
+    #
+    # A function flow template wraps a Python callable that orchestrates work as
+    # a flow. Use this when the control flow is easiest to express directly in
+    # Python instead of as an explicit task list or dependency graph.
+    #
+    # Instances are normally produced through the ``FuncFlowTemplate`` decorator
+    # factory rather than by direct construction.
+    #
+    """Implement the core template behavior for flows.
 
     A function flow template wraps a Python callable that orchestrates work as
     a flow. Use this when the control flow is easiest to express directly in
@@ -342,7 +370,16 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
 def func_flow_template_as_callable_decorator(
     decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsFuncFlowTemplate]) -> \
         Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsFuncFlowTemplate[_CallP, _RetT]]]:
-    """{{FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # {{FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    #
+    # Args:
+    #     decorated_cls: Function-flow template initializer to adapt.
+    #
+    # Returns:
+    #     A decorator factory that converts a Python callable into a function flow template.
+    #
+    """Wrap a template initializer as a callable decorator factory.
 
     Args:
         decorated_cls: Function-flow template initializer to adapt.
@@ -361,7 +398,16 @@ def to_func_flow_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
                             FuncFlowTemplateCore[_CallP, _RetT]]
 ) -> HasFuncArgJobTemplateInit[IsFuncFlowTemplate[_CallP, _RetT], _CallP, _RetT]:
-    """{{FLOW_CAST_INIT_PROTOCOL_SUMMARY}}
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # {{FLOW_CAST_INIT_PROTOCOL_SUMMARY}}
+    #
+    # Args:
+    #     decorated_cls: Function-flow template initializer to cast.
+    #
+    # Returns:
+    #     The initializer typed as ``HasFuncArgJobTemplateInit``.
+    #
+    """Cast a template initializer to the shared init protocol.
 
     Args:
         decorated_cls: Function-flow template initializer to cast.

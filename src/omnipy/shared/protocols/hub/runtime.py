@@ -71,16 +71,28 @@ class IsRootLogObjects(Protocol):
     file_handler: RotatingFileHandler | None = None
 
     def set_config(self, config: IsRootLogConfig) -> None:
-        """{{ISROOTLOGOBJECTS_SET_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISROOTLOGOBJECTS_SET_CONFIG_SUMMARY}}
+        #
+        # {{ISROOTLOGOBJECTS_SET_CONFIG_DETAILS}}
+        """Replace root logging configuration and rebuild logging objects.
 
-        {{ISROOTLOGOBJECTS_SET_CONFIG_DETAILS}}"""
+        Args:
+            config: New root logger configuration to apply.
+"""
         ...
 
     @property
     def config(self) -> IsRootLogConfig:
-        """{{ISROOTLOGOBJECTS_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISROOTLOGOBJECTS_CONFIG_SUMMARY}}
+        #
+        # {{ISROOTLOGOBJECTS_CONFIG_DETAILS}}
+        """Return the active root logging configuration.
 
-        {{ISROOTLOGOBJECTS_CONFIG_DETAILS}}"""
+        Returns:
+            IsRootLogConfig: Configuration currently used to construct formatter and handlers.
+"""
         ...
 
 
@@ -94,9 +106,15 @@ class IsRuntimeConfig(IsConfigBase, Protocol):
     root_log: IsRootLogConfig
 
     def reset_to_defaults(self) -> None:
-        """{{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_SUMMARY}}
+        #
+        # {{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_DETAILS}}
+        """Reset all runtime configuration sections to their default values.
 
-        {{ISRUNTIMECONFIG_RESET_TO_DEFAULTS_DETAILS}}"""
+        Rebuilds the data, engine, job, and root-log config sections and then refreshes runtime
+        subscriptions when the config is attached to a runtime object.
+"""
         ...
 
 
@@ -114,9 +132,15 @@ class IsRuntimeObjects(IsDataPublisher, Protocol):
     root_log: IsRootLogObjects
 
     def setup_reactive(self, ui_type: UserInterfaceType.Literals) -> None:
-        """{{ISRUNTIMEOBJECTS_SETUP_REACTIVE_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNTIMEOBJECTS_SETUP_REACTIVE_SUMMARY}}
+        #
+        # {{ISRUNTIMEOBJECTS_SETUP_REACTIVE_DETAILS}}
+        """Create or remove reactive UI helpers for the detected interface.
 
-        {{ISRUNTIMEOBJECTS_SETUP_REACTIVE_DETAILS}}"""
+        Args:
+            ui_type: Detected user-interface type for the current runtime.
+"""
         ...
 
 
@@ -128,7 +152,18 @@ class IsRuntime(Protocol):
     objects: IsRuntimeObjects
 
     def reset_subscriptions(self):
-        """{{ISRUNTIME_RESET_SUBSCRIPTIONS_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNTIME_RESET_SUBSCRIPTIONS_SUMMARY}}
+        #
+        # {{ISRUNTIME_RESET_SUBSCRIPTIONS_DETAILS}}
+        """Reset runtime subscriptions between config and runtime objects.
 
-        {{ISRUNTIME_RESET_SUBSCRIPTIONS_DETAILS}}"""
+        This method rebuilds the callback graph that keeps configuration, engines, registries,
+        logging, and reactive UI objects synchronized. Call it after replacing runtime subobjects
+        manually.
+        
+        Raises:
+            AssertionError: If a Jupyter UI is detected but reactive objects are unexpectedly
+                missing.
+"""
         ...

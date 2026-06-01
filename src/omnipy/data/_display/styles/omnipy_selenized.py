@@ -42,11 +42,58 @@ from .helpers import Base16Colors, get_styles_from_base16_colors
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_SELENIZED_STYLE_INTERFACE_SUMMARY'] = dedent("""\
         Define the interface for one of the Omnipy Selenized style variants.
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # )
+    #
+    #
+    # class OmnipySelenizedBlackStyle(pygments.style.Style):
+    # # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # # {{SELENIZED_STYLE_INTERFACE_SUMMARY}}
+    #
     """)
 
 
 class OmnipySelenizedBlackStyle(pygments.style.Style):
-    """{{SELENIZED_STYLE_INTERFACE_SUMMARY}}"""
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Define the interface for one of the Omnipy Selenized style variants.
+
+    """Define the interface for one of the Omnipy Selenized style variants.
+# %% Original docstring (managed by expand_docstr_macros.py) %%
+#
+#
+#     name = 'omnipy-selenized-black'
+#     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
+#     variant = 'dark'
+#     _palette = Base16Colors(
+#         base00='#181818',
+#         base01='#252525',
+#         base02='#3b3b3b',
+#         base03='#878787',  # Original: #777777
+#         base04='#878787',  # Original: #777777
+#         base05='#b9b9b9',
+#         base06='#dedede',
+#         base07='#dedede',
+#         base08='#ed4a46',
+#         base09='#e67f43',
+#         base0A='#dbb32d',
+#         base0B='#70b433',
+#         base0C='#3fc5b7',
+#         base0D='#368aeb',
+#         base0E='#a580e2',
+#         base0F='#eb6eb7',
+#     )
+#
+#     background_color = _palette.base00
+#     highlight_color = _palette.base02
+#
+#     styles = get_styles_from_base16_colors(_palette)
+#
+#
+# class OmnipySelenizedDarkStyle(pygments.style.Style):
+#     # %% Original docstring (managed by expand_docstr_macros.py) %%
+#     # {{SELENIZED_STYLE_INTERFACE_SUMMARY}}
+#
+"""
 
     name = 'omnipy-selenized-black'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
@@ -77,7 +124,46 @@ class OmnipySelenizedBlackStyle(pygments.style.Style):
 
 
 class OmnipySelenizedDarkStyle(pygments.style.Style):
-    """{{SELENIZED_STYLE_INTERFACE_SUMMARY}}"""
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Define the interface for one of the Omnipy Selenized style variants.
+
+    """Define the interface for one of the Omnipy Selenized style variants.
+# %% Original docstring (managed by expand_docstr_macros.py) %%
+#
+#
+#     name = 'omnipy-selenized-dark'
+#     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
+#     variant = 'dark'
+#     _palette = Base16Colors(
+#         base00='#103c48',
+#         base01='#184956',
+#         base02='#2d5b69',
+#         base03='#80959a',  # Original: #72898f
+#         base04='#80959a',  # Original: #72898f
+#         base05='#adbcbc',
+#         base06='#cad8d9',
+#         base07='#cad8d9',
+#         base08='#fa5750',
+#         base09='#ed8649',
+#         base0A='#dbb32d',
+#         base0B='#75b938',
+#         base0C='#41c7b9',
+#         base0D='#4695f7',
+#         base0E='#af88eb',
+#         base0F='#f275be',
+#     )
+#
+#     background_color = _palette.base00
+#     highlight_color = _palette.base02
+#
+#     styles = get_styles_from_base16_colors(_palette)
+#
+#
+# class OmnipySelenizedLightStyle(pygments.style.Style):
+#     # %% Original docstring (managed by expand_docstr_macros.py) %%
+#     # {{SELENIZED_STYLE_INTERFACE_SUMMARY}}
+#
+"""
 
     name = 'omnipy-selenized-dark'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
@@ -108,7 +194,46 @@ class OmnipySelenizedDarkStyle(pygments.style.Style):
 
 
 class OmnipySelenizedLightStyle(pygments.style.Style):
-    """{{SELENIZED_STYLE_INTERFACE_SUMMARY}}"""
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Define the interface for one of the Omnipy Selenized style variants.
+
+    """Define the interface for one of the Omnipy Selenized style variants.
+# %% Original docstring (managed by expand_docstr_macros.py) %%
+#
+#
+#     name = 'omnipy-selenized-light'
+#     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
+#     variant = 'light'
+#     _palette = Base16Colors(
+#         base00='#fbf3db',
+#         base01='#ece3cc',
+#         base02='#d5cdb6',
+#         base03='#808c8a',  # Original: #909995
+#         base04='#808c8a',  # Original: #909995
+#         base05='#53676d',
+#         base06='#3a4d53',
+#         base07='#3a4d53',
+#         base08='#cc1729',
+#         base09='#bc5819',
+#         base0A='#a78300',
+#         base0B='#428b00',
+#         base0C='#00978a',
+#         base0D='#006dce',
+#         base0E='#825dc0',
+#         base0F='#c44392',
+#     )
+#
+#     background_color = _palette.base00
+#     highlight_color = _palette.base02
+#
+#     styles = get_styles_from_base16_colors(_palette)
+#
+#
+# class OmnipySelenizedWhiteStyle(pygments.style.Style):
+#     # %% Original docstring (managed by expand_docstr_macros.py) %%
+#     # {{SELENIZED_STYLE_INTERFACE_SUMMARY}}
+#
+"""
 
     name = 'omnipy-selenized-light'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
@@ -139,7 +264,11 @@ class OmnipySelenizedLightStyle(pygments.style.Style):
 
 
 class OmnipySelenizedWhiteStyle(pygments.style.Style):
-    """{{SELENIZED_STYLE_INTERFACE_SUMMARY}}"""
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Define the interface for one of the Omnipy Selenized style variants.
+
+    """Define the interface for one of the Omnipy Selenized style variants.
+"""
 
     name = 'omnipy-selenized-white'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'

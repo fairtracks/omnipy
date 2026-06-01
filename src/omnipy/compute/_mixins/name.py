@@ -29,9 +29,15 @@ class NameJobBaseMixin:
 
     @property
     def name(self) -> str | None:
-        """{{ISUNIQUELYNAMEDJOB_NAME_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISUNIQUELYNAMEDJOB_NAME_SUMMARY}}
+        #
+        # {{ISUNIQUELYNAMEDJOB_NAME_DETAILS}}
+        """Return the configured base name for the job.
 
-        {{ISUNIQUELYNAMEDJOB_NAME_DETAILS}}"""
+        Returns:
+            str: Human-readable name used as the basis for display and registration.
+"""
 
         return self._name
 
@@ -60,9 +66,15 @@ class NameJobBaseMixin:
 class NameJobMixin:
     """Expose public helpers for refreshing generated job names."""
     def regenerate_unique_name(self) -> None:
-        """{{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY}}
+        #
+        # {{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_DETAILS}}
+        """Regenerate the unique job name from the current base name.
 
-        {{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_DETAILS}}"""
+        Updates the stored unique identifier so later registry entries and log messages use a
+        fresh value.
+"""
 
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
         self_as_name_job_base_mixin._regenerate_unique_slugs()

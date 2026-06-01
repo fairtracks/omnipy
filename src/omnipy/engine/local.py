@@ -26,9 +26,18 @@ class LocalRunner(JobRunnerEngine):
 
     @classmethod
     def get_config_cls(cls) -> Type[IsLocalRunnerConfig]:
-        """{{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
+        #
+        # {{ISENGINE_GET_CONFIG_CLS_DETAILS}}
+        """Return the config class associated with this engine type.
 
-        {{ISENGINE_GET_CONFIG_CLS_DETAILS}}"""
+        Args:
+            cls: Engine subclass whose configuration class is being requested.
+        
+        Returns:
+            Type[IsJobRunnerConfig]: Configuration class used to instantiate engine settings.
+"""
         return cast(Type[IsLocalRunnerConfig], LocalRunnerConfig)
 
     def _init_task(self, task: TaskRunSpec) -> object:

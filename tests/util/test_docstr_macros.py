@@ -8,7 +8,9 @@ Authors:
 Created: January 2026
 """
 
+import importlib.util
 import os
+from pathlib import Path
 from textwrap import dedent
 
 import pytest
@@ -17,6 +19,17 @@ from omnipy.util.docstr_macros import (expand_macros,
                                        find_macros_in_docstring,
                                        get_macros_from_env,
                                        process_content)
+
+
+def _load_expand_docstr_macros_hook_module():
+    hook_path = Path(__file__).resolve().parents[2] / '.pre-commit-hooks' / 'expand_docstr_macros.py'
+    spec = importlib.util.spec_from_file_location('expand_docstr_macros_hook', hook_path)
+    assert spec and spec.loader
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+
+    return module
 
 
 @pytest.fixture
@@ -94,12 +107,36 @@ def test_expand_macros(sample_macros) -> None:
     assert '\n    param1 (str): First parameter' in expanded
 
 
-def test_expand_error_multi_paragraph_macro_in_first_line(sample_macros) -> None:
-    """Test expanding multiple macros."""
+def test_expand_multi_paragraph_macro_in_first_line(sample_macros) -> None:
+    """Test expansion of multi-line macro at start of docstring."""
     text = dedent("""\
         {{FULL_DESCRIPTION}}""")
-    with pytest.raises(ValueError):
-        expand_macros(text, sample_macros)
+
+    expanded = expand_macros(text, sample_macros)
+
+    assert expanded == sample_macros['FULL_DESCRIPTION']
+
+
+def test_hook_load_macros_imports_omnipy_before_reading_env(monkeypatch) -> None:
+    """Test hook imports omnipy before collecting macros from environment."""
+    hook_module = _load_expand_docstr_macros_hook_module()
+    call_order = []
+
+    def _fake_import_module(module_name: str):
+        call_order.append(('import_module', module_name))
+        return object()
+
+    def _fake_get_macros_from_env() -> dict[str, str]:
+        call_order.append(('get_macros_from_env',))
+        return {'TEST_MACRO': 'test value'}
+
+    monkeypatch.setattr(hook_module.importlib, 'import_module', _fake_import_module)
+    monkeypatch.setattr(hook_module, 'get_macros_from_env', _fake_get_macros_from_env)
+
+    macros = hook_module.load_macros()
+
+    assert macros == {'TEST_MACRO': 'test value'}
+    assert call_order == [('import_module', 'omnipy'), ('get_macros_from_env',)]
 
 
 def test_expand_multiple_macros(sample_macros) -> None:

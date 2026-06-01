@@ -42,17 +42,29 @@ class RootLogObjects(DataPublisher):
         self._configure_all_objects()
 
     def set_config(self, config: IsRootLogConfig):
-        """{{ISROOTLOGOBJECTS_SET_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISROOTLOGOBJECTS_SET_CONFIG_SUMMARY}}
+        #
+        # {{ISROOTLOGOBJECTS_SET_CONFIG_DETAILS}}
+        """Replace root logging configuration and rebuild logging objects.
 
-        {{ISROOTLOGOBJECTS_SET_CONFIG_DETAILS}}"""
+        Args:
+            config: New root logger configuration to apply.
+"""
         self._config = config
         self._configure_all_objects()
 
     @property
     def config(self) -> IsRootLogConfig:
-        """{{ISROOTLOGOBJECTS_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISROOTLOGOBJECTS_CONFIG_SUMMARY}}
+        #
+        # {{ISROOTLOGOBJECTS_CONFIG_DETAILS}}
+        """Return the active root logging configuration.
 
-        {{ISROOTLOGOBJECTS_CONFIG_DETAILS}}"""
+        Returns:
+            IsRootLogConfig: Configuration currently used to construct formatter and handlers.
+"""
         return self._config
 
     def _configure_all_objects(self):

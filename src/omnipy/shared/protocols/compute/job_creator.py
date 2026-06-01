@@ -62,28 +62,53 @@ class IsJobConfigHolder(Protocol):
     """Protocol for objects that hold mutable job config and engine state."""
     @property
     def config(self) -> IsJobConfig:
-        """{{ISJOBCONFIGHOLDER_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBCONFIGHOLDER_CONFIG_SUMMARY}}
+        #
+        # {{ISJOBCONFIGHOLDER_CONFIG_DETAILS}}
+        """Return the shared job configuration associated with the holder.
 
-        {{ISJOBCONFIGHOLDER_CONFIG_DETAILS}}"""
+        Returns:
+            IsJobConfig: Shared job configuration used for future jobs and runtime lookups.
+"""
         ...
 
     @property
     def engine(self) -> IsEngine | None:
-        """{{ISJOBCONFIGHOLDER_ENGINE_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBCONFIGHOLDER_ENGINE_SUMMARY}}
+        #
+        # {{ISJOBCONFIGHOLDER_ENGINE_DETAILS}}
+        """Return the engine currently associated with the holder, if any.
 
-        {{ISJOBCONFIGHOLDER_ENGINE_DETAILS}}"""
+        Returns:
+            IsEngine | None: Engine used for decorating applied jobs, or ``None`` when no engine
+                has been configured.
+"""
         ...
 
     def set_config(self, config: IsJobConfig) -> None:
-        """{{ISJOBCONFIGHOLDER_SET_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBCONFIGHOLDER_SET_CONFIG_SUMMARY}}
+        #
+        # {{ISJOBCONFIGHOLDER_SET_CONFIG_DETAILS}}
+        """Replace the shared job configuration used by the holder.
 
-        {{ISJOBCONFIGHOLDER_SET_CONFIG_DETAILS}}"""
+        Args:
+            config: Job configuration object to store for future jobs.
+"""
         ...
 
     def set_engine(self, engine: IsEngine) -> None:
-        """{{ISJOBCONFIGHOLDER_SET_ENGINE_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBCONFIGHOLDER_SET_ENGINE_SUMMARY}}
+        #
+        # {{ISJOBCONFIGHOLDER_SET_ENGINE_DETAILS}}
+        """Set the engine used by the holder for future applied jobs.
 
-        {{ISJOBCONFIGHOLDER_SET_ENGINE_DETAILS}}"""
+        Args:
+            engine: Engine that should decorate jobs created through this holder.
+"""
         ...
 
 
@@ -92,14 +117,27 @@ class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
     """Protocol for nested-context job creators."""
     @property
     def nested_context_level(self) -> int:
-        """{{ISJOBCREATOR_NESTED_CONTEXT_LEVEL_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBCREATOR_NESTED_CONTEXT_LEVEL_SUMMARY}}
+        #
+        # {{ISJOBCREATOR_NESTED_CONTEXT_LEVEL_DETAILS}}
+        """Return the current depth of nested job-execution contexts.
 
-        {{ISJOBCREATOR_NESTED_CONTEXT_LEVEL_DETAILS}}"""
+        Returns:
+            int: Number of currently active nested execution contexts.
+"""
         ...
 
     @property
     def time_of_cur_toplevel_nested_context_run(self) -> datetime | None:
-        """{{ISJOBCREATOR_TIME_OF_CUR_TOPLEVEL_NESTED_CONTEXT_RUN_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBCREATOR_TIME_OF_CUR_TOPLEVEL_NESTED_CONTEXT_RUN_SUMMARY}}
+        #
+        # {{ISJOBCREATOR_TIME_OF_CUR_TOPLEVEL_NESTED_CONTEXT_RUN_DETAILS}}
+        """Return the start time for the active top-level execution context, if any.
 
-        {{ISJOBCREATOR_TIME_OF_CUR_TOPLEVEL_NESTED_CONTEXT_RUN_DETAILS}}"""
+        Returns:
+            datetime | None: Timestamp recorded when the outermost execution context started, or
+                ``None`` when no top-level context is active.
+"""
         ...

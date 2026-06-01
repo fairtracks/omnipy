@@ -32,16 +32,28 @@ class DataClassCreator:
 
     @property
     def config(self) -> IsDataConfig:
-        """{{ISDATACLASSCREATOR_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISDATACLASSCREATOR_CONFIG_SUMMARY}}
+        #
+        # {{ISDATACLASSCREATOR_CONFIG_DETAILS}}
+        """Return the data configuration shared by the owning data-class family.
 
-        {{ISDATACLASSCREATOR_CONFIG_DETAILS}}"""
+        Returns:
+            IsDataConfig: Shared configuration object used by related models and datasets.
+"""
 
         return self._config
 
     def set_config(self, config: IsDataConfig) -> None:
-        """{{ISDATACLASSCREATOR_SET_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISDATACLASSCREATOR_SET_CONFIG_SUMMARY}}
+        #
+        # {{ISDATACLASSCREATOR_SET_CONFIG_DETAILS}}
+        """Replace the shared data configuration for the owning data-class family.
 
-        {{ISDATACLASSCREATOR_SET_CONFIG_DETAILS}}"""
+        Args:
+            config: Data configuration object to store for related models and datasets.
+"""
 
         self._config = config
 
@@ -144,9 +156,15 @@ class DataClassBase(Generic[ContentT], metaclass=DataClassBaseMeta):
 
     @property
     def config(self) -> IsDataConfig:
-        """{{ISDATACLASSCREATOR_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISDATACLASSCREATOR_CONFIG_SUMMARY}}
+        #
+        # {{ISDATACLASSCREATOR_CONFIG_DETAILS}}
+        """Return the data configuration shared by the owning data-class family.
 
-        {{ISDATACLASSCREATOR_CONFIG_DETAILS}}"""
+        Returns:
+            IsDataConfig: Shared configuration object used by related models and datasets.
+"""
 
         return self.__class__.data_class_creator.config
 

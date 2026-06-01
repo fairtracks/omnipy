@@ -50,16 +50,29 @@ class JobBase(
 
     @property
     def config(self) -> IsJobConfig:
-        """{{ISJOBBASE_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBBASE_CONFIG_SUMMARY}}
+        #
+        # {{ISJOBBASE_CONFIG_DETAILS}}
+        """Return the job configuration shared by this job family.
 
-        {{ISJOBBASE_CONFIG_DETAILS}}"""
+        Returns:
+            IsJobConfig: Shared job configuration resolved from the owning job creator.
+"""
         return self.__class__.job_creator.config
 
     @property
     def engine(self) -> IsEngine | None:
-        """{{ISJOBBASE_ENGINE_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBBASE_ENGINE_SUMMARY}}
+        #
+        # {{ISJOBBASE_ENGINE_DETAILS}}
+        """Return the currently configured engine for this job family, if any.
 
-        {{ISJOBBASE_ENGINE_DETAILS}}"""
+        Returns:
+            IsEngine | None: Engine used to decorate applied jobs, or ``None`` when no engine has
+                been configured.
+"""
         return self.__class__.job_creator.engine
 
     @property

@@ -28,21 +28,49 @@ class RunStateRegistry(LogMixin):
         super().__init__()
 
     def get_job_state(self, job: IsUniquelyNamedJob) -> RunState.Literals:
-        """{{ISRUNSTATEREGISTRY_GET_JOB_STATE_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNSTATEREGISTRY_GET_JOB_STATE_SUMMARY}}
+        #
+        # {{ISRUNSTATEREGISTRY_GET_JOB_STATE_DETAILS}}
+        """Return the current run state registered for a job.
 
-        {{ISRUNSTATEREGISTRY_GET_JOB_STATE_DETAILS}}"""
+        Args:
+            job: Job whose current run state should be looked up.
+        
+        Returns:
+            RunState.Literals: Current run-state literal for the job.
+"""
         return self._job_states[job.unique_name]
 
     def get_job_state_datetime(self, job: IsUniquelyNamedJob, state: RunState.Literals) -> datetime:
-        """{{ISRUNSTATEREGISTRY_GET_JOB_STATE_DATETIME_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNSTATEREGISTRY_GET_JOB_STATE_DATETIME_SUMMARY}}
+        #
+        # {{ISRUNSTATEREGISTRY_GET_JOB_STATE_DATETIME_DETAILS}}
+        """Return when the job was recorded in a specific run state.
 
-        {{ISRUNSTATEREGISTRY_GET_JOB_STATE_DATETIME_DETAILS}}"""
+        Args:
+            job: Job whose transition time should be looked up.
+            state: Run-state literal to query.
+        
+        Returns:
+            datetime: Timestamp recorded for the requested transition.
+"""
         return self._job_state_datetime[(job.unique_name, state)]
 
     def all_jobs(self, state: RunState.Literals | None = None) -> tuple[IsUniquelyNamedJob, ...]:
-        """{{ISRUNSTATEREGISTRY_ALL_JOBS_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNSTATEREGISTRY_ALL_JOBS_SUMMARY}}
+        #
+        # {{ISRUNSTATEREGISTRY_ALL_JOBS_DETAILS}}
+        """Return all registered jobs, optionally filtered by their current state.
 
-        {{ISRUNSTATEREGISTRY_ALL_JOBS_DETAILS}}"""
+        Args:
+            state: Optional run-state filter limiting the returned jobs.
+        
+        Returns:
+            tuple[IsUniquelyNamedJob, ...]: Registered jobs matching the requested filter.
+"""
         if state is not None:
             job_unique_names = self._state_jobs[state]
             return tuple(self._jobs[unique_name] for unique_name in job_unique_names)
@@ -50,9 +78,16 @@ class RunStateRegistry(LogMixin):
             return tuple(self._jobs.values())
 
     def set_job_state(self, job: IsUniquelyNamedJob, state: RunState.Literals) -> None:
-        """{{ISRUNSTATEREGISTRY_SET_JOB_STATE_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISRUNSTATEREGISTRY_SET_JOB_STATE_SUMMARY}}
+        #
+        # {{ISRUNSTATEREGISTRY_SET_JOB_STATE_DETAILS}}
+        """Register a job transition, update indexes, and emit the matching log event.
 
-        {{ISRUNSTATEREGISTRY_SET_JOB_STATE_DETAILS}}"""
+        Args:
+            job: Job whose state transition should be recorded.
+            state: New run-state literal to register.
+"""
         cur_datetime = datetime.now()
 
         if job.unique_name in self._jobs:

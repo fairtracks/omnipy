@@ -50,27 +50,42 @@ if TYPE_CHECKING:
                 ...
 
     class Model_int(PlainModel[int], IsIntContent):
-        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
+        """Typed stand-in for a concrete ``Model[...]`` subclass.
+"""
 
         ...
 
     class Model_float(PlainModel[float], IsFloatContent):
-        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
+        """Typed stand-in for a concrete ``Model[...]`` subclass.
+"""
 
         ...
 
     class Model_bool(PlainModel[bool], IsBoolContent):
-        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
+        """Typed stand-in for a concrete ``Model[...]`` subclass.
+"""
 
         ...
 
     class Model_str(PlainModel[str], IsStrContent):
-        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
+        """Typed stand-in for a concrete ``Model[...]`` subclass.
+"""
 
         ...
 
     class Model_bytes(PlainModel[bytes], IsBytesContent):
-        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
+        """Typed stand-in for a concrete ``Model[...]`` subclass.
+"""
 
         ...
 
@@ -79,7 +94,10 @@ if TYPE_CHECKING:
             IsSetContent[_ValT],
             Generic[_ValT],
     ):
-        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
+        """Typed stand-in for a concrete ``Model[...]`` subclass.
+"""
 
         ...
 
@@ -88,7 +106,10 @@ if TYPE_CHECKING:
             IsListContent[_ValT],
             Generic[_ValT],
     ):
-        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
+        """Typed stand-in for a concrete ``Model[...]`` subclass.
+"""
 
         ...
 
@@ -115,7 +136,10 @@ if TYPE_CHECKING:
             IsDictContent[_KeyT, _ValT],
             Generic[_KeyT, _ValT],
     ):
-        """{{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
+        """Typed stand-in for a concrete ``Model[...]`` subclass.
+"""
 
         ...
 

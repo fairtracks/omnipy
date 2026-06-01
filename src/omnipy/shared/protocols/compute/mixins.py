@@ -33,9 +33,15 @@ class IsUniquelyNamedJob(Protocol):
     """Protocol for jobs with stable and regenerated names."""
     @property
     def name(self) -> str:
-        """{{ISUNIQUELYNAMEDJOB_NAME_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISUNIQUELYNAMEDJOB_NAME_SUMMARY}}
+        #
+        # {{ISUNIQUELYNAMEDJOB_NAME_DETAILS}}
+        """Return the configured base name for the job.
 
-        {{ISUNIQUELYNAMEDJOB_NAME_DETAILS}}"""
+        Returns:
+            str: Human-readable name used as the basis for display and registration.
+"""
         ...
 
     @property
@@ -44,18 +50,30 @@ class IsUniquelyNamedJob(Protocol):
 
     @property
     def unique_name(self) -> str:
-        """{{ISUNIQUELYNAMEDJOB_UNIQUE_NAME_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISUNIQUELYNAMEDJOB_UNIQUE_NAME_SUMMARY}}
+        #
+        # {{ISUNIQUELYNAMEDJOB_UNIQUE_NAME_DETAILS}}
+        """Return the generated unique name used to identify the job instance.
 
-        {{ISUNIQUELYNAMEDJOB_UNIQUE_NAME_DETAILS}}"""
+        Returns:
+            str: Unique job identifier suitable for registry lookups and logging.
+"""
         ...
 
     def __init__(self, *args, name: str | None = None):
         ...
 
     def regenerate_unique_name(self) -> None:
-        """{{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY}}
+        #
+        # {{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_DETAILS}}
+        """Regenerate the unique job name from the current base name.
 
-        {{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_DETAILS}}"""
+        Updates the stored unique identifier so later registry entries and log messages use a
+        fresh value.
+"""
         ...
 
 

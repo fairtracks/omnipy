@@ -21,9 +21,15 @@ class FlowContextJobMixin:
 
     @property
     def flow_context(self) -> IsNestedContext:
-        """{{ISFLOW_FLOW_CONTEXT_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFLOW_FLOW_CONTEXT_SUMMARY}}
+        #
+        # {{ISFLOW_FLOW_CONTEXT_DETAILS}}
+        """Return a context manager that enters and exits the shared flow context.
 
-        {{ISFLOW_FLOW_CONTEXT_DETAILS}}"""
+        Returns:
+            IsNestedContext: Context manager that tracks top-level flow execution state.
+"""
         class FlowContext(AbstractContextManager):
             @classmethod
             def __enter__(cls) -> None:  # pyright: ignore [reportIncompatibleMethodOverride]
@@ -45,7 +51,14 @@ class FlowContextJobMixin:
 
     @property
     def time_of_last_run(self) -> datetime | None:
-        """{{ISFLOW_TIME_OF_LAST_RUN_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFLOW_TIME_OF_LAST_RUN_SUMMARY}}
+        #
+        # {{ISFLOW_TIME_OF_LAST_RUN_DETAILS}}
+        """Return the timestamp captured for the most recent top-level flow run.
 
-        {{ISFLOW_TIME_OF_LAST_RUN_DETAILS}}"""
+        Returns:
+            datetime | None: Timestamp from the latest top-level flow run, or ``None`` if the
+                flow has not completed one yet.
+"""
         return self._time_of_last_run

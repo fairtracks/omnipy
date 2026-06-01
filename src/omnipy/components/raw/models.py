@@ -194,7 +194,13 @@ class _SplitParamsBase(ParamsBase):
 class _SplitByCommaParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
-        """{{SPLIT_PARAMS_VARIANT_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SPLIT_PARAMS_VARIANT_SUMMARY}}
+        """Split-parameter variant.
+
+        Attributes:
+            delimiter: Delimiter used when splitting item strings.
+        """
 
         delimiter: str = ','
 
@@ -202,7 +208,13 @@ class _SplitByCommaParamsMixin:
 class _SplitByTabParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
-        """{{SPLIT_PARAMS_VARIANT_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SPLIT_PARAMS_VARIANT_SUMMARY}}
+        """Split-parameter variant.
+
+        Attributes:
+            delimiter: Delimiter used when splitting item strings.
+        """
 
         delimiter: str = '\t'
 
@@ -210,7 +222,13 @@ class _SplitByTabParamsMixin:
 class _SplitByNewlineParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
-        """{{SPLIT_PARAMS_VARIANT_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SPLIT_PARAMS_VARIANT_SUMMARY}}
+        """Split-parameter variant.
+
+        Attributes:
+            delimiter: Delimiter used when splitting item strings.
+        """
 
         delimiter: str = '\n'
 
@@ -380,7 +398,13 @@ def _join_items(model_cls: type[_HasJoinParams], data: list[str]) -> str:
 class _JoinByCommaParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
-        """{{JOIN_PARAMS_VARIANT_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{JOIN_PARAMS_VARIANT_SUMMARY}}
+        """Join-parameter variant.
+
+        Attributes:
+            delimiter: Delimiter used when joining item strings.
+        """
 
         delimiter: str = ','
 
@@ -388,7 +412,13 @@ class _JoinByCommaParamsMixin:
 class _JoinByTabParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
-        """{{JOIN_PARAMS_VARIANT_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{JOIN_PARAMS_VARIANT_SUMMARY}}
+        """Join-parameter variant.
+
+        Attributes:
+            delimiter: Delimiter used when joining item strings.
+        """
 
         delimiter: str = '\t'
 
@@ -396,7 +426,13 @@ class _JoinByTabParamsMixin:
 class _JoinByNewlineParamsMixin:
     @params_dataclass
     class Params(ParamsBase):
-        """{{JOIN_PARAMS_VARIANT_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{JOIN_PARAMS_VARIANT_SUMMARY}}
+        """Join-parameter variant.
+
+        Attributes:
+            delimiter: Delimiter used when joining item strings.
+        """
 
         delimiter: str = '\n'
 

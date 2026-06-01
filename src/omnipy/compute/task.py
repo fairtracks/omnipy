@@ -93,7 +93,16 @@ class TaskTemplateCore(
 def task_template_as_callable_decorator(
     decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsTaskTemplate]) -> \
         Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsTaskTemplate[_CallP, _RetT]]]:
-    """{{TASK_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # {{TASK_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    #
+    # Args:
+    #     decorated_cls: Task-template initializer to adapt.
+    #
+    # Returns:
+    #     A decorator factory that converts a Python callable into a task template.
+    #
+    """Wrap a template initializer as a callable decorator factory.
 
     Args:
         decorated_cls: Task-template initializer to adapt.
@@ -110,7 +119,16 @@ def to_task_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
                             TaskTemplateCore[_CallP, _RetT]]
 ) -> HasFuncArgJobTemplateInit[IsTaskTemplate[_CallP, _RetT], _CallP, _RetT]:
-    """{{TASK_CAST_INIT_PROTOCOL_SUMMARY}}
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # {{TASK_CAST_INIT_PROTOCOL_SUMMARY}}
+    #
+    # Args:
+    #     decorated_cls: Task-template initializer to cast.
+    #
+    # Returns:
+    #     The initializer typed as ``HasFuncArgJobTemplateInit``.
+    #
+    """Cast a template initializer to the shared init protocol.
 
     Args:
         decorated_cls: Task-template initializer to cast.

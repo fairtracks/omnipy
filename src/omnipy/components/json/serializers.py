@@ -20,19 +20,25 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
-        """{{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}
+        """Return the dataset class created during deserialization."""
 
         return JsonDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        """{{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}
+        """Return the file suffix used for serialized dataset members."""
 
         return 'json'
 
     @classmethod
     def serialize(cls, dataset: JsonBaseDataset) -> bytes | memoryview:
-        """{{SERIALIZE_GZIPPED_TAR_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZE_GZIPPED_TAR_SUMMARY}}
+        """Serialize a dataset into a gzipped tar archive."""
         def json_encode_func(json_data: JsonModel) -> bytes:
             return json_data.to_json().encode('utf8')
 
@@ -40,7 +46,9 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> JsonDataset:
-        """{{DESERIALIZE_GZIPPED_TAR_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
+        """Deserialize a gzipped tar archive back into a dataset."""
 
         json_dataset = JsonDataset()
 

@@ -22,19 +22,25 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
-        """{{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}
+        """Return the dataset class created during deserialization."""
 
         return StrictStrDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        """{{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}
+        """Return the file suffix used for serialized dataset members."""
 
         return 'txt'
 
     @classmethod
     def serialize(cls, dataset: StrictStrDataset) -> bytes | memoryview:
-        """{{SERIALIZE_GZIPPED_TAR_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZE_GZIPPED_TAR_SUMMARY}}
+        """Serialize a dataset into a gzipped tar archive."""
         def raw_encode_func(content: str) -> bytes:
             return content.encode('utf8')
 
@@ -42,7 +48,9 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> StrictStrDataset:
-        """{{DESERIALIZE_GZIPPED_TAR_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
+        """Deserialize a gzipped tar archive back into a dataset."""
 
         dataset = StrictStrDataset()
 
@@ -75,19 +83,25 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
-        """{{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}
+        """Return the dataset class created during deserialization."""
 
         return StrictBytesDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        """{{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}
+        """Return the file suffix used for serialized dataset members."""
 
         return 'bytes'
 
     @classmethod
     def serialize(cls, dataset: StrictBytesDataset) -> bytes | memoryview:
-        """{{SERIALIZE_GZIPPED_TAR_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZE_GZIPPED_TAR_SUMMARY}}
+        """Serialize a dataset into a gzipped tar archive."""
         def raw_encode_func(content: bytes) -> bytes:
             return content
 
@@ -95,7 +109,9 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> StrictBytesDataset:
-        """{{DESERIALIZE_GZIPPED_TAR_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
+        """Deserialize a gzipped tar archive back into a dataset."""
 
         dataset = cast(StrictBytesDataset, Dataset[Model[bytes]]())
 

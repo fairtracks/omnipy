@@ -57,33 +57,67 @@ class IsEngine(Protocol):
 
     @classmethod
     def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
-        """{{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
+        #
+        # {{ISENGINE_GET_CONFIG_CLS_DETAILS}}
+        """Return the config class associated with this engine type.
 
-        {{ISENGINE_GET_CONFIG_CLS_DETAILS}}"""
+        Args:
+            cls: Engine subclass whose configuration class is being requested.
+        
+        Returns:
+            Type[IsJobRunnerConfig]: Configuration class used to instantiate engine settings.
+"""
         ...
 
     def set_config(self, config: IsJobRunnerConfig) -> None:
-        """{{ISENGINE_SET_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISENGINE_SET_CONFIG_SUMMARY}}
+        #
+        # {{ISENGINE_SET_CONFIG_DETAILS}}
+        """Replace the active config and refresh config-dependent state.
 
-        {{ISENGINE_SET_CONFIG_DETAILS}}"""
+        Args:
+            config: Runtime configuration object for the engine.
+"""
         ...
 
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
-        """{{ISENGINE_SET_REGISTRY_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISENGINE_SET_REGISTRY_SUMMARY}}
+        #
+        # {{ISENGINE_SET_REGISTRY_DETAILS}}
+        """Attach or clear the run-state registry used for job state reporting.
 
-        {{ISENGINE_SET_REGISTRY_DETAILS}}"""
+        Args:
+            registry: Registry implementation, or ``None`` to disable state reporting.
+"""
         ...
 
     @property
     def config(self) -> IsJobRunnerConfig:
-        """{{ISENGINE_CONFIG_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISENGINE_CONFIG_SUMMARY}}
+        #
+        # {{ISENGINE_CONFIG_DETAILS}}
+        """Return the currently active engine configuration.
 
-        {{ISENGINE_CONFIG_DETAILS}}"""
+        Returns:
+            IsJobRunnerConfig: Active configuration object controlling engine behavior.
+"""
         ...
 
     @property
     def registry(self) -> IsRunStateRegistry | None:
-        """{{ISENGINE_REGISTRY_SUMMARY}}
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISENGINE_REGISTRY_SUMMARY}}
+        #
+        # {{ISENGINE_REGISTRY_DETAILS}}
+        """Return the registry currently used for run-state reporting.
 
-        {{ISENGINE_REGISTRY_DETAILS}}"""
+        Returns:
+            IsRunStateRegistry | None: Registry receiving job-state updates, or ``None`` when
+                state reporting is disabled.
+"""
         ...

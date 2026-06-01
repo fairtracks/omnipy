@@ -23,19 +23,25 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
-        """{{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}
+        """Return the dataset class created during deserialization."""
 
         return PandasDataset
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        """{{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZER_GET_OUTPUT_FILE_SUFFIX_SUMMARY}}
+        """Return the file suffix used for serialized dataset members."""
 
         return 'csv'
 
     @classmethod
     def serialize(cls, dataset: PandasDataset) -> bytes | memoryview:
-        """{{SERIALIZE_GZIPPED_TAR_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{SERIALIZE_GZIPPED_TAR_SUMMARY}}
+        """Serialize a dataset into a gzipped tar archive."""
 
         assert isinstance(dataset, PandasDataset)
 
@@ -48,7 +54,9 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> PandasDataset:
-        """{{DESERIALIZE_GZIPPED_TAR_SUMMARY}}"""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
+        """Deserialize a gzipped tar archive back into a dataset."""
 
         pandas_dataset = PandasDataset()
 
