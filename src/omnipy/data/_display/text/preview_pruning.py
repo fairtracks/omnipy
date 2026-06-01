@@ -103,47 +103,11 @@ def _derive_budget(draft_panel: Any) -> _PanelPreviewBudget:
 
 
 def _content_for_pruning(draft_panel: Any) -> object:
-    model_chain_and_leaf = _model_chain_and_supported_leaf_content(draft_panel)
-    if model_chain_and_leaf is not None:
-        _, leaf_content = model_chain_and_leaf
-        return leaf_content
-
     return draft_panel.content
 
 
 def _content_is_non_debug_model_with_supported_inner_content(draft_panel: Any) -> bool:
     return _model_chain_and_supported_leaf_content(draft_panel) is not None
-
-
-def _model_chain_and_supported_leaf_content(draft_panel: Any) -> tuple[list[Any], object] | None:
-    if getattr(draft_panel.config, 'debug', False):
-        return None
-
-    try:
-        from omnipy.data.model import is_model_instance
-    except Exception:
-        return None
-
-    content = draft_panel.content
-    model_chain: list[Any] = []
-    seen_model_ids: set[int] = set()
-
-    while is_model_instance(content):
-        content_id = id(content)
-        if content_id in seen_model_ids:
-            return None
-
-        seen_model_ids.add(content_id)
-        model_chain.append(content)
-        content = getattr(content, 'content', None)
-
-    if not model_chain:
-        return None
-
-    if not _is_supported_content(content):
-        return None
-
-    return model_chain, content
 
 
 def _is_probe_render_active() -> bool:
@@ -159,8 +123,19 @@ def _set_probe_render_active() -> Any:
         _probe_render_active_ctx_var.reset(token)
 
 
-def _is_supported_content(content: object) -> bool:
-    return isinstance(content, (str, bytes, bytearray, dict, list, tuple))
+def _is_sliceable(content: object) -> bool:
+    try:
+        content[:0]  # type: ignore[operator]
+        return True
+    except (TypeError, KeyError):
+        pass
+    # Mapping-like: has items()
+    try:
+        list(content.items())  # type: ignore[union-attr]
+        return True
+    except (TypeError, AttributeError):
+        pass
+    return False
 
 
 def _build_prunable_chunk_plan(
@@ -170,14 +145,11 @@ def _build_prunable_chunk_plan(
     if budget.width_budget is None and budget.height_budget is None:
         return None
 
-    if not _is_supported_content(content):
-        return None
-
-    if _requires_bounded_width(content) and budget.width_budget is None:
+    if not _is_sliceable(content):
         return None
 
     plan = _build_chunk_plan(content)
-    if plan.total_chunks <= 1:
+    if plan is None or plan.total_chunks <= 1:
         return None
 
     return plan
@@ -187,21 +159,17 @@ def _pruning_skip_reason(content: object, budget: _PanelPreviewBudget) -> str:
     if budget.width_budget is None and budget.height_budget is None:
         return 'unbounded width and height budget'
 
-    if not _is_supported_content(content):
-        return f'unsupported content type {type(content)!r}'
-
-    if _requires_bounded_width(content) and budget.width_budget is None:
-        return 'unbounded width for sequence/mapping content'
+    if not _is_sliceable(content):
+        return f'unsupported (not sliceable) content type {type(content)!r}'
 
     plan = _build_chunk_plan(content)
+    if plan is None:
+        return 'unsupported content type for chunking'
     if plan.total_chunks <= 1:
         return 'content already within one chunk'
 
     return 'unknown reason'
 
-
-def _requires_bounded_width(content: object) -> bool:
-    return not isinstance(content, (str, bytes, bytearray))
 
 
 def _cached_panel_if_any(
@@ -254,7 +222,7 @@ def _compute_prefix_size_fail_open(
         memo.active_object_ids.discard(object_id)
 
 
-def _build_chunk_plan(content: object) -> _ChunkPlan:
+def _build_chunk_plan(content: object) -> _ChunkPlan | None:
     if isinstance(content, str):
         chunks = _chunk_str(content)
         return _ChunkPlan(total_chunks=len(chunks), prefix_builder=lambda n: ''.join(chunks[:n]))
@@ -267,20 +235,25 @@ def _build_chunk_plan(content: object) -> _ChunkPlan:
             prefix_builder=lambda n: _restore_bytes_type(content, b''.join(chunks[:n])),
         )
 
-    if isinstance(content, dict):
-        items = list(content.items())
+    # Duck-typing: try sequence-like (supports len and slicing)
+    try:
+        total = len(content)  # type: ignore[arg-type]
+        content[:0]  # type: ignore[operator]
+        return _ChunkPlan(total_chunks=total, prefix_builder=lambda n: content[:n])  # type: ignore[operator]
+    except (TypeError, KeyError):
+        pass
+
+    # Duck-typing: try mapping-like (supports items())
+    try:
+        items = list(content.items())  # type: ignore[union-attr]
         return _ChunkPlan(
             total_chunks=len(items),
-            prefix_builder=lambda n: type(content)(items[:n]),
+            prefix_builder=lambda n: type(content)(items[:n]),  # type: ignore[arg-type]
         )
+    except (TypeError, AttributeError):
+        pass
 
-    if isinstance(content, list):
-        return _ChunkPlan(total_chunks=len(content), prefix_builder=lambda n: content[:n])
-
-    if isinstance(content, tuple):
-        return _ChunkPlan(total_chunks=len(content), prefix_builder=lambda n: content[:n])
-
-    raise TypeError(f'Unsupported content type: {type(content)!r}')
+    return None
 
 
 def _chunk_str(text: str) -> list[str]:
@@ -311,19 +284,6 @@ def _restore_bytes_type(original: object, value: bytes) -> bytes | bytearray:
 
 def _panel_with_prefix(draft_panel: Any, plan: _ChunkPlan, prefix_size: int) -> Any:
     prefix_content = plan.prefix_builder(prefix_size)
-
-    model_chain_and_leaf = _model_chain_and_supported_leaf_content(draft_panel)
-    if model_chain_and_leaf is not None:
-        model_chain, _ = model_chain_and_leaf
-
-        updated_content = prefix_content
-        for model in reversed(model_chain):
-            model_copy = model.copy(deep=False)
-            model_copy.content = updated_content
-            updated_content = model_copy
-
-        return draft_panel.create_modified_copy(content=updated_content)
-
     return draft_panel.create_modified_copy(content=prefix_content)
 
 

@@ -31,6 +31,19 @@ class _FakeDraftPanel:
         )
 
 
+class _SliceableListWrapper:
+    def __init__(self, data: list[object]) -> None:
+        self._data = data
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __getitem__(self, key: slice | int) -> object:
+        if isinstance(key, slice):
+            return _SliceableListWrapper(self._data[key])
+        return self._data[key]
+
+
 def test_sequence_rendered_prefix_superset_stops_at_viewport() -> None:
     content = [f'item-{i}' for i in range(20)]
     panel = _FakeDraftPanel(
@@ -110,8 +123,8 @@ def test_probe_caps_and_fallback() -> None:
         max_probe_items=16,
     )
 
-    assert unbounded_result is unbounded_width_panel
-    assert probe_calls == 0
+    assert unbounded_result is not unbounded_width_panel
+    assert probe_calls > 0
 
     bounded_result = _maybe_prune_draft_panel(
         bounded_width_panel,
@@ -246,3 +259,19 @@ def test_json_model_with_nested_model_wrapper_is_prunable() -> None:
     pruned_data = pruned_panel.content.to_data()
     assert isinstance(pruned_data, list)
     assert len(pruned_data) == 4
+
+
+def test_duck_typed_sliceable_content_is_prunable() -> None:
+    panel = DraftPanel(
+        _SliceableListWrapper(list(range(1000))),
+        frame=Frame(Dimensions(width=20, height=4)),
+    )
+
+    def _probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
+        assert isinstance(prefix_panel.content, _SliceableListWrapper)
+        return 10, len(prefix_panel.content)
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert isinstance(pruned_panel.content, _SliceableListWrapper)
+    assert len(pruned_panel.content) == 4
