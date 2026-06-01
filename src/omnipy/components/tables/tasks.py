@@ -64,6 +64,9 @@ def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
         dataset: Dataset of row-wise tables with column names.
         exclude_cols: Column names to keep shared across all transposed rows.
 
+    Returns:
+        A JSON dataset whose top-level items are former column names.
+
     """
     output_dataset = JsonListOfDictsDataset()
 

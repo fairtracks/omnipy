@@ -135,6 +135,12 @@ class Dataset(
     Attributes:
         data: Mapping from data-file names to validated model or nested dataset instances.
 
+    Example:
+        >>> from omnipy.data.model import Model
+        >>> Numbers = Dataset[Model[int]]
+        >>> Numbers({'one': 1}).to_data()
+        {'one': 1}
+
     """
     class Config:
         """Configure Pydantic behavior for dataset instances.
