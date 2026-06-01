@@ -6,7 +6,6 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-_DEFAULT_MAX_PROBE_ITEMS = 1024
 _DEFAULT_STRING_CHUNK_SIZE = 256
 _DEFAULT_WIDTH_STABILIZATION_WINDOW = 2
 
@@ -48,7 +47,6 @@ def _maybe_prune_draft_panel(
     *,
     probe_render: Callable[[Any], tuple[int, int]],
     memo: _PreviewPruningMemo | None = None,
-    max_probe_items: int = _DEFAULT_MAX_PROBE_ITEMS,
     width_stabilization_window: int = _DEFAULT_WIDTH_STABILIZATION_WINDOW,
 ) -> Any:
     if _is_probe_render_active():
@@ -69,7 +67,6 @@ def _maybe_prune_draft_panel(
     panel_key = _panel_cache_key(
         draft_panel=draft_panel,
         budget=budget,
-        max_probe_items=max_probe_items,
         width_stabilization_window=width_stabilization_window,
     )
     cached_panel = _cached_panel_if_any(draft_panel, memo, panel_key, plan)
@@ -83,7 +80,6 @@ def _maybe_prune_draft_panel(
         plan=plan,
         probe_render=probe_render,
         memo=memo,
-        max_probe_items=max_probe_items,
         width_stabilization_window=width_stabilization_window,
     )
 
@@ -199,7 +195,6 @@ def _compute_prefix_size_fail_open(
     plan: _ChunkPlan,
     probe_render: Callable[[Any], tuple[int, int]],
     memo: _PreviewPruningMemo,
-    max_probe_items: int,
     width_stabilization_window: int,
 ) -> int | None:
     object_id = id(prunable_content)
@@ -215,7 +210,6 @@ def _compute_prefix_size_fail_open(
             plan=plan,
             probe_render=probe_render,
             memo=memo,
-            max_probe_items=max_probe_items,
             width_stabilization_window=width_stabilization_window,
         )
     except Exception:
@@ -305,10 +299,10 @@ def _find_prefix_size(
     plan: _ChunkPlan,
     probe_render: Callable[[Any], tuple[int, int]],
     memo: _PreviewPruningMemo,
-    max_probe_items: int,
     width_stabilization_window: int,
 ) -> int | None:
-    cap = min(max_probe_items, plan.total_chunks)
+    viewport_cap = (budget.width_budget or 1) * (budget.height_budget or 1) + 1
+    cap = min(viewport_cap, plan.total_chunks)
     if cap <= 0:
         return None
 
@@ -478,7 +472,6 @@ def _panel_cache_key(
     *,
     draft_panel: Any,
     budget: _PanelPreviewBudget,
-    max_probe_items: int,
     width_stabilization_window: int,
 ) -> tuple[int, _PanelPreviewBudget, int, int, int, int, int]:
     config_hash = hash(draft_panel.config)
@@ -489,7 +482,6 @@ def _panel_cache_key(
         hash(draft_panel.frame),
         config_hash,
         printer_hash,
-        max_probe_items,
         width_stabilization_window,
     )
 

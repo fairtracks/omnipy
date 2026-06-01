@@ -120,7 +120,6 @@ def test_probe_caps_and_fallback() -> None:
     unbounded_result = _maybe_prune_draft_panel(
         unbounded_width_panel,
         probe_render=_unstable_probe_render,
-        max_probe_items=16,
     )
 
     assert unbounded_result is not unbounded_width_panel
@@ -129,12 +128,11 @@ def test_probe_caps_and_fallback() -> None:
     bounded_result = _maybe_prune_draft_panel(
         bounded_width_panel,
         probe_render=_unstable_probe_render,
-        max_probe_items=16,
     )
 
     assert bounded_result is bounded_width_panel
     assert probe_calls > 0
-    assert max(unstable_probe_sizes) <= 16
+    assert max(unstable_probe_sizes) <= 21
 
     binary_search_probe_sizes: list[int] = []
 
@@ -152,10 +150,9 @@ def test_probe_caps_and_fallback() -> None:
             frame=Frame(Dimensions(width=20, height=None)),
         ),
         probe_render=_binary_search_probe_render,
-        max_probe_items=16,
     )
 
-    assert max(binary_search_probe_sizes) <= 16
+    assert max(binary_search_probe_sizes) <= 21
 
 
 def test_probe_cache_effectiveness() -> None:

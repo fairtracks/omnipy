@@ -1125,7 +1125,7 @@ def test_pretty_repr_preview_pruning_fail_open_for_recursive_cycle_content(
     assert cyclic_touched_count > acyclic_touched_count
 
 
-def test_pretty_repr_preview_pruning_fail_open_when_width_unstable_at_probe_cap(
+def test_pretty_repr_preview_pruning_prunes_growing_width_items(
         monkeypatch: pytest.MonkeyPatch) -> None:
     class _GrowingWidthItem:
         touched_indices: set[int] = set()
@@ -1144,18 +1144,7 @@ def test_pretty_repr_preview_pruning_fail_open_when_width_unstable_at_probe_cap(
         config=OutputConfig(printer=PrettyPrinterLib.RICH, freedom=0),
     )
 
-    original_maybe_prune = getattr(preview_pruning_module, '_maybe_prune_draft_panel')
-
-    def _small_probe_cap_maybe_prune(draft_panel, *, probe_render, memo):
-        return original_maybe_prune(
-            draft_panel,
-            probe_render=probe_render,
-            memo=memo,
-            max_probe_items=8,
-        )
-
-    monkeypatch.setattr(pretty_module, '_maybe_prune_draft_panel', _small_probe_cap_maybe_prune)
-
     pretty_repr_of_draft_output(panel)
 
-    assert max(_GrowingWidthItem.touched_indices) == len(content) - 1
+    # Pruning should mean not all items are rendered
+    assert max(_GrowingWidthItem.touched_indices) < len(content) - 1
