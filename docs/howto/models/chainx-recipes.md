@@ -10,7 +10,7 @@
 ```pycon exec="1" source="console"
 >>> import omnipy as om
 >>> tsv = "a\tb\n1\t2\n3\t4\n"
->>> om.TsvTableModel(tsv).content
+>>> om.TsvTableModel(tsv)
 ```
 
 ## Recipe: follow with typed row conversion
@@ -21,7 +21,7 @@
 >>> class Row(pyd.v1.BaseModel):
 ...     a: int
 ...     b: int
->>> om.Model[list[Row]](om.TsvTableModel("a\tb\n1\t2\n").content).content
+>>> om.Model[list[Row]](om.TsvTableModel("a\tb\n1\t2\n"))
 ```
 
 ## When to switch to compute flows

@@ -19,7 +19,7 @@ Omnipy models and datasets expose a shared display surface: `peek()`, `full()`, 
 ```pycon exec="1" source="console"
 >>> import omnipy as om
 >>> m = om.Model[dict[str, list[int]]]({'a': [1, 2], 'b': [3, 4]})
->>> m.content
+>>> m
 ```
 
 ## 4) Output / display

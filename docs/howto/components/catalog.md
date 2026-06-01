@@ -65,16 +65,16 @@ pipeline data structures.
 >>> SplitToLinesModel = om.SplitToLinesModel
 >>> HttpUrlModel = om.HttpUrlModel
 >>> TsvTableModel = om.TsvTableModel
->>> NotIterableExceptStrOrBytesModel('abc').content
+>>> NotIterableExceptStrOrBytesModel('abc')
 'abc'
->>> JsonListOfDictsModel([{'id': 's1'}]).content
+>>> JsonListOfDictsModel([{'id': 's1'}])
 [{'id': 's1'}]
 >>> NestedDataset({'group': {'value': 1}}).json()
 {'group': {'value': 1}}
->>> SplitToLinesModel('a\nb').content
+>>> SplitToLinesModel('a\nb')
 ['a', 'b']
->>> HttpUrlModel('https://example.org/api').content
+>>> HttpUrlModel('https://example.org/api')
 'https://example.org/api'
->>> TsvTableModel('a\tb\n1\t2\n').content
+>>> TsvTableModel('a\tb\n1\t2\n')
 [{'a': '1', 'b': '2'}]
 ```

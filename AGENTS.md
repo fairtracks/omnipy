@@ -58,7 +58,7 @@ Code examples in docs/ pages follow these rules:
   runtime setup (e.g. `runtime.config.data.model.interactive = False`) behind
   markdown-exec setup blocks so the reader sees only relevant code and output.
 
-- **Display output**: Use `.json()` to show JSON-rendered content, `.content`
-  to show stored data. Use `.peek(debug=True)` only for in-depth technical
+- **Display output**: Use `._docs()` as the default and, in addition, `.content`
+  to show stored data if there is a particular need for that. Use `.peek(debug=True)` only for in-depth technical
   explanations of model internals. Avoid `.to_data()` unless documenting that
   method itself.

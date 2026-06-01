@@ -18,7 +18,7 @@
 ```pycon exec="1" source="console"
 >>> import omnipy as om
 >>> table = om.JsonListOfDictsModel([{'id': 'a', 'x': 1}, {'id': 'b', 'x': 3}])
->>> table.to(om.PandasModel).content
+>>> table.to(om.PandasModel)
 ```
 
 ## Chaining conversions

@@ -11,7 +11,7 @@
 
 ```pycon exec="1" source="console"
 >>> import omnipy as om
->>> om.Model[list[int]](['1', 2, 3.0]).content
+>>> om.Model[list[int]](['1', 2, 3.0])
 ```
 
 ### Add custom normalization with `_parse_data`
@@ -24,7 +24,7 @@
 ...         if isinstance(data, tuple):
 ...             data = list(data)
 ...         return data
->>> IntListFromAnything(('1', 2, 3.0)).content
+>>> IntListFromAnything(('1', 2, 3.0))
 ```
 
 ## Guidance

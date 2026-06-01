@@ -25,7 +25,7 @@ Use a typed model at the boundary where untrusted model output enters your syste
 >>> class LlmAnswer(pyd.v1.BaseModel):
 ...     title: str
 ...     score: int
->>> om.Model[LlmAnswer]({'title': 'Candidate A', 'score': '7'}).content
+>>> om.Model[LlmAnswer]({'title': 'Candidate A', 'score': '7'})
 {'title': 'Candidate A', 'score': 7}
 ```
 
@@ -71,7 +71,7 @@ When input quality varies, start permissive and normalize first.
 >>> class ParsedAnswer(pyd.v1.BaseModel):
 ...     score: int
 ...     approved: bool
->>> om.Model[ParsedAnswer]({'score': '7', 'approved': 'true'}).content
+>>> om.Model[ParsedAnswer]({'score': '7', 'approved': 'true'})
 {'score': 7, 'approved': True}
 ```
 
@@ -90,10 +90,10 @@ raw_answers = [
     {'id': 'a3', 'score': '5', 'approved': 'true'},
 ]
 
-cleaned_answers = [om.Model[ParsedAnswer](answer).content for answer in raw_answers]
+cleaned_answers = [om.Model[ParsedAnswer](answer) for answer in raw_answers]
 
 table = om.JsonListOfDictsModel(cleaned_answers).to(om.RowWiseTableWithColNamesModel).to(om.PandasModel)
-table.content
+table
 ```
 
 This pattern keeps AI output handling composable: parse at the boundary, then use familiar
@@ -132,7 +132,7 @@ def repair_and_parse_llm_answer(payload: dict[str, object]) -> dict[str, object]
         'title': str(payload.get('title', '')).strip(),
         'score': int(payload.get('score', 0)),
     }
-    return om.Model[StrictLlmAnswer](normalized_payload).content
+    return om.Model[StrictLlmAnswer](normalized_payload)
 ```
 
 Typical repair actions:
@@ -176,11 +176,11 @@ def repair_payload(payload: dict[str, object]) -> dict[str, object]:
 
 
 # 3) strict parse
-cleaned = om.Model[YourSchema](repair_payload.run(raw_payload)).content
+cleaned = om.Model[YourSchema](repair_payload.run(raw_payload))
 
 
 # 4) batch -> table
-records = [om.Model[YourSchema](repair_payload.run(item)).content for item in raw_items]
+records = [om.Model[YourSchema](repair_payload.run(item)) for item in raw_items]
 table = om.JsonListOfDictsModel(records).to(om.RowWiseTableWithColNamesModel).to(om.PandasModel)
 
 

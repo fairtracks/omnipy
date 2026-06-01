@@ -26,7 +26,7 @@
 ...     start: int
 ...     end: int
 ...     name: str | None = None
->>> om.Model[BedRow]({'chrom': 'chr1', 'start': '10', 'end': 20}).content
+>>> om.Model[BedRow]({'chrom': 'chr1', 'start': '10', 'end': 20})
 ```
 
 ## Trust-builder note

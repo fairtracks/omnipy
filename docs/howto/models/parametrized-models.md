@@ -17,7 +17,7 @@
 
 ```pycon exec="1" source="console"
 >>> import omnipy as om
->>> om.Model[list[str]]([1, '2', 3]).content
+>>> om.Model[list[str]]([1, '2', 3])
 ```
 
 ## Current limitations

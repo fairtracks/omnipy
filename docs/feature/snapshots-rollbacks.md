@@ -25,7 +25,7 @@ mutations.
 ...     xs.append('oops')
 ... except Exception as err:
 ...     print(type(err).__name__)
->>> xs.content
+>>> xs
 ```
 
 ## 4) Output / display

@@ -21,7 +21,7 @@ Omnipy models also mimic the behavior of the wrapped type (for example, list met
 >>> import omnipy as om
 >>> vals = om.Model[list[int]]((1, '2', 3.0))
 >>> vals.append('4')
->>> vals.content
+>>> vals
 ```
 
 ## 4) Output / display

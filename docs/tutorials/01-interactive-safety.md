@@ -29,12 +29,12 @@ Omnipy models continuously validate data and type-mimic the wrapped Python type.
 ## Error + rollback demonstration
 
 ```pycon exec="1" session="tutorial1" source="console"
->>> before_error = readings.content.copy()
+>>> before_error = readings.copy()
 >>> try:
 ...     readings.append('bonus-ticket')
 ... except Exception as err:
 ...     print(type(err).__name__)
->>> after_error = readings.content
+>>> after_error = readings
 >>> print(before_error == after_error)
 >>> readings
 ```

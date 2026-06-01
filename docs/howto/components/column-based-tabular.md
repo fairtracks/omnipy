@@ -18,9 +18,9 @@ validation in the flow.
 ...     'sample': ['s1', 's2'],
 ...     'count': [10, 20],
 ... })
->>> columnar.content
+>>> columnar
 {'sample': ['s1', 's2'], 'count': [10, 20]}
->>> columnar.to(om.RowWiseTableWithColNamesModel).content
+>>> columnar.to(om.RowWiseTableWithColNamesModel)
 [{"sample": "s1", "count": 10}, {"sample": "s2", "count": 20}]
 ```
 
@@ -34,18 +34,18 @@ validation in the flow.
 ...     count: int
 >>> om.runtime.config.data.model.interactive = True
 >>> columnar = om.ColumnWiseTableWithColNamesModel({'sample': ['s1', 's2'], 'count': ['10', '20']})
->>> typed_rows = om.Model[list[Row]](columnar.to(om.RowWiseTableWithColNamesModel).content)
->>> typed_rows.content
+>>> typed_rows = om.Model[list[Row]](columnar.to(om.RowWiseTableWithColNamesModel))
+>>> typed_rows
 [{"sample": "s1", "count": 10}, {"sample": "s2", "count": 20}]
 >>> typed_rows[0] = {'sample': 's1', 'count': '11'}
->>> typed_rows.content
+>>> typed_rows
 [{"sample": "s1", "count": 11}, {"sample": "s2", "count": 20}]
 >>> try:
 ...     typed_rows[0] = {'sample': 's1', 'count': 'bad'}
 ... except Exception as exc:
 ...     type(exc).__name__
 'ValidationError'
->>> typed_rows.content
+>>> typed_rows
 [{"sample": "s1", "count": 11}, {"sample": "s2", "count": 20}]
 >>> om.runtime.config.data.model.interactive = False
 ```
