@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-yaml
         types: [ yaml ]
@@ -10,7 +10,7 @@ repos:
       - id: check-ast
         types: [ python ]
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.23
+    rev: v0.25
     hooks:
       - id: validate-pyproject
         name: Validate pyproject.toml
@@ -31,7 +31,7 @@ repos:
         stages: [ manual ]
         types: [ python ]
   - repo: https://github.com/pycqa/isort
-    rev: 6.0.0
+    rev: 9.0.0a3
     hooks:
       - id: isort
         name: isort
@@ -43,7 +43,7 @@ repos:
         stages: [ manual ]
         types: [ python ]
   - repo: https://github.com/pycqa/flake8
-    rev: 7.1.2
+    rev: 7.3.0
     hooks:
       - id: flake8
         additional_dependencies: [flake8-quotes==3.3.2]
