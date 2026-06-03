@@ -741,6 +741,8 @@ class IsItemSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
         S.count(value) -> integer -- return number of occurrences of value
         """
         raise AssumedToBeImplementedException
+
+    def __contains__(self, value: object, /) -> bool: raise AssumedToBeImplementedException
     def __iter__(self) -> Iterator[_T_co]: raise AssumedToBeImplementedException
     def __reversed__(self) -> Iterator[_T_co]: raise AssumedToBeImplementedException
 
