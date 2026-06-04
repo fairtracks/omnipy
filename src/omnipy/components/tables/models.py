@@ -1,9 +1,10 @@
 from abc import abstractmethod
 from collections.abc import Iterator, Mapping
 from copy import copy
+import warnings
 from typing import Callable, cast, Generic, get_args, overload, Protocol, Sized, TypeAlias
 
-from typing_extensions import NamedTuple, override, TypeVar
+from typing_extensions import NamedTuple, override, Self, TypeVar
 
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import (is_model_instance,
@@ -55,11 +56,84 @@ if TYPE_CHECKING:
             IsItemSequenceLike[ItemT],
             Generic[ColumnT, ItemT],
     ):
+        _require_explicit_concat_backend: bool
+
+        @classmethod
+        def _concat_column_values(cls, left: ColumnT, right: ColumnT) -> ColumnT | None:
+            ...
+
+        def __add__(self, other: object) -> Self:
+            ...
+
+        def __radd__(self, other: object) -> Self:
+            ...
+
+        def __iadd__(self, other: object) -> Self:
+            ...
+
         ...
 else:
 
     class ColumnModel(Model[ColumnT], Generic[ColumnT, ItemT]):
-        ...
+        _require_explicit_concat_backend = False
+        _concat_fallback_warning_emitted_for: set[type['ColumnModel']] = set()
+
+        @classmethod
+        def _concat_column_values(cls, left: ColumnT, right: ColumnT) -> ColumnT | None:
+            return None
+
+        @staticmethod
+        def _column_values_to_list(values: IsItemSequenceLike[ItemT]) -> list[ItemT]:
+            return [values[i] for i in range(len(values))]
+
+        @classmethod
+        def _concat_column_values_with_fallback(cls, left: ColumnT, right: ColumnT) -> ColumnT:
+            backend_concat = cls._concat_column_values(left, right)
+            if backend_concat is not None:
+                return backend_concat
+
+            if cls._require_explicit_concat_backend:
+                raise TypeError(
+                    f'No concat backend configured for {cls.__name__}; '
+                    'define _concat_column_values() for this ColumnModel subclass')
+
+            if cls not in cls._concat_fallback_warning_emitted_for:
+                warnings.warn(
+                    f'{cls.__name__} is using a generic concat fallback; '
+                    'define _concat_column_values() for better performance',
+                    UserWarning,
+                    stacklevel=2,
+                )
+                cls._concat_fallback_warning_emitted_for.add(cls)
+
+            combined_items = cls._column_values_to_list(left) + cls._column_values_to_list(right)
+
+            try:
+                return cls(combined_items).content
+            except (TypeError, ValueError, ValidationError) as exc:
+                raise TypeError(
+                    f'Unable to apply concat fallback for {cls.__name__}; '
+                    'define _concat_column_values() for this ColumnModel subclass') from exc
+
+        @staticmethod
+        def _as_same_column_model(other: object, output_cls: type[Self]) -> Self:
+            return output_cls(other)
+
+        def __add__(self, other: object) -> Self:
+            other_col = self._as_same_column_model(other, self.__class__)
+            return self.__class__(
+                self.__class__._concat_column_values_with_fallback(self.content, other_col.content))
+
+        def __radd__(self, other: object) -> Self:
+            other_col = self._as_same_column_model(other, self.__class__)
+            return self.__class__(
+                self.__class__._concat_column_values_with_fallback(other_col.content, self.content))
+
+        def __iadd__(self, other: object) -> Self:
+            other_col = self._as_same_column_model(other, self.__class__)
+            self.content = self.__class__._concat_column_values_with_fallback(self.content,
+                                                                              other_col.content)
+            return self
 
 
 class JsonScalarColumnModel(ColumnModel[list[JsonScalar], JsonScalar]):

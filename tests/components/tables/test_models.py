@@ -7,6 +7,7 @@ import pytest_cases as pc
 from omnipy.components.json.typedefs import JsonDictOfScalars, JsonListOfScalars, JsonScalar
 # from omnipy.components.tables.models import JsonMaxLevel2ColumnWiseTableWithColNamesModel,
 from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
+                                             ColumnModel,
                                              CsvTableModel,
                                              CsvTableOfPydanticRecordsModel,
                                              IteratingPydanticRecordsModel,
@@ -767,6 +768,27 @@ def test_json_scalar_column_model(column_data: list[object]) -> None:
 def test_fail_json_scalar_column_model_invalid_input() -> None:
     with pytest.raises(ValidationError):
         JsonScalarColumnModel([1 + 2j])  # complex numbers are not JsonScalar
+
+
+def test_column_model_concat_fallback_warns_for_non_list_content() -> None:
+    class TupleColumnModel(ColumnModel[tuple[int, ...], int]):
+        ...
+
+    left = TupleColumnModel((1, 2))
+    right = TupleColumnModel((3, ))
+
+    with pytest.warns(UserWarning, match='concat fallback'):
+        concatenated = left + right
+
+    assert concatenated.content == (1, 2, 3)
+
+
+def test_column_model_concat_requires_backend_when_strict() -> None:
+    class StrictTupleColumnModel(ColumnModel[tuple[int, ...], int]):
+        _require_explicit_concat_backend = True
+
+    with pytest.raises(TypeError, match='concat backend'):
+        StrictTupleColumnModel((1, )) + StrictTupleColumnModel((2, ))
 
 
 def test_json_max_level1_column_model_accepts_scalars_dicts_and_lists() -> None:
