@@ -926,6 +926,7 @@ class IsValuesView(IsMappingView, Collection[_VT_co], Protocol[_VT_co]):
 
 
 # class Mapping(Collection[_KT], Generic[_KT, _VT_co]):
+@runtime_checkable
 class IsMapping(Collection[_KT], Protocol[_KT, _VT_co]):  # type: ignore[misc]
     """Protocol with the same interface as the abstract class `typing.Mapping`.
 

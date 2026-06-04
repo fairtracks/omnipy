@@ -1,4 +1,4 @@
-from typing import overload, Protocol, SupportsIndex
+from typing import overload, Protocol, runtime_checkable, SupportsIndex
 
 from typing_extensions import TypeVar
 
@@ -7,6 +7,7 @@ from omnipy.shared.exceptions import AssumedToBeImplementedException
 _T_co = TypeVar('_T_co', covariant=True)
 
 
+@runtime_checkable
 class IsItemSequenceLike(Protocol[_T_co]):
     """Minimal sequence-like protocol for item containers.
 

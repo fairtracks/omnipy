@@ -4,7 +4,7 @@ from typing import Annotated, Any, Callable, cast
 import pytest
 import pytest_cases as pc
 
-from omnipy.components.json.typedefs import JsonScalar
+from omnipy.components.json.typedefs import JsonDictOfScalars, JsonListOfScalars, JsonScalar
 # from omnipy.components.tables.models import JsonMaxLevel2ColumnWiseTableWithColNamesModel,
 from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
                                              CsvTableModel,
@@ -293,25 +293,23 @@ def test_pydantic_record_model_all_required() -> None:
         NameRecordModel(firstname='Tarzan')
 
 
-@pytest.fixture
-def IteratingPersonModel() -> type[IteratingPydanticRecordsModel]:
-    class PersonRecord(pyd.BaseModel):
-        firstname: str
-        lastname: str | None = ...  # type: ignore[assignment]
-        age: int
-        deceased: bool = False
-
-    class IteratingPersonModel(
-            IteratingPydanticRecordsModel[PersonRecord,
-                                          JsonScalarColumnWiseTableWithColNamesModel]):
-        pass
-
-    return IteratingPersonModel
+class PersonRecord(pyd.BaseModel):
+    firstname: str
+    lastname: str | None = ...  # type: ignore[assignment]
+    age: int
+    deceased: bool = False
 
 
-def test_iterating_pydantic_record_model_column_wise_data(
-        IteratingPersonModel: Annotated[type[IteratingPydanticRecordsModel],
-                                        pytest.fixture]) -> None:
+class IteratingPersonModel(IteratingPydanticRecordsModel[
+        PersonRecord,
+        JsonScalarColumnWiseTableWithColNamesModel,
+        JsonScalarColumnModel,
+        JsonScalar,
+]):
+    pass
+
+
+def test_iterating_pydantic_record_model_column_wise_data() -> None:
     persons = IteratingPersonModel(
         firstname=['John', 'Jane', 'Tarzan'],
         lastname=['Doe', 'Doe', None],
@@ -342,16 +340,12 @@ def test_iterating_pydantic_record_model_column_wise_data(
     assert empty_persons.to_data() == {'firstname': [], 'lastname': [], 'age': []}
 
 
-def test_iterating_pydantic_record_model_header_info_tracks_output_type(
-        IteratingPersonModel: Annotated[type[IteratingPydanticRecordsModel],
-                                        pytest.fixture]) -> None:
+def test_iterating_pydantic_record_model_header_info_tracks_output_type() -> None:
     header_info = cast(Any, IteratingPersonModel).header_info
     assert header_info.data_with_col_names_type is JsonScalarColumnWiseTableWithColNamesModel
 
 
-def test_iterating_pydantic_record_model_model_instance_input_uses_content_type(
-        IteratingPersonModel: Annotated[type[IteratingPydanticRecordsModel],
-                                        pytest.fixture]) -> None:
+def test_iterating_pydantic_record_model_model_instance_input_uses_content_type() -> None:
     source_data = JsonScalarColumnWiseTableWithColNamesModel(
         firstname=['John', 'Jane'],
         lastname=['Doe', 'Doe'],
@@ -376,7 +370,9 @@ def test_iterating_pydantic_record_model_row_wise_uses_declared_output_type() ->
 
     class IteratingPersonMaxLevel1Model(
             IteratingPydanticRecordsModel[MaxLevel1PersonRecord,
-                                          JsonMaxLevel1ColumnWiseTableWithColNamesModel]):
+                                          JsonMaxLevel1ColumnWiseTableWithColNamesModel,
+                                          JsonMaxLevel1ColumnModel,
+                                          JsonScalar | JsonDictOfScalars | JsonListOfScalars]):
         pass
 
     persons = IteratingPersonMaxLevel1Model([
@@ -392,8 +388,7 @@ def test_iterating_pydantic_record_model_row_wise_uses_declared_output_type() ->
 
 
 def test_iterating_pydantic_record_model_row_wise_data(
-    # runtime: Annotated[IsRuntime, pytest.fixture],
-    IteratingPersonModel: Annotated[type[IteratingPydanticRecordsModel], pytest.fixture]
+        # runtime: Annotated[IsRuntime, pytest.fixture],
 ) -> None:
     persons = IteratingPersonModel([
         ['John', 'Doe', '30'],
