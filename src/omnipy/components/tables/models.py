@@ -18,7 +18,8 @@ from omnipy.shared.protocols.content import (IsDictOfDictsContent,
                                              IsListOfListsContent,
                                              SupportsKeysAndGetItem)
 from omnipy.shared.protocols.data import HasContent
-from omnipy.shared.protocols.typing import IsLightSequenceNotStrBytes, IsMapping
+from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
+from omnipy.shared.protocols.typing import IsMapping
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import first_key_in_mapping
 from omnipy.util.pydantic import ValidationError
@@ -46,7 +47,7 @@ if TYPE_CHECKING:
 
     class ColumnModel(
             PlainModel[ColumnT],
-            IsLightSequenceNotStrBytes[ItemT],
+            IsItemSequenceLike[ItemT],
             Generic[ColumnT, ItemT],
     ):
         ...

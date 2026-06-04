@@ -88,7 +88,7 @@ if sys.version_info >= (3, 14):
 from omnipy.shared.exceptions import AssumedToBeImplementedException
 from omnipy.shared.protocols._collections_abc import IsDictItems, IsDictKeys, IsDictValues
 from omnipy.shared.protocols._typeshed import (ReadableBuffer, SupportsKeysAndGetItem, SupportsRichComparison, SupportsRichComparisonT)
-from omnipy.shared.protocols.typing import (IsAbstractSet, IsMutableMapping, IsMutableSequence, IsMutableSet, IsSequenceNotStrBytes)
+from omnipy.shared.protocols.typing import (IsAbstractSet, IsMutableMapping, IsMutableSequence, IsMutableSet, IsItemSequence)
 
 _T = TypeVar("_T")
 # _I = TypeVar("_I", default=int)
@@ -520,7 +520,7 @@ class _TranslateTable(Protocol):
 
 # @disjoint_base
 # class str(Sequence[str]):
-class IsStr(IsSequenceNotStrBytes[str], Protocol):
+class IsStr(IsItemSequence[str], Protocol):
     """Protocol with the same interface as the builtin class `str`.
     """
     # @overload
@@ -838,7 +838,7 @@ class IsStr(IsSequenceNotStrBytes[str], Protocol):
 
 # @disjoint_base
 # class bytes(Sequence[int]):
-class IsBytes(IsSequenceNotStrBytes[int], Protocol):
+class IsBytes(IsItemSequence[int], Protocol):
     """Protocol with the same interface as the builtin class `bytes`.
     """
 
@@ -1306,7 +1306,7 @@ class IsBool(IsInt, Protocol):
 
 # @disjoint_base
 # class tuple(Sequence[_T_co]):
-class IsTuple(IsSequenceNotStrBytes[_T_co], Protocol[_T_co]):  # type: ignore[misc]
+class IsTuple(IsItemSequence[_T_co], Protocol[_T_co]):  # type: ignore[misc]
     """Protocol with the same interface as the builtin class `tuple`.
     """
     # def __new__(cls, iterable: Iterable[_T_co] = (), /) -> Self: ...

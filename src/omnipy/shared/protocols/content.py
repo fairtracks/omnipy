@@ -18,16 +18,14 @@ from omnipy.shared.protocols.builtins import (_NegativeInteger,
                                               IsSet,
                                               IsStr,
                                               IsTuple)
-from omnipy.shared.protocols.typing import (IsAbstractSet,
-                                            IsHashable,
-                                            IsMapping,
-                                            IsSequenceNotStrBytes)
+from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
+from omnipy.shared.protocols.typing import IsAbstractSet, IsHashable, IsItemSequence, IsMapping
 
 _KeyT = TypeVar('_KeyT')
 _NestedKeyT = TypeVar('_NestedKeyT')
 _ValT = TypeVar('_ValT')
 _OtherT = TypeVar('_OtherT')
-_ValSeqOrGenT = TypeVar('_ValSeqOrGenT', bound=IsSequenceNotStrBytes | Generator)
+_ValSeqOrGenT = TypeVar('_ValSeqOrGenT', bound=IsItemSequence | Generator)
 _ValMappingT = TypeVar('_ValMappingT', bound=IsMapping)
 _NestedValT = TypeVar('_NestedValT')
 _SecondValT = TypeVar('_SecondValT')
@@ -386,7 +384,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def __and__(  # type: ignore [override]
         self,
-        value: IsAbstractSet[object] | IsSequenceNotStrBytes[object] | Generator[object],
+        value: IsAbstractSet[object] | IsItemSequence[object] | Generator[object],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
@@ -394,7 +392,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def __iand__(  # type: ignore [override]
         self,
-        value: IsAbstractSet[object] | IsSequenceNotStrBytes[object] | Generator[object],
+        value: IsAbstractSet[object] | IsItemSequence[object] | Generator[object],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
@@ -402,7 +400,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @overload  # type: ignore [override]
     def __or__(
         self,
-        value: IsAbstractSet[_ValT] | IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        value: IsAbstractSet[_ValT] | IsItemSequence[_ValT] | Generator[_ValT],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
@@ -414,7 +412,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def __or__(
         self,
-        value: IsAbstractSet[object] | IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        value: IsAbstractSet[object] | IsItemSequence[_ValT] | Generator[_ValT],
         /,
     ) -> Self | set[_ValT | _OtherT]:
         raise AssumedToBeImplementedException
@@ -422,7 +420,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def __ior__(  # type: ignore [override]
         self,
-        value: IsAbstractSet[_ValT] | IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        value: IsAbstractSet[_ValT] | IsItemSequence[_ValT] | Generator[_ValT],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
@@ -430,7 +428,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def __sub__(  # type: ignore [override]
         self,
-        value: (IsAbstractSet[_ValT | None] | IsSequenceNotStrBytes[_ValT | None]
+        value: (IsAbstractSet[_ValT | None] | IsItemSequence[_ValT | None]
                 | Generator[_ValT | None]),
         /,
     ) -> Self:
@@ -439,7 +437,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def __isub__(  # type: ignore [override]
         self,
-        value: IsAbstractSet[object] | IsSequenceNotStrBytes[object] | Generator[object],
+        value: IsAbstractSet[object] | IsItemSequence[object] | Generator[object],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
@@ -447,7 +445,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @overload  # type: ignore [override]
     def __xor__(
         self,
-        value: IsAbstractSet[_ValT] | IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        value: IsAbstractSet[_ValT] | IsItemSequence[_ValT] | Generator[_ValT],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
@@ -459,7 +457,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def __xor__(
         self,
-        value: IsAbstractSet[object] | IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        value: IsAbstractSet[object] | IsItemSequence[_ValT] | Generator[_ValT],
         /,
     ) -> Self | set[_ValT | _OtherT]:
         raise AssumedToBeImplementedException
@@ -467,7 +465,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def __ixor__(  # type: ignore [override]
         self,
-        value: IsAbstractSet[_ValT] | IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        value: IsAbstractSet[_ValT] | IsItemSequence[_ValT] | Generator[_ValT],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
@@ -477,7 +475,7 @@ class IsListContent(IsList[_ValT], Protocol[_ValT]):
     @override
     def __add__(  # type: ignore [override]
         self,
-        values: IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        values: IsItemSequence[_ValT] | Generator[_ValT],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
@@ -511,7 +509,7 @@ class IsListContent(IsList[_ValT], Protocol[_ValT]):
         raise AssumedToBeImplementedException
 
 
-class IsListOfListsContent(IsListContent[_ValSeqOrGenT | IsSequenceNotStrBytes[_NestedValT]
+class IsListOfListsContent(IsListContent[_ValSeqOrGenT | IsItemSequence[_NestedValT]
                                          | Generator[_NestedValT]],
                            Protocol[_ValSeqOrGenT, _NestedValT]):
     @overload  # type: ignore [override]
@@ -585,7 +583,7 @@ class IsSameTypeTupleContent(IsHashable, IsTuple[_ValT], Protocol[_ValT]):
     @override
     def __add__(  # type: ignore [override]
         self,
-        value: IsSequenceNotStrBytes[_ValT] | Generator[_ValT],
+        value: IsItemSequence[_ValT] | Generator[_ValT],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
@@ -661,7 +659,7 @@ class IsDictContent(IsDict[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
 
 
 class IsDictOfListsContent(IsDictContent[_KeyT,
-                                         _ValSeqOrGenT | IsSequenceNotStrBytes[_NestedValT]
+                                         _ValSeqOrGenT | IsItemSequenceLike[_NestedValT]
                                          | Generator[_NestedValT]],
                            Protocol[_KeyT, _ValSeqOrGenT, _NestedValT]):
     @override

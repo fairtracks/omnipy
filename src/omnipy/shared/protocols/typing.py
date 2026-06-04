@@ -46,7 +46,6 @@ from omnipy.shared.exceptions import AssumedToBeImplementedException
 from omnipy.shared.protocols._typeshed import (ReadableBuffer,
                                                SupportsGetItem,
                                                SupportsKeysAndGetItem)
-from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
 
 # Note: importing SupportsKeysAndGetItem from _typeshed instead of the
 #       local copy causes basedpyright to enter an infinite loop.
@@ -825,11 +824,6 @@ class IsMutableSequence(IsItemSequence[_T], Protocol[_T]):
         raise AssumedToBeImplementedException
 
     def __iadd__(self, values: Iterable[_T], /) -> Self: raise AssumedToBeImplementedException
-
-# Backward-compatible aliases kept during protocol rename migration.
-IsSequenceNotStrBytes = IsItemSequence
-IsLightSequenceNotStrBytes = IsItemSequenceLike
-
 
 # class AbstractSet(Collection[_T_co]):
 class IsAbstractSet(Collection[_T_co], Protocol[_T_co]):
