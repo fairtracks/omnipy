@@ -263,6 +263,8 @@ class Model(  # type: ignore[misc]
                 if base is Model:
                     break
                 if name in base.__dict__:
+                    if name == '__hash__' and base.__dict__[name] is None:
+                        continue
                     method_defined_before_model = True
                     break
 
