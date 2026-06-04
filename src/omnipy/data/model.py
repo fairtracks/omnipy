@@ -258,6 +258,17 @@ class Model(  # type: ignore[misc]
             return
 
         for name, method_info in get_special_methods_info_dict().items():
+            method_defined_before_model = False
+            for base in created_model.__mro__:
+                if base is Model:
+                    break
+                if name in base.__dict__:
+                    method_defined_before_model = True
+                    break
+
+            if method_defined_before_model:
+                continue
+
             names_to_check = (name, '__add__') if name in ('__iadd__', '__radd__') else (name,)
             for type_to_support in outer_types:
                 if any(_type_supports_method(type_to_support, _) for _ in names_to_check):
@@ -304,8 +315,7 @@ class Model(  # type: ignore[misc]
         if created_model is not cls:
             cleanup_name_qualname_and_module(cls, created_model, orig_model)
 
-        if get_original_bases(created_model) == (Model,):
-            cls._prepare_cls_members_to_mimic_model(created_model)
+        cls._prepare_cls_members_to_mimic_model(created_model)
 
         return created_model
 
@@ -651,8 +661,7 @@ class Model(  # type: ignore[misc]
 
         cls._recursively_set_allow_none(cls._get_root_field())
 
-        if get_original_bases(cls) == (Model,):
-            cls._prepare_cls_members_to_mimic_model(cls)
+        cls._prepare_cls_members_to_mimic_model(cls)
 
         prev_visited_classes.add(cls)
 
