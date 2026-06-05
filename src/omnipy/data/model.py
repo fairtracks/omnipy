@@ -215,7 +215,7 @@ class Model(  # type: ignore[misc]
     ) -> None:
         from omnipy.data._typing.helpers import all_model_type_variants
 
-        outer_types = all_model_type_variants(created_model, double_model_unions_as_variants=True)
+        outer_types = all_model_type_variants(created_model)
 
         def _type_supports_method(_type: type | GenericAlias, _method_name: str) -> bool:
             if is_literal_type(_type):
@@ -1129,10 +1129,11 @@ class Model(  # type: ignore[misc]
             *args: object,
             **kwargs: object,
     ) -> object:
-        content = self._get_real_content()
-        has_add_method = hasattr(content, '__add__')
-        has_radd_method = hasattr(content, '__radd__')
-        has_iadd_method = hasattr(content, '__iadd__')
+        content = self.content
+
+        has_add_method = self._content_obj_hasattr('__add__')
+        has_radd_method = self._content_obj_hasattr('__radd__')
+        has_iadd_method = self._content_obj_hasattr('__iadd__')
 
         if name == '__add__' and has_add_method:
 
@@ -1156,7 +1157,7 @@ class Model(  # type: ignore[misc]
                     return content.__add__(other)  # type: ignore[operator]
 
             def _radd_model_converted_other(other) -> object:
-                other_content = self.__class__(other)._get_real_content()
+                other_content = self.__class__(other).content
                 if has_radd_method:
                     return content.__radd__(other_content)  # type: ignore[attr-defined]
                 else:
@@ -1205,7 +1206,23 @@ class Model(  # type: ignore[misc]
                 self_convert_args_if_failure = False
             else:
                 self_convert_args_if_failure = True
-            return self._call_method(method, self_convert_args_if_failure, *args, **kwargs)
+
+            if name == '__getitem__' and is_model_instance(content):
+                # If propagating a __getitem__ to a nested model, propagate
+                # also the `dynamically_convert_elements_to_models` setting
+                # as it is activated only at the innermost level (when
+                # content is no longer a Model.
+                reset_dyn_convert_els_to_models = False
+            else:
+                reset_dyn_convert_els_to_models = True
+
+            return self._call_method(
+                method,
+                self_convert_args_if_failure,
+                reset_dyn_convert_els_to_models,
+                *args,
+                **kwargs,
+            )
 
     def _call_single_arg_method_with_model_converted_other_first(
         self,
@@ -1228,7 +1245,7 @@ class Model(  # type: ignore[misc]
                 if model_converted_other_method:
                     return model_converted_other_method(arg)
                 else:
-                    return method(self.__class__(arg)._get_real_content(), **kwargs)
+                    return method(self.__class__(arg).content, **kwargs)
             except (ValidationError, TypeError):
                 # TODO: Add debug logging for hidden validation and other exceptions e.g. when
                 #       concatenating `Model[int](123) + '234.'` (gives TypeError:
@@ -1238,10 +1255,11 @@ class Model(  # type: ignore[misc]
         except TypeError:
             return NotImplemented
 
-    def _call_method(
+    def _call_method(  # noqa: C901
         self,
         method: Callable,
         self_convert_args_if_failure: bool,
+        reset_dyn_convert_els_to_models: bool,
         *args: object,
         **kwargs: object,
     ):
@@ -1249,7 +1267,8 @@ class Model(  # type: ignore[misc]
                 self.config.model,
                 'dynamically_convert_elements_to_models',
         ):
-            self.config.model.dynamically_convert_elements_to_models = False
+            if reset_dyn_convert_els_to_models:
+                self.config.model.dynamically_convert_elements_to_models = False
 
             try:
                 ret = method(*args, **kwargs)
@@ -1279,7 +1298,7 @@ class Model(  # type: ignore[misc]
         *args: object,
         **kwargs: object,
     ):
-        model_args = [self.__class__(arg)._get_real_content() for arg in args]
+        model_args = [self.__class__(arg).content for arg in args]
         return method(*model_args, **kwargs)
 
     def _get_convert_full_element_model_generator(
@@ -1313,16 +1332,13 @@ class Model(  # type: ignore[misc]
 
         if level_up and not self.config.model.dynamically_convert_elements_to_models:
             ...
-        elif is_model_instance(ret):
-            ...
         else:
-            for type_to_check in all_model_type_variants(
-                    self, double_model_unions_as_variants=not level_up):
+            for type_to_check in all_model_type_variants(self):
                 plain_type_to_check = ensure_plain_type(type_to_check)
                 if plain_type_to_check in (ForwardRef, TypeVar, None):
                     continue
 
-                if level_up:
+                if level_up:  # from above: dynamically_convert_elements_to_models == True
                     type_args = get_args(type_to_check)
                     if type_args:
                         # Assuming last type argument is the type of value of the container
@@ -1331,7 +1347,8 @@ class Model(  # type: ignore[misc]
                         for level_up_type_to_check in all_type_variants(value_arg_type):
                             level_up_type_to_check = self._fix_tuple_type_from_args(
                                 level_up_type_to_check)
-                            if self._is_instance_or_literal(
+                            # Only non-Models content considered for dynamic conversion
+                            if not is_model_instance(ret) and self._is_instance_or_literal(
                                     ret,
                                     ensure_plain_type(level_up_type_to_check),
                                     level_up_type_to_check,
@@ -1387,9 +1404,7 @@ class Model(  # type: ignore[misc]
 
         def __getattr__(self, attr: str) -> Any:
             if self._is_non_omnipy_pydantic_model() and self._content_obj_hasattr(attr):
-                # Not sure whether self.content or self._get_real_content
-                # here makes any difference...
-                self._validate_and_set_value(self._get_real_content())
+                self._validate_and_set_value(self.content)
 
             content_attr = self._getattr_from_content_obj(attr)
 
@@ -1433,22 +1448,22 @@ class Model(  # type: ignore[misc]
             return content_attr
 
     def _is_non_omnipy_pydantic_model(self) -> bool:
-        return is_non_omnipy_pydantic_model(self._get_real_content())
+        return is_non_omnipy_pydantic_model(self.content)
 
     def _content_obj_hasattr(self, attr) -> object:
-        return hasattr(self._get_real_content(), attr)
+        return hasattr(self.content, attr)
 
     def _getattr_from_content_obj(self, attr) -> object:
-        return getattr(self._get_real_content(), attr)
+        return getattr(self.content, attr)
 
     def _getattr_from_content_cls(self, attr) -> object:
-        return getattr(self._get_real_content().__class__, attr)
+        return getattr(self.content.__class__, attr)
 
-    def _get_real_content(self) -> object:
-        if is_model_instance(self.content):
-            return self.content.content
-        else:
-            return self.content
+    # def _get_real_content(self) -> object:
+    #     if is_model_instance(self.content):
+    #         return self.content.content
+    #     else:
+    #         return self.content
 
     def __eq__(self, other: object) -> bool:
         if is_model_instance(other):
@@ -1458,13 +1473,13 @@ class Model(  # type: ignore[misc]
             return False
 
     def __bool__(self):
-        if self._get_real_content():
+        if self.content:
             return True
         else:
             return False
 
     def __call__(self, *args: object, **kwargs: object) -> object:
-        if not hasattr(self._get_real_content(), '__call__'):
+        if not self._content_obj_hasattr('__call__'):
             raise TypeError(f"'{self.__class__.__name__}' object is not callable")
         return self._special_method(
             '__call__',

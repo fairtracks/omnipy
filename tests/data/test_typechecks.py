@@ -90,25 +90,22 @@ def test_obj_or_model_content_isinstance_for_models() -> None:
 def test_all_model_type_variants() -> None:
     from omnipy.data._typing.helpers import all_model_type_variants
 
-    class MyModel(Model[Model[int | float] | Model[str] | list[int]]):
+    class MyModel(Model[list[int] | float | Model[list[str] | list[int]]]):
         ...
 
-    variants = all_model_type_variants(MyModel, double_model_unions_as_variants=False)
-    assert variants == (int | float, str, list[int])
-
-    variants = all_model_type_variants(MyModel, double_model_unions_as_variants=True)
-    assert variants == (int, float, str, list[int])
+    variants = all_model_type_variants(MyModel)
+    assert variants == (list[int], float, Model[list[str] | list[int]])
 
 
 def test_all_dataset_type_variants() -> None:
     from omnipy.data._typing.helpers import all_dataset_type_variants
     from omnipy.data.dataset import Dataset
 
-    class MyDataset(Dataset[Model[Model[int] | float] | Model[str] | Dataset[Model[list[int]]]]):
+    class MyDataset(Dataset[Model[list[int] | float | Model[str] | Dataset[Model[list[int]]]]]):
         ...
 
     variants = all_dataset_type_variants(MyDataset)
-    assert variants == (int, float, str, Dataset[Model[list[int]]])
+    assert variants == (list[int], float, Model[str], Dataset[Model[list[int]]])
 
 
 def test_is_pydantic_model() -> None:
