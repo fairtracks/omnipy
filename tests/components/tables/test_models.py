@@ -8,6 +8,7 @@ from omnipy.components.json.typedefs import JsonDictOfScalars, JsonListOfScalars
 # from omnipy.components.tables.models import JsonMaxLevel2ColumnWiseTableWithColNamesModel,
 from omnipy.components.tables.models import (ColumnModel,
                                              ColumnWiseTableWithColNamesModel,
+                                             ConcatColumnValueModel,
                                              CsvTableModel,
                                              CsvTableOfPydanticRecordsModel,
                                              IteratingPydanticRecordsModel,
@@ -770,25 +771,53 @@ def test_fail_json_scalar_column_model_invalid_input() -> None:
         JsonScalarColumnModel([1 + 2j])  # complex numbers are not JsonScalar
 
 
-def test_column_model_concat_fallback_warns_for_non_list_content() -> None:
+def test_column_model_concat_operators_for_tuple_content() -> None:
     class TupleColumnModel(ColumnModel[tuple[int, ...], int]):
         ...
 
-    left = TupleColumnModel((1, 2))
-    right = TupleColumnModel((3,))
+    col = TupleColumnModel((1, 2))
+    other = TupleColumnModel((3, 4))
 
-    with pytest.warns(UserWarning, match='concat fallback'):
-        concatenated = left + right
+    assert (col + other).content == (1, 2, 3, 4)
+    assert ((3, 4) + col).content == (3, 4, 1, 2)
 
-    assert concatenated.content == (1, 2, 3)
+    col += other
+    assert col.content == (1, 2, 3, 4)
 
 
-def test_column_model_concat_requires_backend_when_strict() -> None:
-    class StrictTupleColumnModel(ColumnModel[tuple[int, ...], int]):
-        _require_explicit_concat_backend = True
+def test_column_model_concat_operators_for_adapted_array_content() -> None:
+    class ElementwiseList(list[int]):
+        def __add__(self, other: object):
+            if not isinstance(other, ElementwiseList):
+                return NotImplemented
+            min_len = min(len(self), len(other))
+            return ElementwiseList([self[i] + other[i] for i in range(min_len)])
 
-    with pytest.raises(TypeError, match='concat backend'):
-        StrictTupleColumnModel((1,)) + StrictTupleColumnModel((2,))
+    class ElementwiseListConcatModel(ConcatColumnValueModel[ElementwiseList, int]):
+        _allowed_special_methods = frozenset({'__contains__', '__getitem__', '__iter__', '__len__'})
+
+        @classmethod
+        def _concat_column_values(cls, left: ElementwiseList,
+                                  right: ElementwiseList) -> ElementwiseList:
+            return ElementwiseList(list(left) + list(right))
+
+    class ElementwiseListColumnModel(ColumnModel[ElementwiseListConcatModel, int]):
+        ...
+
+    col = ElementwiseListColumnModel([1, 2])
+    other = ElementwiseListColumnModel([3, 4])
+
+    assert ElementwiseList([1, 2]) + ElementwiseList([3, 4]) == [4, 6]
+
+    assert cast(ElementwiseListConcatModel, (col + other).content).content == [1, 2, 3, 4]
+    assert cast(ElementwiseListConcatModel,
+                (col.__radd__(ElementwiseList([5, 6]))).content).content == [5, 6, 1, 2]
+
+    col += other
+    assert cast(ElementwiseListConcatModel, col.content).content == [1, 2, 3, 4]
+
+    with pytest.raises(TypeError):
+        _ = cast(Any, col.content) - other.content
 
 
 def test_json_max_level1_column_model_accepts_scalars_dicts_and_lists() -> None:

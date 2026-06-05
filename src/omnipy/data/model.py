@@ -142,6 +142,9 @@ class Model(  # type: ignore[misc]
 
     See also docs of the Dataset class for more usage examples.
     """
+    @classmethod
+    def _get_special_methods_info_dict(cls) -> dict[str, MethodInfo]:
+        return get_special_methods_info_dict()
 
     __root__: _RootT = pyd.Field(default_factory=undefined_default_factory)
 
@@ -257,7 +260,7 @@ class Model(  # type: ignore[misc]
         if any(lenient_isinstance(_type, TypeVar) for _type in outer_types):
             return
 
-        for name, method_info in get_special_methods_info_dict().items():
+        for name, method_info in created_model._get_special_methods_info_dict().items():
             method_defined_before_model = False
             for base in created_model.__mro__:
                 if base is Model:
@@ -1153,14 +1156,20 @@ class Model(  # type: ignore[misc]
 
             def _radd(other) -> object:
                 if has_radd_method:
-                    return content.__radd__(other)  # type: ignore[attr-defined]
+                    ret = content.__radd__(other)  # type: ignore[attr-defined]
+                    if ret is NotImplemented and has_add_method:
+                        return content.__add__(other)  # type: ignore[operator]
+                    return ret
                 else:
                     return content.__add__(other)  # type: ignore[operator]
 
             def _radd_model_converted_other(other) -> object:
                 other_content = self.__class__(other).content
                 if has_radd_method:
-                    return content.__radd__(other_content)  # type: ignore[attr-defined]
+                    ret = content.__radd__(other_content)  # type: ignore[attr-defined]
+                    if ret is NotImplemented and has_add_method:
+                        return other_content.__add__(content)  # type: ignore[operator]
+                    return ret
                 else:
                     return other_content.__add__(content)  # type: ignore[operator]
 
@@ -1178,7 +1187,10 @@ class Model(  # type: ignore[misc]
 
             def _iadd(other) -> object:
                 if has_iadd_method:
-                    return content.__iadd__(other)  # type: ignore[attr-defined]
+                    ret = content.__iadd__(other)  # type: ignore[attr-defined]
+                    if ret is NotImplemented and has_add_method:
+                        return content.__add__(other)  # type: ignore[operator]
+                    return ret
                 else:
                     return content.__add__(other)  # type: ignore[operator]
 
@@ -1410,7 +1422,7 @@ class Model(  # type: ignore[misc]
             content_attr = self._getattr_from_content_obj(attr)
 
             if inspect.isroutine(content_attr):
-                method_info = get_special_methods_info_dict().get(attr)
+                method_info = self.__class__._get_special_methods_info_dict().get(attr)
                 is_read_only_method = (
                     method_info and not method_info.state_changing
                     or attr in ('items', 'values', 'keys'))
