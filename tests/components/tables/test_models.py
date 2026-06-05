@@ -6,8 +6,8 @@ import pytest_cases as pc
 
 from omnipy.components.json.typedefs import JsonDictOfScalars, JsonListOfScalars, JsonScalar
 # from omnipy.components.tables.models import JsonMaxLevel2ColumnWiseTableWithColNamesModel,
-from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
-                                             ColumnModel,
+from omnipy.components.tables.models import (ColumnModel,
+                                             ColumnWiseTableWithColNamesModel,
                                              CsvTableModel,
                                              CsvTableOfPydanticRecordsModel,
                                              IteratingPydanticRecordsModel,
@@ -775,7 +775,7 @@ def test_column_model_concat_fallback_warns_for_non_list_content() -> None:
         ...
 
     left = TupleColumnModel((1, 2))
-    right = TupleColumnModel((3, ))
+    right = TupleColumnModel((3,))
 
     with pytest.warns(UserWarning, match='concat fallback'):
         concatenated = left + right
@@ -788,7 +788,7 @@ def test_column_model_concat_requires_backend_when_strict() -> None:
         _require_explicit_concat_backend = True
 
     with pytest.raises(TypeError, match='concat backend'):
-        StrictTupleColumnModel((1, )) + StrictTupleColumnModel((2, ))
+        StrictTupleColumnModel((1,)) + StrictTupleColumnModel((2,))
 
 
 def test_json_max_level1_column_model_accepts_scalars_dicts_and_lists() -> None:
