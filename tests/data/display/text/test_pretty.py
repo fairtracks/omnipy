@@ -9,7 +9,7 @@ import pytest_cases as pc
 
 from omnipy.components.json.models import JsonModel
 from omnipy.components.raw.models import StrModel
-from omnipy.components.tables.models import ColumnModel
+from omnipy.components.tables.models import JsonScalarColumnModel
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
@@ -913,7 +913,7 @@ def test_column_pretty_print(case: ColumnPrettyPrintCase) -> None:
     )
 
     _assert_pretty_repr_of_draft(
-        ColumnModel(case.data),
+        JsonScalarColumnModel(case.data),
         exp_plain_output=case.expected_column_output,
         frame=DEFAULT_FRAME,
         within_frame_width=True,

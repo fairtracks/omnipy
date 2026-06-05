@@ -1,4 +1,4 @@
-from omnipy import ColumnModel
+from omnipy.components.tables.models import JsonScalarColumnModel
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
@@ -16,7 +16,7 @@ def test_nested_panels_with_cropped_column_models() -> None:
                     Layout({
                         str(i):
                             DraftPanel(
-                                ColumnModel(range(i, i + 5)),
+                                JsonScalarColumnModel(range(i, i + 5)),
                                 frame=Frame(dims=Dimensions(width=1, height=None)),
                                 config=OutputConfig(use_min_crop_width=True)) for i in range(3)
                     }),

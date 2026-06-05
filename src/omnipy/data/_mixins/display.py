@@ -2788,8 +2788,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         /,
         **config_kwargs,
     ) -> DraftPanel:
-        from omnipy.components.tables.models import (ColumnModel,
-                                                     ColumnWiseTableWithColNamesModel,
+        from omnipy.components.tables.models import (JsonMaxLevel1ColumnModel,
+                                                     JsonMaxLevel1ColumnWiseTableWithColNamesModel,
                                                      PrintableTable)
 
         config = self._update_config_with_overflow_modes(config, 'text', **config_kwargs)
@@ -2797,7 +2797,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         if isinstance(model, PrintableTable):
             try:
-                column_wise_table = ColumnWiseTableWithColNamesModel(model)
+                column_wise_table = JsonMaxLevel1ColumnWiseTableWithColNamesModel(model)
             except Exception:
                 pass
 
@@ -2831,7 +2831,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
                 for i, column in enumerate(column_wise_table.col_names):
                     layout[column] = DraftPanel(
-                        ColumnModel(column_wise_table[column]),
+                        JsonMaxLevel1ColumnModel(column_wise_table[column]),
                         title=f'{i}. {column}',
                         config=table_config,
                     )

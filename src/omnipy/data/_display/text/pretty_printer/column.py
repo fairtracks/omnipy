@@ -3,7 +3,7 @@ from typing import cast
 from typing_extensions import override
 
 from omnipy.components.json.typedefs import JsonScalar
-from omnipy.components.tables.models import ColumnModel
+from omnipy.components.tables.models import ColumnModel, JsonScalarColumnModel
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
@@ -37,7 +37,7 @@ class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
     def _get_content_for_draft_panel(cls, draft_panel: DraftPanel[object,
                                                                   AnyFrame]) -> list[JsonScalar]:
         if not isinstance(draft_panel.content, ColumnModel):
-            column_model = ColumnModel(draft_panel.content)
+            column_model = JsonScalarColumnModel(draft_panel.content)
         else:
             column_model = draft_panel.content
 
