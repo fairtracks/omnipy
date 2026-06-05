@@ -448,7 +448,7 @@ def test_output_config_default_values() -> None:
     assert config.max_title_height is MaxTitleHeight.AUTO
     assert config.min_crop_width == 33
     assert config.use_min_crop_width is False
-    assert config.max_panels_hor == 8
+    assert config.max_panels_hor == 9
     assert config.max_nesting_depth == 3
     assert config.justify is Justify.LEFT
 

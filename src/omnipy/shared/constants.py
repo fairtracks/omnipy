@@ -15,7 +15,7 @@ MIN_PANEL_WIDTH: pyd.NonNegativeInt = 3
 MIN_CROP_WIDTH: pyd.NonNegativeInt = 33
 
 # Overrides MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED if smaller.
-MAX_PANELS_HORIZONTALLY: pyd.NonNegativeInt | None = 8
+MAX_PANELS_HORIZONTALLY: pyd.NonNegativeInt | None = 9
 
 # For deeply nested panels (level >= 2), we want to be more restrictive to
 # improve performance and readability.
