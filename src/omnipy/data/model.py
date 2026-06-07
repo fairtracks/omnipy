@@ -656,8 +656,9 @@ class Model(  # type: ignore[misc]
             prev_outer_type, **globalns)
         cls._get_root_field().type_ = evaluate_any_forward_refs_if_possible(prev_type, **globalns)
         cls.set_orig_model(evaluate_any_forward_refs_if_possible(cls.get_orig_model(), **globalns))
-        cls.__annotations__[ROOT_KEY] = evaluate_any_forward_refs_if_possible(
-            cls.__annotations__[ROOT_KEY], **globalns)
+        if ROOT_KEY in cls.__annotations__:
+            cls.__annotations__[ROOT_KEY] = evaluate_any_forward_refs_if_possible(
+                cls.__annotations__[ROOT_KEY], **globalns)
 
         cls._clean_type_caches()
 
