@@ -24,8 +24,8 @@
 
 ### 4. Master Zen-Batch (The Boilerplate Pruner)
 *   **Nemesis:** Dr. Final_v3_Real / The Spaghetti Monster
-*   **Superpower:** Telekinetically mapping and processing thousands of hierarchical records simultaneously without ever writing a `for`-loop.
-*   **Backstory:** A minimalist warrior who meditated under a waterfall of chaotic scripts until he achieved pure "Code Zen." When Dr. Final's hasty code awakens the Spaghetti Monster, Master Zen-Batch draws his declarative katana. With a single, elegant sweep of his mapping technique, he slices through the sticky webs of boilerplate, manual type-casting, and iteration traps, replacing them with a single line of code.
+*   **Superpower:** Effortlessly mapping and processing thousands of hierarchical records simultaneously without ever writing a `for`-loop.
+*   **Backstory:** Once a martial arts champion, Master Zen-Batch now lives the simple life as a relaxed Australian data surfer. Barefoot, sun-weathered, and smiling behind dark sunglasses, he rides luminous waves of batch data where records, folders, tables, and pipelines all move as one current. With one tiny, lazy katana slash, he prunes boilerplate, duplicate logic, manual type-casting, and tangled iteration traps. He does almost nothing — and everything flows.
 *   **Catchphrase:** "Why loop, when the data can flow?"
 
 ### 5. Sir Fetch-a-Lot (The RESTful Retriever)
