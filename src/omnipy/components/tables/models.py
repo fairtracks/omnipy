@@ -50,23 +50,66 @@ ColumnWiseTableModelT = TypeVar(
 
 if TYPE_CHECKING:  # noqa: C901
 
-    class ConcatColumnValueModel(  # type: ignore[misc]
+    class ConcatByAddArrayAdapterModel(
             PlainModel[ColumnT],
             IsItemSequenceLike[ItemT],
             Generic[ColumnT, ItemT],
     ):
-        _allowed_special_methods: frozenset[str]
+        _allowed_special_methods = frozenset()
 
-        @classmethod
-        def _get_special_methods_info_dict(cls) -> dict[str, MethodInfo]:
+        @staticmethod
+        def _as_item_list(values: ColumnT) -> list[ItemT]:
             ...
 
         @classmethod
         def _concat_column_values(cls, left: ColumnT, right: ColumnT) -> ColumnT:
             ...
 
-        def __add__(self, other: object) -> Self:
+        def __add__(self, other: object):
             ...
+
+else:
+
+    class ConcatByAddArrayAdapterModel(Model[ColumnT], Generic[ColumnT, ItemT]):
+        _allowed_special_methods = frozenset({
+            '__len__',
+            '__length_hint__',
+            '__getitem__',
+            '__setitem__',
+            '__delitem__',
+            '__iter__',
+            '__reversed__',
+            '__contains__',
+            '__copy__',
+            '__deepcopy__',
+            '__str__',
+            '__format__',
+        })
+
+        @classmethod
+        def _get_special_methods_info_dict(cls) -> dict[str, MethodInfo]:
+            special_methods = super()._get_special_methods_info_dict()
+            return {
+                method_name: special_methods[method_name]
+                for method_name in cls._allowed_special_methods
+                if method_name in special_methods
+            }
+
+        @staticmethod
+        def _as_item_list(values: ColumnT) -> list[ItemT]:
+            return list(values)
+
+        @classmethod
+        def _concat_column_values(cls, left: ColumnT, right: ColumnT) -> ColumnT:
+            print(f'{cls.__name__}: default concat fallback via list conversion')
+            return cls(cls._as_item_list(left) + cls._as_item_list(right)).content
+
+        def __add__(self, other: object):
+            other_content = self.__class__(other).content
+            return self.__class__(self._concat_column_values(self.content, other_content))
+
+
+if TYPE_CHECKING:  # noqa: C901
 
     class ColumnModel(
             PlainModel[ColumnT],
@@ -81,42 +124,7 @@ if TYPE_CHECKING:  # noqa: C901
 
         def __iadd__(self, other: object) -> Self:
             ...
-
-        ...
-
 else:
-
-    class ConcatColumnValueModel(Model[ColumnT], Generic[ColumnT, ItemT]):
-        _allowed_special_methods = frozenset({
-            '__contains__',
-            '__getitem__',
-            '__iter__',
-            '__len__',
-            '__reversed__',
-        })
-
-        @classmethod
-        def _get_special_methods_info_dict(cls) -> dict[str, MethodInfo]:
-            special_methods = super()._get_special_methods_info_dict()
-            return {
-                method_name: special_methods[method_name]
-                for method_name in cls._allowed_special_methods
-                if method_name in special_methods
-            }
-
-        @staticmethod
-        def _as_item_list(values: ColumnT) -> list[ItemT]:
-            seq_values = cast(IsItemSequenceLike[ItemT], values)
-            return [seq_values[i] for i in range(len(seq_values))]
-
-        @classmethod
-        def _concat_column_values(cls, left: ColumnT, right: ColumnT) -> ColumnT:
-            print(f'{cls.__name__}: default concat fallback via list conversion')
-            return cls(cls._as_item_list(left) + cls._as_item_list(right)).content
-
-        def __add__(self, other: object):
-            other_content = self.__class__(other).content
-            return self.__class__(self._concat_column_values(self.content, other_content))
 
     class ColumnModel(Model[ColumnT], Generic[ColumnT, ItemT]):
         ...

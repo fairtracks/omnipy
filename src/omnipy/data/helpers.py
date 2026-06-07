@@ -20,7 +20,7 @@ __all__ = [
     'DoubleTypeVarStore',
     'YesNoMaybe',
     'MethodInfo',
-    'get_special_methods_info_dict',
+    'SPECIAL_METHODS_INFO_DICT',
     'ResetSolutionTuple',
     'cleanup_name_qualname_and_module',
     'build_own_module_and_global_namespace_for_forward_refs',
@@ -71,7 +71,7 @@ class MethodInfo(NamedTuple):
 
 # Ordered after their order in the Python documentation
 # (https://docs.python.org/3.10/reference/datamodel.html)
-_SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
+SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     # 3.3.1. Basic customization ############################################
     # '__bool__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     # 3.3.7. Emulating container types ######################################
@@ -179,11 +179,6 @@ _SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     # - Other --------------------------------------------------------
     '__delattr__': MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
 }
-
-
-def get_special_methods_info_dict() -> dict[str, MethodInfo]:
-    return _SPECIAL_METHODS_INFO_DICT
-
 
 validate_cls_counts: defaultdict[str, int] = defaultdict(int)
 

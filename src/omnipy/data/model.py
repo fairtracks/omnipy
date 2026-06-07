@@ -29,9 +29,9 @@ from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
 from omnipy.data.dataset import Dataset, is_dataset_instance
 from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forward_refs,
                                  cleanup_name_qualname_and_module,
-                                 get_special_methods_info_dict,
                                  MethodInfo,
                                  ResetSolutionTuple,
+                                 SPECIAL_METHODS_INFO_DICT,
                                  validate_cls_counts,
                                  YesNoMaybe)
 from omnipy.shared.constants import ROOT_KEY
@@ -144,7 +144,7 @@ class Model(  # type: ignore[misc]
     """
     @classmethod
     def _get_special_methods_info_dict(cls) -> dict[str, MethodInfo]:
-        return get_special_methods_info_dict()
+        return SPECIAL_METHODS_INFO_DICT
 
     __root__: _RootT = pyd.Field(default_factory=undefined_default_factory)
 

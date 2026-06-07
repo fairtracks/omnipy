@@ -5,10 +5,9 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.components.json.typedefs import JsonDictOfScalars, JsonListOfScalars, JsonScalar
-# from omnipy.components.tables.models import JsonMaxLevel2ColumnWiseTableWithColNamesModel,
 from omnipy.components.tables.models import (ColumnModel,
                                              ColumnWiseTableWithColNamesModel,
-                                             ConcatColumnValueModel,
+                                             ConcatByAddArrayAdapterModel,
                                              CsvTableModel,
                                              CsvTableOfPydanticRecordsModel,
                                              IteratingPydanticRecordsModel,
@@ -778,46 +777,59 @@ def test_column_model_concat_operators_for_tuple_content() -> None:
     col = TupleColumnModel((1, 2))
     other = TupleColumnModel((3, 4))
 
-    assert (col + other).content == (1, 2, 3, 4)
-    assert ((3, 4) + col).content == (3, 4, 1, 2)
+    assert (col + other) == TupleColumnModel((1, 2, 3, 4))
+    assert (3, 4) + col == TupleColumnModel((3, 4, 1, 2))
 
     col += other
-    assert col.content == (1, 2, 3, 4)
+    assert col == TupleColumnModel((1, 2, 3, 4))
 
 
 def test_column_model_concat_operators_for_adapted_array_content() -> None:
-    class ElementwiseList(list[int]):
+    class ConcatLackingList(list[int]):
+        def copy(self) -> 'ConcatLackingList':
+            return ConcatLackingList(super().copy())
+
         def __add__(self, other: object):
-            if not isinstance(other, ElementwiseList):
-                return NotImplemented
-            min_len = min(len(self), len(other))
-            return ElementwiseList([self[i] + other[i] for i in range(min_len)])
+            return NotImplemented
 
-    class ElementwiseListConcatModel(ConcatColumnValueModel[ElementwiseList, int]):
-        _allowed_special_methods = frozenset({'__contains__', '__getitem__', '__iter__', '__len__'})
+        def __iadd__(self, other: object):
+            return NotImplemented
 
+        def __radd__(self, other: object):
+            return NotImplemented
+
+    def concat_function(left: ConcatLackingList, right: ConcatLackingList) -> ConcatLackingList:
+        assert isinstance(left, ConcatLackingList) and isinstance(right, ConcatLackingList)
+        concat_list = left.copy()
+        concat_list.extend(right)
+        return concat_list
+
+    class ConcatLackingListAdapterModel(ConcatByAddArrayAdapterModel[ConcatLackingList, int]):
         @classmethod
-        def _concat_column_values(cls, left: ElementwiseList,
-                                  right: ElementwiseList) -> ElementwiseList:
-            return ElementwiseList(list(left) + list(right))
+        def _concat_column_values(cls, left: ConcatLackingList,
+                                  right: ConcatLackingList) -> ConcatLackingList:
+            return concat_function(left, right)
 
-    class ElementwiseListColumnModel(ColumnModel[ElementwiseListConcatModel, int]):
+    class ConcatLackingListColumnModel(ColumnModel[ConcatLackingListAdapterModel, int]):
         ...
 
-    col = ElementwiseListColumnModel([1, 2])
-    other = ElementwiseListColumnModel([3, 4])
-
-    assert ElementwiseList([1, 2]) + ElementwiseList([3, 4]) == [4, 6]
-
-    assert cast(ElementwiseListConcatModel, (col + other).content).content == [1, 2, 3, 4]
-    assert cast(ElementwiseListConcatModel,
-                (col.__radd__(ElementwiseList([5, 6]))).content).content == [5, 6, 1, 2]
-
-    col += other
-    assert cast(ElementwiseListConcatModel, col.content).content == [1, 2, 3, 4]
+    a = ConcatLackingList([1, 2])
+    b = ConcatLackingList([3, 4])
 
     with pytest.raises(TypeError):
-        _ = cast(Any, col.content) - other.content
+        a + b
+
+    assert ConcatLackingListColumnModel(a) + b == ConcatLackingListColumnModel([1, 2, 3, 4])
+    assert a + ConcatLackingListColumnModel(b) == ConcatLackingListColumnModel([1, 2, 3, 4])
+    assert (ConcatLackingListColumnModel(a)
+            + ConcatLackingListColumnModel(b) == ConcatLackingListColumnModel([1, 2, 3, 4]))
+
+    a_model = ConcatLackingListColumnModel(a)
+    a_model += b
+    assert a_model == ConcatLackingListColumnModel([1, 2, 3, 4])
+
+    with pytest.raises(TypeError):
+        a_model - b  # type: ignore[operator]
 
 
 def test_json_max_level1_column_model_accepts_scalars_dicts_and_lists() -> None:
