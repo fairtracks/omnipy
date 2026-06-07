@@ -60,7 +60,8 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
 
         df = self.content.replace({pd.NA: None})
         if isinstance(df, pd.DataFrame):
-            return df.to_dict(orient='records')
+            # return df.to_dict(orient='records')
+            return df.to_dict(orient='list')
         elif isinstance(df, pd.Series):
             return df.to_dict()
 

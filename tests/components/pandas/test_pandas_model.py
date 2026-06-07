@@ -2,7 +2,7 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.components.json.typedefs import JsonListOfDictsOfScalars
+from omnipy.components.json.typedefs import JsonDictOfListsOfScalars, JsonListOfDictsOfScalars
 from omnipy.components.pandas.models import PandasModel
 from omnipy.shared.typing import TYPE_CHECKING
 
@@ -39,20 +39,19 @@ def dataframe_of_list_of_dicts_data() -> 'Annotated[pd.DataFrame, pytest.fixture
 
 
 @pytest.fixture
-def list_of_dicts_data_with_nones() -> Annotated[JsonListOfDictsOfScalars, pytest.fixture]:
-    return [{
-        'bool': True, 'float': 12.1, 'int': 12, 'str': 'abc'
-    }, {
-        'bool': False, 'float': None, 'int': -3, 'str': None
-    }, {
-        'bool': None, 'float': 14.3, 'int': None, 'str': 'def'
-    }]
+def dict_of_lists_data_with_nones() -> Annotated[JsonDictOfListsOfScalars, pytest.fixture]:
+    return {
+        'bool': [True, False, None],
+        'float': [12.1, None, 14.3],
+        'int': [12, -3, None],
+        'str': ['abc', None, 'def']
+    }
 
 
 def test_pandas_model_from_data_to_data(
     list_of_dicts_data_with_missing: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
     dataframe_of_list_of_dicts_data: 'Annotated[pd.DataFrame, pytest.fixture]',
-    list_of_dicts_data_with_nones: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
+    dict_of_lists_data_with_nones: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
 ) -> None:
     from omnipy.components.pandas.lazy_import import pd
 
@@ -62,13 +61,13 @@ def test_pandas_model_from_data_to_data(
         pandas_model.content,  # type: ignore
         dataframe_of_list_of_dicts_data,
     )
-    assert pandas_model.to_data() == list_of_dicts_data_with_nones
+    assert pandas_model.to_data() == dict_of_lists_data_with_nones
 
 
 def test_pandas_model_init_to_data(
     list_of_dicts_data_with_missing: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
     dataframe_of_list_of_dicts_data: 'Annotated[pd.DataFrame, pytest.fixture]',
-    list_of_dicts_data_with_nones: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
+    dict_of_lists_data_with_nones: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
 ) -> None:
     from omnipy.components.pandas.lazy_import import pd
 
@@ -77,12 +76,12 @@ def test_pandas_model_init_to_data(
         pandas_model.content,  # type: ignore
         dataframe_of_list_of_dicts_data,
     )
-    assert pandas_model.to_data() == list_of_dicts_data_with_nones
+    assert pandas_model.to_data() == dict_of_lists_data_with_nones
 
 
 def test_pandas_model_init_dataframe_to_data(
     dataframe_of_list_of_dicts_data: 'Annotated[pd.DataFrame, pytest.fixture]',
-    list_of_dicts_data_with_nones: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
+    dict_of_lists_data_with_nones: Annotated[JsonListOfDictsOfScalars, pytest.fixture],
 ) -> None:
     from omnipy.components.pandas.lazy_import import pd
 
@@ -92,7 +91,7 @@ def test_pandas_model_init_dataframe_to_data(
         pandas_model.content,  # type: ignore
         dataframe_of_list_of_dicts_data,
     )
-    assert pandas_model.to_data() == list_of_dicts_data_with_nones
+    assert pandas_model.to_data() == dict_of_lists_data_with_nones
 
 
 def test_pandas_model_from_json_to_json():

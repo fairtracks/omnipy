@@ -65,7 +65,7 @@ def test_pandas_dataset_list_of_objects_same_keys():
     from omnipy.components.pandas.lazy_import import pd
 
     pandas_data = PandasDataset()
-    data = {'data_file': [{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]}
+    data = {'data_file': {'a': ['abc', 'bcd'], 'b': [12, 23]}}
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,
@@ -103,7 +103,7 @@ def test_pandas_dataset_list_of_objects_different_keys():
     from omnipy.components.pandas.lazy_import import pd
 
     pandas_data = PandasDataset()
-    data = {'data_file': [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]}
+    data = {'data_file': {'a': ['abc', None], 'b': [12, None], 'c': [None, 'bcd']}}
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,
@@ -115,13 +115,7 @@ def test_pandas_dataset_list_of_objects_different_keys():
         check_dtype=False,
     )
     assert_pandas_frame_dtypes(pandas_data['data_file'], ('string', 'Int64', 'string'))
-    assert pandas_data.to_data() == {
-        'data_file': [{
-            'a': 'abc', 'b': 12, 'c': None
-        }, {
-            'a': None, 'b': None, 'c': 'bcd'
-        }]
-    }
+    assert pandas_data.to_data() == data
 
 
 @pytest.mark.skipif(
@@ -134,7 +128,7 @@ def test_pandas_dataset_list_of_objects_float_numbers():
     from omnipy.components.pandas.lazy_import import pd
 
     pandas_data = PandasDataset()
-    data = {'data_file': [{'a': 12.0, 'b': 12.1}, {'a': 3.0}]}
+    data = {'data_file': {'a': [12.0, 3.0], 'b': [12.1, np.nan]}}
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,
@@ -145,20 +139,14 @@ def test_pandas_dataset_list_of_objects_float_numbers():
         }]),
     )
     assert_pandas_frame_dtypes(pandas_data['data_file'], ('Float64', 'Float64'))
-    assert not DeepDiff(
-        pandas_data.to_data(), {'data_file': [{
-            'a': 12.0, 'b': 12.1
-        }, {
-            'a': 3.0, 'b': np.nan
-        }]},
-        significant_digits=3)
+    assert not DeepDiff(pandas_data.to_data(), data, significant_digits=3)
 
 
 def test_pandas_dataset_list_of_nested_objects():
     from omnipy.components.pandas.lazy_import import pd
 
     pandas_data = PandasDataset()
-    data = {'data_file': [{'a': 'abc', 'b': {'c': [1, 3]}}]}
+    data = {'data_file': {'a': ['abc'], 'b': [{'c': [1, 3]}]}}
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,
@@ -192,7 +180,7 @@ def test_pandas_dataset_empty_list():
     pandas_data.from_data({'data_file': []})
     assert isinstance(pandas_data['data_file'].content,
                       pd.DataFrame) and pandas_data['data_file'].content.empty
-    assert pandas_data.to_data() == {'data_file': []}
+    assert pandas_data.to_data() == {'data_file': {}}
 
 
 def test_pandas_dataset_error_not_list():
