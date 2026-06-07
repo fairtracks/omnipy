@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from collections.abc import Iterator, Mapping
 from copy import copy
-import warnings
 from typing import Callable, cast, Generic, get_args, overload, Protocol, Sized, TypeAlias
+import warnings
 
 from typing_extensions import NamedTuple, override, Self, TypeVar
 
@@ -49,7 +49,7 @@ ColumnModelItemT = TypeVar(
 ColumnWiseTableModelT = TypeVar(
     'ColumnWiseTableModelT', default='JsonScalarColumnWiseTableWithColNamesModel')
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # noqa: C901
 
     class ColumnModel(
             PlainModel[ColumnT],
@@ -93,9 +93,8 @@ else:
                 return backend_concat
 
             if cls._require_explicit_concat_backend:
-                raise TypeError(
-                    f'No concat backend configured for {cls.__name__}; '
-                    'define _concat_column_values() for this ColumnModel subclass')
+                raise TypeError(f'No concat backend configured for {cls.__name__}; '
+                                'define _concat_column_values() for this ColumnModel subclass')
 
             if cls not in cls._concat_fallback_warning_emitted_for:
                 warnings.warn(
@@ -131,8 +130,8 @@ else:
 
         def __iadd__(self, other: object) -> Self:
             other_col = self._as_same_column_model(other, self.__class__)
-            self.content = self.__class__._concat_column_values_with_fallback(self.content,
-                                                                              other_col.content)
+            self.content = self.__class__._concat_column_values_with_fallback(
+                self.content, other_col.content)
             return self
 
 
@@ -140,19 +139,18 @@ class JsonScalarColumnModel(ColumnModel[list[JsonScalar], JsonScalar]):
     ...
 
 
-class JsonMaxLevel1ColumnModel(ColumnModel[
-        list[JsonScalar | JsonDictOfScalars | JsonListOfScalars],
-        JsonScalar | JsonDictOfScalars | JsonListOfScalars,
-]):
+JsonMaxLevel1Types: TypeAlias = JsonScalar | JsonDictOfScalars | JsonListOfScalars
+
+JsonMaxLevel2Types: TypeAlias = (
+    JsonScalar | list[JsonScalar | JsonDictOfScalars | JsonListOfScalars]
+    | dict[str, JsonScalar | JsonDictOfScalars | JsonListOfScalars])
+
+
+class JsonMaxLevel1ColumnModel(ColumnModel[list[JsonMaxLevel1Types], JsonMaxLevel1Types]):
     ...
 
 
-class JsonMaxLevel2ColumnModel(ColumnModel[
-        list[JsonScalar | list[JsonScalar | JsonDictOfScalars | JsonListOfScalars]
-             | dict[str, JsonScalar | JsonDictOfScalars | JsonListOfScalars]],
-        JsonScalar | list[JsonScalar | JsonDictOfScalars | JsonListOfScalars]
-        | dict[str, JsonScalar | JsonDictOfScalars | JsonListOfScalars],
-]):
+class JsonMaxLevel2ColumnModel(ColumnModel[list[JsonMaxLevel2Types], JsonMaxLevel2Types]):
     ...
 
 
@@ -463,15 +461,14 @@ class JsonScalarColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesMode
 
 class JsonMaxLevel1ColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesModel[
         JsonMaxLevel1ColumnModel,
-        JsonScalar | JsonDictOfScalars | JsonListOfScalars,
+        JsonMaxLevel1Types,
 ]):
     ...
 
 
 class JsonMaxLevel2ColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesModel[
         JsonMaxLevel2ColumnModel,
-        JsonScalar | list[JsonScalar | JsonDictOfScalars | JsonListOfScalars]
-        | dict[str, JsonScalar | JsonDictOfScalars | JsonListOfScalars],
+        JsonMaxLevel2Types,
 ]):
     ...
 
