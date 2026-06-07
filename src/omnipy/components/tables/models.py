@@ -178,6 +178,8 @@ class PrintableTable:
     ...
 
 
+# TODO: Make RowWiseTable (and family) generic
+
 if TYPE_CHECKING:
 
     class RowWiseTableModel(
