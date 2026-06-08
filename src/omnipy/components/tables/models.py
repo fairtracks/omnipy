@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from collections.abc import Iterator, Mapping
+from collections.abc import Generator, Iterator, Mapping
 from copy import copy
 from typing import Callable, cast, Generic, get_args, overload, Protocol, Sized, TypeAlias
 
@@ -12,7 +12,7 @@ from omnipy.data.model import (is_model_instance,
                                ModelMetaclass,
                                prepare_value_for_validation_if_dataset_or_model)
 from omnipy.shared.protocols.content import (IsDictOfDictsContent,
-                                             IsDictOfListsContent,
+                                             IsDictContent,
                                              IsListContent,
                                              IsListOfDictsContent,
                                              IsListOfListsContent,
@@ -36,6 +36,8 @@ if TYPE_CHECKING:
 
 ColumnT = TypeVar('ColumnT', bound=IsItemSequenceLike)
 ItemT = TypeVar('ItemT')
+ItemT_co = TypeVar('ItemT_co', covariant=True)
+ItemT_inv = TypeVar('ItemT_inv')
 ColumnModelT = TypeVar(
     'ColumnModelT',
     bound='ColumnModel',
@@ -47,12 +49,49 @@ ColumnModelItemT = TypeVar(
 )
 ColumnWiseTableModelT = TypeVar(
     'ColumnWiseTableModelT', default='JsonScalarColumnWiseTableWithColNamesModel')
+ConcatColumnModelT = TypeVar('ConcatColumnModelT', bound='IsConcatColumnLike[object]')
+
+
+class IsConcatColumnLike(IsItemSequenceLike[ItemT_co], Protocol[ItemT_co]):
+    @classmethod
+    def filled(cls, length: int) -> Self:
+        ...
+
+    @classmethod
+    def default_value(cls) -> ItemT_co:
+        ...
+
+    def __iter__(self) -> Iterator[ItemT_co]:
+        ...
+
+    def __reversed__(self) -> Iterator[ItemT_co]:
+        ...
+
+    def index(self, value: object, /) -> int:
+        ...
+
+    def count(self, value: object, /) -> int:
+        ...
+
+    def __add__(self, other: object) -> Self:
+        ...
+
+
+class IsDictOfConcatColumnLike(
+        IsDictContent[str,
+                      ConcatColumnModelT | IsItemSequenceLike[ItemT_inv]
+                      | Generator[ItemT_inv, None, None]],
+        Protocol[ConcatColumnModelT, ItemT_inv],
+):
+    @override
+    def __getitem__(self, key: str, /) -> ConcatColumnModelT:
+        ...
 
 if TYPE_CHECKING:  # noqa: C901
 
     class ConcatByAddArrayAdapterModel(
             PlainModel[ColumnT],
-            IsItemSequenceLike[ItemT],
+            IsConcatColumnLike[ItemT],
             Generic[ColumnT, ItemT],
     ):
         _allowed_special_methods = frozenset()
@@ -65,7 +104,27 @@ if TYPE_CHECKING:  # noqa: C901
         def _concat_column_values(cls, left: ColumnT, right: ColumnT) -> ColumnT:
             ...
 
-        def __add__(self, other: object):
+        @classmethod
+        def filled(cls, length: int) -> Self:
+            ...
+
+        @classmethod
+        def default_value(cls) -> ItemT:
+            ...
+
+        def __iter__(self) -> Iterator[ItemT]:
+            ...
+
+        def __reversed__(self) -> Iterator[ItemT]:
+            ...
+
+        def index(self, value: object, /) -> int:
+            ...
+
+        def count(self, value: object, /) -> int:
+            ...
+
+        def __add__(self, other: object) -> Self:
             ...
 
 else:
@@ -113,9 +172,29 @@ if TYPE_CHECKING:  # noqa: C901
 
     class ColumnModel(
             PlainModel[ColumnT],
-            IsItemSequenceLike[ItemT],
+            IsConcatColumnLike[ItemT],
             Generic[ColumnT, ItemT],
     ):
+        @classmethod
+        def filled(cls, length: int) -> Self:
+            ...
+
+        @classmethod
+        def default_value(cls) -> ItemT:
+            ...
+
+        def __iter__(self) -> Iterator[ItemT]:
+            ...
+
+        def __reversed__(self) -> Iterator[ItemT]:
+            ...
+
+        def index(self, value: object, /) -> int:
+            ...
+
+        def count(self, value: object, /) -> int:
+            ...
+
         def __add__(self, other: object) -> Self:
             ...
 
@@ -274,7 +353,7 @@ class _IsColumnWiseTableWithColNames(HasContent,
                                      SupportsKeysAndGetItem,
                                      Protocol[ColumnModelT, ColumnModelItemT]):
     @property
-    def _content(self) -> dict[str, ColumnModelT]:
+    def _content(self) -> Mapping[str, ColumnModelT]:
         ...
 
     def _get_iter_row(self) -> IterRow[ColumnModelT, ColumnModelItemT]:
@@ -284,7 +363,7 @@ class _IsColumnWiseTableWithColNames(HasContent,
         self,
         other: 'ColWiseAddOtherType',
         reverse: bool,
-    ) -> 'ColumnWiseTableWithColNamesModel[ColumnModelT]':
+    ) -> 'ColumnWiseTableWithColNamesModel[ColumnModelT, ColumnModelItemT]':
         ...
 
 
@@ -355,11 +434,15 @@ class _ColumnWiseTableWithColNamesMixin(Generic[ColumnModelT, ColumnModelItemT])
         self: _IsColumnWiseTableWithColNames[ColumnModelT, ColumnModelItemT],
         other: 'ColWiseAddOtherType',
         reverse: bool,
-    ) -> 'ColumnWiseTableWithColNamesModel':
+    ) -> 'ColumnWiseTableWithColNamesModel[ColumnModelT, ColumnModelItemT]':
         if isinstance(other, ColumnWiseTableWithColNamesModel):
-            _other: ColumnWiseTableWithColNamesModel = other
+            _other = cast(ColumnWiseTableWithColNamesModel[ColumnModelT, ColumnModelItemT], other)
         else:
-            _other = self.__class__(other)  # type: ignore
+            _other = cast(ColumnWiseTableWithColNamesModel[ColumnModelT, ColumnModelItemT],
+                          ColumnWiseTableWithColNamesModel(other))
+
+        def _none_filled_col_from_template(template: ColumnModelT, col_len: int) -> ColumnModelT:
+            return cast(ColumnModelT, template.__class__([None] * col_len))
 
         def _concat_self_and_other(
             self_value: ColumnModelT,
@@ -369,29 +452,35 @@ class _ColumnWiseTableWithColNamesMixin(Generic[ColumnModelT, ColumnModelItemT])
             return value + self_value if reverse else self_value + value
 
         new_content = dict(self._content)
-        for key, value in _other._content.items():
+        other_content = cast(Mapping[str, ColumnModelT], _other.content)
+
+        for key, value in other_content.items():
             if key in new_content:
                 self_value: ColumnModelT = copy(new_content[key])
             else:
-                self_value = [None] * len(self)
+                self_value = _none_filled_col_from_template(value, len(self))
             new_content[key] = _concat_self_and_other(self_value, value, reverse)
 
-        for missing_key in new_content.keys() - _other._content.keys():
+        for missing_key in new_content.keys() - other_content.keys():
             new_content[missing_key] = _concat_self_and_other(
-                copy(new_content[missing_key]), [None] * len(_other), reverse)
+                copy(new_content[missing_key]),
+                _none_filled_col_from_template(new_content[missing_key], len(_other)),
+                reverse,
+            )
 
-        return ColumnWiseTableWithColNamesModel(new_content)
+        return cast(ColumnWiseTableWithColNamesModel[ColumnModelT, ColumnModelItemT],
+                    ColumnWiseTableWithColNamesModel(new_content))
 
     def __add__(
         self: _IsColumnWiseTableWithColNames[ColumnModelT, ColumnModelItemT],
         other: 'ColWiseAddOtherType',
-    ) -> 'ColumnWiseTableWithColNamesModel':
+    ) -> 'ColumnWiseTableWithColNamesModel[ColumnModelT, ColumnModelItemT]':
         return self._common_add(other, reverse=False)
 
     def __radd__(
         self: _IsColumnWiseTableWithColNames[ColumnModelT, ColumnModelItemT],
         other: 'ColWiseAddOtherType',
-    ) -> 'ColumnWiseTableWithColNamesModel':
+    ) -> 'ColumnWiseTableWithColNamesModel[ColumnModelT, ColumnModelItemT]':
         return self._common_add(other, reverse=True)
 
 
@@ -407,7 +496,7 @@ class _ColumnWiseTableWithColNamesModel(
         if isinstance(data, RowWiseTableWithColNamesNoConvertModel):
             row_wise_data = cast(list[dict[str, JsonScalar]], data)
             # Convert row-wise to column-wise
-            column_wise_data: dict[str, ColumnModelT] = {}
+            column_wise_data: dict[str, list[JsonScalar | None]] = {}
 
             row: dict[str, JsonScalar]
             for i, row in enumerate(row_wise_data):
@@ -422,7 +511,7 @@ class _ColumnWiseTableWithColNamesModel(
 
             # That dict is not covariant in the value type is no problem
             # here as the dict is temporary and vil not change after this
-            return column_wise_data  # type:ignore
+            return cast(dict[str, ColumnModelT], column_wise_data)
         else:
             return data
 
@@ -432,7 +521,7 @@ if TYPE_CHECKING:
     class ColumnWiseTableWithColNamesModel(  # type: ignore[misc]
             _ColumnWiseTableWithColNamesMixin[ColumnModelT, ColumnModelItemT],
             PlainModel[dict[str, ColumnModelT]],
-            IsDictOfListsContent[str, ColumnModelT, ColumnModelItemT],
+            IsDictOfConcatColumnLike[ColumnModelT, ColumnModelItemT],
             PrintableTable,
             Generic[ColumnModelT, ColumnModelItemT],
     ):
@@ -450,7 +539,7 @@ else:
 
 
 class JsonScalarColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesModel[
-        ColumnModel[list[JsonScalar], JsonScalar],
+        JsonScalarColumnModel,
         JsonScalar,
 ]):
     ...
@@ -625,7 +714,12 @@ class PydanticRecordModelBase(
         content = data.content if is_model_instance(data) else data
         if isinstance(content, dict) or is_pure_pydantic_model(content):
             # cls._validate_and_set_value(data)
-            return cls._validate_record_model_with_col_names(pyd_model, data, header_names)
+            data_with_col_names = cast(_DataWithColNamesModelT, data)
+            return cls._validate_record_model_with_col_names(
+                pyd_model,
+                data_with_col_names,
+                header_names,
+            )
             return pyd_model(**data)
 
         if isinstance(content, list):
@@ -638,9 +732,10 @@ class PydanticRecordModelBase(
                 (f'Incorrect number of data elements: '
                  f'{len(header_names)} >= {num_data_cols} >= {num_required_fields}')
 
+            data_without_col_names = cast(_DataWithoutColNamesModelT, data)
             return cls._validate_record_model_without_col_names(
                 pyd_model,
-                data,
+                data_without_col_names,
                 data_with_col_names_type,
                 header_names,
             )
@@ -694,7 +789,7 @@ if TYPE_CHECKING:  # noqa: C901
     class IteratingPydanticRecordsModel(
             _ColumnWiseTableWithColNamesMixin,
             PlainModel[ColumnWiseTableModelT],
-            IsDictOfListsContent[str, ColumnModelT, ColumnModelItemT],
+            IsDictOfConcatColumnLike[ColumnModelT, ColumnModelItemT],
             PrintableTable,
             Generic[_PydBaseModelT, ColumnWiseTableModelT, ColumnModelT, ColumnModelItemT],
     ):

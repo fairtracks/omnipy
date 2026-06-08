@@ -135,8 +135,8 @@ def test_columnwise_and_rowwise_table_models_failure() -> None:
 def test_columnwise_table_iter(assert_row_iter: Annotated[AssertRowIter, pytest.fixture]) -> None:
     column_wise_model = JsonScalarColumnWiseTableWithColNamesModel(column_wise_dict_of_lists_data)
 
-    for i, row in enumerate(column_wise_model):
-        assert_row_iter(i, row)
+    for i in range(len(column_wise_model)):
+        assert_row_iter(i, column_wise_model[i])
 
     def model_content_if_needed(model_or_obj):
         return model_or_obj.content if is_model_instance(model_or_obj) else model_or_obj
@@ -194,7 +194,7 @@ def test_columnwise_table_index(
         del column_wise_model[1]  # type: ignore
 
     assert column_wise_model['a'].to_data() == ['1', '4']
-    column_wise_model['a'] = ['10', '40']
+    column_wise_model['a'] = cast(Any, ['10', '40'])
     assert column_wise_model[1]['a'] == '40'
 
 
@@ -468,7 +468,7 @@ def test_pydantic_record_model_base_forwards_output_type_to_row_parser() -> None
         def _validate_record_model_with_col_names(
             cls,
             pyd_model: type[pyd.BaseModel],
-            data: ColumnWiseTableWithColNamesModel,
+            data: JsonScalarColumnWiseTableWithColNamesModel,
             header_names: tuple[str, ...],
         ) -> pyd.BaseModel | JsonScalarColumnWiseTableWithColNamesModel:
             return cast(JsonScalarColumnWiseTableWithColNamesModel, data)
@@ -478,7 +478,7 @@ def test_pydantic_record_model_base_forwards_output_type_to_row_parser() -> None
             cls,
             pyd_model: type[pyd.BaseModel],
             data: list[JsonScalar],
-            output_type: type[ColumnWiseTableWithColNamesModel],
+            output_type: type[JsonScalarColumnWiseTableWithColNamesModel],
             header_names: tuple[str, ...],
         ) -> pyd.BaseModel | JsonScalarColumnWiseTableWithColNamesModel:
             concrete_output_type = cast(type[JsonScalarColumnWiseTableWithColNamesModel],

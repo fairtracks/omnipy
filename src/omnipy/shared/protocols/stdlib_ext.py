@@ -1,3 +1,4 @@
+from collections.abc import Iterator
 from typing import overload, Protocol, runtime_checkable, SupportsIndex
 
 from typing_extensions import TypeVar
@@ -30,4 +31,7 @@ class IsItemSequenceLike(Protocol[_T_co]):
         raise AssumedToBeImplementedException
 
     def __contains__(self, value: object, /) -> bool:
+        raise AssumedToBeImplementedException
+
+    def __iter__(self) -> Iterator[_T_co]:
         raise AssumedToBeImplementedException
