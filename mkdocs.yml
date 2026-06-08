@@ -116,6 +116,25 @@ nav:
   - Code reference: reference/
 - Contributing: contributing.md
 - Release notes: release_notes.md
+- Comics:
+  - The Omnificients:
+    - Optimus Parse (The Data Transformer): comics/optimus-parse.md
+    - The Schema (The Silent Keeper): comics/schema.md
+    - The Merciless Mimic Mantis (The Apex Ambusher): comics/merciless-mimic-mantis.md
+    - Master Zen-Batch (The Boilerplate Pruner): comics/master-zen-batch.md
+    - Sir Fetch-a-Lot (The RESTful Retriever): comics/sir-fetch-a-lot.md
+    - Visor (The Spectral Seer): comics/visor.md
+  - The Un-FAIR Alliance:
+    - Lord Franken-Format (The Toxic Feeder): comics/lord-franken-format.md
+    - '"Honest" HAL Lucinator (The Used-Data Salesman)': comics/honest-hal-lucinator.md
+    - The Null Ninja (The Silent Corruptor): comics/null-ninja.md
+    - Dr. Final_v3_Real / The Spaghetti Monster (The Jekyll & Hyde of Code): comics/dr-final-v3-real-spaghetti-monster.md
+    - The Payload Prankster (The API Poltergeist): comics/payload-prankster.md
+    - Command-line Cryptic (The Monochrome Enigmatist): comics/command-line-cryptic.md
+  - Ultimate Showdowns:
+    - Optimus Prime vs Lord Franken-Format: comics/optimus-parse-vs-lord-franken-format.md
+    - Master Zen-Batch vs The Spaghetti Monster: comics/master-zen-batch-vs-dr-final-v3-real-monster-spaghetti.md
+    - 'The Schema vs "Honest" HAL Lucinator': comics/schema-vs-honest-hal-lucinator.md
 
 watch:
   - src

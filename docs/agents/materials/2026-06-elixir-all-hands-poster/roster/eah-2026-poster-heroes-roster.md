@@ -34,14 +34,13 @@
 
 ### 5. Sir Fetch-a-Lot (The RESTful Retriever)
 *   **Nemesis:** The Payload Prankster
-*   **Superpower:** Instantaneous multi-dimensional projection. She effortlessly untangles chaotic architectures, rendering deep data hierarchies as perfectly scaled, side-by-side nested panels, painted in over 300 hyper-personalized syntax styles.
-Blazing-fast API retrieval through smart request pacing, safe rate-limit control, parallel asynchronous fetching, and relentless pagination tracking.
+*   **Superpower:** Blazing-fast API retrieval through smart request pacing, safe rate-limit control, parallel asynchronous fetching, and relentless pagination tracking.
 *   **Backstory:** A noble winged cyber-hound built to retrieve payloads from even the most labyrinthine APIs. Sir Fetch-a-Lot never carelessly slams into the rate limit—he runs at full speed while staying just under the cap. When data is scattered across multiple endpoints, he splits his attention across many fetch missions at once, gliding through requests in parallel. And when the response stretches across page after page, he follows every next trail with unwavering loyalty until the full result set is safely brought home. He is swift, disciplined, and unstoppable: the goodest boy of distributed retrieval.
 *   **Catchphrase:** "Every endpoint gets sniffed."
 
 
 ### 6. Visor (The Spectral Seer)
-*   **Nemesis:** Count Cryptic (The Monochrome Enigmatist)
+*   **Nemesis:** Command-line Cryptic (The Monochrome Enigmatist)
 *   **Superpower:** Instantaneous multi-dimensional projection. She effortlessly untangles chaotic architectures, rendering deep data hierarchies as perfectly scaled, side-by-side nested panels, painted in over 300 hyper-personalized syntax styles.
 *   **Backstory:** Visor is not entirely of this world. She is an entity from a higher dimension where data does not exist as rigid, sequential text, but as pure, boundless, interconnected geometry. When she first arrived in our computational reality, she was horrified to see beautiful, infinitely complex biological datasets violently squished into flat terminal lines or hidden behind unreadable memory pointers by earthly villains like Count Cryptic.
 
