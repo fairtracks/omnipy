@@ -56,11 +56,7 @@ markdown_extensions:
 #  - footnotes
 
 nav:
-- Start here:
-  - Home: index.md
-  - Install: start/install.md
-  - 10-minute Quickstart: start/quickstart.md
-  - Concepts: start/concepts.md
+- Home: index.md
 - Tutorials:
   - 'Tutorial 1: Interactive safety': tutorials/01-interactive-safety.md
   - 'Tutorial 2: Nested JSON to tables': tutorials/02-json-to-tables.md
