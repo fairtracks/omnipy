@@ -1,4 +1,7 @@
-from typing import Any, Generic, get_args, Protocol
+from collections import defaultdict
+from collections.abc import Iterable, Mapping
+from types import GenericAlias
+from typing import Any, Generic, get_args, Protocol, Union
 
 from typing_extensions import TypeVar
 
@@ -7,7 +10,7 @@ from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, Typ
 from omnipy.data.model import Model
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
-from omnipy.util.helpers import is_iterable
+from omnipy.util.helpers import is_iterable, is_non_str_byte_iterable
 
 
 class NotIterableExceptStrOrBytesModel(Model[object | None]):
@@ -138,3 +141,46 @@ else:
             Generic[_U, _V, _W, _X, _Y, _Z],
     ):
         ...
+
+
+class GroupByTypeModel(Chain2[Model[list], Model[dict[type | GenericAlias, list]]]):
+    """
+    Group list items by their runtime type.
+
+    The model converts a list into a dictionary mapping each inferred item
+    type to the sublist of items having that type. For mappings and other
+    non-string iterables, it attempts to preserve more detailed generic
+    type information, such as key/value types for mappings and element
+    types for tuples and other iterables, when those type forms can be
+    constructed at runtime.
+
+    Examples:
+        >>> GroupByTypeModel([1, 'a', 2, [3], ['b']]).to_data()
+        {int: [1, 2], str: ['a'], list[int]: [[3]], list[str]: [['b']]}
+    """
+    @classmethod
+    def _parse_data(cls, data: Model[list]) -> Model[dict[type | GenericAlias, list]]:
+        grouped: dict[type, list] = defaultdict(list)
+
+        def _iter_union_type(seq: Iterable):
+            return Union[tuple(type(item) for item in seq)]
+
+        def _deduce_full_type(_item: object) -> type:
+            try:
+                if isinstance(_item, Mapping):
+                    return type(_item)[  # type: ignore[index]
+                        _iter_union_type(_item.keys()),
+                        _iter_union_type(_item.values()),
+                    ]
+                elif isinstance(_item, tuple):
+                    return tuple[tuple(type(_) for _ in _item)]
+                elif is_non_str_byte_iterable(_item):
+                    return type(_item)[_iter_union_type(_item)]  # type: ignore[index]
+            except TypeError:
+                pass
+            return type(_item)
+
+        for item in data.content:
+            full_type = _deduce_full_type(item)
+            grouped[full_type].append(item)  # pyright: ignore [reportArgumentType]
+        return Model[dict[type | GenericAlias, list]](grouped)
