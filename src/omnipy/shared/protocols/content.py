@@ -18,7 +18,7 @@ from omnipy.shared.protocols.builtins import (_NegativeInteger,
                                               IsSet,
                                               IsStr,
                                               IsTuple)
-from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
+from omnipy.shared.protocols.stdlib_ext import IsConcatenableItemSequenceLike, IsItemSequenceLike
 from omnipy.shared.protocols.typing import IsAbstractSet, IsHashable, IsItemSequence, IsMapping
 
 _KeyT = TypeVar('_KeyT')
@@ -29,6 +29,7 @@ _ValSeqOrGenT = TypeVar('_ValSeqOrGenT', bound=IsItemSequence | Generator)
 _ValMappingT = TypeVar('_ValMappingT', bound=IsMapping)
 _NestedValT = TypeVar('_NestedValT')
 _SecondValT = TypeVar('_SecondValT')
+_ConcatColumnModelT = TypeVar('_ConcatColumnModelT', bound='IsConcatenableItemSequenceLike[object]')
 
 
 class IsIntContent(IsInt, Protocol):
@@ -675,3 +676,14 @@ class IsDictOfDictsContent(IsDictContent[_KeyT,
     @override
     def __getitem__(self, key: _KeyT, /) -> _ValMappingT:
         raise AssumedToBeImplementedException
+
+
+class IsDictOfConcatenableItemSequenceLike(
+        IsDictContent[str,
+                      _ConcatColumnModelT | IsItemSequenceLike[_ValT]
+                      | Generator[_ValT, None, None]],
+        Protocol[_ConcatColumnModelT, _ValT],
+):
+    @override
+    def __getitem__(self, key: str, /) -> _ConcatColumnModelT:
+        ...

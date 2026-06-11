@@ -194,7 +194,7 @@ def test_columnwise_table_index(
         del column_wise_model[1]  # type: ignore
 
     assert column_wise_model['a'].to_data() == ['1', '4']
-    column_wise_model['a'] = cast(Any, ['10', '40'])
+    column_wise_model['a'] = ['10', '40']
     assert column_wise_model[1]['a'] == '40'
 
 
