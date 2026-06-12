@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add safe, fail-open preview pruning for bounded-height model and dataset previews, including `width=None, height bounded` paths, plus bounded-row `Dataset.list()` materialization, without changing public APIs or renderer-owned output behavior.
+**Goal:** Add safe, fail-open preview pruning for bounded-height model and dataset previews, including `width=None, height bounded` paths, plus bounded-row `Dataset.list()` materialization, while replacing nominal mapping-type gating with a generic frozen-key strategy and without changing public APIs or renderer-owned output behavior.
 
-**Architecture:** Introduce an internal `preview_pruning.py` helper that decides whether a `DraftPanel` can be safely front-pruned before expensive pretty-printer preparation. The helper is wired into `pretty.py`, chooses one active chunking path at a time using cheap metadata, uses bounded heuristic probe renders under the real assigned panel frame, and must fail open whenever bounded-height safety or probe stability cannot be established. `Dataset.list()` remains a separate optimization in `display.py`, limiting row work to the visible range plus a small safety margin.
+**Architecture:** Introduce an internal `preview_pruning.py` helper that decides whether a `DraftPanel` can be safely front-pruned before expensive pretty-printer preparation. The helper is wired into `pretty.py`, chooses one active chunking path at a time using cheap metadata, uses bounded heuristic probe renders under the real assigned panel frame, and must fail open whenever bounded-height safety or probe stability cannot be established. For mapping-like content, safety is capability-based: freeze key order once per prune run, reconstruct candidate prefixes from that frozen order without value deep-copy, and fall back to original behavior whenever lookup, reconstruction, or required mapping invariants cannot be trusted. `Dataset.list()` remains a separate optimization in `display.py`, limiting row work to the visible range plus a small safety margin.
 
 **Tech Stack:** Python, existing Omnipy display/layout/pretty-printer stack, `pytest`, `uv`, `pre-commit`
 
@@ -31,6 +31,9 @@
 - No ellipsis insertion in the pruner.
 - For v1 general containers, pruning is gated to bounded-height cases only: `width=None, height bounded` may prune, while `height=None` must skip pruning regardless of width.
 - If width stabilization is used and does not stabilize before the probe cap, pruning must fail open to the full unpruned content.
+- Mapping pruning must not depend on targeted allowlists of model classes or mapping classes.
+- Mapping determinism for a prune run must come from frozen key order; do not add a separate determinism sample check when that frozen order is in use.
+- Value deep-copy is not part of this design; the mapping path should reconstruct prefixes from frozen keys plus live value lookup and fail open if that becomes unsafe.
 - Coarse-ness and path-selection checks must use cheap metadata only; they must not force expensive chunk construction, full `splitlines()`, `list(mapping.items())`, deep traversal, or `to_data()`-style conversion solely to pick a pruning level.
 - Keep the current exponential-growth plus binary-search refinement strategy; this slice does not add a separate binary-search cap parameter.
 - Probe budgets should use the title-adjusted content viewport (`inner_frame.dims`), not raw outer frame dimensions.
@@ -43,10 +46,11 @@ Tests are the primary deliverable for this plan.
 
 - Bounded-height safe cases: rendering a pruned prefix yields the same visible viewport as rendering the full content and cropping to the viewport.
 - `width=None, height bounded` previews may prune; `height=None` previews must fall back to current full-content behavior.
-- Unsafe or inconclusive cases: probe instability, recursion/cycle issues, unavailable cheap metadata, non-deterministic child ordering, and probe errors all fall back to current full-content behavior.
+- Unsafe or inconclusive cases: probe instability, recursion/cycle issues, unavailable cheap metadata, non-deterministic child ordering, probe errors, missing frozen keys, lookup failures, prefix reconstruction failures, and unstable mapping invariants all fall back to current full-content behavior.
 - `peek()`, `json()`, and `full()` keep current public semantics; only the internal amount of prepared content changes where safely allowed.
 - `Dataset.list()` materializes only visible rows plus a small safety margin while preserving current visible output.
 - Top-level dataset panel limiting remains intact; child-panel pruning is still per-panel and frame-local.
+- `JsonDictOfDictsModel` and similar mapping-like content must no longer fail eligibility only because of a nominal type gate.
 
 ## Planned verification commands
 
@@ -65,7 +69,12 @@ Tests are the primary deliverable for this plan.
 - Probe rendering can accidentally recurse back into pruning unless the probe path is explicitly isolated.
 - Memoization must stay scoped to a single top-level render call; broader caching risks stale or cross-frame results.
 - Hierarchical path selection must not introduce holes or silently switch among sibling subtrees; restart-on-promotion behavior is the main guardrail here.
+- Mapping reconstruction can fail for mapping-like content that does not support stable lookup or invariant-preserving prefix reconstruction; this is expected to fail open rather than broaden special cases.
 - `Dataset.list()` optimization must reduce work without changing the currently visible table output or row numbering.
+
+## Approval gate
+
+- This slice remains docs-first only. No implementation work should begin until the updated spec and this updated plan are reviewed and approved.
 
 ### Task 0: Characterize current `peek()` and `list()` behavior
 
@@ -97,6 +106,7 @@ Tests are the primary deliverable for this plan.
 - [ ] Ensure the tests cover the v1 safety rules called out in the spec: bounded-height gating for general containers, `width=None, height bounded` support, fail-open on width instability, and `inner_frame.dims`-based budgeting.
 - [ ] Add focused helper tests for hierarchical granularity selection: coarse-threshold calculation, skip-level descent, `3 x many` nested structures, and parent-level restart when a deeper path underfills the viewport.
 - [ ] Verify that path selection uses cheap metadata only and fails open when safe cheap counts are unavailable.
+- [ ] Add focused helper tests for mapping pruning with frozen key order: deterministic in-run prefix selection without nominal type gates, no required value deep-copy, and fail-open on missing keys, lookup errors, reconstruction failures, or unstable invariants.
 
 **Acceptance focus:** The helper can distinguish safe vs unsafe pruning opportunities and returns original content in every inconclusive case.
 
@@ -113,11 +123,12 @@ Tests are the primary deliverable for this plan.
 
 - [ ] Add failing integration/contract tests showing that bounded-height previews, including `width=None, height bounded` cases, can avoid preparing heavy invisible tails while preserving the visible viewport.
 - [ ] Add dataset preview-pruning coverage for child-panel pruning and nested `3 x many` granularity selection in real dataset `peek()` paths, separate from the later `list()`-only optimization work.
+- [ ] Add integration coverage proving `JsonDictOfDictsModel` no longer fails only because of a nominal mapping-type check and instead follows the frozen-key strategy when safe.
 - [ ] Add the internal probe-render control needed so probe renders observe real formatting for candidate prefixes without recursively re-entering pruning.
 - [ ] Add per-render memoization only at the scope needed to reuse repeated probe work within one top-level display call.
 - [ ] Implement the selected-path descent and parent-promotion restart behavior without changing prefix-only semantics or introducing sibling holes.
 - [ ] Verify the deterministic descent rule: always choose the first eligible child in existing container order, keep the deepest visited path on that chain when no suitable deeper level is found, and fail open only when deterministic ordering or cheap metadata cannot be established safely.
-- [ ] Verify the explicit fail-open paths: `height=None`, width instability at the cap, recursion/cycle protection, unavailable cheap metadata, non-deterministic child ordering, and probe exceptions.
+- [ ] Verify the explicit fail-open paths: `height=None`, width instability at the cap, recursion/cycle protection, unavailable cheap metadata, non-deterministic child ordering, probe exceptions, missing frozen keys, lookup failures, reconstruction failures, and unstable mapping invariants.
 
 **Acceptance focus:** Real preview code paths honor the helper’s safety rules, and tests prove the visible output contract rather than helper internals alone.
 

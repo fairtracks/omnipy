@@ -2,7 +2,7 @@ Title: Per-panel pruning before pretty-printers — renderer-guided rendered-pre
 
 Overview
 - Purpose: reduce the amount of model/dataset content prepared and sent to pretty-printers for `peek()`/`full()`/`json()`/`list()` displays by returning a slightly-more-than-visible front prefix for each panel. The pruner does not add ellipses or otherwise change final rendering; it only supplies less input. Rendering, cropping, and ellipsis behavior remain the responsibility of existing pretty-print and display layers.
-- Key design decision (adopted): use a renderer-guided rendered-prefix superset strategy (C). For a safely gated bounded panel, probe incremental prefixes under the actual panel frame and stop once a bounded heuristic probe window suggests the prefix is sufficient for the visible viewport. Cap probes to avoid worst-case full scans, and fail open whenever safety cannot be established.
+- Key design decision (adopted): use a renderer-guided rendered-prefix superset strategy (C). For a safely gated bounded panel, probe incremental prefixes under the actual panel frame and stop once a bounded heuristic probe window suggests the prefix is sufficient for the visible viewport. Cap probes to avoid worst-case full scans, and fail open whenever safety cannot be established. For mapping-like content, safety is established by capabilities and in-run strategy, not by nominal model or mapping class allowlists.
 
 Goals & constraints
 - Goals
@@ -11,12 +11,13 @@ Goals & constraints
 - Preserve current rendering architecture and public methods.
 - Keep the optimization best-effort and safe by fail-open; do not claim exactness beyond the current heuristic stopping rules.
 - Constraints
-- Only ordered or sequence-like and insertion-ordered mapping types are guaranteed to be prunable in v1.
+- Sequence-like content and mapping-like content are prunable only when the pruner can establish safe front-prefix semantics from the content's behavior. Mapping pruning is capability- and strategy-based, not class-allowlist-based.
 - For general container pretty-printing in v1, pruning is only enabled when height is bounded. Width may be bounded or unbounded; `width=None, height bounded` previews may prune, while `height=None` previews skip pruning regardless of width.
 - For unbounded-height `full()` calls, pruning is skipped; do not change semantics.
 - The pruner must fail open: any error or unsupported case falls back to current behavior.
 - The pruner must not insert ellipses.
 - Strings and bytes are treated as sequences in pruner logic.
+- For a single preview/prune call, validated model- or dataset-owned content is assumed stable enough that frozen mapping key order remains authoritative for that run.
 
 Architecture & components
 - Primary hook location (recommended)
@@ -40,7 +41,7 @@ Architecture & components
 Data flow & algorithms
 - When pruning runs
   - Pruning runs for a `DraftPanel` when:
-    - content is sequence-like or mapping-like and ordered enough to slice safely;
+    - content is sequence-like, or mapping-like with deterministic prefix semantics established for the current run by freezing key order and reconstructing prefixes from that frozen order;
     - the panel viewport has bounded height for the content shape being rendered; width may be bounded or unbounded, with width stabilization used only when width is known;
     - the pruner recognizes the content shape as safe to slice into whole logical items or chunks.
   - Pruning is skipped and the original `DraftPanel` is forwarded if:
@@ -99,7 +100,7 @@ Data flow & algorithms
   - For general container types whose pretty-printers can globally reformat earlier output based on later items — including Rich, Devtools, and CompactJSON rendering over sequences, mappings, and model-shaped containers — the v1 pruning contract remains best-effort and fail-open rather than exact.
   - The implemented v1 policy allows pruning when `width=None` and `height` is bounded, using the same bounded probe strategy and the same fail-open fallback if the viewport cannot be established safely.
   - Pruning is skipped when `height=None`, including full-view paths, regardless of width.
-  - Known prefix-stable content shapes, such as line-appending text or fixed-column output, could support stricter width-unbounded reasoning or future allowlists, but that is out of scope for this slice.
+- Known prefix-stable content shapes, such as line-appending text or fixed-column output, could support stricter width-unbounded reasoning or future capability-specific strategies, but that is out of scope for this slice.
 - Caps, caching, and fallbacks
   - `max_probe_items` is a private internal cap to prevent worst-case scans; an initial design target is on the order of `1024` logical items or chunks.
   - An optional `max_probe_time` internal cap may be added if needed to bound slow probe loops.
@@ -114,7 +115,12 @@ Data flow & algorithms
   - For bytes, use fixed-size logical chunks compatible with byte-oriented or hexdump-like rendering.
   - For nested structures, keep one active chunking path at a time and preserve prefix-only semantics all the way back to the root; never introduce holes across sibling chunks.
 - Mappings
-  - Use insertion order and include the first `n` key-value pairs as whole pairs.
+  - Mapping pruning safety is determined by capabilities and strategy, not by targeted allowlists of model classes or mapping classes.
+  - Freeze key order once per prune run and use that frozen order as the deterministic prefix basis for all probe and binary-search steps in that run.
+  - Freezing key order means snapshotting only the ordered keys needed for deterministic prefix semantics; it does not require copying keys together with values, and value deep-copy is not required by this design.
+  - Reconstruct candidate prefixes from the frozen key order by looking up the corresponding values in the original mapping when needed.
+  - Do not require a separate determinism sample check when key order has been frozen for the run.
+  - Fail open for the mapping path if any frozen key cannot be found later, if lookup raises, if prefix reconstruction raises, if the reconstruction cannot preserve required mapping invariants, or if the observed mapping invariants become unstable during the run.
 - Nested panels
   - Top-level panel count limiting remains in `_peek_nested_content()`.
   - For each visible child panel, the pruner still runs in `pretty.py` using the child panel's assigned frame.
@@ -136,6 +142,7 @@ Error handling & safety
 - Track object identities to prevent infinite recursion on cyclic structures.
 - Probe renders must run without entering the pruning loop.
 - Keep pruning disabled for any path where safe front-prefix pruning cannot be established.
+- For mapping-like content specifically, fail-open triggers include missing frozen keys, lookup errors while reconstructing a prefix, reconstruction failures, and any inability to preserve or trust the mapping invariants relied on by the frozen-key strategy.
 
 Performance considerations
 - Expected wins
@@ -158,8 +165,9 @@ Testing plan
   - `tests/data/display/text/test_preview_pruning.py`
     - `test_sequence_rendered_prefix_superset_stops_at_viewport`: narrow frame, long list with a very long line far away; assert visible viewport content is preserved and the pruned prefix is smaller than the full input.
     - `test_string_chunking_and_pruning`: long single-line string; ensure chunking returns a prefix that fills the viewport and stops.
-    - `test_mapping_pruning_insertion_order`: large mapping; assert the first `N` pairs are used in insertion order.
+    - `test_mapping_pruning_uses_frozen_key_order`: large mapping; assert the first `N` pairs are reconstructed from the frozen key order without requiring nominal type allowlists or value deep-copy.
     - `test_probe_caps_and_fallback`: extremely large input; assert the pruner respects probe caps, allows `width=None, height bounded`, skips pruning when `height=None`, fails open if needed, and raises no exception.
+    - `test_mapping_pruning_fail_open_on_inconsistent_lookup_or_reconstruction`: mapping-like content with missing keys, lookup errors, or reconstruction failures should skip pruning and return original behavior.
     - `test_probe_cache_effectiveness`: repeated pruning on the same object within a single display call should reuse probe results.
     - `test_nested_granularity_descends_for_three_by_many_shape`: a `3 x many` nested structure should descend past coarse top-level chunking and select a finer prefix-preserving path.
     - `test_nested_granularity_promotes_to_parent_when_underfilled`: if the chosen deeper path is exhausted and the viewport is still underfilled, the pruner should promote to the parent path and restart from the parent prefix.
@@ -168,6 +176,8 @@ Testing plan
     - `test_model_peek_prunes_large_sequence_before_pretty_printing`: assert heavy tails are not prepared beyond the returned prefix using real/instrumented checks.
     - `test_model_json_pruner_respects_width_and_height`: ensure visible preview rows are preserved for both bounded-width and `width=None, height bounded` previews.
     - `test_model_full_unbounded_height_skips_vertical_pruning`: `full()` semantics remain unchanged for `height=None`.
+    - `test_model_peek_mapping_pruning_supports_json_dict_of_dicts_without_nominal_gate`: `JsonDictOfDictsModel` should be eligible for mapping pruning when the frozen-key strategy can be applied safely.
+    - `test_model_peek_mapping_pruning_fails_open_for_unstable_mapping_invariants`: inconsistent mapping behavior during a prune run should fall back to unpruned behavior.
   - `tests/data/test_dataset.py`
     - `test_dataset_peek_top_level_and_child_panels_pruned`: top-level panel count limiting still applies and child panels are pruned individually using their own frames.
     - `test_dataset_peek_nested_three_by_many_uses_finer_granularity`: nested visible panels with few top-level chunks and large inner tails should use finer path selection without creating holes.
@@ -204,5 +214,6 @@ Decisions
 - The pruner must not insert ellipses. Existing rendering layers remain responsible for cropping and ellipsis behavior.
 - Strings and bytes are treated as sequences, using line-aware chunking first and fixed-size chunks for long single-line content.
 - Hierarchical granularity selection adopted: use a single active chunking path, descend past coarse levels when needed, and promote back to the parent path with restart semantics if a deeper path underfills the viewport.
+- Mapping pruning safety adopted: use a frozen-key-order strategy within a prune run, avoid nominal class allowlists, do not require value deep-copy, and fail open whenever lookup, reconstruction, or relied-on mapping invariants cannot be trusted.
 
 End of document.
