@@ -57,7 +57,7 @@ Data flow & algorithms
     - formatting inputs needed for faithful probe renders, including indentation, tab size, and pretty-printer choice.
 - Hierarchical chunking-path selection (single active path)
   - Goal: choose a pruning level with useful chunk granularity before probe rendering, while preserving strict prefix-only, no-holes semantics.
-  - The pruner uses one active chunking path at a time. It starts at the root path and may descend into the first eligible child path when the current level is too coarse.
+  - The pruner uses one active chunking path at a time. It starts at the root path and may descend into the first eligible child path in existing container order when the current level is too coarse.
   - Coarse-ness threshold:
     - `H = height_budget`
     - `w = width_stabilization_window`
@@ -68,13 +68,13 @@ Data flow & algorithms
     1. Start at the root path `/`.
     2. Compute a cheap `chunk_count` for the current path.
     3. If `chunk_count >= T_eff`, select the current path.
-    4. Otherwise descend to the first eligible child path and repeat, allowing multiple coarse intermediate levels to be skipped until a suitable path is found, `max_descent_depth` is reached, or no eligible child remains.
-    5. If no suitable path is found, select the deepest or otherwise best visited path.
+    4. Otherwise descend to the first eligible child path in existing container order and repeat, allowing multiple coarse intermediate levels to be skipped until a suitable path is found, `max_descent_depth` is reached, or no eligible child remains.
+    5. If no suitable path is found, select the deepest visited path along that deterministic descent chain.
     6. Run probe search only on that selected path.
     7. If the selected deeper path is fully consumed and the viewport is still underfilled, promote to the parent path and restart there from prefix start.
     8. Stop after `max_promotions`; if the viewport still cannot be filled safely, fail open.
   - Coarse-ness evaluation must use cheap metadata only and must not trigger expensive chunk construction or full materialization. In particular, it must avoid full `splitlines()` over large text, full `list(mapping.items())`, deep traversal, or model/data conversion done solely to choose a path.
-  - If cheap count metadata is unavailable or unsafe for a node, do not descend through that node; keep the best already-visited path or fail open.
+  - If cheap count metadata is unavailable or unsafe for a node, do not descend through that node; keep the current already-visited path. If deterministic child order cannot be established safely, fail open instead of choosing among siblings heuristically.
 - Probe orchestration (renderer-guided rendered-prefix superset with bounded probes)
   - Goal: return a best-effort front prefix such that, in safely gated cases, rendering that prefix under the same frame, config, and pretty-printer appears sufficient to fill the visible viewport, while keeping probes bounded. If the heuristic cannot establish this safely, return the original input.
   - Steps:
@@ -182,7 +182,7 @@ Testing plan
   - Pre-commit:
     - `uv run pre-commit run --hook-stage manual --all-files`
 - Expected assertions
-  - In safe bounded-width cases where pruning runs and the probe stopping criteria stabilize, the visible viewport contains the same content as would be produced by rendering the full model and cropping to the viewport.
+  - In safe bounded-height cases where pruning runs and the probe stopping criteria stabilize, the visible viewport contains the same content as would be produced by rendering the full model and cropping to the viewport.
   - If width does not stabilize before the probe cap, pruning is skipped and rendering falls back to the full unpruned content.
   - Hidden top-level dataset panels are not materialized.
   - `list()` computes metadata only for visible rows plus the chosen safety margin.

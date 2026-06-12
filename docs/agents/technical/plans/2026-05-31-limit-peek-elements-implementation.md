@@ -43,7 +43,7 @@ Tests are the primary deliverable for this plan.
 
 - Bounded-height safe cases: rendering a pruned prefix yields the same visible viewport as rendering the full content and cropping to the viewport.
 - `width=None, height bounded` previews may prune; `height=None` previews must fall back to current full-content behavior.
-- Unsafe or inconclusive cases: probe instability, recursion/cycle issues, path-selection ambiguity, unavailable cheap metadata, and probe errors all fall back to current full-content behavior.
+- Unsafe or inconclusive cases: probe instability, recursion/cycle issues, unavailable cheap metadata, non-deterministic child ordering, and probe errors all fall back to current full-content behavior.
 - `peek()`, `json()`, and `full()` keep current public semantics; only the internal amount of prepared content changes where safely allowed.
 - `Dataset.list()` materializes only visible rows plus a small safety margin while preserving current visible output.
 - Top-level dataset panel limiting remains intact; child-panel pruning is still per-panel and frame-local.
@@ -109,12 +109,15 @@ Tests are the primary deliverable for this plan.
 - Modify: `src/omnipy/data/_display/text/preview_pruning.py`
 - Modify: `tests/data/display/text/test_pretty.py`
 - Modify: `tests/data/test_model.py`
+- Modify: `tests/data/test_dataset.py`
 
 - [ ] Add failing integration/contract tests showing that bounded-height previews, including `width=None, height bounded` cases, can avoid preparing heavy invisible tails while preserving the visible viewport.
+- [ ] Add dataset preview-pruning coverage for child-panel pruning and nested `3 x many` granularity selection in real dataset `peek()` paths, separate from the later `list()`-only optimization work.
 - [ ] Add the internal probe-render control needed so probe renders observe real formatting for candidate prefixes without recursively re-entering pruning.
 - [ ] Add per-render memoization only at the scope needed to reuse repeated probe work within one top-level display call.
 - [ ] Implement the selected-path descent and parent-promotion restart behavior without changing prefix-only semantics or introducing sibling holes.
-- [ ] Verify the explicit fail-open paths: `height=None`, width instability at the cap, recursion/cycle protection, unavailable cheap metadata, and probe exceptions.
+- [ ] Verify the deterministic descent rule: always choose the first eligible child in existing container order, keep the deepest visited path on that chain when no suitable deeper level is found, and fail open only when deterministic ordering or cheap metadata cannot be established safely.
+- [ ] Verify the explicit fail-open paths: `height=None`, width instability at the cap, recursion/cycle protection, unavailable cheap metadata, non-deterministic child ordering, and probe exceptions.
 
 **Acceptance focus:** Real preview code paths honor the helper’s safety rules, and tests prove the visible output contract rather than helper internals alone.
 
