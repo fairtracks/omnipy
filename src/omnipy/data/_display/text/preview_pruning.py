@@ -319,6 +319,16 @@ def _first_eligible_sequence_child_path(
     path: _ChunkPath,
     content: list[object] | tuple[object, ...],
 ) -> tuple[_ChunkPath | None, bool]:
+    """Return first eligible descendable child for sequence-like content.
+
+    Args:
+        path: Current chunk path.
+        content: Sequence-like content to inspect in order.
+
+    Returns:
+        Tuple ``(child_path, must_fail_open)`` where ``must_fail_open`` is
+        ``True`` when required child metadata cannot be established safely.
+    """
     for idx, child in enumerate(content):
         if not _is_descendable_container(child):
             continue
@@ -344,6 +354,16 @@ def _first_eligible_mapping_child_path(
     path: _ChunkPath,
     content: object,
 ) -> tuple[_ChunkPath | None, bool]:
+    """Return first eligible descendable child for mapping-like content.
+
+    Args:
+        path: Current chunk path.
+        content: Mapping-like content iterated in existing key order.
+
+    Returns:
+        Tuple ``(child_path, must_fail_open)`` where ``must_fail_open`` is
+        ``True`` when lookup or child metadata checks are unsafe.
+    """
     for idx, key in enumerate(content):  # type: ignore[operator]
         try:
             child = content[key]  # type: ignore[index]
@@ -603,7 +623,11 @@ def _build_root_prefix_content_for_path(
         Root-level content with prefix embedded along the selected path,
         or ``None`` if reconstruction fails.
     """
-    prefix_content = path_plan.prefix_builder(prefix_size)
+    try:
+        prefix_content = path_plan.prefix_builder(prefix_size)
+    except Exception:
+        return None
+
     current_path = path
 
     while current_path.parent is not None:
@@ -685,7 +709,7 @@ def _build_chunk_plan(content: object) -> _ChunkPlan | None:
 
 
 def _build_builtin_chunk_plan(content: object) -> _ChunkPlan | None:
-    """Build chunk plan for built-in str/bytes/dict content.
+    """Build chunk plan for built-in str/bytes content.
 
     Args:
         content: Candidate content object.
@@ -787,6 +811,15 @@ def _looks_like_mapping(content: object) -> bool:
 
 
 def _freeze_mapping_keys(content: object) -> _FrozenMappingKeys | None:
+    """Freeze mapping keys and verify key-count consistency.
+
+    Args:
+        content: Mapping-like object supporting ``len`` and iteration.
+
+    Returns:
+        Frozen key snapshot plus expected mapping length, or ``None`` when the
+        mapping cannot be frozen safely.
+    """
     try:
         expected_len = len(content)  # type: ignore[arg-type]
         frozen_keys = tuple(content)  # type: ignore[arg-type]
@@ -804,6 +837,20 @@ def _build_mapping_prefix_from_frozen_keys(
     frozen_keys: _FrozenMappingKeys,
     prefix_size: int,
 ) -> object:
+    """Reconstruct a mapping prefix from frozen keys and live lookups.
+
+    Args:
+        content: Original mapping-like content.
+        frozen_keys: Key snapshot taken at prune start.
+        prefix_size: Number of frozen keys to include in the prefix.
+
+    Returns:
+        Prefix mapping of the same nominal type when reconstruction succeeds.
+
+    Raises:
+        RuntimeError: If mapping invariants change during reconstruction.
+        KeyError, TypeError, AttributeError: If lookup or reconstruction fails.
+    """
     if len(content) != frozen_keys.expected_len:  # type: ignore[arg-type]
         raise RuntimeError('mapping length changed after key freeze')
 
@@ -814,10 +861,7 @@ def _build_mapping_prefix_from_frozen_keys(
     if len(content) != frozen_keys.expected_len:  # type: ignore[arg-type]
         raise RuntimeError('mapping length changed during prefix reconstruction')
 
-    try:
-        return type(content)(prefix_mapping)  # type: ignore[call-arg]
-    except Exception:
-        return dict(prefix_mapping)
+    return type(content)(prefix_mapping)  # type: ignore[call-arg]
 
 
 def _chunk_str(text: str) -> list[str]:

@@ -124,6 +124,25 @@ class _LengthChangingMapping:
         return self._data[key]
 
 
+class _UnreconstructableMapping:
+    def __init__(self, data: dict[str, object] | None = None) -> None:
+        if data is not None:
+            raise TypeError('cannot reconstruct from mapping')
+        self._data = {f'k{i}': i for i in range(8)}
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def keys(self):
+        return self._data.keys()
+
+    def __getitem__(self, key: str) -> object:
+        return self._data[key]
+
+
 def test_sequence_rendered_prefix_superset_stops_at_viewport() -> None:
     content = [f'item-{i}' for i in range(20)]
     panel = _FakeDraftPanel(
@@ -255,6 +274,24 @@ def test_mapping_pruning_fail_open_on_length_mismatch_after_freeze() -> None:
 
     assert pruned_panel is panel
     assert len(unstable_mapping) == 7
+
+
+def test_mapping_pruning_fail_open_on_prefix_reconstruction_type_error() -> None:
+    unreconstructable_mapping = _UnreconstructableMapping()
+    panel = DraftPanel(unreconstructable_mapping, frame=Frame(Dimensions(width=24, height=4)))
+
+    probe_calls = 0
+
+    def _probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
+        nonlocal probe_calls
+        probe_calls += 1
+        assert isinstance(prefix_panel.content, _UnreconstructableMapping)
+        return 1, len(prefix_panel.content)
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert probe_calls == 0
+    assert pruned_panel is panel
 
 
 def test_probe_caps_and_fallback() -> None:
