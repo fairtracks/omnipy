@@ -3,7 +3,6 @@ from __future__ import annotations
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from itertools import islice
 from math import ceil
 from typing import Any, Callable
 
@@ -44,6 +43,12 @@ class _ChunkPlan:
     total_chunks: int
     prefix_builder: Callable[[int], object]
     cache_discriminator: int
+
+
+@dataclass(frozen=True)
+class _FrozenMappingKeys:
+    keys: tuple[object, ...]
+    expected_len: int
 
 
 @dataclass(frozen=True)
@@ -143,10 +148,7 @@ def _build_prunable_chunk_plan(content: object, budget: _PanelPreviewBudget) -> 
     if budget.height_budget is None:
         return None
 
-    if _looks_like_mapping(content) and not _has_deterministic_mapping_order(content):
-        return None
-
-    if not _is_sliceable(content) and not _looks_like_mapping(content):
+    if not _looks_like_mapping(content) and not _is_sliceable(content):
         return None
 
     plan = _build_chunk_plan(content)
@@ -162,10 +164,7 @@ def _pruning_skip_reason(content: object, budget: _PanelPreviewBudget) -> str:
     if budget.height_budget is None:
         return 'full view (unbounded height budget)'
 
-    if _looks_like_mapping(content) and not _has_deterministic_mapping_order(content):
-        return f'unsupported mapping ordering for {type(content)!r}'
-
-    if not _is_sliceable(content) and not _looks_like_mapping(content):
+    if not _looks_like_mapping(content) and not _is_sliceable(content):
         return f'unsupported (not sliceable) content type {type(content)!r}'
 
     plan = _build_chunk_plan(content)
@@ -219,9 +218,6 @@ def _select_active_chunk_path(
     Returns:
         The chosen chunk path, or ``None`` when fail-open conditions apply.
     """
-    if _looks_like_mapping(root_content) and not _has_deterministic_mapping_order(root_content):
-        return None
-
     threshold = _effective_coarseness_threshold(
         height_budget=budget.height_budget,
         width_stabilization_window=width_stabilization_window,
@@ -293,7 +289,7 @@ def _is_descendable_container(content: object) -> bool:
         return True
 
     if _looks_like_mapping(content):
-        return _has_deterministic_mapping_order(content)
+        return True
 
     return _is_sliceable(content)
 
@@ -311,47 +307,65 @@ def _first_eligible_child_path(path: _ChunkPath) -> tuple[_ChunkPath | None, boo
     content = path.content
 
     if isinstance(content, (list, tuple)):
-        for idx, child in enumerate(content):
-            if not _is_descendable_container(child):
-                continue
+        return _first_eligible_sequence_child_path(path, content)
 
-            child_count = _cheap_chunk_count(child)
-            if child_count is None:
-                return None, True
+    if _looks_like_mapping(content):
+        return _first_eligible_mapping_child_path(path, content)
 
-            return (
-                _ChunkPath(
-                    content=child,
-                    parent=path,
-                    parent_locator=_ChildLocator(kind='sequence', index=idx),
-                    depth=path.depth + 1,
-                ),
-                False,
-            )
+    return None, False
 
-        return None, False
 
-    if isinstance(content, dict):
-        for idx, key in enumerate(content):
-            child = content[key]
-            if not _is_descendable_container(child):
-                continue
+def _first_eligible_sequence_child_path(
+    path: _ChunkPath,
+    content: list[object] | tuple[object, ...],
+) -> tuple[_ChunkPath | None, bool]:
+    for idx, child in enumerate(content):
+        if not _is_descendable_container(child):
+            continue
 
-            child_count = _cheap_chunk_count(child)
-            if child_count is None:
-                return None, True
+        child_count = _cheap_chunk_count(child)
+        if child_count is None:
+            return None, True
 
-            return (
-                _ChunkPath(
-                    content=child,
-                    parent=path,
-                    parent_locator=_ChildLocator(kind='mapping', index=idx, key=key),
-                    depth=path.depth + 1,
-                ),
-                False,
-            )
+        return (
+            _ChunkPath(
+                content=child,
+                parent=path,
+                parent_locator=_ChildLocator(kind='sequence', index=idx),
+                depth=path.depth + 1,
+            ),
+            False,
+        )
 
-        return None, False
+    return None, False
+
+
+def _first_eligible_mapping_child_path(
+    path: _ChunkPath,
+    content: object,
+) -> tuple[_ChunkPath | None, bool]:
+    for idx, key in enumerate(content):  # type: ignore[operator]
+        try:
+            child = content[key]  # type: ignore[index]
+        except Exception:
+            return None, True
+
+        if not _is_descendable_container(child):
+            continue
+
+        child_count = _cheap_chunk_count(child)
+        if child_count is None:
+            return None, True
+
+        return (
+            _ChunkPath(
+                content=child,
+                parent=path,
+                parent_locator=_ChildLocator(kind='mapping', index=idx, key=key),
+                depth=path.depth + 1,
+            ),
+            False,
+        )
 
     return None, False
 
@@ -666,8 +680,8 @@ def _build_chunk_plan(content: object) -> _ChunkPlan | None:
     Returns:
         Chunk plan when content is chunkable, otherwise ``None``.
     """
-    return (_build_builtin_chunk_plan(content) or _build_sequence_like_chunk_plan(content)
-            or _build_mapping_like_chunk_plan(content))
+    return (_build_builtin_chunk_plan(content) or _build_mapping_like_chunk_plan(content)
+            or _build_sequence_like_chunk_plan(content))
 
 
 def _build_builtin_chunk_plan(content: object) -> _ChunkPlan | None:
@@ -693,17 +707,6 @@ def _build_builtin_chunk_plan(content: object) -> _ChunkPlan | None:
         return _ChunkPlan(
             total_chunks=len(chunks),
             prefix_builder=lambda n: _restore_bytes_type(content, b''.join(chunks[:n])),
-            cache_discriminator=id(content),
-        )
-
-    if isinstance(content, dict):
-        total = len(content)
-        if total <= 0:
-            return None
-        return _ChunkPlan(
-            total_chunks=total,
-            prefix_builder=lambda n: type(content)
-            (islice(content.items(), n)),  # type: ignore[call-arg]
             cache_discriminator=id(content),
         )
 
@@ -744,19 +747,19 @@ def _build_mapping_like_chunk_plan(content: object) -> _ChunkPlan | None:
     if not _looks_like_mapping(content):
         return None
 
-    try:
-        total = len(content)  # type: ignore[arg-type]
-        list(islice(content.items(), 1))  # type: ignore[union-attr]
-    except (TypeError, AttributeError):
+    frozen_keys = _freeze_mapping_keys(content)
+    if frozen_keys is None:
         return None
 
-    if total <= 0:
+    if frozen_keys.expected_len <= 0:
         return None
+
+    def _build_prefix(prefix_size: int) -> object:
+        return _build_mapping_prefix_from_frozen_keys(content, frozen_keys, prefix_size)
 
     return _ChunkPlan(
-        total_chunks=total,
-        prefix_builder=lambda n: type(content)
-        (islice(content.items(), n)),  # type: ignore[arg-type,call-arg]
+        total_chunks=frozen_keys.expected_len,
+        prefix_builder=_build_prefix,
         cache_discriminator=id(content),
     )
 
@@ -770,20 +773,51 @@ def _looks_like_mapping(content: object) -> bool:
     Returns:
         ``True`` when mapping-like attributes are present.
     """
-    return hasattr(content, 'keys') and hasattr(content, '__getitem__') and hasattr(
-        content, 'items')
+    if isinstance(content, (str, bytes, bytearray, list, tuple)):
+        return False
+
+    if hasattr(content, 'keys') and hasattr(content, '__getitem__') and hasattr(content, '__len__'):
+        return True
+
+    if _is_sliceable(content):
+        return False
+
+    return hasattr(content, '__iter__') and hasattr(content, '__getitem__') and hasattr(
+        content, '__len__')
 
 
-def _has_deterministic_mapping_order(content: object) -> bool:
-    """Check whether mapping iteration order is deterministic.
+def _freeze_mapping_keys(content: object) -> _FrozenMappingKeys | None:
+    try:
+        expected_len = len(content)  # type: ignore[arg-type]
+        frozen_keys = tuple(content)  # type: ignore[arg-type]
+    except Exception:
+        return None
 
-    Args:
-        content: Candidate mapping-like content.
+    if expected_len != len(frozen_keys):
+        return None
 
-    Returns:
-        ``True`` for mappings with deterministic key iteration.
-    """
-    return isinstance(content, dict)
+    return _FrozenMappingKeys(keys=frozen_keys, expected_len=expected_len)
+
+
+def _build_mapping_prefix_from_frozen_keys(
+    content: object,
+    frozen_keys: _FrozenMappingKeys,
+    prefix_size: int,
+) -> object:
+    if len(content) != frozen_keys.expected_len:  # type: ignore[arg-type]
+        raise RuntimeError('mapping length changed after key freeze')
+
+    prefix_mapping: dict[object, object] = {}
+    for key in frozen_keys.keys[:prefix_size]:
+        prefix_mapping[key] = content[key]  # type: ignore[index]
+
+    if len(content) != frozen_keys.expected_len:  # type: ignore[arg-type]
+        raise RuntimeError('mapping length changed during prefix reconstruction')
+
+    try:
+        return type(content)(prefix_mapping)  # type: ignore[call-arg]
+    except Exception:
+        return dict(prefix_mapping)
 
 
 def _chunk_str(text: str) -> list[str]:

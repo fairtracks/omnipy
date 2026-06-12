@@ -1,7 +1,10 @@
 from collections import OrderedDict
 from dataclasses import dataclass, field
+from typing import cast
 
-from omnipy.components.json.models import JsonModel
+import pytest
+
+from omnipy.components.json.models import JsonDictOfDictsModel, JsonModel
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
@@ -57,6 +60,67 @@ class _LenUnavailableSequence:
         raise TypeError('len() unavailable')
 
     def __getitem__(self, key: slice | int) -> object:
+        return self._data[key]
+
+
+class _FailingLookupMapping:
+    def __init__(
+        self,
+        data: dict[str, object],
+        failure_type: type[Exception] | None = None,
+        failing_key: str | None = None,
+    ) -> None:
+        self._data = dict(data)
+        self._failure_type = failure_type
+        self._failing_key = failing_key
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def keys(self):
+        return self._data.keys()
+
+    def __getitem__(self, key: str) -> object:
+        if self._failure_type is not None and key == self._failing_key:
+            if self._failure_type is KeyError:
+                raise KeyError(key)
+            raise self._failure_type('unstable lookup')
+
+        return self._data[key]
+
+
+class _LengthChangingMapping:
+    def __init__(
+        self,
+        data: dict[str, object],
+        shrink_on_getitem: bool = True,
+        *,
+        remove_probe_key_only: bool = False,
+    ) -> None:
+        self._data = dict(data)
+        self._shrink_on_getitem = shrink_on_getitem
+        self._remove_probe_key_only = remove_probe_key_only
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def keys(self):
+        return self._data.keys()
+
+    def __getitem__(self, key: str) -> object:
+        if self._shrink_on_getitem and len(self._data) > 1:
+            if key in self._data and (not self._remove_probe_key_only or key == 'k0'):
+                self._data.pop(key)
+            else:
+                self._data.pop(next(reversed(self._data)))
+            self._shrink_on_getitem = False
+
         return self._data[key]
 
 
@@ -127,6 +191,70 @@ def test_ordered_dict_pruning_preserves_mapping_type() -> None:
     assert pruned_panel is not panel
     assert isinstance(pruned_panel.content, OrderedDict)
     assert list(pruned_panel.content.items()) == list(content.items())[:4]
+
+
+def test_json_dict_of_dicts_model_mapping_is_prunable() -> None:
+    content = JsonDictOfDictsModel({f'k{i}': {'value': i} for i in range(10)})
+    panel = DraftPanel(content, frame=Frame(Dimensions(width=24, height=3)))
+
+    def _probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
+        assert isinstance(prefix_panel.content, JsonDictOfDictsModel)
+        prefix_data = cast(dict[str, object], prefix_panel.content.to_data())
+        width = max((len(str(key)) for key in prefix_data.keys()), default=0)
+        height = len(prefix_data)
+        return width, height
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert pruned_panel is not panel
+    assert isinstance(pruned_panel.content, JsonDictOfDictsModel)
+    pruned_data = cast(dict[str, object], pruned_panel.content.to_data())
+    original_data = cast(dict[str, object], content.to_data())
+    assert list(pruned_data.items()) == list(original_data.items())[:4]
+
+
+@pytest.mark.parametrize('failure_type', [KeyError, TypeError, AttributeError])
+def test_mapping_pruning_fail_open_on_lookup_errors(failure_type: type[Exception]) -> None:
+    unstable_mapping = _FailingLookupMapping(
+        {f'k{i}': i for i in range(8)},
+        failure_type=failure_type,
+        failing_key='k1',
+    )
+    panel = DraftPanel(unstable_mapping, frame=Frame(Dimensions(width=24, height=4)))
+
+    probe_calls = 0
+
+    def _probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
+        nonlocal probe_calls
+        probe_calls += 1
+        assert isinstance(prefix_panel.content, _FailingLookupMapping)
+        return 1, len(prefix_panel.content)
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert pruned_panel is panel
+    assert probe_calls > 0
+
+
+def test_mapping_pruning_fail_open_on_length_mismatch_after_freeze() -> None:
+    unstable_mapping = _LengthChangingMapping(
+        {f'k{i}': i for i in range(8)},
+        remove_probe_key_only=True,
+    )
+    panel = DraftPanel(unstable_mapping, frame=Frame(Dimensions(width=24, height=4)))
+
+    probe_calls = 0
+
+    def _probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
+        nonlocal probe_calls
+        probe_calls += 1
+        assert isinstance(prefix_panel.content, _LengthChangingMapping)
+        return 1, len(prefix_panel.content)
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert pruned_panel is panel
+    assert len(unstable_mapping) == 7
 
 
 def test_probe_caps_and_fallback() -> None:
