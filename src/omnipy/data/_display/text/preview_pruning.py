@@ -34,9 +34,8 @@ class _PanelPreviewBudget:
 
 @dataclass
 class _PreviewPruningMemo:
-    probe_cache: dict[tuple[int, int, int, int, int], tuple[int, int]] = field(default_factory=dict)
-    panel_cache: dict[tuple[int, _PanelPreviewBudget, int, int, int, int],
-                      int | None] = field(default_factory=dict)
+    probe_cache: dict[tuple[int, int, int, int, int, int], tuple[int,
+                                                                 int]] = field(default_factory=dict)
     active_object_ids: set[int] = field(default_factory=set)
 
 
@@ -44,6 +43,7 @@ class _PreviewPruningMemo:
 class _ChunkPlan:
     total_chunks: int
     prefix_builder: Callable[[int], object]
+    cache_discriminator: int
 
 
 @dataclass(frozen=True)
@@ -384,47 +384,17 @@ def _compute_pruned_content_with_promotions(
     current_path = selected_path
 
     while True:
-        plan = _build_chunk_plan(current_path.content)
-        if plan is None:
-            return None
-
-        prefix_size, had_probe_error = _compute_prefix_size_fail_open(
+        prune_result, should_promote = _attempt_path_prune(
             draft_panel=draft_panel,
-            prunable_content=current_path.content,
+            path=current_path,
             budget=budget,
-            plan=plan,
             probe_render=probe_render,
             memo=memo,
             width_stabilization_window=width_stabilization_window,
         )
-        if had_probe_error:
-            return None
-
-        if prefix_size is not None and prefix_size < plan.total_chunks:
-            pruned_content = _build_root_prefix_content_for_path(
-                path=current_path,
-                path_plan=plan,
-                prefix_size=prefix_size,
-            )
-            if pruned_content is None:
-                return None
-
-            _log_prune(f'Pruned: {plan.total_chunks} -> {prefix_size} items')
-            return pruned_content
-
-        try:
-            underfills_viewport = _path_underfills_viewport(
-                draft_panel=draft_panel,
-                budget=budget,
-                plan=plan,
-                probe_render=probe_render,
-                memo=memo,
-            )
-        except Exception:
-            _log_prune('Skipping pruning: probe error while checking underfill')
-            return None
-
-        if not underfills_viewport:
+        if prune_result is not None:
+            return prune_result
+        if not should_promote:
             return None
 
         if current_path.parent is None or promotions >= max_promotions:
@@ -432,6 +402,92 @@ def _compute_pruned_content_with_promotions(
 
         promotions += 1
         current_path = current_path.parent
+
+
+def _attempt_path_prune(
+    *,
+    draft_panel: Any,
+    path: _ChunkPath,
+    budget: _PanelPreviewBudget,
+    probe_render: Callable[[Any], tuple[int, int]],
+    memo: _PreviewPruningMemo,
+    width_stabilization_window: int,
+) -> tuple[object | None, bool]:
+    """Attempt pruning at one path and report whether to promote parent.
+
+    Args:
+        draft_panel: Panel being pruned.
+        path: Active chunk path currently evaluated.
+        budget: Preview budget constraints.
+        probe_render: Render probe callback used during prefix search.
+        memo: Shared probe/pruning memoization.
+        width_stabilization_window: Probe width-stability window.
+
+    Returns:
+        Tuple ``(pruned_content, should_promote_parent)``.
+    """
+    plan = _build_chunk_plan(path.content)
+    if plan is None:
+        return None, False
+
+    prefix_size, had_probe_error = _compute_prefix_size_fail_open(
+        draft_panel=draft_panel,
+        prunable_content=path.content,
+        budget=budget,
+        plan=plan,
+        probe_render=probe_render,
+        memo=memo,
+        width_stabilization_window=width_stabilization_window,
+    )
+    if had_probe_error:
+        return None, False
+
+    if prefix_size is not None and prefix_size < plan.total_chunks:
+        if not _should_apply_prefix_reduction(
+                content=path.content, total_chunks=plan.total_chunks, prefix_size=prefix_size):
+            return None, False
+
+        pruned_content = _build_root_prefix_content_for_path(
+            path=path,
+            path_plan=plan,
+            prefix_size=prefix_size,
+        )
+        if pruned_content is None:
+            return None, False
+
+        _log_prune(f'Pruned: {plan.total_chunks} -> {prefix_size} items')
+        return pruned_content, False
+
+    try:
+        underfills_viewport = _path_underfills_viewport(
+            draft_panel=draft_panel,
+            budget=budget,
+            plan=plan,
+            probe_render=probe_render,
+            memo=memo,
+        )
+    except Exception:
+        _log_prune('Skipping pruning: probe error while checking underfill')
+        return None, False
+
+    return None, underfills_viewport
+
+
+def _should_apply_prefix_reduction(*, content: object, total_chunks: int, prefix_size: int) -> bool:
+    """Decide whether a computed prefix reduction is meaningful enough.
+
+    Args:
+        content: Content object being reduced.
+        total_chunks: Total chunk count in the current chunk plan.
+        prefix_size: Candidate retained prefix size.
+
+    Returns:
+        ``True`` when the reduction should be applied.
+    """
+    if _looks_like_mapping(content):
+        return (total_chunks - prefix_size) >= 2
+
+    return True
 
 
 def _compute_prefix_size_fail_open(
@@ -625,7 +681,11 @@ def _build_builtin_chunk_plan(content: object) -> _ChunkPlan | None:
     """
     if isinstance(content, str):
         chunks = _chunk_str(content)
-        return _ChunkPlan(total_chunks=len(chunks), prefix_builder=lambda n: ''.join(chunks[:n]))
+        return _ChunkPlan(
+            total_chunks=len(chunks),
+            prefix_builder=lambda n: ''.join(chunks[:n]),
+            cache_discriminator=id(content),
+        )
 
     if isinstance(content, (bytes, bytearray)):
         bytes_content = bytes(content)
@@ -633,6 +693,7 @@ def _build_builtin_chunk_plan(content: object) -> _ChunkPlan | None:
         return _ChunkPlan(
             total_chunks=len(chunks),
             prefix_builder=lambda n: _restore_bytes_type(content, b''.join(chunks[:n])),
+            cache_discriminator=id(content),
         )
 
     if isinstance(content, dict):
@@ -641,7 +702,9 @@ def _build_builtin_chunk_plan(content: object) -> _ChunkPlan | None:
             return None
         return _ChunkPlan(
             total_chunks=total,
-            prefix_builder=lambda n: dict(islice(content.items(), n)),
+            prefix_builder=lambda n: type(content)
+            (islice(content.items(), n)),  # type: ignore[call-arg]
+            cache_discriminator=id(content),
         )
 
     return None
@@ -665,6 +728,7 @@ def _build_sequence_like_chunk_plan(content: object) -> _ChunkPlan | None:
     return _ChunkPlan(
         total_chunks=total,
         prefix_builder=lambda n: content[:n],  # type: ignore[operator]
+        cache_discriminator=id(content),
     )
 
 
@@ -693,6 +757,7 @@ def _build_mapping_like_chunk_plan(content: object) -> _ChunkPlan | None:
         total_chunks=total,
         prefix_builder=lambda n: type(content)
         (islice(content.items(), n)),  # type: ignore[arg-type,call-arg]
+        cache_discriminator=id(content),
     )
 
 
@@ -891,7 +956,7 @@ def _probe_prefix(
     probe_render: Callable[[Any], tuple[int, int]],
     memo: _PreviewPruningMemo,
 ) -> tuple[int, int]:
-    cache_key = _probe_cache_key(draft_panel, prefix_size)
+    cache_key = _probe_cache_key(draft_panel, plan, prefix_size)
     cached = memo.probe_cache.get(cache_key)
     if cached is not None:
         return cached
@@ -916,11 +981,19 @@ def _width_stabilized(width_history: list[int], width_stabilization_window: int)
     return len(set(tail)) == 1
 
 
-def _probe_cache_key(draft_panel: Any, prefix_size: int) -> tuple[int, int, int, int, int]:
+def _probe_cache_key(draft_panel: Any, plan: _ChunkPlan,
+                     prefix_size: int) -> tuple[int, int, int, int, int, int]:
     frame_hash = hash(draft_panel.frame)
     config_hash = hash(draft_panel.config)
     printer_hash = hash(getattr(draft_panel.config, 'printer', None))
-    return (id(draft_panel.content), prefix_size, frame_hash, config_hash, printer_hash)
+    return (
+        id(draft_panel.content),
+        plan.cache_discriminator,
+        prefix_size,
+        frame_hash,
+        config_hash,
+        printer_hash,
+    )
 
 
 __all__ = ['_PreviewPruningMemo', '_effective_coarseness_threshold', '_maybe_prune_draft_panel']

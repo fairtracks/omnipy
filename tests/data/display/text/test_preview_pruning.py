@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from dataclasses import dataclass, field
 
 from omnipy.components.json.models import JsonModel
@@ -5,9 +6,11 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.text.preview_pruning import (_effective_coarseness_threshold,
+from omnipy.data._display.text.preview_pruning import (_build_chunk_plan,
+                                                       _effective_coarseness_threshold,
                                                        _maybe_prune_draft_panel,
-                                                       _PreviewPruningMemo)
+                                                       _PreviewPruningMemo,
+                                                       _probe_prefix)
 from omnipy.shared.enums.display import PrettyPrinterLib
 
 
@@ -109,6 +112,23 @@ def test_mapping_pruning_insertion_order() -> None:
     assert list(pruned_panel.content.items()) == list(content.items())[:4]
 
 
+def test_ordered_dict_pruning_preserves_mapping_type() -> None:
+    content = OrderedDict((f'k{i}', i) for i in range(10))
+    panel = DraftPanel(content, frame=Frame(Dimensions(width=20, height=3)))
+
+    def _probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
+        assert isinstance(prefix_panel.content, OrderedDict)
+        width = max((len(str(key)) for key in prefix_panel.content.keys()), default=0)
+        height = len(prefix_panel.content)
+        return width, height
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert pruned_panel is not panel
+    assert isinstance(pruned_panel.content, OrderedDict)
+    assert list(pruned_panel.content.items()) == list(content.items())[:4]
+
+
 def test_probe_caps_and_fallback() -> None:
     unbounded_width_panel = DraftPanel(
         list(range(1000)),
@@ -196,6 +216,50 @@ def test_probe_cache_effectiveness() -> None:
     _maybe_prune_draft_panel(panel, probe_render=_probe_render, memo=_PreviewPruningMemo())
 
     assert probe_calls > calls_after_first_run
+
+
+def test_probe_cache_key_distinguishes_chunk_plans_for_same_prefix_size() -> None:
+    panel = _FakeDraftPanel(
+        content=['root'],
+        frame=Frame(Dimensions(width=40, height=10)),
+        inner_frame=Frame(Dimensions(width=40, height=10)),
+    )
+
+    flat_plan = _build_chunk_plan(list(range(8)))
+    nested_plan = _build_chunk_plan([[i] for i in range(8)])
+    assert flat_plan is not None
+    assert nested_plan is not None
+
+    probe_calls = 0
+
+    def _probe_render(prefix_panel: _FakeDraftPanel) -> tuple[int, int]:
+        nonlocal probe_calls
+        probe_calls += 1
+        assert isinstance(prefix_panel.content, list)
+
+        if prefix_panel.content and isinstance(prefix_panel.content[0], list):
+            return 1, 100 + len(prefix_panel.content)
+
+        return 1, len(prefix_panel.content)
+
+    memo = _PreviewPruningMemo()
+    flat_result = _probe_prefix(
+        draft_panel=panel,
+        plan=flat_plan,
+        prefix_size=3,
+        probe_render=_probe_render,
+        memo=memo,
+    )
+    nested_result = _probe_prefix(
+        draft_panel=panel,
+        plan=nested_plan,
+        prefix_size=3,
+        probe_render=_probe_render,
+        memo=memo,
+    )
+
+    assert flat_result != nested_result
+    assert probe_calls == 2
 
 
 def test_panel_cache_distinguishes_configs_for_same_content_and_frame() -> None:
