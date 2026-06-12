@@ -262,7 +262,7 @@ def test_probe_cache_key_distinguishes_chunk_plans_for_same_prefix_size() -> Non
     assert probe_calls == 2
 
 
-def test_panel_cache_distinguishes_configs_for_same_content_and_frame() -> None:
+def test_probe_cache_distinguishes_configs_for_same_content_and_frame() -> None:
     content = [f'item-{i}' for i in range(20)]
     frame = Frame(Dimensions(width=80, height=4))
 
