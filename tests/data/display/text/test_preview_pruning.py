@@ -5,7 +5,9 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.text.preview_pruning import _maybe_prune_draft_panel, _PreviewPruningMemo
+from omnipy.data._display.text.preview_pruning import (_effective_coarseness_threshold,
+                                                       _maybe_prune_draft_panel,
+                                                       _PreviewPruningMemo)
 from omnipy.shared.enums.display import PrettyPrinterLib
 
 
@@ -41,6 +43,17 @@ class _SliceableListWrapper:
     def __getitem__(self, key: slice | int) -> object:
         if isinstance(key, slice):
             return _SliceableListWrapper(self._data[key])
+        return self._data[key]
+
+
+class _LenUnavailableSequence:
+    def __init__(self, data: list[object]) -> None:
+        self._data = data
+
+    def __len__(self) -> int:
+        raise TypeError('len() unavailable')
+
+    def __getitem__(self, key: slice | int) -> object:
         return self._data[key]
 
 
@@ -272,3 +285,119 @@ def test_duck_typed_sliceable_content_is_prunable() -> None:
 
     assert isinstance(pruned_panel.content, _SliceableListWrapper)
     assert len(pruned_panel.content) == 4
+
+
+def test_effective_coarseness_threshold_formula() -> None:
+    assert _effective_coarseness_threshold(height_budget=10, width_stabilization_window=2) == 8
+    assert _effective_coarseness_threshold(height_budget=1, width_stabilization_window=1) == 4
+    assert _effective_coarseness_threshold(height_budget=None, width_stabilization_window=2) == 7
+
+
+def test_hierarchical_skip_level_descent_prunes_deep_single_chain() -> None:
+    content = [[[i for i in range(60)]]]
+    panel = _FakeDraftPanel(
+        content=content,
+        frame=Frame(Dimensions(width=30, height=7)),
+        inner_frame=Frame(Dimensions(width=30, height=4)),
+    )
+
+    def _probe_render(prefix_panel: _FakeDraftPanel) -> tuple[int, int]:
+        assert isinstance(prefix_panel.content, list)
+
+        if prefix_panel.content and isinstance(prefix_panel.content[0], list):
+            if prefix_panel.content[0] and isinstance(prefix_panel.content[0][0], list):
+                nested_len = len(prefix_panel.content[0][0])
+                return nested_len, nested_len
+
+            child_len = len(prefix_panel.content[0])
+            return child_len, child_len
+
+        root_len = len(prefix_panel.content)
+        return root_len, root_len
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert isinstance(pruned_panel.content, list)
+    assert len(pruned_panel.content) == 1
+    assert isinstance(pruned_panel.content[0], list)
+    assert isinstance(pruned_panel.content[0][0], list)
+    assert len(pruned_panel.content[0][0]) == 5
+
+
+def test_hierarchical_three_by_many_selects_finer_granularity() -> None:
+    content = [[row * 100 + col for col in range(80)] for row in range(3)]
+    panel = _FakeDraftPanel(
+        content=content,
+        frame=Frame(Dimensions(width=30, height=7)),
+        inner_frame=Frame(Dimensions(width=30, height=4)),
+    )
+
+    def _probe_render(prefix_panel: _FakeDraftPanel) -> tuple[int, int]:
+        assert isinstance(prefix_panel.content, list)
+        if prefix_panel.content and isinstance(prefix_panel.content[0], list):
+            child_len = len(prefix_panel.content[0])
+            return child_len, child_len
+
+        root_len = len(prefix_panel.content)
+        return root_len, root_len
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert isinstance(pruned_panel.content, list)
+    assert len(pruned_panel.content) == 1
+    assert isinstance(pruned_panel.content[0], list)
+    assert len(pruned_panel.content[0]) == 5
+
+
+def test_hierarchical_parent_restart_when_deep_path_underfills() -> None:
+    content = [[i] for i in range(30)]
+    panel = _FakeDraftPanel(
+        content=content,
+        frame=Frame(Dimensions(width=30, height=50)),
+        inner_frame=Frame(Dimensions(width=30, height=40)),
+    )
+
+    root_probe_count = 0
+    child_probe_count = 0
+
+    def _probe_render(prefix_panel: _FakeDraftPanel) -> tuple[int, int]:
+        nonlocal root_probe_count, child_probe_count
+        assert isinstance(prefix_panel.content, list)
+
+        if prefix_panel.content and isinstance(prefix_panel.content[0], list):
+            root_probe_count += 1
+            return 1, len(prefix_panel.content) * 2
+
+        child_probe_count += 1
+        return 1, len(prefix_panel.content) // 2
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert child_probe_count > 0
+    assert root_probe_count > 0
+    assert isinstance(pruned_panel.content, list)
+    assert len(pruned_panel.content) == 21
+
+
+def test_fail_open_when_child_cheap_metadata_is_unavailable() -> None:
+    content = [
+        _LenUnavailableSequence(list(range(20))),
+        [1],
+        [2],
+        [3],
+        [4],
+        [5],
+    ]
+    panel = _FakeDraftPanel(
+        content=content,
+        frame=Frame(Dimensions(width=30, height=14)),
+        inner_frame=Frame(Dimensions(width=30, height=8)),
+    )
+
+    def _probe_render(prefix_panel: _FakeDraftPanel) -> tuple[int, int]:
+        assert isinstance(prefix_panel.content, list)
+        return 1, len(prefix_panel.content) * 2
+
+    pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+
+    assert pruned_panel is panel

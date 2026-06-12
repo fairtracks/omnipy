@@ -18,6 +18,7 @@ from abc import ABCMeta, abstractmethod
 import dataclasses
 import functools
 from inspect import signature
+from itertools import islice
 import os
 from pathlib import Path
 import sys
@@ -3829,6 +3830,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         layout: Layout[DraftPanel] = Layout()
 
+        rows_to_materialize = self._dataset_list_rows_to_materialize(self_dataset, frame, config)
+        row_items = list(islice(self_data_as_dict.items(), rows_to_materialize))
+        row_keys = [key for key, _ in row_items]
+        row_models = [model for _, model in row_items]
+
         max_digits_for_dataset_list_index_numbers = self._max_digits_for_dataset_list_index_numbers(
             self_dataset,
             frame,
@@ -3836,23 +3842,21 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         )
 
         layout['#'] = DraftPanel(
-            '\n'.join(str(i) for i in range(len(self_dataset))),
+            '\n'.join(str(i) for i in range(len(row_items))),
             title='#',
             frame=Frame(
                 Dimensions(max_digits_for_dataset_list_index_numbers, None), fixed_width=True),
             config=config)
         layout['Data file name'] = DraftPanel(
-            '\n'.join(self_data_as_dict.keys()), title='Data file name', config=text_config)
+            '\n'.join(row_keys), title='Data file name', config=text_config)
         layout['Type'] = DraftPanel(
-            '\n'.join(self._type_str(v) for v in self_data_as_dict.values()),
-            title='Type',
-            config=config)
+            '\n'.join(self._type_str(v) for v in row_models), title='Type', config=config)
         layout['Length'] = DraftPanel(
-            '\n'.join(str(self._len_if_available(v)) for v in self_data_as_dict.values()),
+            '\n'.join(str(self._len_if_available(v)) for v in row_models),
             title='Length',
             config=right_justified_config)
         layout['Size (in memory)'] = DraftPanel(
-            '\n'.join(self._obj_size_if_available(v) for v in self_data_as_dict.values()),
+            '\n'.join(self._obj_size_if_available(v) for v in row_models),
             title='Size (in memory)',
             config=right_justified_config)
 
@@ -3879,6 +3883,41 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         max_digits_for_dataset_list_index_numbers = len(str(num_panels_listed_in_view - 1))
 
         return max_digits_for_dataset_list_index_numbers
+
+    def _dataset_list_rows_to_materialize(
+        self,
+        dataset: 'Dataset',
+        frame: Frame,
+        config: OutputConfig,
+    ) -> int:
+        """Compute how many dataset rows to materialize for ``Dataset.list()``.
+
+        For bounded-height renders this returns visible rows plus a small
+        safety margin so ellipsis/layout behavior remains unchanged while
+        avoiding eager materialization of all rows.
+
+        Args:
+            dataset: Dataset being rendered.
+            frame: Output frame constraints.
+            config: Display output configuration.
+
+        Returns:
+            Number of rows to materialize from the front of the dataset.
+        """
+        if not has_height(frame.dims):
+            return len(dataset)
+
+        panels_design_dims = PanelDesignDims.create(config.panel)
+        inner_frame_height = (
+            frame.dims.height - panels_design_dims.num_extra_vertical_chars(1)
+            - config.max_title_height - TITLE_BLANK_LINES)
+
+        if inner_frame_height <= 0:
+            return 0
+
+        visible_rows = max(0, inner_frame_height - 1)
+        safety_margin = 2
+        return min(len(dataset), visible_rows + safety_margin)
 
     def _browse(self, **kwargs) -> None:
         self._browse_dataset(**kwargs)

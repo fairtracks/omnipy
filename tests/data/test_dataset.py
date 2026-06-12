@@ -13,6 +13,7 @@ from typing_extensions import TypeVar
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
+from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.exceptions import FailedDataError, PendingDataError
 from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.hub.runtime import IsRuntime
@@ -1634,3 +1635,102 @@ def test_parametrized_dataset_with_none() -> None:
     )
 
     assert DefaultOtherStrDataset(dict(x=None))['x'].content == 'other'
+
+
+def _render_panel_to_plain_terminal(panel: Any) -> str:
+    return panel.render_next_stage().render_next_stage().plain.terminal
+
+
+def test_dataset_list_bounded_height_materializes_only_front_rows(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    dataset = Dataset[Model[list[int]]]({f'row_{i}': [i, i + 1] for i in range(30)})
+
+    len_calls = 0
+    size_calls = 0
+    materialized_row_counts: list[int] = []
+
+    def _track_len(cls, obj: Any) -> int | str:
+        nonlocal len_calls
+        len_calls += 1
+        return 2
+
+    def _track_size(cls, obj: Any) -> str:
+        nonlocal size_calls
+        size_calls += 1
+        return '1 Byte'
+
+    original_rows_to_materialize = type(dataset)._dataset_list_rows_to_materialize
+
+    def _track_rows_to_materialize(instance, dataset_arg, frame, config) -> int:
+        rows_to_materialize = original_rows_to_materialize(instance, dataset_arg, frame, config)
+        materialized_row_counts.append(rows_to_materialize)
+        return rows_to_materialize
+
+    monkeypatch.setattr(type(dataset), '_len_if_available', classmethod(_track_len))
+    monkeypatch.setattr(type(dataset), '_obj_size_if_available', classmethod(_track_size))
+    monkeypatch.setattr(
+        type(dataset), '_dataset_list_rows_to_materialize', classmethod(_track_rows_to_materialize))
+
+    rendered_output = _render_panel_to_plain_terminal(
+        dataset._list(
+            width=80,
+            height=9,
+            ui=UserInterfaceType.TERMINAL,
+        ))
+
+    assert materialized_row_counts
+    assert materialized_row_counts[-1] == 6
+    assert len_calls == materialized_row_counts[-1]
+    assert size_calls == materialized_row_counts[-1]
+
+    # Visible output stays unchanged
+    assert '│ 0 │ row_0' in rendered_output
+    assert '│ 1 │ row_1' in rendered_output
+    assert '│ 2 │ row_2' in rendered_output
+    assert '│ 3 │ row_3' in rendered_output
+    assert '│ … │ …' in rendered_output
+    assert 'row_4' not in rendered_output
+
+
+def test_dataset_list_unbounded_height_still_materializes_all_rows(
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    dataset = Dataset[Model[list[int]]]({f'row_{i}': [i, i + 1] for i in range(12)})
+
+    len_calls = 0
+    size_calls = 0
+    materialized_row_counts: list[int] = []
+
+    def _track_len(cls, obj: Any) -> int | str:
+        nonlocal len_calls
+        len_calls += 1
+        return 2
+
+    def _track_size(cls, obj: Any) -> str:
+        nonlocal size_calls
+        size_calls += 1
+        return '1 Byte'
+
+    original_rows_to_materialize = type(dataset)._dataset_list_rows_to_materialize
+
+    def _track_rows_to_materialize(instance, dataset_arg, frame, config) -> int:
+        rows_to_materialize = original_rows_to_materialize(instance, dataset_arg, frame, config)
+        materialized_row_counts.append(rows_to_materialize)
+        return rows_to_materialize
+
+    monkeypatch.setattr(type(dataset), '_len_if_available', classmethod(_track_len))
+    monkeypatch.setattr(type(dataset), '_obj_size_if_available', classmethod(_track_size))
+    monkeypatch.setattr(
+        type(dataset), '_dataset_list_rows_to_materialize', classmethod(_track_rows_to_materialize))
+
+    rendered_output = _render_panel_to_plain_terminal(
+        dataset._list(
+            width=80,
+            height=None,
+            ui=UserInterfaceType.TERMINAL,
+        ))
+
+    assert materialized_row_counts
+    assert materialized_row_counts[-1] == len(dataset)
+    assert len_calls == len(dataset)
+    assert size_calls == len(dataset)
+    assert '│ 11 │ row_11' in rendered_output

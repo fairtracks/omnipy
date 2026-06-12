@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
-from itertools import islice
 from contextvars import ContextVar
 from dataclasses import dataclass, field
+from itertools import islice
+from math import ceil
 from typing import Any, Callable
 
 _DEFAULT_STRING_CHUNK_SIZE = 256
 _DEFAULT_WIDTH_STABILIZATION_WINDOW = 2
+_DEFAULT_COARSENESS_ALPHA = 0.4
+_DEFAULT_MAX_DESCENT_DEPTH = 5
+_DEFAULT_MAX_PROMOTIONS = 3
 
 _probe_render_active_ctx_var: ContextVar[bool] = ContextVar(
     '_probe_render_active_ctx_var',
@@ -31,7 +35,7 @@ class _PanelPreviewBudget:
 @dataclass
 class _PreviewPruningMemo:
     probe_cache: dict[tuple[int, int, int, int, int], tuple[int, int]] = field(default_factory=dict)
-    panel_cache: dict[tuple[int, _PanelPreviewBudget, int, int, int, int, int],
+    panel_cache: dict[tuple[int, _PanelPreviewBudget, int, int, int, int],
                       int | None] = field(default_factory=dict)
     active_object_ids: set[int] = field(default_factory=set)
 
@@ -40,6 +44,21 @@ class _PreviewPruningMemo:
 class _ChunkPlan:
     total_chunks: int
     prefix_builder: Callable[[int], object]
+
+
+@dataclass(frozen=True)
+class _ChildLocator:
+    kind: str  # sequence | mapping
+    index: int
+    key: object | None = None
+
+
+@dataclass(frozen=True)
+class _ChunkPath:
+    content: object
+    parent: _ChunkPath | None = None
+    parent_locator: _ChildLocator | None = None
+    depth: int = 0
 
 
 def _maybe_prune_draft_panel(
@@ -54,43 +73,37 @@ def _maybe_prune_draft_panel(
         return draft_panel
 
     prunable_content = _content_for_pruning(draft_panel)
-
     budget = _derive_budget(draft_panel)
-    plan = _build_prunable_chunk_plan(prunable_content, budget)
-    if plan is None:
+
+    if _build_prunable_chunk_plan(prunable_content, budget) is None:
         _log_prune(f'Skipping pruning: {_pruning_skip_reason(prunable_content, budget)}')
         return draft_panel
 
     if memo is None:
         memo = _PreviewPruningMemo()
 
-    panel_key = _panel_cache_key(
-        draft_panel=draft_panel,
+    selected_path = _select_active_chunk_path(
+        root_content=prunable_content,
         budget=budget,
         width_stabilization_window=width_stabilization_window,
     )
-    cached_panel = _cached_panel_if_any(draft_panel, memo, panel_key, plan)
-    if cached_panel is not None:
-        return cached_panel
+    if selected_path is None:
+        _log_prune('Skipping pruning: unable to select deterministic chunk path safely')
+        return draft_panel
 
-    prefix_size = _compute_prefix_size_fail_open(
+    pruned_content = _compute_pruned_content_with_promotions(
         draft_panel=draft_panel,
-        prunable_content=prunable_content,
+        selected_path=selected_path,
         budget=budget,
-        plan=plan,
         probe_render=probe_render,
         memo=memo,
         width_stabilization_window=width_stabilization_window,
     )
-
-    memo.panel_cache[panel_key] = prefix_size
-    if prefix_size is None or prefix_size >= plan.total_chunks:
+    if pruned_content is None:
         _log_prune('Skipping pruning: no reduction found')
         return draft_panel
 
-    _log_prune(f'Pruned: {plan.total_chunks} -> {prefix_size} items')
-
-    return _panel_with_prefix(draft_panel, plan, prefix_size)
+    return draft_panel.create_modified_copy(content=pruned_content)
 
 
 def _derive_budget(draft_panel: Any) -> _PanelPreviewBudget:
@@ -101,10 +114,6 @@ def _derive_budget(draft_panel: Any) -> _PanelPreviewBudget:
 
 def _content_for_pruning(draft_panel: Any) -> object:
     return draft_panel.content
-
-
-def _content_is_non_debug_model_with_supported_inner_content(draft_panel: Any) -> bool:
-    return _model_chain_and_supported_leaf_content(draft_panel) is not None
 
 
 def _is_probe_render_active() -> bool:
@@ -125,32 +134,23 @@ def _is_sliceable(content: object) -> bool:
         content[:0]  # type: ignore[operator]
         return True
     except (TypeError, KeyError):
-        pass
-    # Mapping-like: has keys() and __getitem__
-    if hasattr(content, 'keys') and hasattr(content, '__getitem__'):
-        try:
-            content[0]  # type: ignore[operator]
-            return True  # is sequence-like after all
-        except (TypeError, KeyError):
-            pass
-        return True
-    return False
+        return False
 
 
-def _build_prunable_chunk_plan(
-    content: object,
-    budget: _PanelPreviewBudget,
-) -> _ChunkPlan | None:
+def _build_prunable_chunk_plan(content: object, budget: _PanelPreviewBudget) -> _ChunkPlan | None:
     if budget.width_budget is None and budget.height_budget is None:
         return None
     if budget.height_budget is None:
         return None
 
-    if not _is_sliceable(content):
+    if _looks_like_mapping(content) and not _has_deterministic_mapping_order(content):
+        return None
+
+    if not _is_sliceable(content) and not _looks_like_mapping(content):
         return None
 
     plan = _build_chunk_plan(content)
-    if plan is None or plan.total_chunks <= 1:
+    if plan is None:
         return None
 
     return plan
@@ -162,7 +162,10 @@ def _pruning_skip_reason(content: object, budget: _PanelPreviewBudget) -> str:
     if budget.height_budget is None:
         return 'full view (unbounded height budget)'
 
-    if not _is_sliceable(content):
+    if _looks_like_mapping(content) and not _has_deterministic_mapping_order(content):
+        return f'unsupported mapping ordering for {type(content)!r}'
+
+    if not _is_sliceable(content) and not _looks_like_mapping(content):
         return f'unsupported (not sliceable) content type {type(content)!r}'
 
     plan = _build_chunk_plan(content)
@@ -174,21 +177,261 @@ def _pruning_skip_reason(content: object, budget: _PanelPreviewBudget) -> str:
     return 'unknown reason'
 
 
+def _effective_coarseness_threshold(
+    *,
+    height_budget: int | None,
+    width_stabilization_window: int,
+    alpha: float = _DEFAULT_COARSENESS_ALPHA,
+) -> int:
+    """Compute the adaptive chunk-count threshold used for descent.
 
-def _cached_panel_if_any(
-    draft_panel: Any,
-    memo: _PreviewPruningMemo,
-    panel_key: tuple[int, _PanelPreviewBudget, int, int, int, int, int],
-    plan: _ChunkPlan,
-) -> Any | None:
-    if panel_key not in memo.panel_cache:
+    Args:
+        height_budget: Available panel height for rendered content.
+        width_stabilization_window: Probe window used by prefix sizing.
+        alpha: Scaling factor for the base threshold.
+
+    Returns:
+        Effective minimum chunk threshold for selecting the active path.
+    """
+    if height_budget is None:
+        t_base = 16
+    else:
+        t_base = max(2 * height_budget, height_budget + width_stabilization_window + 1)
+
+    return max(4, ceil(alpha * t_base))
+
+
+def _select_active_chunk_path(
+    *,
+    root_content: object,
+    budget: _PanelPreviewBudget,
+    width_stabilization_window: int,
+    max_descent_depth: int = _DEFAULT_MAX_DESCENT_DEPTH,
+) -> _ChunkPath | None:
+    """Select a single deterministic path for hierarchical pruning.
+
+    Args:
+        root_content: Top-level content considered for preview pruning.
+        budget: Width/height budgets for the preview panel.
+        width_stabilization_window: Probe width-stability window.
+        max_descent_depth: Maximum number of child descents to attempt.
+
+    Returns:
+        The chosen chunk path, or ``None`` when fail-open conditions apply.
+    """
+    if _looks_like_mapping(root_content) and not _has_deterministic_mapping_order(root_content):
         return None
 
-    cached_prefix_size = memo.panel_cache[panel_key]
-    if cached_prefix_size is None or cached_prefix_size >= plan.total_chunks:
-        return draft_panel
+    threshold = _effective_coarseness_threshold(
+        height_budget=budget.height_budget,
+        width_stabilization_window=width_stabilization_window,
+    )
 
-    return _panel_with_prefix(draft_panel, plan, cached_prefix_size)
+    current_path = _ChunkPath(content=root_content)
+
+    for _ in range(max_descent_depth + 1):
+        count = _cheap_chunk_count(current_path.content)
+        if count is None:
+            return None
+
+        if count >= threshold:
+            return current_path
+
+        child_path, must_fail_open = _first_eligible_child_path(current_path)
+        if must_fail_open:
+            return None
+        if child_path is None:
+            return current_path
+
+        current_path = child_path
+
+    return current_path
+
+
+def _cheap_chunk_count(content: object) -> int | None:
+    """Return a cheap chunk count or ``None`` when unsafe/unavailable.
+
+    Args:
+        content: Candidate content object.
+
+    Returns:
+        Cheaply computed chunk count if available, else ``None``.
+    """
+    if isinstance(content, (str, bytes, bytearray, list, tuple, dict)):
+        return len(content)
+
+    if _looks_like_mapping(content):
+        try:
+            return len(content)  # type: ignore[arg-type]
+        except TypeError:
+            return None
+
+    try:
+        total = len(content)  # type: ignore[arg-type]
+    except TypeError:
+        return None
+
+    if _is_sliceable(content):
+        return total
+
+    return None
+
+
+def _is_descendable_container(content: object) -> bool:
+    """Check whether a child content object is safe to descend into.
+
+    Args:
+        content: Candidate child content.
+
+    Returns:
+        ``True`` if hierarchical descent is allowed for this content.
+    """
+    if isinstance(content, (str, bytes, bytearray)):
+        return False
+
+    if isinstance(content, (list, tuple, dict)):
+        return True
+
+    if _looks_like_mapping(content):
+        return _has_deterministic_mapping_order(content)
+
+    return _is_sliceable(content)
+
+
+def _first_eligible_child_path(path: _ChunkPath) -> tuple[_ChunkPath | None, bool]:
+    """Locate the first descendable child path.
+
+    Args:
+        path: Current chunk path.
+
+    Returns:
+        Tuple of ``(child_path, must_fail_open)`` where ``must_fail_open`` is
+        ``True`` when child metadata cannot be established safely.
+    """
+    content = path.content
+
+    if isinstance(content, (list, tuple)):
+        for idx, child in enumerate(content):
+            if not _is_descendable_container(child):
+                continue
+
+            child_count = _cheap_chunk_count(child)
+            if child_count is None:
+                return None, True
+
+            return (
+                _ChunkPath(
+                    content=child,
+                    parent=path,
+                    parent_locator=_ChildLocator(kind='sequence', index=idx),
+                    depth=path.depth + 1,
+                ),
+                False,
+            )
+
+        return None, False
+
+    if isinstance(content, dict):
+        for idx, key in enumerate(content):
+            child = content[key]
+            if not _is_descendable_container(child):
+                continue
+
+            child_count = _cheap_chunk_count(child)
+            if child_count is None:
+                return None, True
+
+            return (
+                _ChunkPath(
+                    content=child,
+                    parent=path,
+                    parent_locator=_ChildLocator(kind='mapping', index=idx, key=key),
+                    depth=path.depth + 1,
+                ),
+                False,
+            )
+
+        return None, False
+
+    return None, False
+
+
+def _compute_pruned_content_with_promotions(
+    *,
+    draft_panel: Any,
+    selected_path: _ChunkPath,
+    budget: _PanelPreviewBudget,
+    probe_render: Callable[[Any], tuple[int, int]],
+    memo: _PreviewPruningMemo,
+    width_stabilization_window: int,
+    max_promotions: int = _DEFAULT_MAX_PROMOTIONS,
+) -> object | None:
+    """Compute pruned content from selected path with bounded promotions.
+
+    Args:
+        draft_panel: Panel being pruned.
+        selected_path: Initially selected active chunk path.
+        budget: Preview budget constraints.
+        probe_render: Render probe callback used during prefix search.
+        memo: Shared probe/pruning memoization.
+        width_stabilization_window: Probe width-stability window.
+        max_promotions: Maximum upward promotions if path underfills.
+
+    Returns:
+        Root-level pruned content, or ``None`` when pruning should fail open.
+    """
+    promotions = 0
+    current_path = selected_path
+
+    while True:
+        plan = _build_chunk_plan(current_path.content)
+        if plan is None:
+            return None
+
+        prefix_size, had_probe_error = _compute_prefix_size_fail_open(
+            draft_panel=draft_panel,
+            prunable_content=current_path.content,
+            budget=budget,
+            plan=plan,
+            probe_render=probe_render,
+            memo=memo,
+            width_stabilization_window=width_stabilization_window,
+        )
+        if had_probe_error:
+            return None
+
+        if prefix_size is not None and prefix_size < plan.total_chunks:
+            pruned_content = _build_root_prefix_content_for_path(
+                path=current_path,
+                path_plan=plan,
+                prefix_size=prefix_size,
+            )
+            if pruned_content is None:
+                return None
+
+            _log_prune(f'Pruned: {plan.total_chunks} -> {prefix_size} items')
+            return pruned_content
+
+        try:
+            underfills_viewport = _path_underfills_viewport(
+                draft_panel=draft_panel,
+                budget=budget,
+                plan=plan,
+                probe_render=probe_render,
+                memo=memo,
+            )
+        except Exception:
+            _log_prune('Skipping pruning: probe error while checking underfill')
+            return None
+
+        if not underfills_viewport:
+            return None
+
+        if current_path.parent is None or promotions >= max_promotions:
+            return None
+
+        promotions += 1
+        current_path = current_path.parent
 
 
 def _compute_prefix_size_fail_open(
@@ -200,30 +443,186 @@ def _compute_prefix_size_fail_open(
     probe_render: Callable[[Any], tuple[int, int]],
     memo: _PreviewPruningMemo,
     width_stabilization_window: int,
-) -> int | None:
+) -> tuple[int | None, bool]:
+    """Find prefix size while guarding recursion and probe failures.
+
+    Args:
+        draft_panel: Panel being probed.
+        prunable_content: Content object whose prefix is being measured.
+        budget: Preview budget constraints.
+        plan: Chunk plan for prefix construction.
+        probe_render: Render probe callback used during prefix search.
+        memo: Shared probe/pruning memoization.
+        width_stabilization_window: Probe width-stability window.
+
+    Returns:
+        Tuple ``(prefix_size, had_probe_error)``.
+    """
     object_id = id(prunable_content)
     if object_id in memo.active_object_ids:
         _log_prune('Skipping pruning: detected active recursion for content object')
-        return None
+        return None, True
 
     memo.active_object_ids.add(object_id)
     try:
-        return _find_prefix_size(
-            draft_panel=draft_panel,
-            budget=budget,
-            plan=plan,
-            probe_render=probe_render,
-            memo=memo,
-            width_stabilization_window=width_stabilization_window,
+        return (
+            _find_prefix_size(
+                draft_panel=draft_panel,
+                budget=budget,
+                plan=plan,
+                probe_render=probe_render,
+                memo=memo,
+                width_stabilization_window=width_stabilization_window,
+            ),
+            False,
         )
     except Exception:
         _log_prune('Skipping pruning: probe error while computing prefix size')
-        return None
+        return None, True
     finally:
         memo.active_object_ids.discard(object_id)
 
 
+def _path_underfills_viewport(
+    *,
+    draft_panel: Any,
+    budget: _PanelPreviewBudget,
+    plan: _ChunkPlan,
+    probe_render: Callable[[Any], tuple[int, int]],
+    memo: _PreviewPruningMemo,
+) -> bool:
+    """Check whether a full path render still underfills height budget.
+
+    Args:
+        draft_panel: Panel being probed.
+        budget: Preview budget constraints.
+        plan: Chunk plan for the currently selected path.
+        probe_render: Render probe callback used during prefix probing.
+        memo: Shared probe/pruning memoization.
+
+    Returns:
+        ``True`` when rendered height is below the height budget.
+    """
+    if budget.height_budget is None:
+        return False
+
+    _, rendered_height = _probe_prefix(
+        draft_panel=draft_panel,
+        plan=plan,
+        prefix_size=plan.total_chunks,
+        probe_render=probe_render,
+        memo=memo,
+    )
+    return rendered_height < budget.height_budget
+
+
+def _build_root_prefix_content_for_path(
+    *,
+    path: _ChunkPath,
+    path_plan: _ChunkPlan,
+    prefix_size: int,
+) -> object | None:
+    """Rebuild root content from a pruned child path prefix.
+
+    Args:
+        path: Active chunk path where prefix reduction happened.
+        path_plan: Chunk plan for the terminal path content.
+        prefix_size: Number of chunks to keep at terminal path.
+
+    Returns:
+        Root-level content with prefix embedded along the selected path,
+        or ``None`` if reconstruction fails.
+    """
+    prefix_content = path_plan.prefix_builder(prefix_size)
+    current_path = path
+
+    while current_path.parent is not None:
+        parent_locator = current_path.parent_locator
+        if parent_locator is None:
+            return None
+
+        prefix_content = _embed_child_prefix_into_parent(
+            parent_content=current_path.parent.content,
+            parent_locator=parent_locator,
+            child_prefix_content=prefix_content,
+        )
+        if prefix_content is None:
+            return None
+
+        current_path = current_path.parent
+
+    return prefix_content
+
+
+def _embed_child_prefix_into_parent(
+    *,
+    parent_content: object,
+    parent_locator: _ChildLocator,
+    child_prefix_content: object,
+) -> object | None:
+    """Embed a pruned child prefix into its parent prefix content.
+
+    Args:
+        parent_content: Original parent container.
+        parent_locator: Locator describing the child position in parent.
+        child_prefix_content: Pruned child content to splice into parent.
+
+    Returns:
+        Parent prefix content with updated child, or ``None`` on mismatch.
+    """
+    if parent_locator.kind == 'sequence':
+        if not isinstance(parent_content, (list, tuple)):
+            return None
+
+        parent_prefix = list(parent_content[:parent_locator.index + 1])
+        if not parent_prefix:
+            return None
+
+        parent_prefix[-1] = child_prefix_content
+        if isinstance(parent_content, tuple):
+            return tuple(parent_prefix)
+        return parent_prefix
+
+    if parent_locator.kind == 'mapping':
+        if not isinstance(parent_content, dict) or parent_locator.key is None:
+            return None
+
+        prefix_mapping: dict[object, object] = {}
+        for idx, key in enumerate(parent_content):
+            if idx > parent_locator.index:
+                break
+            if key == parent_locator.key:
+                prefix_mapping[key] = child_prefix_content
+            else:
+                prefix_mapping[key] = parent_content[key]
+
+        return type(parent_content)(prefix_mapping)
+
+    return None
+
+
 def _build_chunk_plan(content: object) -> _ChunkPlan | None:
+    """Build the first applicable chunking plan for content.
+
+    Args:
+        content: Content object to chunk.
+
+    Returns:
+        Chunk plan when content is chunkable, otherwise ``None``.
+    """
+    return (_build_builtin_chunk_plan(content) or _build_sequence_like_chunk_plan(content)
+            or _build_mapping_like_chunk_plan(content))
+
+
+def _build_builtin_chunk_plan(content: object) -> _ChunkPlan | None:
+    """Build chunk plan for built-in str/bytes/dict content.
+
+    Args:
+        content: Candidate content object.
+
+    Returns:
+        Chunk plan for supported built-ins, else ``None``.
+    """
     if isinstance(content, str):
         chunks = _chunk_str(content)
         return _ChunkPlan(total_chunks=len(chunks), prefix_builder=lambda n: ''.join(chunks[:n]))
@@ -236,33 +635,90 @@ def _build_chunk_plan(content: object) -> _ChunkPlan | None:
             prefix_builder=lambda n: _restore_bytes_type(content, b''.join(chunks[:n])),
         )
 
-    # Duck-typing: try sequence-like (supports len and slicing)
+    if isinstance(content, dict):
+        total = len(content)
+        if total <= 0:
+            return None
+        return _ChunkPlan(
+            total_chunks=total,
+            prefix_builder=lambda n: dict(islice(content.items(), n)),
+        )
+
+    return None
+
+
+def _build_sequence_like_chunk_plan(content: object) -> _ChunkPlan | None:
+    """Build chunk plan for sequence-like objects via slicing.
+
+    Args:
+        content: Candidate sequence-like content.
+
+    Returns:
+        Chunk plan when ``len`` and slicing are supported, else ``None``.
+    """
     try:
         total = len(content)  # type: ignore[arg-type]
         content[:0]  # type: ignore[operator]
-        return _ChunkPlan(total_chunks=total, prefix_builder=lambda n: content[:n])  # type: ignore[operator]
     except (TypeError, KeyError):
-        pass
-
-    # Duck-typing: try mapping-like
-    try:
-        pairs = list(islice(content.items(), 1))  # type: ignore[union-attr]
-    except (TypeError, AttributeError):
-        pass
-    else:
-        total = len(content)  # type: ignore[arg-type]
-        if total > 0:
-            return _ChunkPlan(
-                total_chunks=total,
-                prefix_builder=lambda n: type(content)(  # type: ignore[call-arg]
-                    islice(content.items(), n)  # type: ignore[arg-type]
-                ),
-            )
         return None
 
-    return None
+    return _ChunkPlan(
+        total_chunks=total,
+        prefix_builder=lambda n: content[:n],  # type: ignore[operator]
+    )
 
-    return None
+
+def _build_mapping_like_chunk_plan(content: object) -> _ChunkPlan | None:
+    """Build chunk plan for mapping-like objects with items iteration.
+
+    Args:
+        content: Candidate mapping-like content.
+
+    Returns:
+        Chunk plan when mapping metadata is available, else ``None``.
+    """
+    if not _looks_like_mapping(content):
+        return None
+
+    try:
+        total = len(content)  # type: ignore[arg-type]
+        list(islice(content.items(), 1))  # type: ignore[union-attr]
+    except (TypeError, AttributeError):
+        return None
+
+    if total <= 0:
+        return None
+
+    return _ChunkPlan(
+        total_chunks=total,
+        prefix_builder=lambda n: type(content)
+        (islice(content.items(), n)),  # type: ignore[arg-type,call-arg]
+    )
+
+
+def _looks_like_mapping(content: object) -> bool:
+    """Heuristically detect mapping-like protocol support.
+
+    Args:
+        content: Candidate content object.
+
+    Returns:
+        ``True`` when mapping-like attributes are present.
+    """
+    return hasattr(content, 'keys') and hasattr(content, '__getitem__') and hasattr(
+        content, 'items')
+
+
+def _has_deterministic_mapping_order(content: object) -> bool:
+    """Check whether mapping iteration order is deterministic.
+
+    Args:
+        content: Candidate mapping-like content.
+
+    Returns:
+        ``True`` for mappings with deterministic key iteration.
+    """
+    return isinstance(content, dict)
 
 
 def _chunk_str(text: str) -> list[str]:
@@ -289,11 +745,6 @@ def _restore_bytes_type(original: object, value: bytes) -> bytes | bytearray:
     if isinstance(original, bytearray):
         return bytearray(value)
     return value
-
-
-def _panel_with_prefix(draft_panel: Any, plan: _ChunkPlan, prefix_size: int) -> Any:
-    prefix_content = plan.prefix_builder(prefix_size)
-    return draft_panel.create_modified_copy(content=prefix_content)
 
 
 def _find_prefix_size(
@@ -445,7 +896,7 @@ def _probe_prefix(
     if cached is not None:
         return cached
 
-    prefix_panel = _panel_with_prefix(draft_panel, plan, prefix_size)
+    prefix_panel = draft_panel.create_modified_copy(content=plan.prefix_builder(prefix_size))
     rendered_width, rendered_height = probe_render(prefix_panel)
 
     result = (int(rendered_width), int(rendered_height))
@@ -472,22 +923,4 @@ def _probe_cache_key(draft_panel: Any, prefix_size: int) -> tuple[int, int, int,
     return (id(draft_panel.content), prefix_size, frame_hash, config_hash, printer_hash)
 
 
-def _panel_cache_key(
-    *,
-    draft_panel: Any,
-    budget: _PanelPreviewBudget,
-    width_stabilization_window: int,
-) -> tuple[int, _PanelPreviewBudget, int, int, int, int, int]:
-    config_hash = hash(draft_panel.config)
-    printer_hash = hash(getattr(draft_panel.config, 'printer', None))
-    return (
-        id(draft_panel.content),
-        budget,
-        hash(draft_panel.frame),
-        config_hash,
-        printer_hash,
-        width_stabilization_window,
-    )
-
-
-__all__ = ['_PreviewPruningMemo', '_maybe_prune_draft_panel']
+__all__ = ['_PreviewPruningMemo', '_effective_coarseness_threshold', '_maybe_prune_draft_panel']
