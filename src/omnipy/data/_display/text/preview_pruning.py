@@ -68,7 +68,7 @@ class _ChunkPath:
 
 def _format_chunk_path(path: _ChunkPath) -> str:
     if path.parent is None:
-        return 'root'
+        return '/'
 
     locators: list[_ChildLocator] = []
     cursor = path
@@ -78,11 +78,26 @@ def _format_chunk_path(path: _ChunkPath) -> str:
         locators.append(cursor.parent_locator)
         cursor = cursor.parent
 
-    parts = ['root']
+    parts = ['']
     for locator in reversed(locators):
-        parts.append(f'{locator.kind}:{locator.index}')
+        parts.append(_format_path_segment(locator))
 
     return '/'.join(parts)
+
+
+def _format_path_segment(locator: _ChildLocator) -> str:
+    if locator.kind == 'sequence':
+        return str(locator.index)
+
+    assert locator.kind == 'mapping'
+    return _escape_mapping_key_for_path(locator.key)
+
+
+def _escape_mapping_key_for_path(key: object | None) -> str:
+    if isinstance(key, str):
+        return key.replace('/', '_')
+
+    return str(key).replace('/', '_')
 
 
 def _maybe_prune_draft_panel(
@@ -729,19 +744,15 @@ def _embed_child_prefix_into_parent(
         return parent_prefix
 
     if parent_locator.kind == 'mapping':
-        if not isinstance(parent_content, dict) or parent_locator.key is None:
+        if not _looks_like_mapping(parent_content) or parent_locator.key is None:
             return None
 
-        prefix_mapping: dict[object, object] = {}
-        for idx, key in enumerate(parent_content):
-            if idx > parent_locator.index:
-                break
-            if key == parent_locator.key:
-                prefix_mapping[key] = child_prefix_content
-            else:
-                prefix_mapping[key] = parent_content[key]
-
-        return type(parent_content)(prefix_mapping)
+        return _build_mapping_prefix_with_replaced_child(
+            content=parent_content,
+            replacement_index=parent_locator.index,
+            expected_key=parent_locator.key,
+            replacement_value=child_prefix_content,
+        )
 
     return None
 
@@ -913,6 +924,44 @@ def _build_mapping_prefix_from_frozen_keys(
         raise RuntimeError('mapping length changed during prefix reconstruction')
 
     return type(content)(prefix_mapping)  # type: ignore[call-arg]
+
+
+def _build_mapping_prefix_with_replaced_child(
+    *,
+    content: object,
+    replacement_index: int,
+    expected_key: object,
+    replacement_value: object,
+) -> object | None:
+    frozen_keys = _freeze_mapping_keys(content)
+    if frozen_keys is None:
+        return None
+
+    if replacement_index < 0 or replacement_index >= frozen_keys.expected_len:
+        return None
+
+    if frozen_keys.keys[replacement_index] != expected_key:
+        return None
+
+    prefix_mapping: dict[object, object] = {}
+    prefix_keys = frozen_keys.keys[:replacement_index + 1]
+    for idx, key in enumerate(prefix_keys):
+        try:
+            value = replacement_value if idx == replacement_index else content[key]  # type: ignore[index]
+        except Exception:
+            return None
+        prefix_mapping[key] = value
+
+    try:
+        if len(content) != frozen_keys.expected_len:  # type: ignore[arg-type]
+            return None
+    except Exception:
+        return None
+
+    try:
+        return type(content)(prefix_mapping)  # type: ignore[call-arg]
+    except Exception:
+        return None
 
 
 def _chunk_str(text: str) -> list[str]:

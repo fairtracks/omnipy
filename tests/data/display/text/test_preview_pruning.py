@@ -691,3 +691,101 @@ def test_verbose_log_marks_ellipsis_skip_as_expected_noop_with_context(
             '(single-char placeholder, unbounded height budget)' in captured.out)
     assert "title='…'" in captured.out
     assert 'frame=(width=1, height=None)' in captured.out
+
+
+def test_verbose_granularity_log_uses_readable_json_pointer_like_path(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import omnipy.shared.constants as const
+
+    panel = _FakeDraftPanel(
+        content={
+            'data/set': [list(range(40)), [1], [2]],
+            'meta': 'x',
+        },
+        frame=Frame(Dimensions(width=40, height=9)),
+        inner_frame=Frame(Dimensions(width=40, height=5)),
+    )
+
+    def _probe_render(prefix_panel: _FakeDraftPanel) -> tuple[int, int]:
+        content = prefix_panel.content
+
+        if isinstance(content, dict):
+            content = next(iter(content.values()))
+
+        if isinstance(content, list) and content and isinstance(content[0], list):
+            return 1, len(content[0])
+
+        if isinstance(content, list):
+            return 1, len(content)
+
+        return 1, 1
+
+    const.VERBOSE_PRUNE = True
+    try:
+        _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+        captured = capsys.readouterr()
+    finally:
+        const.VERBOSE_PRUNE = False
+
+    assert '[PRUNE] Granularity path selected: /data_set/0' in captured.out
+
+
+def test_granularity_pruning_reconstructs_mapping_like_parent_and_logs_pruned(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import omnipy.shared.constants as const
+
+    panel = DraftPanel(
+        JsonModel({'dataset': list(range(200)), 'meta': 'x'}),
+        frame=Frame(Dimensions(width=40, height=9)),
+    )
+
+    def _probe_render(prefix_panel: DraftPanel) -> tuple[int, int]:
+        def _height_from_content(value: object) -> int:
+            if isinstance(value, (str, bytes, bytearray, dict)):
+                return 1
+
+            try:
+                return len(value)  # type: ignore[arg-type]
+            except TypeError:
+                return 1
+
+        content = prefix_panel.content
+
+        if isinstance(content, JsonModel):
+            mapped = cast(dict[str, object], content.to_data())
+            values = list(mapped.values())
+            if values:
+                return 1, _height_from_content(values[0])
+            return 1, len(mapped)
+
+        if isinstance(content, (str, bytes, bytearray, dict)):
+            return 1, 1
+
+        try:
+            return 1, len(content)  # type: ignore[arg-type]
+        except TypeError:
+            pass
+
+        return 1, 1
+
+    const.VERBOSE_PRUNE = True
+    try:
+        out_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
+        captured = capsys.readouterr()
+    finally:
+        const.VERBOSE_PRUNE = False
+
+    assert out_panel is not panel
+    assert isinstance(out_panel.content, JsonModel)
+
+    out_data = cast(dict[str, object], out_panel.content.to_data())
+    in_data = cast(dict[str, object], panel.content.to_data())
+    assert isinstance(out_data['dataset'], list)
+    assert isinstance(in_data['dataset'], list)
+    assert len(out_data['dataset']) < len(in_data['dataset'])
+
+    assert '[PRUNE] Granularity path selected: /dataset' in captured.out
+    assert '[PRUNE] Pruned:' in captured.out
+    assert '[PRUNE] No prefix reduction applied after granularity-aware probing' not in captured.out
