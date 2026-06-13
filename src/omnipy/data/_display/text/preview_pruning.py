@@ -18,11 +18,11 @@ _probe_render_active_ctx_var: ContextVar[bool] = ContextVar(
 )
 
 
-def _log_prune(msg: str) -> None:
+def _log_prune(msg: str, draft_panel: Any | None = None) -> None:
     from omnipy.shared.constants import VERBOSE_PRUNE
 
     if VERBOSE_PRUNE:
-        print(f'[PRUNE] {msg}')
+        print(f'[PRUNE] {msg}{_format_panel_log_context(draft_panel)}')
 
 
 @dataclass(frozen=True)
@@ -66,6 +66,25 @@ class _ChunkPath:
     depth: int = 0
 
 
+def _format_chunk_path(path: _ChunkPath) -> str:
+    if path.parent is None:
+        return 'root'
+
+    locators: list[_ChildLocator] = []
+    cursor = path
+
+    while cursor.parent is not None:
+        assert cursor.parent_locator is not None
+        locators.append(cursor.parent_locator)
+        cursor = cursor.parent
+
+    parts = ['root']
+    for locator in reversed(locators):
+        parts.append(f'{locator.kind}:{locator.index}')
+
+    return '/'.join(parts)
+
+
 def _maybe_prune_draft_panel(
     draft_panel: Any,
     *,
@@ -74,14 +93,15 @@ def _maybe_prune_draft_panel(
     width_stabilization_window: int = _DEFAULT_WIDTH_STABILIZATION_WINDOW,
 ) -> Any:
     if _is_probe_render_active():
-        _log_prune('Skipping pruning: probe render is already active')
+        _log_prune('Skipping pruning: expected/no-op: probe render is already active', draft_panel)
         return draft_panel
 
     prunable_content = _content_for_pruning(draft_panel)
     budget = _derive_budget(draft_panel)
 
     if _build_prunable_chunk_plan(prunable_content, budget) is None:
-        _log_prune(f'Skipping pruning: {_pruning_skip_reason(prunable_content, budget)}')
+        skip_reason = _pruning_skip_reason(draft_panel, prunable_content, budget)
+        _log_prune(f'Skipping pruning: {skip_reason}', draft_panel)
         return draft_panel
 
     if memo is None:
@@ -93,8 +113,11 @@ def _maybe_prune_draft_panel(
         width_stabilization_window=width_stabilization_window,
     )
     if selected_path is None:
-        _log_prune('Skipping pruning: unable to select deterministic chunk path safely')
+        _log_prune('Skipping pruning: actionable: unable to select deterministic chunk path safely',
+                   draft_panel)
         return draft_panel
+
+    _log_prune(f'Granularity path selected: {_format_chunk_path(selected_path)}', draft_panel)
 
     pruned_content = _compute_pruned_content_with_promotions(
         draft_panel=draft_panel,
@@ -105,7 +128,7 @@ def _maybe_prune_draft_panel(
         width_stabilization_window=width_stabilization_window,
     )
     if pruned_content is None:
-        _log_prune('Skipping pruning: no reduction found')
+        _log_prune('No prefix reduction applied after granularity-aware probing', draft_panel)
         return draft_panel
 
     return draft_panel.create_modified_copy(content=pruned_content)
@@ -158,22 +181,43 @@ def _build_prunable_chunk_plan(content: object, budget: _PanelPreviewBudget) -> 
     return plan
 
 
-def _pruning_skip_reason(content: object, budget: _PanelPreviewBudget) -> str:
+def _pruning_skip_reason(draft_panel: Any, content: object, budget: _PanelPreviewBudget) -> str:
     if budget.width_budget is None and budget.height_budget is None:
-        return 'unbounded width and height budget'
+        return 'actionable: unbounded width and height budget'
+
+    if _looks_like_ellipsis_panel(draft_panel):
+        return 'expected/no-op: ellipsis panel (single-char placeholder, unbounded height budget)'
+
     if budget.height_budget is None:
-        return 'full view (unbounded height budget)'
+        return 'actionable: full view (unbounded height budget)'
 
     if not _looks_like_mapping(content) and not _is_sliceable(content):
-        return f'unsupported (not sliceable) content type {type(content)!r}'
+        return f'actionable: unsupported (not sliceable) content type {type(content)!r}'
 
     plan = _build_chunk_plan(content)
     if plan is None:
-        return 'unsupported content type for chunking'
+        return 'actionable: unsupported content type for chunking'
     if plan.total_chunks <= 1:
-        return 'content already within one chunk'
+        return 'expected/no-op: content already within one chunk'
 
-    return 'unknown reason'
+    return 'actionable: unknown reason'
+
+
+def _looks_like_ellipsis_panel(draft_panel: Any) -> bool:
+    return getattr(draft_panel, 'title',
+                   None) == '…' and _content_for_pruning(draft_panel) in ('', '…')
+
+
+def _format_panel_log_context(draft_panel: Any | None) -> str:
+    if draft_panel is None:
+        return ''
+
+    title = getattr(draft_panel, 'title', '')
+    frame = getattr(draft_panel, 'frame', None)
+    dims = getattr(frame, 'dims', None)
+    width = getattr(dims, 'width', None)
+    height = getattr(dims, 'height', None)
+    return f" | title={title!r} frame=(width={width}, height={height})"
 
 
 def _effective_coarseness_threshold(
@@ -489,7 +533,7 @@ def _attempt_path_prune(
         if pruned_content is None:
             return None, False
 
-        _log_prune(f'Pruned: {plan.total_chunks} -> {prefix_size} items')
+        _log_prune(f'Pruned: {plan.total_chunks} -> {prefix_size} items', draft_panel)
         return pruned_content, False
 
     try:
@@ -501,7 +545,10 @@ def _attempt_path_prune(
             memo=memo,
         )
     except Exception:
-        _log_prune('Skipping pruning: probe error while checking underfill')
+        _log_prune(
+            'Skipping pruning: actionable: probe error while checking underfill',
+            draft_panel,
+        )
         return None, False
 
     return None, underfills_viewport
@@ -550,7 +597,8 @@ def _compute_prefix_size_fail_open(
     """
     object_id = id(prunable_content)
     if object_id in memo.active_object_ids:
-        _log_prune('Skipping pruning: detected active recursion for content object')
+        _log_prune('Skipping pruning: actionable: detected active recursion for content object',
+                   draft_panel)
         return None, True
 
     memo.active_object_ids.add(object_id)
@@ -567,7 +615,10 @@ def _compute_prefix_size_fail_open(
             False,
         )
     except Exception:
-        _log_prune('Skipping pruning: probe error while computing prefix size')
+        _log_prune(
+            'Skipping pruning: actionable: probe error while computing prefix size',
+            draft_panel,
+        )
         return None, True
     finally:
         memo.active_object_ids.discard(object_id)

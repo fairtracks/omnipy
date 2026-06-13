@@ -716,7 +716,8 @@ def test_model_json_verbose_prune_logs_reduced_preparation(
     pruned_lines = [line for line in prune_lines if line.startswith('[PRUNE] Pruned: ')]
     assert pruned_lines
 
-    before_after_text = pruned_lines[-1].removeprefix('[PRUNE] Pruned: ').removesuffix(' items')
+    pruned_line_payload = pruned_lines[-1].split(' | ', maxsplit=1)[0]
+    before_after_text = pruned_line_payload.removeprefix('[PRUNE] Pruned: ').removesuffix(' items')
     before_text, after_text = before_after_text.split(' -> ', maxsplit=1)
 
     assert int(before_text) == 10000

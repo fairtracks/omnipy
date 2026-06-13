@@ -14,6 +14,7 @@ from omnipy.data._display.text.preview_pruning import (_build_chunk_plan,
                                                        _maybe_prune_draft_panel,
                                                        _PreviewPruningMemo,
                                                        _probe_prefix)
+import omnipy.data._display.text.preview_pruning as preview_pruning_module
 from omnipy.shared.enums.display import PrettyPrinterLib
 
 
@@ -630,3 +631,63 @@ def test_fail_open_when_child_cheap_metadata_is_unavailable() -> None:
     pruned_panel = _maybe_prune_draft_panel(panel, probe_render=_probe_render)
 
     assert pruned_panel is panel
+
+
+def test_verbose_log_for_no_reduction_mentions_pruning_probe_step(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import omnipy.shared.constants as const
+
+    panel = _FakeDraftPanel(
+        content=[f'item-{i}' for i in range(20)],
+        frame=Frame(Dimensions(width=30, height=8)),
+        inner_frame=Frame(Dimensions(width=30, height=5)),
+    )
+
+    def _return_no_reduction(**_kwargs) -> None:
+        return None
+
+    monkeypatch.setattr(
+        preview_pruning_module,
+        '_compute_pruned_content_with_promotions',
+        _return_no_reduction,
+    )
+
+    const.VERBOSE_PRUNE = True
+    try:
+        out_panel = _maybe_prune_draft_panel(panel, probe_render=lambda _panel: (1, 1))
+        captured = capsys.readouterr()
+    finally:
+        const.VERBOSE_PRUNE = False
+
+    assert out_panel is panel
+    assert '[PRUNE] Granularity path selected:' in captured.out
+    assert '[PRUNE] No prefix reduction applied after granularity-aware probing' in captured.out
+    assert "title=''" in captured.out
+    assert 'frame=(width=30, height=8)' in captured.out
+    assert '[PRUNE] Skipping pruning: no reduction found' not in captured.out
+
+
+def test_verbose_log_marks_ellipsis_skip_as_expected_noop_with_context(
+        capsys: pytest.CaptureFixture[str]) -> None:
+    import omnipy.shared.constants as const
+
+    panel = DraftPanel(
+        '…',
+        title='…',
+        frame=Frame(Dimensions(width=1, height=None), fixed_width=True),
+    )
+
+    const.VERBOSE_PRUNE = True
+    try:
+        out_panel = _maybe_prune_draft_panel(panel, probe_render=lambda _panel: (1, 1))
+        captured = capsys.readouterr()
+    finally:
+        const.VERBOSE_PRUNE = False
+
+    assert out_panel is panel
+    assert ('[PRUNE] Skipping pruning: expected/no-op: ellipsis panel '
+            '(single-char placeholder, unbounded height budget)' in captured.out)
+    assert "title='…'" in captured.out
+    assert 'frame=(width=1, height=None)' in captured.out
