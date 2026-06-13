@@ -1,5 +1,4 @@
 from textwrap import dedent
-from typing import Any
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
@@ -12,9 +11,7 @@ from omnipy.data.model import Model
 from omnipy.shared.enums.display import PrettyPrinterLib
 from omnipy.shared.enums.ui import UserInterfaceType
 
-
-def _render_panel_to_plain_terminal(panel: Any) -> str:
-    return panel.render_next_stage().render_next_stage().plain.terminal
+from .helpers import render_panel_to_plain_terminal
 
 
 def _assert_pretty_repr_of_draft(
@@ -79,7 +76,7 @@ def test_pretty_repr_of_draft_characterizes_bounded_and_unbounded_viewports() ->
 def test_characterize_peek_json_full_viewport_output() -> None:
     model = Model[list[list[int]]]([[i, i + 1, i + 2] for i in range(0, 18, 3)])
 
-    bounded_peek_output = _render_panel_to_plain_terminal(
+    bounded_peek_output = render_panel_to_plain_terminal(
         model._peek(
             width=32,
             height=8,
@@ -96,7 +93,7 @@ def test_characterize_peek_json_full_viewport_output() -> None:
         ╰────────────────────────╯
         """)
 
-    unbounded_height_peek_output = _render_panel_to_plain_terminal(
+    unbounded_height_peek_output = render_panel_to_plain_terminal(
         model._peek(
             width=32,
             height=None,
@@ -117,7 +114,7 @@ def test_characterize_peek_json_full_viewport_output() -> None:
         ╰────────────────────────╯
         """)
 
-    unbounded_width_peek_output = _render_panel_to_plain_terminal(
+    unbounded_width_peek_output = render_panel_to_plain_terminal(
         model._peek(
             width=None,
             height=8,
@@ -131,7 +128,7 @@ def test_characterize_peek_json_full_viewport_output() -> None:
         ╰────────────────────────────────────────────────────────────────────────────╯
         """)
 
-    bounded_json_output = _render_panel_to_plain_terminal(
+    bounded_json_output = render_panel_to_plain_terminal(
         model._json(
             width=32,
             height=8,
@@ -148,7 +145,7 @@ def test_characterize_peek_json_full_viewport_output() -> None:
         ╰───────────────────╯
         """)
 
-    full_output = _render_panel_to_plain_terminal(
+    full_output = render_panel_to_plain_terminal(
         model._full(
             width=32,
             height=4,
@@ -161,7 +158,7 @@ def test_characterize_peek_json_full_viewport_output() -> None:
 def test_characterize_dataset_list_framing_and_rows() -> None:
     dataset = Dataset[Model[list[int]]]({f'row_{i}': [i, i + 1] for i in range(12)})
 
-    bounded_list_output = _render_panel_to_plain_terminal(
+    bounded_list_output = render_panel_to_plain_terminal(
         dataset._list(
             width=80,
             height=9,
@@ -179,7 +176,7 @@ def test_characterize_dataset_list_framing_and_rows() -> None:
         ╰───┴────────────────┴──────────────────┴────────┴──────────────────╯
         """)
 
-    unbounded_height_list_output = _render_panel_to_plain_terminal(
+    unbounded_height_list_output = render_panel_to_plain_terminal(
         dataset._list(
             width=80,
             height=None,
