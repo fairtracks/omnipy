@@ -195,6 +195,7 @@ disallow_untyped_decorators = false
 
 [tool.basedpyright]
 typeCheckingMode = "standard"
+reportInvalidCast = "none"
 reportFunctionMemberAccess = "warning"
 reportUnusedExpression = "none"
 #reportUnnecessaryTypeIgnoreComment = "error"

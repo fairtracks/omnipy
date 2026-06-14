@@ -25,7 +25,7 @@ if typing.TYPE_CHECKING:
 @dataclass
 class ConcatCase:
     col_wise_model: JsonScalarColumnWiseTableWithColNamesModel
-    other: ColWiseAddOtherType
+    other: JsonScalarColumnWiseTableWithColNamesModel | ColWiseAddOtherType
     expected: dict[str, list[JsonScalar]]
 
 
