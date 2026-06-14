@@ -1,15 +1,15 @@
 from collections.abc import Iterator
 from typing import overload, Protocol, runtime_checkable, SupportsIndex
 
-from typing_extensions import Self, TypeVar
+from typing_extensions import TypeVar
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
 
-_ItemT_co = TypeVar('_ItemT_co', covariant=True)
+_ItemCovT = TypeVar('_ItemCovT', covariant=True)
 
 
 @runtime_checkable
-class IsItemSequenceLike(Protocol[_ItemT_co]):
+class IsItemSequenceLike(Protocol[_ItemCovT]):
     """Minimal sequence-like protocol for item containers.
 
     This protocol models indexable and sized containers with membership checks,
@@ -17,15 +17,15 @@ class IsItemSequenceLike(Protocol[_ItemT_co]):
     sequence interface.
     """
     @overload
-    def __getitem__(self, index: SupportsIndex, /) -> _ItemT_co:
+    def __getitem__(self, index: SupportsIndex, /) -> _ItemCovT:
         raise AssumedToBeImplementedException
 
     @overload
-    def __getitem__(self, index: slice, /) -> 'IsItemSequenceLike[_ItemT_co]':
+    def __getitem__(self, index: slice, /) -> 'IsItemSequenceLike[_ItemCovT]':
         raise AssumedToBeImplementedException
 
     def __getitem__(self, index: SupportsIndex | slice,
-                    /) -> _ItemT_co | 'IsItemSequenceLike[_ItemT_co]':
+                    /) -> _ItemCovT | 'IsItemSequenceLike[_ItemCovT]':
         raise AssumedToBeImplementedException
 
     def __len__(self) -> int:
@@ -34,21 +34,5 @@ class IsItemSequenceLike(Protocol[_ItemT_co]):
     def __contains__(self, value: object, /) -> bool:
         raise AssumedToBeImplementedException
 
-    def __iter__(self) -> Iterator[_ItemT_co]:
+    def __iter__(self) -> Iterator[_ItemCovT]:
         raise AssumedToBeImplementedException
-
-
-class IsConcatenableItemSequenceLike(IsItemSequenceLike[_ItemT_co], Protocol[_ItemT_co]):
-    @classmethod
-    def default_filled(cls, length: int) -> Self:
-        ...
-
-    @classmethod
-    def default_value(cls) -> _ItemT_co:
-        ...
-
-    def __iter__(self) -> Iterator[_ItemT_co]:
-        ...
-
-    def __add__(self, other: object) -> Self:
-        ...

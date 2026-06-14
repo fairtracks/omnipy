@@ -1569,7 +1569,7 @@ class IsDict(IsMutableMapping[_KT, _VT], Protocol[_KT, _VT]):
 
 if sys.version_info >= (3, 15):
     @disjoint_base
-    class frozendict(Mapping[_KT, _VT]):
+    class frozendict(IsMapping[_KT, _VT]):
         @overload
         def __new__(cls, /) -> frozendict[Any, Any]: ...
         @overload

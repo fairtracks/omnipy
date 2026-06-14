@@ -11,14 +11,15 @@ from omnipy.data.model import (is_model_instance,
                                Model,
                                ModelMetaclass,
                                prepare_value_for_validation_if_dataset_or_model)
-from omnipy.shared.protocols.content import (IsDictOfConcatenableItemSequenceLike,
+from omnipy.shared.protocols.content import (IsConcatenableItemSequenceLikeContent,
+                                             IsDictOfConcatenableItemSequenceLikeContent,
                                              IsDictOfDictsContent,
                                              IsListContent,
                                              IsListOfDictsContent,
                                              IsListOfListsContent,
                                              SupportsKeysAndGetItem)
 from omnipy.shared.protocols.data import HasContent
-from omnipy.shared.protocols.stdlib_ext import IsConcatenableItemSequenceLike, IsItemSequenceLike
+from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
 from omnipy.shared.protocols.typing import IsMapping
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import first_key_in_mapping
@@ -47,13 +48,14 @@ _ColumnModelItemT = TypeVar(
 )
 _ColumnWiseTableModelT = TypeVar(
     '_ColumnWiseTableModelT', default='JsonScalarColumnWiseTableWithColNamesModel')
-_ConcatColumnModelT = TypeVar('_ConcatColumnModelT', bound='IsConcatenableItemSequenceLike[object]')
+_ConcatColumnModelT = TypeVar(
+    '_ConcatColumnModelT', bound=IsConcatenableItemSequenceLikeContent[object])
 
 if TYPE_CHECKING:  # noqa: C901
 
     class ConcatByAddArrayAdapterModel(
             PlainModel[_ColumnT],
-            IsConcatenableItemSequenceLike[_ItemT],
+            IsConcatenableItemSequenceLikeContent[_ItemT],
             Generic[_ColumnT, _ItemT],
     ):
         _allowed_special_methods = frozenset()
@@ -125,7 +127,7 @@ if TYPE_CHECKING:  # noqa: C901
 
     class ColumnModel(
             PlainModel[_ColumnT],
-            IsConcatenableItemSequenceLike[_ItemT],
+            IsConcatenableItemSequenceLikeContent[_ItemT],
             Generic[_ColumnT, _ItemT],
     ):
         @classmethod
@@ -465,7 +467,7 @@ if TYPE_CHECKING:
     class ColumnWiseTableWithColNamesModel(  # type: ignore[misc]
             _ColumnWiseTableWithColNamesMixin[_ColumnModelT, _ColumnModelItemT],
             PlainModel[dict[str, _ColumnModelT]],
-            IsDictOfConcatenableItemSequenceLike[_ColumnModelT, _ColumnModelItemT],
+            IsDictOfConcatenableItemSequenceLikeContent[_ColumnModelT, _ColumnModelItemT],
             PrintableTable,
             Generic[_ColumnModelT, _ColumnModelItemT],
     ):
@@ -733,7 +735,7 @@ if TYPE_CHECKING:  # noqa: C901
     class IteratingPydanticRecordsModel(
             _ColumnWiseTableWithColNamesMixin,
             PlainModel[_ColumnWiseTableModelT],
-            IsDictOfConcatenableItemSequenceLike[_ColumnModelT, _ColumnModelItemT],
+            IsDictOfConcatenableItemSequenceLikeContent[_ColumnModelT, _ColumnModelItemT],
             PrintableTable,
             Generic[_PydBaseModelT, _ColumnWiseTableModelT, _ColumnModelT, _ColumnModelItemT],
     ):
