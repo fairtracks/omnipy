@@ -14,6 +14,7 @@ from omnipy.components.tables.models import (ColumnModel,
                                              JsonMaxLevel1ColumnModel,
                                              JsonMaxLevel1ColumnWiseTableWithColNamesModel,
                                              JsonMaxLevel2ColumnModel,
+                                             JsonMaxLevel2ColumnWiseTableWithColNamesModel,
                                              JsonScalarColumnModel,
                                              JsonScalarColumnWiseTableWithColNamesModel,
                                              PydanticRecordModel,
@@ -834,10 +835,10 @@ def test_column_model_concat_operators_for_adapted_array_content() -> None:
 
 def test_json_max_level1_column_model_accepts_scalars_dicts_and_lists() -> None:
     data = [1, 'abc', None, {'a': 1, 'b': None}, [2, 'x', False]]
-    col = JsonMaxLevel1ColumnModel(data)
+    col_model = JsonMaxLevel1ColumnModel(data)
 
-    assert col.content == data
-    assert col.to_data() == data
+    assert col_model.content == data
+    assert col_model.to_data() == data
 
 
 def test_json_max_level1_column_model_rejects_nested_list_in_dict() -> None:
@@ -859,10 +860,10 @@ def test_json_max_level2_column_model_accepts_level2_nested_values() -> None:
             'c': ['y', False, None],
         },
     ]
-    col = JsonMaxLevel2ColumnModel(data)
+    col_model = JsonMaxLevel2ColumnModel(data)
 
-    assert col.content == data
-    assert col.to_data() == data
+    assert col_model.content == data
+    assert col_model.to_data() == data
 
 
 def test_json_max_level2_column_model_rejects_level3_dict_nesting() -> None:
@@ -870,108 +871,86 @@ def test_json_max_level2_column_model_rejects_level3_dict_nesting() -> None:
         JsonMaxLevel2ColumnModel([{'a': {'b': {'c': 1}}}])
 
 
-# def test_json_scalar_column_wise_table_uses_scalar_column_model() -> None:
-#     data = {
-#         'a': [1, 2],
-#         'b': ['x', None],
-#     }
-#
-#     table = JsonScalarColumnWiseTableWithColNamesModel(data)
-#
-#     assert table.to_data() == data
-#     assert table.col_names == ('a', 'b')
-#     assert table['a'].to_data() == [1, 2]
-#     assert table[0] == {'a': 1, 'b': 'x'}
-#     assert table[1] == {'a': 2, 'b': None}
-#     assert list(table) == [
-#         {
-#             'a': 1, 'b': 'x'
-#         },
-#         {
-#             'a': 2, 'b': None
-#         },
-#     ]
-#     assert (table + table).to_data() == {
-#         'a': [1, 2, 1, 2],
-#         'b': ['x', None, 'x', None],
-#     }
-#
-#
-# def test_json_max_level1_column_wise_table_iterates_rows_and_supports_addition() -> None:
-#     cell_0_0 = 1
-#     cell_0_1 = ['x', None]
-#     cell_1_0 = {'k': 2}
-#     cell_1_1 = 3
-#     cell_2_0 = 4
-#     cell_2_1 = [False]
-#
-#     data = {
-#         'a': [cell_0_0, cell_1_0],
-#         'b': [cell_0_1, cell_1_1],
-#     }
-#     other = {
-#         'a': [cell_2_0],
-#         'b': [cell_2_1],
-#     }
-#
-#     table = JsonMaxLevel1ColumnWiseTableWithColNamesModel(data)
-#     other_table = JsonMaxLevel1ColumnWiseTableWithColNamesModel(other)
-#
-#     assert table.to_data() == data
-#     assert isinstance(table['a'], JsonMaxLevel1ColumnModel)
-#     assert table[0] == {'a': cell_0_0, 'b': cell_0_1}
-#     assert table[1] == {'a': cell_1_0, 'b': cell_1_1}
-#     assert list(table) == [
-#         {
-#             'a': cell_0_0, 'b': cell_0_1
-#         },
-#         {
-#             'a': cell_1_0, 'b': cell_1_1
-#         },
-#     ]
-#     assert (table + other_table).to_data() == {
-#         'a': [cell_0_0, cell_1_0, cell_2_0],
-#         'b': [cell_0_1, cell_1_1, cell_2_1],
-#     }
-#
-#
-# def test_json_max_level2_column_wise_table_supports_row_access_iteration_and_addition() -> None:
-#     cell_0_0 = 1
-#     cell_0_1 = {'m': 1, 'n': {'p': 2}, 'o': ['u', None]}
-#     cell_1_0 = ['x', {'k': 2}, [3]]
-#     cell_1_1 = {'m': 2, 'n': {'p': 3}, 'o': ['v', False]}
-#     cell_2_0 = None
-#     cell_2_1 = {'m': 3, 'n': {'p': 4}, 'o': ['w', True]}
-#
-#     data = {
-#         'a': [cell_0_0, cell_1_0],
-#         'b': [cell_0_1, cell_1_1],
-#     }
-#     other = {
-#         'a': [cell_2_0],
-#         'b': [cell_2_1],
-#     }
-#
-#     table = JsonMaxLevel2ColumnWiseTableWithColNamesModel(data)
-#     other_table = JsonMaxLevel2ColumnWiseTableWithColNamesModel(other)
-#
-#     assert table.to_data() == data
-#     assert isinstance(table['a'], JsonMaxLevel2ColumnModel)
-#     expected_rows = [
-#         {
-#             'a': cell_0_0,
-#             'b': cell_0_1,
-#         },
-#         {
-#             'a': cell_1_0,
-#             'b': cell_1_1,
-#         },
-#     ]
-#
-#     assert table[0] == expected_rows[0]
-#     assert table[1] == expected_rows[1]
-#     assert list(table) == expected_rows
-#     assert (table + other_table).to_data() == {
-#         'a': [cell_0_0, cell_1_0, cell_2_0],
-#         'b': [cell_0_1, cell_1_1, cell_2_1],
-#     }
+def test_json_scalar_column_wise_table_uses_scalar_column_model() -> None:
+    data = {
+        'a': [1, 2],
+        'b': ['x', None],
+    }
+
+    table_model = JsonScalarColumnWiseTableWithColNamesModel(data)
+
+    assert table_model.to_data() == data
+    assert table_model.col_names == ('a', 'b')
+    assert table_model['a'].to_data() == [1, 2]
+
+    assert dict(table_model[0]) == {'a': 1, 'b': 'x'}
+    assert dict(table_model[1]) == {'a': 2, 'b': None}
+
+    assert (table_model + table_model).to_data() == {
+        'a': [1, 2, 1, 2],
+        'b': ['x', None, 'x', None],
+    }
+
+
+def test_json_max_level1_column_wise_table_iterates_rows_and_supports_addition() -> None:
+    cell_0_0 = 1
+    cell_0_1 = ['x', None]
+    cell_1_0 = {'k': 2}
+    cell_1_1 = 3
+    cell_2_0 = 4
+    cell_2_1 = [False]
+
+    data = {
+        'a': [cell_0_0, cell_1_0],
+        'b': [cell_0_1, cell_1_1],
+    }
+    other = {
+        'a': [cell_2_0],
+        'b': [cell_2_1],
+    }
+
+    table_model = JsonMaxLevel1ColumnWiseTableWithColNamesModel(data)
+    other_table_model = JsonMaxLevel1ColumnWiseTableWithColNamesModel(other)
+
+    assert table_model.to_data() == data
+    assert isinstance(table_model['a'], JsonMaxLevel1ColumnModel)
+
+    assert dict(table_model[0]) == {'a': cell_0_0, 'b': cell_0_1}
+    assert dict(table_model[1]) == {'a': cell_1_0, 'b': cell_1_1}
+
+    assert (table_model + other_table_model).to_data() == {
+        'a': [cell_0_0, cell_1_0, cell_2_0],
+        'b': [cell_0_1, cell_1_1, cell_2_1],
+    }
+
+
+def test_json_max_level2_column_wise_table_supports_row_access_iteration_and_addition() -> None:
+    cell_0_0 = 1
+    cell_0_1 = {'m': 1, 'n': {'p': 2}, 'o': ['u', None]}
+    cell_1_0 = ['x', {'k': 2}, [3]]
+    cell_1_1 = {'m': 2, 'n': {'p': 3}, 'o': ['v', False]}
+    cell_2_0 = None
+    cell_2_1 = {'m': 3, 'n': {'p': 4}, 'o': ['w', True]}
+
+    data = {
+        'a': [cell_0_0, cell_1_0],
+        'b': [cell_0_1, cell_1_1],
+    }
+    other = {
+        'a': [cell_2_0],
+        'b': [cell_2_1],
+    }
+
+    table_model = JsonMaxLevel2ColumnWiseTableWithColNamesModel(data)
+    other_table_model = JsonMaxLevel2ColumnWiseTableWithColNamesModel(other)
+
+    assert table_model.to_data() == data
+    assert isinstance(table_model['a'], JsonMaxLevel2ColumnModel)
+
+    assert dict(table_model[0]) == {'a': cell_0_0, 'b': cell_0_1}
+    assert dict(table_model[1]) == {'a': cell_1_0, 'b': cell_1_1}
+
+    assert (table_model + other_table_model).to_data() == {
+        'a': [cell_0_0, cell_1_0, cell_2_0],
+        'b': [cell_0_1, cell_1_1, cell_2_1],
+    }
