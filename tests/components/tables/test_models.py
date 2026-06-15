@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from typing import Annotated, Any, Callable, cast
+import math
+from typing import Annotated, Any, Callable, cast, Generic
 
 import pytest
 import pytest_cases as pc
+from typing_extensions import TypeVar
 
 from omnipy.components.json.typedefs import JsonDictOfScalars, JsonListOfScalars, JsonScalar
 from omnipy.components.tables.models import (ColumnModel,
                                              ColumnWiseTableWithColNamesModel,
-                                             ConcatByAddArrayAdapterModel,
                                              CsvTableModel,
                                              CsvTableOfPydanticRecordsModel,
                                              IteratingPydanticRecordsModel,
@@ -31,6 +32,7 @@ import omnipy.util.pydantic as pyd
 
 from .cases.concat import ConcatCase, ConcatCaseReverse
 from .cases.raw.table_data import column_wise_dict_of_lists_data
+from .helpers.classes import IntListLikeColumnModel, ListLikeNoAdd
 from .helpers.protocols import AssertColumnWiseMappings, AssertRowIter
 
 # TODO: Add tests and logic to check that all columns have the same length
@@ -757,6 +759,74 @@ def test_fail_table_of_records_model_with_optional_fields_incorrect_input(
         RowWiseRecordsTableOptionalLastModel('John\tDoe\t37\textra')
 
 
+def test_column_model_default_value() -> None:
+    class MyClass:
+        ...
+
+    T = TypeVar('T')
+
+    class MyList(list[T], Generic[T]):
+        ...
+
+    assert ColumnModel[list[int], int].default_value() == 0
+    assert ColumnModel[tuple[bool, ...], bool].default_value() is False
+    assert ColumnModel[list[list[int]], list[int]].default_value() == []
+    assert ColumnModel[MyList[int], int].default_value() == 0
+    assert isinstance(ColumnModel[tuple[MyClass, ...], MyClass].default_value(), MyClass)
+
+    assert ColumnModel[list[float | None], float | None].default_value() is None
+    assert math.isnan(ColumnModel[list[int | float], int | float].default_value())
+    assert ColumnModel[list[str | int], str | int].default_value() == 0
+    assert ColumnModel[list[list[int] | str], list[int] | str].default_value() == ''
+    assert ColumnModel[list[dict[str, int] | list[int]],
+                       dict[str, int] | list[int]].default_value() == []
+    assert ColumnModel[list[set[int] | dict[str, int]],
+                       set[int] | dict[str, int]].default_value() == {}
+    assert ColumnModel[list[bool | set[int]], bool | set[int]].default_value() == set()
+
+
+def test_column_model_default_filled() -> None:
+    T = TypeVar('T')
+
+    class MyList(list[T], Generic[T]):
+        ...
+
+    assert ColumnModel[list[int], int].filled(0, 0).to_data() == []
+    assert ColumnModel[list[int], int].filled(0, 1).to_data() == [0]
+    assert ColumnModel[MyList[int], int].filled(1, 10).to_data() == MyList([1]) * 10
+
+    assert ColumnModel[tuple[str | float, ...], str | float].filled(0.0,
+                                                                    3).to_data() == (0.0, 0.0, 0.0)
+
+    class MyListOfListsColumnModel(ColumnModel[list[list[object]], list[object]]):
+        ...
+
+    my_pair_list_of_lists_model = MyListOfListsColumnModel.filled([], 2)
+    assert isinstance(my_pair_list_of_lists_model, MyListOfListsColumnModel)
+    assert len(my_pair_list_of_lists_model) == 2
+    assert my_pair_list_of_lists_model.content[0] == []
+    assert my_pair_list_of_lists_model.content[1] == []
+
+
+@pytest.mark.parametrize('method_name', ('default_value', 'filled'))
+def test_fail_column_model_default_value_or_filled(method_name: str) -> None:
+
+    with pytest.raises(TypeError):
+        getattr(ColumnModel[tuple[int], int], method_name)()
+
+    with pytest.raises(TypeError):
+        getattr(ColumnModel[list[bool | complex], bool | complex], method_name)()
+
+    class MyIntList(list[int]):
+        ...
+
+    with pytest.raises(TypeError):
+        getattr(ColumnModel[MyIntList, int], method_name)()
+
+    with pytest.raises(TypeError):
+        getattr(ColumnModel[list[int] | tuple[int, ...], int], method_name)()
+
+
 @pytest.mark.parametrize(
     'column_data', [[1, 2, 3], ['a', 'b', 'c'], [True, False, True], [1.0, 'abc', None]],
     ids=['integers', 'strings', 'booleans', 'mixed'])
@@ -764,6 +834,14 @@ def test_json_scalar_column_model(column_data: list[object]) -> None:
     col = JsonScalarColumnModel(column_data)
     assert col.content == column_data
     assert col.to_data() == column_data
+
+
+def test_json_scalar_column_model_default_value_and_filled() -> None:
+    assert JsonScalarColumnModel.default_value() is None
+    assert JsonScalarColumnModel.filled(None, 0) == JsonScalarColumnModel([])
+    assert JsonScalarColumnModel.filled(None, 1) == JsonScalarColumnModel([None])
+    assert JsonScalarColumnModel.filled(None, 10) == JsonScalarColumnModel([None] * 10)
+    assert JsonScalarColumnModel.filled(0, 10) == JsonScalarColumnModel([0] * 10)
 
 
 def test_fail_json_scalar_column_model_invalid_input() -> None:
@@ -786,48 +864,20 @@ def test_column_model_concat_operators_for_tuple_content() -> None:
 
 
 def test_column_model_concat_operators_for_adapted_array_content() -> None:
-    class ConcatLackingList(list[int]):
-        def copy(self) -> 'ConcatLackingList':
-            return ConcatLackingList(super().copy())
-
-        def __add__(self, other: object):
-            return NotImplemented
-
-        def __iadd__(self, other: object):
-            return NotImplemented
-
-        def __radd__(self, other: object):
-            return NotImplemented
-
-    def concat_function(left: ConcatLackingList, right: ConcatLackingList) -> ConcatLackingList:
-        assert isinstance(left, ConcatLackingList) and isinstance(right, ConcatLackingList)
-        concat_list = left.copy()
-        concat_list.extend(right)
-        return concat_list
-
-    class ConcatLackingListAdapterModel(ConcatByAddArrayAdapterModel[ConcatLackingList, int]):
-        @classmethod
-        def _concat_column_values(cls, left: ConcatLackingList,
-                                  right: ConcatLackingList) -> ConcatLackingList:
-            return concat_function(left, right)
-
-    class ConcatLackingListColumnModel(ColumnModel[ConcatLackingListAdapterModel, int]):
-        ...
-
-    a = ConcatLackingList([1, 2])
-    b = ConcatLackingList([3, 4])
+    a = ListLikeNoAdd([1, 2])
+    b = ListLikeNoAdd([3, 4])
 
     with pytest.raises(TypeError):
-        a + b
+        a + b  # type: ignore[operator]
 
-    assert ConcatLackingListColumnModel(a) + b == ConcatLackingListColumnModel([1, 2, 3, 4])
-    assert a + ConcatLackingListColumnModel(b) == ConcatLackingListColumnModel([1, 2, 3, 4])
-    assert (ConcatLackingListColumnModel(a)
-            + ConcatLackingListColumnModel(b) == ConcatLackingListColumnModel([1, 2, 3, 4]))
+    assert IntListLikeColumnModel(a) + b == IntListLikeColumnModel([1, 2, 3, 4])
+    assert a + IntListLikeColumnModel(b) == IntListLikeColumnModel([1, 2, 3, 4])
+    assert IntListLikeColumnModel(a) + IntListLikeColumnModel(b) \
+           == IntListLikeColumnModel([1, 2, 3, 4])
 
-    a_model = ConcatLackingListColumnModel(a)
+    a_model = IntListLikeColumnModel(a)
     a_model += b
-    assert a_model == ConcatLackingListColumnModel([1, 2, 3, 4])
+    assert a_model == IntListLikeColumnModel([1, 2, 3, 4])
 
     with pytest.raises(TypeError):
         a_model - b  # type: ignore[operator]

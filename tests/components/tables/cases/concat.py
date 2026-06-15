@@ -1,37 +1,54 @@
 from dataclasses import dataclass
-import typing
+from typing import Generic
 
 import pytest_cases as pc
+from typing_extensions import TypeVar
 
-from omnipy.components.json.typedefs import JsonScalar
-from omnipy.components.tables.models import (ColWiseAddOtherType,
+from omnipy.components.tables.models import (ColumnModel,
+                                             ColumnWiseTableWithColNamesModel,
+                                             ColWiseAddOtherType,
                                              JsonScalarColumnWiseTableWithColNamesModel,
                                              RowWiseTableWithColNamesModel)
+from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
+from omnipy.shared.protocols.typing import IsMapping
 
+from ..helpers.classes import (FloatListLikeColumnWiseTableWithColNamesModel,
+                               IntListLikeColumnWiseTableWithColNamesModel)
 from .raw.table_data import (col_wise_dict_of_empty_lists_data,
+                             col_wise_list_likes_of_int_data,
+                             column_wise_dict_of_int_data,
                              column_wise_dict_of_lists_data,
+                             column_wise_dict_of_other_int_data,
                              concat_col_wise_data,
+                             concat_col_wise_list_likes_of_float_data,
+                             concat_col_wise_list_likes_of_int_data,
                              concat_non_overlapping_col_wise_data,
                              other_col_wise_dict_of_lists_data,
                              other_non_overlapping_col_wise_dict_of_lists_data,
                              other_row_wise_list_of_dicts_data,
                              reverse_concat_col_wise_data,
-                             reverse_concat_non_overlapping_col_wise_data)
+                             reverse_concat_non_overlapping_col_wise_data,
+                             reversed_concat_col_wise_list_likes_of_float_data,
+                             reversed_concat_col_wise_list_likes_of_int_data,
+                             row_wise_dict_of_other_float_data)
 
-if typing.TYPE_CHECKING:
-    pass
-
-
-@dataclass
-class ConcatCase:
-    col_wise_model: JsonScalarColumnWiseTableWithColNamesModel
-    other: JsonScalarColumnWiseTableWithColNamesModel | ColWiseAddOtherType
-    expected: dict[str, list[JsonScalar]]
+_ColModelT = TypeVar('_ColModelT', bound=ColumnModel)
+_ColModelItemT = TypeVar('_ColModelItemT')
 
 
 @dataclass
-class ConcatCaseReverse(ConcatCase):
-    expected_reverse: dict[str, list[JsonScalar]]
+class ConcatCase(Generic[_ColModelT, _ColModelItemT]):
+    col_wise_model: ColumnWiseTableWithColNamesModel[_ColModelT, _ColModelItemT]
+    other: ColumnWiseTableWithColNamesModel[_ColModelT, _ColModelItemT] | ColWiseAddOtherType
+    expected: IsMapping[str, IsItemSequenceLike[_ColModelItemT]]
+
+
+@dataclass
+class ConcatCaseReverse(
+        ConcatCase[_ColModelT, _ColModelItemT],
+        Generic[_ColModelT, _ColModelItemT],
+):
+    expected_reverse: IsMapping[str, IsItemSequenceLike[_ColModelItemT]]
 
 
 @pc.case(id='concat_col_wise_model_with_col_wise_model', tags=['concat'])
@@ -146,4 +163,33 @@ def case_concat_col_wise_model_with_empty_list() -> ConcatCase:
         other=[],
         expected=column_wise_dict_of_lists_data,
         expected_reverse=column_wise_dict_of_lists_data,
+    )
+
+
+@pc.case(id='list_like_col_wise_model_with_empty_row_wise_model', tags=['concat'])
+def case_list_like_col_wise_model_with_empty_row_wise_model() -> ConcatCase:
+    return ConcatCase(
+        col_wise_model=IntListLikeColumnWiseTableWithColNamesModel(column_wise_dict_of_int_data),
+        other=RowWiseTableWithColNamesModel(),
+        expected=col_wise_list_likes_of_int_data,
+    )
+
+
+@pc.case(id='list_like_col_wise_model_with_int_other', tags=['concat', 'reverse'])
+def case_list_like_col_wise_model_with_int_other() -> ConcatCase:
+    return ConcatCaseReverse(
+        col_wise_model=IntListLikeColumnWiseTableWithColNamesModel(column_wise_dict_of_int_data),
+        other=column_wise_dict_of_other_int_data,
+        expected=concat_col_wise_list_likes_of_int_data,
+        expected_reverse=reversed_concat_col_wise_list_likes_of_int_data,
+    )
+
+
+@pc.case(id='list_like_col_wise_model_with_float_other', tags=['concat', 'reverse'])
+def case_list_like_col_wise_model_with_float_other() -> ConcatCase:
+    return ConcatCaseReverse(
+        col_wise_model=FloatListLikeColumnWiseTableWithColNamesModel(column_wise_dict_of_int_data),
+        other=row_wise_dict_of_other_float_data,
+        expected=concat_col_wise_list_likes_of_float_data,
+        expected_reverse=reversed_concat_col_wise_list_likes_of_float_data,
     )

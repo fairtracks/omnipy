@@ -1,4 +1,4 @@
-from collections.abc import Generator, Iterable, Iterator
+from collections.abc import Generator, Iterable
 from typing import Any, Literal, overload, Protocol, SupportsIndex
 
 from typing_extensions import override, Self, TypeVar
@@ -29,9 +29,8 @@ _ValSeqT = TypeVar('_ValSeqT', bound=IsItemSequence[object])
 _ValMappingT = TypeVar('_ValMappingT', bound=IsMapping[str, object])
 _NestedValT = TypeVar('_NestedValT')
 _SecondValT = TypeVar('_SecondValT')
-_ItemCovT = TypeVar('_ItemCovT', covariant=True)
 _ConcatColumnModelT = TypeVar(
-    '_ConcatColumnModelT', bound='IsConcatenableItemSequenceLikeContent[object]')
+    '_ConcatColumnModelT', bound='IsConcatenableItemSequenceLikeColumnContent[object]')
 
 
 class IsIntContent(IsInt, Protocol):
@@ -740,41 +739,43 @@ class IsDictOfDictsContent(IsDictContent[_KeyT,
         raise AssumedToBeImplementedException
 
 
-class IsConcatenableItemSequenceLikeContent(IsItemSequenceLike[_ItemCovT], Protocol[_ItemCovT]):
-    @classmethod
-    def default_filled(cls, length: int) -> Self:
-        ...  # Abstract method
-
-    @classmethod
-    def default_value(cls) -> _ItemCovT:
-        ...  # Abstract method
-
-    def __iter__(self) -> Iterator[_ItemCovT]:
-        raise AssumedToBeImplementedException
-
+class IsConcatenableItemSequenceLikeContent(IsItemSequenceLike[_ValT], Protocol[_ValT]):
     def __add__(
         self,
-        values: IsItemSequenceLike[_ItemCovT] | Generator[_ItemCovT],
+        values: IsItemSequenceLike[_ValT] | Generator[_ValT],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
 
     def __radd__(
         self,
-        values: IsItemSequenceLike[_ItemCovT] | Generator[_ItemCovT],
+        values: IsItemSequenceLike[_ValT] | Generator[_ValT],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
 
     def __iadd__(
         self,
-        values: IsItemSequenceLike[_ItemCovT] | Generator[_ItemCovT],
+        values: IsItemSequenceLike[_ValT] | Generator[_ValT],
         /,
     ) -> Self:
         raise AssumedToBeImplementedException
 
 
-class IsDictOfConcatenableItemSequenceLikeContent(
+class IsConcatenableItemSequenceLikeColumnContent(
+        IsConcatenableItemSequenceLikeContent[_ValT],
+        Protocol[_ValT],
+):
+    @classmethod
+    def default_value(cls) -> _ValT:
+        ...  # Abstract method
+
+    @classmethod
+    def filled(cls, value: _ValT, length: int) -> Self:
+        ...  # Abstract method
+
+
+class IsDictOfConcatenableItemSequenceLikeColumnContent(
         IsDictContent[str,
                       _ConcatColumnModelT | IsItemSequenceLike[_ValT]
                       | Generator[_ValT, None, None]],
