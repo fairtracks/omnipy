@@ -30,4 +30,4 @@ jobs:
           sudo update-locale LANG=de_DE.UTF-8
       - name: Test with pytest
         run: |
-          uv run pytest -v --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process
+          uv run pytest -v --mypy-pyproject-toml-file=pyproject.toml

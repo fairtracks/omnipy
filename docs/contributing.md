@@ -64,11 +64,11 @@
 ### Running tests
 
 - To run all tests, type:
-  - `uv run pytest --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
+  - `uv run pytest --mypy-pyproject-toml-file=pyproject.toml`
 
 - If you are repeatedly running tests on the command line, e.g.:
   - ```
-    export PYTEST_ARGS="--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process"
+    export PYTEST_ARGS="--mypy-pyproject-toml-file=pyproject.toml"
     ```
   - Using `zsh`, which is default shell on Mac:
     - `uv run pytest $=PYTEST_ARGS tests`
@@ -145,7 +145,7 @@ Information on how to configure `pyright` for `JupyterLab` will be added here so
       - Name: `pytest in tests`
       - Script path: select "tests" directory
       - Additional arguments:
-        `--mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
+        `---mypy-pyproject-toml-file=pyproject.toml`
       - Click OK
     - Repeat for other subprojects/test modules as needed, e.g. `pytest in tests.modules` (path=
       `...tests/modules`)

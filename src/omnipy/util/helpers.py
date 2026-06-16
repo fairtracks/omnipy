@@ -403,7 +403,7 @@ def get_event_loop_and_check_if_loop_is_running() -> tuple[asyncio.AbstractEvent
     loop: asyncio.AbstractEventLoop | None = None
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         loop_is_running = loop.is_running()
     except RuntimeError:
         loop_is_running = False

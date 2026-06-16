@@ -8,8 +8,8 @@
 
 ## Verification
 
-- Full test command: `uv run pytest -v --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
-- Focused pytest runs still need the same mypy-plugin flags, for example: `uv run pytest tests/components/json/test_json_types.yml --mypy-only-local-stub --mypy-pyproject-toml-file=pyproject.toml --mypy-same-process`
+- Full test command: `uv run pytest -v --mypy-pyproject-toml-file=pyproject.toml
+- Focused pytest runs still need the same mypy-plugin flags, for example: `uv run pytest tests/components/json/test_json_types.yml --mypy-pyproject-toml-file=pyproject.toml
 - Check-only formatting/import-order validation matches CI with `uv run pre-commit run --hook-stage manual --all-files`.
 
 ## Formatting And Hooks

@@ -9,6 +9,7 @@ from omnipy.data.model import Model
 from omnipy.shared.protocols.compute.job import IsTaskTemplate
 from omnipy.util.pydantic import ValidationError
 
+from ...helpers.functions import unwrap
 from ..cases.iterate_tasks import IterateDataFilesCase
 from ..cases.raw.functions import data_import_func
 
@@ -19,7 +20,9 @@ def test_fail_property_iterate_over_data_files_no_arg_task() -> None:
 
 
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks')
-def test_properties_default_values_task(case: IterateDataFilesCase) -> None:
+async def test_properties_default_values_task(case: IterateDataFilesCase) -> None:
+    case = await unwrap(case)
+
     with pytest.raises(ValueError):
         TaskTemplate(iterate_over_data_files=None)(case.task_func)  # type: ignore[arg-type]
 
@@ -32,7 +35,9 @@ def test_properties_default_values_task(case: IterateDataFilesCase) -> None:
 
 
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks')
-def test_property_iterate_over_data_files_task(case: IterateDataFilesCase) -> None:
+async def test_property_iterate_over_data_files_task(case: IterateDataFilesCase) -> None:
+    case = await unwrap(case)
+
     iter_template = TaskTemplate(iterate_over_data_files=case.iterate_over_data_files)(
         case.task_func)
 
@@ -41,7 +46,9 @@ def test_property_iterate_over_data_files_task(case: IterateDataFilesCase) -> No
 
 
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks')
-def test_property_output_dataset_param_task(case: IterateDataFilesCase) -> None:
+async def test_property_output_dataset_param_task(case: IterateDataFilesCase) -> None:
+    case = await unwrap(case)
+
     iter_dataset_param_task_template_decorator = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
         output_dataset_param='output_dataset',
@@ -58,7 +65,9 @@ def test_property_output_dataset_param_task(case: IterateDataFilesCase) -> None:
 
 
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks')
-def test_property_output_dataset_cls_is_int_task(case: IterateDataFilesCase) -> None:
+async def test_property_output_dataset_cls_is_int_task(case: IterateDataFilesCase) -> None:
+    case = await unwrap(case)
+
     iter_dataset_cls_template_decorator = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
         output_dataset_cls=Dataset[Model[int]])
@@ -74,7 +83,10 @@ def test_property_output_dataset_cls_is_int_task(case: IterateDataFilesCase) -> 
 
 
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks')
-def test_property_output_dataset_param_and_cls_is_int_task(case: IterateDataFilesCase) -> None:
+async def test_property_output_dataset_param_and_cls_is_int_task(
+        case: IterateDataFilesCase) -> None:
+    case = await unwrap(case)
+
     iter_dataset_cls_task_template_decorator = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
         output_dataset_param='output_dataset',
@@ -217,6 +229,7 @@ async def test_iterate_over_data_files_with_output_dataset_param_and_cls_is_int_
 @pc.parametrize('cancel_tasks', (False, True), ids=('run_tasks', 'cancel_tasks'))
 async def test_iterate_over_data_files_await_future_task(case: IterateDataFilesCase,
                                                          cancel_tasks: bool) -> None:
+    case = await unwrap(case)
 
     task_template = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,

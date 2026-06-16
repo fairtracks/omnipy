@@ -261,7 +261,7 @@ def case_async_wait_a_bit_multithreaded_futures() -> JobCase[[float], Awaitable[
             pytest.xfail('Stopped working in some Prefect version between 2.10.10 and 2.13.3.'
                          '(Unclear if the above comment is specific to this test case, as all'
                          'tests in test_all_engines.py were disabled).')
-        future = await asyncio.get_event_loop().run_in_executor(None, job, 0.005)
+        future = await asyncio.get_running_loop().run_in_executor(None, job, 0.005)
         sync_wait_for_job_state(job, [RunState.RUNNING, RunState.FINISHED])
 
         assert await resolve(future) == 0.005
@@ -310,7 +310,7 @@ def case_async_wait_a_bit_multiprocessing() -> JobCase[[float], Awaitable[float]
             get_async_assert_results_wait_a_bit_func(job)
 
         with ProcessPoolExecutor(max_workers=1) as executor:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             future = await loop.run_in_executor(
                 executor,
                 async_assert_results_wait_a_bit,

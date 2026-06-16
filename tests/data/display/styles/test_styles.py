@@ -160,7 +160,7 @@ def run_sync_func() -> Callable[[Callable[..., Any]], Awaitable[Any]]:
     Fixture to run blocking synchronous functions in an async context.
     """
     async def _run_sync_func(func: Callable[..., Any]) -> Any:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, func)
 
     return _run_sync_func

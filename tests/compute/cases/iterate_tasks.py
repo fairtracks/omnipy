@@ -251,8 +251,8 @@ def case_async_single_int_plus_int_return_str_model_with_output_str_dataset_func
     id='async_single_int_plus_future_int_return_str_func',
     tags=['async', 'function', 'iterate', 'await_number_future'],
 )
-def case_async_single_int_plus_future_int_return_str_func() -> IterateDataFilesCase:
-    loop = asyncio.get_event_loop()
+async def case_async_single_int_plus_future_int_return_str_func() -> IterateDataFilesCase:
+    loop = asyncio.get_running_loop()
     number_future = loop.create_future()
     return IterateDataFilesCase(
         task_func=async_single_int_plus_future_int_return_str_func,
@@ -268,8 +268,8 @@ def case_async_single_int_plus_future_int_return_str_func() -> IterateDataFilesC
     id='async_single_int_plus_future_int_fail_func',
     tags=['async', 'function', 'iterate', 'await_number_future'],
 )
-def case_async_single_int_plus_future_int_fail_func() -> IterateDataFilesCase:
-    loop = asyncio.get_event_loop()
+async def case_async_single_int_plus_future_int_fail_func() -> IterateDataFilesCase:
+    loop = asyncio.get_running_loop()
     number_future = loop.create_future()
     return IterateDataFilesCase(
         task_func=async_single_int_plus_future_int_fail_func,

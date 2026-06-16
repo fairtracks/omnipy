@@ -1,3 +1,4 @@
+import inspect
 import json
 import subprocess
 import sys
@@ -32,3 +33,10 @@ def get_pip_installed_packages() -> set[str]:
     reqs_json = subprocess.check_output([sys.executable, '-m', 'pip', 'list', '--format=json'])
     reqs = json.loads(reqs_json)
     return set(req['name'] for req in reqs)
+
+
+async def unwrap(case_data):
+    """If the case data is a deferred async coroutine, resolve it."""
+    if inspect.iscoroutine(case_data):
+        return await case_data
+    return case_data
