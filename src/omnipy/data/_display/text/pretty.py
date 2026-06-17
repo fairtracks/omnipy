@@ -99,7 +99,7 @@ def _iteratively_reduce_width(
     return cast(ReflowedTextDraftPanel[FrameT], cur_reflowed_text_panel)
 
 
-def _unique_format_params_key_maker(_args, kwargs):
+def _unique_format_params_key_maker(*_args, **kwargs):
     """A key maker for unique format parameters."""
     return hash((
         kwargs['pretty_printer'],
