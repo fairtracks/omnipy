@@ -1,4 +1,6 @@
-from rich._cell_widths import CELL_WIDTHS
+from typing import cast
+
+from rich._unicode_data import load as load_cell_table
 from rich.cells import _is_single_cell_widths
 
 from omnipy.util.range_lookup import RangeLookup
@@ -9,7 +11,13 @@ class UnicodeCharWidthMap:
         width_0_ranges = []
         width_2_ranges = []
 
-        for start, stop_inclusive, width in CELL_WIDTHS:
+        cell_widths = cast(list[tuple[int, int, int]], load_cell_table().widths)
+
+        # ASCII cell widths from rich.cells.get_character_cell_size()
+        width_0_ranges.append(range(0, 32))
+        width_0_ranges.append(range(0x07F, 0x0A0))
+
+        for start, stop_inclusive, width in cell_widths:
             cur_range = range(start, stop_inclusive + 1)
             if width <= 0:
                 width_0_ranges.append(cur_range)

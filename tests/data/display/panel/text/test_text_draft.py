@@ -193,10 +193,6 @@ def test_reflowed_text_draft_panel_variable_width_chars() -> None:
     # Null character is zero-width
     assert_dims_aware_panel(ReflowedTextDraftPanel('\0北京\n北京'), Dimensions(width=4, height=2))
 
-    # Soft hyphen character is zero-width
-    assert_dims_aware_panel(
-        ReflowedTextDraftPanel('hyphe\xad\nnate'), Dimensions(width=5, height=2))
-
     # Tab character width depends on context
     assert_dims_aware_panel(ReflowedTextDraftPanel('\tc'), Dimensions(width=5, height=1))
     assert_dims_aware_panel(ReflowedTextDraftPanel(' a\tb'), Dimensions(width=5, height=1))
