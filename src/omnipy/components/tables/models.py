@@ -39,7 +39,7 @@ from ..raw.models import (SplitLinesToColumnsByCommaModel,
 if TYPE_CHECKING:
     from omnipy.data._typing.mimic_models import PlainModel
 
-_ColumnT = TypeVar('_ColumnT', bound=IsItemSequenceLike[object])
+_ColumnT = TypeVar('_ColumnT', bound=IsItemSequenceLike)
 _ItemT = TypeVar('_ItemT')
 _ColModelT = TypeVar(
     '_ColModelT',
@@ -53,7 +53,7 @@ _ColModelItemT = TypeVar(
 _ColWiseTableModelT = TypeVar(
     '_ColWiseTableModelT', default='JsonScalarColumnWiseTableWithColNamesModel')
 _ConcatColumnModelT = TypeVar(
-    '_ConcatColumnModelT', bound=IsConcatenableItemSequenceLikeColumnContent[object])
+    '_ConcatColumnModelT', bound=IsConcatenableItemSequenceLikeColumnContent)
 
 if TYPE_CHECKING:  # noqa: C901
 
@@ -205,10 +205,13 @@ class JsonMaxLevel2ColumnModel(ColumnModel[list[JsonMaxLevel2Types], JsonMaxLeve
 
 
 class IterRow(Mapping[str, _ColModelT], Generic[_ColModelT, _ColModelItemT]):
-    def __init__(self, content: Mapping[str, _ColModelT]) -> None:
+    def __init__(
+        self,
+        content: Mapping[str, _ColModelT | IsItemSequenceLike[_ColModelItemT]],
+    ) -> None:
         self._content = {
-            key: content[key].content if is_model_instance(content[key]) else content[key]
-            for key in content
+            key: value.content if is_model_instance(value) else value
+            for key, value in content.items()
         }
         self.row_number: int = -1
 

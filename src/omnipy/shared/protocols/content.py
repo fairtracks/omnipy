@@ -25,12 +25,12 @@ _KeyT = TypeVar('_KeyT')
 _NestedKeyT = TypeVar('_NestedKeyT')
 _ValT = TypeVar('_ValT')
 _OtherT = TypeVar('_OtherT')
-_ValSeqT = TypeVar('_ValSeqT', bound=IsItemSequence[object])
-_ValMappingT = TypeVar('_ValMappingT', bound=IsMapping[str, object])
+_ValSeqT = TypeVar('_ValSeqT', bound=IsItemSequence)
+_ValMappingT = TypeVar('_ValMappingT', bound=IsMapping)
 _NestedValT = TypeVar('_NestedValT')
 _SecondValT = TypeVar('_SecondValT')
 _ConcatColumnModelT = TypeVar(
-    '_ConcatColumnModelT', bound='IsConcatenableItemSequenceLikeColumnContent[object]')
+    '_ConcatColumnModelT', bound='IsConcatenableItemSequenceLikeColumnContent')
 
 
 class IsIntContent(IsInt, Protocol):
