@@ -1,7 +1,7 @@
 from math import nan
-from typing import Generic, Iterator, overload, Self, SupportsIndex
+from typing import Generic, Iterator, overload, SupportsIndex
 
-from typing_extensions import TypeVar
+from typing_extensions import Self, TypeVar
 
 from omnipy import ColumnModel, ColumnWiseTableWithColNamesModel
 from omnipy.components.tables.models import ConcatByAddArrayAdapterModel
