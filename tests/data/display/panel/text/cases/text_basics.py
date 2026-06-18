@@ -88,9 +88,9 @@ def case_syntax_text_empty(
         FrameTestCase(
             frame=Frame(Dimensions(width=1, height=1)),
             config=OutputConfig(v_overflow=VerticalOverflowMode.CROP_BOTTOM),
-            exp_plain_output=' \n',
+            exp_plain_output='…\n',
             exp_stylized_dims=Dimensions(width=1, height=1),
-            exp_plain_output_only_width=' \n \n',
+            exp_plain_output_only_width='…\n…\n',
             exp_stylized_dims_only_width=Dimensions(width=1, height=2),
             exp_plain_output_only_height='  \n',
             # With width not defined, vertical cropping at the "resize"
