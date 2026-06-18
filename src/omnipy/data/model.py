@@ -77,6 +77,13 @@ _ClassOrTupleT = TypeVar('_ClassOrTupleT')
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
 
+# Due to overriding the dict method of pydantic GenericModel, we need to
+# redefine dict here to be able to use it for typing in Dataset methods.
+# Otherwise, python syntax checkers will assume that 'dict' in method signatures
+# refers to the method instead of the built-in dict type.
+
+dict_t = dict
+
 
 class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
     # Hack to overcome bug in pydantic/fields.py (v1.10.13), lines 636-641:
@@ -143,7 +150,7 @@ class Model(  # type: ignore[misc]
     See also docs of the Dataset class for more usage examples.
     """
     @classmethod
-    def _get_special_methods_info_dict(cls) -> dict[str, MethodInfo]:
+    def _get_special_methods_info_dict(cls) -> dict_t[str, MethodInfo]:
         return SPECIAL_METHODS_INFO_DICT
 
     __root__: _RootT = pyd.Field(default_factory=undefined_default_factory)
@@ -429,7 +436,7 @@ class Model(  # type: ignore[misc]
 
         @overload
         def __new__(
-            cls: 'type[Model[dict[_KeyT, _ValT]]] | type[Model[Model[dict[_KeyT, _ValT]]]]',
+            cls: 'type[Model[dict_t[_KeyT, _ValT]]] | type[Model[Model[dict_t[_KeyT, _ValT]]]]',
             *args: Any,
             **kwargs: Any,
         ) -> Model_dict[_KeyT, _ValT]:
@@ -554,7 +561,7 @@ class Model(  # type: ignore[misc]
         super().__init__()
         self.from_data(super_kwargs[ROOT_KEY])
 
-    def _init(self, super_kwargs: dict[str, Any], **kwargs: Any) -> None:
+    def _init(self, super_kwargs: dict_t[str, Any], **kwargs: Any) -> None:
         ...
 
     def __del__(self):
@@ -866,7 +873,7 @@ class Model(  # type: ignore[misc]
     # TODO: See if it is possible to support general mappings similarly to iterables (in Model)
     #       (note: this is an old TODO, it is unclear what exactly is not supported...)
     @pyd.root_validator(pre=True)
-    def _generous_iterable_support(cls, root_obj: dict[str, _RootT | None]) -> Any:
+    def _generous_iterable_support(cls, root_obj: dict_t[str, _RootT | None]) -> Any:
         if ROOT_KEY in root_obj:
             value = root_obj[ROOT_KEY]
             outer_type = cls.outer_type()
@@ -881,7 +888,7 @@ class Model(  # type: ignore[misc]
         return root_obj
 
     @pyd.root_validator
-    def _parse_root_object(cls, root_obj: dict[str, _RootT | None]) -> Any:
+    def _parse_root_object(cls, root_obj: dict_t[str, _RootT | None]) -> Any:
         assert ROOT_KEY in root_obj
         value = root_obj[ROOT_KEY]
         value = parse_none_according_to_model(value, root_model=cls)
@@ -913,7 +920,7 @@ class Model(  # type: ignore[misc]
     def do(self, placeholder: F) -> Any:
         return placeholder(self)
 
-    def dict(self, *args, **kwargs) -> dict[str, object]:
+    def dict(self, *args, **kwargs) -> dict_t[str, object]:
         return {ROOT_KEY: self.to_data()}
 
     # TODO: Improve typing of to_data/from_data. Should be limited to JSON types at least, but also

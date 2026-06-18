@@ -153,14 +153,14 @@ class Dataset(
         # json_dumps = orjson_dumps
 
     if TYPE_CHECKING:
-        data: dict[str, _ModelOrDatasetT] = pyd.Field(default={})
+        data: dict_t[str, _ModelOrDatasetT] = pyd.Field(default={})
 
     else:
 
         # TODO: For pydantic v2, remove hack in Dataset to stop e.g.
         #       [{'a': 'b', 'c': 'd'}] to be coerced into {'a': 'c'} (remove
         #       first part of the union below, and edit get_type() and to_json_schema())
-        data: list[dict[str, _ModelOrDatasetT]] | dict[str, _ModelOrDatasetT] = pyd.Field(
+        data: list[dict_t[str, _ModelOrDatasetT]] | dict_t[str, _ModelOrDatasetT] = pyd.Field(
             default={})
 
     # data: dict[str, _ModelOrDatasetT] = pyd.Field(default={})
