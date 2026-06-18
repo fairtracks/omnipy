@@ -8,8 +8,8 @@ from omnipy.compute._job_creator import JobCreator
 from omnipy.config.job import JobConfig
 from omnipy.shared.exceptions import JobStateException
 
+from ..helpers.functions import assert_func_wrapper
 from .conftest import MockJobClasses
-from .helpers.functions import assert_updated_wrapper
 from .helpers.mocks import (CommandMockJob,
                             CommandMockJobTemplate,
                             CommandMockJobTemplateCore,
@@ -320,7 +320,7 @@ def test_subclass_apply(mock_local_runner: Annotated[MockLocalRunner, pytest.fix
     cmd = cmd_tmpl.apply()
     assert isinstance(cmd, CommandMockJob)
     assert cmd.engine_decorator_applied is True
-    assert_updated_wrapper(cmd, cmd_tmpl)
+    assert_func_wrapper(cmd, cmd_tmpl)
 
     assert cmd.uppercase is True
     assert cmd.params == {'what': 'all'}
@@ -333,13 +333,13 @@ def test_subclass_apply(mock_local_runner: Annotated[MockLocalRunner, pytest.fix
 def test_subclass_apply_revise() -> None:
     cmd_tmpl = CommandMockJobTemplate('restore', params={'what': 'nothing'})(mock_cmd_func)
     cmd = cmd_tmpl.apply()
-    assert_updated_wrapper(cmd, cmd_tmpl)
+    assert_func_wrapper(cmd, cmd_tmpl)
     assert isinstance(cmd, CommandMockJob)
 
     assert cmd() == 'nothing has been restored'
 
     cmd_tmpl_revised = cmd.revise()
-    assert_updated_wrapper(cmd_tmpl_revised, cmd)
+    assert_func_wrapper(cmd_tmpl_revised, cmd)
     assert isinstance(cmd_tmpl_revised, CommandMockJobTemplateCore)
 
     assert cmd.uppercase is False
@@ -351,7 +351,7 @@ def test_subclass_apply_revise() -> None:
     _assert_immutable_command_mock_job_properties(cmd_tmpl_revised)
 
     cmd_revised = cmd_tmpl_revised.apply()
-    assert_updated_wrapper(cmd_revised, cmd_tmpl_revised)
+    assert_func_wrapper(cmd_revised, cmd_tmpl_revised)
     assert cmd_revised() == 'nothing has been restored'
 
 
@@ -359,7 +359,7 @@ def test_subclass_refine_empty() -> None:
     cmd_tmpl = CommandMockJobTemplate('restore', params={'what': 'nothing'})(mock_cmd_func)
 
     cmd_tmpl_refined = cmd_tmpl.refine()
-    assert_updated_wrapper(cmd_tmpl_refined, cmd_tmpl)
+    assert_func_wrapper(cmd_tmpl_refined, cmd_tmpl)
     assert isinstance(cmd_tmpl_refined, CommandMockJobTemplateCore)
     assert cmd_tmpl_refined is not cmd_tmpl
     assert cmd_tmpl_refined == cmd_tmpl
@@ -372,38 +372,38 @@ def test_subclass_refine_scalar() -> None:
             'what': 'all', 'where': 'everywhere'
         })(mock_cmd_func,)
     all_erased = all_erased_tmpl.apply()
-    assert_updated_wrapper(all_erased, all_erased_tmpl)
+    assert_func_wrapper(all_erased, all_erased_tmpl)
     assert all_erased() == 'all has been erased, everywhere'
 
     # Refine job template with scalar property 'uppercase' as bool (update=True, default).
     # Other properties are unchanged
     shout_tmpl = all_erased_tmpl.refine(uppercase=True)
-    assert_updated_wrapper(shout_tmpl, all_erased_tmpl)
+    assert_func_wrapper(shout_tmpl, all_erased_tmpl)
     assert shout_tmpl != all_erased_tmpl
     for shout_obj in shout_tmpl, shout_tmpl.apply():
-        assert_updated_wrapper(shout_obj, shout_tmpl)
+        assert_func_wrapper(shout_obj, shout_tmpl)
         assert shout_obj.id == 'all_erased'
         assert shout_obj.uppercase is True
         assert shout_obj.params == dict(what='all', where='everywhere')
 
     shout = shout_tmpl.apply()
-    assert_updated_wrapper(shout, shout_tmpl)
+    assert_func_wrapper(shout, shout_tmpl)
     assert shout != all_erased
     assert shout() == 'ALL HAS BEEN ERASED, EVERYWHERE'
 
     # Refine job template with id and scalar property 'uppercase' as bool (update=False).
     # Other properties are reset to default.
     silent_tmpl = shout_tmpl.refine(uppercase=False, update=False)  # noqa
-    assert_updated_wrapper(silent_tmpl, shout_tmpl)
+    assert_func_wrapper(silent_tmpl, shout_tmpl)
     assert silent_tmpl != shout_tmpl
     for silent_obj in silent_tmpl, silent_tmpl.apply():
-        assert_updated_wrapper(silent_obj, silent_tmpl)
+        assert_func_wrapper(silent_obj, silent_tmpl)
         assert silent_obj.id == ''
         assert silent_obj.uppercase is False
         assert silent_obj.params == {}
 
     silent = silent_tmpl.refine(id='silent').apply()
-    assert_updated_wrapper(silent, silent_tmpl)
+    assert_func_wrapper(silent, silent_tmpl)
     assert silent != shout
     assert silent.id == 'silent'
     assert silent() == 'I know nothing'
@@ -416,13 +416,13 @@ def test_subclass_refine_mapping() -> None:
     assert cmd_tmpl.uppercase is True
     assert cmd_tmpl.params == {}
     cmd = cmd_tmpl.apply()
-    assert_updated_wrapper(cmd, cmd_tmpl)
+    assert_func_wrapper(cmd, cmd_tmpl)
     assert cmd() == 'I KNOW NOTHING'
 
     # Refine job template with mapping property 'params' as dict (update=True, default).
     # Other properties are unchanged. 'params' was previously empty and is now filled
     nicer_tmpl = cmd_tmpl.refine(params=dict(what='something', where='somewhere'))
-    assert_updated_wrapper(nicer_tmpl, cmd_tmpl)
+    assert_func_wrapper(nicer_tmpl, cmd_tmpl)
     assert nicer_tmpl != cmd_tmpl
     for nicer_obj in nicer_tmpl, nicer_tmpl.apply():
         assert nicer_obj.id == 'restore'
@@ -430,39 +430,39 @@ def test_subclass_refine_mapping() -> None:
         assert nicer_obj.params == dict(what='something', where='somewhere')
 
     nicer = nicer_tmpl.apply()
-    assert_updated_wrapper(nicer, nicer_tmpl)
+    assert_func_wrapper(nicer, nicer_tmpl)
     assert nicer != cmd
     assert nicer() == 'SOMETHING HAS BEEN RESTORED, SOMEWHERE'
 
     # Refine job template with mapping property 'params' as list of tuples (update=True).
     # Other properties are unchanged, as well as other entries in 'params'
     secret_tmpl = nicer_tmpl.refine(params=[('where', 'but it is a secret')])  # noqa
-    assert_updated_wrapper(secret_tmpl, nicer_tmpl)
+    assert_func_wrapper(secret_tmpl, nicer_tmpl)
     assert secret_tmpl != nicer_tmpl
     for secret_obj in secret_tmpl, secret_tmpl.apply():
-        assert_updated_wrapper(secret_obj, secret_tmpl)
+        assert_func_wrapper(secret_obj, secret_tmpl)
         assert secret_obj.id == 'restore'
         assert secret_obj.uppercase is True
         assert secret_obj.params == dict(what='something', where='but it is a secret')
 
     secret = secret_tmpl.apply()
-    assert_updated_wrapper(secret, secret_tmpl)
+    assert_func_wrapper(secret, secret_tmpl)
     assert secret != nicer
     assert secret() == 'SOMETHING HAS BEEN RESTORED, BUT IT IS A SECRET'
 
     # Refine job template with 'params' as dict (update=False).
     # Other properties are reset to default. Previous 'params' mapping property is fully replaced
     nothing_tmpl = secret_tmpl.refine(params=dict(what='nothing'), update=False)
-    assert_updated_wrapper(nothing_tmpl, secret_tmpl)
+    assert_func_wrapper(nothing_tmpl, secret_tmpl)
     assert nothing_tmpl != secret_tmpl
     for nothing_obj in nothing_tmpl, nothing_tmpl.apply():
-        assert_updated_wrapper(nothing_obj, nothing_tmpl)
+        assert_func_wrapper(nothing_obj, nothing_tmpl)
         assert nothing_obj.id == ''
         assert nothing_obj.uppercase is False
         assert nothing_obj.params == dict(what='nothing')
 
     nothing = nothing_tmpl.refine(id='nothing').apply()
-    assert_updated_wrapper(nothing, nothing_tmpl)
+    assert_func_wrapper(nothing, nothing_tmpl)
     assert nothing != secret
     assert nothing.id == 'nothing'
     assert nothing() == 'nothing has been restored'
@@ -471,18 +471,18 @@ def test_subclass_refine_mapping() -> None:
 def test_subclass_refine_reset_mapping() -> None:
     cmd_tmpl = CommandMockJobTemplate('erase')(mock_cmd_func)
     cmd = cmd_tmpl.apply()
-    assert_updated_wrapper(cmd, cmd_tmpl)
+    assert_func_wrapper(cmd, cmd_tmpl)
     assert cmd() == 'I know nothing'
 
     nothing_tmpl = cmd_tmpl.refine(uppercase=True, params=dict(what='nothing'))
-    assert_updated_wrapper(nothing_tmpl, cmd_tmpl)
+    assert_func_wrapper(nothing_tmpl, cmd_tmpl)
     nothing = nothing_tmpl.apply()
-    assert_updated_wrapper(nothing, nothing_tmpl)
+    assert_func_wrapper(nothing, nothing_tmpl)
     assert nothing() == 'NOTHING HAS BEEN ERASED'
 
     # Resetting mapping property 'params' does not work with update=True
     reset_params_tmpl = nothing_tmpl.refine(params={})
-    assert_updated_wrapper(reset_params_tmpl, nothing_tmpl)
+    assert_func_wrapper(reset_params_tmpl, nothing_tmpl)
     assert reset_params_tmpl == nothing_tmpl
     assert reset_params_tmpl.uppercase is True
     assert reset_params_tmpl.params == dict(what='nothing')
@@ -496,16 +496,16 @@ def test_subclass_refine_reset_mapping() -> None:
             params=val,
             update=False,
         )
-        assert_updated_wrapper(reset_params_tmpl, nothing_tmpl)
+        assert_func_wrapper(reset_params_tmpl, nothing_tmpl)
         assert reset_params_tmpl != cmd_tmpl
         for reset_params_obj in reset_params_tmpl, reset_params_tmpl.apply():
-            assert_updated_wrapper(reset_params_obj, reset_params_tmpl)
+            assert_func_wrapper(reset_params_obj, reset_params_tmpl)
             assert reset_params_tmpl.uppercase is True
             assert reset_params_obj.params == {}
 
     # One-liner to reset job to default values
     reset = nothing.revise().refine(update=False).apply()
-    assert_updated_wrapper(reset, nothing)
+    assert_func_wrapper(reset, nothing)
 
     assert reset == cmd
     assert reset() == 'I know nothing'
@@ -516,17 +516,17 @@ def test_subclass_refine_reset_mapping() -> None:
 def test_revise_refine_mappings_are_copied() -> None:
     all_tmpl = CommandMockJobTemplate('erase', params={'what': 'all'})(mock_cmd_func)
     all_refined_tmpl = all_tmpl.refine(params=dict(where='everywhere'),)
-    assert_updated_wrapper(all_refined_tmpl, all_tmpl)
+    assert_func_wrapper(all_refined_tmpl, all_tmpl)
 
     assert len(all_tmpl.params) == 1
     assert len(all_refined_tmpl.params) == 2
 
     all_job = all_tmpl.apply()
-    assert_updated_wrapper(all_job, all_tmpl)
+    assert_func_wrapper(all_job, all_tmpl)
     all_revised_tmpl = all_job.revise()
-    assert_updated_wrapper(all_revised_tmpl, all_job)
+    assert_func_wrapper(all_revised_tmpl, all_job)
     all_revised_refined_tmpl = all_revised_tmpl.refine(params=dict(where='sadly'),)
-    assert_updated_wrapper(all_revised_refined_tmpl, all_revised_tmpl)
+    assert_func_wrapper(all_revised_refined_tmpl, all_revised_tmpl)
 
     assert len(all_tmpl.params) == 1
     assert len(all_job.params) == 1

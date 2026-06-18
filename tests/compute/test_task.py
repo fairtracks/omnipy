@@ -6,16 +6,16 @@ import pytest_cases as pc
 from omnipy.compute.task import Task, TaskTemplate, TaskTemplateCore
 from omnipy.shared.exceptions import JobStateException
 
+from ..helpers.functions import assert_func_wrapper
 from .cases.raw.functions import format_to_string_func, power_m1_func
 from .cases.tasks import TaskCase
-from .helpers.functions import assert_updated_wrapper
 from .helpers.mocks import MockLocalRunner
 
 
 def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     task_template = TaskTemplate()(format_to_string_func)
     assert isinstance(task_template, TaskTemplateCore)
-    assert_updated_wrapper(task_template, format_to_string_func)
+    assert_func_wrapper(task_template, format_to_string_func)
 
     with pytest.raises(TypeError):
         TaskTemplate(format_to_string_func)(format_to_string_func)  # type: ignore[misc, arg-type]
@@ -25,7 +25,7 @@ def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> 
 
     task = task_template.apply()
     assert isinstance(task, Task)
-    assert_updated_wrapper(task, format_to_string_func)
+    assert_func_wrapper(task, format_to_string_func)
 
 
 @pc.parametrize_with_cases('case', cases='.cases.tasks')
@@ -35,13 +35,13 @@ def test_task_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
         assert mock_local_runner.finished is False
 
     task_template = TaskTemplate()(case.task_func)
-    assert_updated_wrapper(task_template, case.task_func)
+    assert_func_wrapper(task_template, case.task_func)
 
     with pytest.raises(TypeError):
         task_template(*case.args, **case.kwargs)
 
     task = task_template.apply()
-    assert_updated_wrapper(task, case.task_func)
+    assert_func_wrapper(task, case.task_func)
 
     result = task(*case.args, **case.kwargs)
 

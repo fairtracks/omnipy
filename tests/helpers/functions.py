@@ -35,6 +35,17 @@ def get_pip_installed_packages() -> set[str]:
     return set(req['name'] for req in reqs)
 
 
+def assert_func_wrapper(wrapper, wrapped):
+    assert wrapper.__name__ == wrapped.__name__
+    assert wrapper.__qualname__ == wrapped.__qualname__
+    assert wrapper.__module__ == wrapped.__module__
+    assert wrapper.__doc__ == wrapped.__doc__
+    assert wrapper.__annotations__ == wrapped.__annotations__
+
+    equal_signatures = inspect.signature(wrapper) == inspect.signature(wrapped)
+    assert equal_signatures
+
+
 async def unwrap(case_data):
     """If the case data is a deferred async coroutine, resolve it."""
     if inspect.iscoroutine(case_data):

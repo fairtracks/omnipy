@@ -1,10 +1,11 @@
-import inspect
 from typing import Any, Callable, cast, Generic, ParamSpec
 
 import pytest
 from typing_extensions import TypeVar
 
 from omnipy.util.callable_decorator import callable_decorator_cls
+
+from ..helpers.functions import assert_func_wrapper
 
 # Note:
 #
@@ -48,13 +49,7 @@ def test_fail_plain_decorator_not_callable_arg() -> None:
 
 
 def _assert_func_decoration(my_func):
-    assert my_func.__name__ == my_func.func.__name__
-    assert my_func.__qualname__ == my_func.func.__qualname__
-    assert my_func.__module__ == my_func.func.__module__
-    assert my_func.__doc__ == my_func.func.__doc__
-    assert my_func.__annotations__ == my_func.func.__annotations__
-
-    assert inspect.signature(my_func) == inspect.signature(my_func.func)
+    assert_func_wrapper(my_func, my_func.func)
 
 
 def _assert_call_func(my_func):
@@ -67,7 +62,7 @@ def test_plain_decorator() -> None:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func_1) is MockClass
-    _assert_func_decoration(my_func_1)  # noqa
+    _assert_func_decoration(my_func_1)
     _assert_call_func(my_func_1)
 
     assert my_func_1.args == ()
@@ -95,7 +90,7 @@ def test_decorator_with_kwargs() -> None:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func_3) is MockClass
-    _assert_func_decoration(my_func_3)  # noqa
+    _assert_func_decoration(my_func_3)
     _assert_call_func(my_func_3)
 
     assert my_func_3.args == ()
@@ -109,7 +104,7 @@ def test_decorator_with_args_and_kwargs() -> None:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func_4) is MockClass
-    _assert_func_decoration(my_func_4)  # noqa
+    _assert_func_decoration(my_func_4)
     _assert_call_func(my_func_4)
 
     assert my_func_4.args == (123, True)
@@ -126,7 +121,7 @@ def test_decorator_with_args_and_kwargs_first_arg_func() -> None:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func_5) is MockClass
-    _assert_func_decoration(my_func_5)  # noqa
+    _assert_func_decoration(my_func_5)
     _assert_call_func(my_func_5)
 
     assert my_func_5.args == (other_func, 123, True)
@@ -141,7 +136,7 @@ def test_double_decorator_with_args_and_kwargs() -> None:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func_6) is MockClass
-    _assert_func_decoration(my_func_6)  # noqa
+    _assert_func_decoration(my_func_6)
     _assert_call_func(my_func_6)
 
     assert my_func_6.args == (234, False)
@@ -176,7 +171,7 @@ def test_decorator_as_function_fancy_func() -> None:
     my_func = MockClass(my_fancy_func)
 
     assert type(my_func) is MockClass
-    _assert_func_decoration(my_func)  # noqa
+    _assert_func_decoration(my_func)
     _assert_call_func(my_func)
 
     assert my_func.args == ()
@@ -188,7 +183,7 @@ def test_decorator_as_function_fancy_func_args_kwargs() -> None:
     my_func = MockClass(123, True, param=123, other=True)(my_fancy_func)
 
     assert type(my_func) is MockClass
-    _assert_func_decoration(my_func)  # noqa
+    _assert_func_decoration(my_func)
     _assert_call_func(my_func)
 
     assert my_func.args == (123, True)

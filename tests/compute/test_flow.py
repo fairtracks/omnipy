@@ -14,10 +14,11 @@ from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
                                                  IsFuncFlowTemplate,
                                                  IsLinearFlowTemplate)
 
+from ..helpers.functions import assert_func_wrapper
 from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func
 from .helpers.classes import AnyFlowClsTuple, FuncArgFlowClsTuple, TaskTemplateArgFlowClsTuple
-from .helpers.functions import assert_flow_or_flow_template, assert_updated_wrapper
+from .helpers.functions import assert_flow_or_flow_template
 from .helpers.mocks import (IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
                             MockFlowTemplateSubclass,
                             MockJobTemplateSubclass,
@@ -279,13 +280,13 @@ def test_flow_run_flow_cls_tuple(mock_local_runner: Annotated[MockLocalRunner, p
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
-    assert_updated_wrapper(case.flow_template, case.flow_func)
+    assert_func_wrapper(case.flow_template, case.flow_func)
 
     with pytest.raises(TypeError):
         case.flow_template(*case.args, **case.kwargs)  # noqa
 
     flow = case.flow_template.apply()
-    assert_updated_wrapper(flow, case.flow_func)
+    assert_func_wrapper(flow, case.flow_func)
 
     results = flow(*case.args, **case.kwargs)
 
