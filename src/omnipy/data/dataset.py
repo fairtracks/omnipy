@@ -703,6 +703,7 @@ class Dataset(
 
         return super().validate({'data': value})
 
+    # TODO: Improve DRY of Model.update_forward_refs() and Dataset.update_forward_refs()
     @classmethod
     def update_forward_refs(
         cls,
@@ -710,10 +711,11 @@ class Dataset(
         prev_visited_classes: set[type] | None = None,
         **localns: Any,
     ) -> None:
-        from omnipy.data.model import is_model_subclass
         """
         Try to update ForwardRefs on fields based on this Model, globalns and localns.
         """
+
+        from omnipy.data.model import is_model_subclass
 
         if prev_visited_classes is None:
             prev_visited_classes = set()
@@ -736,8 +738,11 @@ class Dataset(
         super().update_forward_refs(**globalns)
 
         cls._get_data_field().type_ = evaluate_any_forward_refs_if_possible(prev_type, **globalns)
-        cls.__annotations__[DATA_KEY] = evaluate_any_forward_refs_if_possible(
-            cls.__annotations__[DATA_KEY], **globalns)
+        if DATA_KEY in cls.__annotations__:
+            cls.__annotations__[DATA_KEY] = evaluate_any_forward_refs_if_possible(
+                cls.__annotations__[DATA_KEY], **globalns)
+
+        cls._clean_type_caches()
 
         prev_visited_classes.add(cls)
 
@@ -785,8 +790,6 @@ class Dataset(
 
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
-
-        cls._clean_type_caches()
 
     def _validate_data_file(self, data_file: str) -> None:
         from omnipy.data.model import is_model_instance
