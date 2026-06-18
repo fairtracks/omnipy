@@ -1,5 +1,6 @@
 from collections import deque
 from copy import copy
+import inspect
 import sys
 from types import NotImplementedType
 from typing import cast, Generic, get_args, Iterable, SupportsIndex, TypeVar
@@ -131,7 +132,7 @@ class SetDeque(deque, Generic[_ObjT]):
             args = get_args(self.__orig_class__)  # pyright: ignore [reportAttributeAccessIssue]
             if len(args) == 1:
                 arg = args[0]
-                arg_repr = f"[{arg.__name__ if hasattr(arg, '__name__') else repr(arg)}]"
+                arg_repr = f'[{arg.__name__ if inspect.isclass(arg) else repr(arg)}]'
         maxlen_repr = f', maxlen={self.maxlen}' if self.maxlen is not None else ''
         return f'{self.__class__.__name__}{arg_repr}({list(self)}{maxlen_repr})'
 

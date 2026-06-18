@@ -7,6 +7,9 @@ from omnipy.data.model import Model
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util.helpers import all_type_variants, ensure_plain_type
 
+if sys.version_info >= (3, 14):
+    from annotationlib import Format as AnnoFormat
+
 
 def assert_model(model: object, target_type: TypeForm, content: object):
     assert isinstance(model, Model)
@@ -40,7 +43,10 @@ def assert_func_wrapper(wrapper, wrapped):
     assert wrapper.__qualname__ == wrapped.__qualname__
     assert wrapper.__module__ == wrapped.__module__
     assert wrapper.__doc__ == wrapped.__doc__
-    assert wrapper.__annotations__ == wrapped.__annotations__
+    if sys.version_info >= (3, 14):
+        assert wrapper.__annotate__(AnnoFormat.VALUE) == wrapped.__annotate__(AnnoFormat.VALUE)
+    else:
+        assert wrapper.__annotations__ == wrapped.__annotations__
 
     equal_signatures = inspect.signature(wrapper) == inspect.signature(wrapped)
     assert equal_signatures

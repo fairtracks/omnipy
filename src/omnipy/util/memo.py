@@ -1,5 +1,4 @@
 from collections import defaultdict, UserDict
-from copy import _deepcopy_atomic, _deepcopy_dispatch  # type: ignore[attr-defined]
 import gc
 import sys
 import traceback
@@ -10,6 +9,11 @@ from typing_extensions import TypeVar
 from omnipy.util.setdeque import SetDeque
 
 _ObjT = TypeVar('_ObjT', bound=object)
+
+if sys.version_info >= (3, 14):
+    from copy import _atomic_types  # type: ignore[attr-defined]
+else:
+    from copy import _deepcopy_atomic, _deepcopy_dispatch  # type: ignore[attr-defined]
 
 
 class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
@@ -131,7 +135,15 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
     @staticmethod
     def _is_atomic(obj: object) -> bool:
         try:
-            return type(obj) is tuple or _deepcopy_dispatch[type(obj)] is _deepcopy_atomic
+            cls = type(obj)
+
+            if cls is tuple:
+                return True
+
+            if sys.version_info >= (3, 14):
+                return cls in _atomic_types
+            else:
+                return _deepcopy_dispatch[cls] is _deepcopy_atomic
         except KeyError:
             return False
 

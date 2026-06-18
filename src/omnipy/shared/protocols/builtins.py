@@ -82,8 +82,8 @@ from typing import (  # noqa: Y022,UP035
 # from typing_extensions import Literal, LiteralString, Self, TypeIs, TypeVarTuple, deprecated, disjoint_base  # noqa: Y023, UP035
 from typing_extensions import Literal, LiteralString, Self, deprecated, TypeVar
 
-if sys.version_info >= (3, 14):
-    from _typeshed import AnnotateFunc
+# if sys.version_info >= (3, 14):
+#     from _typeshed import AnnotateFunc
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
 from omnipy.shared.protocols._collections_abc import IsDictItems, IsDictKeys, IsDictValues

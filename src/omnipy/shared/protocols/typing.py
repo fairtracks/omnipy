@@ -36,10 +36,10 @@ from typing import AbstractSet, Any, AnyStr, overload, Protocol, runtime_checkab
 # from typing_extensions import Never as _Never, deprecated
 from typing_extensions import Self, TypeVar
 
-if sys.version_info >= (3, 14):
-    from _typeshed import EvaluateFunc
-
-    from annotationlib import Format
+# if sys.version_info >= (3, 14):
+#     from _typeshed import EvaluateFunc
+#
+#     from annotationlib import Format
 
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
