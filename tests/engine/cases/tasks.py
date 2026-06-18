@@ -83,6 +83,7 @@ def case_sync_range() -> JobCase[[int], Generator]:
     id='async-generator-range',
     tags=['async', 'generator', 'singlethread', 'localsuccess'],
 )
+@pytest.mark.asyncio
 def case_async_range() -> JobCase[[int], Awaitable[Generator]]:
     async def run_and_assert_results(job: IsJob) -> None:
         generator = job(5)
@@ -135,6 +136,7 @@ def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
     id='async-generator-coroutine-wait_for_send_twice()',
     tags=['async', 'generator-coroutine', 'singlethread', 'localsuccess'],
 )
+@pytest.mark.asyncio
 def case_async_wait_for_send_twice() -> JobCase[[], Awaitable[Generator]]:
     async def run_and_assert_results(job: IsJob) -> None:
         generator_obj = job()
@@ -160,6 +162,7 @@ def case_async_wait_for_send_twice() -> JobCase[[], Awaitable[Generator]]:
     id='async-coroutine-wait_a_bit(0.005)==0.005',
     tags=['async', 'coroutine', 'singlethread', 'success'],
 )
+@pytest.mark.asyncio
 def case_async_wait_a_bit() -> JobCase[[float], Awaitable[float]]:
     async def run_and_assert_results(job: IsJob) -> None:
         async_assert_results_wait_a_bit: Callable[[float], Awaitable] = \
@@ -228,6 +231,7 @@ def case_sync_wait_a_bit_multithreaded_futures() -> JobCase[[float], float]:
     id='async-coroutine-threading-wait_a_bit(0.005)==0.005',
     tags=['async', 'coroutine', 'multithread', 'success'],
 )
+@pytest.mark.asyncio
 def case_async_wait_a_bit_multithreaded_threading() -> JobCase[[float], Awaitable[float]]:
     def run_and_assert_results(job: IsJob) -> None:
         async_assert_results_wait_a_bit: Callable[[float], Awaitable] = \
@@ -253,6 +257,7 @@ def case_async_wait_a_bit_multithreaded_threading() -> JobCase[[float], Awaitabl
     id='async-coroutine-futures-wait_a_bit(0.005)==0.005',
     tags=['async', 'coroutine', 'multithread', 'success'],
 )
+@pytest.mark.asyncio
 def case_async_wait_a_bit_multithreaded_futures() -> JobCase[[float], Awaitable[float]]:
     async def run_and_assert_results(job: IsJob) -> None:
         from omnipy.components.prefect.engine.prefect import PrefectEngine
@@ -301,6 +306,7 @@ def case_sync_wait_a_bit_multiprocessing_futures() -> JobCase[[float], float]:
     id='fail-async-coroutine-multiproc-futures-wait_a_bit(0.005)==0.005',
     tags=['async', 'coroutine', 'multiprocess', 'fail'],
 )
+@pytest.mark.asyncio
 def case_async_wait_a_bit_multiprocessing() -> JobCase[[float], Awaitable[float]]:
 
     pytest.xfail("Can't pickle function")
