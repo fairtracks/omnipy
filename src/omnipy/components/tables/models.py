@@ -585,7 +585,11 @@ class _RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]] | R
 
             if len(data_list_of_lists) > 0:
                 first_row_as_colnames = Model[list[str]](data_list_of_lists[0]).content
-
+                # TODO: RowWiseTableWithColNamesModel fails with duplicate
+                #       column names. Either assert uniqueness or
+                #       (preferably) provide a de-uniqueness normalization
+                #       (e.g. ["col", "col"] -> ["col", "col-2"]. Check
+                #       existing solution for Dataset key uniqueness.
                 return cls._convert_list_of_lists_to_list_of_dicts(data_list_of_lists,
                                                                    first_row_as_colnames)
             else:
