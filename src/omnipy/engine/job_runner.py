@@ -36,10 +36,7 @@ class JobRunnerEngine(Engine, ABC):
 
             async def detect_finished_async_generator_decorator():
                 try:
-                    if sys.version_info >= (3, 10):
-                        value = yield await anext(job_result)
-                    else:
-                        value = yield await job_result.__anext__()
+                    value = yield await anext(job_result)
                     while True:
                         value = yield await job_result.asend(value)
                 except StopAsyncIteration:
