@@ -67,13 +67,13 @@ class PrefectEngine(TaskRunnerEngine,
 
                 @prefect_task(**task_kwargs)
                 async def _async_generator_task(*inner_args, **inner_kwargs):
+                    job_result = call_func(*inner_args, **inner_kwargs)
+                    sent = None
                     try:
-                        job_result = call_func(*inner_args, **inner_kwargs)
-                        value = yield await anext(job_result)
                         while True:
-                            value = yield await job_result.asend(value)
+                            sent = yield await job_result.asend(sent)
                     except StopAsyncIteration:
-                        pass
+                        return
 
                 return _async_generator_task
             else:
@@ -89,13 +89,7 @@ class PrefectEngine(TaskRunnerEngine,
 
                 @prefect_task(**task_kwargs)
                 def _sync_generator_task(*inner_args, **inner_kwargs):
-                    try:
-                        job_result = call_func(*inner_args, **inner_kwargs)
-                        value = yield next(job_result)
-                        while True:
-                            value = yield job_result.send(value)
-                    except StopIteration:
-                        pass
+                    yield from call_func(*inner_args, **inner_kwargs)
 
                 return _sync_generator_task
             else:
@@ -128,13 +122,13 @@ class PrefectEngine(TaskRunnerEngine,
 
                     @prefect_flow(**flow_kwargs)
                     async def _async_generator_task_flow(*inner_args, **inner_kwargs):
+                        job_result = _prefect_task(*inner_args, **inner_kwargs)
+                        sent = None
                         try:
-                            job_result = _prefect_task(*inner_args, **inner_kwargs)
-                            value = yield await anext(job_result)
                             while True:
-                                value = yield await job_result.asend(value)
+                                sent = yield await job_result.asend(sent)
                         except StopAsyncIteration:
-                            pass
+                            return
 
                     return _async_generator_task_flow(*args, **kwargs)
                 else:
@@ -150,13 +144,7 @@ class PrefectEngine(TaskRunnerEngine,
 
                     @prefect_flow(**flow_kwargs)
                     def _sync_generator_task_flow(*inner_args, **inner_kwargs):
-                        try:
-                            job_result = _prefect_task(*inner_args, **inner_kwargs)
-                            value = yield next(job_result)
-                            while True:
-                                value = yield job_result.send(value)
-                        except StopIteration:
-                            pass
+                        yield from _prefect_task(*inner_args, **inner_kwargs)
 
                     return _sync_generator_task_flow(*args, **kwargs)
                 else:
@@ -178,13 +166,13 @@ class PrefectEngine(TaskRunnerEngine,
 
                 @prefect_flow(**flow_kwargs)
                 async def _async_generator_flow(*inner_args, **inner_kwargs):
+                    job_result = call_func(*inner_args, **inner_kwargs)
+                    sent = None
                     try:
-                        job_result = call_func(*inner_args, **inner_kwargs)
-                        value = yield await anext(job_result)
                         while True:
-                            value = yield await job_result.asend(value)
+                            sent = yield await job_result.asend(sent)
                     except StopAsyncIteration:
-                        pass
+                        return
 
                 return _async_generator_flow
             else:

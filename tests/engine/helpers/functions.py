@@ -127,15 +127,14 @@ def create_linear_flow_with_two_func_tasks(
 
     @task_template_cls()
     def _passthrough_generator_task(arg):
-        try:
-            value = yield next(arg)
-            while True:
-                value = yield arg.send(value)
-        except StopIteration:
-            pass
+        yield from arg
 
     task_template_func = task_template_cls(name=name)(func)
     if not task_template_func.has_async_func() and task_template_func.has_generator_func():
+        # This is needed as Prefect 3 coerces returned generators from
+        # regular synchronous functions to lists. If the task is instead
+        # wrapping a generator function, the generator is recognized and
+        # handled.
         passthrough_task = _passthrough_generator_task
     else:
         passthrough_task = _passthrough_task

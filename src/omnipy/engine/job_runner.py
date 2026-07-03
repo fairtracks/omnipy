@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import inspect
-import sys
 from types import AsyncGeneratorType, GeneratorType
 from typing import Any, Awaitable, Callable, cast
 
@@ -23,22 +22,18 @@ class JobRunnerEngine(Engine, ABC):
             job_result = cast(GeneratorType, job_result)
 
             def detect_finished_generator_decorator():
-                try:
-                    value = yield next(job_result)
-                    while True:
-                        value = yield job_result.send(value)
-                except StopIteration:
-                    self._register_job_state(job, RunState.FINISHED)
+                yield from job_result
+                self._register_job_state(job, RunState.FINISHED)
 
             return detect_finished_generator_decorator()
         elif isinstance(job_result, AsyncGeneratorType):
             job_result = cast(AsyncGeneratorType, job_result)
 
             async def detect_finished_async_generator_decorator():
+                sent = None
                 try:
-                    value = yield await anext(job_result)
                     while True:
-                        value = yield await job_result.asend(value)
+                        sent = yield await job_result.asend(sent)
                 except StopAsyncIteration:
                     self._register_job_state(job, RunState.FINISHED)
 
