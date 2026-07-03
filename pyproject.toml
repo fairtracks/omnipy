@@ -136,7 +136,11 @@ checkpointing = true
 
 # General
 
+# Retaining compatibility with python 3.10
 python_version = "3.10"
+# Needed on python>=3.12 to avoid syntax errors for "type" syntax when
+# python_version = "3.10"
+native_parser = true
 always_true = "TYPE_CHECKER_IS_MYPY"
 mypy_path = "src:tests"
 
@@ -158,7 +162,7 @@ follow_imports = "silent"
 # Know exactly what you're doing
 warn_redundant_casts = true
 warn_unused_ignores = true
-warn_unused_configs = true
+warn_unused_configs = false
 warn_unreachable = false
 show_error_codes = true
 
@@ -213,3 +217,10 @@ asyncio_default_fixture_loop_scope = "function"
 "omnipy-selenized-dark" = "omnipy.data._display.styles.omnipy_selenized:OmnipySelenizedDarkStyle"
 "omnipy-selenized-light" = "omnipy.data._display.styles.omnipy_selenized:OmnipySelenizedLightStyle"
 "omnipy-selenized-white" = "omnipy.data._display.styles.omnipy_selenized:OmnipySelenizedWhiteStyle"
+
+[tool.uv]
+
+override-dependencies = [
+    "numpy>=2.5.0; python_version >= '3.12'",
+    "pandas>=3.0.0; python_version >= '3.12'"
+]
