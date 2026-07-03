@@ -32,7 +32,7 @@ def dataframe_of_list_of_dicts_data() -> 'Annotated[pd.DataFrame, pytest.fixture
     int_col = pd.Series([12, -3, pd.NA], dtype='Int64')
     float_col = pd.Series([12.1, pd.NA, 14.3], dtype='Float64')
     bool_col = pd.Series([True, False, pd.NA], dtype='boolean')
-    str_col = pd.Series(['abc', pd.NA, 'def'], dtype='string[python]')
+    str_col = pd.Series(['abc', pd.NA, 'def'], dtype='string')
     df = pd.concat([int_col, float_col, bool_col, str_col], axis=1)
     df.columns = ('int', 'float', 'bool', 'str')
     return df
