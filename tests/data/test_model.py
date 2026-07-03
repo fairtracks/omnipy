@@ -4348,13 +4348,13 @@ def test_mimic_dynamically_bound_instance_variable(
 
 def test_literal_model_defaults() -> None:
     assert LiteralFiveModel().to_data() == 5
-    assert LiteralFiveModel().outer_type(with_args=True) is Literal[5]
+    assert LiteralFiveModel().outer_type(with_args=True) == Literal[5]
 
     assert LiteralTextModel().to_data() == 'text'
-    assert LiteralTextModel().outer_type(with_args=True) is Literal['text']
+    assert LiteralTextModel().outer_type(with_args=True) == Literal['text']
 
     assert LiteralFiveOrTextModel().to_data() == 5
-    assert LiteralFiveOrTextModel().outer_type(with_args=True) is Literal[5, 'text']
+    assert LiteralFiveOrTextModel().outer_type(with_args=True) == Literal[5, 'text']
 
 
 def test_literal_model_validation() -> None:
