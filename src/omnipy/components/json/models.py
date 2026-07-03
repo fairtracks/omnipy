@@ -24,14 +24,6 @@ if TYPE_CHECKING:
                                                   Model_str,
                                                   PlainModel)
 
-# # IsMapping[str, int]
-#
-# sddddf: IsMapping[int, str] = {1: "foo", 2: "bar"}
-# ssd: IsKeysView[int] = {1: "foo", 2: "bar"}.keys()
-# sssd: IsDictKeys[int, str] = {1: "foo", 2: "bar"}.keys()
-#
-# kkjah: IsMappingProxyType[str, str] = MappingProxyType({"d": 'S'})
-
 #
 # Private models
 #
