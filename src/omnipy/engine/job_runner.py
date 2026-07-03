@@ -203,7 +203,7 @@ class FuncFlowRunnerEngine(JobRunnerEngine):
             def _func_flow_runner_call_func(*args: object, **kwargs: object) -> Any:
                 self._register_job_state(func_flow, RunState.RUNNING)
                 with func_flow.flow_context:
-                    flow_result = self._run_func_flow(state, func_flow, *args, **kwargs)
+                    flow_result = self._run_func_flow(state, func_flow, call_func, *args, **kwargs)
                     return self._decorate_result_with_job_finalization_detector(
                         func_flow, flow_result)
 
@@ -211,10 +211,28 @@ class FuncFlowRunnerEngine(JobRunnerEngine):
 
         job_callback_accept_decorator(_func_flow_decorator)
 
+    @staticmethod
+    def default_func_flow_run_decorator(
+        func_flow: IsFuncFlow,
+        call_func: Callable,
+    ) -> Callable:  # noqa: C901
+        def _inner_run_func_flow(*args: object, **kwargs: object):
+            with func_flow.flow_context:
+                return call_func(*args, **kwargs)
+
+        return _inner_run_func_flow
+
     @abstractmethod
     def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:
         ...
 
     @abstractmethod
-    def _run_func_flow(self, state: Any, func_flow: IsFuncFlow, *args, **kwargs) -> Any:
+    def _run_func_flow(
+        self,
+        state: Any,
+        func_flow: IsFuncFlow,
+        call_func: Callable,
+        *args,
+        **kwargs,
+    ) -> Any:
         ...

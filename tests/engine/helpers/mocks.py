@@ -243,9 +243,16 @@ class MockJobRunnerSubclass(TaskRunnerEngine,
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         return MockBackendFlow(self._config, call_func)
 
-    def _run_func_flow(self, state: MockBackendFlow, func_flow: IsFuncFlow, *args, **kwargs) -> Any:
+    def _run_func_flow(
+        self,
+        state: MockBackendFlow,
+        func_flow: IsFuncFlow,
+        call_func: Callable,
+        *args,
+        **kwargs,
+    ) -> Any:
         assert state.call_func is not None
-        result = state.run(func_flow, state.call_func, *args, **kwargs)
+        result = state.run(func_flow, call_func, *args, **kwargs)
         self.finished_backend_flows.append(state)
         return result
 

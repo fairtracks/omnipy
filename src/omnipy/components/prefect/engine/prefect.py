@@ -131,7 +131,15 @@ class PrefectEngine(TaskRunnerEngine,
     # FuncFlowRunnerEngine
 
     def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:
+        call_func = self.default_func_flow_run_decorator(func_flow, call_func)
         return self._init_flow(func_flow, call_func)
 
-    def _run_func_flow(self, state: Any, func_flow: IsFuncFlow, *args, **kwargs) -> Any:
+    def _run_func_flow(
+        self,
+        state: Any,
+        func_flow: IsFuncFlow,
+        call_func: Callable,
+        *args,
+        **kwargs,
+    ) -> Any:
         return self._run_flow(state, func_flow, *args, **kwargs)
