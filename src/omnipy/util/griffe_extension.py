@@ -10,7 +10,8 @@ class UseDynamicSignatureForSpecificFunctions(griffe.Extension):
         self.functions = functions
 
     def on_function_instance(self, *, func: griffe.Function, **kwargs) -> None:
-        from _griffe.agents.inspector import _convert_object_to_annotation, _convert_parameter
+        from griffe._internal.agents.inspector import (_convert_object_to_annotation,
+                                                       _convert_parameter)
 
         if func.path not in self.functions:
             return
