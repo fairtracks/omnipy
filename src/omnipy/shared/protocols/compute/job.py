@@ -107,3 +107,23 @@ class IsFuncFlow(IsFuncArgJob['IsFuncFlowTemplate[_CallP, _RetCovT]',
                  Protocol[_CallP, _RetCovT]):
     """"""
     ...
+
+
+class IsAnyFlowTemplate(IsFuncArgJobTemplate['IsAnyFlowTemplate[_CallP, _RetCovT]',
+                                             'IsAnyFlow[_CallP, _RetCovT]',
+                                             _CallP,
+                                             _RetCovT],
+                        IsFlowTemplate,
+                        Protocol[_CallP, _RetCovT]):
+    """"""
+    ...
+
+
+class IsAnyFlow(IsFuncArgJob['IsAnyFlowTemplate[_CallP, _RetCovT]',
+                             'IsAnyFlow[_CallP, _RetCovT]',
+                             _CallP,
+                             _RetCovT],
+                IsFlow,
+                Protocol[_CallP, _RetCovT]):
+    """"""
+    ...

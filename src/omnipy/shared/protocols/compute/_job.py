@@ -26,6 +26,12 @@ _RetCovT = TypeVar('_RetCovT', covariant=True)
 _RetContraT = TypeVar('_RetContraT', contravariant=True)
 
 
+class HasJobCreator(Protocol):
+    @property
+    def job_creator(self) -> IsJobCreator:
+        ...
+
+
 class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
     """"""
     @property

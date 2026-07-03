@@ -1,6 +1,6 @@
 from collections import defaultdict
 from io import TextIOBase
-from typing import Protocol, runtime_checkable, TYPE_CHECKING
+from typing import Any, Protocol, runtime_checkable, TYPE_CHECKING
 
 from omnipy.shared.enums.colorstyles import AllColorStyles
 from omnipy.shared.enums.data import BackoffStrategy
@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 @runtime_checkable
 class IsConfigBase(IsDataPublisher, Protocol):
     """"""
-    def as_model(self) -> 'IsModel[dict[str, object]]':
+    def as_model(self) -> 'IsModel[Any]':
         ...
 
     def default_repr_to_terminal_str(

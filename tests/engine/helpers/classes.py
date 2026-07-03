@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Awaitable, Callable, Generic, Type, TypeVar
+from typing import Any, Awaitable, Callable, Generic, ParamSpec, Type, TypeVar
+
+from typing_extensions import override
 
 from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute._job import IsJob
@@ -19,15 +21,15 @@ class JobType(Enum):
     func_flow = 4
 
 
-ArgT = TypeVar('ArgT')
+CallP = ParamSpec('CallP')
 ReturnT = TypeVar('ReturnT')
 
 
 @dataclass
-class JobCase(Generic[ArgT, ReturnT]):
+class JobCase(Generic[CallP, ReturnT]):
     name: str
-    job_func: Callable[[ArgT], ReturnT]
-    run_and_assert_results_func: Callable[..., None] | Awaitable[Callable[..., None]]
+    job_func: Callable[CallP, ReturnT]
+    run_and_assert_results_func: Callable[..., None | Awaitable[None]]
     job_type: JobType | None = None
     job: IsJob | None = None
 
@@ -43,7 +45,16 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlo
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
         self._engine.set_registry(registry)
 
-    def get_config_cls(self) -> Type[IsJobRunnerConfig]:
+    @property
+    def config(self) -> IsJobRunnerConfig:
+        return self._engine.config
+
+    @property
+    def registry(self) -> IsRunStateRegistry | None:
+        return self._engine.registry
+
+    @override
+    def get_config_cls(self) -> Type[IsJobRunnerConfig]:  # type: ignore[override]
         return self._engine.get_config_cls()  # noqa
 
     def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:

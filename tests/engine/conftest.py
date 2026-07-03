@@ -1,10 +1,11 @@
 from typing import Callable, Type
 
+import pytest
 import pytest_cases as pc
 
 from omnipy.components.prefect.engine.prefect import PrefectEngine
+from omnipy.components.prefect.lazy_import import prefect_test_harness
 from omnipy.engine.local import LocalRunner
-from omnipy.shared.protocols.compute._job import IsJobTemplate
 from omnipy.shared.protocols.compute.job import IsFlowTemplate, IsTaskTemplate
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsTaskRunnerEngine
@@ -100,7 +101,7 @@ def mock_func_flow_runner_subcls(func_flow_runner_subcls):
 
 @pc.fixture(scope='function')
 @pc.parametrize(engine=[LocalRunner(), PrefectEngine()], ids=['[local]', '[prefect]'])
-def all_engines(engine):
+def all_engines(engine) -> IsEngine:
     return engine
 
 
@@ -218,7 +219,7 @@ def func_flow_mock_classes(
 @pc.parametrize('registry', [no_registry], ids=[''])
 def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
     job_case: JobCase,
-    job_mock_classes: tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
+    job_mock_classes: tuple[JobType, Type[IsTaskTemplate], Type[IsFlowTemplate], Type[IsEngine]],
     engine_decorator: Callable[[IsEngine], IsEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
@@ -248,7 +249,7 @@ def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_func_types_mock_jobs_mock_runner_subcls_assert_runstate_mock_reg(
     job_case: JobCase,
-    job_mock_classes: tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
+    job_mock_classes: tuple[JobType, Type[IsTaskTemplate], Type[IsFlowTemplate], Type[IsEngine]],
     engine_decorator: Callable[[IsEngine], IsEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
@@ -282,8 +283,8 @@ def all_func_types_mock_jobs_mock_runner_subcls_assert_runstate_mock_reg(
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg(
     job_case: JobCase,
-    job_classes: tuple[JobType, Type[IsJobTemplate], Type[IsEngine]],
-    engine: Type[IsEngine],
+    job_classes: tuple[JobType, Type[IsTaskTemplate], Type[IsFlowTemplate], Type[IsEngine]],
+    engine: IsEngine,
     engine_decorator: Callable[[IsEngine], IsEngine] | None,
     registry: IsRunStateRegistry | None,
 ):

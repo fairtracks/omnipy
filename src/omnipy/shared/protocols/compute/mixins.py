@@ -11,7 +11,7 @@ class IsUniquelyNamedJob(Protocol):
     def unique_name(self) -> str:
         ...
 
-    def __init__(self, *, name: str | None = None):
+    def __init__(self, *args, name: str | None = None):
         ...
 
     def regenerate_unique_name(self) -> None:

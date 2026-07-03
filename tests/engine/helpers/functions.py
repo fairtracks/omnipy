@@ -4,10 +4,11 @@ from time import sleep
 from typing import Callable, cast, Type
 
 from omnipy.shared.enums.job import RunState
-from omnipy.shared.protocols.compute._job import IsJob, IsJobBase
+from omnipy.shared.protocols.compute._job import HasJobCreator, IsJob, IsJobBase
 from omnipy.shared.protocols.compute.job import (IsDagFlow,
                                                  IsDagFlowTemplate,
                                                  IsFlowTemplate,
+                                                 IsFuncFlow,
                                                  IsFuncFlowTemplate,
                                                  IsLinearFlow,
                                                  IsLinearFlowTemplate,
@@ -25,9 +26,10 @@ from .classes import JobCase, JobType
 
 
 def extract_engine(job: IsJobBase) -> IsEngine:
-    engine = job.__class__.job_creator.engine
-    if hasattr(engine, '_engine'):  # TaskRunnerStateChecker
-        engine = engine._engine  # noqa
+    engine = cast(HasJobCreator, job.__class__).job_creator.engine
+    assert engine is not None
+    if engine and hasattr(engine, '_engine'):  # TaskRunnerStateChecker
+        engine = engine._engine  # pyright: ignore[reportAttributeAccessIssue]
     return engine
 
 
@@ -104,7 +106,7 @@ def create_task_with_func(
 
     task_template = task_template_cls(name=name)(func)
 
-    task_template_cls.job_creator.set_engine(engine)
+    task_template_cls.job_creator.set_engine(engine)  # type: ignore[attr-defined]
     if registry:
         engine.set_registry(registry)
 
@@ -130,7 +132,7 @@ def create_linear_flow_with_two_func_tasks(
         name=name,
     )(func,)
 
-    task_template_cls.job_creator.set_engine(engine)
+    cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
     if registry:
         engine.set_registry(registry)
 
@@ -149,7 +151,7 @@ def create_dag_flow_with_two_func_tasks(
     task_template = task_template_cls(name=name)(func)
     dag_flow_template = dag_flow_template_cls(task_template, task_template, name=name)(func)
 
-    task_template_cls.job_creator.set_engine(engine)
+    cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
     if registry:
         engine.set_registry(registry)
 
@@ -163,17 +165,17 @@ def create_func_flow_with_two_func_tasks(
     func_flow_template_cls: type[IsFuncFlowTemplate],
     engine: IsFuncFlowRunnerEngine,
     registry: IsRunStateRegistry | None,
-) -> IsDagFlow:
+) -> IsFuncFlow:
 
     task_template = task_template_cls(name=name)(func)
 
     @func_flow_template_cls(name=name)
     def func_flow_template(*args: object, **kwargs: object) -> object:
-        for i in range(2):
+        for _ in range(2):
             result = task_template(*args, **kwargs)
-        return result  # noqa
+        return result  # pyright: ignore[reportPossiblyUnboundVariable]
 
-    task_template_cls.job_creator.set_engine(engine)
+    cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
     if registry:
         engine.set_registry(registry)
 
@@ -207,8 +209,8 @@ def update_job_case_with_job(
             job_case.name,
             job_case.job_func,
             task_template_cls,
-            flow_template_cls,
-            cast(IsLinearFlowRunnerEngine, engine),
+            cast(type[IsLinearFlowTemplate], flow_template_cls),
+            engine,
             registry,
         )
     elif job_type.value == JobType.dag_flow.value:
@@ -217,8 +219,8 @@ def update_job_case_with_job(
             job_case.name,
             job_case.job_func,
             task_template_cls,
-            flow_template_cls,
-            cast(IsDagFlowRunnerEngine, engine),
+            cast(type[IsDagFlowTemplate], flow_template_cls),
+            engine,
             registry,
         )
     elif job_type.value == JobType.func_flow.value:
@@ -227,8 +229,8 @@ def update_job_case_with_job(
             job_case.name,
             job_case.job_func,
             task_template_cls,
-            flow_template_cls,
-            cast(IsFuncFlowRunnerEngine, engine),
+            cast(type[IsFuncFlowTemplate], flow_template_cls),
+            engine,
             registry,
         )
 

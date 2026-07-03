@@ -67,8 +67,12 @@ def run_state_registry(
 @pc.parametrize('registry', [run_state_registry], ids=[''])
 def all_func_types_real_jobs_all_engines_real_reg(
     job_case: JobCase,
-    job_classes: tuple[JobType, Type[IsJobTemplate]],
-    engine: Type[IsEngine],
+    job_classes: tuple[JobType,
+                       Type[IsJobTemplate],
+                       Type[IsLinearFlowTemplate],
+                       Type[IsDagFlowTemplate],
+                       Type[IsFuncFlowTemplate]],
+    engine: IsEngine,
     engine_decorator: Callable[[IsEngine], IsEngine] | None,
     registry: IsRunStateRegistry | None,
 ):

@@ -1,8 +1,7 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import threading
-from types import NoneType
-from typing import Awaitable, Callable, Generator
+from typing import AsyncGenerator, Awaitable, Callable, Coroutine, Generator
 
 from aiostream.stream import enumerate as aenumerate
 import pytest
@@ -84,7 +83,7 @@ def case_sync_range() -> JobCase[[int], Generator]:
     tags=['async', 'generator', 'singlethread', 'localsuccess'],
 )
 @pytest.mark.asyncio
-def case_async_range() -> JobCase[[int], Awaitable[Generator]]:
+def case_async_range() -> JobCase[[int], AsyncGenerator]:
     async def run_and_assert_results(job: IsJob) -> None:
         generator = job(5)
         assert_job_state(job, [RunState.RUNNING, RunState.FINISHED])
@@ -96,7 +95,7 @@ def case_async_range() -> JobCase[[int], Awaitable[Generator]]:
 
         assert_job_state(job, [RunState.FINISHED])
 
-    return JobCase[[int], Awaitable[Generator]]('range', async_range, run_and_assert_results)
+    return JobCase[[int], AsyncGenerator]('range', async_range, run_and_assert_results)
 
 
 # Synchronous/Asynchronous generator coroutine: wait_for_send_twice()
@@ -137,7 +136,7 @@ def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
     tags=['async', 'generator-coroutine', 'singlethread', 'localsuccess'],
 )
 @pytest.mark.asyncio
-def case_async_wait_for_send_twice() -> JobCase[[], Awaitable[Generator]]:
+def case_async_wait_for_send_twice() -> JobCase[[], AsyncGenerator]:
     async def run_and_assert_results(job: IsJob) -> None:
         generator_obj = job()
         assert_job_state(job, [RunState.RUNNING])
@@ -150,9 +149,9 @@ def case_async_wait_for_send_twice() -> JobCase[[], Awaitable[Generator]]:
 
         assert_job_state(job, [RunState.FINISHED])
 
-    return JobCase[[], Awaitable[Generator]]('wait_for_send_twice',
-                                             async_wait_for_send_twice,
-                                             run_and_assert_results)
+    return JobCase[[], AsyncGenerator]('wait_for_send_twice',
+                                       async_wait_for_send_twice,
+                                       run_and_assert_results)
 
 
 #  Asynchronous coroutine: wait_a_bit()
@@ -195,7 +194,7 @@ def case_async_wait_a_bit() -> JobCase[[float], Awaitable[float]]:
 )
 def case_sync_wait_a_bit_multithreaded_threading() -> JobCase[[float], float]:
     def run_and_assert_results(job: IsJob) -> None:
-        sync_assert_results_wait_a_bit: Callable[[float], NoneType] = \
+        sync_assert_results_wait_a_bit: Callable[[float], None] = \
             get_sync_assert_results_wait_a_bit_func(job)
         thread = threading.Thread(target=sync_assert_results_wait_a_bit, args=(0.005,))
 
@@ -234,7 +233,7 @@ def case_sync_wait_a_bit_multithreaded_futures() -> JobCase[[float], float]:
 @pytest.mark.asyncio
 def case_async_wait_a_bit_multithreaded_threading() -> JobCase[[float], Awaitable[float]]:
     def run_and_assert_results(job: IsJob) -> None:
-        async_assert_results_wait_a_bit: Callable[[float], Awaitable] = \
+        async_assert_results_wait_a_bit: Callable[[float], Coroutine] = \
             get_async_assert_results_wait_a_bit_func(job)
 
         def async_run_assert_results_wait_a_bit(seconds: float) -> None:

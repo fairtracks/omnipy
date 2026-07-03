@@ -6,13 +6,22 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
-from omnipy.shared.protocols.compute.job import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols.compute.job import (IsAnyFlow,
+                                                 IsDagFlow,
+                                                 IsFlow,
+                                                 IsFuncFlow,
+                                                 IsLinearFlow,
+                                                 IsTask)
 from omnipy.shared.protocols.config import IsPrefectEngineConfig
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import resolve
 
 if TYPE_CHECKING:
     from ..lazy_import import PrefectTask
+
+
+class FlowKwargs(TypedDict):
+    name: str
 
 
 class PrefectEngine(TaskRunnerEngine,
@@ -63,7 +72,7 @@ class PrefectEngine(TaskRunnerEngine,
         if task.in_flow_context:
             return _prefect_task(*args, **kwargs)
         else:
-            flow_kwargs: dict[str, Any] = dict(name=task.name)
+            flow_kwargs = FlowKwargs(name=task.name)
 
             if task.has_coroutine_func():
 
@@ -78,12 +87,12 @@ class PrefectEngine(TaskRunnerEngine,
 
             return _task_flow(*args, **kwargs)
 
-    def _init_flow(self, flow: IsFlow, call_func: Callable) -> Any:
+    def _init_flow(self, flow: IsAnyFlow, call_func: Callable) -> Any:
         from ..lazy_import import prefect_flow
 
         assert isinstance(self._config, PrefectEngineConfig)
-        flow_kwargs = dict(name=flow.name,)
         if flow.has_coroutine_func():
+        flow_kwargs = FlowKwargs(name=flow.name)
 
             @prefect_flow(**flow_kwargs)
             async def _flow(*inner_args, **inner_kwargs):
