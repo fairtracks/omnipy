@@ -1,4 +1,3 @@
-import asyncio
 from contextlib import AbstractContextManager
 from datetime import datetime
 from functools import update_wrapper
@@ -11,6 +10,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
+from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute._job import IsJob
 from omnipy.shared.protocols.compute.job import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
@@ -36,10 +36,11 @@ class MockJobCreator(AbstractContextManager):
         self.nested_context_level -= 1
 
 
-class MockTask:
+class MockTask(LogMixin):
     job_creator = MockJobCreator()
 
     def __init__(self, func: Callable, *, name: str | None = None) -> None:
+        super().__init__()
         self._func = func
         self._func_signature = inspect.signature(self._func)
         self.name = name if name is not None else func.__name__
@@ -54,8 +55,11 @@ class MockTask:
     def _call_func(self, *args: object, **kwargs: object) -> Any:
         return self._func(*args, **kwargs)
 
-    def has_coroutine_func(self) -> bool:
-        return asyncio.iscoroutinefunction(self._func)
+    def has_async_func(self) -> bool:
+        return (inspect.iscoroutinefunction(self._func) or inspect.isasyncgenfunction(self._func))
+
+    def has_generator_func(self) -> bool:
+        return (inspect.isgeneratorfunction(self._func) or inspect.isasyncgenfunction(self._func))
 
     @property
     def flow_context(self):

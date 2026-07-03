@@ -179,7 +179,28 @@ class IsFuncArgJobBase(Protocol):
     def param_key_map(self) -> MappingProxyType[str, str]:
         ...
 
-    def has_coroutine_func(self) -> bool:
+    def has_async_func(self) -> bool:
+        """
+        Determines whether the job function is asynchronous.
+
+        This method checks if the job function is an asynchronous coroutine
+        or generator function.
+
+        Returns:
+            bool: True if the job function is asynchronous, else False.
+        """
+        ...
+
+    def has_generator_func(self) -> bool:
+        """
+        Determines whether the job function is a generator function.
+
+        This method checks if the job function is an asynchronous or
+        synchronous generator function.
+
+        Returns:
+            bool: True if the job function is a generator function, else False.
+        """
         ...
 
     def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments:

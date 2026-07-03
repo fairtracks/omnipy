@@ -122,10 +122,24 @@ def create_linear_flow_with_two_func_tasks(
     registry: IsRunStateRegistry | None,
 ) -> IsLinearFlow:
     @task_template_cls()
-    def passthrough_task(arg):
+    def _passthrough_task(arg):
         return arg
 
+    @task_template_cls()
+    def _passthrough_generator_task(arg):
+        try:
+            value = yield next(arg)
+            while True:
+                value = yield arg.send(value)
+        except StopIteration:
+            pass
+
     task_template_func = task_template_cls(name=name)(func)
+    if not task_template_func.has_async_func() and task_template_func.has_generator_func():
+        passthrough_task = _passthrough_generator_task
+    else:
+        passthrough_task = _passthrough_task
+
     linear_flow_template = linear_flow_template_cls(
         task_template_func,
         passthrough_task,

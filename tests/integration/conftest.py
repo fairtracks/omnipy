@@ -3,6 +3,7 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
+from omnipy.components.prefect.lazy_import import prefect_test_harness
 from omnipy.shared.enums.job import EngineChoice
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
@@ -16,3 +17,9 @@ def runtime(runtime_data_config_variants: Annotated[IsRuntime, pytest.fixture]) 
 @pc.parametrize(engine=[EngineChoice.LOCAL, EngineChoice.PREFECT], ids=['local', 'prefect'])
 def runtime_all_engines(runtime: Annotated[IsRuntime, pytest.fixture], engine: str) -> None:
     runtime.config.engine.choice = engine  # type: ignore[assignment]
+
+
+@pytest.fixture(autouse=True, scope='package')
+def prefect_test_fixture():
+    with prefect_test_harness():
+        yield

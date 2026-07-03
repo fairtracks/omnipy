@@ -12,8 +12,8 @@ classifiers = ["Development Status :: 2 - Pre-Alpha", "Framework :: Pydantic", "
 dependencies = [
     "inflection (>=0.5.1,<0.6.0)",
     "pandas (>=2.2)",
-    "prefect (>=2.13.2,<3)",
-    "anyio (<4.14.0)",  # To fix issue in (at least) prefect 2.20.25
+    "prefect (>=3,<4)",
+    "fastapi (>=0.119.0,<0.126.0)",  # Support for pydantic v1 namespace
     "typing-extensions (>=4.13,<5)",
     "chardet (>=7.0.0,<8)",
     "devtools (>=0.12.2,<1)",

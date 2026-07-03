@@ -21,6 +21,15 @@ from .helpers.mocks import (MockDagFlowTemplate,
                             MockRunStateRegistry,
                             MockTaskTemplate)
 
+# Prefect
+
+
+@pytest.fixture(autouse=True, scope='package')
+def prefect_test_fixture():
+    with prefect_test_harness():
+        yield
+
+
 # Mock job templates
 
 

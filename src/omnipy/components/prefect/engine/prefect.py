@@ -1,5 +1,6 @@
 from datetime import timedelta
-from typing import Any, Callable, Type
+from logging import WARNING
+from typing import Any, Callable, Type, TypedDict
 
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
@@ -41,30 +42,78 @@ class PrefectEngine(TaskRunnerEngine,
 
     # TaskRunnerEngine
 
-    def _init_task(self, task: IsTask, call_func: Callable) -> 'PrefectTask':
-        from ..lazy_import import prefect_task, task_input_hash
+    def _init_task(self, task: IsTask, call_func: Callable) -> 'PrefectTask':  # noqa: C901
+        from ..lazy_import import cache_policies, prefect_task
 
         assert isinstance(self._config, PrefectEngineConfig)
-        task_kwargs: dict[str, Any] = dict(
-            name=task.name,
-            cache_key_fn=task_input_hash if self._config.use_cached_results else None,
-            cache_expiration=timedelta(days=1))
+        task_kwargs: dict[str, Any] = dict(name=task.name)
 
-        if task.has_coroutine_func():
+        if self._config.use_cached_results and task.has_generator_func():
+            task.log(
+                'NOTE: Cache-key computation for Prefect tasks traverses task parameters '
+                'and will consume generator inputs. To disable caching of task parameters, set '
+                '`runtime.config.engine.prefect.use_cached_results` to `False`.',
+                level=WARNING)
 
-            @prefect_task(**task_kwargs)
-            async def _task(*inner_args, **inner_kwargs):
-                return await call_func(*inner_args, **inner_kwargs)
+        if self._config.use_cached_results:
+            task_kwargs['cache_policy'] = cache_policies.DEFAULT
+            task_kwargs['cache_expiration'] = timedelta(days=1)
         else:
+            task_kwargs['cache_policy'] = cache_policies.NO_CACHE
 
-            @prefect_task(**task_kwargs)
-            def _task(*inner_args, **inner_kwargs):
-                return call_func(*inner_args, **inner_kwargs)
+        if task.has_async_func():
 
-        return _task
+            if task.has_generator_func():
 
-    def _run_task(self, state: 'PrefectTask', task: IsTask, call_func: Callable, *args,
-                  **kwargs) -> Any:
+                @prefect_task(**task_kwargs)
+                async def _async_generator_task(*inner_args, **inner_kwargs):
+                    try:
+                        job_result = call_func(*inner_args, **inner_kwargs)
+                        value = yield await anext(job_result)
+                        while True:
+                            value = yield await job_result.asend(value)
+                    except StopAsyncIteration:
+                        pass
+
+                return _async_generator_task
+            else:
+
+                @prefect_task(**task_kwargs)
+                async def _async_task(*inner_args, **inner_kwargs):
+                    return await call_func(*inner_args, **inner_kwargs)
+
+                return _async_task
+
+        else:
+            if task.has_generator_func():
+
+                @prefect_task(**task_kwargs)
+                def _sync_generator_task(*inner_args, **inner_kwargs):
+                    try:
+                        job_result = call_func(*inner_args, **inner_kwargs)
+                        value = yield next(job_result)
+                        while True:
+                            value = yield job_result.send(value)
+                    except StopIteration:
+                        pass
+
+                return _sync_generator_task
+            else:
+
+                @prefect_task(**task_kwargs)
+                def _sync_task(*inner_args, **inner_kwargs):
+                    return call_func(*inner_args, **inner_kwargs)
+
+                return _sync_task
+
+    def _run_task(  # noqa: C901
+        self,
+        state: 'PrefectTask',
+        task: IsTask,
+        call_func: Callable,
+        *args,
+        **kwargs,
+    ) -> Any:
         from ..lazy_import import prefect_flow
 
         _prefect_task = state
@@ -74,38 +123,88 @@ class PrefectEngine(TaskRunnerEngine,
         else:
             flow_kwargs = FlowKwargs(name=task.name)
 
-            if task.has_coroutine_func():
+            if _prefect_task.isasync:
+                if _prefect_task.isgenerator:
 
-                @prefect_flow(**flow_kwargs)
-                async def _task_flow(*inner_args, **inner_kwargs):
-                    return await resolve(_prefect_task(*inner_args, **inner_kwargs))
+                    @prefect_flow(**flow_kwargs)
+                    async def _async_generator_task_flow(*inner_args, **inner_kwargs):
+                        try:
+                            job_result = _prefect_task(*inner_args, **inner_kwargs)
+                            value = yield await anext(job_result)
+                            while True:
+                                value = yield await job_result.asend(value)
+                        except StopAsyncIteration:
+                            pass
+
+                    return _async_generator_task_flow(*args, **kwargs)
+                else:
+
+                    @prefect_flow(**flow_kwargs)
+                    async def _async_task_flow(*inner_args, **inner_kwargs):
+                        return await resolve(_prefect_task(*inner_args, **inner_kwargs))
+
+                    return _async_task_flow(*args, **kwargs)
+
             else:
+                if _prefect_task.isgenerator:
 
-                @prefect_flow(**flow_kwargs)
-                def _task_flow(*inner_args, **inner_kwargs):
-                    return _prefect_task(*inner_args, **inner_kwargs)
+                    @prefect_flow(**flow_kwargs)
+                    def _sync_generator_task_flow(*inner_args, **inner_kwargs):
+                        try:
+                            job_result = _prefect_task(*inner_args, **inner_kwargs)
+                            value = yield next(job_result)
+                            while True:
+                                value = yield job_result.send(value)
+                        except StopIteration:
+                            pass
 
-            return _task_flow(*args, **kwargs)
+                    return _sync_generator_task_flow(*args, **kwargs)
+                else:
 
-    def _init_flow(self, flow: IsAnyFlow, call_func: Callable) -> Any:
+                    @prefect_flow(**flow_kwargs)
+                    def _sync_task_flow(*inner_args, **inner_kwargs):
+                        return _prefect_task(*inner_args, **inner_kwargs)
+
+                    return _sync_task_flow(*args, **kwargs)
+
+    def _init_flow(self, flow: IsAnyFlow, call_func: Callable) -> Any:  # noqa: C901
         from ..lazy_import import prefect_flow
 
         assert isinstance(self._config, PrefectEngineConfig)
-        if flow.has_coroutine_func():
         flow_kwargs = FlowKwargs(name=flow.name)
 
-            @prefect_flow(**flow_kwargs)
-            async def _flow(*inner_args, **inner_kwargs):
-                with flow.flow_context:
+        if flow.has_async_func():
+            if flow.has_generator_func():
+
+                @prefect_flow(**flow_kwargs)
+                async def _async_generator_flow(*inner_args, **inner_kwargs):
+                    try:
+                        job_result = call_func(*inner_args, **inner_kwargs)
+                        value = yield await anext(job_result)
+                        while True:
+                            value = yield await job_result.asend(value)
+                    except StopAsyncIteration:
+                        pass
+
+                return _async_generator_flow
+            else:
+
+                @prefect_flow(**flow_kwargs)
+                async def _async_flow(*inner_args, **inner_kwargs):
                     return await resolve(call_func(*inner_args, **inner_kwargs))
+
+                return _async_flow
         else:
 
-            @prefect_flow(**flow_kwargs)
-            def _flow(*inner_args, **inner_kwargs):
-                with flow.flow_context:
-                    return call_func(*inner_args, **inner_kwargs)
+            def _sync_auto_flow(*inner_args, **inner_kwargs):
+                @prefect_flow(**flow_kwargs)
+                def _sync_generator_flow(*inner_args, **inner_kwargs):
+                    yield call_func(*inner_args, **inner_kwargs)
 
-        return _flow
+                for result in _sync_generator_flow(*inner_args, **inner_kwargs):
+                    return result
+
+            return _sync_auto_flow
 
     def _run_flow(self, state: Any, flow: IsFlow, *args, **kwargs) -> Any:
         _prefect_flow = state

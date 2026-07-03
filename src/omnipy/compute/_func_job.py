@@ -1,4 +1,4 @@
-import asyncio
+import inspect
 from typing import Callable, Generic, ParamSpec, TypeVar
 
 from omnipy.compute._job import JobBase
@@ -24,8 +24,13 @@ class PlainFuncArgJobBase(JobBase[_JobTemplateT, _JobT, _CallP, _RetT],
     def _get_init_args(self) -> tuple[object, ...]:
         return self._job_func,
 
-    def has_coroutine_func(self) -> bool:
-        return asyncio.iscoroutinefunction(self._job_func)
+    def has_async_func(self) -> bool:
+        return (inspect.iscoroutinefunction(self._job_func)
+                or inspect.isasyncgenfunction(self._job_func))
+
+    def has_generator_func(self) -> bool:
+        return (inspect.isgeneratorfunction(self._job_func)
+                or inspect.isasyncgenfunction(self._job_func))
 
     def _call_job(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetT:
         """To be overloaded by mixins"""
