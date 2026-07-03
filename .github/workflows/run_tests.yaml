@@ -11,23 +11,29 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
+
       - name: Install dependencies
         run: |
           uv sync --all-groups
+
       - name: Build docs with MkDocs
         run: |
           uv sync --all-groups
           uv run mkdocs build
+
       - name: Install locale - de_DE.UTF-8
         run: |
           sudo locale-gen de_DE.UTF-8
           sudo update-locale LANG=de_DE.UTF-8
+
       - name: Test with pytest
         run: |
           uv run pytest -v --mypy-pyproject-toml-file=pyproject.toml

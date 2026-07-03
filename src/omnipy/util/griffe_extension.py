@@ -24,11 +24,11 @@ class UseDynamicSignatureForSpecificFunctions(griffe.Extension):
 
         signature = inspect.signature(runtime_func)
 
-        parameters = griffe.Parameters(
-            *[
-                _convert_parameter(parameter, parent=func.parent)
-                for parameter in signature.parameters.values()
-            ],)
+        assert func.parent is not None
+        parameters = griffe.Parameters(*[
+            _convert_parameter(parameter, parent=func.parent)
+            for parameter in signature.parameters.values()
+        ])
 
         return_annotation = signature.return_annotation
         returns = (None if return_annotation is inspect.Signature.empty else
