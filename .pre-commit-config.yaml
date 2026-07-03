@@ -13,6 +13,7 @@ repos:
     rev: v0.25
     hooks:
       - id: validate-pyproject
+        args: [-D, mypy]
         name: Validate pyproject.toml
         additional_dependencies: ["validate-pyproject-schema-store[all]"]
   - repo: https://github.com/google/yapf
@@ -22,7 +23,7 @@ repos:
         name: "yapf"
         additional_dependencies: [toml]
         args: [ '--style', 'pyproject.toml', '--parallel', '--in-place' ]
-        stages: [ commit ]
+        stages: [ pre-commit ]
         types: [ python ]
       - id: yapf
         name: "yapf (check)"
@@ -35,7 +36,7 @@ repos:
     hooks:
       - id: isort
         name: isort
-        stages: [ commit ]
+        stages: [ pre-commit ]
         types: [ python ]
       - id: isort
         name: isort (check)
