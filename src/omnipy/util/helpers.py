@@ -135,8 +135,8 @@ def transfer_generic_args_to_cls(to_cls, from_generic_type):
 
 
 @overload
-def ensure_plain_type(
-        in_type: ForwardRef) -> ForwardRef:  # pyright: ignore [reportOverlappingOverload]
+def ensure_plain_type(  # pyright: ignore [reportOverlappingOverload]
+        in_type: ForwardRef) -> ForwardRef:
     ...
 
 

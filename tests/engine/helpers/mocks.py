@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import update_wrapper
 import inspect
 from inspect import BoundArguments
-from typing import Any, Callable, Type
+from typing import Any, Callable, cast, Type
 
 from omnipy.config import ConfigBase
 from omnipy.engine.job_runner import (DagFlowRunnerEngine,
@@ -13,16 +13,25 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute._job import IsJob
-from omnipy.shared.protocols.compute.job import IsDagFlow, IsFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols.compute.job import (IsDagFlow,
+                                                 IsFlow,
+                                                 IsFuncFlow,
+                                                 IsLinearFlow,
+                                                 IsTask,
+                                                 IsTaskTemplate)
 from omnipy.shared.protocols.config import IsJobRunnerConfig
-from omnipy.shared.protocols.engine.base import IsEngine
+from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
+                                                       IsEngine,
+                                                       IsFuncFlowRunnerEngine,
+                                                       IsLinearFlowRunnerEngine,
+                                                       IsTaskRunnerEngine)
 from omnipy.shared.typedefs import GeneralDecorator
 from omnipy.util.callable_decorator import callable_decorator_cls
 from omnipy.util.helpers import generate_job_slug
 
 
 class MockJobCreator(AbstractContextManager):
-    def __init__(self):
+    def __init__(self) -> None:
         self.engine: IsEngine | None = None
         self.nested_context_level = 0
 
@@ -86,9 +95,14 @@ class MockTaskTemplate(MockTask):
     def run(self, *args: object, **kwargs: object) -> object:
         return self.apply()(*args, **kwargs)
 
-    def apply(self) -> IsTask:
+    def apply(self) -> MockTask:
         task = MockTask(self._func, name=self.name)
-        self.job_creator.engine.apply_task_decorator(task, task._accept_call_func_decorator)
+        engine = cast(IsTaskRunnerEngine, self.job_creator.engine)
+        assert engine is not None
+        engine.apply_task_decorator(
+            task,  # type: ignore[arg-type]
+            task._accept_call_func_decorator,
+        )
         update_wrapper(task, self._func)
         return task
 
@@ -96,14 +110,14 @@ class MockTaskTemplate(MockTask):
 class MockLinearFlow(MockTask):
     def __init__(self,
                  func: Callable,
-                 *task_templates: MockTaskTemplate,
+                 *task_templates: IsTaskTemplate,
                  name: str | None = None,
                  **kwargs: object) -> None:
         self._task_templates = task_templates
         super().__init__(func, name=name, **kwargs)
 
     @property
-    def task_templates(self) -> tuple[MockTaskTemplate, ...]:
+    def task_templates(self) -> tuple[IsTaskTemplate, ...]:
         return self._task_templates
 
 
@@ -111,8 +125,12 @@ class MockLinearFlow(MockTask):
 class MockLinearFlowTemplate(MockLinearFlow):
     def apply(self) -> MockLinearFlow:
         linear_flow = MockLinearFlow(self._func, *self._task_templates, name=self.name)
-        self.job_creator.engine.apply_linear_flow_decorator(linear_flow,
-                                                            linear_flow._accept_call_func_decorator)
+        engine = cast(IsLinearFlowRunnerEngine, self.job_creator.engine)
+        assert engine is not None
+        engine.apply_linear_flow_decorator(
+            linear_flow,  # type: ignore[arg-type]
+            linear_flow._accept_call_func_decorator,
+        )
         update_wrapper(linear_flow, self._func)
         return linear_flow
 
@@ -120,14 +138,14 @@ class MockLinearFlowTemplate(MockLinearFlow):
 class MockDagFlow(MockTask):
     def __init__(self,
                  func: Callable,
-                 *task_templates: MockTaskTemplate,
+                 *task_templates: IsTaskTemplate,
                  name: str | None = None,
                  **kwargs: object) -> None:
         self._task_templates = task_templates
         super().__init__(func, name=name, **kwargs)
 
     @property
-    def task_templates(self) -> tuple[MockTaskTemplate, ...]:
+    def task_templates(self) -> tuple[IsTaskTemplate, ...]:
         return self._task_templates
 
 
@@ -135,8 +153,11 @@ class MockDagFlow(MockTask):
 class MockDagFlowTemplate(MockDagFlow):
     def apply(self) -> MockDagFlow:
         dag_flow = MockDagFlow(self._func, *self._task_templates, name=self.name)
-        self.job_creator.engine.apply_dag_flow_decorator(dag_flow,
-                                                         dag_flow._accept_call_func_decorator)
+        engine = cast(IsDagFlowRunnerEngine, self.job_creator.engine)
+        engine.apply_dag_flow_decorator(
+            dag_flow,  # type: ignore[arg-type]
+            dag_flow._accept_call_func_decorator,
+        )
         update_wrapper(dag_flow, self._func)
         return dag_flow
 
@@ -147,11 +168,14 @@ class MockFuncFlow(MockTask):
 
 
 @callable_decorator_cls
-class MockFuncFlowTemplate(MockFuncFlow, MockTaskTemplate):
+class MockFuncFlowTemplate(MockFuncFlow, MockTaskTemplate):  # pyright: ignore
     def apply(self) -> MockFuncFlow:
         func_flow = MockFuncFlow(self._func, name=self.name)
-        self.job_creator.engine.apply_func_flow_decorator(func_flow,
-                                                          func_flow._accept_call_func_decorator)
+        engine = cast(IsFuncFlowRunnerEngine, self.job_creator.engine)
+        engine.apply_func_flow_decorator(
+            func_flow,  # type: ignore[arg-type]
+            func_flow._accept_call_func_decorator,
+        )
         update_wrapper(func_flow, self._func)
         return func_flow
 
