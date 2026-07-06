@@ -182,17 +182,27 @@ def create_func_flow_with_two_func_tasks(
 
     task_template = task_template_cls(name=name)(func)
 
-    @func_flow_template_cls(name=name)
-    def func_flow_template(*args: object, **kwargs: object) -> object:
-        for _ in range(2):
-            result = task_template(*args, **kwargs)
-        return result  # pyright: ignore[reportPossiblyUnboundVariable]
-
-    cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
+    task_template_cls.job_creator.set_engine(engine)  # type: ignore[attr-defined]
     if registry:
         engine.set_registry(registry)
 
-    return func_flow_template.apply()
+    if not task_template.has_async_func() and task_template.has_generator_func():
+
+        @func_flow_template_cls(name=name)
+        def sync_generator_func_flow_template(*args: object, **kwargs: object):
+            task_template(*args, **kwargs)
+            yield from task_template(*args, **kwargs)
+
+        return sync_generator_func_flow_template.apply()
+
+    else:
+
+        @func_flow_template_cls(name=name)
+        def plain_func_flow_template(*args: object, **kwargs: object) -> object:
+            task_template(*args, **kwargs)
+            return task_template(*args, **kwargs)
+
+        return plain_func_flow_template.apply()
 
 
 def update_job_case_with_job(

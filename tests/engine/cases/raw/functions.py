@@ -38,6 +38,7 @@ def sync_range(num: int) -> Generator:
 
 async def async_range(num: int) -> AsyncGenerator:
     for i in range(num):
+        await asyncio.sleep(0.01)
         yield i
 
 
@@ -56,4 +57,5 @@ def sync_wait_for_send_twice() -> Generator:
 async def async_wait_for_send_twice() -> AsyncGenerator:
     for i in range(2):
         value = yield
+        await asyncio.sleep(0.01)
         yield i, value
