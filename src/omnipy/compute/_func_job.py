@@ -1,4 +1,3 @@
-import inspect
 from typing import Callable, Generic, ParamSpec, TypeVar
 
 from omnipy.compute._job import JobBase
@@ -10,6 +9,7 @@ from omnipy.compute._mixins.result_key import ResultKeyFuncJobBaseMixin
 from omnipy.compute._mixins.serialize import SerializerFuncJobBaseMixin
 from omnipy.shared._typedefs import _JobT, _JobTemplateT
 from omnipy.shared.typedefs import GeneralDecorator
+from omnipy.util.helpers import is_async_func, is_generator_func
 
 _CallP = ParamSpec('_CallP')
 _RetT = TypeVar('_RetT')
@@ -25,12 +25,10 @@ class PlainFuncArgJobBase(JobBase[_JobTemplateT, _JobT, _CallP, _RetT],
         return self._job_func,
 
     def has_async_func(self) -> bool:
-        return (inspect.iscoroutinefunction(self._job_func)
-                or inspect.isasyncgenfunction(self._job_func))
+        return is_async_func(self._job_func)
 
     def has_generator_func(self) -> bool:
-        return (inspect.isgeneratorfunction(self._job_func)
-                or inspect.isasyncgenfunction(self._job_func))
+        return is_generator_func(self._job_func)
 
     def _call_job(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetT:
         """To be overloaded by mixins"""

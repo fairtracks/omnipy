@@ -28,11 +28,11 @@ class TaskTemplateArgsJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT
     def task_templates(self) -> tuple[IsTaskTemplate, ...]:
         return self._task_templates
 
-    def has_generator_func(self) -> bool:
-        for task_template in self.task_templates:
-            if task_template.has_generator_func():
-                return True
-        return False
+    # def has_generator_func(self) -> bool:
+    #     for task_template in self.task_templates:
+    #         if task_template.has_generator_func():
+    #             return True
+    #     return False
 
     def _refine(self,
                 *task_templates: IsTaskTemplate,

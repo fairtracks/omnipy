@@ -238,6 +238,14 @@ def is_non_str_byte_iterable(
     return is_iterable(obj) and not type(obj) in (str, bytes)
 
 
+def is_async_func(call_func: Callable) -> bool:
+    return inspect.iscoroutinefunction(call_func) or inspect.isasyncgenfunction(call_func)
+
+
+def is_generator_func(call_func: Callable) -> bool:
+    return inspect.isgeneratorfunction(call_func) or inspect.isasyncgenfunction(call_func)
+
+
 def ensure_non_str_byte_iterable(value):
     return value if is_non_str_byte_iterable(value) else (value,)
 

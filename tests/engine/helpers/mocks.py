@@ -27,7 +27,7 @@ from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
                                                        IsTaskRunnerEngine)
 from omnipy.shared.typedefs import GeneralDecorator
 from omnipy.util.callable_decorator import callable_decorator_cls
-from omnipy.util.helpers import generate_job_slug
+from omnipy.util.helpers import generate_job_slug, is_async_func, is_generator_func
 
 
 class MockJobCreator(AbstractContextManager):
@@ -65,10 +65,10 @@ class MockTask(LogMixin):
         return self._func(*args, **kwargs)
 
     def has_async_func(self) -> bool:
-        return (inspect.iscoroutinefunction(self._func) or inspect.isasyncgenfunction(self._func))
+        return is_async_func(self._func)
 
     def has_generator_func(self) -> bool:
-        return (inspect.isgeneratorfunction(self._func) or inspect.isasyncgenfunction(self._func))
+        return is_generator_func(self._func)
 
     @property
     def flow_context(self):
