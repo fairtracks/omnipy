@@ -18,7 +18,7 @@ from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
 from omnipy.config import ConfigBase
-from omnipy.engine.job_runner import DagFlowRunnerEngine, LinearFlowRunnerEngine
+from omnipy.engine.run_spec import DagFlowRunSpec, FuncFlowRunSpec, LinearFlowRunSpec
 from omnipy.shared.protocols.compute._job import (HasFuncArgJobTemplateInit,
                                                   IsFuncArgJob,
                                                   IsFuncArgJobTemplate,
@@ -423,14 +423,14 @@ class MockLocalRunner:
                                     linear_flow: IsLinearFlow,
                                     job_callback_accept_decorator: Callable) -> None:
         def _default_linear_flow_decorator(call_func: Callable) -> Callable:
-            return LinearFlowRunnerEngine.default_linear_flow_run_decorator(linear_flow)
+            return LinearFlowRunSpec(linear_flow, call_func).create_default_run_callable()
 
         job_callback_accept_decorator(_default_linear_flow_decorator)
 
     def apply_dag_flow_decorator(self, dag_flow: IsDagFlow,
                                  job_callback_accept_decorator: Callable) -> None:
         def _default_dag_flow_decorator(call_func: Callable) -> Callable:
-            return DagFlowRunnerEngine.default_dag_flow_run_decorator(dag_flow)
+            return DagFlowRunSpec(dag_flow, call_func).create_default_run_callable()
 
         job_callback_accept_decorator(_default_dag_flow_decorator)
 
@@ -439,8 +439,10 @@ class MockLocalRunner:
                                   job_callback_accept_decorator: Callable) -> None:
         def _func_flow_decorator(call_func: Callable) -> Callable:
             def _call_func(*args: object, **kwargs: object) -> Any:
-                with func_flow.flow_context:
-                    result = call_func(*args, **kwargs)
+                result = FuncFlowRunSpec(func_flow, call_func).create_default_run_callable()(
+                    *args,
+                    **kwargs,
+                )
 
                 self.finished = True
                 return result

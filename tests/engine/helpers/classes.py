@@ -4,12 +4,14 @@ from typing import Any, Awaitable, Callable, Generic, ParamSpec, Type, TypeVar
 
 from typing_extensions import override
 
+from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute._job import IsJob
 from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
                                                        IsFuncFlowRunnerEngine,
+                                                       IsLinearFlowRunnerEngine,
                                                        IsTaskRunnerEngine)
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
@@ -34,8 +36,12 @@ class JobCase(Generic[CallP, ReturnT]):
     job: IsJob | None = None
 
 
-class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlowRunnerEngine):
+class JobRunnerStateChecker(IsTaskRunnerEngine,
+                            IsLinearFlowRunnerEngine,
+                            IsDagFlowRunnerEngine,
+                            IsFuncFlowRunnerEngine):
     def __init__(self, engine):
+        object.__init__(self)
         self._engine = engine
         self._engine.__init__()
 
@@ -74,49 +80,22 @@ class JobRunnerStateChecker(IsTaskRunnerEngine, IsDagFlowRunnerEngine, IsFuncFlo
                                   job_callback_accept_decorator: Callable) -> None:
         return self._engine.apply_func_flow_decorator(func_flow, job_callback_accept_decorator)
 
-    def _init_task(self, task: IsTask, call_func: Callable) -> Any:
+    def _init_task(self, task: TaskRunSpec) -> object:
         from .functions import assert_job_state
-        assert_job_state(task, [RunState.INITIALIZED])
-        return self._engine._init_task(task, call_func)  # noqa
+        assert_job_state(task._job, [RunState.INITIALIZED])
+        return self._engine._init_task(task)  # noqa
 
-    def _run_task(self, state: Any, task: IsTask, call_func: Callable, *args, **kwargs) -> Any:
+    def _run_task(self, state: Any, task: TaskRunSpec, *args, **kwargs) -> object:
         from .functions import assert_job_state
-        assert_job_state(task, [RunState.RUNNING])
-        return self._engine._run_task(state, task, call_func, *args, **kwargs)  # noqa
+        assert_job_state(task._job, [RunState.RUNNING])
+        return self._engine._run_task(state, task, *args, **kwargs)  # noqa
 
-    def _init_linear_flow(self, linear_flow: IsLinearFlow) -> Any:
+    def _init_flow(self, flow: FlowRunSpec) -> object:
         from .functions import assert_job_state
-        assert_job_state(linear_flow, [RunState.INITIALIZED])
-        return self._engine._init_linear_flow(linear_flow)  # noqa
+        assert_job_state(flow._job, [RunState.INITIALIZED])
+        return self._engine._init_flow(flow)  # noqa
 
-    def _run_linear_flow(self, state: Any, linear_flow: IsLinearFlow, *args, **kwargs) -> Any:
+    def _run_flow(self, state: Any, flow: FlowRunSpec, *args, **kwargs) -> object:
         from .functions import assert_job_state
-        assert_job_state(linear_flow, [RunState.RUNNING])
-        return self._engine._run_linear_flow(state, linear_flow, *args, **kwargs)  # noqa
-
-    def _init_dag_flow(self, dag_flow: IsDagFlow) -> Any:
-        from .functions import assert_job_state
-        assert_job_state(dag_flow, [RunState.INITIALIZED])
-        return self._engine._init_dag_flow(dag_flow)  # noqa
-
-    def _run_dag_flow(self, state: Any, dag_flow: IsDagFlow, *args, **kwargs) -> Any:
-        from .functions import assert_job_state
-        assert_job_state(dag_flow, [RunState.RUNNING])
-        return self._engine._run_dag_flow(state, dag_flow, *args, **kwargs)  # noqa
-
-    def _init_func_flow(self, func_flow: IsFuncFlow) -> Any:
-        from .functions import assert_job_state
-        assert_job_state(func_flow, [RunState.INITIALIZED])
-        return self._engine._init_func_flow(func_flow)  # noqa
-
-    def _run_func_flow(
-        self,
-        state: Any,
-        func_flow: IsFuncFlow,
-        call_func: Callable,
-        *args,
-        **kwargs,
-    ) -> Any:
-        from .functions import assert_job_state
-        assert_job_state(func_flow, [RunState.RUNNING])
-        return self._engine._run_func_flow(state, func_flow, call_func, *args, **kwargs)  # noqa
+        assert_job_state(flow._job, [RunState.RUNNING])
+        return self._engine._run_flow(state, flow, *args, **kwargs)  # noqa

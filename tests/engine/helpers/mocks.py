@@ -10,15 +10,11 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
                                       FuncFlowRunnerEngine,
                                       LinearFlowRunnerEngine,
                                       TaskRunnerEngine)
+from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute._job import IsJob
-from omnipy.shared.protocols.compute.job import (IsDagFlow,
-                                                 IsFlow,
-                                                 IsFuncFlow,
-                                                 IsLinearFlow,
-                                                 IsTask,
-                                                 IsTaskTemplate)
+from omnipy.shared.protocols.compute.job import IsTaskTemplate
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
                                                        IsEngine,
@@ -51,6 +47,7 @@ class MockTask(LogMixin):
     def __init__(self, func: Callable, *, name: str | None = None) -> None:
         super().__init__()
         self._func = func
+        self._job_func = func
         self._func_signature = inspect.signature(self._func)
         self.name = name if name is not None else func.__name__
         self.regenerate_unique_name()
@@ -65,10 +62,10 @@ class MockTask(LogMixin):
         return self._func(*args, **kwargs)
 
     def has_async_func(self) -> bool:
-        return is_async_func(self._func)
+        return is_async_func(self._job_func)
 
     def has_generator_func(self) -> bool:
-        return is_generator_func(self._func)
+        return is_generator_func(self._job_func)
 
     @property
     def flow_context(self):
@@ -188,7 +185,7 @@ class MockBackendTask:
     def __init__(self, engine_config: MockEngineConfig):
         self.backend_verbose = engine_config.backend_verbose
 
-    def run(self, task: IsTask, call_func: Callable, *args: object, **kwargs: object):
+    def run(self, task: TaskRunSpec, call_func: Callable, *args: object, **kwargs: object):
         if self.backend_verbose:
             print('Running task "{}": ...'.format(task.name))
         result = call_func(*args, **kwargs)
@@ -198,11 +195,10 @@ class MockBackendTask:
 
 
 class MockBackendFlow:
-    def __init__(self, engine_config: MockEngineConfig, call_func: Callable | None = None):
+    def __init__(self, engine_config: MockEngineConfig):
         self.backend_verbose = engine_config.backend_verbose
-        self.call_func = call_func
 
-    def run(self, flow: IsFlow, call_func: Callable, *args: object, **kwargs: object):
+    def run(self, flow: FlowRunSpec, call_func: Callable, *args: object, **kwargs: object):
         if self.backend_verbose:
             print('Running flow "{}": ...'.format(flow.name))
         result = call_func(*args, **kwargs)
@@ -230,57 +226,21 @@ class MockJobRunnerSubclass(TaskRunnerEngine,
 
     # TaskRunnerEngine
 
-    def _init_task(self, task: IsTask, call_func: Callable) -> MockBackendTask:
+    def _init_task(self, task: TaskRunSpec) -> MockBackendTask:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         return MockBackendTask(self._config)
 
-    def _run_task(self, state: MockBackendTask, task: IsTask, call_func: Callable, *args,
-                  **kwargs) -> Any:
-        result = state.run(task, call_func, *args, **kwargs)
+    def _run_task(self, state: MockBackendTask, task: TaskRunSpec, *args, **kwargs) -> object:
+        result = state.run(task, task.create_default_run_callable(), *args, **kwargs)
         self.finished_backend_tasks.append(state)
         return result
 
-    # LinearFlowRunnerEngine
-
-    def _init_linear_flow(self, linear_flow: IsLinearFlow) -> MockBackendFlow:
+    def _init_flow(self, flow: FlowRunSpec) -> MockBackendFlow:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
         return MockBackendFlow(self._config)
 
-    def _run_linear_flow(self, state: MockBackendFlow, linear_flow: IsLinearFlow, *args,
-                         **kwargs) -> Any:
-        call_func = self.default_linear_flow_run_decorator(linear_flow)
-        result = state.run(linear_flow, call_func, *args, **kwargs)
-        self.finished_backend_flows.append(state)
-        return result
-
-    # DagFlowRunnerEngine
-
-    def _init_dag_flow(self, dag_flow: IsDagFlow) -> MockBackendFlow:
-        assert isinstance(self._config, MockEngineConfig)  # to help type checkers
-        return MockBackendFlow(self._config)
-
-    def _run_dag_flow(self, state: MockBackendFlow, dag_flow: IsDagFlow, *args, **kwargs) -> Any:
-        call_func = self.default_dag_flow_run_decorator(dag_flow)
-        result = state.run(dag_flow, call_func, *args, **kwargs)
-        self.finished_backend_flows.append(state)
-        return result
-
-    # FuncFlowRunnerEngine
-
-    def _init_func_flow(self, func_flow: IsFuncFlow, call_func: Callable) -> object:
-        assert isinstance(self._config, MockEngineConfig)  # to help type checkers
-        return MockBackendFlow(self._config, call_func)
-
-    def _run_func_flow(
-        self,
-        state: MockBackendFlow,
-        func_flow: IsFuncFlow,
-        call_func: Callable,
-        *args,
-        **kwargs,
-    ) -> Any:
-        assert state.call_func is not None
-        result = state.run(func_flow, call_func, *args, **kwargs)
+    def _run_flow(self, state: MockBackendFlow, flow: FlowRunSpec, *args, **kwargs) -> object:
+        result = state.run(flow, flow.create_default_run_callable(), *args, **kwargs)
         self.finished_backend_flows.append(state)
         return result
 
