@@ -1,0 +1,195 @@
+import asyncio
+from contextlib import contextmanager
+from typing import Any, AsyncGenerator, Callable, NamedTuple
+
+import pytest
+import pytest_cases as pc
+
+from omnipy.util.callable_types import (callable_type_from_flags,
+                                        CallableType,
+                                        decorate_callable_by_type,
+                                        decorate_result_by_type)
+
+
+class CallableTypeCase(NamedTuple):
+    __test__ = False
+    call_type: CallableType
+    create_call_func: Callable[[list[str]], Callable[..., Any]]
+    call_arg: int
+    expected_result: Any
+    expected_events: list[str]
+
+
+def _create_sync_callable(state: list[str]) -> Callable[[int], int]:
+    def sync_func(value: int) -> int:
+        state.append(f'call:{value}')
+        return value + 1
+
+    return sync_func
+
+
+def _create_sync_generator_callable(state: list[str]) -> Callable[[int], Any]:
+    def sync_generator_func(count: int):
+        for num in range(count):
+            state.append(f'yield:{num}')
+            yield num
+
+    return sync_generator_func
+
+
+def _create_async_callable(state: list[str]) -> Callable[[int], Any]:
+    async def async_func(value: int) -> int:
+        state.append(f'call:{value}')
+        return value + 1
+
+    return async_func
+
+
+def _create_async_generator_callable(state: list[str]) -> Callable[[int], Any]:
+    async def async_generator_func(count: int):
+        for num in range(count):
+            state.append(f'yield:{num}')
+            yield num
+
+    return async_generator_func
+
+
+@pc.case(id='sync')
+def case_callable_sync() -> CallableTypeCase:
+    return CallableTypeCase(
+        call_type=CallableType.SYNC,
+        create_call_func=_create_sync_callable,
+        call_arg=4,
+        expected_result=5,
+        expected_events=['call:4'],
+    )
+
+
+@pc.case(id='sync_generator')
+def case_callable_sync_generator() -> CallableTypeCase:
+    return CallableTypeCase(
+        call_type=CallableType.SYNC_GENERATOR,
+        create_call_func=_create_sync_generator_callable,
+        call_arg=3,
+        expected_result=(0, 1, 2),
+        expected_events=['yield:0', 'yield:1', 'yield:2'],
+    )
+
+
+@pc.case(id='async')
+def case_callable_async() -> CallableTypeCase:
+    return CallableTypeCase(
+        call_type=CallableType.ASYNC,
+        create_call_func=_create_async_callable,
+        call_arg=4,
+        expected_result=5,
+        expected_events=['call:4'],
+    )
+
+
+@pc.case(id='async_generator')
+def case_callable_async_generator() -> CallableTypeCase:
+    return CallableTypeCase(
+        call_type=CallableType.ASYNC_GENERATOR,
+        create_call_func=_create_async_generator_callable,
+        call_arg=3,
+        expected_result=[0, 1, 2],
+        expected_events=['yield:0', 'yield:1', 'yield:2'],
+    )
+
+
+class TrackedContext:
+    def __init__(self) -> None:
+        self.state: list[str] = []
+
+    @contextmanager
+    def context(self):
+        self.state.append('enter')
+        try:
+            yield
+        finally:
+            self.state.append('exit')
+
+
+def _execute_call(callable_case: CallableTypeCase, call_func: Callable[..., Any]) -> Any:
+    async def _consume_async_generator(generator: AsyncGenerator) -> list[int]:
+        return [item async for item in generator]
+
+    arg = callable_case.call_arg
+
+    if callable_case.call_type is CallableType.SYNC:
+        return call_func(arg)
+    if callable_case.call_type is CallableType.SYNC_GENERATOR:
+        return tuple(call_func(arg))
+    if callable_case.call_type is CallableType.ASYNC:
+        return asyncio.run(call_func(arg))
+    return asyncio.run(_consume_async_generator(call_func(arg)))
+
+
+@pytest.mark.parametrize(
+    ('has_async', 'has_generator', 'expected_type'),
+    [
+        (False, False, CallableType.SYNC),
+        (False, True, CallableType.SYNC_GENERATOR),
+        (True, False, CallableType.ASYNC),
+        (True, True, CallableType.ASYNC_GENERATOR),
+    ],
+)
+def test_callable_type_from_flags(
+    has_async: bool,
+    has_generator: bool,
+    expected_type: CallableType,
+) -> None:
+    assert callable_type_from_flags(
+        has_async=has_async, has_generator=has_generator) is expected_type
+
+
+@pc.parametrize_with_cases('case', cases='.')
+def test_decorate_callable_by_type_with_context(case: CallableTypeCase,) -> None:
+    tracked_context = TrackedContext()
+    wrapped = decorate_callable_by_type(
+        case.create_call_func(tracked_context.state),
+        case.call_type,
+        context_factory=tracked_context.context,
+    )
+
+    assert _execute_call(case, wrapped) == case.expected_result
+    assert tracked_context.state == ['enter', *case.expected_events, 'exit']
+
+
+@pc.parametrize_with_cases('case', cases='.')
+def test_decorate_result_by_type(case: CallableTypeCase) -> None:
+    state: list[str] = []
+    decorated_call = decorate_result_by_type(on_finished=lambda: state.append('finished'))(
+        case.create_call_func(state))
+
+    assert _execute_call(case, decorated_call) == case.expected_result
+    assert state == [*case.expected_events, 'finished']
+
+
+def test_decorate_callable_by_type_async_resolve_async_result_with_non_awaitable() -> None:
+    case = case_callable_sync()
+    state: list[str] = []
+
+    wrapped = decorate_callable_by_type(
+        case.create_call_func(state),
+        CallableType.ASYNC,
+        resolve_async_result=True,
+    )
+
+    assert asyncio.run(wrapped(case.call_arg)) == case.expected_result
+    assert state == case.expected_events
+
+
+def test_decorate_callable_by_type_async_without_resolve_async_result_raises() -> None:
+    case = case_callable_sync()
+    state: list[str] = []
+
+    wrapped = decorate_callable_by_type(
+        case.create_call_func(state),
+        CallableType.ASYNC,
+        resolve_async_result=False,
+    )
+
+    with pytest.raises(TypeError):
+        asyncio.run(wrapped(case.call_arg))
