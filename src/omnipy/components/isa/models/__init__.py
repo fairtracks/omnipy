@@ -1,7 +1,8 @@
+from omnipy.components.tables.models import (JsonScalarColumnWiseTableWithColNamesModel,
+                                             PrintableTable)
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
 
-from ...json.models import JsonListOfDictsOfScalarsModel
 from ..models.investigation_schema import IsaInvestigationModel, IsaInvestigationSchema
 
 ISA_JSON_MODEL_TOP_LEVEL_KEY: str = 'investigation'
@@ -31,5 +32,5 @@ class IsaJsonModel(Model[IsaInvestigationSchema | IsaTopLevelModel]):
             return IsaTopLevelModel(investigation=data)
 
 
-class FlattenedIsaJsonModel(Model[JsonListOfDictsOfScalarsModel]):
+class FlattenedIsaJsonModel(Model[JsonScalarColumnWiseTableWithColNamesModel], PrintableTable):
     ...

@@ -234,7 +234,8 @@ def display_jupyter_setup_note(detected_ui_type: JupyterUserInterfaceType.Litera
             bullet='ℹ️',
             html_content=dedent("""\
                 Omnipy has detected that it is being imported into a Jupyter
-                session. Please run the following in a separate cell:
+                session. Please make sure the following is run, in this or a
+                separate cell:
 
                 <pre><code>import omnipy as om
                 om.setup_jupyter_ui()
@@ -484,10 +485,9 @@ def setup_jupyter_ui():
                               'set the "Windowing mode" setting under the '
                               '"Notebook" section of the "Settings Editor" '
                               '(from the "Settings" menu) to '
-                              '<i>"defer"</i> instead of the '
-                              'default <i>"full"</i>. Reactive '
-                              'functionality might be less responsive '
-                              'in this mode.'),
+                              '<i>"contentVisibility"</i> (JupyterLab v4.5 '
+                              'onwards) or <i>"defer"</i> (<v4.5) instead '
+                              'of <i>"full"</i>.'),
             ),
             raw=True,
         )
