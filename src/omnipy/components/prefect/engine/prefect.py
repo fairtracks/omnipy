@@ -30,6 +30,7 @@ class TaskKwargs(TypedDict, total=False):
 class FlowKwargs(TypedDict, total=False):
     name: str
     flow_run_name: str
+    validate_parameters: bool
 
 
 class PrefectEngine(TaskRunnerEngine,
@@ -118,6 +119,7 @@ class PrefectEngine(TaskRunnerEngine,
             flow_kwargs = FlowKwargs(
                 name=task.name,
                 flow_run_name=task.unique_run_slug,
+                validate_parameters=False,
             )
             wrapped_callable = self._wrap_as_prefect_compatible_callable(
                 _prefect_task,
@@ -138,6 +140,7 @@ class PrefectEngine(TaskRunnerEngine,
         flow_kwargs = FlowKwargs(
             name=flow.name,
             flow_run_name=flow.unique_run_slug,
+            validate_parameters=False,
         )
         run_callable = flow.create_default_run_callable()
 
