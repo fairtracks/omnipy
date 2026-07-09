@@ -109,6 +109,7 @@ For each production engine, the final plan must include at least:
 - one passing `FuncFlow` parent case
 - one passing nested-flow case where the parent uses a child flow rather than only task children
 - one passing async-flow case involving nested or composed flow behavior
+- one passing mixed sync/async composition case without requiring a full cartesian parity matrix
 - one passing nested parameter-routing case across a parent/child flow boundary
 
 #### Semantic floor
@@ -190,7 +191,7 @@ Keep compute coverage targeted and semantic rather than exhaustive.
 
 Good fits include:
 
-- callable-type derivation for linear and DAG flows from the last child
+- callable-type derivation for linear and DAG flows from the terminal child
 - nested flow lifecycle/context expectations
 - parameter-routing expectations across nested boundaries when easier to specify here than in the
   full engine harness
