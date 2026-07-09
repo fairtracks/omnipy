@@ -9,6 +9,7 @@
 # See "_collections_abc.pyi" for more details.
 
 # flake8: noqa
+# isort: skip_file
 
 import sys
 # from abc import abstractmethod

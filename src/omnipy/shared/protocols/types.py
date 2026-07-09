@@ -8,6 +8,7 @@
 # See "types.pyi" for more details.
 
 # flake8: noqa
+# isort: skip_file
 
 # import sys
 # from _typeshed import AnnotationForm, MaybeNone, SupportsKeysAndGetItem

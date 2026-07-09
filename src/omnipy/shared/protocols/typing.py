@@ -8,6 +8,7 @@
 # See "typing.pyi" for more details.
 
 # flake8: noqa
+# isort: skip_file
 
 from __future__ import annotations
 
