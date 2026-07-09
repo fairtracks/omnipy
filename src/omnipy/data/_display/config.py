@@ -104,7 +104,7 @@ class OutputConfig:
             white, depending on the luminosity of the foreground color.
         fonts (Tuple[str, ...]): Font families to use in HTML output, in
             order of preference (empty tuple for browser default).
-        font_size (NonNegativeInt | None): Font size in pixels for HTML output
+        font_size (NonNegativeFloat | None): Font size in pixels for HTML output
             (None for browser default).
         font_weight (NonNegativeInt | None): Font weight for HTML output (None
             for browser default).
@@ -166,7 +166,7 @@ class OutputConfig:
         'Courier New',
         'monospace',
     )
-    font_size: pyd.NonNegativeInt | None = 14
+    font_size: pyd.NonNegativeFloat | None = 14
     font_weight: pyd.NonNegativeInt | None = 400
     line_height: pyd.NonNegativeFloat | None = 1.25
     h_overflow: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS

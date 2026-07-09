@@ -238,7 +238,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             fonts (Tuple[str, ...]):
                 Font families to use in HTML output, in order of
                 preference (empty tuple for browser default).
-            font_size (NonNegativeInt | None):
+            font_size (NonNegativeFloat | None):
                 Font size in pixels for HTML output (None for browser
                 default).
             font_weight (NonNegativeInt | None):
@@ -331,7 +331,7 @@ class IsDisplayMethod(Protocol):
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
-        font_size: 'pyd.NonNegativeInt | None' = 14,
+        font_size: 'pyd.NonNegativeFloat | None' = 14,
         font_weight: 'pyd.NonNegativeInt | None' = 400,
         line_height: 'pyd.NonNegativeFloat | None' = 1.25,
         h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
@@ -369,7 +369,7 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
-        font_size: 'pyd.NonNegativeInt | None' = 14,
+        font_size: 'pyd.NonNegativeFloat | None' = 14,
         font_weight: 'pyd.NonNegativeInt | None' = 400,
         line_height: 'pyd.NonNegativeFloat | None' = 1.25,
         h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
@@ -407,7 +407,7 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
-        font_size: 'pyd.NonNegativeInt | None' = 14,
+        font_size: 'pyd.NonNegativeFloat | None' = 14,
         font_weight: 'pyd.NonNegativeInt | None' = 400,
         line_height: 'pyd.NonNegativeFloat | None' = 1.25,
         h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
@@ -445,7 +445,7 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         bg: bool = False,
         fonts: tuple[str,
                      ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
-        font_size: 'pyd.NonNegativeInt | None' = 14,
+        font_size: 'pyd.NonNegativeFloat | None' = 14,
         font_weight: 'pyd.NonNegativeInt | None' = 400,
         line_height: 'pyd.NonNegativeFloat | None' = 1.25,
         h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
@@ -513,7 +513,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                                       'Consolas',
                                       'Courier New',
                                       'monospace'),
-            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
             h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
@@ -637,7 +637,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):
@@ -816,7 +816,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):
@@ -945,7 +945,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                                       'Consolas',
                                       'Courier New',
                                       'monospace'),
-            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
             h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
@@ -1068,7 +1068,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):
@@ -1247,7 +1247,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):
@@ -1346,7 +1346,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                                       'Consolas',
                                       'Courier New',
                                       'monospace'),
-            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
             h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
@@ -1473,7 +1473,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):
@@ -1655,7 +1655,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):
@@ -1753,7 +1753,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                                       'Consolas',
                                       'Courier New',
                                       'monospace'),
-            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
             h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
@@ -1871,7 +1871,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):
@@ -2034,7 +2034,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):
@@ -2219,7 +2219,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             fonts (Tuple[str, ...]):
                 Font families to use in HTML output, in order of
                 preference (empty tuple for browser default).
-            font_size (NonNegativeInt | None):
+            font_size (NonNegativeFloat | None):
                 Font size in pixels for HTML output (None for browser
                 default).
             font_weight (NonNegativeInt | None):
@@ -2750,7 +2750,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         if not nested_call:
             if UserInterfaceType.is_jupyter_in_browser(ui_type):
                 from omnipy.data._display.integrations.jupyter.components import ModelBrowser
-                ModelBrowser(html_content=html_output)._ipython_display_()
+                ModelBrowser(html_content=html_output)._ipython_display_()  # pyright: ignore
             else:
                 for filename, html_content in html_output.items():
                     file_path = self._create_cached_html_file(filename, html_content)
@@ -2789,7 +2789,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         **config_kwargs,
     ) -> DraftPanel:
         from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
-                                                     JsonMaxLevel1ColumnModel,
                                                      JsonMaxLevel1ColumnWiseTableWithColNamesModel,
                                                      PrintableTable)
 
@@ -3070,7 +3069,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                                       'Consolas',
                                       'Courier New',
                                       'monospace'),
-            font_size: 'pyd.NonNegativeInt | None' = 14,
+            font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
             h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
@@ -3193,7 +3192,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):
@@ -3372,7 +3371,7 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 fonts (Tuple[str, ...]):
                     Font families to use in HTML output, in order of
                     preference (empty tuple for browser default).
-                font_size (NonNegativeInt | None):
+                font_size (NonNegativeFloat | None):
                     Font size in pixels for HTML output (None for browser
                     default).
                 font_weight (NonNegativeInt | None):

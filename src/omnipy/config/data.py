@@ -168,7 +168,7 @@ class FontConfig(ConfigBase):
         'Courier New',
         'monospace',
     )
-    size: pyd.NonNegativeInt = 14
+    size: pyd.NonNegativeFloat = 14
     weight: pyd.NonNegativeInt = 400
     line_height: pyd.NonNegativeFloat = 1.25
 

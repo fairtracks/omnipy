@@ -95,7 +95,7 @@ class IsTerminalUserInterfaceConfig(IsDimsModeConfig, Protocol):
 class IsFontConfig(IsConfigBase, Protocol):
     """"""
     families: tuple[str, ...]
-    size: pyd.NonNegativeInt
+    size: pyd.NonNegativeFloat
     weight: pyd.NonNegativeInt
     line_height: pyd.NonNegativeFloat
 

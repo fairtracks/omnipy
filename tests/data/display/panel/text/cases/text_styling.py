@@ -164,7 +164,7 @@ def case_syntax_styling_setup_no_frame_or_configs(
 @pc.case(id='no-frame-light-color', tags=['setup', 'syntax_text'])
 def case_syntax_styling_setup_no_frame_color_config(
         css_font_families: tuple[str, ...],
-        css_font_size: int | None,
+        css_font_size: float | None,
         css_font_weight: int | None,
         css_line_height: float | None,
         solid_background: bool) -> StylizedPanelTestCaseSetup[str]:
