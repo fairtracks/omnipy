@@ -3,6 +3,7 @@ from datetime import datetime
 from functools import update_wrapper
 import inspect
 from inspect import BoundArguments
+from types import MappingProxyType
 from typing import Any, Callable, cast, Type
 
 from omnipy.config import ConfigBase
@@ -60,6 +61,14 @@ class MockTask(LogMixin):
 
     def _call_func(self, *args: object, **kwargs: object) -> Any:
         return self._func(*args, **kwargs)
+
+    @property
+    def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
+        return self._func_signature.parameters
+
+    @property
+    def return_type(self) -> type:
+        return self._func_signature.return_annotation
 
     def has_async_func(self) -> bool:
         return is_async_func(self._job_func)

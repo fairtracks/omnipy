@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import contextmanager
-from typing import Any, AsyncGenerator, Callable, NamedTuple
+import inspect
+from typing import Any, AsyncGenerator, Callable, NamedTuple, Protocol
 
 import pytest
 import pytest_cases as pc
@@ -54,7 +55,7 @@ def _create_async_generator_callable(state: list[str]) -> Callable[[int], Any]:
     return async_generator_func
 
 
-@pc.case(id='sync')
+@pc.case(id='sync', tags=['sync', 'function'])
 def case_callable_sync() -> CallableTypeCase:
     return CallableTypeCase(
         call_type=CallableType.SYNC,
@@ -65,7 +66,7 @@ def case_callable_sync() -> CallableTypeCase:
     )
 
 
-@pc.case(id='sync_generator')
+@pc.case(id='sync_generator', tags=['sync', 'generator'])
 def case_callable_sync_generator() -> CallableTypeCase:
     return CallableTypeCase(
         call_type=CallableType.SYNC_GENERATOR,
@@ -76,7 +77,7 @@ def case_callable_sync_generator() -> CallableTypeCase:
     )
 
 
-@pc.case(id='async')
+@pc.case(id='async', tags=['async', 'function'])
 def case_callable_async() -> CallableTypeCase:
     return CallableTypeCase(
         call_type=CallableType.ASYNC,
@@ -87,7 +88,7 @@ def case_callable_async() -> CallableTypeCase:
     )
 
 
-@pc.case(id='async_generator')
+@pc.case(id='async_generator', tags=['async', 'generator'])
 def case_callable_async_generator() -> CallableTypeCase:
     return CallableTypeCase(
         call_type=CallableType.ASYNC_GENERATOR,
@@ -144,11 +145,39 @@ def test_callable_type_from_flags(
         has_async=has_async, has_generator=has_generator) is expected_type
 
 
+@pc.parametrize_with_cases('case', cases='.', has_tag='function')
+def test_decorate_callable_by_type_wrap_signature(case: CallableTypeCase,) -> None:
+    call_func = case.create_call_func([])
+
+    class CanAddInt(Protocol):
+        def __add__(self, other: int) -> int:
+            ...
+
+    def func_int_add(value: CanAddInt) -> int:
+        ...
+
+    func_int_add_sign = inspect.signature(func_int_add)
+
+    wrapped = decorate_callable_by_type(
+        call_func,
+        func_int_add_sign.parameters,
+        func_int_add_sign.return_annotation,
+        case.call_type,
+    )
+
+    assert _execute_call(case, wrapped) == case.expected_result
+    assert inspect.signature(wrapped) == func_int_add_sign
+
+
 @pc.parametrize_with_cases('case', cases='.')
 def test_decorate_callable_by_type_with_context(case: CallableTypeCase,) -> None:
     tracked_context = TrackedContext()
+    call_func = case.create_call_func(tracked_context.state)
+
     wrapped = decorate_callable_by_type(
-        case.create_call_func(tracked_context.state),
+        call_func,
+        inspect.signature(call_func).parameters,
+        inspect.signature(call_func).return_annotation,
         case.call_type,
         context_factory=tracked_context.context,
     )
@@ -157,22 +186,15 @@ def test_decorate_callable_by_type_with_context(case: CallableTypeCase,) -> None
     assert tracked_context.state == ['enter', *case.expected_events, 'exit']
 
 
-@pc.parametrize_with_cases('case', cases='.')
-def test_decorate_result_by_type(case: CallableTypeCase) -> None:
-    state: list[str] = []
-    decorated_call = decorate_result_by_type(on_finished=lambda: state.append('finished'))(
-        case.create_call_func(state))
-
-    assert _execute_call(case, decorated_call) == case.expected_result
-    assert state == [*case.expected_events, 'finished']
-
-
 def test_decorate_callable_by_type_async_resolve_async_result_with_non_awaitable() -> None:
     case = case_callable_sync()
     state: list[str] = []
+    call_func = case.create_call_func(state)
 
     wrapped = decorate_callable_by_type(
-        case.create_call_func(state),
+        call_func,
+        inspect.signature(call_func).parameters,
+        inspect.signature(call_func).return_annotation,
         CallableType.ASYNC,
         resolve_async_result=True,
     )
@@ -184,12 +206,25 @@ def test_decorate_callable_by_type_async_resolve_async_result_with_non_awaitable
 def test_decorate_callable_by_type_async_without_resolve_async_result_raises() -> None:
     case = case_callable_sync()
     state: list[str] = []
+    call_func = case.create_call_func(state)
 
     wrapped = decorate_callable_by_type(
-        case.create_call_func(state),
+        call_func,
+        inspect.signature(call_func).parameters,
+        inspect.signature(call_func).return_annotation,
         CallableType.ASYNC,
         resolve_async_result=False,
     )
 
     with pytest.raises(TypeError):
         asyncio.run(wrapped(case.call_arg))
+
+
+@pc.parametrize_with_cases('case', cases='.')
+def test_decorate_result_by_type(case: CallableTypeCase) -> None:
+    state: list[str] = []
+    decorated_call = decorate_result_by_type(on_finished=lambda: state.append('finished'))(
+        case.create_call_func(state))
+
+    assert _execute_call(case, decorated_call) == case.expected_result
+    assert state == [*case.expected_events, 'finished']

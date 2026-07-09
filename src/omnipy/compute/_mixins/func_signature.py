@@ -13,7 +13,7 @@ class SignatureFuncJobBaseMixin:
         self.__signature__ = self._func_signature
 
     @property
-    def param_signatures(self) -> MappingProxyType:
+    def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
         return self._func_signature.parameters
 
     @property

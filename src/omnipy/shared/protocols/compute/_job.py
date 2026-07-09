@@ -1,5 +1,5 @@
 from datetime import datetime
-from inspect import BoundArguments
+import inspect
 from types import MappingProxyType
 from typing import Any, Callable, Iterable, Mapping, ParamSpec, Protocol, runtime_checkable
 
@@ -120,7 +120,7 @@ class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
 class IsFuncArgJobBase(Protocol):
     """"""
     @property
-    def param_signatures(self) -> MappingProxyType:
+    def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
         ...
 
     @property
@@ -203,7 +203,7 @@ class IsFuncArgJobBase(Protocol):
         """
         ...
 
-    def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments:
+    def get_bound_args(self, *args: object, **kwargs: object) -> inspect.BoundArguments:
         ...
 
 

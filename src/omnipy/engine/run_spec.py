@@ -21,7 +21,7 @@ class JobRunSpec(ABC):
         return self._job.name
 
     @property
-    def param_signatures(self) -> MappingProxyType:
+    def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
         return self._job.param_signatures
 
     @property
@@ -65,6 +65,8 @@ class FlowRunSpec(JobRunSpec, ABC):
     def create_default_run_callable(self) -> Callable:
         return decorate_callable_by_type(
             self._create_default_run_callable(),
+            self.param_signatures,
+            self.return_type,
             callable_type_from_flags(
                 has_async=self.has_async_func(),
                 has_generator=self.has_generator_func(),

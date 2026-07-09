@@ -1,5 +1,7 @@
 from datetime import timedelta
+import inspect
 from logging import WARNING
+from types import MappingProxyType
 from typing import Any, Callable, Type, TypedDict
 
 from omnipy.config.engine import PrefectEngineConfig
@@ -38,6 +40,8 @@ class PrefectEngine(TaskRunnerEngine,
     @staticmethod
     def _wrap_as_prefect_compatible_callable(
         call_func: Callable,
+        param_signatures: MappingProxyType[str, inspect.Parameter],
+        return_type: type,
         *,
         has_async_func: bool,
         has_generator_func: bool,
@@ -52,6 +56,8 @@ class PrefectEngine(TaskRunnerEngine,
         """
         return decorate_callable_by_type(
             call_func,
+            param_signatures,
+            return_type,
             callable_type_from_flags(
                 has_async=has_async_func,
                 has_generator=has_generator_func,
@@ -82,6 +88,8 @@ class PrefectEngine(TaskRunnerEngine,
 
         wrapped_callable = self._wrap_as_prefect_compatible_callable(
             task.create_default_run_callable(),
+            task.param_signatures,
+            task.return_type,
             has_async_func=task.has_async_func(),
             has_generator_func=task.has_generator_func(),
         )
@@ -105,6 +113,8 @@ class PrefectEngine(TaskRunnerEngine,
             flow_kwargs = FlowKwargs(name=task.name)
             wrapped_callable = self._wrap_as_prefect_compatible_callable(
                 _prefect_task,
+                task.param_signatures,
+                task.return_type,
                 has_async_func=_prefect_task.isasync,
                 has_generator_func=_prefect_task.isgenerator,
             )
@@ -121,6 +131,8 @@ class PrefectEngine(TaskRunnerEngine,
         has_generator_func = flow.has_generator_func()
         wrapped_callable = self._wrap_as_prefect_compatible_callable(
             run_callable,
+            flow.param_signatures,
+            flow.return_type,
             has_async_func=flow.has_async_func(),
             has_generator_func=has_generator_func,
             resolve_async_result=not has_generator_func,

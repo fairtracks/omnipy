@@ -3,7 +3,7 @@ from contextlib import AbstractContextManager, nullcontext
 from enum import auto, Enum
 import functools
 import inspect
-from types import AsyncGeneratorType, GeneratorType
+from types import AsyncGeneratorType, GeneratorType, MappingProxyType
 from typing import Any, Callable, overload
 
 from typing_extensions import ParamSpec, TypeVar
@@ -41,6 +41,8 @@ def callable_type_from_flags(*, has_async: bool, has_generator: bool) -> Callabl
 
 def decorate_callable_by_type(  # noqa: C901
     call_func: Callable[_P, Any],
+    param_signatures: MappingProxyType[str, inspect.Parameter],
+    return_type: type,
     call_type: CallableType,
     *,
     context_factory: Callable[[], AbstractContextManager[object]] | None = None,
@@ -49,6 +51,8 @@ def decorate_callable_by_type(  # noqa: C901
     from omnipy.util.helpers import resolve
 
     make_context = context_factory or nullcontext
+    signature = inspect.Signature(
+        parameters=tuple(param_signatures.values()), return_annotation=return_type)
 
     if call_type is CallableType.SYNC:
 
@@ -56,6 +60,7 @@ def decorate_callable_by_type(  # noqa: C901
             with make_context():
                 return call_func(*args, **kwargs)
 
+        _sync_wrapper.__signature__ = signature
         return _sync_wrapper
 
     elif call_type is CallableType.SYNC_GENERATOR:
@@ -64,6 +69,7 @@ def decorate_callable_by_type(  # noqa: C901
             with make_context():
                 yield from call_func(*args, **kwargs)
 
+        _sync_generator_wrapper.__signature__ = signature
         return _sync_generator_wrapper
 
     elif call_type is CallableType.ASYNC:
@@ -75,6 +81,7 @@ def decorate_callable_by_type(  # noqa: C901
                     return await resolve(result)
                 return await result
 
+        _async_wrapper.__signature__ = signature
         return _async_wrapper
 
     else:
@@ -89,6 +96,7 @@ def decorate_callable_by_type(  # noqa: C901
                 except StopAsyncIteration:
                     return
 
+        _async_generator_wrapper.__signature__ = signature
         return _async_generator_wrapper
 
 
