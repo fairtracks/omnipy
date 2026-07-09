@@ -56,10 +56,17 @@ The schema should organize coverage around:
 - callable-type behavior
 - engine parity
 
-The spec should not prescribe an exhaustive cartesian matrix. Instead, it should require a defined
-minimum coverage floor plus a thorough representative matrix above that floor, with the planner
-choosing exact combinations based on Python callable edge cases, engine behavior, and duplication
-control.
+The spec should not prescribe an exhaustive cartesian matrix for every axis. Instead, it should
+require a defined minimum coverage floor plus a thorough representative matrix above that floor.
+
+One axis is explicitly exhaustive: in the engine harness, for each production engine, the matrix of
+parent flow type × top-level callable type must be complete.
+
+- Parent flow types: `LinearFlow`, `DagFlow`, `FuncFlow`
+- Top-level callable types: sync function, sync generator, async coroutine, async generator
+
+Other axes may still be planned representatively above the required floor, based on Python callable
+edge cases, engine behavior, and duplication control.
 
 #### Required scope constraints
 
@@ -75,8 +82,9 @@ control.
 
 #### Callable-type expectations to verify
 
-- For linear and DAG flows, “last child” means the last declared entry in `child_job_templates`,
-  which is also the terminal child by current execution order and returned result semantics.
+- For linear and DAG flows, “terminal child” means the last declared entry in
+  `child_job_templates`, which is also the terminal child by current execution order and returned
+  result semantics.
 - Linear and DAG flows should follow the effective callable type of that terminal child.
 - The current implementation may not fully enforce this intended rule for all async combinations;
   the test plan should treat this as a likely gap-discovery area and allow narrow consistency fixes
@@ -99,14 +107,14 @@ This section defines the required floor. The planner may exceed it, but not go b
 - Engine parity must be demonstrated for the production engines (`LocalRunner` and `PrefectEngine`).
 - Mock-runner coverage remains useful for run-state and harness assertions, but mock-only coverage
   does not satisfy the parity requirement.
+- For each production engine, the engine harness must include the full 3 × 4 matrix of:
+  - parent flow type: `LinearFlow`, `DagFlow`, `FuncFlow`
+  - top-level callable type: sync function, sync generator, async coroutine, async generator
 
 #### Flow-kind floor
 
 For each production engine, the final plan must include at least:
 
-- one passing `LinearFlow` composition case
-- one passing `DagFlow` composition case
-- one passing `FuncFlow` parent case
 - one passing nested-flow case where the parent uses a child flow rather than only task children
 - one passing async-flow case involving nested or composed flow behavior
 - one passing mixed sync/async composition case without requiring a full cartesian parity matrix
@@ -116,7 +124,7 @@ For each production engine, the final plan must include at least:
 
 Across the full plan, coverage must include:
 
-- linear and DAG parents with multiple children
+- linear and DAG parents with multiple children across the exhaustive top-level callable-type matrix
 - child tasks and child flows in the engine harness
 - child flows of each existing flow type (`LinearFlow`, `DagFlow`, `FuncFlow`) under linear/DAG
   parents at least once overall
@@ -134,8 +142,9 @@ cleanly:
 - parameter routing across nested flow boundaries
 - result propagation and terminal-child output behavior
 - run-state transitions in harness-driven engine tests
-- flow context / lifecycle propagation in compute-focused tests
-- refine/revise behavior when child jobs include flows
+- terminal-child callable-type validation on construction, if a small validation fix is introduced
+- terminal-child callable-type revalidation on `refine()` / `revise()`, if a small validation fix
+  is introduced
 - support-gap or failure-path behavior for at least one nested async scenario
 
 ### 5. Support-gap test policy
@@ -187,16 +196,16 @@ fixtures rather than into large hand-written test bodies.
 
 #### `tests/compute/`
 
-Keep compute coverage targeted and semantic rather than exhaustive.
+Keep compute coverage validation-only, and only if a small validation fix is introduced.
 
 Good fits include:
 
-- callable-type derivation for linear and DAG flows from the terminal child
-- nested flow lifecycle/context expectations
-- parameter-routing expectations across nested boundaries when easier to specify here than in the
-  full engine harness
-- refine/revise behavior when child jobs include flows
-- small validation tests if a tiny supporting production fix is introduced
+- validation that linear and DAG flow construction rejects or flags terminal-child callable-type
+  inconsistencies, if such validation is added
+- validation that `refine()` / `revise()` re-check terminal-child callable-type consistency when
+  child composition changes, if such validation is added
+
+If no small validation fix is added, no compute-suite expansion is required by this spec.
 
 #### `tests/integration/`
 
@@ -237,13 +246,14 @@ interaction.
 This design is successful if the resulting plan leads to:
 
 1. Engine-first parity coverage for async and nested flows across all existing engines.
-2. Child-flow coverage for linear and DAG flows, including child func flows.
-3. Clear verification of callable-type expectations for linear/DAG flows versus func flows.
-4. A defined minimum coverage floor that the planner cannot silently shrink.
-5. Representative async cases that expose current support gaps.
-6. Explicit support-gap handling so committed failing tests, `xfail`, and engine-specific
+2. A complete per-engine engine-harness matrix of 3 parent flow types × 4 top-level callable types.
+3. Child-flow coverage for linear and DAG flows, including child func flows.
+4. Clear verification of callable-type expectations for linear/DAG flows versus func flows.
+5. A defined minimum coverage floor that the planner cannot silently shrink.
+6. Representative async cases that expose current support gaps.
+7. Explicit support-gap handling so committed failing tests, `xfail`, and engine-specific
    expectations are used intentionally rather than ambiguously.
-7. Committed failing tests being acceptable where they document real unsupported-yet-claimed
+8. Committed failing tests being acceptable where they document real unsupported-yet-claimed
    behavior.
 
 ## Risks and mitigations
@@ -252,7 +262,8 @@ This design is successful if the resulting plan leads to:
 
 Mitigation:
 
-- keep the spec matrix high-level rather than frozen
+- keep only the user-required top-level callable-type matrix exhaustive, while keeping other axes
+  representative
 - define a clear minimum floor so “representative” does not become underspecified
 - centralize complexity in reusable builders and fixtures
 - let planning choose representative combinations instead of enumerating every combination here
@@ -271,5 +282,7 @@ Before implementation planning, the plan should preserve these decisions:
 - engine harness is the main authority
 - no new public concepts or APIs
 - async-flow coverage and child-flow coverage are both first-class requirements
+- the top-level parent-flow-type × callable-type matrix is exhaustive per production engine
+- compute coverage is validation-only and only applies if a small validation fix is introduced
 - the planner must preserve the minimum coverage floor and explicit support-gap policy
 - failing tests are acceptable when they document current gaps
