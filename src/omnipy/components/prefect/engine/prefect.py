@@ -15,10 +15,16 @@ from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.callable_types import callable_type_from_flags, decorate_callable_by_type
 
 if TYPE_CHECKING:
-    from ..lazy_import import PrefectTask
+    from ..lazy_import import CachePolicy, NotSet, PrefectTask
 
 
-class FlowKwargs(TypedDict):
+class TaskKwargs(TypedDict, total=False):
+    name: str
+    cache_policy: CachePolicy | type[NotSet]
+    cache_expiration: timedelta | None
+
+
+class FlowKwargs(TypedDict, total=False):
     name: str
 
 
@@ -71,7 +77,7 @@ class PrefectEngine(TaskRunnerEngine,
         from ..lazy_import import cache_policies, prefect_task
 
         assert isinstance(self._config, PrefectEngineConfig)
-        task_kwargs: dict[str, Any] = dict(name=task.name)
+        task_kwargs = TaskKwargs(name=task.name)
 
         if self._config.use_cached_results and task.has_generator_func():
             task.log(
