@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from time import sleep
 from typing import Callable, cast, Type
 
-from omnipy.shared.enums.job import RunState
+from omnipy.shared.enums.job import JobType, RunState
 from omnipy.shared.protocols.compute.job import (HasJobCreator,
                                                  IsDagFlow,
                                                  IsDagFlowTemplate,
@@ -25,7 +25,7 @@ from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.util.callable_types import CallableType
 from omnipy.util.helpers import resolve
 
-from .classes import JobCase, JobType
+from .classes import JobCase
 
 
 def extract_engine(job: IsJobBase) -> IsEngine:
@@ -210,7 +210,7 @@ def create_func_flow_with_two_func_tasks(
 
 def update_job_case_with_job(
     job_case: JobCase,
-    job_type: JobType,
+    job_type: JobType.Literals,
     task_template_cls: Type[IsTaskTemplate],
     flow_template_cls: Type[IsFlowTemplate] | None,
     engine: IsEngine,
@@ -221,7 +221,7 @@ def update_job_case_with_job(
         engine = engine_decorator(engine)
 
     job_case.job_type = job_type
-    if job_type.value == JobType.task.value:
+    if job_type == JobType.TASK:
         job_case.job = create_task_with_func(
             job_case.name,
             job_case.job_func,
@@ -229,7 +229,7 @@ def update_job_case_with_job(
             cast(IsTaskRunnerEngine, engine),
             registry,
         )
-    elif job_type.value == JobType.linear_flow.value:
+    elif job_type == JobType.LINEAR_FLOW:
         engine = cast(IsLinearFlowRunnerEngine, engine)
         job_case.job = create_linear_flow_with_two_func_tasks(
             job_case.name,
@@ -239,7 +239,7 @@ def update_job_case_with_job(
             engine,
             registry,
         )
-    elif job_type.value == JobType.dag_flow.value:
+    elif job_type == JobType.DAG_FLOW:
         engine = cast(IsDagFlowRunnerEngine, engine)
         job_case.job = create_dag_flow_with_two_func_tasks(
             job_case.name,
@@ -249,7 +249,7 @@ def update_job_case_with_job(
             engine,
             registry,
         )
-    elif job_type.value == JobType.func_flow.value:
+    elif job_type == JobType.FUNC_FLOW:
         engine = cast(IsFuncFlowRunnerEngine, engine)
         job_case.job = create_func_flow_with_two_func_tasks(
             job_case.name,

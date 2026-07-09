@@ -6,29 +6,29 @@ import pytest_cases as pc
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 from omnipy.hub._registry import RunStateRegistry
+from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
                                                  IsFuncFlowTemplate,
-                                                 IsJobTemplate,
                                                  IsLinearFlowTemplate,
                                                  IsTaskTemplate)
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
 from ....engine.conftest import all_engines
-from ....engine.helpers.classes import JobCase, JobType
+from ....engine.helpers.classes import JobCase
 from ....engine.helpers.functions import update_job_case_with_job
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    'job_type', [JobType.task, JobType.linear_flow, JobType.dag_flow, JobType.func_flow],
+    'job_type', [JobType.TASK, JobType.LINEAR_FLOW, JobType.DAG_FLOW, JobType.FUNC_FLOW],
     ids=['task', 'linear_flow', 'dag_flow', 'func_flow'])
 @pc.parametrize('task_template_cls', [TaskTemplate], ids=[''])
 @pc.parametrize('linear_flow_template_cls', [LinearFlowTemplate], ids=[''])
 @pc.parametrize('dag_flow_template_cls', [DagFlowTemplate], ids=[''])
 @pc.parametrize('func_flow_template_cls', [FuncFlowTemplate], ids=[''])
 def all_job_classes(
-    job_type: JobType,
+    job_type: JobType.Literals,
     task_template_cls: Type[IsTaskTemplate],
     linear_flow_template_cls: Type[IsLinearFlowTemplate],
     dag_flow_template_cls: Type[IsDagFlowTemplate],
@@ -67,8 +67,8 @@ def run_state_registry(
 @pc.parametrize('registry', [run_state_registry], ids=[''])
 def all_func_types_real_jobs_all_engines_real_reg(
     job_case: JobCase,
-    job_classes: tuple[JobType,
-                       Type[IsJobTemplate],
+    job_classes: tuple[JobType.Literals,
+                       Type[IsTaskTemplate],
                        Type[IsLinearFlowTemplate],
                        Type[IsDagFlowTemplate],
                        Type[IsFuncFlowTemplate]],
@@ -82,12 +82,11 @@ def all_func_types_real_jobs_all_engines_real_reg(
      dag_flow_template_cls,
      func_flow_template_cls) = job_classes
 
-    # TODO: Fix job_type comparisons everywhere (bug due to pytest.fixture?)
-    if job_type.value == JobType.linear_flow.value:
+    if job_type == JobType.LINEAR_FLOW:
         flow_template_cls = linear_flow_template_cls
-    elif job_type.value == JobType.dag_flow.value:
+    elif job_type == JobType.DAG_FLOW:
         flow_template_cls = dag_flow_template_cls
-    elif job_type.value == JobType.func_flow.value:
+    elif job_type == JobType.FUNC_FLOW:
         flow_template_cls = func_flow_template_cls
     else:
         flow_template_cls = None

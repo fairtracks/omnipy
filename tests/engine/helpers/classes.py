@@ -1,26 +1,17 @@
 from dataclasses import dataclass
-from enum import Enum
 from typing import Any, Awaitable, Callable, Generic, ParamSpec, Type, TypeVar
 
 from typing_extensions import override
 
-from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
-from omnipy.shared.enums.job import RunState
-from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsJob, IsLinearFlow, IsTask
+from omnipy.engine.run_spec import FlowRunSpec, IsFuncArgJob, TaskRunSpec
+from omnipy.shared.enums.job import JobType, RunState
+from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
                                                        IsFuncFlowRunnerEngine,
                                                        IsLinearFlowRunnerEngine,
                                                        IsTaskRunnerEngine)
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
-
-
-class JobType(Enum):
-    task = 1
-    linear_flow = 2
-    dag_flow = 3
-    func_flow = 4
-
 
 CallP = ParamSpec('CallP')
 ReturnT = TypeVar('ReturnT')
@@ -31,8 +22,8 @@ class JobCase(Generic[CallP, ReturnT]):
     name: str
     job_func: Callable[CallP, ReturnT]
     run_and_assert_results_func: Callable[..., None | Awaitable[None]]
-    job_type: JobType | None = None
-    job: IsJob | None = None
+    job_type: JobType.Literals | None = None
+    job: IsFuncArgJob | None = None
 
 
 class JobRunnerStateChecker(IsTaskRunnerEngine,

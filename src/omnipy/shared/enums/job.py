@@ -57,6 +57,24 @@ class EngineChoice(LiteralEnum[str]):
     PREFECT: Literal['prefect'] = 'prefect'
 
 
+class TaskJobType(LiteralEnum[str]):
+    Literals = Literal['task']
+
+    TASK: Literal['task'] = 'task'
+
+
+class FlowJobType(LiteralEnum[str]):
+    Literals = Literal['linear_flow', 'dag_flow', 'func_flow']
+
+    LINEAR_FLOW: Literal['linear_flow'] = 'linear_flow'
+    DAG_FLOW: Literal['dag_flow'] = 'dag_flow'
+    FUNC_FLOW: Literal['func_flow'] = 'func_flow'
+
+
+class JobType(TaskJobType, FlowJobType):
+    Literals = Literal[TaskJobType.Literals, FlowJobType.Literals]
+
+
 class RunState(LiteralEnum[int]):
     Literals = Literal[1, 2, 3]
 
