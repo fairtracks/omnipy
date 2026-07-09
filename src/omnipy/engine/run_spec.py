@@ -8,7 +8,7 @@ from typing import Any, Callable, cast
 
 from omnipy.shared.protocols.compute._job import IsFuncArgJob, IsTaskTemplateArgsJob
 from omnipy.shared.protocols.compute.job import IsAnyFlow, IsTask, IsTaskTemplate
-from omnipy.util.callable_types import callable_type_from_flags, decorate_callable_by_type
+from omnipy.util.callable_types import decorate_callable_by_type
 
 
 class JobRunSpec(ABC):
@@ -36,11 +36,9 @@ class JobRunSpec(ABC):
     def return_type(self) -> type:
         return self._job.return_type
 
-    def has_async_func(self) -> bool:
-        return self._job.has_async_func()
-
-    def has_generator_func(self) -> bool:
-        return self._job.has_generator_func()
+    @property
+    def callable_type(self) -> CallableType.Literals:
+        return self._job.callable_type
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None) -> None:
         self._job.log(log_msg, level=level, datetime_obj=datetime_obj)
@@ -75,10 +73,7 @@ class FlowRunSpec(JobRunSpec, ABC):
             self._create_default_run_callable(),
             self.param_signatures,
             self.return_type,
-            callable_type_from_flags(
-                has_async=self.has_async_func(),
-                has_generator=self.has_generator_func(),
-            ),
+            self.callable_type,
             context_factory=lambda: self.flow_context,
         )
 

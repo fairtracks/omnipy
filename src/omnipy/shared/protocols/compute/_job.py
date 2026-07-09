@@ -20,6 +20,7 @@ from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.shared.typedefs import GeneralDecorator
+from omnipy.util.callable_types import CallableType
 
 _CallP = ParamSpec('_CallP')
 _RetCovT = TypeVar('_RetCovT', covariant=True)
@@ -179,27 +180,17 @@ class IsFuncArgJobBase(Protocol):
     def param_key_map(self) -> MappingProxyType[str, str]:
         ...
 
-    def has_async_func(self) -> bool:
+    @property
+    def callable_type(self) -> CallableType.Literals:
         """
-        Determines whether the job function is asynchronous.
+        The effective callable type of the job function.
 
-        This method checks if the job function is an asynchronous coroutine
-        or generator function.
+        The callable type captures both the synchronous/asynchronous and
+        plain/generator dimensions of the wrapped callable.
 
         Returns:
-            bool: True if the job function is asynchronous, else False.
-        """
-        ...
-
-    def has_generator_func(self) -> bool:
-        """
-        Determines whether the job function is a generator function.
-
-        This method checks if the job function is an asynchronous or
-        synchronous generator function.
-
-        Returns:
-            bool: True if the job function is a generator function, else False.
+            CallableType.Literals: The effective callable type of the job
+                function.
         """
         ...
 

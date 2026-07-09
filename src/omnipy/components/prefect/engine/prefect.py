@@ -12,7 +12,10 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
 from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.shared.protocols.config import IsPrefectEngineConfig
 from omnipy.shared.typing import TYPE_CHECKING
-from omnipy.util.callable_types import callable_type_from_flags, decorate_callable_by_type
+from omnipy.util.callable_types import (callable_type_from_flags,
+                                        CallableType,
+                                        decorate_callable_by_type,
+                                        GeneratorCallableType)
 
 if TYPE_CHECKING:
     from ..lazy_import import CachePolicy, NotSet, PrefectTask
@@ -50,8 +53,7 @@ class PrefectEngine(TaskRunnerEngine,
         param_signatures: MappingProxyType[str, inspect.Parameter],
         return_type: type,
         *,
-        has_async_func: bool,
-        has_generator_func: bool,
+        callable_type: CallableType.Literals,
         resolve_async_result: bool = False,
     ) -> Callable:
         """Expose the effective function type to Prefect.
@@ -65,10 +67,7 @@ class PrefectEngine(TaskRunnerEngine,
             call_func,
             param_signatures,
             return_type,
-            callable_type_from_flags(
-                has_async=has_async_func,
-                has_generator=has_generator_func,
-            ),
+            callable_type,
             resolve_async_result=resolve_async_result,
         )
 
@@ -80,7 +79,7 @@ class PrefectEngine(TaskRunnerEngine,
         assert isinstance(self._config, PrefectEngineConfig)
         task_kwargs = TaskKwargs(name=task.name)
 
-        if self._config.use_cached_results and task.has_generator_func():
+        if self._config.use_cached_results and task.callable_type in GeneratorCallableType:
             task.log(
                 'NOTE: Cache-key computation for Prefect tasks traverses task parameters '
                 'and will consume generator inputs. To disable caching of task parameters, set '
@@ -97,8 +96,7 @@ class PrefectEngine(TaskRunnerEngine,
             task.create_default_run_callable(),
             task.param_signatures,
             task.return_type,
-            has_async_func=task.has_async_func(),
-            has_generator_func=task.has_generator_func(),
+            callable_type=task.callable_type,
         )
 
         return prefect_task(**task_kwargs)(wrapped_callable)
@@ -125,8 +123,10 @@ class PrefectEngine(TaskRunnerEngine,
                 _prefect_task,
                 task.param_signatures,
                 task.return_type,
-                has_async_func=_prefect_task.isasync,
-                has_generator_func=_prefect_task.isgenerator,
+                callable_type=callable_type_from_flags(
+                    is_async=_prefect_task.isasync,
+                    is_generator=_prefect_task.isgenerator,
+                ),
             )
 
             return prefect_flow(**flow_kwargs)(wrapped_callable)(*args, **kwargs)
@@ -141,14 +141,12 @@ class PrefectEngine(TaskRunnerEngine,
         )
         run_callable = flow.create_default_run_callable()
 
-        has_generator_func = flow.has_generator_func()
         wrapped_callable = self._wrap_as_prefect_compatible_callable(
             run_callable,
             flow.param_signatures,
             flow.return_type,
-            has_async_func=flow.has_async_func(),
-            has_generator_func=has_generator_func,
-            resolve_async_result=not has_generator_func,
+            callable_type=flow.callable_type,
+            resolve_async_result=flow.callable_type not in GeneratorCallableType,
         )
         return prefect_flow(**flow_kwargs)(wrapped_callable)
 

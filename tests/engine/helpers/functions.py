@@ -20,6 +20,7 @@ from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
                                                        IsLinearFlowRunnerEngine,
                                                        IsTaskRunnerEngine)
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
+from omnipy.util.callable_types import CallableType
 from omnipy.util.helpers import resolve
 
 from .classes import JobCase, JobType
@@ -130,7 +131,7 @@ def create_linear_flow_with_two_func_tasks(
         yield from arg
 
     task_template_func = task_template_cls(name=name)(func)
-    if not task_template_func.has_async_func() and task_template_func.has_generator_func():
+    if task_template_func.callable_type is CallableType.SYNC_GENERATOR:
         # This is needed as Prefect 3 coerces returned generators from
         # regular synchronous functions to lists. If the task is instead
         # wrapping a generator function, the generator is recognized and
@@ -186,7 +187,7 @@ def create_func_flow_with_two_func_tasks(
     if registry:
         engine.set_registry(registry)
 
-    if not task_template.has_async_func() and task_template.has_generator_func():
+    if task_template.callable_type is CallableType.SYNC_GENERATOR:
 
         @func_flow_template_cls(name=name)
         def sync_generator_func_flow_template(*args: object, **kwargs: object):

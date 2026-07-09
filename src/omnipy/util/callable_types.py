@@ -1,12 +1,13 @@
 from collections.abc import AsyncGenerator, Awaitable, Generator
 from contextlib import AbstractContextManager, nullcontext
-from enum import auto, Enum
 import functools
 import inspect
 from types import AsyncGeneratorType, GeneratorType, MappingProxyType
-from typing import Any, Callable, overload
+from typing import Any, Callable, Literal, overload
 
 from typing_extensions import ParamSpec, TypeVar
+
+from omnipy.util.literal_enum import LiteralEnum
 
 _P = ParamSpec('_P')
 _R = TypeVar('_R')
@@ -15,35 +16,79 @@ _S = TypeVar('_S')
 _GR = TypeVar('_GR')
 
 
-class CallableType(Enum):
-    SYNC = auto()
-    SYNC_GENERATOR = auto()
-    ASYNC = auto()
-    ASYNC_GENERATOR = auto()
+class _SyncFunctionType(LiteralEnum[str]):
+    Literals = Literal['sync-function']
+    SYNC_FUNCTION: Literal['sync-function'] = 'sync-function'
+
+
+class _SyncGeneratorType(LiteralEnum[str]):
+    Literals = Literal['sync-generator']
+    SYNC_GENERATOR: Literal['sync-generator'] = 'sync-generator'
+
+
+class _AsyncCoroutineType(LiteralEnum[str]):
+    Literals = Literal['async-coroutine']
+    ASYNC_COROUTINE: Literal['async-coroutine'] = 'async-coroutine'
+
+
+class _AsyncGeneratorType(LiteralEnum[str]):
+    Literals = Literal['async-generator']
+    ASYNC_GENERATOR: Literal['async-generator'] = 'async-generator'
+
+
+class SyncCallableType(_SyncFunctionType, _SyncGeneratorType):
+    Literals = Literal[_SyncFunctionType.Literals, _SyncGeneratorType.Literals]
+
+
+class AsyncCallableType(_AsyncCoroutineType, _AsyncGeneratorType):
+    Literals = Literal[_AsyncCoroutineType.Literals, _AsyncGeneratorType.Literals]
+
+
+class PlainCallableType(_SyncFunctionType, _AsyncCoroutineType):
+    Literals = Literal[_SyncFunctionType.Literals, _AsyncCoroutineType.Literals]
+
+
+class GeneratorCallableType(_SyncGeneratorType, _AsyncGeneratorType):
+    Literals = Literal[_SyncGeneratorType.Literals, _AsyncGeneratorType.Literals]
+
+
+class CallableType(SyncCallableType, AsyncCallableType):
+    Literals = Literal[SyncCallableType.Literals, AsyncCallableType.Literals]
+
+
+def get_callable_type(callable: Callable[..., Any]) -> CallableType.Literals:
+    if inspect.isasyncgenfunction(callable):
+        return CallableType.ASYNC_GENERATOR
+    elif inspect.iscoroutinefunction(callable):
+        return CallableType.ASYNC_COROUTINE
+    elif inspect.isgeneratorfunction(callable):
+        return CallableType.SYNC_GENERATOR
+    else:
+        return CallableType.SYNC_FUNCTION
 
 
 def _noop() -> None:
     return None
 
 
-def callable_type_from_flags(*, has_async: bool, has_generator: bool) -> CallableType:
-    if has_async:
-        if has_generator:
+def callable_type_from_flags(*, is_async: bool, is_generator: bool) -> CallableType.Literals:
+    if is_async:
+        if is_generator:
             return CallableType.ASYNC_GENERATOR
         else:
-            return CallableType.ASYNC
+            return CallableType.ASYNC_COROUTINE
     else:
-        if has_generator:
+        if is_generator:
             return CallableType.SYNC_GENERATOR
         else:
-            return CallableType.SYNC
+            return CallableType.SYNC_FUNCTION
 
 
 def decorate_callable_by_type(  # noqa: C901
     call_func: Callable[_P, Any],
     param_signatures: MappingProxyType[str, inspect.Parameter],
     return_type: type,
-    call_type: CallableType,
+    call_type: CallableType.Literals,
     *,
     context_factory: Callable[[], AbstractContextManager[object]] | None = None,
     resolve_async_result: bool = False,
@@ -54,7 +99,7 @@ def decorate_callable_by_type(  # noqa: C901
     signature = inspect.Signature(
         parameters=tuple(param_signatures.values()), return_annotation=return_type)
 
-    if call_type is CallableType.SYNC:
+    if call_type is CallableType.SYNC_FUNCTION:
 
         def _sync_wrapper(*args: _P.args, **kwargs: _P.kwargs):
             with make_context():
@@ -72,7 +117,7 @@ def decorate_callable_by_type(  # noqa: C901
         _sync_generator_wrapper.__signature__ = signature
         return _sync_generator_wrapper
 
-    elif call_type is CallableType.ASYNC:
+    elif call_type is CallableType.ASYNC_COROUTINE:
 
         async def _async_wrapper(*args: _P.args, **kwargs: _P.kwargs):
             with make_context():
