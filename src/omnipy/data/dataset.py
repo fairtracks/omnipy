@@ -837,7 +837,7 @@ class Dataset(
             prop = getattr(self.__class__, attr)
             prop.__set__(self, value)
         else:
-            raise RuntimeError('Model does not allow setting of extra attributes')
+            raise RuntimeError('Dataset does not allow setting of extra attributes')
 
     @pyd.root_validator
     def _parse_root_object(

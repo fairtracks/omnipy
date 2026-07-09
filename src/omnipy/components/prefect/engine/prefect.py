@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
 class TaskKwargs(TypedDict, total=False):
     name: str
-    cache_policy: CachePolicy | type[NotSet]
+    cache_policy: 'CachePolicy | type[NotSet]'
     cache_expiration: timedelta | None
 
 
@@ -74,7 +74,7 @@ class PrefectEngine(TaskRunnerEngine,
 
     # TaskRunnerEngine
 
-    def _init_task(self, task: TaskRunSpec) -> PrefectTask:
+    def _init_task(self, task: TaskRunSpec) -> 'PrefectTask':
         from ..lazy_import import cache_policies, prefect_task
 
         assert isinstance(self._config, PrefectEngineConfig)
@@ -104,7 +104,7 @@ class PrefectEngine(TaskRunnerEngine,
 
     def _run_task(
         self,
-        state: PrefectTask,
+        state: 'PrefectTask',
         task: TaskRunSpec,
         *args,
         **kwargs,

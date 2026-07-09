@@ -7,7 +7,7 @@ def set_prefect_config_path():
     prefect_module_dir = Path(__file__).resolve().parent
 
     os.environ['PREFECT_LOGGING_SETTINGS_PATH'] = \
-        f'{prefect_module_dir.joinpath("settings", "logging.yml")}'
+        f"{prefect_module_dir.joinpath('settings', 'logging.yml')}"
 
 
 def use_ephemeral_mode_for_tests():

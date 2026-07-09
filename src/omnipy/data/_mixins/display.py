@@ -2387,7 +2387,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     new_frame = resized_panel.frame.modified_copy(width=resized_panel.dims.width)
                     resized_panel = dataclasses.replace(
                         resized_panel,
-                        frame=new_frame,  # type: ignore[arg-type]
+                        frame=new_frame,
                     )
             return resized_panel.render_next_stage()
 

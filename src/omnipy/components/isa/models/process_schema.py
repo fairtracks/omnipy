@@ -2,7 +2,7 @@
 #   filename:  process_schema.json
 #   timestamp: 2024-02-07T08:09:26+00:00
 
-from datetime import date, datetime
+import datetime
 from enum import Enum
 from typing import List, Optional, Union
 
@@ -36,7 +36,7 @@ class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
     parameterValues: Optional[List[
         process_parameter_value_schema.IsaProcessParameterValueModel]] = None
     performer: Optional[str] = None
-    date: Optional[Union[datetime, date, pyd.constr(max_length=0)]] = None
+    date: Optional[Union[datetime.datetime, datetime.date, pyd.constr(max_length=0)]] = None
     previousProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
     nextProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
     inputs: Optional[List[Union[

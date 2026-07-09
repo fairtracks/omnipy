@@ -3,7 +3,6 @@ from inspect import Parameter
 import json
 from typing import Any, Callable, Generic, ParamSpec, TypeVar
 
-import pytest
 import pytest_cases as pc
 
 from omnipy.data.model import Model
