@@ -23,22 +23,22 @@ from omnipy.components.remote.tasks import (async_load_urls_into_new_dataset,
 from ..helpers.classes import EndpointCase, RequestTypeCase
 
 
-@pc.case(tags='supports_external_session')
+@pc.case(tags='supports_external_retry_client')
 def case_get_json_from_api_endpoint() -> RequestTypeCase:
     return RequestTypeCase(True, get_json_from_api_endpoint, dict(), JsonDataset)
 
 
-@pc.case(tags='supports_external_session')
+@pc.case(tags='supports_external_retry_client')
 def case_get_str_from_api_endpoint() -> RequestTypeCase:
     return RequestTypeCase(True, get_str_from_api_endpoint, dict(), StrDataset)
 
 
-@pc.case(tags='supports_external_session')
+@pc.case(tags='supports_external_retry_client')
 def case_get_bytes_from_api_endpoint() -> RequestTypeCase:
     return RequestTypeCase(True, get_bytes_from_api_endpoint, dict(), BytesDataset)
 
 
-@pc.case(tags='supports_external_session')
+@pc.case(tags='supports_external_retry_client')
 def case_get_auto_from_api_endpoint() -> RequestTypeCase:
     return RequestTypeCase(True, get_auto_from_api_endpoint, dict(), AutoResponseContentDataset)
 

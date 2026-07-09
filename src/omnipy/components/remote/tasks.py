@@ -9,6 +9,7 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.enums.data import BackoffStrategy
+from omnipy.shared.exceptions import ShouldNotOccurException
 from omnipy.shared.typing import TYPE_CHECKING
 
 from ..json.datasets import JsonDataset, JsonListOfDictsDataset
@@ -28,16 +29,21 @@ _JsonDatasetT = TypeVar('_JsonDatasetT', bound=Dataset)
 async def _call_get(url: HttpUrlModel,
                     session: 'ClientSession') -> 'AsyncGenerator[ClientResponse, None]':
     async with session.get(str(url)) as response:
-        if response.status != 200:
-            raise ConnectionError(f'Failed to get data from {url}')
         yield response
 
 
-def _get_retry_client(
-    client_session: 'ClientSession | None',
-    retry_http_statuses: tuple[int, ...],
-    retry_attempts: int,
-    retry_backoff_strategy: BackoffStrategy.Literals,
+def _check_response_status(response: 'ClientResponse') -> None:
+    if response.status != 200:
+        raise ConnectionError(f'Failed to get data. '
+                              f'HTTP status: {response.status}. '
+                              f'URL: {response.url}')
+
+
+def get_retry_client(
+    client_session: 'ClientSession | None' = None,
+    retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
+    retry_attempts: int = DEFAULT_RETRIES,
+    retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
 ) -> 'RetryClient':
     from .helpers import BACKOFF_STRATEGY_2_RETRY_CLS
     from .lazy_import import RetryClient
@@ -55,111 +61,72 @@ def _get_retry_client(
 
 
 async def _ensure_retry_session(
-    client_session: 'ClientSession | None',
-    retry_http_statuses: tuple[int, ...],
-    retry_attempts: int,
-    retry_backoff_strategy: BackoffStrategy.Literals,
-) -> 'AsyncGenerator[RetryClient, None]':
+        retry_client: 'RetryClient | None') -> 'AsyncGenerator[RetryClient, None]':
     from .lazy_import import ClientSession
 
-    if client_session:
-        yield _get_retry_client(
-            client_session,
-            retry_http_statuses,
-            retry_attempts,
-            retry_backoff_strategy,
-        )
+    if retry_client:
+        yield retry_client
     else:
         async with ClientSession() as tmp_session:
-            yield _get_retry_client(
-                tmp_session,
-                retry_http_statuses,
-                retry_attempts,
-                retry_backoff_strategy,
-            )
+            yield get_retry_client(tmp_session,)
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=JsonDataset)
 async def get_json_from_api_endpoint(
     url: HttpUrlModel,
-    client_session: 'ClientSession | None' = None,
-    retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
-    retry_attempts: int = DEFAULT_RETRIES,
-    retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
+    retry_client: 'RetryClient | None' = None,
 ) -> JsonModel:
     from .lazy_import import ClientSession
 
-    async for retry_session in _ensure_retry_session(
-            client_session,
-            retry_http_statuses,
-            retry_attempts,
-            retry_backoff_strategy,
-    ):
+    async for retry_session in _ensure_retry_session(retry_client,):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
-            output_data = JsonModel(await response.json(content_type=None))
-    return output_data
+            _check_response_status(response)
+            return JsonModel(await response.json(content_type=None))
+
+    raise ShouldNotOccurException('Other exception should have been raised before this point.')
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=StrDataset)
 async def get_str_from_api_endpoint(
     url: HttpUrlModel,
-    client_session: 'ClientSession | None' = None,
-    retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
-    retry_attempts: int = DEFAULT_RETRIES,
-    retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
+    retry_client: 'RetryClient | None' = None,
 ) -> StrModel:
     from .lazy_import import ClientSession
 
-    async for retry_session in _ensure_retry_session(
-            client_session,
-            retry_http_statuses,
-            retry_attempts,
-            retry_backoff_strategy,
-    ):
+    async for retry_session in _ensure_retry_session(retry_client,):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
-            output_data = StrModel(await response.text())
-    return output_data
+            _check_response_status(response)
+            return StrModel(await response.text())
+
+    raise ShouldNotOccurException('Other exception should have been raised before this point.')
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=BytesDataset)
 async def get_bytes_from_api_endpoint(
     url: HttpUrlModel,
-    client_session: 'ClientSession | None' = None,
-    retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
-    retry_attempts: int = DEFAULT_RETRIES,
-    retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
+    retry_client: 'RetryClient | None' = None,
 ) -> BytesModel:
     from .lazy_import import ClientSession
 
-    async for retry_session in _ensure_retry_session(
-            client_session,
-            retry_http_statuses,
-            retry_attempts,
-            retry_backoff_strategy,
-    ):
+    async for retry_session in _ensure_retry_session(retry_client,):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
-            output_data = BytesModel(await response.read())
-    return output_data
+            _check_response_status(response)
+            return BytesModel(await response.read())
+
+    raise ShouldNotOccurException('Other exception should have been raised before this point.')
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=AutoResponseContentDataset)
 async def get_auto_from_api_endpoint(
     url: HttpUrlModel,
-    client_session: 'ClientSession | None' = None,
-    retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
-    retry_attempts: int = DEFAULT_RETRIES,
-    retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
+    retry_client: 'RetryClient | None' = None,
     as_mime_type: str | None = None,
 ) -> AutoResponseContentModel:
     from .lazy_import import ClientSession, CONTENT_TYPE
 
-    async for retry_session in _ensure_retry_session(
-            client_session,
-            retry_http_statuses,
-            retry_attempts,
-            retry_backoff_strategy,
-    ):
+    async for retry_session in _ensure_retry_session(retry_client):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
+            _check_response_status(response)
             if as_mime_type:
                 content_type = content_type_header = as_mime_type
             else:
@@ -174,9 +141,11 @@ async def get_auto_from_api_endpoint(
                 case 'application/octet-stream' | _:
                     content = await response.read()
 
-    model = AutoResponseContentModel(
-        ResponseContentPydModel(content_type=content_type_header, response=content))
-    return model
+            model = AutoResponseContentModel(
+                ResponseContentPydModel(content_type=content_type_header, response=content))
+            return model
+
+    raise ShouldNotOccurException('Other exception should have been raised before this point.')
 
 
 @TaskTemplate()

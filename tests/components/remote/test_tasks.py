@@ -1,9 +1,9 @@
 import asyncio
 from functools import partial
-from typing import Annotated, cast
+from typing import Annotated, Any, cast
 
 import aiohttp
-import aiohttp.web_response
+from aiohttp import web
 import pytest
 import pytest_cases as pc
 
@@ -14,11 +14,110 @@ from omnipy import (AutoResponseContentDataset,
                     Model,
                     StrictBytesDataset,
                     StrictStrDataset)
+from omnipy.components.remote.tasks import (get_auto_from_api_endpoint,
+                                            get_bytes_from_api_endpoint,
+                                            get_json_from_api_endpoint,
+                                            get_retry_client,
+                                            get_str_from_api_endpoint)
+from omnipy.shared.exceptions import FailedDataError
 from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
 from ...helpers.functions import assert_model_or_val, assert_val
 from ...helpers.protocols import AssertModelOrValFunc
 from .helpers.classes import EndpointCase, RequestTypeCase
+
+
+@pytest.fixture(scope='function')
+async def always_failing_server_url(aiohttp_server):
+    async def _always_failing_endpoint(request: web.Request) -> web.Response:
+        return web.Response(text='Error', status=503)
+
+    app = web.Application()
+    app.router.add_route('GET', '/always_fails', _always_failing_endpoint)
+    server = await aiohttp_server(app)
+    yield str(server.make_url('/always_fails'))
+
+
+@pytest.fixture(scope='function')
+async def fails_once_then_succeeds_server_url(aiohttp_server):
+    request_count = 0
+
+    async def _flaky_endpoint(request: web.Request) -> web.Response:
+        nonlocal request_count
+        request_count += 1
+
+        if request_count == 1:
+            return web.Response(text='Error', status=503)
+
+        return web.json_response(dict(author='Recovered Artist', lyrics=['Recovered line']))
+
+    app = web.Application()
+    app.router.add_route('GET', '/fails_once', _flaky_endpoint)
+    server = await aiohttp_server(app)
+    yield str(server.make_url('/fails_once'))
+
+
+async def _run_get_json_with_retry_attempts(url: str, retry_attempts: int):
+    query_urls = omnipy.HttpUrlDataset({'flaky': omnipy.HttpUrlModel(url)})
+
+    async with aiohttp.ClientSession() as client_session:
+        async with get_retry_client(
+                client_session=client_session,
+                retry_http_statuses=(503,),
+                retry_attempts=retry_attempts,
+        ) as retry_client:
+            return cast(
+                Any,
+                await
+                get_json_from_api_endpoint.run(cast(Any, query_urls), retry_client=retry_client))
+
+
+async def test_get_retry_client_with_single_attempt_fails_after_initial_503(
+        fails_once_then_succeeds_server_url: str) -> None:
+    output = await _run_get_json_with_retry_attempts(
+        fails_once_then_succeeds_server_url, retry_attempts=1)
+    output_any = cast(Any, output)
+
+    with pytest.raises(FailedDataError, match='HTTP status: 503'):
+        _ = output_any['flaky']['author']
+
+
+async def test_get_retry_client_with_second_attempt_recovers_after_initial_503(
+        fails_once_then_succeeds_server_url: str) -> None:
+    output = await _run_get_json_with_retry_attempts(
+        fails_once_then_succeeds_server_url, retry_attempts=2)
+    output_any = cast(Any, output)
+    assert_model_or_val(output_any['flaky']['author'], str, 'Recovered Artist')
+
+
+@pytest.mark.parametrize(
+    'task',
+    [
+        get_json_from_api_endpoint,
+        get_str_from_api_endpoint,
+        get_bytes_from_api_endpoint,
+        get_auto_from_api_endpoint,
+    ],
+    ids=['json', 'str', 'bytes', 'auto'],
+)
+async def test_get_from_api_endpoint_run_raises_for_non_200_response(
+    always_failing_server_url: str,
+    task: Any,
+) -> None:
+    query_urls = omnipy.HttpUrlDataset({'failing': omnipy.HttpUrlModel(always_failing_server_url)})
+
+    async with aiohttp.ClientSession() as client_session:
+        async with get_retry_client(
+                client_session=client_session,
+                retry_http_statuses=(),
+                retry_attempts=1,
+        ) as retry_client:
+            output = await task.run(query_urls, retry_client=retry_client)
+
+    with pytest.raises(FailedDataError, match='HTTP status: 503') as exc_info:
+        _ = output['failing']
+
+    assert 'always_fails' in str(exc_info.value)
 
 
 def _assert_query_results(assert_model_if_dyn_conv_else_val,
@@ -65,7 +164,7 @@ def _assert_json_query_results(data: JsonDictOfListsDataset):
 
 
 @pc.parametrize_with_cases('case', cases='.cases.request_types')
-async def test_get_from_api_endpoint_without_session(
+async def test_get_from_api_endpoint_without_retry_client(
     endpoint: Annotated[EndpointCase, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
     case: RequestTypeCase,
@@ -78,6 +177,8 @@ async def test_get_from_api_endpoint_without_session(
         # in the event loop.
         loop, loop_is_running = get_event_loop_and_check_if_loop_is_running()
         assert loop_is_running
+        assert loop
+
         run_func = partial(case.job.run, endpoint.query_urls, **case.kwargs)
         data = await loop.run_in_executor(None, run_func)
     if case.expected_exceptions:
@@ -100,18 +201,19 @@ async def test_get_from_api_endpoint_without_session(
 @pc.parametrize_with_cases(
     'case',
     cases='.cases.request_types',
-    has_tag='supports_external_session',
+    has_tag='supports_external_retry_client',
 )
-async def test_get_from_api_endpoint_with_session(
+async def test_get_from_api_endpoint_with_retry_client(
     endpoint: Annotated[EndpointCase, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
     case: RequestTypeCase,
 ) -> None:
 
     async with aiohttp.ClientSession() as client_session:
-        task1 = case.job.run(endpoint.query_urls[:2], client_session=client_session)
-        task2 = case.job.run(endpoint.query_urls[2:], client_session=client_session)
-        results = await asyncio.gather(task1, task2)
-        data = results[0] | results[1]
+        async with get_retry_client(client_session=client_session) as retry_client:
+            task1 = case.job.run(endpoint.query_urls[:2], retry_client=retry_client)
+            task2 = case.job.run(endpoint.query_urls[2:], retry_client=retry_client)
+            results = await asyncio.gather(task1, task2)
+            data = results[0] | results[1]
 
     _assert_query_results(assert_model_if_dyn_conv_else_val, case, data, endpoint.auto_model_type)
