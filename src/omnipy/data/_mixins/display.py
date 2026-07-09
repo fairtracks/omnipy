@@ -2962,6 +2962,14 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         return repr_str
 
+    def update_reactive_views(self):
+        from omnipy import runtime
+        assert runtime.objects.reactive is not None
+        obj_id_update_flags = runtime.objects.reactive.obj_id_update_flags.value.copy()
+        flag = obj_id_update_flags.get(id(self), False)
+        obj_id_update_flags[id(self)] = not flag
+        runtime.objects.reactive.obj_id_update_flags.set(obj_id_update_flags)
+
 
 def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
     def wrapper(self, **kwargs) -> _RetT:

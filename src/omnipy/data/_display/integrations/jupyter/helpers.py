@@ -67,6 +67,8 @@ class ReactiveObjects(DataPublisher):
         default_factory=lambda: ReactiveConfigCopy(LayoutConfig()))
     available_display_dims_in_px: IsReactive[AvailableDisplayDims] = pyd.Field(
         default_factory=lambda: solara.Reactive(AvailableDisplayDims(width=0, height=0)))
+    obj_id_update_flags: IsReactive[dict[int, bool]] = pyd.Field(
+        default_factory=lambda: solara.Reactive(dict()))
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, ReactiveObjects):

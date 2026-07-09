@@ -382,6 +382,7 @@ class IsReactiveObjects(Protocol):
     text_config: IsReactive[IsTextConfig]
     layout_config: IsReactive[IsLayoutConfig]
     available_display_dims_in_px: IsReactive[AvailableDisplayDims]
+    obj_id_update_flags: IsReactive[dict[int, bool]]
 
     def __eq__(self, other) -> bool:
         ...

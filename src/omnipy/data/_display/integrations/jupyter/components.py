@@ -84,6 +84,7 @@ def DimsCalculator(
 
 @solara.component  # pyright: ignore [reportPrivateImportUsage]
 def ShowHtml(
+    update_flag: bool | None,
     jupyter_ui_config: IsJupyterUserInterfaceConfig,
     orig_jupyter_ui_config: IsJupyterUserInterfaceConfig,
     text_config: IsTextConfig,
@@ -95,8 +96,8 @@ def ShowHtml(
     render_output_method: Callable[[FullyRenderedPanel], str],
     **kwargs: Any,
 ):
-    if (jupyter_ui_config != orig_jupyter_ui_config or text_config != orig_text_config
-            or layout_config != orig_layout_config):
+    if (update_flag is not None or jupyter_ui_config != orig_jupyter_ui_config
+            or text_config != orig_text_config or layout_config != orig_layout_config):
         rendered_panel = render_panel_method(**kwargs)
 
     solara.HTML(
@@ -152,6 +153,7 @@ def ReactivelyResizingHtml(
     reactive_jupyter_ui_config = reactive_objs.jupyter_ui_config.value
     reactive_text_config = reactive_objs.text_config.value
     reactive_layout_config = reactive_objs.layout_config.value
+    reactive_obj_id_update_flags = reactive_objs.obj_id_update_flags.value
 
     if any(_ in kwargs for _ in ('font_weight', 'font_size', 'fonts', 'line_height')):
 
@@ -177,6 +179,7 @@ def ReactivelyResizingHtml(
                 rendered_panel = render_panel_method(**kwargs)
 
     ShowHtml(
+        update_flag=reactive_obj_id_update_flags.get(id(obj), None),
         jupyter_ui_config=reactive_jupyter_ui_config,
         orig_jupyter_ui_config=orig_jupyter_ui_config,
         text_config=reactive_text_config,
