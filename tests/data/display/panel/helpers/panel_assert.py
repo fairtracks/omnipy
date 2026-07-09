@@ -165,11 +165,11 @@ def strip_all_styling_from_panel_output(
 
 def _get_font_style_by_case_id(case_id: str | None) -> str:
     DEFAULT_FONT_STYLE = ("font-family: 'Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', "
-                          "'monospace'; font-size: 14px; font-weight: 400; line-height: 1.25; ")
+                          "'monospace'; font-size: 14.0px; font-weight: 400; line-height: 1.25; ")
 
     FONT_STYLING_ONLY = 'font-weight: 500; line-height: 1.0; '
 
-    FULL_FONT_CONF = ("font-family: 'monospace'; font-size: 15px; "
+    FULL_FONT_CONF = ("font-family: 'monospace'; font-size: 15.0px; "
                       'font-weight: 600; line-height: 1.1; ')
 
     match (case_id):
