@@ -4,11 +4,39 @@ import inspect
 from inspect import BoundArguments
 from logging import INFO
 from types import MappingProxyType
-from typing import Any, Callable, cast
+from typing import Any, Callable, cast, Generator
 
 from omnipy.shared.protocols.compute._job import IsFuncArgJob, IsTaskTemplateArgsJob
 from omnipy.shared.protocols.compute.job import IsAnyFlow, IsTask, IsTaskTemplate
-from omnipy.util.callable_types import decorate_callable_by_type
+from omnipy.util.callable_types import CallableType, decorate_callable_by_type
+from omnipy.util.helpers import resolve
+
+
+def _has_any_async_coroutine_jobs(flow_run_spec: 'TaskTemplateArgsFlowRunSpec') -> bool:
+    return any(
+        task.callable_type is CallableType.ASYNC_COROUTINE for task in flow_run_spec.task_templates)
+
+
+def _drain_sync_results(run_tasks_gen: Generator[object, object, object]) -> object:
+    try:
+        result = next(run_tasks_gen)
+        while True:
+            result = run_tasks_gen.send(result)
+    except StopIteration as exc:
+        return exc.value
+
+
+async def _drain_async_results(
+    run_tasks_gen: Generator[object, object, object],
+    resolve_result_func: Callable[[object], Any] = resolve,
+) -> object:
+    try:
+        result = next(run_tasks_gen)
+        while True:
+            result = await resolve_result_func(result)
+            result = run_tasks_gen.send(result)
+    except StopIteration as exc:
+        return exc.value
 
 
 class JobRunSpec(ABC):
@@ -91,7 +119,10 @@ class TaskTemplateArgsFlowRunSpec(FlowRunSpec, ABC):
 
 class LinearFlowRunSpec(TaskTemplateArgsFlowRunSpec):
     def _create_default_run_callable(self) -> Callable:
-        def _inner_run_linear_flow(*args: object, **kwargs: object):
+        def _run_all_linear_tasks(
+            *args: object,
+            **kwargs: object,
+        ) -> Generator[object, object, object]:
             result = None
             for i, job in enumerate(self.task_templates):
                 # TODO: Better handling of kwargs
@@ -100,17 +131,35 @@ class LinearFlowRunSpec(TaskTemplateArgsFlowRunSpec):
                 else:
                     result = job(*args)
 
+                result = yield result
+
                 args = (result,)
+
             return result
 
-        return _inner_run_linear_flow
+        if _has_any_async_coroutine_jobs(self):
+
+            async def _async_inner_run_linear_flow(*args: object, **kwargs: object):
+                return await _drain_async_results(_run_all_linear_tasks(*args, **kwargs))
+
+            return _async_inner_run_linear_flow
+        else:
+
+            def _sync_inner_run_linear_flow(*args: object, **kwargs: object):
+                return _drain_sync_results(_run_all_linear_tasks(*args, **kwargs))
+
+            return _sync_inner_run_linear_flow
 
 
 class DagFlowRunSpec(TaskTemplateArgsFlowRunSpec):
     def _create_default_run_callable(self) -> Callable:  # noqa: C901
-        def _inner_run_dag_flow(*args: object, **kwargs: object):
+        def _run_all_dag_tasks(
+            *args: object,
+            **kwargs: object,
+        ) -> Generator[object, object, object]:
             results = {}
             result = None
+
             for i, job in enumerate(self.task_templates):
                 if i == 0:
                     results = self.get_bound_args(*args, **kwargs).arguments
@@ -133,13 +182,38 @@ class DagFlowRunSpec(TaskTemplateArgsFlowRunSpec):
                 params = {key: val for key, val in results.items() if key in param_keys}
                 result = job(**params)
 
+                result = yield result
+
                 if isinstance(result, dict) and len(result) > 0:
                     results.update(result)
                 else:
                     results[job.name] = result
+
             return result
 
-        return _inner_run_dag_flow
+        if _has_any_async_coroutine_jobs(self):
+
+            async def _async_inner_run_dag_flow(*args: object, **kwargs: object):
+                async def _resolve_awaitable_dag_task_result(result: object) -> object:
+                    result = await resolve(result)
+
+                    if isinstance(result, dict) and len(result) > 0:
+                        result = {key: await resolve(val) for key, val in result.items()}
+
+                    return result
+
+                return await _drain_async_results(
+                    _run_all_dag_tasks(*args, **kwargs),
+                    _resolve_awaitable_dag_task_result,
+                )
+
+            return _async_inner_run_dag_flow
+        else:
+
+            def _sync_inner_run_dag_flow(*args: object, **kwargs: object):
+                return _drain_sync_results(_run_all_dag_tasks(*args, **kwargs))
+
+            return _sync_inner_run_dag_flow
 
 
 class FuncFlowRunSpec(FlowRunSpec):
