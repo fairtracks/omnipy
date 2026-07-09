@@ -10,7 +10,7 @@ from omnipy.compute._mixins.name import NameJobBaseMixin, NameJobMixin
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared._typedefs import _JobT, _JobTemplateT
 from omnipy.shared.exceptions import JobStateException, ShouldNotOccurException
-from omnipy.shared.protocols.compute._job import IsJob, IsJobBase, IsJobTemplate
+from omnipy.shared.protocols.compute.job import IsJob, IsJobBase, IsJobTemplate
 from omnipy.shared.protocols.compute.job_creator import IsJobCreator
 from omnipy.shared.protocols.config import IsJobConfig
 from omnipy.shared.protocols.engine.base import IsEngine

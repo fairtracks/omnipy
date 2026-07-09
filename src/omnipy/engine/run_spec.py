@@ -6,15 +6,18 @@ from logging import INFO
 from types import MappingProxyType
 from typing import Any, Callable, cast, Generator
 
-from omnipy.shared.protocols.compute._job import IsFuncArgJob, IsTaskTemplateArgsJob
-from omnipy.shared.protocols.compute.job import IsAnyFlow, IsTask, IsTaskTemplate
+from omnipy.shared.protocols.compute.job import (IsAnyFlow,
+                                                 IsChildJobListArgJob,
+                                                 IsFuncArgJob,
+                                                 IsFuncArgJobTemplate,
+                                                 IsTask)
 from omnipy.util.callable_types import CallableType, decorate_callable_by_type
 from omnipy.util.helpers import resolve
 
 
-def _has_any_async_coroutine_jobs(flow_run_spec: 'TaskTemplateArgsFlowRunSpec') -> bool:
-    return any(
-        task.callable_type is CallableType.ASYNC_COROUTINE for task in flow_run_spec.task_templates)
+def _has_any_async_coroutine_jobs(flow_run_spec: 'ChildJobListArgFlowRunSpec') -> bool:
+    return any(job.callable_type is CallableType.ASYNC_COROUTINE
+               for job in flow_run_spec.child_job_templates)
 
 
 def _drain_sync_results(run_tasks_gen: Generator[object, object, object]) -> object:
@@ -110,21 +113,21 @@ class FlowRunSpec(JobRunSpec, ABC):
         ...
 
 
-class TaskTemplateArgsFlowRunSpec(FlowRunSpec, ABC):
+class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
     @property
-    def task_templates(self) -> tuple[IsTaskTemplate, ...]:
-        flow = cast(IsTaskTemplateArgsJob[IsTaskTemplate, Any, Any, Any, Any], self._job)
-        return flow.task_templates
+    def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
+        flow = cast(IsChildJobListArgJob, self._job)
+        return flow.child_job_templates
 
 
-class LinearFlowRunSpec(TaskTemplateArgsFlowRunSpec):
+class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
     def _create_default_run_callable(self) -> Callable:
         def _run_all_linear_tasks(
             *args: object,
             **kwargs: object,
         ) -> Generator[object, object, object]:
             result = None
-            for i, job in enumerate(self.task_templates):
+            for i, job in enumerate(self.child_job_templates):
                 # TODO: Better handling of kwargs
                 if i == 0:
                     result = job(*args, **kwargs)
@@ -151,7 +154,7 @@ class LinearFlowRunSpec(TaskTemplateArgsFlowRunSpec):
             return _sync_inner_run_linear_flow
 
 
-class DagFlowRunSpec(TaskTemplateArgsFlowRunSpec):
+class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
     def _create_default_run_callable(self) -> Callable:  # noqa: C901
         def _run_all_dag_tasks(
             *args: object,
@@ -160,7 +163,7 @@ class DagFlowRunSpec(TaskTemplateArgsFlowRunSpec):
             results = {}
             result = None
 
-            for i, job in enumerate(self.task_templates):
+            for i, job in enumerate(self.child_job_templates):
                 if i == 0:
                     results = self.get_bound_args(*args, **kwargs).arguments
 

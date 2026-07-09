@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import cast
 
 from omnipy.compute._job import JobBase
-from omnipy.shared.protocols.compute._job import IsJob
+from omnipy.shared.protocols.compute.job import IsJob
 from omnipy.shared.protocols.compute.mixins import IsNestedContext
 
 

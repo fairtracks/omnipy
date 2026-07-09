@@ -3,7 +3,7 @@ from typing import cast, Iterable, Mapping
 
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute._mixins.name import NameJobBaseMixin
-from omnipy.shared.protocols.compute._job import IsJobBase
+from omnipy.shared.protocols.compute.job import IsJobBase
 from omnipy.util.helpers import repr_max_len
 from omnipy.util.param_key_mapper import ParamKeyMapper
 

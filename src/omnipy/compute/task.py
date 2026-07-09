@@ -4,8 +4,7 @@ from typing_extensions import Concatenate
 
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
-from omnipy.shared.protocols.compute._job import HasFuncArgJobTemplateInit
-from omnipy.shared.protocols.compute.job import IsTask, IsTaskTemplate
+from omnipy.shared.protocols.compute.job import HasFuncArgJobTemplateInit, IsTask, IsTaskTemplate
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsTaskRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls

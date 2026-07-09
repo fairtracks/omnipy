@@ -12,7 +12,7 @@ from omnipy.compute._mixins.typedefs import (_InputDatasetT,
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import is_model_subclass, Model
-from omnipy.shared.protocols.compute._job import IsJobBase, IsPlainFuncArgJobBase
+from omnipy.shared.protocols.compute.job import IsJobBase, IsPlainFuncArgJobBase
 from omnipy.shared.protocols.data import IsDataset
 
 # Functions

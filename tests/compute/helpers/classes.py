@@ -14,13 +14,14 @@ from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
 CallP = ParamSpec('CallP')
 RetT = TypeVar('RetT')
 
-SingleTaskLinearFlowTemplateCallable: TypeAlias = Callable[[IsTaskTemplate],
-                                                           Callable[[Callable[CallP, RetT]],
-                                                                    IsLinearFlowTemplate[CallP,
-                                                                                         RetT]]]
-SingleTaskDagFlowTemplateCallable: TypeAlias = Callable[[IsTaskTemplate],
-                                                        Callable[[Callable[CallP, RetT]],
-                                                                 IsDagFlowTemplate[CallP, RetT]]]
+SingleChildJobLinearFlowTemplateCallable: TypeAlias = Callable[[IsTaskTemplate],
+                                                               Callable[[Callable[CallP, RetT]],
+                                                                        IsLinearFlowTemplate[CallP,
+                                                                                             RetT]]]
+SingleChildJobDagFlowTemplateCallable: TypeAlias = Callable[[IsTaskTemplate],
+                                                            Callable[[Callable[CallP, RetT]],
+                                                                     IsDagFlowTemplate[CallP,
+                                                                                       RetT]]]
 FuncFlowTemplateCallable: TypeAlias = Callable[[],
                                                Callable[[Callable[CallP, RetT]],
                                                         IsFuncFlowTemplate[CallP, RetT]]]
@@ -29,14 +30,14 @@ FuncFlowTemplateCallable: TypeAlias = Callable[[],
 # class FlowClsTuple(NamedTuple):
 #     flow_cls: type[LinearFlow] | type[DagFlow] | type[FuncFlow]
 #     flow_tmpl_cls: (
-#         SingleTaskLinearFlowTemplateCallable | SingleTaskDagFlowTemplateCallable
+#         SingleChildJobLinearFlowTemplateCallable | SingleChildJobDagFlowTemplateCallable
 #         | FuncFlowTemplateCallable)
 #     assert_flow_tmpl_cls: type[JobTemplateMixin]
 
 FlowClsT = TypeVar('FlowClsT', bound=type[LinearFlow] | type[DagFlow] | type[FuncFlow])
 FlowTmplClsT = TypeVar(
     'FlowTmplClsT',
-    bound=SingleTaskLinearFlowTemplateCallable | SingleTaskDagFlowTemplateCallable
+    bound=SingleChildJobLinearFlowTemplateCallable | SingleChildJobDagFlowTemplateCallable
     | FuncFlowTemplateCallable)
 
 
@@ -47,12 +48,12 @@ class FlowClsTuple(NamedTuple, Generic[FlowClsT, FlowTmplClsT]):
 
 
 FuncArgFlowClsTuple: TypeAlias = FlowClsTuple[type[FuncFlow], FuncFlowTemplateCallable]
-TaskTemplateArgFlowClsTuple: TypeAlias = FlowClsTuple[type[LinearFlow] | type[DagFlow],
-                                                      SingleTaskLinearFlowTemplateCallable
-                                                      | SingleTaskDagFlowTemplateCallable]
+ChildJobListArgFlowClsTuple: TypeAlias = FlowClsTuple[type[LinearFlow] | type[DagFlow],
+                                                      SingleChildJobLinearFlowTemplateCallable
+                                                      | SingleChildJobDagFlowTemplateCallable]
 AnyFlowClsTuple: TypeAlias = FlowClsTuple[type[LinearFlow] | type[DagFlow] | type[FuncFlow],
-                                          SingleTaskLinearFlowTemplateCallable
-                                          | SingleTaskDagFlowTemplateCallable
+                                          SingleChildJobLinearFlowTemplateCallable
+                                          | SingleChildJobDagFlowTemplateCallable
                                           | FuncFlowTemplateCallable]
 
 

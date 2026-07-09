@@ -16,12 +16,12 @@ from omnipy.compute.flow import (DagFlow,
                                  LinearFlowTemplateCore)
 
 from .helpers.classes import (AnyFlowClsTuple,
+                              ChildJobListArgFlowClsTuple,
                               FlowClsTuple,
                               FuncArgFlowClsTuple,
                               FuncFlowTemplateCallable,
-                              SingleTaskDagFlowTemplateCallable,
-                              SingleTaskLinearFlowTemplateCallable,
-                              TaskTemplateArgFlowClsTuple)
+                              SingleChildJobDagFlowTemplateCallable,
+                              SingleChildJobLinearFlowTemplateCallable)
 from .helpers.mocks import (IsMockJob,
                             IsMockJobTemplate,
                             MockJobSubclass,
@@ -61,7 +61,8 @@ def mock_job_datetime(
 
 
 @pc.fixture(scope='function')
-def linear_flow_cls_tuple() -> FlowClsTuple[type[LinearFlow], SingleTaskLinearFlowTemplateCallable]:
+def linear_flow_cls_tuple(
+) -> FlowClsTuple[type[LinearFlow], SingleChildJobLinearFlowTemplateCallable]:
     return FlowClsTuple(
         flow_cls=LinearFlow,
         flow_tmpl_cls=LinearFlowTemplate,
@@ -70,7 +71,7 @@ def linear_flow_cls_tuple() -> FlowClsTuple[type[LinearFlow], SingleTaskLinearFl
 
 
 @pc.fixture(scope='function')
-def dag_flow_cls_tuple() -> FlowClsTuple[type[DagFlow], SingleTaskDagFlowTemplateCallable]:
+def dag_flow_cls_tuple() -> FlowClsTuple[type[DagFlow], SingleChildJobDagFlowTemplateCallable]:
     return FlowClsTuple(
         flow_cls=DagFlow,
         flow_tmpl_cls=DagFlowTemplate,
@@ -96,9 +97,9 @@ def func_arg_flow_cls_tuple(
 
 @pc.fixture(scope='function')
 @pc.parametrize('flow_cls_tuple', [linear_flow_cls_tuple, dag_flow_cls_tuple])
-def task_tmpl_arg_flow_cls_tuple(
-    flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple,
-                              pc.fixture]) -> TaskTemplateArgFlowClsTuple:
+def child_job_list_arg_flow_cls_tuple(
+    flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple,
+                              pc.fixture]) -> ChildJobListArgFlowClsTuple:
     return flow_cls_tuple
 
 

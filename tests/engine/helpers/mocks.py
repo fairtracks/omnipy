@@ -14,8 +14,7 @@ from omnipy.engine.job_runner import (DagFlowRunnerEngine,
 from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared.enums.job import RunState
-from omnipy.shared.protocols.compute._job import IsJob
-from omnipy.shared.protocols.compute.job import IsTaskTemplate
+from omnipy.shared.protocols.compute.job import IsFuncArgJobTemplate, IsJob
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
                                                        IsEngine,
@@ -118,21 +117,21 @@ class MockTaskTemplate(MockTask):
 class MockLinearFlow(MockTask):
     def __init__(self,
                  func: Callable,
-                 *task_templates: IsTaskTemplate,
+                 *child_job_templates: IsFuncArgJobTemplate,
                  name: str | None = None,
                  **kwargs: object) -> None:
-        self._task_templates = task_templates
+        self._child_job_templates = child_job_templates
         super().__init__(func, name=name, **kwargs)
 
     @property
-    def task_templates(self) -> tuple[IsTaskTemplate, ...]:
-        return self._task_templates
+    def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
+        return self._child_job_templates
 
 
 @callable_decorator_cls
 class MockLinearFlowTemplate(MockLinearFlow):
     def apply(self) -> MockLinearFlow:
-        linear_flow = MockLinearFlow(self._func, *self._task_templates, name=self.name)
+        linear_flow = MockLinearFlow(self._func, *self._child_job_templates, name=self.name)
         engine = cast(IsLinearFlowRunnerEngine, self.job_creator.engine)
         assert engine is not None
         engine.apply_linear_flow_decorator(
@@ -146,21 +145,21 @@ class MockLinearFlowTemplate(MockLinearFlow):
 class MockDagFlow(MockTask):
     def __init__(self,
                  func: Callable,
-                 *task_templates: IsTaskTemplate,
+                 *child_job_templates: IsFuncArgJobTemplate,
                  name: str | None = None,
                  **kwargs: object) -> None:
-        self._task_templates = task_templates
+        self._child_job_templates = child_job_templates
         super().__init__(func, name=name, **kwargs)
 
     @property
-    def task_templates(self) -> tuple[IsTaskTemplate, ...]:
-        return self._task_templates
+    def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
+        return self._child_job_templates
 
 
 @callable_decorator_cls
 class MockDagFlowTemplate(MockDagFlow):
     def apply(self) -> MockDagFlow:
-        dag_flow = MockDagFlow(self._func, *self._task_templates, name=self.name)
+        dag_flow = MockDagFlow(self._func, *self._child_job_templates, name=self.name)
         engine = cast(IsDagFlowRunnerEngine, self.job_creator.engine)
         engine.apply_dag_flow_decorator(
             dag_flow,  # type: ignore[arg-type]

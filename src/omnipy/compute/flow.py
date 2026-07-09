@@ -4,17 +4,16 @@ from typing_extensions import TypeVar
 
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
+from omnipy.compute._joblist_job import ChildJobListArgJobBase
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
-from omnipy.compute._tasklist_job import TaskTemplateArgsJobBase
-from omnipy.shared.protocols.compute._job import (HasFuncArgJobTemplateInit,
-                                                  HasTaskTemplateArgsJobTemplateInit)
-from omnipy.shared.protocols.compute.job import (IsDagFlow,
+from omnipy.shared.protocols.compute.job import (HasChildJobListArgJobTemplateInit,
+                                                 HasFuncArgJobTemplateInit,
+                                                 IsDagFlow,
                                                  IsDagFlowTemplate,
                                                  IsFuncFlow,
                                                  IsFuncFlowTemplate,
                                                  IsLinearFlow,
-                                                 IsLinearFlowTemplate,
-                                                 IsTaskTemplate)
+                                                 IsLinearFlowTemplate)
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
                                                        IsFuncFlowRunnerEngine,
@@ -44,10 +43,10 @@ class FlowBase:
     ...
 
 
-class LinearFlowTemplateCore(TaskTemplateArgsJobBase[IsLinearFlowTemplate[_CallP, _RetT],
-                                                     IsLinearFlow[_CallP, _RetT],
-                                                     _CallP,
-                                                     _RetT],
+class LinearFlowTemplateCore(ChildJobListArgJobBase[IsLinearFlowTemplate[_CallP, _RetT],
+                                                    IsLinearFlow[_CallP, _RetT],
+                                                    _CallP,
+                                                    _RetT],
                              JobTemplateMixin[IsLinearFlowTemplate[_CallP, _RetT],
                                               IsLinearFlow[_CallP, _RetT],
                                               _CallP,
@@ -73,13 +72,9 @@ def linear_flow_template_as_callable_decorator(
 def to_linear_flow_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
                             LinearFlowTemplateCore[_CallP, _RetT]]
-) -> HasTaskTemplateArgsJobTemplateInit[
-        IsLinearFlowTemplate[_CallP, _RetT], IsTaskTemplate, _CallP, _RetT]:
+) -> HasChildJobListArgJobTemplateInit[IsLinearFlowTemplate[_CallP, _RetT], _CallP, _RetT]:
     return cast(
-        HasTaskTemplateArgsJobTemplateInit[IsLinearFlowTemplate[_CallP, _RetT],
-                                           IsTaskTemplate,
-                                           _CallP,
-                                           _RetT],
+        HasChildJobListArgJobTemplateInit[IsLinearFlowTemplate[_CallP, _RetT], _CallP, _RetT],
         decorated_cls)
 
 
@@ -92,10 +87,10 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
                           _CallP,
                           _RetT],
                  FlowBase,
-                 TaskTemplateArgsJobBase[IsLinearFlowTemplate[_CallP, _RetT],
-                                         IsLinearFlow[_CallP, _RetT],
-                                         _CallP,
-                                         _RetT],
+                 ChildJobListArgJobBase[IsLinearFlowTemplate[_CallP, _RetT],
+                                        IsLinearFlow[_CallP, _RetT],
+                                        _CallP,
+                                        _RetT],
                  Generic[_CallP, _RetT]):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         if self.engine:
@@ -108,10 +103,10 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
         return cast(type[IsLinearFlowTemplate[_CallP, _RetT]], LinearFlowTemplate)
 
 
-class DagFlowTemplateCore(TaskTemplateArgsJobBase[IsDagFlowTemplate[_CallP, _RetT],
-                                                  IsDagFlow[_CallP, _RetT],
-                                                  _CallP,
-                                                  _RetT],
+class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT],
+                                                 IsDagFlow[_CallP, _RetT],
+                                                 _CallP,
+                                                 _RetT],
                           JobTemplateMixin[IsDagFlowTemplate[_CallP, _RetT],
                                            IsDagFlow[_CallP, _RetT],
                                            _CallP,
@@ -137,14 +132,9 @@ def dag_flow_template_as_callable_decorator(
 def to_dag_flow_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
                             DagFlowTemplateCore[_CallP, _RetT]]
-) -> HasTaskTemplateArgsJobTemplateInit[
-        IsDagFlowTemplate[_CallP, _RetT], IsTaskTemplate, _CallP, _RetT]:
-    return cast(
-        HasTaskTemplateArgsJobTemplateInit[IsDagFlowTemplate[_CallP, _RetT],
-                                           IsTaskTemplate,
-                                           _CallP,
-                                           _RetT],
-        decorated_cls)
+) -> HasChildJobListArgJobTemplateInit[IsDagFlowTemplate[_CallP, _RetT], _CallP, _RetT]:
+    return cast(HasChildJobListArgJobTemplateInit[IsDagFlowTemplate[_CallP, _RetT], _CallP, _RetT],
+                decorated_cls)
 
 
 DagFlowTemplate = dag_flow_template_as_callable_decorator(
@@ -153,10 +143,10 @@ DagFlowTemplate = dag_flow_template_as_callable_decorator(
 
 class DagFlow(JobMixin[IsDagFlowTemplate[_CallP, _RetT], IsDagFlow[_CallP, _RetT], _CallP, _RetT],
               FlowBase,
-              TaskTemplateArgsJobBase[IsDagFlowTemplate[_CallP, _RetT],
-                                      IsDagFlow[_CallP, _RetT],
-                                      _CallP,
-                                      _RetT],
+              ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT],
+                                     IsDagFlow[_CallP, _RetT],
+                                     _CallP,
+                                     _RetT],
               Generic[_CallP, _RetT]):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         if self.engine:

@@ -6,9 +6,9 @@ import pytest_cases as pc
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 from omnipy.hub._registry import RunStateRegistry
-from omnipy.shared.protocols.compute._job import IsJobTemplate
 from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
                                                  IsFuncFlowTemplate,
+                                                 IsJobTemplate,
                                                  IsLinearFlowTemplate,
                                                  IsTaskTemplate)
 from omnipy.shared.protocols.engine.base import IsEngine

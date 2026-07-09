@@ -9,8 +9,11 @@ from omnipy.engine.run_spec import (DagFlowRunSpec,
                                     LinearFlowRunSpec,
                                     TaskRunSpec)
 from omnipy.shared.enums.job import RunState
-from omnipy.shared.protocols.compute._job import IsFuncArgJob
-from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols.compute.job import (IsDagFlow,
+                                                 IsFuncArgJob,
+                                                 IsFuncFlow,
+                                                 IsLinearFlow,
+                                                 IsTask)
 from omnipy.util.callable_types import decorate_result_by_type
 
 

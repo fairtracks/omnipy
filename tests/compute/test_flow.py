@@ -9,15 +9,15 @@ from omnipy.compute._job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 from omnipy.shared.exceptions import JobStateException
-from omnipy.shared.protocols.compute._job import IsFuncArgJobTemplate
 from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
+                                                 IsFuncArgJobTemplate,
                                                  IsFuncFlowTemplate,
                                                  IsLinearFlowTemplate)
 
 from ..helpers.functions import assert_func_wrapper
 from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func
-from .helpers.classes import AnyFlowClsTuple, FuncArgFlowClsTuple, TaskTemplateArgFlowClsTuple
+from .helpers.classes import AnyFlowClsTuple, ChildJobListArgFlowClsTuple, FuncArgFlowClsTuple
 from .helpers.functions import assert_flow_or_flow_template
 from .helpers.mocks import (IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
                             MockFlowTemplateSubclass,
@@ -121,11 +121,11 @@ def test_fail_init_func_arg_flow_classes(
         flow_tmpl_cls(lambda x: x)(lambda y: y)  # type: ignore[misc, call-arg]
 
 
-def test_init_task_template_args_flow_templates(
+def test_init_child_job_list_arg_flow_templates(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-    task_tmpl_arg_flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple, pytest.fixture],
+    child_job_list_arg_flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple, pytest.fixture],
 ) -> None:
-    _, flow_tmpl_cls, assert_flow_tmpl_cls = task_tmpl_arg_flow_cls_tuple
+    _, flow_tmpl_cls, assert_flow_tmpl_cls = child_job_list_arg_flow_cls_tuple
 
     task_tmpl = TaskTemplate()(format_to_string_func)
     flow_template = flow_tmpl_cls(task_tmpl)(format_to_string_func)
@@ -168,11 +168,11 @@ def _run_and_assert_flow_template(flow_template: IsFuncArgJobTemplate,
         flow('text')
 
 
-def test_apply_run_task_tmpl_arg_flow_cls_tuple(
+def test_apply_run_child_job_list_arg_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-    task_tmpl_arg_flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple, pytest.fixture],
+    child_job_list_arg_flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple, pytest.fixture],
 ) -> None:
-    flow_cls, flow_tmpl_cls, _ = task_tmpl_arg_flow_cls_tuple
+    flow_cls, flow_tmpl_cls, _ = child_job_list_arg_flow_cls_tuple
 
     task_tmpl = TaskTemplate()(format_to_string_func)
     flow_template = flow_tmpl_cls(task_tmpl)(format_to_string_func)
@@ -197,11 +197,11 @@ def test_apply_run_func_arg_flow_cls_tuple(
                                   'format_to_string_func')
 
 
-def test_refine_task_tmpl_arg_flow_cls_tuple(
+def test_refine_child_job_list_arg_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-    task_tmpl_arg_flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple, pytest.fixture],
+    child_job_list_arg_flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple, pytest.fixture],
 ) -> None:
-    _, flow_tmpl_cls, assert_flow_tmpl_cls = task_tmpl_arg_flow_cls_tuple
+    _, flow_tmpl_cls, assert_flow_tmpl_cls = child_job_list_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls(TaskTemplate()(format_to_string_func))(empty_dict_func)
     flow_template_2 = flow_template.refine(TaskTemplate()(data_import_func), name='data_import')
@@ -246,11 +246,11 @@ def _apply_revise_and_run_and_assert_flow_template(flow_template: IsFuncArgJobTe
     assert flow_template_2.run('text', 1) == 'text: 1'
 
 
-def test_revise_task_tmpl_arg_flow_cls_tuple(
+def test_revise_child_job_list_arg_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-    task_tmpl_arg_flow_cls_tuple: Annotated[TaskTemplateArgFlowClsTuple, pytest.fixture],
+    child_job_list_arg_flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple, pytest.fixture],
 ) -> None:
-    _, flow_tmpl_cls, assert_flow_tmpl_cls = task_tmpl_arg_flow_cls_tuple
+    _, flow_tmpl_cls, assert_flow_tmpl_cls = child_job_list_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls(TaskTemplate()(format_to_string_func))(format_to_string_func)
 

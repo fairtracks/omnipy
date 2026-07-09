@@ -1,6 +1,6 @@
 from typing import Callable
 
-from omnipy.shared.protocols.compute._job import IsJob, IsJobTemplate
+from omnipy.shared.protocols.compute.job import IsJob, IsJobTemplate
 
 from ...helpers.functions import assert_func_wrapper
 

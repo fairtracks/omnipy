@@ -8,8 +8,8 @@ from ....compute.test_flow import (test_dag_flow_ignore_args_and_non_matched_kwa
                                    test_fail_init_func_arg_flow_classes,
                                    test_flow_context_mock,
                                    test_flow_run_flow_cls_tuple,
+                                   test_init_child_job_list_arg_flow_templates,
                                    test_init_func_arg_flow_templates,
-                                   test_init_task_template_args_flow_templates,
                                    test_linear_flow_only_first_positional,
                                    test_time_of_flow_run_mock,
                                    test_time_of_multi_level_flow_run_flow_cls_tuple)
@@ -24,7 +24,7 @@ test_time_of_flow_run_mock  # noqa
 test_fail_init_flow_cls_tuple  # noqa
 test_fail_init_func_arg_flow_classes  # noqa
 test_init_func_arg_flow_templates  # noqa
-test_init_task_template_args_flow_templates  # noqa
+test_init_child_job_list_arg_flow_templates  # noqa
 test_flow_run_flow_cls_tuple  # noqa
 test_linear_flow_only_first_positional  # noqa
 test_dag_flow_ignore_args_and_non_matched_kwarg_returns  # noqa

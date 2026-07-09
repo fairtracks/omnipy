@@ -93,7 +93,7 @@ def test_revise_refine_three_task_dagflow_alternative(
         result_key='+√',
     ).apply()
 
-    task_tmpls = list(pos_square_root.task_templates)
+    task_tmpls = list(pos_square_root.child_job_templates)
     task_tmpls[-1] = task_tmpls[-1].refine(result_key='Positive square root')
     pos_square_root_new = pos_square_root.revise().refine(
         *task_tmpls,

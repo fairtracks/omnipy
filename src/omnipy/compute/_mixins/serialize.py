@@ -11,8 +11,7 @@ from omnipy.shared.enums.job import ConfigPersistOutputsOptions as ConfigPersist
 from omnipy.shared.enums.job import (OutputStorageProtocolOptions,
                                      PersistOutputsOptions,
                                      RestoreOutputsOptions)
-from omnipy.shared.protocols.compute._job import IsJob, IsJobBase
-from omnipy.shared.protocols.compute.job import IsFlow
+from omnipy.shared.protocols.compute.job import IsFlow, IsJob, IsJobBase
 from omnipy.shared.protocols.config import IsJobConfig
 from omnipy.shared.protocols.data import IsDataset, IsSerializerRegistry
 from omnipy.util.helpers import get_job_name_slug

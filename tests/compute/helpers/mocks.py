@@ -19,15 +19,15 @@ from omnipy.compute._job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
 from omnipy.config import ConfigBase
 from omnipy.engine.run_spec import DagFlowRunSpec, FuncFlowRunSpec, LinearFlowRunSpec
-from omnipy.shared.protocols.compute._job import (HasFuncArgJobTemplateInit,
-                                                  IsFuncArgJob,
-                                                  IsFuncArgJobTemplate,
-                                                  IsJob,
-                                                  IsJobTemplate)
-from omnipy.shared.protocols.compute.job import (IsDagFlow,
+from omnipy.shared.protocols.compute.job import (HasFuncArgJobTemplateInit,
+                                                 IsDagFlow,
                                                  IsFlow,
                                                  IsFlowTemplate,
+                                                 IsFuncArgJob,
+                                                 IsFuncArgJobTemplate,
                                                  IsFuncFlow,
+                                                 IsJob,
+                                                 IsJobTemplate,
                                                  IsLinearFlow,
                                                  IsTask)
 from omnipy.shared.protocols.config import IsJobRunnerConfig

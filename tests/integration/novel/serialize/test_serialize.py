@@ -9,7 +9,7 @@ from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
                                      OutputStorageProtocolOptions,
                                      PersistOutputsOptions,
                                      RestoreOutputsOptions)
-from omnipy.shared.protocols.compute._job import IsFuncArgJobTemplate
+from omnipy.shared.protocols.compute.job import IsFuncArgJobTemplate
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 

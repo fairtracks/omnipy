@@ -4,12 +4,14 @@ from time import sleep
 from typing import Callable, cast, Type
 
 from omnipy.shared.enums.job import RunState
-from omnipy.shared.protocols.compute._job import HasJobCreator, IsJob, IsJobBase
-from omnipy.shared.protocols.compute.job import (IsDagFlow,
+from omnipy.shared.protocols.compute.job import (HasJobCreator,
+                                                 IsDagFlow,
                                                  IsDagFlowTemplate,
                                                  IsFlowTemplate,
                                                  IsFuncFlow,
                                                  IsFuncFlowTemplate,
+                                                 IsJob,
+                                                 IsJobBase,
                                                  IsLinearFlow,
                                                  IsLinearFlowTemplate,
                                                  IsTask,
