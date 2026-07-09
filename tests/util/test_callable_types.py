@@ -140,7 +140,7 @@ def test_callable_type(case: CallableTypeCase) -> None:
     [
         (False, False, CallableType.SYNC_FUNCTION),
         (False, True, CallableType.SYNC_GENERATOR),
-        (True, False, CallableType.ASYNC_GENERATOR),
+        (True, False, CallableType.ASYNC_COROUTINE),
         (True, True, CallableType.ASYNC_GENERATOR),
     ],
 )
