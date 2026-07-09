@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from datetime import timedelta
 import inspect
 from logging import WARNING
@@ -25,6 +26,7 @@ class TaskKwargs(TypedDict, total=False):
     name: str
     cache_policy: 'CachePolicy | type[NotSet]'
     cache_expiration: timedelta | None
+    persist_result: bool
 
 
 class FlowKwargs(TypedDict, total=False):
@@ -73,7 +75,6 @@ class PrefectEngine(TaskRunnerEngine,
         )
 
     # TaskRunnerEngine
-
     def _init_task(self, task: TaskRunSpec) -> 'PrefectTask':
         from ..lazy_import import cache_policies, prefect_task
 
@@ -88,8 +89,11 @@ class PrefectEngine(TaskRunnerEngine,
                 level=WARNING)
 
         if self._config.use_cached_results:
-            task_kwargs['cache_policy'] = cache_policies.DEFAULT
+            omnipy_policy = self._get_omnipy_cache_policy()
+
+            task_kwargs['cache_policy'] = omnipy_policy
             task_kwargs['cache_expiration'] = timedelta(days=1)
+            task_kwargs['persist_result'] = True
         else:
             task_kwargs['cache_policy'] = cache_policies.NO_CACHE
 
@@ -101,6 +105,58 @@ class PrefectEngine(TaskRunnerEngine,
         )
 
         return prefect_task(**task_kwargs)(wrapped_callable)
+
+    @classmethod
+    def _get_omnipy_cache_policy(cls):
+        from omnipy.data.dataset import Dataset, is_dataset_instance
+        from omnipy.data.model import is_model_instance, Model
+
+        from ..lazy_import import CachePolicy  # RUN_ID,; TASK_SOURCE,
+        from ..lazy_import import Inputs, TaskRunContext
+
+        @dataclass
+        class OmnipyInputs(CachePolicy):
+            def compute_key(
+                self,
+                task_ctx: TaskRunContext,
+                inputs: dict[str, Any],
+                flow_parameters: dict[str, Any],
+                **kwargs: Any,
+            ) -> str | None:
+                inputs = inputs or {}
+
+                if not inputs:
+                    return None
+
+                def _model_transform(model: Model) -> tuple:
+                    return model.__class__.__name__, model.to_data()
+
+                def _dataset_transform(dataset: Dataset) -> tuple:
+                    return dataset.__class__.__name__, dataset.to_data()
+
+                def _model_or_dataset_transform(obj: Model | Dataset | object) -> object | tuple:
+                    if is_model_instance(obj):
+                        return _model_transform(obj)
+                    elif is_dataset_instance(obj):
+                        return _dataset_transform(obj)
+                    return obj
+
+                transformed_inputs = {}
+                for key, val in inputs.items():
+                    transformed_inputs[key] = _model_or_dataset_transform(val)
+
+                key = Inputs(exclude=['retry_client']).compute_key(task_ctx,
+                                                                   transformed_inputs,
+                                                                   flow_parameters,
+                                                                   **kwargs)
+                print(f'OmnipyInputs.compute_key: {key}')
+                return key
+
+        # omnipy_policy = OmnipyInputs() + TASK_SOURCE + RUN_ID
+        # omnipy_policy = OmnipyInputs() + TASK_SOURCE
+        omnipy_policy = OmnipyInputs()
+
+        return omnipy_policy
 
     def _run_task(
         self,
