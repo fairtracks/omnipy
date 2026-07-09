@@ -92,9 +92,11 @@ def test_property_unique_name_default_mock(
 
     for job in job_tmpl, job_tmpl.apply():
         assert job.unique_name is None
+        assert job.unique_run_slug is None
 
         with pytest.raises(AttributeError):
             job.unique_name = 'cool_name'  # pyright: ignore [reportAttributeAccessIssue]
+            job.unique_run_slug = 'cool_name'  # pyright: ignore [reportAttributeAccessIssue]
 
 
 def test_property_unique_name_change_mock(
@@ -103,16 +105,17 @@ def test_property_unique_name_change_mock(
 
     job_tmpl = JobTemplate(name='my_job')
     assert job_tmpl.unique_name is None
+    assert job_tmpl.unique_run_slug is None
 
     job = job_tmpl.apply()
     assert job_tmpl.unique_name is None
+    assert job_tmpl.unique_run_slug is None
 
     assert job.unique_name.startswith('mock-job-subclass-my-job-')
-    assert job.unique_name != job.name
+    assert not job.unique_run_slug.startswith('mock-job-subclass-my-job-')
 
-    with pytest.raises(AttributeError):
-        unique_name = 'mock-job-subclass-my-job-crouching-dolphin'
-        job.unique_name = unique_name  # pyright: ignore [reportAttributeAccessIssue]
+    assert job.unique_name != job.unique_run_slug != job.name
+    assert job.unique_name.endswith(job.unique_run_slug)
 
 
 def test_property_unique_name_uniqueness_mock(
@@ -125,13 +128,16 @@ def test_property_unique_name_uniqueness_mock(
     job_2 = job_tmpl.apply()
 
     assert job_1.unique_name.startswith('mock-job-subclass-my-job-')
-    assert job_1.unique_name != job_1.name
+    assert job_1.unique_name != job_1.unique_run_slug != job_1.name
+    assert job_1.unique_name.endswith(job_1.unique_run_slug)
 
     assert job_2.unique_name.startswith('mock-job-subclass-my-job-')
-    assert job_2.unique_name != job_2.name
+    assert job_2.unique_name != job_2.unique_run_slug != job_2.name
+    assert job_2.unique_name.endswith(job_2.unique_run_slug)
 
     assert job_1.name == job_2.name
     assert job_1.unique_name != job_2.unique_name
+    assert job_1.unique_run_slug != job_2.unique_run_slug
 
 
 def test_property_unique_name_regenerate_mock(
@@ -141,15 +147,20 @@ def test_property_unique_name_regenerate_mock(
     job = JobTemplate(name='my_job').apply()
 
     assert job.unique_name.startswith('mock-job-subclass-my-job-')
-    assert job.unique_name != job.name
+    assert not job.unique_run_slug.startswith('mock-job-subclass-my-job-')
+    assert job.unique_name != job.unique_run_slug != job.name
+    assert job.unique_name.endswith(job.unique_run_slug)
 
     prev_unique_name = job.unique_name
+    prev_unique_run_slug = job.unique_run_slug
     job.regenerate_unique_name()
 
     assert job.unique_name.startswith('mock-job-subclass-my-job-')
-    assert job.unique_name != job.name
+    assert job.unique_name != job.unique_run_slug != job.name
+    assert job.unique_name.endswith(job.unique_run_slug)
 
     assert job.unique_name != prev_unique_name
+    assert job.unique_run_slug != prev_unique_run_slug
 
 
 def test_property_unique_name_revise_mock(
@@ -158,9 +169,11 @@ def test_property_unique_name_revise_mock(
 
     job = JobTemplate(name='my_job').apply()
     assert job.unique_name is not None
+    assert job.unique_run_slug is not None
 
     new_job_tmpl = job.revise()
     assert new_job_tmpl.unique_name is None
+    assert new_job_tmpl.unique_run_slug is None
 
 
 def test_equal_job_dependent_on_name_mock(

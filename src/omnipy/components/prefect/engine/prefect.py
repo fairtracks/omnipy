@@ -26,6 +26,7 @@ class TaskKwargs(TypedDict, total=False):
 
 class FlowKwargs(TypedDict, total=False):
     name: str
+    flow_run_name: str
 
 
 class PrefectEngine(TaskRunnerEngine,
@@ -116,7 +117,10 @@ class PrefectEngine(TaskRunnerEngine,
         if task.in_flow_context:
             return _prefect_task(*args, **kwargs)
         else:
-            flow_kwargs = FlowKwargs(name=task.name)
+            flow_kwargs = FlowKwargs(
+                name=task.name,
+                flow_run_name=task.unique_run_slug,
+            )
             wrapped_callable = self._wrap_as_prefect_compatible_callable(
                 _prefect_task,
                 task.param_signatures,
@@ -131,7 +135,10 @@ class PrefectEngine(TaskRunnerEngine,
         from ..lazy_import import prefect_flow
 
         assert isinstance(self._config, PrefectEngineConfig)
-        flow_kwargs = FlowKwargs(name=flow.name)
+        flow_kwargs = FlowKwargs(
+            name=flow.name,
+            flow_run_name=flow.unique_run_slug,
+        )
         run_callable = flow.create_default_run_callable()
 
         has_generator_func = flow.has_generator_func()

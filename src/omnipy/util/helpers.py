@@ -486,7 +486,7 @@ def max_or_none(*args: NumberT | None) -> NumberT | None:
     return max(filtered_args) if filtered_args else None
 
 
-def get_job_slug_base(job_cls_name: str, job_name: str):
+def get_job_name_slug(job_cls_name: str, job_name: str):
     import inflection
 
     job_cls_name_slug = inflection.underscore(job_cls_name).replace('_', '-')
@@ -494,7 +494,11 @@ def get_job_slug_base(job_cls_name: str, job_name: str):
     return f'{job_cls_name_slug}-{job_name_slug}'
 
 
-def generate_job_slug(job_cls_name: str, job_name: str):
+def generate_run_slug():
     import coolname
 
-    return f'{get_job_slug_base(job_cls_name, job_name)}-{coolname.generate_slug(3)}'
+    return coolname.generate_slug(3)
+
+
+def get_full_job_slug(job_cls_name: str, job_name: str, job_run_slug: str):
+    return f'{get_job_name_slug(job_cls_name, job_name)}-{job_run_slug}'

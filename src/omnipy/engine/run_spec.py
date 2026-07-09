@@ -21,6 +21,14 @@ class JobRunSpec(ABC):
         return self._job.name
 
     @property
+    def unique_name(self) -> str:
+        return self._job.unique_name
+
+    @property
+    def unique_run_slug(self) -> str:
+        return self._job.unique_run_slug
+
+    @property
     def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
         return self._job.param_signatures
 

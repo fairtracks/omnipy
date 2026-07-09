@@ -24,7 +24,10 @@ from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
                                                        IsTaskRunnerEngine)
 from omnipy.shared.typedefs import GeneralDecorator
 from omnipy.util.callable_decorator import callable_decorator_cls
-from omnipy.util.helpers import generate_job_slug, is_async_func, is_generator_func
+from omnipy.util.helpers import (generate_run_slug,
+                                 get_full_job_slug,
+                                 is_async_func,
+                                 is_generator_func)
 
 
 class MockJobCreator(AbstractContextManager):
@@ -54,7 +57,10 @@ class MockTask(LogMixin):
         self.regenerate_unique_name()
 
     def regenerate_unique_name(self) -> None:
-        self.unique_name = generate_job_slug(self.__class__.__name__, self.name)
+        self.unique_run_slug = generate_run_slug()
+        self.unique_name = get_full_job_slug(self.__class__.__name__,
+                                             self.name,
+                                             self.unique_run_slug)
 
     def __call__(self, *args: object, **kwargs: object) -> Any:
         return self._call_func(*args, **kwargs)

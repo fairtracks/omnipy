@@ -15,7 +15,7 @@ from omnipy.shared.protocols.compute._job import IsJob, IsJobBase
 from omnipy.shared.protocols.compute.job import IsFlow
 from omnipy.shared.protocols.config import IsJobConfig
 from omnipy.shared.protocols.data import IsDataset, IsSerializerRegistry
-from omnipy.util.helpers import get_job_slug_base
+from omnipy.util.helpers import get_job_name_slug
 from omnipy.util.mixin import strip_mixins_suffix
 
 PersistOpts = PersistOutputsOptions
@@ -164,7 +164,7 @@ class SerializerFuncJobBaseMixin:
         job_cls_name = strip_mixins_suffix(self.__class__.__name__)
 
         assert self_as_name_job_base_mixin.name is not None
-        return get_job_slug_base(job_cls_name, self_as_name_job_base_mixin.name).replace('-', '_')
+        return get_job_name_slug(job_cls_name, self_as_name_job_base_mixin.name).replace('-', '_')
 
     def _generate_datetime_str(self):
         self_as_job = cast(IsJob, self)

@@ -8,6 +8,10 @@ class IsUniquelyNamedJob(Protocol):
         ...
 
     @property
+    def unique_run_slug(self) -> str:
+        ...
+
+    @property
     def unique_name(self) -> str:
         ...
 
