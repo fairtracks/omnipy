@@ -78,6 +78,7 @@ if not __all__:
                                      FuncFlowTemplate,
                                      LinearFlow,
                                      LinearFlowTemplate)
+    from omnipy.compute.helpers import Void
     from omnipy.compute.task import Task, TaskTemplate
     from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
     from omnipy.data.model import (is_model_instance,
@@ -112,6 +113,7 @@ if not __all__:
         'FuncFlowTemplate',
         'LinearFlow',
         'LinearFlowTemplate',
+        'Void',
         'Task',
         'TaskTemplate',
         'Dataset',

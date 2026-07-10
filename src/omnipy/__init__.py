@@ -179,6 +179,7 @@ from omnipy.compute.flow import (DagFlow,
                                  FuncFlowTemplate,
                                  LinearFlow,
                                  LinearFlowTemplate)
+from omnipy.compute.helpers import Void
 from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data._display.panel.helpers import ForceAutodetect
 from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
@@ -310,6 +311,7 @@ __all__ = [
     'FuncFlowTemplate',
     'LinearFlow',
     'LinearFlowTemplate',
+    'Void',
     'Task',
     'TaskTemplate',
     'Dataset',
