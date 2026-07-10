@@ -19,7 +19,7 @@
 - Modify: `tests/engine/helpers/classes.py`
   - Add `ComposedFlowCase` with a concrete `build_job_func` closure.
 - Modify: `tests/engine/helpers/functions.py`
-  - Add `apply_composed_flow_case()` and widen `run_job_test()` to accept `JobCase | ComposedFlowCase`.
+  - Add `apply_job()` for shared engine/registry wiring, add `apply_composed_flow_case()`, and widen `run_job_test()` to accept `JobCase | ComposedFlowCase`.
 - Modify: `tests/engine/conftest.py`
   - Add production-engine fixtures for matrix cases and semantic-floor cases using real template classes.
 - Modify: `tests/engine/test_all_engines.py`
@@ -59,6 +59,28 @@
 - Known external engine limitations use engine-specific `pytest.xfail(strict=True)` with a one-line reason.
 - Claimed-supported behavior that stays red after investigation uses one narrow committed failing case or `xfail(strict=True)`, chosen deliberately per case.
 - Temporary local TDD-red is fine during a slice, but every retained gap must be classified before the slice is handed off.
+
+## Case implementation guidelines
+
+### Case implementation guidelines for `build_job_func` closures
+
+All test cases in `tests/engine/cases/flows.py` must follow these patterns:
+
+1. **Decorator syntax for local functions** — When defining task/flow functions locally, use `@TaskTemplate()`, `@LinearFlowTemplate(...)`, `@DagFlowTemplate(...)`, and `@FuncFlowTemplate()` decorator syntax instead of `SomeTemplate(name='x')(func)`.
+2. **No `task_template_cls` variable** — Use the concrete class (`TaskTemplate`, `LinearFlowTemplate`, `DagFlowTemplate`, `FuncFlowTemplate`) directly instead of assigning it to a temporary variable.
+3. **Meaningful variable names** — Variable names should describe behavior and align with the task/flow identity, which defaults to the function name when `name=` is omitted.
+4. **Naming** — Only pass `name=` when reusing a function under a different identity. Otherwise rely on the function name, and ensure the name truthfully describes what the task/flow does.
+5. **`parent` means the flow** — In composed cases, the flow template is the parent; the first child is not the parent. Name variables accordingly.
+6. **Tasks and flows must make behavioral sense** — Mix sync and async tasks within the same flow when the case is testing mixed-mode composition, ensure DAG branches actually change the result so routing is real, ensure async tasks actually use `async`/`await`, and keep names truthful about sync vs async behavior.
+7. **Spacing and comments** — Use blank lines between logical sections such as `# Tasks` and `# DAG Flow`, and keep comments readable enough that each closure's topology is easy to scan.
+8. **Helper for common engine wiring** — Replace the repeated engine/registry/apply pattern with a shared helper such as `apply_job(template, engine, registry)` instead of inlining:
+
+   ```python
+   cast(HasJobCreator, TaskTemplate).job_creator.set_engine(engine)
+   if registry:
+       engine.set_registry(registry)
+   return template.apply()
+   ```
 
 ## Constraints
 
