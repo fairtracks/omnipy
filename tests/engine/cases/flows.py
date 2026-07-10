@@ -3,6 +3,7 @@ from typing import AsyncGenerator, Awaitable, Generator
 
 import pytest_cases as pc
 
+from omnipy import Void
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 from omnipy.shared.enums.job import RunState
@@ -82,8 +83,7 @@ def case_linear_flow_sync_generator_terminal_child() -> ComposedFlowCase[[int], 
         # Linear Flow
         @LinearFlowTemplate(normalize_count, double_count, generate_tripled_values)
         def linear_flow_sync_generator_terminal(count: int) -> Generator:
-            if False:
-                yield count
+            yield from Void()  # For generator signature only; never run.
 
         return apply_job(linear_flow_sync_generator_terminal, engine, registry)
 
@@ -174,8 +174,8 @@ def case_linear_flow_async_generator_terminal_child() -> ComposedFlowCase[[int],
         # Linear Flow
         @LinearFlowTemplate(add_one, add_two, emit_offset_series)
         async def linear_flow_async_generator_terminal(number: int) -> AsyncGenerator:
-            if False:
-                yield number
+            async for _ in Void():  # For generator signature only; never run.
+                yield _
 
         return apply_job(linear_flow_async_generator_terminal, engine, registry)
 
@@ -270,8 +270,7 @@ def case_dag_flow_sync_generator_terminal_child() -> ComposedFlowCase[[int], Gen
             generate_window,
         )
         def dag_flow_sync_generator_terminal(number: int) -> Generator:
-            if False:
-                yield number
+            yield from Void()  # For generator signature only; never run.
 
         return apply_job(dag_flow_sync_generator_terminal, engine, registry)
 
@@ -366,8 +365,8 @@ def case_dag_flow_async_generator_terminal_child() -> ComposedFlowCase[[int], As
             emit_stepped_series,
         )
         async def dag_flow_async_generator_terminal(number: int) -> AsyncGenerator:
-            if False:
-                yield number
+            async for _ in Void():  # For generator signature only; never run.
+                yield _
 
         return apply_job(dag_flow_async_generator_terminal, engine, registry)
 
