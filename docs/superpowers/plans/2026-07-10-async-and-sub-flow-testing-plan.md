@@ -26,6 +26,8 @@
   - Add two thin async parametrized tests that consume the new fixtures.
 - Modify only if red tests require it: `tests/compute/test_flow.py`
   - Validation-only callable-type checks for child-flow composition changes during construction, `refine()`, and `revise()`.
+- Create: `src/omnipy/compute/helpers.py`
+  - Public `Void` helper for generator and async-generator placeholder bodies used by flow templates.
 - Modify only if red tests require it: `src/omnipy/compute/_joblist_job.py`
   - Narrow callable-type consistency seam for child-job-list flows.
 - Modify only if red tests require it: `src/omnipy/engine/run_spec.py`
@@ -80,6 +82,23 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
    if registry:
        engine.set_registry(registry)
    return template.apply()
+   ```
+9. **Generator placeholder bodies** — For flow templates whose body exists only to define a generator or async-generator callable signature, use the public `Void()` helper instead of `if False: yield ...`:
+
+   Sync generator:
+   ```python
+   yield from Void()  # For generator signature only; never run.
+   ```
+
+   Async generator:
+   ```python
+   async for _ in Void():  # For generator signature only; never run.
+       yield _
+   ```
+
+   Import `Void` from `omnipy`:
+   ```python
+   from omnipy import Void
    ```
 
 ## Constraints
