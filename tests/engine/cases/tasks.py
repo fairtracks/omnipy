@@ -123,9 +123,11 @@ def case_sync_wait_for_send_twice() -> JobCase[[], Generator]:
 
         assert_job_state(job, [RunState.FINISHED])
 
-    return JobCase[[], Generator]('wait_for_send_twice',
-                                  sync_wait_for_send_twice,
-                                  run_and_assert_results)
+    return JobCase[[], Generator](
+        'wait_for_send_twice',
+        sync_wait_for_send_twice,
+        run_and_assert_results,
+    )
 
 
 @pc.case(
@@ -151,9 +153,11 @@ def case_async_wait_for_send_twice() -> JobCase[[], AsyncGenerator]:
 
         assert_job_state(job, [RunState.FINISHED])
 
-    return JobCase[[], AsyncGenerator]('wait_for_send_twice',
-                                       async_wait_for_send_twice,
-                                       run_and_assert_results)
+    return JobCase[[], AsyncGenerator](
+        'wait_for_send_twice',
+        async_wait_for_send_twice,
+        run_and_assert_results,
+    )
 
 
 #  Asynchronous coroutine: wait_a_bit()
@@ -176,9 +180,11 @@ def case_async_wait_a_bit() -> JobCase[[float], Awaitable[float]]:
 
         assert_job_state(job, [RunState.FINISHED])
 
-    return JobCase[[float], Awaitable[float]]('wait_a_bit',
-                                              async_wait_a_bit,
-                                              run_and_assert_results)
+    return JobCase[[float], Awaitable[float]](
+        'wait_a_bit',
+        async_wait_a_bit,
+        run_and_assert_results,
+    )
 
 
 #
@@ -244,14 +250,16 @@ def case_async_wait_a_bit_multithreaded_threading() -> JobCase[[float], Awaitabl
         thread = threading.Thread(target=async_run_assert_results_wait_a_bit, args=(0.005,))
 
         thread.start()
-        sync_wait_for_job_state(job, [RunState.RUNNING])
+        sync_wait_for_job_state(job, [RunState.RUNNING, RunState.FINISHED])
 
         thread.join()
         assert_job_state(job, [RunState.FINISHED])
 
-    return JobCase[[float], Awaitable[float]]('wait_a_bit',
-                                              async_wait_a_bit,
-                                              run_and_assert_results)
+    return JobCase[[float], Awaitable[float]](
+        'wait_a_bit',
+        async_wait_a_bit,
+        run_and_assert_results,
+    )
 
 
 @pc.case(
@@ -267,9 +275,11 @@ def case_async_wait_a_bit_multithreaded_futures() -> JobCase[[float], Awaitable[
         assert await resolve(future) == 0.005
         assert_job_state(job, [RunState.FINISHED])
 
-    return JobCase[[float], Awaitable[float]]('wait_a_bit',
-                                              async_wait_a_bit,
-                                              run_and_assert_results)
+    return JobCase[[float], Awaitable[float]](
+        'wait_a_bit',
+        async_wait_a_bit,
+        run_and_assert_results,
+    )
 
 
 #
@@ -319,6 +329,8 @@ def case_async_wait_a_bit_multiprocessing() -> JobCase[[float], Awaitable[float]
             )
             await future
 
-    return JobCase[[float], Awaitable[float]]('wait_a_bit',
-                                              async_wait_a_bit,
-                                              run_and_assert_results)
+    return JobCase[[float], Awaitable[float]](
+        'wait_a_bit',
+        async_wait_a_bit,
+        run_and_assert_results,
+    )

@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
-from typing import Any, Callable
+from abc import ABC
+from typing import Any, Callable, ClassVar, Literal, NamedTuple
 
 from omnipy.engine._base import Engine
 from omnipy.engine.run_spec import (DagFlowRunSpec,
@@ -8,17 +8,95 @@ from omnipy.engine.run_spec import (DagFlowRunSpec,
                                     JobRunSpec,
                                     LinearFlowRunSpec,
                                     TaskRunSpec)
-from omnipy.shared.enums.job import RunState
-from omnipy.shared.protocols.compute.job import (IsDagFlow,
-                                                 IsFuncArgJob,
-                                                 IsFuncFlow,
-                                                 IsLinearFlow,
-                                                 IsTask)
+from omnipy.shared.enums.job import JobType, RunState
+from omnipy.shared.protocols.compute.job import IsFuncArgJob
 from omnipy.util.callable_types import decorate_result_by_type
+
+InitRunHookName = Literal['_init_task', '_init_flow']
+ExecRunHookName = Literal['_run_task', '_run_flow']
+JobRunHookNames = tuple[InitRunHookName, ExecRunHookName]
+
+
+class JobRunDef(NamedTuple):
+    run_spec: type[JobRunSpec]
+    init_hook_name: InitRunHookName
+    run_hook_name: ExecRunHookName
+
+
+TASK_RUN_HOOKS: JobRunHookNames = ('_init_task', '_run_task')
+FLOW_RUN_HOOKS: JobRunHookNames = ('_init_flow', '_run_flow')
+
+JOB_TYPE_TO_RUN_DEF: dict[JobType.Literals, JobRunDef] = {
+    JobType.TASK: JobRunDef(TaskRunSpec, TASK_RUN_HOOKS[0], TASK_RUN_HOOKS[1]),
+    JobType.LINEAR_FLOW: JobRunDef(LinearFlowRunSpec, FLOW_RUN_HOOKS[0], FLOW_RUN_HOOKS[1]),
+    JobType.DAG_FLOW: JobRunDef(DagFlowRunSpec, FLOW_RUN_HOOKS[0], FLOW_RUN_HOOKS[1]),
+    JobType.FUNC_FLOW: JobRunDef(FuncFlowRunSpec, FLOW_RUN_HOOKS[0], FLOW_RUN_HOOKS[1]),
+}
 
 
 class JobRunnerEngine(Engine, ABC):
     """Base class for job runner engine implementations"""
+    supported_job_types: ClassVar[frozenset[JobType.Literals]] = frozenset()
+
+    @classmethod
+    def __init_subclass__(cls) -> None:
+        super().__init_subclass__()
+
+        assert cls.supported_job_types, ('`supported_job_types` must be set '
+                                         'on JobRunnerEngine subclasses')
+
+        def _require_hook_override(hook_name: str, support_desc: str) -> None:
+            if getattr(cls, hook_name) is getattr(JobRunnerEngine, hook_name):
+                raise TypeError(f'JobRunnerEngine subclass {cls.__name__} supports '
+                                f'{support_desc} but does not override {hook_name}')
+
+        unknown_job_types = set(cls.supported_job_types) - set(JOB_TYPE_TO_RUN_DEF)
+        if unknown_job_types:
+            raise TypeError(f'JobRunnerEngine subclass {cls.__name__} has unknown supported job '
+                            f'types: {sorted(unknown_job_types)}')
+
+        required_run_hooks = {
+            hook_name for job_type in cls.supported_job_types for hook_name in (
+                JOB_TYPE_TO_RUN_DEF[job_type].init_hook_name,
+                JOB_TYPE_TO_RUN_DEF[job_type].run_hook_name,)
+        }
+        for hook_name in required_run_hooks:
+            _require_hook_override(hook_name, 'supported jobs')
+
+    def supports(self, job_type: JobType.Literals) -> bool:
+        return job_type in self.supported_job_types
+
+    def _require_support(self, job_type: JobType.Literals) -> None:
+        if not self.supports(job_type):
+            raise RuntimeError(f'JobRunnerEngine "{self.__class__.__name__}" does not '
+                               f'support job type: {job_type}')
+
+    def apply_job_decorator(
+        self,
+        job_type: JobType.Literals,
+        job: IsFuncArgJob,
+        job_callback_accept_decorator: Callable,
+    ) -> None:
+        self._require_support(job_type)
+        job_run_spec_cls, init_state, run_job = self._job_type_to_run_spec_and_funcs(job_type)
+
+        self._apply_job_decorator(
+            job,
+            job_callback_accept_decorator,
+            job_run_spec_cls,
+            init_state,
+            run_job,
+        )
+
+    def _job_type_to_run_spec_and_funcs(
+            self, job_type: JobType.Literals) -> tuple[type[JobRunSpec], Callable, Callable]:
+        if job_type not in JOB_TYPE_TO_RUN_DEF:
+            raise ValueError(f'Unknown job type: {job_type}')
+
+        job_run_def = JOB_TYPE_TO_RUN_DEF[job_type]
+        job_run_spec, init_hook_name, run_hook_name = job_run_def
+        return job_run_spec, getattr(self, init_hook_name), getattr(self, run_hook_name)
+
     def _register_job_state(self, job: IsFuncArgJob, state: RunState.Literals) -> None:
         if self._registry:
             self._registry.set_job_state(job, state)
@@ -52,94 +130,14 @@ class JobRunnerEngine(Engine, ABC):
 
         return decorate_result_by_type(on_finished=_register_job_finished)(lambda: job_result)()
 
-
-class TaskRunnerEngine(JobRunnerEngine):
-    """Base class for task runner engine implementations"""
-    def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
-        self._apply_job_decorator(
-            task,
-            job_callback_accept_decorator,
-            TaskRunSpec,
-            self._init_task,
-            self._run_task,
-        )
-
-    @abstractmethod
     def _init_task(self, task: TaskRunSpec) -> object:
-        ...
+        raise NotImplementedError
 
-    @abstractmethod
     def _run_task(self, state: Any, task: TaskRunSpec, *args, **kwargs) -> object:
-        ...
+        raise NotImplementedError
 
-
-class LinearFlowRunnerEngine(JobRunnerEngine):
-    """Base class for linear flow runner engine implementations"""
-    def apply_linear_flow_decorator(
-        self,
-        linear_flow: IsLinearFlow,
-        job_callback_accept_decorator: Callable,
-    ) -> None:
-        self._apply_job_decorator(
-            linear_flow,
-            job_callback_accept_decorator,
-            LinearFlowRunSpec,
-            self._init_flow,
-            self._run_flow,
-        )
-
-    @abstractmethod
     def _init_flow(self, flow: FlowRunSpec) -> object:
-        ...
+        raise NotImplementedError
 
-    @abstractmethod
     def _run_flow(self, state: Any, flow: FlowRunSpec, *args, **kwargs) -> object:
-        ...
-
-
-class DagFlowRunnerEngine(JobRunnerEngine):
-    """Base class for DAG flow runner engine implementations"""
-    def apply_dag_flow_decorator(
-        self,
-        dag_flow: IsDagFlow,
-        job_callback_accept_decorator: Callable,
-    ) -> None:
-        self._apply_job_decorator(
-            dag_flow,
-            job_callback_accept_decorator,
-            DagFlowRunSpec,
-            self._init_flow,
-            self._run_flow,
-        )
-
-    @abstractmethod
-    def _init_flow(self, flow: FlowRunSpec) -> object:
-        ...
-
-    @abstractmethod
-    def _run_flow(self, state: Any, flow: FlowRunSpec, *args, **kwargs) -> object:
-        ...
-
-
-class FuncFlowRunnerEngine(JobRunnerEngine):
-    """Base class for function flow runner engine implementations"""
-    def apply_func_flow_decorator(
-        self,
-        func_flow: IsFuncFlow,
-        job_callback_accept_decorator: Callable,
-    ) -> None:
-        self._apply_job_decorator(
-            func_flow,
-            job_callback_accept_decorator,
-            FuncFlowRunSpec,
-            self._init_flow,
-            self._run_flow,
-        )
-
-    @abstractmethod
-    def _init_flow(self, flow: FlowRunSpec) -> object:
-        ...
-
-    @abstractmethod
-    def _run_flow(self, state: Any, flow: FlowRunSpec, *args, **kwargs) -> object:
-        ...
+        raise NotImplementedError

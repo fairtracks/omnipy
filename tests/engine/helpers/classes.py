@@ -3,14 +3,11 @@ from typing import Any, Awaitable, Callable, Generic, ParamSpec, Type, TypeVar
 
 from typing_extensions import override
 
-from omnipy.engine.run_spec import FlowRunSpec, IsFuncArgJob, TaskRunSpec
+from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.shared.enums.job import JobType, RunState
-from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.protocols.compute.job import IsFuncArgJob
 from omnipy.shared.protocols.config import IsJobRunnerConfig
-from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
-                                                       IsFuncFlowRunnerEngine,
-                                                       IsLinearFlowRunnerEngine,
-                                                       IsTaskRunnerEngine)
+from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
 CallP = ParamSpec('CallP')
@@ -26,13 +23,11 @@ class JobCase(Generic[CallP, ReturnT]):
     job: IsFuncArgJob | None = None
 
 
-class JobRunnerStateChecker(IsTaskRunnerEngine,
-                            IsLinearFlowRunnerEngine,
-                            IsDagFlowRunnerEngine,
-                            IsFuncFlowRunnerEngine):
-    def __init__(self, engine):
+class JobRunnerStateChecker(IsJobRunnerEngine):
+    def __init__(self, engine: IsJobRunnerEngine):
         object.__init__(self)
         self._engine = engine
+        self.supported_job_types = self._engine.supported_job_types
         self._engine.__init__()
 
     def set_config(self, config: IsJobRunnerConfig) -> None:
@@ -53,22 +48,14 @@ class JobRunnerStateChecker(IsTaskRunnerEngine,
     def get_config_cls(self) -> Type[IsJobRunnerConfig]:  # type: ignore[override]
         return self._engine.get_config_cls()  # noqa
 
-    def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
-        return self._engine.apply_task_decorator(task, job_callback_accept_decorator)
+    def supports(self, job_type: JobType.Literals) -> bool:
+        return self._engine.supports(job_type)
 
-    def apply_linear_flow_decorator(self,
-                                    linear_flow: IsLinearFlow,
-                                    job_callback_accept_decorator: Callable) -> None:
-        return self._engine.apply_linear_flow_decorator(linear_flow, job_callback_accept_decorator)
-
-    def apply_dag_flow_decorator(self, dag_flow: IsDagFlow,
-                                 job_callback_accept_decorator: Callable) -> None:
-        return self._engine.apply_dag_flow_decorator(dag_flow, job_callback_accept_decorator)
-
-    def apply_func_flow_decorator(self,
-                                  func_flow: IsFuncFlow,
-                                  job_callback_accept_decorator: Callable) -> None:
-        return self._engine.apply_func_flow_decorator(func_flow, job_callback_accept_decorator)
+    def apply_job_decorator(self,
+                            job_type: JobType.Literals,
+                            job: IsFuncArgJob,
+                            job_callback_accept_decorator: Callable) -> None:
+        return self._engine.apply_job_decorator(job_type, job, job_callback_accept_decorator)
 
     def _init_task(self, task: TaskRunSpec) -> object:
         from .functions import assert_job_state

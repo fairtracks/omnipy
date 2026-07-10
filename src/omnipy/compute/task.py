@@ -4,9 +4,10 @@ from typing_extensions import Concatenate
 
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
+from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import HasFuncArgJobTemplateInit, IsTask, IsTaskTemplate
 from omnipy.shared.protocols.engine.base import IsEngine
-from omnipy.shared.protocols.engine.job_runner import IsTaskRunnerEngine
+from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
 
 __all__ = [
@@ -27,16 +28,22 @@ class TaskBase:
     ...
 
 
-class TaskTemplateCore(FuncArgJobBase[IsTaskTemplate[_CallP, _RetT],
-                                      IsTask[_CallP, _RetT],
-                                      _CallP,
-                                      _RetT],
-                       JobTemplateMixin[IsTaskTemplate[_CallP, _RetT],
-                                        IsTask[_CallP, _RetT],
-                                        _CallP,
-                                        _RetT],
-                       TaskBase,
-                       Generic[_CallP, _RetT]):
+class TaskTemplateCore(
+        FuncArgJobBase[
+            IsTaskTemplate[_CallP, _RetT],
+            IsTask[_CallP, _RetT],
+            _CallP,
+            _RetT,
+        ],
+        JobTemplateMixin[
+            IsTaskTemplate[_CallP, _RetT],
+            IsTask[_CallP, _RetT],
+            _CallP,
+            _RetT,
+        ],
+        TaskBase,
+        Generic[_CallP, _RetT],
+):
     """"""
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsTask[_CallP, _RetT]]:
@@ -72,9 +79,13 @@ class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP
            Generic[_CallP, _RetT]):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         if self.engine:
-            engine = cast(IsTaskRunnerEngine, self.engine)
+            engine = cast(IsJobRunnerEngine, self.engine)
             self_with_mixins = cast(IsTask[_CallP, _RetT], self)
-            engine.apply_task_decorator(self_with_mixins, self._accept_call_func_decorator)
+            engine.apply_job_decorator(
+                JobType.TASK,
+                self_with_mixins,
+                self._accept_call_func_decorator,
+            )
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsTaskTemplate[_CallP, _RetT]]:

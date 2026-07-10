@@ -1,19 +1,21 @@
 from typing import Any, Type
 
 from omnipy.config.engine import LocalRunnerConfig
-from omnipy.engine.job_runner import (DagFlowRunnerEngine,
-                                      FuncFlowRunnerEngine,
-                                      LinearFlowRunnerEngine,
-                                      TaskRunnerEngine)
+from omnipy.engine.job_runner import JobRunnerEngine
 from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
+from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.config import IsLocalRunnerConfig
 
 
-class LocalRunner(TaskRunnerEngine,
-                  LinearFlowRunnerEngine,
-                  DagFlowRunnerEngine,
-                  FuncFlowRunnerEngine):
+class LocalRunner(JobRunnerEngine):
     """Local job runner"""
+    supported_job_types = frozenset({
+        JobType.TASK,
+        JobType.LINEAR_FLOW,
+        JobType.DAG_FLOW,
+        JobType.FUNC_FLOW,
+    })
+
     def _init_engine(self) -> None:
         ...
 

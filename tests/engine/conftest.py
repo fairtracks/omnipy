@@ -8,8 +8,7 @@ from omnipy.components.prefect.lazy_import import prefect_test_harness
 from omnipy.engine.local import LocalRunner
 from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import IsFlowTemplate, IsTaskTemplate
-from omnipy.shared.protocols.engine.base import IsEngine
-from omnipy.shared.protocols.engine.job_runner import IsTaskRunnerEngine
+from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
 from .helpers.classes import JobCase, JobRunnerStateChecker
@@ -75,43 +74,43 @@ def mock_func_flow_template(flow_template_cls):
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    task_runner_subcls=[MockJobRunnerSubclass],
+    task_job_runner_cls=[MockJobRunnerSubclass],
     ids=['m[task_runner]'],
 )
-def mock_task_runner_subcls(task_runner_subcls):
-    return task_runner_subcls
+def mock_task_job_runner_cls(task_job_runner_cls):
+    return task_job_runner_cls
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    linear_flow_runner_subcls=[MockJobRunnerSubclass],
+    linear_flow_job_runner_cls=[MockJobRunnerSubclass],
     ids=['m[linearflow_runner]'],
 )
-def mock_linear_flow_runner_subcls(linear_flow_runner_subcls):
-    return linear_flow_runner_subcls
+def mock_linear_flow_job_runner_cls(linear_flow_job_runner_cls):
+    return linear_flow_job_runner_cls
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    dag_flow_runner_subcls=[MockJobRunnerSubclass],
+    dag_flow_job_runner_cls=[MockJobRunnerSubclass],
     ids=['m[dagflow_runner]'],
 )
-def mock_dag_flow_runner_subcls(dag_flow_runner_subcls):
-    return dag_flow_runner_subcls
+def mock_dag_flow_job_runner_cls(dag_flow_job_runner_cls):
+    return dag_flow_job_runner_cls
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    func_flow_runner_subcls=[MockJobRunnerSubclass],
+    func_flow_job_runner_cls=[MockJobRunnerSubclass],
     ids=['m[funcflow_runner]'],
 )
-def mock_func_flow_runner_subcls(func_flow_runner_subcls):
-    return func_flow_runner_subcls
+def mock_func_flow_job_runner_cls(func_flow_job_runner_cls):
+    return func_flow_job_runner_cls
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(engine=[LocalRunner(), PrefectEngine()], ids=['[local]', '[prefect]'])
-def all_engines(engine) -> IsEngine:
+def all_engines(engine) -> IsJobRunnerEngine:
     return engine
 
 
@@ -120,7 +119,7 @@ def all_engines(engine) -> IsEngine:
 
 @pc.fixture(scope='function', name='assertstate')
 def assert_runstate_engine_decorator():
-    def decorate_engine_with_runstate_checker(engine: IsTaskRunnerEngine) -> IsTaskRunnerEngine:
+    def decorate_engine_with_runstate_checker(engine: IsJobRunnerEngine) -> IsJobRunnerEngine:
         return JobRunnerStateChecker(engine)
 
     return decorate_engine_with_runstate_checker
@@ -128,7 +127,7 @@ def assert_runstate_engine_decorator():
 
 @pc.fixture(scope='function', name='no_verbose')
 def no_verbose_config_engine_decorator():
-    def decorate_engine_with_no_verbose_config(engine: IsEngine) -> IsEngine:
+    def decorate_engine_with_no_verbose_config(engine: IsJobRunnerEngine) -> IsJobRunnerEngine:
         engine.set_config(MockEngineConfig(backend_verbose=False))
         return engine
 
@@ -160,56 +159,56 @@ def no_registry(registry):
 @pc.parametrize('job_type', [JobType.TASK], ids=['task'])
 @pc.parametrize('task_template_cls', [pc.fixture_ref(mock_task_template)], ids=[''])
 @pc.parametrize('flow_template_cls', [None], ids=[''])
-@pc.parametrize('job_runner_subcls', [pc.fixture_ref(mock_task_runner_subcls)], ids=[''])
+@pc.parametrize('job_runner_cls', [pc.fixture_ref(mock_task_job_runner_cls)], ids=[''])
 def task_mock_classes(
     job_type: JobType.Literals,
     task_template_cls: Type[IsTaskTemplate],
     flow_template_cls: Type[IsFlowTemplate] | None,
-    job_runner_subcls: Type[IsEngine],
+    job_runner_cls: Type[IsJobRunnerEngine],
 ):
-    return job_type, task_template_cls, flow_template_cls, job_runner_subcls
+    return job_type, task_template_cls, flow_template_cls, job_runner_cls
 
 
 @pc.fixture(scope='function')
 @pc.parametrize('job_type', [JobType.LINEAR_FLOW], ids=['linear_flow'])
 @pc.parametrize('task_template_cls', [pc.fixture_ref(mock_task_template)], ids=[''])
 @pc.parametrize('flow_template_cls', [pc.fixture_ref(mock_linear_flow_template)], ids=[''])
-@pc.parametrize('job_runner_subcls', [pc.fixture_ref(mock_linear_flow_runner_subcls)], ids=[''])
+@pc.parametrize('job_runner_cls', [pc.fixture_ref(mock_linear_flow_job_runner_cls)], ids=[''])
 def linear_flow_mock_classes(
     job_type: JobType.Literals,
     task_template_cls: Type[IsTaskTemplate],
     flow_template_cls: Type[IsFlowTemplate] | None,
-    job_runner_subcls: Type[IsEngine],
+    job_runner_cls: Type[IsJobRunnerEngine],
 ):
-    return job_type, task_template_cls, flow_template_cls, job_runner_subcls
+    return job_type, task_template_cls, flow_template_cls, job_runner_cls
 
 
 @pc.fixture(scope='function')
 @pc.parametrize('job_type', [JobType.DAG_FLOW], ids=['dag_flow'])
 @pc.parametrize('task_template_cls', [pc.fixture_ref(mock_task_template)], ids=[''])
 @pc.parametrize('flow_template_cls', [pc.fixture_ref(mock_dag_flow_template)], ids=[''])
-@pc.parametrize('job_runner_subcls', [pc.fixture_ref(mock_dag_flow_runner_subcls)], ids=[''])
+@pc.parametrize('job_runner_cls', [pc.fixture_ref(mock_dag_flow_job_runner_cls)], ids=[''])
 def dag_flow_mock_classes(
     job_type: JobType.Literals,
     task_template_cls: Type[IsTaskTemplate],
     flow_template_cls: Type[IsFlowTemplate] | None,
-    job_runner_subcls: Type[IsEngine],
+    job_runner_cls: Type[IsJobRunnerEngine],
 ):
-    return job_type, task_template_cls, flow_template_cls, job_runner_subcls
+    return job_type, task_template_cls, flow_template_cls, job_runner_cls
 
 
 @pc.fixture(scope='function')
 @pc.parametrize('job_type', [JobType.FUNC_FLOW], ids=['func_flow'])
 @pc.parametrize('task_template_cls', [pc.fixture_ref(mock_task_template)], ids=[''])
 @pc.parametrize('flow_template_cls', [pc.fixture_ref(mock_func_flow_template)], ids=[''])
-@pc.parametrize('job_runner_subcls', [pc.fixture_ref(mock_func_flow_runner_subcls)], ids=[''])
+@pc.parametrize('job_runner_cls', [pc.fixture_ref(mock_func_flow_job_runner_cls)], ids=[''])
 def func_flow_mock_classes(
     job_type: JobType.Literals,
     task_template_cls: Type[IsTaskTemplate],
     flow_template_cls: Type[IsFlowTemplate] | None,
-    job_runner_subcls: Type[IsEngine],
+    job_runner_cls: Type[IsJobRunnerEngine],
 ):
-    return job_type, task_template_cls, flow_template_cls, job_runner_subcls
+    return job_type, task_template_cls, flow_template_cls, job_runner_cls
 
 
 # test_job_runner
@@ -227,24 +226,24 @@ def func_flow_mock_classes(
     ids=['', '', '', ''])
 @pc.parametrize('engine_decorator', [no_verbose_config_engine_decorator])
 @pc.parametrize('registry', [no_registry], ids=[''])
-def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
+def power_mock_jobs_mock_runner_cls_no_verbose_no_reg(
     job_case: JobCase,
     job_mock_classes: tuple[
         JobType.Literals,
         Type[IsTaskTemplate],
         Type[IsFlowTemplate],
-        Type[IsEngine],
+        Type[IsJobRunnerEngine],
     ],
-    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
-    job_type, task_template_cls, flow_template_cls, job_runner_subcls = job_mock_classes
+    job_type, task_template_cls, flow_template_cls, job_runner_cls = job_mock_classes
     return update_job_case_with_job(
         job_case,
         job_type,
         task_template_cls,
         flow_template_cls,
-        job_runner_subcls(),
+        job_runner_cls(),
         engine_decorator,
         registry,
     )
@@ -262,24 +261,24 @@ def power_mock_jobs_mock_runner_subcls_no_verbose_no_reg(
     ids=['', '', '', ''])
 @pc.parametrize('engine_decorator', [assert_runstate_engine_decorator])
 @pc.parametrize('registry', [mock_registry], ids=[''])
-def all_func_types_mock_jobs_mock_runner_subcls_assert_runstate_mock_reg(
+def all_func_types_mock_jobs_mock_runner_cls_assert_runstate_mock_reg(
     job_case: JobCase,
     job_mock_classes: tuple[
         JobType.Literals,
         Type[IsTaskTemplate],
         Type[IsFlowTemplate],
-        Type[IsEngine],
+        Type[IsJobRunnerEngine],
     ],
-    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
-    job_type, task_template_cls, flow_template_cls, job_runner_subcls = job_mock_classes
+    job_type, task_template_cls, flow_template_cls, job_runner_cls = job_mock_classes
     return update_job_case_with_job(
         job_case,
         job_type,
         task_template_cls,
         flow_template_cls,
-        job_runner_subcls(),
+        job_runner_cls(),
         engine_decorator,
         registry,
     )
@@ -307,13 +306,13 @@ def all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg(
         JobType.Literals,
         Type[IsTaskTemplate],
         Type[IsFlowTemplate],
-        Type[IsEngine],
+        Type[IsJobRunnerEngine],
     ],
-    engine: IsEngine,
-    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    engine: IsJobRunnerEngine,
+    engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
-    job_type, task_template_cls, flow_template_cls, job_runner_subcls = job_classes
+    job_type, task_template_cls, flow_template_cls, _job_runner_cls = job_classes
 
     return update_job_case_with_job(
         job_case,

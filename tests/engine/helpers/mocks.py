@@ -7,20 +7,14 @@ from types import MappingProxyType
 from typing import Any, Callable, cast, Type
 
 from omnipy.config import ConfigBase
-from omnipy.engine.job_runner import (DagFlowRunnerEngine,
-                                      FuncFlowRunnerEngine,
-                                      LinearFlowRunnerEngine,
-                                      TaskRunnerEngine)
+from omnipy.engine.job_runner import JobRunnerEngine
 from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.hub.log.mixin import LogMixin
-from omnipy.shared.enums.job import RunState
+from omnipy.shared.enums.job import JobType, RunState
 from omnipy.shared.protocols.compute.job import IsFuncArgJobTemplate, IsJob
 from omnipy.shared.protocols.config import IsJobRunnerConfig
-from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
-                                                       IsEngine,
-                                                       IsFuncFlowRunnerEngine,
-                                                       IsLinearFlowRunnerEngine,
-                                                       IsTaskRunnerEngine)
+from omnipy.shared.protocols.engine.base import IsEngine
+from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.typedefs import GeneralDecorator
 from omnipy.util.callable_decorator import callable_decorator_cls
 from omnipy.util.callable_types import CallableType, get_callable_type
@@ -104,9 +98,10 @@ class MockTaskTemplate(MockTask):
 
     def apply(self) -> MockTask:
         task = MockTask(self._func, name=self.name)
-        engine = cast(IsTaskRunnerEngine, self.job_creator.engine)
+        engine = cast(IsJobRunnerEngine, self.job_creator.engine)
         assert engine is not None
-        engine.apply_task_decorator(
+        engine.apply_job_decorator(
+            JobType.TASK,
             task,  # type: ignore[arg-type]
             task._accept_call_func_decorator,
         )
@@ -132,9 +127,10 @@ class MockLinearFlow(MockTask):
 class MockLinearFlowTemplate(MockLinearFlow):
     def apply(self) -> MockLinearFlow:
         linear_flow = MockLinearFlow(self._func, *self._child_job_templates, name=self.name)
-        engine = cast(IsLinearFlowRunnerEngine, self.job_creator.engine)
+        engine = cast(IsJobRunnerEngine, self.job_creator.engine)
         assert engine is not None
-        engine.apply_linear_flow_decorator(
+        engine.apply_job_decorator(
+            JobType.LINEAR_FLOW,
             linear_flow,  # type: ignore[arg-type]
             linear_flow._accept_call_func_decorator,
         )
@@ -160,8 +156,9 @@ class MockDagFlow(MockTask):
 class MockDagFlowTemplate(MockDagFlow):
     def apply(self) -> MockDagFlow:
         dag_flow = MockDagFlow(self._func, *self._child_job_templates, name=self.name)
-        engine = cast(IsDagFlowRunnerEngine, self.job_creator.engine)
-        engine.apply_dag_flow_decorator(
+        engine = cast(IsJobRunnerEngine, self.job_creator.engine)
+        engine.apply_job_decorator(
+            JobType.DAG_FLOW,
             dag_flow,  # type: ignore[arg-type]
             dag_flow._accept_call_func_decorator,
         )
@@ -178,8 +175,9 @@ class MockFuncFlow(MockTask):
 class MockFuncFlowTemplate(MockFuncFlow, MockTaskTemplate):  # pyright: ignore
     def apply(self) -> MockFuncFlow:
         func_flow = MockFuncFlow(self._func, name=self.name)
-        engine = cast(IsFuncFlowRunnerEngine, self.job_creator.engine)
-        engine.apply_func_flow_decorator(
+        engine = cast(IsJobRunnerEngine, self.job_creator.engine)
+        engine.apply_job_decorator(
+            JobType.FUNC_FLOW,
             func_flow,  # type: ignore[arg-type]
             func_flow._accept_call_func_decorator,
         )
@@ -217,10 +215,14 @@ class MockBackendFlow:
         return result
 
 
-class MockJobRunnerSubclass(TaskRunnerEngine,
-                            LinearFlowRunnerEngine,
-                            DagFlowRunnerEngine,
-                            FuncFlowRunnerEngine):
+class MockJobRunnerSubclass(JobRunnerEngine):
+    supported_job_types = frozenset({
+        JobType.TASK,
+        JobType.LINEAR_FLOW,
+        JobType.DAG_FLOW,
+        JobType.FUNC_FLOW,
+    })
+
     def _init_engine(self) -> None:
         self._update_from_config()
         self.finished_backend_tasks: list[MockBackendTask] = []
@@ -234,7 +236,7 @@ class MockJobRunnerSubclass(TaskRunnerEngine,
     def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
         return MockEngineConfig
 
-    # TaskRunnerEngine
+    # Task run hooks
 
     def _init_task(self, task: TaskRunSpec) -> MockBackendTask:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers
@@ -244,6 +246,8 @@ class MockJobRunnerSubclass(TaskRunnerEngine,
         result = state.run(task, task.create_default_run_callable(), *args, **kwargs)
         self.finished_backend_tasks.append(state)
         return result
+
+    # Flow run hooks
 
     def _init_flow(self, flow: FlowRunSpec) -> MockBackendFlow:
         assert isinstance(self._config, MockEngineConfig)  # to help type checkers

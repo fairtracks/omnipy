@@ -17,10 +17,7 @@ from omnipy.shared.protocols.compute.job import (HasJobCreator,
                                                  IsTask,
                                                  IsTaskTemplate)
 from omnipy.shared.protocols.engine.base import IsEngine
-from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
-                                                       IsFuncFlowRunnerEngine,
-                                                       IsLinearFlowRunnerEngine,
-                                                       IsTaskRunnerEngine)
+from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.util.callable_types import CallableType
 from omnipy.util.helpers import resolve
@@ -103,7 +100,7 @@ def create_task_with_func(
     name: str,
     func: Callable,
     task_template_cls: type[IsTaskTemplate],
-    engine: IsTaskRunnerEngine,
+    engine: IsJobRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsTask:
 
@@ -121,7 +118,7 @@ def create_linear_flow_with_two_func_tasks(
     func: Callable,
     task_template_cls: type[IsTaskTemplate],
     linear_flow_template_cls: type[IsLinearFlowTemplate],
-    engine: IsLinearFlowRunnerEngine,
+    engine: IsJobRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsLinearFlow:
     @task_template_cls()
@@ -160,7 +157,7 @@ def create_dag_flow_with_two_func_tasks(
     func: Callable,
     task_template_cls: type[IsTaskTemplate],
     dag_flow_template_cls: type[IsDagFlowTemplate],
-    engine: IsDagFlowRunnerEngine,
+    engine: IsJobRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsDagFlow:
 
@@ -179,7 +176,7 @@ def create_func_flow_with_two_func_tasks(
     func: Callable,
     task_template_cls: type[IsTaskTemplate],
     func_flow_template_cls: type[IsFuncFlowTemplate],
-    engine: IsFuncFlowRunnerEngine,
+    engine: IsJobRunnerEngine,
     registry: IsRunStateRegistry | None,
 ) -> IsFuncFlow:
 
@@ -213,8 +210,8 @@ def update_job_case_with_job(
     job_type: JobType.Literals,
     task_template_cls: Type[IsTaskTemplate],
     flow_template_cls: Type[IsFlowTemplate] | None,
-    engine: IsEngine,
-    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    engine: IsJobRunnerEngine,
+    engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
     if engine_decorator:
@@ -226,11 +223,10 @@ def update_job_case_with_job(
             job_case.name,
             job_case.job_func,
             task_template_cls,
-            cast(IsTaskRunnerEngine, engine),
+            engine,
             registry,
         )
     elif job_type == JobType.LINEAR_FLOW:
-        engine = cast(IsLinearFlowRunnerEngine, engine)
         job_case.job = create_linear_flow_with_two_func_tasks(
             job_case.name,
             job_case.job_func,
@@ -240,7 +236,6 @@ def update_job_case_with_job(
             registry,
         )
     elif job_type == JobType.DAG_FLOW:
-        engine = cast(IsDagFlowRunnerEngine, engine)
         job_case.job = create_dag_flow_with_two_func_tasks(
             job_case.name,
             job_case.job_func,
@@ -250,7 +245,6 @@ def update_job_case_with_job(
             registry,
         )
     elif job_type == JobType.FUNC_FLOW:
-        engine = cast(IsFuncFlowRunnerEngine, engine)
         job_case.job = create_func_flow_with_two_func_tasks(
             job_case.name,
             job_case.job_func,

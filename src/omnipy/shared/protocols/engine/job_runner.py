@@ -1,37 +1,22 @@
 from typing import Callable, Protocol, runtime_checkable
 
-from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncFlow, IsLinearFlow, IsTask
+from omnipy.shared.enums.job import JobType
+from omnipy.shared.protocols.compute.job import IsFuncArgJob
 from omnipy.shared.protocols.engine.base import IsEngine
 
 
 @runtime_checkable
-class IsTaskRunnerEngine(IsEngine, Protocol):
+class IsJobRunnerEngine(IsEngine, Protocol):
     """"""
-    def apply_task_decorator(self, task: IsTask, job_callback_accept_decorator: Callable) -> None:
+    supported_job_types: frozenset[JobType.Literals]
+
+    def supports(self, job_type: JobType.Literals) -> bool:
         ...
 
-
-@runtime_checkable
-class IsLinearFlowRunnerEngine(IsEngine, Protocol):
-    """"""
-    def apply_linear_flow_decorator(self,
-                                    linear_flow: IsLinearFlow,
-                                    job_callback_accept_decorator: Callable) -> None:
-        ...
-
-
-@runtime_checkable
-class IsDagFlowRunnerEngine(IsEngine, Protocol):
-    """"""
-    def apply_dag_flow_decorator(self, dag_flow: IsDagFlow,
-                                 job_callback_accept_decorator: Callable) -> None:
-        ...
-
-
-@runtime_checkable
-class IsFuncFlowRunnerEngine(IsEngine, Protocol):
-    """"""
-    def apply_func_flow_decorator(self,
-                                  func_flow: IsFuncFlow,
-                                  job_callback_accept_decorator: Callable) -> None:
+    def apply_job_decorator(
+        self,
+        job_type: JobType.Literals,
+        job: IsFuncArgJob,
+        job_callback_accept_decorator: Callable,
+    ) -> None:
         ...

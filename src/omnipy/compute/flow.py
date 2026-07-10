@@ -6,6 +6,7 @@ from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
 from omnipy.compute._joblist_job import ChildJobListArgJobBase
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
+from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import (HasChildJobListArgJobTemplateInit,
                                                  HasFuncArgJobTemplateInit,
                                                  IsDagFlow,
@@ -15,9 +16,7 @@ from omnipy.shared.protocols.compute.job import (HasChildJobListArgJobTemplateIn
                                                  IsLinearFlow,
                                                  IsLinearFlowTemplate)
 from omnipy.shared.protocols.engine.base import IsEngine
-from omnipy.shared.protocols.engine.job_runner import (IsDagFlowRunnerEngine,
-                                                       IsFuncFlowRunnerEngine,
-                                                       IsLinearFlowRunnerEngine)
+from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
 
 __all__ = [
@@ -43,16 +42,22 @@ class FlowBase:
     ...
 
 
-class LinearFlowTemplateCore(ChildJobListArgJobBase[IsLinearFlowTemplate[_CallP, _RetT],
-                                                    IsLinearFlow[_CallP, _RetT],
-                                                    _CallP,
-                                                    _RetT],
-                             JobTemplateMixin[IsLinearFlowTemplate[_CallP, _RetT],
-                                              IsLinearFlow[_CallP, _RetT],
-                                              _CallP,
-                                              _RetT],
-                             FlowBase,
-                             Generic[_CallP, _RetT]):
+class LinearFlowTemplateCore(
+        ChildJobListArgJobBase[
+            IsLinearFlowTemplate[_CallP, _RetT],
+            IsLinearFlow[_CallP, _RetT],
+            _CallP,
+            _RetT,
+        ],
+        JobTemplateMixin[
+            IsLinearFlowTemplate[_CallP, _RetT],
+            IsLinearFlow[_CallP, _RetT],
+            _CallP,
+            _RetT,
+        ],
+        FlowBase,
+        Generic[_CallP, _RetT],
+):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsLinearFlow[_CallP, _RetT]]:
         return cast(type[IsLinearFlow[_CallP, _RetT]], LinearFlow[_CallP, _RetT])
@@ -94,9 +99,13 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
                  Generic[_CallP, _RetT]):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         if self.engine:
-            engine = cast(IsLinearFlowRunnerEngine, self.engine)
+            engine = cast(IsJobRunnerEngine, self.engine)
             self_with_mixins = cast(IsLinearFlow, self)
-            engine.apply_linear_flow_decorator(self_with_mixins, self._accept_call_func_decorator)
+            engine.apply_job_decorator(
+                JobType.LINEAR_FLOW,
+                self_with_mixins,
+                self._accept_call_func_decorator,
+            )
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsLinearFlowTemplate[_CallP, _RetT]]:
@@ -141,18 +150,26 @@ DagFlowTemplate = dag_flow_template_as_callable_decorator(
     to_dag_flow_template_init_protocol(DagFlowTemplateCore))
 
 
-class DagFlow(JobMixin[IsDagFlowTemplate[_CallP, _RetT], IsDagFlow[_CallP, _RetT], _CallP, _RetT],
-              FlowBase,
-              ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT],
-                                     IsDagFlow[_CallP, _RetT],
-                                     _CallP,
-                                     _RetT],
-              Generic[_CallP, _RetT]):
+class DagFlow(
+        JobMixin[IsDagFlowTemplate[_CallP, _RetT], IsDagFlow[_CallP, _RetT], _CallP, _RetT],
+        FlowBase,
+        ChildJobListArgJobBase[
+            IsDagFlowTemplate[_CallP, _RetT],
+            IsDagFlow[_CallP, _RetT],
+            _CallP,
+            _RetT,
+        ],
+        Generic[_CallP, _RetT],
+):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         if self.engine:
-            engine = cast(IsDagFlowRunnerEngine, self.engine)
+            engine = cast(IsJobRunnerEngine, self.engine)
             self_with_mixins = cast(IsDagFlow, self)
-            engine.apply_dag_flow_decorator(self_with_mixins, self._accept_call_func_decorator)
+            engine.apply_job_decorator(
+                JobType.DAG_FLOW,
+                self_with_mixins,
+                self._accept_call_func_decorator,
+            )
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsDagFlowTemplate[_CallP, _RetT]]:
@@ -197,19 +214,31 @@ FuncFlowTemplate = func_flow_template_as_callable_decorator(
     to_func_flow_template_init_protocol(FuncFlowTemplateCore))
 
 
-class FuncFlow(JobMixin[IsFuncFlowTemplate[_CallP, _RetT], IsFuncFlow[_CallP, _RetT], _CallP,
-                        _RetT],
-               FlowBase,
-               FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
-                              IsFuncFlow[_CallP, _RetT],
-                              _CallP,
-                              _RetT],
-               Generic[_CallP, _RetT]):
+class FuncFlow(
+        JobMixin[
+            IsFuncFlowTemplate[_CallP, _RetT],
+            IsFuncFlow[_CallP, _RetT],
+            _CallP,
+            _RetT,
+        ],
+        FlowBase,
+        FuncArgJobBase[
+            IsFuncFlowTemplate[_CallP, _RetT],
+            IsFuncFlow[_CallP, _RetT],
+            _CallP,
+            _RetT,
+        ],
+        Generic[_CallP, _RetT],
+):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         if self.engine:
-            engine = cast(IsFuncFlowRunnerEngine, self.engine)
+            engine = cast(IsJobRunnerEngine, self.engine)
             self_with_mixins = cast(IsFuncFlow, self)
-            engine.apply_func_flow_decorator(self_with_mixins, self._accept_call_func_decorator)
+            engine.apply_job_decorator(
+                JobType.FUNC_FLOW,
+                self_with_mixins,
+                self._accept_call_func_decorator,
+            )
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsFuncFlowTemplate[_CallP, _RetT]]:
