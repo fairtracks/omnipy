@@ -1,5 +1,5 @@
 import asyncio
-from typing import AsyncGenerator, Awaitable, Generator
+from typing import AsyncGenerator, Awaitable, Generator, cast
 
 import pytest_cases as pc
 
@@ -7,7 +7,7 @@ from omnipy import Void
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 from omnipy.shared.enums.job import RunState
-from omnipy.shared.protocols.compute.job import IsFuncArgJob
+from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncArgJob
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.util.callable_types import CallableType
@@ -696,6 +696,329 @@ def case_linear_parent_with_func_child() -> ComposedFlowCase[[int], int]:
 
     return ComposedFlowCase[[int], int](
         name='linear-parent-child-with-func-child',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='dag-parent-child-with-linear-child',
+    tags=['semantic-floor', 'dag-parent', 'linear-child'],
+)
+def case_dag_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Tasks
+        @TaskTemplate()
+        def compute_base_value(number: int) -> int:
+            return number + 4
+
+        @TaskTemplate()
+        def compute_branch_value(number: int) -> int:
+            return number * 2
+
+        @TaskTemplate()
+        def combine_parent_branches(base_value: int, branch_value: int) -> int:
+            return base_value + branch_value
+
+        @TaskTemplate()
+        def subtract_branch_offset(total_value: int) -> int:
+            return total_value - 3
+
+        # Linear Child Flow
+        @LinearFlowTemplate(combine_parent_branches, subtract_branch_offset)
+        def linear_child_from_dag_parent(base_value: int, branch_value: int) -> int:
+            ...
+
+        # DAG Parent Flow
+        @DagFlowTemplate(
+            compute_base_value.refine(result_key='base_value'),
+            compute_branch_value.refine(result_key='branch_value'),
+            linear_child_from_dag_parent,
+        )
+        def dag_parent_with_linear_child(number: int) -> int:
+            ...
+
+        return apply_job(dag_parent_with_linear_child, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job(5) == 16
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='dag-parent-child-with-linear-child',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='dag-parent-child-with-dag-child',
+    tags=['semantic-floor', 'dag-parent', 'dag-child'],
+)
+def case_dag_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Parent Tasks
+        @TaskTemplate()
+        def compute_left_value(number: int) -> int:
+            return number + 1
+
+        @TaskTemplate()
+        def compute_right_value(number: int) -> int:
+            return number * 4
+
+        # Child Tasks
+        @TaskTemplate()
+        def compute_child_total(left_value: int, right_value: int) -> int:
+            return left_value + right_value
+
+        @TaskTemplate()
+        def compute_child_gap(left_value: int, right_value: int) -> int:
+            return right_value - left_value
+
+        @TaskTemplate()
+        def combine_child_total_and_gap(child_total: int, child_gap: int) -> int:
+            return child_total + child_gap
+
+        # DAG Child Flow
+        @DagFlowTemplate(
+            compute_child_total.refine(result_key='child_total'),
+            compute_child_gap.refine(result_key='child_gap'),
+            combine_child_total_and_gap,
+        )
+        def dag_child_from_dag_parent(left_value: int, right_value: int) -> int:
+            ...
+
+        # DAG Parent Flow
+        @DagFlowTemplate(
+            compute_left_value.refine(result_key='left_value'),
+            compute_right_value.refine(result_key='right_value'),
+            dag_child_from_dag_parent,
+        )
+        def dag_parent_with_dag_child(number: int) -> int:
+            ...
+
+        return apply_job(dag_parent_with_dag_child, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job(3) == 24
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='dag-parent-child-with-dag-child',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='dag-parent-child-with-func-child',
+    tags=['semantic-floor', 'dag-parent', 'func-child'],
+)
+def case_dag_parent_with_func_child() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Parent Tasks
+        @TaskTemplate()
+        def compute_primary_value(number: int) -> int:
+            return number + 2
+
+        @TaskTemplate()
+        def compute_secondary_value(number: int) -> int:
+            return number * 3
+
+        # Func Child Tasks
+        @TaskTemplate()
+        def add_child_inputs(primary_value: int, secondary_value: int) -> int:
+            return primary_value + secondary_value
+
+        @TaskTemplate()
+        def square_child_input(number: int) -> int:
+            return number * number
+
+        # Func Child Flow
+        @FuncFlowTemplate()
+        def func_child_from_dag_parent(primary_value: int, secondary_value: int) -> int:
+            combined_value = add_child_inputs(primary_value, secondary_value)
+            return square_child_input(combined_value)
+
+        # DAG Parent Flow
+        @DagFlowTemplate(
+            compute_primary_value.refine(result_key='primary_value'),
+            compute_secondary_value.refine(result_key='secondary_value'),
+            func_child_from_dag_parent,
+        )
+        def dag_parent_with_func_child(number: int) -> int:
+            ...
+
+        return apply_job(dag_parent_with_func_child, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job(2) == 100
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='dag-parent-child-with-func-child',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='dag-parent-child-routing',
+    tags=['semantic-floor', 'dag-parent', 'dag-routing'],
+)
+def case_dag_parent_child_routing() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Parent Tasks
+        @TaskTemplate()
+        def compute_mapped_input(seed: int) -> int:
+            return seed + 5
+
+        @TaskTemplate()
+        def compute_mapped_multiplier(seed: int) -> int:
+            return seed * 2
+
+        # Child Tasks
+        @TaskTemplate()
+        def scale_child_value(value: int, multiplier: int) -> int:
+            return value * multiplier
+
+        @TaskTemplate()
+        def compute_child_checksum(value: int, scaled_value: int) -> int:
+            return value + scaled_value
+
+        @TaskTemplate()
+        def finalize_parent_routed_result(mapped_input: int, child_checksum: int) -> int:
+            return child_checksum - mapped_input
+
+        # DAG Child Flow
+        @DagFlowTemplate(
+            scale_child_value.refine(
+                param_key_map={
+                    'value': 'child_value',
+                    'multiplier': 'child_multiplier',
+                },
+                result_key='scaled_value',
+            ),
+            compute_child_checksum.refine(param_key_map={'value': 'child_value'}),
+        )
+        def dag_child_with_routing(child_value: int, child_multiplier: int) -> int:
+            ...
+
+        # DAG Parent Flow
+        @DagFlowTemplate(
+            compute_mapped_input.refine(result_key='mapped_input'),
+            compute_mapped_multiplier.refine(result_key='mapped_multiplier'),
+            dag_child_with_routing.refine(
+                param_key_map={
+                    'child_value': 'mapped_input',
+                    'child_multiplier': 'mapped_multiplier',
+                },
+                result_key='child_checksum',
+            ),
+            finalize_parent_routed_result,
+        )
+        def dag_parent_child_routing(seed: int) -> int:
+            ...
+
+        return apply_job(dag_parent_child_routing, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job(3) == 48
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='dag-parent-child-routing',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='dag-parent-child-refine-revise',
+    tags=['semantic-floor', 'dag-parent', 'dag-refine-revise'],
+)
+def case_dag_parent_child_refine_revise() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    # Parent Tasks
+    @TaskTemplate()
+    def compute_left_value(number: int) -> int:
+        return number + 1
+
+    @TaskTemplate()
+    def compute_right_value(number: int) -> int:
+        return number * 2
+
+    # Child Tasks
+    @TaskTemplate()
+    def combine_child_values(left_value: int, right_value: int) -> int:
+        return left_value + right_value
+
+    @TaskTemplate()
+    def multiply_combined_value(combined_value: int) -> int:
+        return combined_value * 2
+
+    @TaskTemplate()
+    def subtract_from_combined_value(combined_value: int) -> int:
+        return combined_value - 3
+
+    @TaskTemplate()
+    def return_child_result(child_result: int) -> int:
+        return child_result
+
+    # Child Flows
+    @LinearFlowTemplate(combine_child_values, multiply_combined_value)
+    def initial_linear_child(left_value: int, right_value: int) -> int:
+        ...
+
+    @LinearFlowTemplate(combine_child_values, subtract_from_combined_value)
+    def replacement_linear_child(left_value: int, right_value: int) -> int:
+        ...
+
+    # DAG Parent Flow
+    @DagFlowTemplate(
+        compute_left_value.refine(result_key='left_value'),
+        compute_right_value.refine(result_key='right_value'),
+        initial_linear_child.refine(result_key='child_result'),
+        return_child_result,
+    )
+    def dag_parent_child_refine_revise(number: int) -> int:
+        ...
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        return apply_job(dag_parent_child_refine_revise, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        initial_result = job(4)
+        assert initial_result == 26
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+        dag_job = cast(IsDagFlow, job)
+        revised_child_templates = list(dag_job.child_job_templates)
+        revised_child_templates[2] = replacement_linear_child.refine(result_key='child_result')
+
+        revised_job = dag_job.revise().refine(*revised_child_templates).apply()
+        revised_result = revised_job(4)
+
+        assert revised_result == 10
+        assert revised_result != initial_result
+        assert_case_callable_type_and_finished_state(revised_job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='dag-parent-child-refine-revise',
         build_job_func=build_job,
         run_and_assert_results_func=run_and_assert_results,
         expected_callable_type=expected_callable_type,
