@@ -1,5 +1,7 @@
 """Task definitions for integration novel full tests."""
 
+import asyncio
+
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.multi import MultiModelDataset
@@ -9,20 +11,50 @@ from ...helpers.models import GeneralTable, record_schema_factory, RecordSchemaD
 
 @TaskTemplate()
 def uppercase(text: str) -> str:
-    """Uppercase uppercase."""
     return text.upper()
 
 
 @TaskTemplate()
 def square_root(number: int) -> dict[str, float]:
-    """Return the square root."""
     return {'neg_root': -number**0.5, 'pos_root': number**0.5}
 
 
 @TaskTemplate()
 def merge_key_value_into_str(key: object, val: object) -> str:
-    """Merge key value into string."""
     return '{}: {}'.format(key, val)
+
+
+@TaskTemplate()
+async def fetch_remote_value(seed: int) -> int:
+    await asyncio.sleep(0)
+    return seed + 5
+
+
+@TaskTemplate()
+async def normalize_remote_value(value: int) -> int:
+    await asyncio.sleep(0)
+    return value * 2
+
+
+@TaskTemplate()
+async def store_pipeline_result(value: int, prefix: str) -> str:
+    await asyncio.sleep(0)
+    return f'{prefix}{value}'
+
+
+@TaskTemplate()
+def normalize_text(text: str) -> str:
+    return text.strip().lower()
+
+
+@TaskTemplate()
+def add_label(text: str, label: str) -> str:
+    return f'{label}{text}'
+
+
+@TaskTemplate()
+def wrap_message(text: str, left: str, right: str) -> str:
+    return f'{left}{text}{right}'
 
 
 # TODO: Implement explicit serializer support (if needed)
@@ -30,7 +62,6 @@ def merge_key_value_into_str(key: object, val: object) -> str:
 
 @TaskTemplate()
 def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
-    """Extract record schema def."""
     record_model = {}
     for record in table.to_data():
         for field_key, field_val in record.items():
@@ -48,7 +79,6 @@ def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
 def apply_models_to_dataset(
         dataset: Dataset[GeneralTable],
         record_schema_defs: Dataset[RecordSchemaDef]) -> MultiModelDataset[GeneralTable]:
-    """Apply models to dataset."""
     multi_model_dataset = dataset.as_multi_model_dataset()
     for data_file in multi_model_dataset.keys():
         multi_model_dataset.set_model(
