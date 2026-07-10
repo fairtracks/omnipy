@@ -2,7 +2,7 @@ from typing import AsyncGenerator, Awaitable, cast, Generator
 
 import pytest_cases as pc
 
-from omnipy.compute.flow import DagFlowTemplate, LinearFlowTemplate
+from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
 from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute.job import HasJobCreator, IsFuncArgJob
@@ -13,7 +13,7 @@ from omnipy.util.helpers import resolve
 
 from ..helpers.classes import ComposedFlowCase
 from ..helpers.functions import assert_job_state
-from .raw.functions import async_range, async_wait_a_bit, sync_range
+from .raw.functions import async_range, async_wait_a_bit, sync_power, sync_range
 from .tasks import sync_double, sync_increment
 
 
@@ -27,7 +27,8 @@ def case_linear_flow_sync_function_terminal_child() -> ComposedFlowCase[[int], i
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         task_template_cls = TaskTemplate
         parent_task_template = task_template_cls(name='linear_sync_function_parent')(sync_increment)
-        terminal_task_template = task_template_cls(name='linear_sync_function_terminal')(sync_double)
+        terminal_task_template = task_template_cls(name='linear_sync_function_terminal')(
+            sync_double)
         linear_flow_template = LinearFlowTemplate(
             parent_task_template,
             terminal_task_template,
@@ -62,8 +63,10 @@ def case_linear_flow_sync_generator_terminal_child() -> ComposedFlowCase[[int], 
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         task_template_cls = TaskTemplate
-        parent_task_template = task_template_cls(name='linear_sync_generator_parent')(sync_increment)
-        terminal_task_template = task_template_cls(name='linear_sync_generator_terminal')(sync_range)
+        parent_task_template = task_template_cls(name='linear_sync_generator_parent')(
+            sync_increment)
+        terminal_task_template = task_template_cls(name='linear_sync_generator_terminal')(
+            sync_range)
         linear_flow_template = LinearFlowTemplate(
             parent_task_template,
             terminal_task_template,
@@ -94,7 +97,8 @@ def case_linear_flow_sync_generator_terminal_child() -> ComposedFlowCase[[int], 
     id='linear-flow-async-coroutine-terminal-child',
     tags=['matrix', 'linear-flow', 'async', 'coroutine'],
 )
-def case_linear_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[float], Awaitable[float]]:
+def case_linear_flow_async_coroutine_terminal_child(
+) -> ComposedFlowCase[[float], Awaitable[float]]:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -137,8 +141,10 @@ def case_linear_flow_async_generator_terminal_child() -> ComposedFlowCase[[int],
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         task_template_cls = TaskTemplate
-        parent_task_template = task_template_cls(name='linear_async_generator_parent')(sync_increment)
-        terminal_task_template = task_template_cls(name='linear_async_generator_terminal')(async_range)
+        parent_task_template = task_template_cls(name='linear_async_generator_parent')(
+            sync_increment)
+        terminal_task_template = task_template_cls(name='linear_async_generator_terminal')(
+            async_range)
         linear_flow_template = LinearFlowTemplate(
             parent_task_template,
             terminal_task_template,
@@ -342,6 +348,160 @@ def case_dag_flow_async_generator_terminal_child() -> ComposedFlowCase[[int], As
 
     return ComposedFlowCase[[int], AsyncGenerator](
         name='dag-async-generator-terminal-child',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-sync-function-body',
+    tags=['matrix', 'func-flow', 'sync', 'function'],
+)
+def case_func_flow_sync_function_body() -> ComposedFlowCase[[int, int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        task_template_cls = TaskTemplate
+        power_task_template = task_template_cls(name='func_sync_function_body_task')(sync_power)
+
+        @FuncFlowTemplate(name='func_flow_sync_function_body')
+        def func_flow_template(number: int, exponent: int) -> int:
+            return power_task_template(number, exponent)
+
+        cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
+        cast(HasJobCreator, type(func_flow_template)).job_creator.set_engine(engine)
+        if registry:
+            engine.set_registry(registry)
+
+        return func_flow_template.apply()
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job.callable_type is expected_callable_type
+        assert job(4, 2) == 16
+        assert_job_state(job, [RunState.FINISHED])
+
+    return ComposedFlowCase[[int, int], int](
+        name='func-flow-sync-function-body',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-sync-generator-body',
+    tags=['matrix', 'func-flow', 'sync', 'generator'],
+)
+def case_func_flow_sync_generator_body() -> ComposedFlowCase[[int], Generator]:
+    expected_callable_type = CallableType.SYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        task_template_cls = TaskTemplate
+        increment_task_template = task_template_cls(name='func_sync_generator_body_increment')(
+            sync_increment)
+        range_task_template = task_template_cls(name='func_sync_generator_body_range')(sync_range)
+
+        @FuncFlowTemplate(name='func_flow_sync_generator_body')
+        def func_flow_template(num: int) -> Generator:
+            incremented_num = increment_task_template(num)
+            yield from range_task_template(incremented_num)
+
+        cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
+        cast(HasJobCreator, type(func_flow_template)).job_creator.set_engine(engine)
+        if registry:
+            engine.set_registry(registry)
+
+        return func_flow_template.apply()
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job.callable_type is expected_callable_type
+        generator = job(4)
+        assert tuple(generator) == (0, 1, 2, 3, 4)
+        assert_job_state(job, [RunState.FINISHED])
+
+    return ComposedFlowCase[[int], Generator](
+        name='func-flow-sync-generator-body',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-async-coroutine-body',
+    tags=['matrix', 'func-flow', 'async', 'coroutine'],
+)
+def case_func_flow_async_coroutine_body() -> ComposedFlowCase[[float], Awaitable[float]]:
+    expected_callable_type = CallableType.ASYNC_COROUTINE
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        task_template_cls = TaskTemplate
+        wait_task_template = task_template_cls(name='func_async_coroutine_body_wait')(
+            async_wait_a_bit)
+
+        @FuncFlowTemplate(name='func_flow_async_coroutine_body')
+        async def func_flow_template(seconds: float) -> float:
+            return await wait_task_template(seconds)
+
+        cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
+        cast(HasJobCreator, type(func_flow_template)).job_creator.set_engine(engine)
+        if registry:
+            engine.set_registry(registry)
+
+        return func_flow_template.apply()
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job.callable_type is expected_callable_type
+        result = await resolve(job(0.005))
+        assert result == 0.005
+        assert_job_state(job, [RunState.FINISHED])
+
+    return ComposedFlowCase[[float], Awaitable[float]](
+        name='func-flow-async-coroutine-body',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-async-generator-body',
+    tags=['matrix', 'func-flow', 'async', 'generator'],
+)
+def case_func_flow_async_generator_body() -> ComposedFlowCase[[int], AsyncGenerator]:
+    expected_callable_type = CallableType.ASYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        task_template_cls = TaskTemplate
+        increment_task_template = task_template_cls(name='func_async_generator_body_increment')(
+            sync_increment)
+        range_task_template = task_template_cls(name='func_async_generator_body_range')(async_range)
+
+        @FuncFlowTemplate(name='func_flow_async_generator_body')
+        async def func_flow_template(num: int) -> AsyncGenerator:
+            incremented_num = increment_task_template(num)
+            async for value in range_task_template(incremented_num):
+                yield value
+
+        cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
+        cast(HasJobCreator, type(func_flow_template)).job_creator.set_engine(engine)
+        if registry:
+            engine.set_registry(registry)
+
+        return func_flow_template.apply()
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job.callable_type is expected_callable_type
+        result = job(4)
+        values = []
+        async for value in result:
+            values.append(value)
+        assert values == [0, 1, 2, 3, 4]
+        assert_job_state(job, [RunState.FINISHED])
+
+    return ComposedFlowCase[[int], AsyncGenerator](
+        name='func-flow-async-generator-body',
         build_job_func=build_job,
         run_and_assert_results_func=run_and_assert_results,
         expected_callable_type=expected_callable_type,
