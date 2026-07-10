@@ -1,6 +1,7 @@
 import asyncio
 from typing import AsyncGenerator, Awaitable, Generator, cast
 
+import pytest
 import pytest_cases as pc
 
 from omnipy import Void
@@ -14,7 +15,7 @@ from omnipy.util.callable_types import CallableType
 from omnipy.util.helpers import resolve
 
 from ..helpers.classes import ComposedFlowCase
-from ..helpers.functions import apply_job, assert_job_state
+from ..helpers.functions import apply_job, assert_job_state, check_engine_cls
 
 
 def assert_case_callable_type_and_finished_state(
@@ -1019,6 +1020,162 @@ def case_dag_parent_child_refine_revise() -> ComposedFlowCase[[int], int]:
 
     return ComposedFlowCase[[int], int](
         name='dag-parent-child-refine-revise',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-calls-linear-child',
+    tags=['semantic-floor', 'func-flow-calls-flow'],
+)
+def case_func_flow_calls_linear_child() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Tasks
+        @TaskTemplate()
+        def add_three(number: int) -> int:
+            return number + 3
+
+        @TaskTemplate()
+        def double_number(number: int) -> int:
+            return number * 2
+
+        # Linear Child Flow
+        @LinearFlowTemplate(add_three, double_number)
+        def linear_child_flow(number: int) -> int:
+            ...
+
+        # Func Parent Flow
+        @FuncFlowTemplate()
+        def func_parent_calls_linear_child(number: int) -> int:
+            return linear_child_flow(number)
+
+        return apply_job(func_parent_calls_linear_child, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job(4) == 14
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='func-flow-calls-linear-child',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-mixed-sync-async',
+    tags=['semantic-floor', 'func-flow-mixed-async'],
+)
+def case_func_flow_mixed_sync_async() -> ComposedFlowCase[[int], Awaitable[int]]:
+    expected_callable_type = CallableType.ASYNC_COROUTINE
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Sync Tasks
+        @TaskTemplate()
+        def add_two(number: int) -> int:
+            return number + 2
+
+        @TaskTemplate()
+        def square_number(number: int) -> int:
+            return number * number
+
+        # Async Task
+        @TaskTemplate()
+        async def wait_and_add_five(number: int) -> int:
+            await asyncio.sleep(0)
+            return number + 5
+
+        # Sync Child Flow
+        @LinearFlowTemplate(add_two, square_number)
+        def sync_linear_child(number: int) -> int:
+            ...
+
+        # Async Child Flow
+        @FuncFlowTemplate()
+        async def async_child_flow(number: int) -> int:
+            return await wait_and_add_five(number)
+
+        # Func Parent Flow
+        @FuncFlowTemplate()
+        async def func_parent_mixed_sync_async(number: int) -> int:
+            sync_child_result = sync_linear_child(number)
+            return await async_child_flow(sync_child_result)
+
+        return apply_job(func_parent_mixed_sync_async, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        result = await resolve(job(3))
+        assert result == 30
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], Awaitable[int]](
+        name='func-flow-mixed-sync-async',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-nested-async-support-gap',
+    tags=['semantic-floor', 'func-flow-nested-async-gap'],
+)
+def case_func_flow_nested_async_support_gap() -> ComposedFlowCase[[int], Awaitable[int]]:
+    expected_callable_type = CallableType.ASYNC_COROUTINE
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Tasks
+        @TaskTemplate()
+        def add_one(number: int) -> int:
+            return number + 1
+
+        @TaskTemplate()
+        async def wait_and_double(number: int) -> int:
+            await asyncio.sleep(0)
+            return number * 2
+
+        @TaskTemplate()
+        async def wait_and_add_ten(number: int) -> int:
+            await asyncio.sleep(0)
+            return number + 10
+
+        # Nested Async Child Flow
+        @LinearFlowTemplate(add_one, wait_and_double)
+        async def async_linear_grandchild(number: int) -> int:
+            ...
+
+        @FuncFlowTemplate()
+        async def async_func_child(number: int) -> int:
+            nested_result = await resolve(async_linear_grandchild(number))
+            return await wait_and_add_ten(nested_result)
+
+        # Func Parent Flow
+        @FuncFlowTemplate()
+        async def func_parent_nested_async(number: int) -> int:
+            return await async_func_child(number)
+
+        return apply_job(func_parent_nested_async, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        from omnipy.components.prefect.engine.prefect import PrefectEngine
+
+        try:
+            result = await resolve(job(4))
+        except Exception:
+            if check_engine_cls(job, PrefectEngine):
+                pytest.xfail('Nested async flow chaining is not supported by PrefectEngine.')
+            raise
+
+        assert result == 20
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], Awaitable[int]](
+        name='func-flow-nested-async-support-gap',
         build_job_func=build_job,
         run_and_assert_results_func=run_and_assert_results,
         expected_callable_type=expected_callable_type,
