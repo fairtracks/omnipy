@@ -130,7 +130,7 @@ def case_linear_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[int],
             wait_and_return_milliseconds,
         )
         async def linear_flow_async_coroutine_terminal(milliseconds: int) -> int:
-            return milliseconds
+            ...
 
         return apply_job(linear_flow_async_coroutine_terminal, engine, registry)
 
@@ -318,7 +318,7 @@ def case_dag_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[int], Aw
             wait_and_scale,
         )
         async def dag_flow_async_coroutine_terminal(number: int) -> int:
-            return number
+            ...
 
         return apply_job(dag_flow_async_coroutine_terminal, engine, registry)
 
