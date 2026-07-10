@@ -17,6 +17,14 @@ from ..helpers.classes import ComposedFlowCase
 from ..helpers.functions import apply_job, assert_job_state
 
 
+def assert_case_callable_type_and_finished_state(
+    job: IsFuncArgJob,
+    expected_callable_type: CallableType.Literals,
+) -> None:
+    assert job.callable_type is expected_callable_type
+    assert_job_state(job, [RunState.FINISHED])
+
+
 @pc.case(
     id='linear-flow-sync-function-terminal-child',
     tags=['matrix', 'linear-flow', 'sync', 'function'],
@@ -544,6 +552,150 @@ def case_func_flow_async_generator_body() -> ComposedFlowCase[[int], AsyncGenera
 
     return ComposedFlowCase[[int], AsyncGenerator](
         name='func-flow-async-generator-body',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='linear-parent-child-with-linear-child',
+    tags=['semantic-floor', 'linear-parent', 'linear-child', 'linear-parent-child'],
+)
+def case_linear_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Tasks
+        @TaskTemplate()
+        def add_two(number: int) -> int:
+            return number + 2
+
+        @TaskTemplate()
+        def multiply_by_three(number: int) -> int:
+            return number * 3
+
+        @TaskTemplate()
+        def subtract_one(number: int) -> int:
+            return number - 1
+
+        # Linear Child Flow
+        @LinearFlowTemplate(multiply_by_three, subtract_one)
+        def linear_child(number: int) -> int:
+            ...
+
+        # Linear Parent Flow
+        @LinearFlowTemplate(add_two, linear_child)
+        def linear_parent(number: int) -> int:
+            ...
+
+        return apply_job(linear_parent, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job(4) == 17
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='linear-parent-child-with-linear-child',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='linear-parent-child-with-dag-child',
+    tags=['semantic-floor', 'linear-parent', 'dag-child', 'linear-parent-child'],
+)
+def case_linear_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Tasks
+        @TaskTemplate()
+        def add_one(number: int) -> int:
+            return number + 1
+
+        @TaskTemplate()
+        def compute_base(number: int) -> int:
+            return number * 3
+
+        @TaskTemplate()
+        def compute_bonus(number: int) -> int:
+            return number - 2
+
+        @TaskTemplate()
+        def combine_base_and_bonus(base: int, bonus: int) -> int:
+            return base + bonus
+
+        # DAG Child Flow
+        @DagFlowTemplate(
+            compute_base.refine(result_key='base'),
+            compute_bonus.refine(result_key='bonus'),
+            combine_base_and_bonus,
+        )
+        def dag_child(number: int) -> int:
+            ...
+
+        # Linear Parent Flow
+        @LinearFlowTemplate(add_one, dag_child)
+        def linear_parent(number: int) -> int:
+            ...
+
+        return apply_job(linear_parent, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job(5) == 22
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='linear-parent-child-with-dag-child',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='linear-parent-child-with-func-child',
+    tags=['semantic-floor', 'linear-parent', 'func-child', 'linear-parent-child'],
+)
+def case_linear_parent_with_func_child() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Tasks
+        @TaskTemplate()
+        def double_number(number: int) -> int:
+            return number * 2
+
+        @TaskTemplate()
+        def add_five(number: int) -> int:
+            return number + 5
+
+        @TaskTemplate()
+        def multiply_by_four(number: int) -> int:
+            return number * 4
+
+        # Func Child Flow
+        @FuncFlowTemplate()
+        def func_child(number: int) -> int:
+            buffered_number = add_five(number)
+            return multiply_by_four(buffered_number)
+
+        # Linear Parent Flow
+        @LinearFlowTemplate(double_number, func_child)
+        def linear_parent(number: int) -> int:
+            ...
+
+        return apply_job(linear_parent, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job(3) == 44
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='linear-parent-child-with-func-child',
         build_job_func=build_job,
         run_and_assert_results_func=run_and_assert_results,
         expected_callable_type=expected_callable_type,
