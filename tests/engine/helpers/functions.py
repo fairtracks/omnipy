@@ -9,6 +9,7 @@ from omnipy.shared.enums.job import JobType, RunState
 from omnipy.shared.protocols.compute.job import (HasJobCreator,
                                                  IsDagFlow,
                                                  IsDagFlowTemplate,
+                                                 IsFuncArgJob,
                                                  IsFlowTemplate,
                                                  IsFuncFlow,
                                                  IsFuncFlowTemplate,
@@ -24,7 +25,7 @@ from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.util.callable_types import CallableType
 from omnipy.util.helpers import resolve
 
-from .classes import JobCase
+from .classes import ComposedFlowCase, JobCase
 
 
 def extract_engine(job: IsJobBase) -> IsEngine:
@@ -270,6 +271,16 @@ def update_job_case_with_job(
     return job_case
 
 
-async def run_job_test(job_case: JobCase):
+def apply_composed_flow_case(
+    job_case: ComposedFlowCase,
+    engine: IsEngine,
+    registry: IsRunStateRegistry | None,
+) -> IsFuncArgJob:
+    job_case.job = job_case.build_job_func(engine, registry)
+    return job_case.job
+
+
+async def run_job_test(job_case: JobCase | ComposedFlowCase):
     """Provide run job test for test reuse."""
+    assert job_case.job is not None
     await resolve(job_case.run_and_assert_results_func(job_case.job))

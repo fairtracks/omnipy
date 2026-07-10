@@ -7,10 +7,12 @@ from typing_extensions import override
 
 from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.shared.enums.job import JobType, RunState
+from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.compute.job import IsFuncArgJob
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
+from omnipy.util.callable_types import CallableType
 
 CallP = ParamSpec('CallP')
 ReturnT = TypeVar('ReturnT')
@@ -22,6 +24,15 @@ class JobCase(Generic[CallP, ReturnT]):
     job_func: Callable[CallP, ReturnT]
     run_and_assert_results_func: Callable[..., None | Awaitable[None]]
     job_type: JobType.Literals | None = None
+    job: IsFuncArgJob | None = None
+
+
+@dataclass
+class ComposedFlowCase(Generic[CallP, ReturnT]):
+    name: str
+    build_job_func: Callable[[IsEngine, IsRunStateRegistry | None], IsFuncArgJob]
+    run_and_assert_results_func: Callable[..., None | Awaitable[None]]
+    expected_callable_type: CallableType.Literals
     job: IsFuncArgJob | None = None
 
 

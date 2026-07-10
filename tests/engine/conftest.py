@@ -13,8 +13,8 @@ from omnipy.shared.protocols.compute.job import IsFlowTemplate, IsTaskTemplate
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
-from .helpers.classes import JobCase, JobRunnerStateChecker
-from .helpers.functions import update_job_case_with_job
+from .helpers.classes import ComposedFlowCase, JobCase, JobRunnerStateChecker
+from .helpers.functions import apply_composed_flow_case, update_job_case_with_job
 from .helpers.mocks import (MockDagFlowTemplate,
                             MockEngineConfig,
                             MockFuncFlowTemplate,
@@ -331,3 +331,45 @@ def all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg(
         engine_decorator,
         registry,
     )
+
+
+@pc.fixture(scope='function')
+@pc.parametrize_with_cases(
+    'job_case',
+    cases='.cases.flows',
+    has_tag='matrix',
+)
+@pc.parametrize('engine', [all_engines], ids=[''])
+@pc.parametrize('engine_decorator', [assert_runstate_engine_decorator])
+@pc.parametrize('registry', [mock_registry], ids=[''])
+def all_flow_matrix_cases_all_engines_assert_runstate_mock_reg(
+    job_case: ComposedFlowCase,
+    engine: IsEngine,
+    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    registry: IsRunStateRegistry | None,
+):
+    if engine_decorator:
+        engine = engine_decorator(engine)
+    apply_composed_flow_case(job_case, engine, registry)
+    return job_case
+
+
+@pc.fixture(scope='function')
+@pc.parametrize_with_cases(
+    'job_case',
+    cases='.cases.flows',
+    has_tag='semantic-floor',
+)
+@pc.parametrize('engine', [all_engines], ids=[''])
+@pc.parametrize('engine_decorator', [assert_runstate_engine_decorator])
+@pc.parametrize('registry', [mock_registry], ids=[''])
+def nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg(
+    job_case: ComposedFlowCase,
+    engine: IsEngine,
+    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    registry: IsRunStateRegistry | None,
+):
+    if engine_decorator:
+        engine = engine_decorator(engine)
+    apply_composed_flow_case(job_case, engine, registry)
+    return job_case
