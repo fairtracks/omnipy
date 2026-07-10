@@ -1,5 +1,5 @@
 import asyncio
-from typing import AsyncGenerator, Awaitable, Generator, cast
+from typing import AsyncGenerator, Awaitable, cast, Generator
 
 import pytest_cases as pc
 
@@ -950,7 +950,7 @@ def case_dag_parent_child_routing() -> ComposedFlowCase[[int], int]:
     id='dag-parent-child-refine-revise',
     tags=['semantic-floor', 'dag-parent', 'dag-refine-revise'],
 )
-def case_dag_parent_child_refine_revise() -> ComposedFlowCase[[int], int]:
+def case_dag_parent_child_refine_revise() -> ComposedFlowCase[[int], int]:  # noqa: C901
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     # Parent Tasks

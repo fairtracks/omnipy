@@ -7,9 +7,9 @@ from typing_extensions import override
 
 from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.shared.enums.job import JobType, RunState
-from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.compute.job import IsFuncArgJob
 from omnipy.shared.protocols.config import IsJobRunnerConfig
+from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.util.callable_types import CallableType
