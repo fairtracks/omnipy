@@ -48,3 +48,19 @@
 ...     return number
 >>> repeat_plus_one.run(0, 3)
 ```
+
+Generator flow bodies may exist only to define the callable signature while child jobs perform
+the actual execution.
+
+```python
+@LinearFlowTemplate(task_one, generator_task_two)
+def my_sync_generator_flow(number: int) -> Generator[int, None, None]:
+    yield from Void()  # For generator signature only; never run.
+```
+
+```python
+@DagFlowTemplate(task_one, generator_task_two)
+async def my_async_generator_flow(number: int) -> AsyncGenerator[int, None]:
+    async for _ in Void():  # For generator signature only; never run.
+        yield _
+```
