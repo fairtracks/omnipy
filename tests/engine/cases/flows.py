@@ -1,7 +1,6 @@
 import asyncio
 from typing import AsyncGenerator, Awaitable, Generator, cast
 
-import pytest
 import pytest_cases as pc
 
 from omnipy import Void
@@ -15,7 +14,7 @@ from omnipy.util.callable_types import CallableType
 from omnipy.util.helpers import resolve
 
 from ..helpers.classes import ComposedFlowCase
-from ..helpers.functions import apply_job, assert_job_state, check_engine_cls
+from ..helpers.functions import apply_job, assert_job_state
 
 
 def assert_case_callable_type_and_finished_state(
@@ -1162,14 +1161,8 @@ def case_func_flow_nested_async_support_gap() -> ComposedFlowCase[[int], Awaitab
         return apply_job(func_parent_nested_async, engine, registry)
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
-        from omnipy.components.prefect.engine.prefect import PrefectEngine
-
-        try:
-            result = await resolve(job(4))
-        except Exception:
-            if check_engine_cls(job, PrefectEngine):
-                pytest.xfail('Nested async flow chaining is not supported by PrefectEngine.')
-            raise
+        # Compatibility probe: expected to pass on both engines; remove if stable.
+        result = await resolve(job(4))
 
         assert result == 20
         assert_case_callable_type_and_finished_state(job, expected_callable_type)
