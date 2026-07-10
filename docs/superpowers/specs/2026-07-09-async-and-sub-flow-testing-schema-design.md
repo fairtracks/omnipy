@@ -21,6 +21,9 @@ instead of introducing new runtime concepts or APIs.
 - No introduction of explicit `AsyncFlow` or `SubFlow` concepts.
 - No major production refactors.
 - No frozen full cartesian matrix in the spec.
+- No new multithread or multiprocess task/flow tests in this slice.
+- No expansion of tests that mix execution-model concerns with the async/subflow job semantics under
+  test here.
 
 ## Current context
 
@@ -186,6 +189,8 @@ This is the main expansion area.
 - Keep `tests/engine/cases/tasks.py` as the main source of primitive callable behavior.
 - It is allowed to add a limited number of new primitive task callables there if they materially
   improve async/nested-flow coverage.
+- Do not add new multithread or multiprocess task cases for this slice; new coverage should stay on
+  the ordinary single-thread job/flow semantics relevant to async flows and nested flows.
 - Add new engine case-building layers for flow composition and nesting.
 - Extend helper builders so parent flows can be assembled from task and/or flow children.
 - Reuse existing top-level parametrized engine tests where possible, rather than growing many new
@@ -284,5 +289,6 @@ Before implementation planning, the plan should preserve these decisions:
 - async-flow coverage and child-flow coverage are both first-class requirements
 - the top-level parent-flow-type × callable-type matrix is exhaustive per production engine
 - compute coverage is validation-only and only applies if a small validation fix is introduced
+- no new multithread or multiprocess cases should be added in this slice
 - the planner must preserve the minimum coverage floor and explicit support-gap policy
 - failing tests are acceptable when they document current gaps
