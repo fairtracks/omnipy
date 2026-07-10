@@ -10,6 +10,7 @@ from omnipy.shared.protocols.compute.job import (HasJobCreator,
                                                  IsDagFlow,
                                                  IsDagFlowTemplate,
                                                  IsFuncArgJob,
+                                                 IsFuncArgJobTemplate,
                                                  IsFlowTemplate,
                                                  IsFuncFlow,
                                                  IsFuncFlowTemplate,
@@ -49,6 +50,18 @@ def assert_job_state(job: IsJob, states: list[RunState.Literals]):
     job_state = extract_job_run_state(job)
     if job_state:
         assert job_state in states, job_state
+
+
+def apply_job(
+    template: IsFuncArgJobTemplate,
+    engine: IsEngine,
+    registry: IsRunStateRegistry | None,
+):
+    """Apply a template with engine and registry wiring."""
+    cast(HasJobCreator, type(template)).job_creator.set_engine(engine)
+    if registry:
+        engine.set_registry(registry)
+    return template.apply()
 
 
 def _check_timeout(
