@@ -46,9 +46,6 @@ def sync_increment(number: int) -> int:
     return number + 1
 
 
-async def async_increment(number: int) -> int:
-    return number + 1
-
 
 @pc.case(
     id='sync-function-power(4,2)==16',
