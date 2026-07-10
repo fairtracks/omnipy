@@ -38,6 +38,18 @@ RunTaskAndAssertType = Callable[[IsJob], None]
 AsyncRunTaskAndAssertType = Callable[[IsJob], Awaitable[None]]
 
 
+def sync_double(number: int) -> int:
+    return number * 2
+
+
+def sync_increment(number: int) -> int:
+    return number + 1
+
+
+async def async_increment(number: int) -> int:
+    return number + 1
+
+
 @pc.case(
     id='sync-function-power(4,2)==16',
     tags=['sync', 'function', 'singlethread', 'success', 'power'],
