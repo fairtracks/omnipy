@@ -1,5 +1,5 @@
 from collections.abc import AsyncGenerator
-from typing import Literal, cast
+from typing import Literal
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer
@@ -9,7 +9,7 @@ MonitoringSource = Literal['river', 'wastewater']
 
 _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = {
     'river': {
-        1: [
+        0: [
             {
                 'river_batch_id':
                     'river-batch-1',
@@ -41,7 +41,7 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
                 },],
             },
         ],
-        2: [{
+        1: [{
             'river_batch_id': 'river-batch-3',
             'catchment': 'glomma-upper',
             'sampled_at': '2026-05-17',
@@ -53,7 +53,7 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
         },],
     },
     'wastewater': {
-        1: [{
+        0: [{
             'wastewater_batch_id':
                 'wastewater-batch-1',
             'catchment_code':
@@ -73,7 +73,7 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
                 },
             ],
         },],
-        2: [{
+        1: [{
             'wastewater_batch_id': 'wastewater-batch-2',
             'catchment_code': 'glomma-upper',
             'monitoring_date': '2026-05-10',
@@ -87,21 +87,21 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
 }
 
 
-def create_monitoring_service_app(source: MonitoringSource) -> web.Application:
+def create_monitoring_service_app(source: MonitoringSource, endpoint: str) -> web.Application:
     async def _monitoring_endpoint(request: web.Request) -> web.Response:
         page = int(request.query.get('page', '1'))
         return web.json_response(_MONITORING_PAGES[source][page])
 
     app = web.Application()
-    app.router.add_route('GET', f'/{source}', _monitoring_endpoint)
+    app.router.add_route('GET', f'/{endpoint}', _monitoring_endpoint)
     return app
 
 
 @pytest.fixture(scope='function')
 async def river_service(aiohttp_server) -> AsyncGenerator[TestServer, None]:
-    yield await aiohttp_server(create_monitoring_service_app('river'))
+    yield await aiohttp_server(create_monitoring_service_app('river', 'samples'))
 
 
 @pytest.fixture(scope='function')
 async def wastewater_service(aiohttp_server) -> AsyncGenerator[TestServer, None]:
-    yield await aiohttp_server(create_monitoring_service_app('wastewater'))
+    yield await aiohttp_server(create_monitoring_service_app('wastewater', 'retrieve_samples'))

@@ -8,8 +8,8 @@ import pytest
 
 from omnipy import (Dataset,
                     FuncFlowTemplate,
-                    HttpUrlModel,
                     HttpUrlDataset,
+                    HttpUrlModel,
                     JsonListOfDictsDataset,
                     PandasDataset,
                     TaskTemplate)
@@ -28,17 +28,6 @@ class MonitoringTables(Dataset[PandasDataset]):
 def _table_records(table_dataset: PandasDataset, table_name: str) -> list[dict[str, object]]:
     records = cast(Any, table_dataset[table_name].content).to_dict(orient='records')
     return cast(list[dict[str, object]], records)
-
-
-def build_paginated_source_urls(base_url: str, source_name: str, page_count: int) -> HttpUrlDataset:
-    urls = HttpUrlDataset()
-
-    for page in range(1, page_count + 1):
-        url = HttpUrlModel(base_url)
-        url.query['page'] = str(page)
-        urls[f'{source_name}_page_{page}'] = url
-
-    return urls
 
 
 def _service_base_url(service: TestServer, source_name: str) -> str:
@@ -165,19 +154,35 @@ def _sort_measurement_rows(measurement_rows: list[dict[str, object]]) -> list[di
     )
 
 
+def build_paginated_source_urls(source_name: str, port: int | None, endpoint: str,
+                                page_count: int) -> HttpUrlDataset:
+    urls = HttpUrlDataset()
+
+    for page in range(page_count):
+        url = HttpUrlModel('http://localhost')
+        url.port = port
+        url.path /= endpoint
+        url.query['page'] = page
+        urls[f'{source_name}_page_{page}'] = url
+
+    return urls
+
+
 async def test_environmental_monitoring_harmonization(
     runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     river_service: Annotated[TestServer, pytest.fixture],
     wastewater_service: Annotated[TestServer, pytest.fixture],
 ) -> None:
     river_urls = build_paginated_source_urls(
-        _service_base_url(river_service, 'river'),
         'river',
+        river_service.port,
+        'samples',
         page_count=2,
     )
     wastewater_urls = build_paginated_source_urls(
-        _service_base_url(wastewater_service, 'wastewater'),
         'wastewater',
+        wastewater_service.port,
+        'retrieve_samples',
         page_count=2,
     )
 
