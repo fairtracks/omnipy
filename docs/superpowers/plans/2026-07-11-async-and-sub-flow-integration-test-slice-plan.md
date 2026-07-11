@@ -35,16 +35,18 @@
   - Tiny typed `Model` / `Dataset` definitions and normalization-visible Pydantic schemas for Scenario B+C.
 - Create: `tests/integration/novel/full/helpers/submission_cases.py`
   - Scenario B+C sample data, manifest/storage fixtures, storage-backed FASTQ references, and adapter-facing expected JSON payload helpers.
-- Delete or rewrite as part of cleanup: `tests/integration/novel/full/test_async_subflow_scenarios.py`
-  - Retire the old mixed showcase once the three new files cover its intended value more readably.
-- Delete or repurpose only if no longer imported after the rewrite:
+- Delete as part of cleanup: `tests/integration/novel/full/test_async_subflow_scenarios.py`
+  - Retire the old mixed showcase completely; it must not remain as a fourth overlapping async/subflow narrative test.
+- Modify shared files to remove only the superseded async/subflow-specific entries while preserving other still-used coverage:
   - `tests/integration/novel/full/cases/flows.py`
   - `tests/integration/novel/full/cases/raw/flows.py`
   - `tests/integration/novel/full/cases/raw/tasks.py`
+- Delete dead files after the shared-file cleanup proves they are no longer referenced:
   - `tests/integration/novel/full/cases/raw/asserts.py`
   - `tests/integration/novel/full/cases/raw/validators.py`
+- Retain shared support files that are still used by unrelated integration tests:
   - `tests/integration/novel/full/helpers/models.py`
-  - package `__init__.py` files under those directories if they become empty
+  - package `__init__.py` files needed by surviving tests
 - Leave unrelated existing integration tests in place:
   - `tests/integration/novel/full/test_three_task_flow.py`
   - `tests/integration/novel/full/test_multi_model_dataset.py`
@@ -94,14 +96,14 @@
 
 ## Shared acceptance criteria
 
-- `tests/integration/novel/full/` contains exactly three new canonical async/subflow slice tests: Scenario A, Scenario B+C, and the separate callable-type validation test.
+- `tests/integration/novel/full/` ends with exactly three canonical async/subflow slice tests: Scenario A, Scenario B+C, and the separate callable-type validation test.
 - Scenario A exercises real GET-backed `Dataset.load()` / `load_into()` behavior and Omnipy flattening in one integrated path.
 - Scenario A returns a Dataset with `samples` and `measurements` as `PandasDataset` members and asserts representative harmonized rows/values.
 - Scenario B+C uses typed Dataset members `submission_samples`, `submission_files`, and `submission_metadata`, with visible normalization and linkage validation around `local_submission_alias`, `local_sample_alias`, and `local_sample_aliases`.
 - Scenario B+C stores the final downstream receipt/status back into `submission_metadata` and preserves the orchestration order required by the spec.
 - The third test stays readable and non-scenario-oriented, and only asserts validation behavior that already exists or that the parent plan explicitly adds.
-- The old `test_async_subflow_scenarios.py` showcase is removed or reduced so it is no longer the canonical coverage entry point for this slice.
-- The old async/subflow implementation attempt under `tests/integration/novel/full/` is removed or repurposed so no superseded helper/case files remain as dead narrative coverage.
+- `tests/integration/novel/full/test_async_subflow_scenarios.py` is deleted, not rewritten.
+- The old async/subflow implementation attempt under `tests/integration/novel/full/` is retired by deleting the old showcase test, removing its async-subflow-only case/helper entries from shared files, and deleting only those leftover files that become unreferenced afterward.
 
 ### Task 1: Scenario A — environmental monitoring harmonization
 
@@ -157,7 +159,6 @@
 
 **Files:**
 - Create: `tests/integration/novel/full/test_flow_callable_type_validation.py`
-- Modify or remove: `tests/integration/novel/full/test_async_subflow_scenarios.py`
 
 **What this slice must prove:**
 - Linear and DAG flow construction behavior stays readable when callable type depends on child composition.
@@ -177,19 +178,22 @@
 ### Task 4: Remove the superseded integration implementation attempt and verify the new slice is the only canonical narrative coverage
 
 **Files:**
-- Delete or rewrite: `tests/integration/novel/full/test_async_subflow_scenarios.py`
-- Delete or repurpose only if no longer needed by surviving tests:
+- Delete: `tests/integration/novel/full/test_async_subflow_scenarios.py`
+- Modify to remove only async/subflow-scenario entries that supported the deleted showcase test:
   - `tests/integration/novel/full/cases/flows.py`
   - `tests/integration/novel/full/cases/raw/flows.py`
   - `tests/integration/novel/full/cases/raw/tasks.py`
+- Delete if left unreferenced after that cleanup:
   - `tests/integration/novel/full/cases/raw/asserts.py`
   - `tests/integration/novel/full/cases/raw/validators.py`
+- Retain because other tests still use them:
   - `tests/integration/novel/full/helpers/models.py`
-  - empty `__init__.py` containers left behind by the cleanup
+  - package `__init__.py` files required by surviving tests
 
 **What this slice must prove:**
-- The current implementation attempt is actually removed rather than left beside the new tests as confusing duplicate coverage.
-- Only files that were part of the superseded async/subflow narrative attempt are removed; unrelated full-integration tests remain untouched.
+- The current implementation attempt is actually retired rather than left beside the new tests as confusing duplicate coverage.
+- The end state is unambiguous: the old showcase test is deleted, not rewritten or reduced.
+- Shared support modules are trimmed only where they carried async-subflow-scenario-specific entries for the deleted test; shared support still needed by `test_three_task_flow.py` and `test_multi_model_dataset.py` remains in place.
 - Imports, helper references, and package layout remain coherent after the cleanup.
 
 **Verification target:**
