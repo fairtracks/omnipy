@@ -322,6 +322,47 @@ def test_linear_flow_only_first_positional(
     assert linear_flow() == 168
 
 
+def test_linear_flow_forwards_kwargs_to_later_child_jobs(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def add_one_tmpl(number: int) -> int:
+        return number + 1
+
+    @TaskTemplate()
+    def multiply_tmpl(number: int, factor: int) -> int:
+        return number * factor
+
+    @LinearFlowTemplate(add_one_tmpl, multiply_tmpl)
+    def linear_flow_tmpl(number: int, factor: int) -> int:
+        ...
+
+    linear_flow = linear_flow_tmpl.apply()
+    assert linear_flow(number=4, factor=3) == 15
+
+
+def test_linear_flow_param_key_map_and_fixed_params(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def identity_tmpl(number: int) -> int:
+        return number
+
+    @TaskTemplate()
+    def transform_tmpl(number: int, add: int, mult: int) -> int:
+        return (number + add) * mult
+
+    transformed_tmpl = transform_tmpl.refine(
+        param_key_map=dict(add='step', mult='factor'),
+        fixed_params=dict(mult=2),
+    )
+
+    @LinearFlowTemplate(identity_tmpl, transformed_tmpl)
+    def linear_flow_tmpl(number: int, step: int, factor: int) -> int:
+        ...
+
+    linear_flow = linear_flow_tmpl.apply()
+    assert linear_flow(number=3, step=4, factor=10) == 14
+
+
 def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     @TaskTemplate()
@@ -360,6 +401,48 @@ def test_dynamic_dag_flow_by_returned_dict(
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow() == 84
+
+
+def test_dag_flow_forwards_later_kwargs_and_respects_mapped_fixed_params(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def identity_tmpl(number: int) -> int:
+        return number
+
+    @TaskTemplate()
+    def transform_tmpl(number: int, multiplier: int, offset: int) -> int:
+        return number * multiplier + offset
+
+    transformed_tmpl = transform_tmpl.refine(
+        param_key_map=dict(multiplier='factor'),
+        fixed_params=dict(multiplier=3),
+    )
+
+    @DagFlowTemplate(identity_tmpl.refine(result_key='number'), transformed_tmpl)
+    def dag_flow_tmpl(number: int, factor: int, offset: int) -> int:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    assert dag_flow(number=4, factor=10, offset=5) == 17
+
+
+def test_dag_flow_mapped_key_cannot_override_fixed_params(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def multiply_tmpl(number: int, multiplier: int) -> int:
+        return number * multiplier
+
+    multiplied_tmpl = multiply_tmpl.refine(
+        param_key_map=dict(multiplier='factor'),
+        fixed_params=dict(multiplier=3),
+    )
+
+    @DagFlowTemplate(multiplied_tmpl)
+    def dag_flow_tmpl(number: int, factor: int) -> int:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    assert dag_flow(number=4, factor=10) == 12
 
 
 def mypy_fix_mock_task_template_assert_same_time(
