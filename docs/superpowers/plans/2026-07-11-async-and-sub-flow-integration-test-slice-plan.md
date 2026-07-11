@@ -4,7 +4,7 @@
 
 **Goal:** Replace the current async/subflow integration implementation attempt with three readable integration tests that match the approved spec's scenario A, scenario B+C, and separate callable-type / `refine()` / `revise()` validation slice.
 
-**Architecture:** Keep `tests/engine/` as the primary authority for async and nested-flow semantics, and use `tests/integration/novel/full/` only for selective, narrative, user-facing confirmations. Scenario A should exercise real GET-backed `Dataset.load()` / `load_into()` behavior plus a harmonization subflow that normalizes data and uses Omnipy flattening in the integrated path. Scenario B+C should use small Pydantic-backed Omnipy `Model` / `Dataset` types and async adapter tasks for POST-like downstream steps, while keeping those adapters easy to swap later for mock HTTP POST services. The third test should stay separate from the narrative scenarios and cover outer callable-type plus construction / `refine()` / `revise()` validation behavior readably.
+**Architecture:** Keep `tests/engine/` as the primary authority for async and nested-flow semantics, and use `tests/integration/novel/full/` only for selective, narrative, user-facing confirmations. Scenario A should exercise real GET-backed `Dataset.load()` / `load_into()` behavior through one paginated mock endpoint per source type, plus a harmonization subflow that normalizes data and uses Omnipy flattening in the integrated path around a shared geography/time backbone. Scenario B+C should use small Pydantic-backed Omnipy `Model` / `Dataset` types centered on a single ISA-inspired submission metadata record, with async adapter tasks for POST-like downstream steps and an explicitly external transfer step that Omnipy coordinates rather than performs. The third test should stay separate from the narrative scenarios and cover outer callable-type plus construction / `refine()` / `revise()` validation behavior readably, while the slice as a whole stays within the integration proof boundaries defined by the spec.
 
 **Tech Stack:** Python, pytest, aiohttp test server fixtures, Omnipy `Dataset` / `Model` / flow templates, Pydantic-backed typed models, `PandasDataset`
 
@@ -30,11 +30,11 @@
 - Create: `tests/integration/novel/full/test_flow_callable_type_validation.py`
   - Separate readable validation-oriented integration test.
 - Create: `tests/integration/novel/full/helpers/monitoring_services.py`
-  - Extracted aiohttp app factory, paginated payload builders, and URL/fixture helpers for Scenario A, following the established `tests/components/remote/` aiohttp-server fixture pattern.
+  - Extracted aiohttp app factory, paginated payload builders, and URL/fixture helpers for Scenario A, following the established `tests/components/remote/` aiohttp-server fixture pattern with one endpoint per source type and query-param pagination.
 - Create: `tests/integration/novel/full/helpers/submission_models.py`
-  - Tiny typed `Model` / `Dataset` definitions and normalization-visible Pydantic schemas for Scenario B+C.
+  - Tiny typed `Model` / `Dataset` definitions and normalization-visible Pydantic schemas for Scenario B+C, including the single submission-metadata record, paired-end FASTQ file shape, and external identifier fields.
 - Create: `tests/integration/novel/full/helpers/submission_cases.py`
-  - Scenario B+C sample data, manifest/storage fixtures, storage-backed FASTQ references, and adapter-facing expected JSON payload helpers.
+  - Scenario B+C sample data, manifest/storage fixtures, storage-backed FASTQ references, and adapter-facing expected JSON payload helpers, including transfer-status and downstream-ID examples.
 - Delete as part of cleanup: `tests/integration/novel/full/test_async_subflow_scenarios.py`
   - Retire the old mixed showcase completely; it must not remain as a fourth overlapping async/subflow narrative test.
 - Modify shared files to remove only the superseded async/subflow-specific entries while preserving other still-used coverage:
@@ -66,9 +66,11 @@
 
 - Domain story: harmonize river-water and wastewater monitoring batches for the same catchment and monitoring dates.
 - Service boundary: use mock HTTP GET services built with extracted helper modules + fixtures, following the existing `tests/components/remote/` aiohttp-server pattern rather than ad-hoc monkeypatching.
+- Endpoint shape: prefer one mock endpoint per source type (`river` and `wastewater`) with paginated batches selected by query parameters such as `?page=1`, rather than one endpoint per page or one monolithic endpoint returning everything at once.
 - Fetching surface: use real `Dataset.load()` / `load_into()` behavior for the GET side.
 - Async shape: one async parent flow with two async source-specific collection tasks; each task may fetch multiple pages asynchronously from one source type.
 - Subflow shape: a harmonization subflow normalizes field names and units, then uses Omnipy flattening functionality in the integrated path.
+- Shared harmonization backbone: the two sources should overlap primarily on geography and time, while still keeping enough source-specific measurements to make the harmonization feel real.
 - Output shape: return a Dataset with two `PandasDataset` members named `samples` and `measurements`.
 
 ### Scenario B+C details that must remain explicit
@@ -78,13 +80,19 @@
   - `submission_samples`
   - `submission_files`
   - `submission_metadata`
+- `submission_metadata` should remain a single record for the whole submission and should combine a minimal ISA-inspired study/submission envelope with archive-process state, rather than splitting those concerns into multiple metadata records.
 - Required linkage names:
   - `local_submission_alias` is the internal submission identifier
   - `local_sample_alias` is the internal sample identifier
+  - `biosamplevault_sample_id` is the external sample identifier returned by BioSampleVault
+  - `sequence_depot_submission_id` is the external submission identifier returned by Sequence Depot
   - paired-end FASTQ manifest rows link to samples through `local_sample_alias`
+  - the minimal file model should stay close to real sequencing practice: one sample links to two files distinguished by roles such as `read1` and `read2`
   - `submission_metadata` is a single record that also carries included `local_sample_aliases`
 - Validation/cleanup must be visible through typed models, including lowercasing local aliases and checking sample/file/metadata linkage consistency.
+- `submission_metadata` should visibly carry a small but believable subset of study/submission fields such as project/study identity, release date, and submission checklist version, along with final receipt information.
 - Adapter/request boundaries should stay JSON-shaped and isolated so the v1 async task adapters can later be swapped for mock HTTP POST services without rewriting the scenario assertions.
+- Transfer realism: the file-transfer step is an external asynchronous operation coordinated by Omnipy rather than implemented by Omnipy itself. The test should make that distinction visible so the scenario stays honest about what Omnipy is brokering versus what an external transfer service performs.
 - Final output must be the enriched typed Dataset package plus final receipt/status stored in `submission_metadata`.
 
 ### Third validation test details that must remain explicit
@@ -94,14 +102,37 @@
 - It must explicitly include the async-lifting rule intended by production code, but only after implementation verifies whether the real rule is “terminal child decides” or “any async child lifts the outer callable type to async.”
 - It must not invent a second validation path; any new production validation requirement routes back to the parent plan's Task 8.
 
+### Integration proof boundaries that must remain explicit
+
+Across the three integration tests, the selective integration slice should prove:
+
+- user-meaningful flow/subflow composition rather than isolated helper behavior
+- believable Dataset-centric outputs
+- JSON/REST boundary handling where it materially contributes to the user story
+- typed validation and light normalization where the integrated contract depends on them
+
+Across the three integration tests, the selective integration slice should explicitly not try to prove:
+
+- exhaustive validator edge cases
+- low-level flattening mechanics in isolation
+- all retry/failure-path combinations
+- real support for actual third-party public services
+- every callable-type combination already covered more thoroughly by the engine harness
+
 ## Shared acceptance criteria
 
 - `tests/integration/novel/full/` ends with exactly three canonical async/subflow slice tests: Scenario A, Scenario B+C, and the separate callable-type validation test.
 - Scenario A exercises real GET-backed `Dataset.load()` / `load_into()` behavior and Omnipy flattening in one integrated path.
+- Scenario A uses one paginated mock endpoint per source type, selected by query parameter, rather than bespoke one-off page endpoints.
 - Scenario A returns a Dataset with `samples` and `measurements` as `PandasDataset` members and asserts representative harmonized rows/values.
-- Scenario B+C uses typed Dataset members `submission_samples`, `submission_files`, and `submission_metadata`, with visible normalization and linkage validation around `local_submission_alias`, `local_sample_alias`, and `local_sample_aliases`.
+- Scenario A keeps geography/time as the shared harmonization backbone while preserving source-specific measurements.
+- Scenario B+C uses typed Dataset members `submission_samples`, `submission_files`, and `submission_metadata`, with visible normalization and linkage validation around `local_submission_alias`, `local_sample_alias`, `local_sample_aliases`, `biosamplevault_sample_id`, and `sequence_depot_submission_id`.
+- Scenario B+C keeps `submission_metadata` as one combined ISA-inspired submission/study record plus archive-process state, not multiple split metadata records.
+- Scenario B+C uses a paired-end FASTQ-oriented file model with `read1` / `read2` roles.
 - Scenario B+C stores the final downstream receipt/status back into `submission_metadata` and preserves the orchestration order required by the spec.
+- Scenario B+C makes the transfer boundary honest: Omnipy coordinates an external asynchronous transfer step rather than pretending to implement transfer itself.
 - The third test stays readable and non-scenario-oriented, and only asserts validation behavior that already exists or that the parent plan explicitly adds.
+- The three integration tests stay within the spec's proof boundaries and do not drift into exhaustive validator, flattening-mechanics, retry-matrix, or third-party-service coverage.
 - `tests/integration/novel/full/test_async_subflow_scenarios.py` is deleted, not rewritten.
 - The old async/subflow implementation attempt under `tests/integration/novel/full/` is retired by deleting the old showcase test, removing its async-subflow-only case/helper entries from shared files, and deleting only those leftover files that become unreferenced afterward.
 
@@ -116,7 +147,9 @@
 **What this slice must prove:**
 - One async parent flow coordinates two async source-specific collection tasks.
 - Each source task can fetch multiple pages asynchronously from its mocked GET service.
+- Each mocked source uses one source-type endpoint with query-param pagination (for example `river?page=1` and `wastewater?page=1`) rather than separate endpoints per page.
 - A harmonization subflow normalizes field names and units, then uses Omnipy flattening in the integrated path.
+- The harmonization has a believable shared backbone around geography/time overlap while preserving some source-specific measurements.
 - The final result is a Dataset containing `samples` and `measurements` as `PandasDataset` members.
 - The extracted mock-service fixtures follow the existing aiohttp-server style already used under `tests/components/remote/`, so the narrative test still uses realistic request/response wiring.
 
@@ -140,15 +173,19 @@
 **What this slice must prove:**
 - The workflow starts from typed local metadata, file manifests, and storage-backed FASTQ references.
 - The Dataset package contains `submission_samples`, `submission_files`, and `submission_metadata`.
-- Normalization and validation are visible through the typed models, including lowercase alias cleanup and linkage checks across `local_submission_alias`, `local_sample_alias`, paired-end files, and metadata membership via `local_sample_aliases`.
-- Async task adapters enforce the brokering order: metadata cleanup and manifest/storage verification happen before submission-ID creation, transfer completion, BioSampleVault registration, and final Sequence Depot submission.
+- `submission_metadata` is one combined record carrying a small ISA-inspired study/submission envelope together with archive-process state.
+- Normalization and validation are visible through the typed models, including lowercase alias cleanup and linkage checks across `local_submission_alias`, `local_sample_alias`, paired-end files with `read1` / `read2` roles, metadata membership via `local_sample_aliases`, and returned external IDs.
+- Async task adapters enforce the brokering order: metadata cleanup and manifest/storage verification happen before submission-ID creation, externally performed transfer completion, BioSampleVault registration, and final Sequence Depot submission.
+- Returned downstream identifiers include `biosamplevault_sample_id` on sample-linked results and `sequence_depot_submission_id` on submission-linked results.
 - The final receipt/status is stored back into `submission_metadata`.
 - The helper layout keeps POST-like request/response payloads isolated behind adapter-friendly JSON builders so a later swap to aiohttp mock POST services is local rather than architectural.
+- The scenario stays honest that Omnipy coordinates transfer progress/status but does not itself implement the file-transfer mechanism.
 
 **User-facing acceptance criteria:**
 - The test reads like a small end-user workflow, not a transport harness demo.
 - The final dataset package is enriched with downstream identifiers/receipt data while preserving typed validation guarantees.
 - Assertions show both data cleanup and orchestration ordering, without pretending that real third-party HTTP integrations already exist.
+- Assertions stay at the integration-proof boundary: meaningful workflow outputs and contracts, not exhaustive validator or retry-matrix coverage.
 
 **Verification target:**
 - `uv run pytest tests/integration/novel/full/test_sequence_submission_brokering.py -v --mypy-pyproject-toml-file=pyproject.toml`
@@ -214,7 +251,9 @@
 ## Spec-to-plan self-check
 
 - Scenario A matches the spec's mock GET + `Dataset.load()` + flattening requirement.
-- Scenario B+C matches the typed Dataset brokering requirement, preserves the exact dataset member and linkage names, and keeps async service boundaries adapter-based for v1 with a future mock-POST swap seam.
+- Scenario A now also preserves the one-endpoint-per-source query-param pagination shape and the geography/time harmonization backbone from the updated spec.
+- Scenario B+C matches the typed Dataset brokering requirement, preserves the exact dataset member and linkage names, carries the ISA-inspired single-record metadata envelope, uses paired-end file roles, and keeps async service boundaries adapter-based for v1 with a future mock-POST swap seam.
 - The third test is separated from the narrative scenarios and is explicitly tied to construction / `refine()` / `revise()` validation behavior, including the async-lifting ambiguity check.
+- The plan now preserves the explicit integration proof boundaries added in the updated spec.
 - The plan now explicitly includes cleanup/removal of the current `tests/integration/novel/full/` async/subflow implementation attempt.
 - The plan keeps integration coverage selective and readable rather than duplicating the engine harness.
