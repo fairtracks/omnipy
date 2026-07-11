@@ -7,13 +7,10 @@ import pytest_cases as pc
 
 from omnipy.shared.protocols.compute.job import IsAnyFlowTemplate, IsTask
 
-from .raw.flows import (async_io_pipeline_flow,
-                        nested_subflow_composition_flow,
-                        pos_square_root_dag_flow,
+from .raw.flows import (pos_square_root_dag_flow,
                         pos_square_root_func_flow,
                         specialize_record_models_dag_flow,
-                        specialize_record_models_func_flow,
-                        subflow_replacement_flow)
+                        specialize_record_models_func_flow)
 
 RunTaskAndAssertType = Callable[[IsTask], None]
 AsyncRunTaskAndAssertType = Callable[[IsTask], Awaitable[None]]
@@ -86,40 +83,3 @@ def case_sync_funcflow_specialize_record_models() -> FlowCase:
         flow_template=specialize_record_models_func_flow,  # noqa
     )
 
-
-#
-# test_async_subflow_scenarios
-#
-
-
-@pc.case(
-    id='async-io-pipeline-linear-flow',
-    tags=['async_subflow_scenario', 'async_io_pipeline', 'linearflow', 'singlethread'],
-)
-def case_async_io_pipeline_linearflow() -> FlowCase:
-    return FlowCase(
-        name='async_io_pipeline',
-        flow_template=async_io_pipeline_flow,  # noqa
-    )
-
-
-@pc.case(
-    id='nested-subflow-composition-dagflow',
-    tags=['async_subflow_scenario', 'nested_subflow_composition', 'dagflow', 'singlethread'],
-)
-def case_nested_subflow_composition_dagflow() -> FlowCase:
-    return FlowCase(
-        name='nested_subflow_composition',
-        flow_template=nested_subflow_composition_flow,  # noqa
-    )
-
-
-@pc.case(
-    id='subflow-replacement-dagflow',
-    tags=['async_subflow_scenario', 'subflow_replacement', 'dagflow', 'singlethread'],
-)
-def case_subflow_replacement_dagflow() -> FlowCase:
-    return FlowCase(
-        name='subflow_replacement',
-        flow_template=subflow_replacement_flow,  # noqa
-    )

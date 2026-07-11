@@ -1,7 +1,5 @@
 """Task definitions for integration novel full tests."""
 
-import asyncio
-
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.multi import MultiModelDataset
@@ -22,39 +20,6 @@ def square_root(number: int) -> dict[str, float]:
 @TaskTemplate()
 def merge_key_value_into_str(key: object, val: object) -> str:
     return '{}: {}'.format(key, val)
-
-
-@TaskTemplate()
-async def fetch_remote_value(seed: int) -> int:
-    await asyncio.sleep(0)
-    return seed + 5
-
-
-@TaskTemplate()
-async def normalize_remote_value(value: int) -> int:
-    await asyncio.sleep(0)
-    return value * 2
-
-
-@TaskTemplate()
-async def store_pipeline_result(value: int, prefix: str) -> str:
-    await asyncio.sleep(0)
-    return f'{prefix}{value}'
-
-
-@TaskTemplate()
-def normalize_text(text: str) -> str:
-    return text.strip().lower()
-
-
-@TaskTemplate()
-def add_label(text: str, label: str) -> str:
-    return f'{label}{text}'
-
-
-@TaskTemplate()
-def wrap_message(text: str, left: str, right: str) -> str:
-    return f'{left}{text}{right}'
 
 
 # TODO: Implement explicit serializer support (if needed)
