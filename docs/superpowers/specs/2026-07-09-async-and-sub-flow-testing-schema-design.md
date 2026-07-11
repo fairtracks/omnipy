@@ -238,12 +238,17 @@ This scenario should prove a simple async + subflow story with real GET-based fe
   monitoring dates.
 - Service boundary: use mock HTTP GET services, built with extracted helper modules + fixtures,
   following the existing `tests/components/remote/` aiohttp-server pattern.
+- Endpoint shape: prefer one mock endpoint per source type (`river` and `wastewater`) with
+  paginated batches selected by query parameters such as `?page=1`, rather than one endpoint per
+  page or one monolithic endpoint returning everything at once.
 - Fetching surface: use real `Dataset.load()` / `load_into()` behavior for the GET side so this
   currently under-tested integration path is exercised.
 - Async shape: one async parent flow with two async source-specific collection tasks; each task may
   fetch multiple pages asynchronously from one source type.
 - Subflow shape: a harmonization subflow should normalize field names and units, then use Omnipy's
   flattening functionality in the integrated path.
+- Shared harmonization backbone: the two sources overlap primarily on geography and time, while
+  still keeping enough source-specific measurements to make the harmonization feel real.
 - Output shape: return a Dataset with two `PandasDataset` members named `samples` and
   `measurements`.
 - Assertions should stay user-facing: representative harmonized rows/values, the two-table output,
@@ -266,17 +271,32 @@ real third-party integrations already exist.
   - `submission_samples`
   - `submission_files`
   - `submission_metadata`
+- `submission_metadata` should remain a single record for the whole submission and should combine a
+  minimal ISA-inspired study/submission envelope with archive-process state, rather than splitting
+  those concerns into multiple metadata records.
 - Linking contract:
   - `local_submission_alias` is the internal submission identifier
   - `local_sample_alias` is the internal sample identifier
+  - `biosamplevault_sample_id` is the external sample identifier returned by BioSampleVault
+  - `sequence_depot_submission_id` is the external submission identifier returned by
+    Sequence Depot
   - paired-end FASTQ manifest rows link to samples through `local_sample_alias`
+  - the minimal file model should stay close to real sequencing practice: one sample links to two
+    files distinguished by roles such as `read1` and `read2`
   - `submission_metadata` is a single record that also carries the included
     `local_sample_aliases`
 - Validation/cleanup should be visible through typed models, including simple normalization such as
   lowercasing local aliases and checking that sample/file/metadata linkages are consistent.
+- `submission_metadata` should visibly carry a small but believable subset of study/submission
+  fields such as project/study identity, release date, and submission checklist version, along with
+  final receipt information.
 - Orchestration contract: final Sequence Depot submission must wait for metadata cleanup,
   manifest/storage verification, submission-ID creation, transfer completion, and BioSampleVault
   sample-ID registration.
+- Transfer realism: the file-transfer step is an external asynchronous operation coordinated by
+  Omnipy rather than implemented by Omnipy itself. The test should make that distinction visible so
+  the scenario stays honest about what Omnipy is brokering versus what an external transfer service
+  performs.
 - Final output: the enriched typed Dataset package plus final receipt/status stored in
   `submission_metadata`.
 
@@ -294,6 +314,23 @@ behavior for linear and DAG flows when child composition changes.
   callable type to async,” pause and confirm rather than silently choosing one.
 - If the current attempted integration test already touches this area, replace it with a much more
   readable version rather than keeping the existing scenario-style presentation.
+
+##### Integration proof boundaries
+
+Across the three integration tests, the selective integration slice should prove:
+
+- user-meaningful flow/subflow composition rather than isolated helper behavior
+- believable Dataset-centric outputs
+- JSON/REST boundary handling where it materially contributes to the user story
+- typed validation and light normalization where the integrated contract depends on them
+
+The selective integration slice should explicitly not try to prove:
+
+- exhaustive validator edge cases
+- low-level flattening mechanics in isolation
+- all retry/failure-path combinations
+- real support for actual third-party public services
+- every callable-type combination already covered more thoroughly by the engine harness
 
 ### 7. Boundaries for supporting code changes
 
