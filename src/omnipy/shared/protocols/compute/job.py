@@ -218,43 +218,6 @@ if is_package_editable('omnipy'):
             _JobT: Applied job instance ready to be called.
     """)
 
-    os.environ['OMNIPY_MACRO_ISFUNCARGJOBTEMPLATE_REFINE_COMMON_ARGS'] = dedent("""\
-            update: Whether omitted values should be inherited from the current template.
-            name: Optional replacement display name.
-            iterate_over_data_files: Whether dataset inputs should be processed item-wise.
-            output_dataset_param: Optional name of an explicit output-dataset parameter.
-            output_dataset_cls: Optional dataset class to use for iterated outputs.
-            auto_async: Whether coroutine jobs should auto-run outside flow contexts.
-            result_key: Optional key used to wrap the returned result in a dictionary.
-            fixed_params: Keyword arguments fixed onto every job invocation.
-            param_key_map: Mapping from external keyword names to callable parameter names.
-            persist_outputs: Per-job output-persistence preference.
-            restore_outputs: Per-job output-restore preference.
-            **kwargs: Additional constructor keyword overrides.
-
-        Returns:
-            _JobTemplateT: Refined template instance.
-    """)
-
-    os.environ['OMNIPY_MACRO_HASFUNCARGJOBTEMPLATEINIT_CALL_COMMON_ARGS'] = dedent("""\
-            job_func: Python callable to wrap as a job template.
-            name: Optional replacement display name.
-            iterate_over_data_files: Whether dataset inputs should be processed item-wise.
-            output_dataset_param: Optional name of an explicit output-dataset parameter.
-            output_dataset_cls: Optional dataset class to use for iterated outputs.
-            auto_async: Whether coroutine jobs should auto-run outside flow contexts.
-            result_key: Optional key used to wrap the returned result in a dictionary.
-            fixed_params: Keyword arguments fixed onto every job invocation.
-            param_key_map: Mapping from external keyword names to callable parameter names.
-            persist_outputs: Per-job output-persistence preference.
-            restore_outputs: Per-job output-restore preference.
-            **kwargs: Additional constructor keyword overrides.
-
-        Returns:
-            _JobTemplateT: New job template instance wrapping ``job_func``.
-    """)
-
-
 class HasJobCreator(Protocol):
     """Protocol for objects exposing a shared :class:`IsJobCreator` instance."""
 
@@ -269,7 +232,11 @@ class HasJobCreator(Protocol):
 
 
 class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
-    """"""
+    """Common protocol shared by job templates and applied jobs.
+
+    Implementations expose stable naming, logging, configuration, and the
+    lifecycle hooks used to move between template, applied-job, and run states.
+    """
     @property
     def _job_creator(self) -> IsJobCreator:
         ...
@@ -341,7 +308,11 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[_JobTemplateT, _JobT, _Call
 
 
 class IsFuncArgJobBase(Protocol):
-    """"""
+    """Protocol for jobs backed by a Python callable and callable-related options.
+
+    This contract adds signature inspection, dataset-iteration controls, result
+    shaping, and persisted-output settings on top of the base job lifecycle.
+    """
     @property
     def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
         """Return the inspected parameter signature of the job callable.
@@ -563,7 +534,7 @@ class IsFuncArgJobBase(Protocol):
         Args:
             *args: Positional call arguments.
             **kwargs: Keyword call arguments.
-
+        
         Returns:
             inspect.BoundArguments: Bound arguments with defaults applied.
 """
@@ -571,7 +542,7 @@ class IsFuncArgJobBase(Protocol):
 
 
 class IsPlainFuncArgJobBase(Protocol):
-    """"""
+    """Minimal protocol for objects that store and decorate a wrapped callable."""
 
     _job_func: Callable
 
@@ -584,7 +555,11 @@ _CallableT = TypeVar('_CallableT', bound=Callable)
 
 class IsJobBaseCallable(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetCovT],
                         Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
-    """Protocol for job objects that can be called like ordinary Python callables."""
+    """Protocol for job objects that expose a normal callable interface.
+
+    Templates and applied jobs both satisfy this contract, but they may route
+    calls differently depending on whether they are inside a flow context.
+    """
 
     def __call__(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT:
         ...
@@ -593,7 +568,11 @@ class IsJobBaseCallable(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetCovT],
 @runtime_checkable
 class IsJob(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
             Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
-    """"""
+    """Protocol for an applied job that is ready to execute.
+
+    Applied jobs carry runtime state such as engine decoration and flow-run
+    timing, and they can be revised back into templates when needed.
+    """
     @property
     def time_of_cur_toplevel_flow_run(self) -> datetime | None:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
@@ -618,7 +597,7 @@ class IsJob(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
         Args:
             *args: Positional constructor arguments.
             **kwargs: Keyword constructor arguments.
-
+        
         Returns:
             _JobT: New applied job instance.
 """
@@ -643,7 +622,11 @@ class IsJob(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
 @runtime_checkable
 class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
                     Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
-    """"""
+    """Protocol for a reusable job template with immutable configuration.
+
+    Templates can be created, refined, applied to produce runnable jobs, or run
+    directly through the apply-and-execute convenience path.
+    """
     @classmethod
     def create_job_template(cls, *args: object, **kwargs: object) -> _JobTemplateT:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
@@ -655,7 +638,7 @@ class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
         Args:
             *args: Positional constructor arguments.
             **kwargs: Keyword constructor arguments.
-
+        
         Returns:
             _JobTemplateT: New job template instance.
 """
@@ -671,7 +654,7 @@ class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
         Args:
             *args: Positional arguments passed to the applied job.
             **kwargs: Keyword arguments passed to the applied job.
-
+        
         Returns:
             _RetCovT: Result returned by the applied job.
 """
@@ -693,7 +676,11 @@ class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
 class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT],
                            IsFuncArgJobBase,
                            Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
-    """"""
+    """Template protocol for callable-backed tasks and function-style flows.
+
+    Implementations refine the wrapped callable's execution options without
+    changing the public callable contract seen by template consumers.
+    """
     def refine(
             self,
             *args: Any,
@@ -715,7 +702,7 @@ class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT]
         # Args:
         #     *args: Positional constructor overrides for the template.
         #
-        # {{ISFUNCARGJOBTEMPLATE_REFINE_COMMON_ARGS}}
+        # {{JOB_TEMPLATE_REFINE_COMMON_ARGS}}
         #
         """Return a template with updated callable-configuration settings.
 
@@ -734,7 +721,7 @@ class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT]
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
-
+        
         Returns:
             _JobTemplateT: Refined template instance.
 
@@ -743,7 +730,11 @@ class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT]
 
 
 class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
-    """"""
+    """Callable initializer protocol for templates that wrap one Python callable.
+
+    This is the decorator-facing constructor shape used by task templates and
+    callable-backed flow templates.
+    """
     def __call__(
         self,
         job_func: Callable[_CallP, _RetContraT],
@@ -764,7 +755,7 @@ class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
         # Create a job template around ``job_func``.
         #
         # Args:
-        # {{HASFUNCARGJOBTEMPLATEINIT_CALL_COMMON_ARGS}}
+        # {{JOB_TEMPLATE_INIT_CALL_COMMON_ARGS}}
         """Create a job template around ``job_func``.
 
         Args:
@@ -780,7 +771,7 @@ class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
-
+        
         Returns:
             _JobTemplateT: New job template instance wrapping ``job_func``.
 """
@@ -788,7 +779,11 @@ class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
 
 
 class IsChildJobListArgJobBase(IsFuncArgJobBase, Protocol):
-    """"""
+    """Protocol for flow-style jobs that own an ordered child-template list.
+
+    The child templates define the nested jobs a flow applies or orchestrates in
+    addition to its own callable-backed configuration.
+    """
     @property
     def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
         """Return the child-job templates owned by the flow template.
@@ -800,7 +795,11 @@ class IsChildJobListArgJobBase(IsFuncArgJobBase, Protocol):
 
 
 class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
-    """"""
+    """Callable initializer protocol for flow templates with child job templates.
+
+    The initializer receives both the coordinating callable and the ordered child
+    templates that make up the flow body.
+    """
     def __call__(
         self,
         job_func: Callable[_CallP, _RetContraT],
@@ -824,7 +823,7 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
         # Args:
         #     *child_job_templates: Ordered child-job templates owned by the flow template.
         #
-        # {{HASFUNCARGJOBTEMPLATEINIT_CALL_COMMON_ARGS}}
+        # {{JOB_TEMPLATE_INIT_CALL_COMMON_ARGS}}
         """Create a flow template around ``job_func`` and child jobs.
 
         Args:
@@ -842,7 +841,7 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
-
+        
         Returns:
             _JobTemplateT: New job template instance wrapping ``job_func``.
 """
@@ -879,12 +878,16 @@ class IsTaskTemplate(IsFuncArgJobTemplate['IsTaskTemplate[_CallP, _RetT]',
 class IsFuncArgJob(IsJob[_JobTemplateT, _JobT, _CallP, _RetCovT],
                    IsFuncArgJobBase,
                    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
-    """"""
+    """Applied-job protocol for callable-backed tasks and flows."""
 
 
 class IsTask(IsFuncArgJob['IsTaskTemplate[_CallP, _RetT]', 'IsTask[_CallP, _RetT]', _CallP, _RetT],
              Protocol[_CallP, _RetT]):
-    """Protocol for applied Omnipy tasks."""
+    """Protocol for an applied Omnipy task.
+
+    A task represents one runnable callable-backed compute step with no owned
+    child job templates.
+    """
 
     ...
 
@@ -928,7 +931,11 @@ class IsFlow(Protocol):
 class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT],
                                    IsChildJobListArgJobBase,
                                    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
-    """"""
+    """Template protocol for flows composed from an ordered child-template list.
+
+    Refinement can replace the owned child templates while keeping the shared
+    callable-backed configuration contract from :class:`IsFuncArgJobTemplate`.
+    """
     def refine(
             self,
             *child_job_templates: IsFuncArgJobTemplate,
@@ -950,7 +957,7 @@ class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _C
         # Args:
         #     *child_job_templates: Replacement ordered child-job templates.
         #
-        # {{ISFUNCARGJOBTEMPLATE_REFINE_COMMON_ARGS}}
+        # {{JOB_TEMPLATE_REFINE_COMMON_ARGS}}
         #
         """Return a flow template with updated child jobs or callable configuration.
 
@@ -969,7 +976,7 @@ class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _C
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
-
+        
         Returns:
             _JobTemplateT: Refined template instance.
 
@@ -1064,5 +1071,9 @@ class IsAnyFlow(IsFuncArgJob['IsAnyFlowTemplate[_CallP, _RetCovT]',
                              _RetCovT],
                 IsFlow,
                 Protocol[_CallP, _RetCovT]):
-    """"""
+    """Protocol covering any applied Omnipy flow variant.
+
+    This union-style flow contract is useful where task, linear-flow, DAG-flow,
+    and function-flow implementations are all accepted.
+    """
     ...

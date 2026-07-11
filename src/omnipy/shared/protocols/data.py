@@ -96,19 +96,19 @@ class HasContent(Protocol[ContentT]):
     """Object with a typed ``content`` value that can be read or replaced."""
     @property
     def content(self) -> ContentT:
-        """Content.
+        """Return the wrapped content value.
 
         Returns:
-            ContentT: Result produced by ``content()``.
+            ContentT: Current content stored by the object.
         """
         ...
 
     @content.setter
     def content(self, value: ContentT) -> None:
-        """Content.
+        """Replace the wrapped content value.
 
         Args:
-            value: (ContentT) Argument passed to ``content()``.
+            value: New content to store.
         """
         ...
 
@@ -118,10 +118,10 @@ class IsModel(HasContent[_RootT], Protocol[_RootT]):
     """Single-value data wrapper with typed content and conversion support."""
     @classmethod
     def full_type(cls) -> type[_RootT]:
-        """Full type.
+        """Return the fully resolved Python type represented by this model.
 
         Returns:
-            type[_RootT]: Result produced by ``full_type()``.
+            type[_RootT]: Concrete Python type accepted as model content.
         """
         ...
 
@@ -145,71 +145,71 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
     @classmethod
     @functools.cache
     def get_type(cls) -> type[_ModelOrDatasetT]:
-        """Get type.
+        """Return the item type stored by this dataset class.
 
         Returns:
-            type[_ModelOrDatasetT]: Result produced by ``get_type()``.
+            type[_ModelOrDatasetT]: Model or nested-dataset type used for items.
         """
         ...
 
     def to_data(self) -> dict[str, Any]:
-        """To data.
+        """Convert the dataset to plain Python data.
 
         Returns:
-            dict[str, Any]: Result produced by ``to_data()``.
+            dict[str, Any]: Plain-data representation keyed by dataset entry name.
         """
         ...
 
     def from_data(self,
                   data: Mapping[str, Any] | Iterable[tuple[str, Any]],
                   update: bool = True) -> None:
-        """From data.
+        """Populate the dataset from plain Python data.
 
         Args:
-            data: (Mapping[str, Any] | Iterable[tuple[str, Any]]) Argument passed to ``from_data()``.
-            update: (bool) Argument passed to ``from_data()``.
+            data: Plain-data mapping or iterable of key-value pairs to import.
+            update: Whether imported values should merge into existing content.
         """
         ...
 
     def to_json(self, pretty=True) -> dict[str, str]:
-        """To json.
+        """Serialize the dataset to JSON strings.
 
         Args:
-            pretty: Argument passed to ``to_json()``.
+            pretty: Whether to format the JSON output for readability.
 
         Returns:
-            dict[str, str]: Result produced by ``to_json()``.
+            dict[str, str]: JSON representation for each dataset entry.
         """
         ...
 
     def from_json(self,
                   data: Mapping[str, str] | Iterable[tuple[str, str]],
                   update: bool = True) -> None:
-        """From json.
+        """Populate the dataset from JSON-encoded entries.
 
         Args:
-            data: (Mapping[str, str] | Iterable[tuple[str, str]]) Argument passed to ``from_json()``.
-            update: (bool) Argument passed to ``from_json()``.
+            data: JSON strings keyed by dataset entry name.
+            update: Whether imported values should merge into existing content.
         """
         ...
 
     @classmethod
     def to_json_schema(cls, pretty=True) -> str | dict[str, str]:
-        """To json schema.
+        """Return the JSON schema for this dataset type.
 
         Args:
-            pretty: Argument passed to ``to_json_schema()``.
+            pretty: Whether to format the schema output for readability.
 
         Returns:
-            str | dict[str, str]: Result produced by ``to_json_schema()``.
+            str | dict[str, str]: JSON schema as one string or per-entry mapping.
         """
         ...
 
     def save(self, path: str) -> None:
-        """Save.
+        """Persist the dataset to a filesystem path.
 
         Args:
-            path: (str) Argument passed to ``save()``.
+            path: Destination path for the serialized dataset.
         """
         ...
 
@@ -221,16 +221,16 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         as_mime_type: None | str = None,
         **kwargs: IsPathOrUrl,
     ) -> Self | asyncio.Task[Self]:
-        """Load.
+        """Load dataset content from one or more paths or URLs.
 
         Args:
-            paths_or_urls: (IsPathsOrUrlsOneOrMoreOrNone) Argument passed to ``load()``.
-            by_file_suffix: (bool) Argument passed to ``load()``.
-            as_mime_type: (None | str) Argument passed to ``load()``.
-            kwargs: (IsPathOrUrl) Argument passed to ``load()``.
+            paths_or_urls: Source path, URL, or collection of sources to load.
+            by_file_suffix: Whether serializer lookup should prefer file suffixes.
+            as_mime_type: Explicit MIME type override, if any.
+            kwargs: Additional named path or URL sources.
 
         Returns:
-            Self | asyncio.Task[Self]: Result produced by ``load()``.
+            Self | asyncio.Task[Self]: Loaded dataset or asynchronous load task.
         """
         ...
 
@@ -241,59 +241,59 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         as_mime_type: None | str = None,
         **kwargs: IsPathOrUrl,
     ) -> Self | asyncio.Task[Self]:
-        """Load into.
+        """Load external content into the current dataset instance.
 
         Args:
-            paths_or_urls: (IsPathsOrUrlsOneOrMoreOrNone) Argument passed to ``load_into()``.
-            by_file_suffix: (bool) Argument passed to ``load_into()``.
-            as_mime_type: (None | str) Argument passed to ``load_into()``.
-            kwargs: (IsPathOrUrl) Argument passed to ``load_into()``.
+            paths_or_urls: Source path, URL, or collection of sources to load.
+            by_file_suffix: Whether serializer lookup should prefer file suffixes.
+            as_mime_type: Explicit MIME type override, if any.
+            kwargs: Additional named path or URL sources.
 
         Returns:
-            Self | asyncio.Task[Self]: Result produced by ``load_into()``.
+            Self | asyncio.Task[Self]: Updated dataset or asynchronous load task.
         """
         ...
 
     @property
     def available_data(self) -> Self:
-        """Available data.
+        """Return a view containing only successfully available entries.
 
         Returns:
-            Self: Result produced by ``available_data()``.
+            Self: Dataset containing entries whose content is already available.
         """
         ...
 
     @property
     def pending_data(self) -> Self:
-        """Pending data.
+        """Return a view containing entries that are still processing.
 
         Returns:
-            Self: Result produced by ``pending_data()``.
+            Self: Dataset containing entries backed by pending work.
         """
         ...
 
     @property
     def failed_data(self) -> Self:
-        """Failed data.
+        """Return a view containing entries whose processing failed.
 
         Returns:
-            Self: Result produced by ``failed_data()``.
+            Self: Dataset containing entries associated with failures.
         """
         ...
 
     def pending_task_details(self) -> dict[str, IsPendingData]:
-        """Pending task details.
+        """Return metadata for entries that are still processing.
 
         Returns:
-            dict[str, IsPendingData]: Result produced by ``pending_task_details()``.
+            dict[str, IsPendingData]: Pending metadata keyed by dataset entry name.
         """
         ...
 
     def failed_task_details(self) -> dict[str, IsFailedData]:
-        """Failed task details.
+        """Return failure metadata for entries whose processing failed.
 
         Returns:
-            dict[str, IsFailedData]: Result produced by ``failed_task_details()``.
+            dict[str, IsFailedData]: Failure metadata keyed by dataset entry name.
         """
         ...
 
@@ -337,22 +337,22 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
 class IsMultiModelDataset(IsDataset[_ModelOrDatasetT], Protocol[_ModelOrDatasetT]):
     """Dataset protocol that can assign different model classes per item."""
     def set_model(self, data_file: str, model: type[IsModel]) -> None:
-        """Set model.
+        """Assign a model class to one dataset entry.
 
         Args:
-            data_file: (str) Argument passed to ``set_model()``.
-            model: (type[IsModel]) Argument passed to ``set_model()``.
+            data_file: Entry name whose model should be updated.
+            model: Model class to associate with that entry.
         """
         ...
 
     def get_model(self, data_file: str) -> type[IsModel]:
-        """Get model.
+        """Return the model class associated with one dataset entry.
 
         Args:
-            data_file: (str) Argument passed to ``get_model()``.
+            data_file: Entry name whose model should be returned.
 
         Returns:
-            type[IsModel]: Result produced by ``get_model()``.
+            type[IsModel]: Model class associated with that entry.
         """
         ...
 
@@ -375,56 +375,56 @@ class IsSerializer(Protocol[_DatasetT]):
     """Serializer interface for converting datasets to and from bytes."""
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
-        """Is dataset directly supported.
+        """Return whether the serializer can handle the dataset as-is.
 
         Args:
-            dataset: (IsDataset) Argument passed to ``is_dataset_directly_supported()``.
+            dataset: Dataset instance to check.
 
         Returns:
-            bool: Result produced by ``is_dataset_directly_supported()``.
+            bool: ``True`` when no dataset conversion is required before serialization.
         """
         ...
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
-        """Get dataset cls for new.
+        """Return the dataset class this serializer creates when deserializing.
 
         Returns:
-            Type[IsDataset]: Result produced by ``get_dataset_cls_for_new()``.
+            Type[IsDataset]: Dataset class produced for fresh deserialization targets.
         """
         ...
 
     @classmethod
     def get_output_file_suffix(cls) -> str:
-        """Get output file suffix.
+        """Return the default file suffix produced by this serializer.
 
         Returns:
-            str: Result produced by ``get_output_file_suffix()``.
+            str: File suffix used for serialized output files.
         """
         ...
 
     @classmethod
     def serialize(cls, dataset: _DatasetT) -> bytes | memoryview:
-        """Serialize.
+        """Serialize a dataset into a bytes-like payload.
 
         Args:
-            dataset: (_DatasetT) Argument passed to ``serialize()``.
+            dataset: Dataset instance to serialize.
 
         Returns:
-            bytes | memoryview: Result produced by ``serialize()``.
+            bytes | memoryview: Serialized dataset payload.
         """
         ...
 
     @classmethod
     def deserialize(cls, serialized: bytes, any_file_suffix=False) -> _DatasetT:
-        """Deserialize.
+        """Deserialize a bytes payload into a dataset instance.
 
         Args:
-            serialized: (bytes) Argument passed to ``deserialize()``.
-            any_file_suffix: Argument passed to ``deserialize()``.
+            serialized: Serialized dataset payload.
+            any_file_suffix: Whether suffix validation should be relaxed.
 
         Returns:
-            _DatasetT: Result produced by ``deserialize()``.
+            _DatasetT: Deserialized dataset instance.
         """
         ...
 
@@ -436,14 +436,14 @@ class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
     def create_tarfile_from_dataset(cls,
                                     dataset: _DatasetT,
                                     data_encode_func: Callable[..., bytes | memoryview]) -> bytes:
-        """Create tarfile from dataset.
+        """Create a tar archive payload from a dataset.
 
         Args:
-            dataset: (_DatasetT) Argument passed to ``create_tarfile_from_dataset()``.
-            data_encode_func: (Callable[..., bytes | memoryview]) Argument passed to ``create_tarfile_from_dataset()``.
+            dataset: Dataset to archive.
+            data_encode_func: Encoder used for individual dataset-entry payloads.
 
         Returns:
-            bytes: Result produced by ``create_tarfile_from_dataset()``.
+            bytes: Tar archive containing the serialized dataset entries.
         """
 
         ...
@@ -456,15 +456,15 @@ class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
                                     dictify_object_func: Callable[[str, Any], dict | str],
                                     import_method: str = 'from_data',
                                     any_file_suffix: bool = False) -> None:
-        """Create dataset from tarfile.
+        """Populate a dataset from a tar archive payload.
 
         Args:
-            dataset: (_DatasetT) Argument passed to ``create_dataset_from_tarfile()``.
-            tarfile_bytes: (bytes) Argument passed to ``create_dataset_from_tarfile()``.
-            data_decode_func: (Callable[[IO[bytes]], Any]) Argument passed to ``create_dataset_from_tarfile()``.
-            dictify_object_func: (Callable[[str, Any], dict | str]) Argument passed to ``create_dataset_from_tarfile()``.
-            import_method: (str) Argument passed to ``create_dataset_from_tarfile()``.
-            any_file_suffix: (bool) Argument passed to ``create_dataset_from_tarfile()``.
+            dataset: Dataset instance to populate.
+            tarfile_bytes: Serialized tar archive payload.
+            data_decode_func: Decoder used for individual archived payloads.
+            dictify_object_func: Helper that converts decoded objects to importable values.
+            import_method: Dataset import method to call for decoded entries.
+            any_file_suffix: Whether suffix validation should be relaxed.
         """
         ...
 
@@ -476,51 +476,53 @@ class IsSerializerRegistry(Protocol):
         ...
 
     def register(self, serializer_cls: Type[IsSerializer]) -> None:
-        """Register.
+        """Register a serializer class with the registry.
 
         Args:
-            serializer_cls: (Type[IsSerializer]) Argument passed to ``register()``.
+            serializer_cls: Serializer class to add.
         """
         ...
 
     @property
     def serializers(self) -> tuple[Type[IsSerializer], ...]:
-        """Serializers.
+        """Return all registered serializer classes.
 
         Returns:
-            tuple[Type[IsSerializer], ...]: Result produced by ``serializers()``.
+            tuple[Type[IsSerializer], ...]: Registered serializer classes.
         """
         ...
 
     @property
     def tar_file_serializers(self) -> tuple[Type[IsTarFileSerializer], ...]:
-        """Tar file serializers.
+        """Return the registered tar-file serializer classes.
 
         Returns:
-            tuple[Type[IsTarFileSerializer], ...]: Result produced by ``tar_file_serializers()``.
+            tuple[Type[IsTarFileSerializer], ...]: Registered tar-file serializers.
         """
         ...
 
     def auto_detect(self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
-        """Auto detect.
+        """Return the best serializer match for a dataset, if any.
 
         Args:
-            dataset: (IsDataset) Argument passed to ``auto_detect()``.
+            dataset: Dataset to inspect.
 
         Returns:
-            tuple[IsDataset, IsSerializer] | tuple[None, None]: Result produced by ``auto_detect()``.
+            tuple[IsDataset, IsSerializer] | tuple[None, None]: Parsed dataset and
+                serializer pair, or ``(None, None)`` when no match exists.
         """
         ...
 
     def auto_detect_tar_file_serializer(
             self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
-        """Auto detect tar file serializer.
+        """Return the best tar-file serializer match for a dataset, if any.
 
         Args:
-            dataset: (IsDataset) Argument passed to ``auto_detect_tar_file_serializer()``.
+            dataset: Dataset to inspect.
 
         Returns:
-            tuple[IsDataset, IsSerializer] | tuple[None, None]: Result produced by ``auto_detect_tar_file_serializer()``.
+            tuple[IsDataset, IsSerializer] | tuple[None, None]: Parsed dataset and
+                tar-file serializer pair, or ``(None, None)`` when no match exists.
         """
         ...
 
@@ -531,25 +533,25 @@ class IsSerializerRegistry(Protocol):
 
     def detect_tar_file_serializers_from_dataset_cls(
             self, dataset: IsDataset) -> tuple[Type[IsTarFileSerializer], ...]:
-        """Detect tar file serializers from dataset cls.
+        """Return tar-file serializers compatible with the dataset class.
 
         Args:
-            dataset: (IsDataset) Argument passed to ``detect_tar_file_serializers_from_dataset_cls()``.
+            dataset: Dataset whose class should be inspected.
 
         Returns:
-            tuple[Type[IsTarFileSerializer], ...]: Result produced by ``detect_tar_file_serializers_from_dataset_cls()``.
+            tuple[Type[IsTarFileSerializer], ...]: Compatible tar-file serializer classes.
         """
         ...
 
     def detect_tar_file_serializers_from_file_suffix(
             self, file_suffix: str) -> tuple[Type[IsTarFileSerializer], ...]:
-        """Detect tar file serializers from file suffix.
+        """Return tar-file serializers matching a file suffix.
 
         Args:
-            file_suffix: (str) Argument passed to ``detect_tar_file_serializers_from_file_suffix()``.
+            file_suffix: File suffix to match against registered serializers.
 
         Returns:
-            tuple[Type[IsTarFileSerializer], ...]: Result produced by ``detect_tar_file_serializers_from_file_suffix()``.
+            tuple[Type[IsTarFileSerializer], ...]: Matching tar-file serializer classes.
         """
         ...
 
@@ -557,15 +559,15 @@ class IsSerializerRegistry(Protocol):
                                                      log_obj: CanLog,
                                                      tar_file_path: str,
                                                      to_dataset: IsDataset) -> IsDataset | None:
-        """Load from tar file path based on file suffix.
+        """Load a tar archive into a dataset using suffix-based detection.
 
         Args:
-            log_obj: (CanLog) Argument passed to ``load_from_tar_file_path_based_on_file_suffix()``.
-            tar_file_path: (str) Argument passed to ``load_from_tar_file_path_based_on_file_suffix()``.
-            to_dataset: (IsDataset) Argument passed to ``load_from_tar_file_path_based_on_file_suffix()``.
+            log_obj: Logger used for progress and error reporting.
+            tar_file_path: Path to the tar archive on disk.
+            to_dataset: Dataset instance to populate.
 
         Returns:
-            IsDataset | None: Result produced by ``load_from_tar_file_path_based_on_file_suffix()``.
+            IsDataset | None: Populated dataset, or ``None`` when no serializer matches.
         """
         ...
 
@@ -573,15 +575,15 @@ class IsSerializerRegistry(Protocol):
                                                      log_obj: CanLog,
                                                      tar_file_path: str,
                                                      to_dataset: IsDataset) -> IsDataset | None:
-        """Load from tar file path based on dataset cls.
+        """Load a tar archive into a dataset using dataset-class detection.
 
         Args:
-            log_obj: (CanLog) Argument passed to ``load_from_tar_file_path_based_on_dataset_cls()``.
-            tar_file_path: (str) Argument passed to ``load_from_tar_file_path_based_on_dataset_cls()``.
-            to_dataset: (IsDataset) Argument passed to ``load_from_tar_file_path_based_on_dataset_cls()``.
+            log_obj: Logger used for progress and error reporting.
+            tar_file_path: Path to the tar archive on disk.
+            to_dataset: Dataset instance to populate.
 
         Returns:
-            IsDataset | None: Result produced by ``load_from_tar_file_path_based_on_dataset_cls()``.
+            IsDataset | None: Populated dataset, or ``None`` when no serializer matches.
         """
         ...
 
@@ -594,24 +596,24 @@ class IsSnapshotWrapper(Protocol[ObjContraT, ContentT]):
     snapshot: ContentT
 
     def taken_of_same_obj(self, obj: ObjContraT) -> bool:
-        """Taken of same obj.
+        """Return whether the snapshot belongs to the given object.
 
         Args:
-            obj: (ObjContraT) Argument passed to ``taken_of_same_obj()``.
+            obj: Object to compare with the captured snapshot owner.
 
         Returns:
-            bool: Result produced by ``taken_of_same_obj()``.
+            bool: ``True`` when the snapshot was taken from ``obj``.
         """
         ...
 
     def differs_from(self, obj: ObjContraT) -> bool:
-        """Differs from.
+        """Return whether the object's current content differs from the snapshot.
 
         Args:
-            obj: (ObjContraT) Argument passed to ``differs_from()``.
+            obj: Object whose current content should be compared.
 
         Returns:
-            bool: Result produced by ``differs_from()``.
+            bool: ``True`` when the current content no longer matches the snapshot.
         """
         ...
 
@@ -621,65 +623,61 @@ class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasC
                        Protocol[HasContentT, ContentT]):
     """Container protocol managing snapshots used for deepcopy/reactive tracking."""
     def clear(self) -> None:
-        """Clear.
-        """
+        """Remove all tracked snapshots and bookkeeping state."""
         ...
 
     def all_are_empty(self, debug: bool = False) -> bool:
-        """All are empty.
+        """Return whether every tracked snapshot collection is empty.
 
         Args:
-            debug: (bool) Argument passed to ``all_are_empty()``.
+            debug: Whether extra diagnostics should be enabled during the check.
 
         Returns:
-            bool: Result produced by ``all_are_empty()``.
+            bool: ``True`` when no tracked snapshot state remains.
         """
         ...
 
     def get_deepcopy_content_ids(self) -> SetDeque[int]:
-        """Get deepcopy content ids.
+        """Return tracked content ids participating in deepcopy bookkeeping.
 
         Returns:
-            SetDeque[int]: Result produced by ``get_deepcopy_content_ids()``.
+            SetDeque[int]: Content ids currently tracked for deepcopy handling.
         """
         ...
 
     def get_deepcopy_content_ids_scheduled_for_deletion(self) -> SetDeque[int]:
-        """Get deepcopy content ids scheduled for deletion.
+        """Return tracked content ids waiting to be deleted.
 
         Returns:
-            SetDeque[int]: Result produced by ``get_deepcopy_content_ids_scheduled_for_deletion()``.
+            SetDeque[int]: Content ids marked for later deletion.
         """
         ...
 
     def schedule_deepcopy_content_ids_for_deletion(self, *keys: int) -> None:
-        """Schedule deepcopy content ids for deletion.
+        """Mark tracked content ids for later deletion.
 
         Args:
-            keys: (int) Argument passed to ``schedule_deepcopy_content_ids_for_deletion()``.
+            keys: Content ids to queue for deletion.
         """
         ...
 
     def delete_scheduled_deepcopy_content_ids(self) -> None:
-        """Delete scheduled deepcopy content ids.
-        """
+        """Delete every content id previously scheduled for removal."""
         ...
 
     def take_snapshot_setup(self) -> None:
-        """Take snapshot setup.
-        """
+        """Prepare internal state before taking one or more snapshots."""
         ...
 
     def take_snapshot_teardown(self) -> None:
-        """Take snapshot teardown.
-        """
+        """Finalize snapshot bookkeeping after snapshot capture completes."""
         ...
 
     def take_snapshot(self, obj: HasContentT) -> None:
-        """Take snapshot.
+        """Capture a snapshot of the given object's current content.
 
         Args:
-            obj: (HasContentT) Argument passed to ``take_snapshot()``.
+            obj: Object whose content should be snapshotted.
         """
         ...
 
@@ -696,18 +694,18 @@ class IsReactive(Protocol[ContentT]):
     """Mutable reactive value wrapper used for config/state propagation."""
     @property
     def value(self) -> ContentT:
-        """Value.
+        """Return the current reactive value.
 
         Returns:
-            ContentT: Result produced by ``value()``.
+            ContentT: Current value stored by the reactive wrapper.
         """
         ...
 
     def set(self, value: ContentT):
-        """Set.
+        """Replace the current reactive value.
 
         Args:
-            value: (ContentT) Argument passed to ``set()``.
+            value: New value to publish.
         """
         ...
 
@@ -756,27 +754,27 @@ class IsDataClassCreator(Protocol[HasContentT, ContentT]):
 
     @property
     def reactive_objects(self) -> IsReactiveObjects | None:
-        """Reactive objects.
+        """Return the shared bundle of reactive runtime objects, if configured.
 
         Returns:
-            IsReactiveObjects | None: Result produced by ``reactive_objects()``.
+            IsReactiveObjects | None: Shared reactive-object bundle, or ``None``.
         """
         ...
 
     def set_reactive_objects(self, reactive_objects: IsReactiveObjects) -> None:
-        """Set reactive objects.
+        """Store the shared bundle of reactive runtime objects.
 
         Args:
-            reactive_objects: (IsReactiveObjects) Argument passed to ``set_reactive_objects()``.
+            reactive_objects: Reactive-object bundle to share with related data classes.
         """
         ...
 
     @property
     def snapshot_holder(self) -> IsSnapshotHolder[HasContentT, ContentT]:
-        """Snapshot holder.
+        """Return the snapshot manager used for deepcopy and reactive tracking.
 
         Returns:
-            IsSnapshotHolder[HasContentT, ContentT]: Result produced by ``snapshot_holder()``.
+            IsSnapshotHolder[HasContentT, ContentT]: Snapshot manager for related objects.
         """
         ...
 
@@ -785,13 +783,13 @@ class IsDataClassCreator(Protocol[HasContentT, ContentT]):
         top_level_entry_func: Callable[[], None],
         top_level_exit_func: Callable[[], None],
     ) -> ContextManager[int]:
-        """Deepcopy context.
+        """Return a context manager for coordinated deepcopy bookkeeping.
 
         Args:
-            top_level_entry_func: (Callable[[], None]) Argument passed to ``deepcopy_context()``.
-            top_level_exit_func: (Callable[[], None]) Argument passed to ``deepcopy_context()``.
+            top_level_entry_func: Callback invoked when entering the outermost deepcopy.
+            top_level_exit_func: Callback invoked when leaving the outermost deepcopy.
 
         Returns:
-            ContextManager[int]: Result produced by ``deepcopy_context()``.
+            ContextManager[int]: Context manager tracking nested deepcopy depth.
         """
         ...

@@ -30,7 +30,11 @@ if TYPE_CHECKING:
 
 @runtime_checkable
 class IsConfigBase(IsDataPublisher, Protocol):
-    """"""
+    """Base protocol for Omnipy configuration objects.
+
+    Config objects publish updates, can be viewed as models, and provide a
+    renderer-friendly string representation.
+    """
     def as_model(self) -> 'IsModel[Any]':
         ...
 
@@ -38,13 +42,13 @@ class IsConfigBase(IsDataPublisher, Protocol):
         self,
         ui_type: TerminalOutputUserInterfaceType.Literals,
     ) -> str:
-        """Default repr to terminal str.
-        
+        """Render the config for a terminal-style user interface.
+
         Args:
-            ui_type: (TerminalOutputUserInterfaceType.Literals) Argument passed to ``default_repr_to_terminal_str()``.
-        
+            ui_type: Terminal frontend variant requesting the representation.
+
         Returns:
-            str: Result produced by ``default_repr_to_terminal_str()``.
+            str: Terminal-friendly string representation of the config.
         """
         ...
 
@@ -57,13 +61,13 @@ class IsConfigBase(IsDataPublisher, Protocol):
 
 @runtime_checkable
 class IsColorConfig(IsConfigBase, Protocol):
-    """Define the ``IsColorConfig`` interface.
-    
+    """Color settings shared by terminal and HTML-style renderers.
+
     Attributes:
-        system: (DisplayColorSystem.Literals) Public attribute on the protocol/class.
-        style: (AllColorStyles.Literals | str) Public attribute on the protocol/class.
-        dark_background: (bool) Public attribute on the protocol/class.
-        solid_background: (bool) Public attribute on the protocol/class.
+        system: Available color-system capability for the target renderer.
+        style: Named color theme or explicit style identifier.
+        dark_background: Whether the target surface uses a dark background.
+        solid_background: Whether panels should assume an opaque background.
     """
 
     system: DisplayColorSystem.Literals
@@ -74,12 +78,12 @@ class IsColorConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsUserInterfaceTypeConfig(IsConfigBase, Protocol):
-    """Define the ``IsUserInterfaceTypeConfig`` interface.
-    
+    """Base configuration shared by concrete user-interface frontends.
+
     Attributes:
-        width: (pyd.NonNegativeInt | None) Public attribute on the protocol/class.
-        height: (pyd.NonNegativeInt | None) Public attribute on the protocol/class.
-        color: (IsColorConfig) Public attribute on the protocol/class.
+        width: Preferred render width in characters or pixels, if known.
+        height: Preferred render height in characters or pixels, if known.
+        color: Color configuration for this frontend.
     """
 
     width: pyd.NonNegativeInt | None
@@ -91,20 +95,20 @@ class IsUserInterfaceTypeConfig(IsConfigBase, Protocol):
         width: pyd.NonNegativeInt | None,
         height: pyd.NonNegativeInt | None,
     ) -> None:
-        """Set width and height.
-        
+        """Update the preferred display dimensions for this frontend.
+
         Args:
-            width: (pyd.NonNegativeInt | None) Argument passed to ``set_width_and_height()``.
-            height: (pyd.NonNegativeInt | None) Argument passed to ``set_width_and_height()``.
+            width: New preferred width, or ``None`` when unknown.
+            height: New preferred height, or ``None`` when unknown.
         """
 
 
 @runtime_checkable
 class IsDimsModeMixin(Protocol):
-    """Define the ``IsDimsModeMixin`` interface.
-    
+    """Mixin protocol for configs that track dimension refresh behavior.
+
     Attributes:
-        dims_mode: (DisplayDimensionsUpdateMode.Literals) Public attribute on the protocol/class.
+        dims_mode: Policy controlling when display dimensions are refreshed.
     """
 
     dims_mode: DisplayDimensionsUpdateMode.Literals = DisplayDimensionsUpdateMode.AUTO
@@ -112,29 +116,27 @@ class IsDimsModeMixin(Protocol):
 
 @runtime_checkable
 class IsDimsModeConfig(IsUserInterfaceTypeConfig, IsDimsModeMixin, Protocol):
-    """Define the ``IsDimsModeConfig`` interface.
-    """
+    """UI config that also exposes display-dimension refresh behavior."""
 
     ...
 
 
 @runtime_checkable
 class IsTerminalUserInterfaceConfig(IsDimsModeConfig, Protocol):
-    """Define the ``IsTerminalUserInterfaceConfig`` interface.
-    """
+    """Terminal-specific user-interface configuration."""
 
     ...
 
 
 @runtime_checkable
 class IsFontConfig(IsConfigBase, Protocol):
-    """Define the ``IsFontConfig`` interface.
-    
+    """Font settings for HTML-based Omnipy renderers.
+
     Attributes:
-        families: (tuple[str, ...]) Public attribute on the protocol/class.
-        size: (pyd.NonNegativeInt) Public attribute on the protocol/class.
-        weight: (pyd.NonNegativeInt) Public attribute on the protocol/class.
-        line_height: (pyd.NonNegativeFloat) Public attribute on the protocol/class.
+        families: Ordered list of font-family fallbacks.
+        size: Base font size.
+        weight: Default font weight.
+        line_height: Relative line-height multiplier.
     """
 
     families: tuple[str, ...]
@@ -145,10 +147,10 @@ class IsFontConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsHtmlUserInterfaceConfig(IsUserInterfaceTypeConfig, Protocol):
-    """Define the ``IsHtmlUserInterfaceConfig`` interface.
-    
+    """Base configuration for browser- and notebook-style HTML frontends.
+
     Attributes:
-        font: (IsFontConfig) Public attribute on the protocol/class.
+        font: Font settings used by the HTML renderer.
     """
 
     font: IsFontConfig
@@ -156,27 +158,25 @@ class IsHtmlUserInterfaceConfig(IsUserInterfaceTypeConfig, Protocol):
 
 @runtime_checkable
 class IsJupyterUserInterfaceConfig(IsHtmlUserInterfaceConfig, IsDimsModeConfig, Protocol):
-    """Define the ``IsJupyterUserInterfaceConfig`` interface.
-    """
+    """HTML UI configuration specialized for Jupyter environments."""
 
     ...
 
 
 @runtime_checkable
 class IsBrowserUserInterfaceConfig(IsHtmlUserInterfaceConfig, Protocol):
-    """Define the ``IsBrowserUserInterfaceConfig`` interface.
-    """
+    """HTML UI configuration specialized for browser rendering."""
 
     ...
 
 
 @runtime_checkable
 class IsOverflowConfig(IsConfigBase, Protocol):
-    """Define the ``IsOverflowConfig`` interface.
-    
+    """Overflow behavior for horizontally and vertically constrained output.
+
     Attributes:
-        horizontal: (HorizontalOverflowMode.Literals) Public attribute on the protocol/class.
-        vertical: (VerticalOverflowMode.Literals) Public attribute on the protocol/class.
+        horizontal: Horizontal overflow handling policy.
+        vertical: Vertical overflow handling policy.
     """
 
     horizontal: HorizontalOverflowMode.Literals
@@ -185,15 +185,15 @@ class IsOverflowConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsTextConfig(IsConfigBase, Protocol):
-    """Define the ``IsTextConfig`` interface.
-    
+    """Text-formatting settings used by Omnipy renderers.
+
     Attributes:
-        overflow: (IsOverflowConfig) Public attribute on the protocol/class.
-        tab_size: (pyd.NonNegativeInt) Public attribute on the protocol/class.
-        indent_tab_size: (pyd.NonNegativeInt) Public attribute on the protocol/class.
-        pretty_printer: (PrettyPrinterLib.Literals) Public attribute on the protocol/class.
-        proportional_freedom: (pyd.NonNegativeFloat) Public attribute on the protocol/class.
-        debug_mode: (bool) Public attribute on the protocol/class.
+        overflow: Overflow behavior for text output.
+        tab_size: Number of spaces represented by a tab.
+        indent_tab_size: Tab width used when indenting structured output.
+        pretty_printer: Pretty-printing backend to use.
+        proportional_freedom: Tuning value for proportional line breaking.
+        debug_mode: Whether extra rendering diagnostics should be shown.
     """
 
     overflow: IsOverflowConfig
@@ -206,18 +206,18 @@ class IsTextConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsLayoutConfig(IsConfigBase, Protocol):
-    """Define the ``IsLayoutConfig`` interface.
-    
+    """Panel and layout settings for structured output rendering.
+
     Attributes:
-        overflow: (IsOverflowConfig) Public attribute on the protocol/class.
-        panel_design: (PanelDesign.Literals) Public attribute on the protocol/class.
-        panel_title_at_top: (bool) Public attribute on the protocol/class.
-        max_title_height: (MaxTitleHeight.Literals) Public attribute on the protocol/class.
-        min_panel_width: (pyd.NonNegativeInt) Public attribute on the protocol/class.
-        min_crop_width: (pyd.NonNegativeInt) Public attribute on the protocol/class.
-        max_panels_hor: (pyd.NonNegativeInt | None) Public attribute on the protocol/class.
-        max_nesting_depth: (pyd.NonNegativeInt | None) Public attribute on the protocol/class.
-        justify: (Justify.Literals) Public attribute on the protocol/class.
+        overflow: Overflow behavior used by panels and layouts.
+        panel_design: Visual panel style.
+        panel_title_at_top: Whether panel titles should be rendered above content.
+        max_title_height: Maximum title height policy.
+        min_panel_width: Minimum panel width before collapsing layout.
+        min_crop_width: Minimum width before content is cropped.
+        max_panels_hor: Maximum number of side-by-side panels, if limited.
+        max_nesting_depth: Maximum nested panel depth, if limited.
+        justify: Default content justification inside panels.
     """
 
     overflow: IsOverflowConfig
@@ -233,16 +233,16 @@ class IsLayoutConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsUserInterfaceConfig(IsConfigBase, Protocol):
-    """Define the ``IsUserInterfaceConfig`` interface.
-    
+    """Top-level bundle of frontend-specific UI configuration sections.
+
     Attributes:
-        detected_type: (SpecifiedUserInterfaceType.Literals) Public attribute on the protocol/class.
-        terminal: (IsTerminalUserInterfaceConfig) Public attribute on the protocol/class.
-        jupyter: (IsJupyterUserInterfaceConfig) Public attribute on the protocol/class.
-        browser: (IsBrowserUserInterfaceConfig) Public attribute on the protocol/class.
-        text: (IsTextConfig) Public attribute on the protocol/class.
-        layout: (IsLayoutConfig) Public attribute on the protocol/class.
-        cache_dir_path: (str) Public attribute on the protocol/class.
+        detected_type: Frontend type currently in use.
+        terminal: Terminal-specific UI settings.
+        jupyter: Jupyter-specific UI settings.
+        browser: Browser-specific UI settings.
+        text: Shared text-rendering settings.
+        layout: Shared layout-rendering settings.
+        cache_dir_path: Directory used for UI-related cache files.
     """
 
     detected_type: SpecifiedUserInterfaceType.Literals
@@ -257,24 +257,24 @@ class IsUserInterfaceConfig(IsConfigBase, Protocol):
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
     ) -> IsUserInterfaceTypeConfig:
-        """Get ui type config.
-        
+        """Return the config section matching a concrete frontend type.
+
         Args:
-            ui_type: (SpecifiedUserInterfaceType.Literals) Argument passed to ``get_ui_type_config()``.
-        
+            ui_type: Frontend type whose config section should be returned.
+
         Returns:
-            IsUserInterfaceTypeConfig: Result produced by ``get_ui_type_config()``.
+            IsUserInterfaceTypeConfig: Config section for the requested frontend.
         """
         ...
 
 
 @runtime_checkable
 class IsModelConfig(IsConfigBase, Protocol):
-    """Define the ``IsModelConfig`` interface.
-    
+    """Configuration controlling model behavior and conversions.
+
     Attributes:
-        interactive: (bool) Public attribute on the protocol/class.
-        dynamically_convert_elements_to_models: (bool) Public attribute on the protocol/class.
+        interactive: Whether models favor interactive display behavior.
+        dynamically_convert_elements_to_models: Whether nested elements are converted lazily.
     """
 
     interactive: bool
@@ -283,14 +283,14 @@ class IsModelConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsHttpRequestsConfig(IsConfigBase, Protocol):
-    """Define the ``IsHttpRequestsConfig`` interface.
-    
+    """HTTP retry and throttling policy for one request profile.
+
     Attributes:
-        requests_per_time_period: (float) Public attribute on the protocol/class.
-        time_period_in_secs: (float) Public attribute on the protocol/class.
-        retry_http_statuses: (tuple[int, ...]) Public attribute on the protocol/class.
-        retry_attempts: (int) Public attribute on the protocol/class.
-        retry_backoff_strategy: (BackoffStrategy.Literals) Public attribute on the protocol/class.
+        requests_per_time_period: Maximum requests allowed per time window.
+        time_period_in_secs: Length of the throttling window in seconds.
+        retry_http_statuses: HTTP status codes that should trigger retries.
+        retry_attempts: Maximum number of retry attempts.
+        retry_backoff_strategy: Backoff strategy used between retries.
     """
 
     requests_per_time_period: float
@@ -302,11 +302,11 @@ class IsHttpRequestsConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsHttpConfig(IsConfigBase, Protocol):
-    """Define the ``IsHttpConfig`` interface.
-    
+    """HTTP configuration with default and per-host request policies.
+
     Attributes:
-        defaults: (IsHttpRequestsConfig) Public attribute on the protocol/class.
-        for_host: (defaultdict[str, IsHttpRequestsConfig]) Public attribute on the protocol/class.
+        defaults: Fallback request policy used when no host-specific override exists.
+        for_host: Request-policy overrides keyed by host name.
     """
 
     defaults: IsHttpRequestsConfig
@@ -315,12 +315,12 @@ class IsHttpConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsDataConfig(IsConfigBase, Protocol):
-    """Define the ``IsDataConfig`` interface.
-    
+    """Top-level configuration bundle for data, models, and HTTP access.
+
     Attributes:
-        ui: (IsUserInterfaceConfig) Public attribute on the protocol/class.
-        model: (IsModelConfig) Public attribute on the protocol/class.
-        http: (IsHttpConfig) Public attribute on the protocol/class.
+        ui: User-interface and rendering settings.
+        model: Model conversion and interaction settings.
+        http: HTTP retry and throttling settings.
     """
 
     ui: IsUserInterfaceConfig
@@ -333,26 +333,24 @@ class IsDataConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsJobRunnerConfig(IsConfigBase, Protocol):
-    """Define the ``IsJobRunnerConfig`` interface.
-    """
+    """Base protocol for engine-specific job-runner configuration sections."""
 
     ...
 
 
 @runtime_checkable
 class IsLocalRunnerConfig(IsJobRunnerConfig, Protocol):
-    """Define the ``IsLocalRunnerConfig`` interface.
-    """
+    """Runner configuration for the local execution backend."""
 
     ...
 
 
 @runtime_checkable
 class IsPrefectEngineConfig(IsJobRunnerConfig, Protocol):
-    """Define the ``IsPrefectEngineConfig`` interface.
-    
+    """Runner configuration for the Prefect execution backend.
+
     Attributes:
-        use_cached_results: (bool) Public attribute on the protocol/class.
+        use_cached_results: Whether Prefect should reuse cached task results.
     """
 
     use_cached_results: bool = False
@@ -360,12 +358,12 @@ class IsPrefectEngineConfig(IsJobRunnerConfig, Protocol):
 
 @runtime_checkable
 class IsEngineConfig(IsConfigBase, Protocol):
-    """Define the ``IsEngineConfig`` interface.
-    
+    """Top-level engine selection and per-engine configuration bundle.
+
     Attributes:
-        choice: (EngineChoice.Literals) Public attribute on the protocol/class.
-        local: (IsLocalRunnerConfig) Public attribute on the protocol/class.
-        prefect: (IsPrefectEngineConfig) Public attribute on the protocol/class.
+        choice: Engine backend currently selected for execution.
+        local: Configuration for the local backend.
+        prefect: Configuration for the Prefect backend.
     """
 
     choice: EngineChoice.Literals
@@ -379,10 +377,10 @@ class IsEngineConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsOutputStorageConfigBase(IsConfigBase, Protocol):
-    """Define the ``IsOutputStorageConfigBase`` interface.
-    
+    """Base protocol for persisted-output storage backends.
+
     Attributes:
-        persist_data_dir_path: (str) Public attribute on the protocol/class.
+        persist_data_dir_path: Root path used for persisted job outputs.
     """
 
     persist_data_dir_path: str
@@ -390,19 +388,18 @@ class IsOutputStorageConfigBase(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsLocalOutputStorageConfig(IsOutputStorageConfigBase, Protocol):
-    """Define the ``IsLocalOutputStorageConfig`` interface.
-    """
+    """Filesystem-backed settings for persisted job outputs."""
 
 
 @runtime_checkable
 class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
-    """Define the ``IsS3OutputStorageConfig`` interface.
-    
+    """S3-compatible settings for persisted job outputs.
+
     Attributes:
-        endpoint_url: (str) Public attribute on the protocol/class.
-        access_key: (str) Public attribute on the protocol/class.
-        secret_key: (str) Public attribute on the protocol/class.
-        bucket_name: (str) Public attribute on the protocol/class.
+        endpoint_url: S3 API endpoint URL.
+        access_key: Access key used for authentication.
+        secret_key: Secret key used for authentication.
+        bucket_name: Bucket that stores persisted outputs.
     """
 
     endpoint_url: str
@@ -413,14 +410,14 @@ class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
 
 @runtime_checkable
 class IsOutputStorageConfig(IsConfigBase, Protocol):
-    """Define the ``IsOutputStorageConfig`` interface.
-    
+    """Persisted-output policy and backend selection.
+
     Attributes:
-        persist_outputs: (ConfigPersistOutputsOptions.Literals) Public attribute on the protocol/class.
-        restore_outputs: (ConfigRestoreOutputsOptions.Literals) Public attribute on the protocol/class.
-        protocol: (ConfigOutputStorageProtocolOptions.Literals) Public attribute on the protocol/class.
-        local: (IsLocalOutputStorageConfig) Public attribute on the protocol/class.
-        s3: (IsS3OutputStorageConfig) Public attribute on the protocol/class.
+        persist_outputs: Default policy for persisting job outputs.
+        restore_outputs: Default policy for restoring persisted outputs.
+        protocol: Storage backend selected for persisted outputs.
+        local: Local-backend settings.
+        s3: S3-backend settings.
     """
 
     persist_outputs: ConfigPersistOutputsOptions.Literals
@@ -432,10 +429,10 @@ class IsOutputStorageConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsJobConfig(IsConfigBase, Protocol):
-    """Define the ``IsJobConfig`` interface.
-    
+    """Job execution configuration shared across tasks and flows.
+
     Attributes:
-        output_storage: (IsOutputStorageConfig) Public attribute on the protocol/class.
+        output_storage: Settings controlling persisted job outputs.
     """
 
     output_storage: IsOutputStorageConfig
@@ -446,20 +443,20 @@ class IsJobConfig(IsConfigBase, Protocol):
 
 @runtime_checkable
 class IsRootLogConfig(IsConfigBase, Protocol):
-    """Define the ``IsRootLogConfig`` interface.
-    
+    """Root logging configuration for Omnipy runtime objects.
+
     Attributes:
-        log_format_str: (str) Public attribute on the protocol/class.
-        locale: (LocaleType) Public attribute on the protocol/class.
-        log_to_stdout: (bool) Public attribute on the protocol/class.
-        log_to_stderr: (bool) Public attribute on the protocol/class.
-        log_to_file: (bool) Public attribute on the protocol/class.
-        stdout: (TextIOBase) Public attribute on the protocol/class.
-        stderr: (TextIOBase) Public attribute on the protocol/class.
-        stdout_log_min_level: (int) Public attribute on the protocol/class.
-        stderr_log_min_level: (int) Public attribute on the protocol/class.
-        file_log_min_level: (int) Public attribute on the protocol/class.
-        file_log_path: (str) Public attribute on the protocol/class.
+        log_format_str: Format string used by root log handlers.
+        locale: Locale used for formatting and localization-sensitive output.
+        log_to_stdout: Whether logging to standard output is enabled.
+        log_to_stderr: Whether logging to standard error is enabled.
+        log_to_file: Whether file logging is enabled.
+        stdout: Stream used for standard-output logging.
+        stderr: Stream used for standard-error logging.
+        stdout_log_min_level: Minimum level sent to standard output.
+        stderr_log_min_level: Minimum level sent to standard error.
+        file_log_min_level: Minimum level written to the log file.
+        file_log_path: Destination path for file logging.
     """
 
     log_format_str: str

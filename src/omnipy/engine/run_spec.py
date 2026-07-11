@@ -102,36 +102,57 @@ class JobRunSpec(ABC):
 
     @property
     def name(self) -> str:
-        """See `IsUniquelyNamedJob.name`."""
+        """Proxies to the wrapped job's display name.
+
+        See :attr:`~omnipy.shared.protocols.compute.mixins.IsUniquelyNamedJob.name`.
+        """
         return self._job.name
 
     @property
     def unique_name(self) -> str:
-        """See `IsUniquelyNamedJob.unique_name`."""
+        """Proxies to the wrapped job's unique registry name.
+
+        See :attr:`~omnipy.shared.protocols.compute.mixins.IsUniquelyNamedJob.unique_name`.
+        """
         return self._job.unique_name
 
     @property
     def unique_run_slug(self) -> str:
-        """See `IsUniquelyNamedJob.unique_run_slug`."""
+        """Proxies to the wrapped job's run-specific slug.
+
+        See :attr:`~omnipy.shared.protocols.compute.mixins.IsUniquelyNamedJob.unique_run_slug`.
+        """
         return self._job.unique_run_slug
 
     @property
     def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
-        """See `IsFuncArgJobBase.param_signatures`."""
+        """Proxies to the wrapped job's callable parameter metadata.
+
+        See :attr:`~omnipy.shared.protocols.compute.job.IsFuncArgJobBase.param_signatures`.
+        """
         return self._job.param_signatures
 
     @property
     def return_type(self) -> type:
-        """See `IsFuncArgJobBase.return_type`."""
+        """Proxies to the wrapped job's annotated return type.
+
+        See :attr:`~omnipy.shared.protocols.compute.job.IsFuncArgJobBase.return_type`.
+        """
         return self._job.return_type
 
     @property
     def callable_type(self) -> CallableType.Literals:
-        """See `IsFuncArgJobBase.callable_type`."""
+        """Proxies to the wrapped job's callable-shape classification.
+
+        See :attr:`~omnipy.shared.protocols.compute.job.IsFuncArgJobBase.callable_type`.
+        """
         return self._job.callable_type
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None) -> None:
-        """See `CanLog.log`."""
+        """Proxies log messages to the wrapped job.
+
+        See :meth:`~omnipy.shared.protocols.hub.log.CanLog.log`.
+        """
         self._job.log(log_msg, level=level, datetime_obj=datetime_obj)
 
     @abstractmethod
@@ -149,7 +170,10 @@ class TaskRunSpec(JobRunSpec):
 
     @property
     def in_flow_context(self) -> bool:
-        """See `IsJobBase.in_flow_context`."""
+        """Proxies whether the wrapped task is running inside a flow.
+
+        See :attr:`~omnipy.shared.protocols.compute.job.IsJobBase.in_flow_context`.
+        """
         task = cast(IsTask, self._job)
         return task.in_flow_context
 
@@ -167,12 +191,18 @@ class FlowRunSpec(JobRunSpec, ABC):
 
     @property
     def flow_context(self):
-        """See `IsFlow.flow_context`."""
+        """Proxies the wrapped flow's nested execution context.
+
+        See :attr:`~omnipy.shared.protocols.compute.job.IsFlow.flow_context`.
+        """
         flow = cast(IsAnyFlow, self._job)
         return flow.flow_context
 
     def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments:
-        """See `IsFuncArgJobBase.get_bound_args`."""
+        """Proxies argument binding to the wrapped flow callable.
+
+        See :meth:`~omnipy.shared.protocols.compute.job.IsFuncArgJobBase.get_bound_args`.
+        """
         flow = cast(IsAnyFlow, self._job)
         return flow.get_bound_args(*args, **kwargs)
 
@@ -200,7 +230,10 @@ class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
 
     @property
     def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
-        """See `IsChildJobListArgJobBase.child_job_templates`."""
+        """Proxies the wrapped flow's ordered child templates.
+
+        See :attr:`~omnipy.shared.protocols.compute.job.IsChildJobListArgJobBase.child_job_templates`.
+        """
         flow = cast(IsChildJobListArgJob, self._job)
         return flow.child_job_templates
 

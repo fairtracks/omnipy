@@ -74,7 +74,7 @@ class JobRunnerEngine(Engine, ABC):
 
         Args:
             job_type: Job category to test.
-
+        
         Returns:
             bool: ``True`` when ``job_type`` is supported by the engine.
 """

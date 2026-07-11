@@ -9,6 +9,11 @@ from omnipy.shared.protocols.compute.job import IsJobBase
 from omnipy.util.helpers import repr_max_len
 from omnipy.util.param_key_mapper import ParamKeyMapper
 
+JOB_TEMPLATE_PARAMS_ARG_DOCS = (
+    'fixed_params: Keyword arguments fixed onto every job invocation.\n'
+    'param_key_map: Mapping from external keyword names to callable parameter names.'
+)
+
 
 class ParamsFuncJobBaseMixin:
     """Apply fixed parameters and keyword remapping before job execution."""

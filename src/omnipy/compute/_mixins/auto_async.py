@@ -7,6 +7,10 @@ from typing import Callable, cast, Coroutine
 from omnipy.shared.protocols.compute.job import IsJobBase
 from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
+JOB_TEMPLATE_AUTO_ASYNC_ARG_DOC = (
+    'auto_async: Whether coroutine jobs should auto-run outside flow contexts.'
+)
+
 
 class AutoAsyncJobBaseMixin:
     """Add optional automatic execution of coroutine jobs."""

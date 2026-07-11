@@ -5,6 +5,10 @@ from typing import cast
 from omnipy.compute._mixins.name import NameJobBaseMixin
 from omnipy.shared.protocols.compute.job import IsJobBase
 
+JOB_TEMPLATE_RESULT_KEY_ARG_DOC = (
+    'result_key: Optional key used to wrap the returned result in a dictionary.'
+)
+
 
 class ResultKeyFuncJobBaseMixin:
     """Optionally wrap a job result in a single-key dictionary."""

@@ -5,6 +5,8 @@ from typing import Callable, cast
 from omnipy.util.helpers import generate_run_slug, get_full_job_slug
 from omnipy.util.mixin import strip_mixins_suffix
 
+JOB_TEMPLATE_NAME_ARG_DOC = 'name: Optional replacement display name.'
+
 
 class NameJobBaseMixin:
     """Provide base support for job names and generated unique names."""

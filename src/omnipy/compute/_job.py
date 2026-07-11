@@ -249,7 +249,7 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
         Args:
             *args: Positional constructor arguments.
             **kwargs: Keyword constructor arguments.
-
+        
         Returns:
             _JobTemplateT: New job template instance.
 """
@@ -273,7 +273,7 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
         Args:
             *args: Positional arguments passed to the applied job.
             **kwargs: Keyword arguments passed to the applied job.
-
+        
         Returns:
             _RetCovT: Result returned by the applied job.
 """
@@ -295,7 +295,11 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
         return cast(_JobT, job)
 
     def refine(self, *args: Any, update: bool = True, **kwargs: object) -> _JobTemplateT:
-        """See `IsFuncArgJobTemplate.refine` and `IsChildJobListArgJobTemplate.refine`."""
+        """Forward refinement to the shared template lifecycle implementation.
+
+        See :meth:`~omnipy.shared.protocols.compute.job.IsFuncArgJobTemplate.refine`
+        and :meth:`~omnipy.shared.protocols.compute.job.IsChildJobListArgJobTemplate.refine`.
+        """
         self_as_job_base = cast(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT], self)
         return self_as_job_base._refine(*args, update=update, **kwargs)
 
@@ -344,7 +348,7 @@ class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT
         Args:
             *args: Positional constructor arguments.
             **kwargs: Keyword constructor arguments.
-
+        
         Returns:
             _JobT: New applied job instance.
 """

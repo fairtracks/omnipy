@@ -141,6 +141,14 @@ def to_linear_flow_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
                             LinearFlowTemplateCore[_CallP, _RetT]]
 ) -> HasChildJobListArgJobTemplateInit[IsLinearFlowTemplate[_CallP, _RetT], _CallP, _RetT]:
+    """Cast a linear-flow template initializer to the shared init protocol.
+
+    Args:
+        decorated_cls: Linear-flow template initializer to cast.
+
+    Returns:
+        The initializer typed as ``HasChildJobListArgJobTemplateInit``.
+    """
     return cast(
         HasChildJobListArgJobTemplateInit[IsLinearFlowTemplate[_CallP, _RetT], _CallP, _RetT],
         decorated_cls)
@@ -264,6 +272,14 @@ def to_dag_flow_template_init_protocol(
     decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
                             DagFlowTemplateCore[_CallP, _RetT]]
 ) -> HasChildJobListArgJobTemplateInit[IsDagFlowTemplate[_CallP, _RetT], _CallP, _RetT]:
+    """Cast a DAG-flow template initializer to the shared init protocol.
+
+    Args:
+        decorated_cls: DAG-flow template initializer to cast.
+
+    Returns:
+        The initializer typed as ``HasChildJobListArgJobTemplateInit``.
+    """
     return cast(HasChildJobListArgJobTemplateInit[IsDagFlowTemplate[_CallP, _RetT], _CallP, _RetT],
                 decorated_cls)
 

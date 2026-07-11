@@ -409,8 +409,7 @@ class IsInt(Protocol):
 # @disjoint_base
 # class float:
 class IsFloat(Protocol):
-    """Define the ``IsFloat`` interface.
-    """
+    """Protocol for the subset of built-in ``float`` behavior used by Omnipy typing."""
     # def __new__(cls, x: ConvertibleToFloat = 0, /) -> Self: ...
     def as_integer_ratio(self) -> tuple[int, int]: raise AssumedToBeImplementedException
     def hex(self) -> str: raise AssumedToBeImplementedException
@@ -538,8 +537,7 @@ class _TranslateTable(Protocol):
 # @disjoint_base
 # class str(Sequence[str]):
 class IsStr(IsItemSequence[str], Protocol):
-    """Protocol with the same interface as the builtin class `str`.
-    """
+    """Protocol mirroring the builtin ``str`` interface used by Omnipy typing."""
     # @overload
     # def __new__(cls, object: object = "") -> Self: ...
     # @overload
@@ -798,7 +796,7 @@ class IsStr(IsItemSequence[str], Protocol):
     def __add__(self, value: str | LiteralString, /) -> Self | LiteralString: raise AssumedToBeImplementedException
 
     # Incompatible with Sequence.__contains__
-    def __contains__(self, key: str, /) -> bool: raise AssumedToBeImplementedException
+    def __contains__(self, key: str, /) -> bool: raise AssumedToBeImplementedException  # type: ignore[override]
     def __eq__(self, value: object, /) -> bool: raise AssumedToBeImplementedException
     def __ge__(self, value: str, /) -> bool: raise AssumedToBeImplementedException
 
@@ -856,8 +854,7 @@ class IsStr(IsItemSequence[str], Protocol):
 # @disjoint_base
 # class bytes(Sequence[int]):
 class IsBytes(IsItemSequence[int], Protocol):
-    """Protocol with the same interface as the builtin class `bytes`.
-    """
+    """Protocol mirroring the builtin ``bytes`` interface used by Omnipy typing."""
 
     # @overload
     # def __new__(cls, o: Iterable[SupportsIndex] | SupportsIndex | SupportsBytes | ReadableBuffer, #             /) -> Self: ...
@@ -945,15 +942,15 @@ class IsBytes(IsItemSequence[int], Protocol):
         end: SupportsIndex | None = None,
         /,
     ) -> bool:
-        """Startswith.
-        
+        """Return whether the byte sequence starts with the given prefix.
+
         Args:
-            prefix: (ReadableBuffer | tuple[ReadableBuffer, ...]) Argument passed to ``startswith()``.
-            start: (SupportsIndex | None) Argument passed to ``startswith()``.
-            end: (SupportsIndex | None) Argument passed to ``startswith()``.
-        
+            prefix: Prefix or tuple of prefixes to test.
+            start: Optional inclusive start offset.
+            end: Optional exclusive end offset.
+
         Returns:
-            bool: Result produced by ``startswith()``.
+            bool: ``True`` when the selected slice starts with ``prefix``.
         """
         raise AssumedToBeImplementedException
     # def strip(self, bytes: ReadableBuffer | None = None, /) -> bytes: ...
@@ -998,7 +995,7 @@ class IsBytes(IsItemSequence[int], Protocol):
     # def __mod__(self, value: Any, /) -> bytes: ...
     def __mod__(self, value: Any, /) -> Self: raise AssumedToBeImplementedException
     # Incompatible with Sequence.__contains__
-    def __contains__(self, key: SupportsIndex | ReadableBuffer, /) -> bool: raise AssumedToBeImplementedException
+    def __contains__(self, key: SupportsIndex | ReadableBuffer, /) -> bool: raise AssumedToBeImplementedException  # type: ignore[override]
     def __eq__(self, value: object, /) -> bool: raise AssumedToBeImplementedException
     def __ne__(self, value: object, /) -> bool: raise AssumedToBeImplementedException
     def __lt__(self, value: bytes, /) -> bool: raise AssumedToBeImplementedException
@@ -1240,8 +1237,7 @@ _IntegerFormats: TypeAlias = Literal[
 # @final
 # class bool(int):
 class IsBool(IsInt, Protocol):
-    """Define the ``IsBool`` interface.
-    """
+    """Protocol for the subset of built-in ``bool`` behavior used by Omnipy typing."""
     # def __new__(cls, o: object = False, /) -> Self: ...
 
     # The following overloads could be represented more elegantly with a TypeVar("_B", bool, int),
@@ -1333,8 +1329,7 @@ class IsBool(IsInt, Protocol):
 # @disjoint_base
 # class tuple(Sequence[_T_co]):
 class IsTuple(IsItemSequence[_T_co], Protocol[_T_co]):  # type: ignore[misc]
-    """Protocol with the same interface as the builtin class `tuple`.
-    """
+    """Protocol mirroring the builtin ``tuple`` interface used by Omnipy typing."""
     # def __new__(cls, iterable: Iterable[_T_co] = (), /) -> Self: ...
     def __len__(self) -> int: raise AssumedToBeImplementedException
     def __contains__(self, key: object, /) -> bool: raise AssumedToBeImplementedException
@@ -1493,8 +1488,7 @@ class IsList(IsMutableSequence[_T], Protocol[_T]):
 # @disjoint_base
 # class dict(MutableMapping[_KT, _VT]):
 class IsDict(IsMutableMapping[_KT, _VT], Protocol[_KT, _VT]):
-    """Define the ``IsDict`` interface.
-    """
+    """Protocol for the subset of built-in ``dict`` behavior used by Omnipy typing."""
     # # __init__ should be kept roughly in line with `collections.UserDict.__init__`, which has similar semantics
     # # Also multiprocessing.managers.SyncManager.dict()
     # @overload
@@ -1648,8 +1642,7 @@ if sys.version_info >= (3, 15):
 # @disjoint_base
 # class set(MutableSet[_T]):
 class IsSet(IsMutableSet[_T], Protocol[_T]):
-    """Define the ``IsSet`` interface.
-    """
+    """Protocol for the subset of built-in ``set`` behavior used by Omnipy typing."""
     # @overload
     # def __init__(self) -> None: ...
     #
@@ -1694,8 +1687,7 @@ class IsSet(IsMutableSet[_T], Protocol[_T]):
 # @disjoint_base
 # class frozenset(IsAbstractSet[_T_co]):
 class IsFrozenSet(IsAbstractSet[_T_co], Protocol[_T_co]):  # type: ignore[misc]
-    """Define the ``IsFrozenSet`` interface.
-    """
+    """Protocol for the subset of built-in ``frozenset`` behavior used by Omnipy typing."""
     # @overload
     # def __new__(cls) -> Self:
     #     raise AssumedToBeImplementedException

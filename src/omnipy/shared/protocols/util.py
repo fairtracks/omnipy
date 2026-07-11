@@ -6,43 +6,41 @@ from typing_extensions import Self
 
 
 class IsDataPublisher(Protocol):
-    """Define the ``IsDataPublisher`` interface.
-    """
+    """Protocol for objects that publish change notifications to subscribers."""
+
     def subscribe_attr(self, attr_name: str, callback_fun: Callable[..., None]):
-        """Subscribe attr.
-        
+        """Subscribe to updates for one named attribute.
+
         Args:
-            attr_name: (str) Argument passed to ``subscribe_attr()``.
-            callback_fun: (Callable[..., None]) Argument passed to ``subscribe_attr()``.
+            attr_name: Name of the published attribute to observe.
+            callback_fun: Callback invoked when that attribute changes.
         """
         ...
 
     def subscribe(self, callback_fun: Callable[..., None], do_callback: bool = True) -> None:
-        """Subscribe.
-        
+        """Subscribe to general publisher updates.
+
         Args:
-            callback_fun: (Callable[..., None]) Argument passed to ``subscribe()``.
-            do_callback: (bool) Argument passed to ``subscribe()``.
+            callback_fun: Callback invoked when the publisher changes.
+            do_callback: Whether to invoke the callback immediately after subscribing.
         """
         ...
 
     def unsubscribe_all(self) -> None:
-        """Unsubscribe all.
-        """
+        """Remove every registered subscriber."""
         ...
 
     def deepcopy(self) -> Self:
-        """Deepcopy.
-        
+        """Return a deep-copied publisher instance.
+
         Returns:
-            Self: Result produced by ``deepcopy()``.
+            Self: Deep copy of the current publisher object.
         """
         ...
 
 
 class IsDataclass(Protocol):
-    """Define the ``IsDataclass`` interface.
-    """
+    """Protocol for objects that expose the standard dataclass marker fields."""
 
     # as already noted in comments, checking for this attribute is currently
     # the most reliable way to ascertain that something is a dataclass

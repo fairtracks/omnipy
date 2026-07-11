@@ -714,9 +714,9 @@ class IsItemSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
     """Protocol with the same interface as the abstract class `typing.Sequence`.
 
     Note that with no custom handling, as is typically done in a type
-    checker, the `string`, `bytes`, and `bytearray` types will not be
+    checker, the ``str``, ``bytes``, and ``bytearray`` types will not be
     considered Sequences by this protocol, due to differences in the
-    `__contains__` method.
+    ``__contains__`` method.
     """
     @overload
     # @abstractmethod
@@ -731,23 +731,23 @@ class IsItemSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
     # def index(self, value: Any, start: int = 0, stop: int = ..., /) -> int:
     # Omnipy: start and stop removed to support range as IsItemSequence
     def index(self, value: Any, /) -> int:
-        """Index.
-        
+        """Return the position of ``value`` in the sequence.
+
         Args:
-            value: (Any) Argument passed to ``index()``.
-        
+            value: Element to locate.
+
         Returns:
-            int: Result produced by ``index()``.
+            int: Zero-based index of the first matching element.
         """
         raise AssumedToBeImplementedException
     def count(self, value: Any, /) -> int:
-        """Count.
-        
+        """Return how many times ``value`` appears in the sequence.
+
         Args:
-            value: (Any) Argument passed to ``count()``.
-        
+            value: Element to count.
+
         Returns:
-            int: Result produced by ``count()``.
+            int: Number of matching elements.
         """
         raise AssumedToBeImplementedException
 
@@ -757,16 +757,15 @@ class IsItemSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
 
 # class MutableSequence(Sequence[_T]):
 class IsMutableSequence(IsItemSequence[_T], Protocol[_T]):
-    """Protocol with the same interface as the abstract class `typing.MutableSequence`.
-    """
+    """Protocol mirroring the ``typing.MutableSequence`` abstract interface."""
 
     # @abstractmethod
     def insert(self, index: int, value: _T, /) -> None:
-        """Insert.
-        
+        """Insert ``value`` before ``index``.
+
         Args:
-            index: (int) Argument passed to ``insert()``.
-            value: (_T) Argument passed to ``insert()``.
+            index: Position where the value should be inserted.
+            value: Element to insert.
         """
         raise AssumedToBeImplementedException
 
@@ -799,47 +798,45 @@ class IsMutableSequence(IsItemSequence[_T], Protocol[_T]):
 
     # Mixin methods
     def append(self, value: _T, /) -> None:
-        """Append.
-        
+        """Append ``value`` to the end of the sequence.
+
         Args:
-            value: (_T) Argument passed to ``append()``.
+            value: Element to append.
         """
         raise AssumedToBeImplementedException
 
     def clear(self) -> None:
-        """Clear.
-        """
+        """Remove all items from the sequence."""
         raise AssumedToBeImplementedException
 
     def extend(self, values: Iterable[_T], /) -> None:
-        """Extend.
-        
+        """Append all values from an iterable.
+
         Args:
-            values: (Iterable[_T]) Argument passed to ``extend()``.
+            values: Elements to append in order.
         """
         raise AssumedToBeImplementedException
 
     def reverse(self) -> None:
-        """Reverse.
-        """
+        """Reverse the sequence in place."""
         raise AssumedToBeImplementedException
 
     def pop(self, index: int = -1, /) -> _T:
-        """Pop.
-        
+        """Remove and return one element from the sequence.
+
         Args:
-            index: (int) Argument passed to ``pop()``.
-        
+            index: Position of the element to remove. Defaults to the last item.
+
         Returns:
-            _T: Result produced by ``pop()``.
+            _T: Removed element.
         """
         raise AssumedToBeImplementedException
 
     def remove(self, value: _T, /) -> None:
-        """Remove.
-        
+        """Remove the first matching element.
+
         Args:
-            value: (_T) Argument passed to ``remove()``.
+            value: Element to remove.
         """
         raise AssumedToBeImplementedException
 
@@ -847,8 +844,7 @@ class IsMutableSequence(IsItemSequence[_T], Protocol[_T]):
 
 # class AbstractSet(Collection[_T_co]):
 class IsAbstractSet(Collection[_T_co], Protocol[_T_co]):
-    """Define the ``IsAbstractSet`` interface.
-    """
+    """Protocol mirroring the ``typing.AbstractSet`` interface."""
     # @abstractmethod
     def __contains__(self, x: object, /) -> bool: raise AssumedToBeImplementedException
     def _hash(self) -> int: raise AssumedToBeImplementedException
@@ -868,8 +864,7 @@ class IsAbstractSet(Collection[_T_co], Protocol[_T_co]):
 
 # class MutableSet(AbstractSet[_T]):
 class IsMutableSet(IsAbstractSet[_T], Protocol[_T]):
-    """Define the ``IsMutableSet`` interface.
-    """
+    """Protocol mirroring the ``typing.MutableSet`` interface."""
     # @abstractmethod
     def add(self, value: _T, /) -> None: raise AssumedToBeImplementedException
     # @abstractmethod
@@ -887,16 +882,14 @@ class IsMutableSet(IsAbstractSet[_T], Protocol[_T]):
 
 # class MappingView(Sized):
 class IsMappingView(Protocol):
-    """Define the ``IsMappingView`` interface.
-    """
+    """Protocol for lightweight view objects over mapping content."""
     # __slots__ = ("_mapping",)
     # def __init__(self, mapping: Sized) -> None: ...  # undocumented
     def __len__(self) -> int: raise AssumedToBeImplementedException
 
 # class ItemsView(MappingView, AbstractSet[tuple[_KT_co, _VT_co]], Generic[_KT_co, _VT_co]):
 class IsItemsView(IsMappingView, IsAbstractSet[tuple[_KT_co, _VT_co]], Protocol[_KT_co, _VT_co]):
-    """Protocol with the same interface as the abstract class `typing.ItemsView`.
-    """
+    """Protocol mirroring the ``typing.ItemsView`` abstract interface."""
     # def __init__(self, mapping: SupportsGetItemViewable[_KT_co, _VT_co]) -> None: ...  # undocumented
     # @classmethod
     # def _from_iterable(cls, it: Iterable[_S], /) -> set[_S]: ...
@@ -913,8 +906,7 @@ class IsItemsView(IsMappingView, IsAbstractSet[tuple[_KT_co, _VT_co]], Protocol[
 
 # class KeysView(MappingView, AbstractSet[_KT_co]):
 class IsKeysView(IsMappingView, IsAbstractSet[_KT_co], Protocol[_KT_co]):  # type: ignore[misc]
-    """Define the ``IsKeysView`` interface.
-    """
+    """Protocol mirroring the ``typing.KeysView`` abstract interface."""
     # def __init__(self, mapping: Viewable[_KT_co]) -> None: ...  # undocumented
     # @classmethod
     # def _from_iterable(cls, it: Iterable[_S], /) -> set[_S]: ...
@@ -932,8 +924,7 @@ class IsKeysView(IsMappingView, IsAbstractSet[_KT_co], Protocol[_KT_co]):  # typ
 
 # class ValuesView(MappingView, Collection[_VT_co]):
 class IsValuesView(IsMappingView, Collection[_VT_co], Protocol[_VT_co]):
-    """Define the ``IsValuesView`` interface.
-    """
+    """Protocol mirroring the ``typing.ValuesView`` abstract interface."""
     # def __init__(self, mapping: SupportsGetItemViewable[Any, _VT_co]) -> None: ...  # undocumented
     def __contains__(self, value: object, /) -> bool: raise AssumedToBeImplementedException
     def __iter__(self) -> Iterator[_VT_co]: raise AssumedToBeImplementedException
@@ -948,8 +939,7 @@ class IsValuesView(IsMappingView, Collection[_VT_co], Protocol[_VT_co]):
 # class Mapping(Collection[_KT], Generic[_KT, _VT_co]):
 @runtime_checkable
 class IsMapping(Collection[_KT], Protocol[_KT, _VT_co]):  # type: ignore[misc]
-    """Define the ``IsMapping`` interface.
-    """
+    """Protocol mirroring the ``typing.Mapping`` abstract interface."""
 
     # TODO: We wish the key type could also be covariant, but that doesn't work,
     # see discussion in https://github.com/python/typing/pull/273.
@@ -964,14 +954,14 @@ class IsMapping(Collection[_KT], Protocol[_KT, _VT_co]):  # type: ignore[misc]
     @overload
     def get(self, key: _KT, default: _T, /) -> _VT_co | _T: raise AssumedToBeImplementedException
     def get(self, key: _KT, default: None | _VT_co | _T = None, /) -> _VT_co | _T | None:
-        """Get.
-        
+        """Return the value for ``key`` or ``default`` when absent.
+
         Args:
-            key: (_KT) Argument passed to ``get()``.
-            default: (None | _VT_co | _T) Argument passed to ``get()``.
-        
+            key: Mapping key to look up.
+            default: Fallback value returned when the key is missing.
+
         Returns:
-            _VT_co | _T | None: Result produced by ``get()``.
+            _VT_co | _T | None: Stored value or the supplied fallback.
         """
         raise AssumedToBeImplementedException
 
@@ -983,18 +973,18 @@ class IsMapping(Collection[_KT], Protocol[_KT, _VT_co]):  # type: ignore[misc]
     #     raise AssumedToBeImplementedException
 
     def keys(self) -> IsKeysView[_KT]:
-        """Keys.
-        
+        """Return a dynamic view over the mapping's keys.
+
         Returns:
-            IsKeysView[_KT]: Result produced by ``keys()``.
+            IsKeysView[_KT]: View object exposing the current keys.
         """
         raise AssumedToBeImplementedException
 
     def values(self) -> IsValuesView[_VT_co]:
-        """Values.
-        
+        """Return a dynamic view over the mapping's values.
+
         Returns:
-            IsValuesView[_VT_co]: Result produced by ``values()``.
+            IsValuesView[_VT_co]: View object exposing the current values.
         """
         raise AssumedToBeImplementedException
 
@@ -1003,8 +993,7 @@ class IsMapping(Collection[_KT], Protocol[_KT, _VT_co]):  # type: ignore[misc]
 
 # class MutableMapping(Mapping[_KT, _VT]):
 class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
-    """Define the ``IsMutableMapping`` interface.
-    """
+    """Protocol mirroring the ``typing.MutableMapping`` abstract interface."""
 
     # @abstractmethod
     def __setitem__(self, key: _KT, value: _VT, /) -> None: raise AssumedToBeImplementedException
@@ -1012,8 +1001,7 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
     def __delitem__(self, key: _KT, /) -> None: raise AssumedToBeImplementedException
 
     def clear(self) -> None:
-        """Clear.
-        """
+        """Remove all items from the mapping."""
         raise AssumedToBeImplementedException
 
     @overload
@@ -1023,22 +1011,22 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
     @overload
     def pop(self, key: _KT, default: _T, /) -> _VT | _T: raise AssumedToBeImplementedException
     def pop(self, key: _KT, default: None | _VT | _T = None, /) -> _VT | _T | None:
-        """Pop.
-        
+        """Remove and return one value from the mapping.
+
         Args:
-            key: (_KT) Argument passed to ``pop()``.
-            default: (None | _VT | _T) Argument passed to ``pop()``.
-        
+            key: Mapping key to remove.
+            default: Fallback returned when the key is missing.
+
         Returns:
-            _VT | _T | None: Result produced by ``pop()``.
+            _VT | _T | None: Removed value or the supplied fallback.
         """
         raise AssumedToBeImplementedException
 
     def popitem(self) -> tuple[_KT, _VT]:
-        """Popitem.
-        
+        """Remove and return one key-value pair.
+
         Returns:
-            tuple[_KT, _VT]: Result produced by ``popitem()``.
+            tuple[_KT, _VT]: Removed key-value pair.
         """
         raise AssumedToBeImplementedException
 
@@ -1052,14 +1040,14 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
     # def setdefault(self: MutableMapping[_KT, _T | None], key: _KT, default: None = None, /) -> _T | None: ...
     # @overload
     def setdefault(self, key: _KT, default: _VT, /) -> _VT:
-        """Setdefault.
-        
+        """Return the value for ``key``, inserting ``default`` when absent.
+
         Args:
-            key: (_KT) Argument passed to ``setdefault()``.
-            default: (_VT) Argument passed to ``setdefault()``.
-        
+            key: Mapping key to look up or initialize.
+            default: Value to insert when the key is missing.
+
         Returns:
-            _VT: Result produced by ``setdefault()``.
+            _VT: Existing or newly inserted value.
         """
         raise AssumedToBeImplementedException
     # def setdefault(self: IsMutableMapping[_KT, _VT] | IsMutableMapping[_KT, _T | None], key: _KT, default: _VT | None = None, /) -> _VT | _T | None: raise AssumedToBeImplementedException
@@ -1101,12 +1089,11 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
         /,
         **kwargs: _VT,
     ) -> None:
-        """Update.
-        
+        """Update the mapping from another mapping, iterable, or keyword pairs.
+
         Args:
-            m: (SupportsKeysAndGetItem[_KT, _VT] | SupportsKeysAndGetItem[str, _VT]
-                    | Iterable[tuple[_KT, _VT]] | Iterable[tuple[str, _VT]] | None) Argument passed to ``update()``.
-            kwargs: (_VT) Argument passed to ``update()``.
+            m: Optional mapping or iterable of key-value pairs to merge in.
+            kwargs: Additional keyword pairs to merge in.
         """
         raise AssumedToBeImplementedException
 
@@ -1119,8 +1106,7 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
 # classes deriving from IO use different names for the arguments.
 # class IO(Generic[AnyStr]):
 class IsIO(Protocol[AnyStr]):
-    """Define the ``IsIO`` interface.
-    """
+    """Protocol mirroring the shared ``typing.IO`` interface."""
     # At runtime these are all abstract properties,
     # but making them abstract in the stub is hugely disruptive, for not much gain.
     # See #8726
@@ -1196,8 +1182,7 @@ class IsIO(Protocol[AnyStr]):
 
 # class BinaryIO(IO[bytes]):
 class IsBinaryIO(IsIO[bytes], Protocol):
-    """Define the ``IsBinaryIO`` interface.
-    """
+    """Protocol mirroring the ``typing.BinaryIO`` interface."""
     # __slots__ = ()
     # @abstractmethod
     # def __enter__(self) -> BinaryIO: ...
@@ -1205,8 +1190,7 @@ class IsBinaryIO(IsIO[bytes], Protocol):
 
 # class TextIO(IO[str]):
 class IsTextIO(IsIO[str], Protocol):
-    """Define the ``IsTextIO`` interface.
-    """
+    """Protocol mirroring the ``typing.TextIO`` interface."""
 
     # See comment regarding the @properties in the `IO` class
     # __slots__ = ()
