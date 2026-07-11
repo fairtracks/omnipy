@@ -2,6 +2,8 @@
 
 from datetime import datetime
 import inspect
+import os
+from textwrap import dedent
 from types import MappingProxyType
 from typing import Any, Callable, Iterable, Mapping, ParamSpec, Protocol, runtime_checkable, TypeVar
 
@@ -16,6 +18,7 @@ from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.shared.typedefs import GeneralDecorator
+from omnipy.util.helpers import is_package_editable
 from omnipy.util.callable_types import CallableType
 
 _CallP = ParamSpec('_CallP')

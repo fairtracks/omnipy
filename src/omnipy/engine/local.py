@@ -1,4 +1,4 @@
-from typing import Any, Type
+from typing import Any, cast, Type
 
 from omnipy.config.engine import LocalRunnerConfig
 from omnipy.engine.job_runner import JobRunnerEngine

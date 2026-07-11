@@ -3,7 +3,7 @@ from datetime import timedelta
 import inspect
 from logging import WARNING
 from types import MappingProxyType
-from typing import Any, Callable, Type, TypedDict
+from typing import Any, Callable, cast, Type, TypedDict
 
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import JobRunnerEngine
