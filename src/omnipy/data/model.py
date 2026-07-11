@@ -2354,6 +2354,15 @@ class Model(  # type: ignore[misc]
 
 
 def prepare_value_for_validation_if_dataset_or_model(value: object,) -> tuple[bool, object]:
+    """Convert model-like inputs to plain data before validation.
+
+    Args:
+        value: Candidate value to normalize before validation.
+
+    Returns:
+        tuple[bool, object]: Flag indicating whether a conversion was applied, together
+            with the normalized value.
+    """
     if is_dataset_instance(value):
         return True, value.to_data()
     if is_model_instance(value):

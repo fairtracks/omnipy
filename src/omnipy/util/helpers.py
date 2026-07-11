@@ -950,6 +950,15 @@ def max_or_none(*args: NumberT | None) -> NumberT | None:
 
 
 def get_job_name_slug(job_cls_name: str, job_name: str):
+    """Build a slug from a job class name and configured job name.
+
+    Args:
+        job_cls_name: Concrete job class name.
+        job_name: Configured human-readable job name.
+
+    Returns:
+        str: Dash-separated slug combining the class and job names.
+    """
     import inflection
 
     job_cls_name_slug = inflection.underscore(job_cls_name).replace('_', '-')
@@ -958,10 +967,25 @@ def get_job_name_slug(job_cls_name: str, job_name: str):
 
 
 def generate_run_slug():
+    """Generate a short human-readable slug for a specific job run.
+
+    Returns:
+        str: Random three-word slug suitable for run naming.
+    """
     import coolname
 
     return coolname.generate_slug(3)
 
 
 def get_full_job_slug(job_cls_name: str, job_name: str, job_run_slug: str):
+    """Build the full slug used to identify a concrete job run.
+
+    Args:
+        job_cls_name: Concrete job class name.
+        job_name: Configured human-readable job name.
+        job_run_slug: Run-specific slug, typically from :func:`generate_run_slug`.
+
+    Returns:
+        str: Full job-run slug combining the job slug and run slug.
+    """
     return f'{get_job_name_slug(job_cls_name, job_name)}-{job_run_slug}'

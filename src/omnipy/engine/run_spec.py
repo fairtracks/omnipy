@@ -1,3 +1,10 @@
+"""Engine-facing run-spec adapters for tasks and flows.
+
+Run-spec objects expose a uniform view of Omnipy jobs so execution engines can
+initialize them, wrap their callables, and execute them without depending on the
+full job implementation details.
+"""
+
 from abc import ABC, abstractmethod
 from collections.abc import Mapping
 from datetime import datetime
@@ -87,63 +94,141 @@ async def _drain_async_results(
 
 
 class JobRunSpec(ABC):
+    """Base adapter exposing engine-facing metadata and callables for a job."""
+
     def __init__(self, job: IsFuncArgJob, run_callable: Callable) -> None:
         self._job = job
         self._run_callable = run_callable
 
     @property
     def name(self) -> str:
+        """Return the human-readable job name used for display and logging.
+
+        Returns:
+            str: Configured job name.
+        """
         return self._job.name
 
     @property
     def unique_name(self) -> str:
+        """Return the unique identifier assigned to this job instance.
+
+        Returns:
+            str: Unique job name suitable for registries and logs.
+        """
         return self._job.unique_name
 
     @property
     def unique_run_slug(self) -> str:
+        """Return the unique slug used to name the current job run.
+
+        Returns:
+            str: Run-specific slug derived from the job name and run identifier.
+        """
         return self._job.unique_run_slug
 
     @property
     def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
+        """Return the bound parameter signature for the wrapped job callable.
+
+        Returns:
+            MappingProxyType[str, inspect.Parameter]: Mapping from parameter names to
+                their inspected signature objects.
+        """
         return self._job.param_signatures
 
     @property
     def return_type(self) -> type:
+        """Return the annotated return type for the wrapped job callable.
+
+        Returns:
+            type: Return annotation exposed to the engine wrapper.
+        """
         return self._job.return_type
 
     @property
     def callable_type(self) -> CallableType.Literals:
+        """Return the effective sync/async and plain/generator callable shape.
+
+        Returns:
+            CallableType.Literals: Effective callable type of the wrapped job.
+        """
         return self._job.callable_type
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None) -> None:
+        """Forward a log message to the wrapped job.
+
+        Args:
+            log_msg: Message to emit.
+            level: Logging level for the message.
+            datetime_obj: Explicit timestamp to record with the message, if any.
+        """
         self._job.log(log_msg, level=level, datetime_obj=datetime_obj)
 
     @abstractmethod
     def create_default_run_callable(self) -> Callable:
+        """Build the default callable that engines should initialize and execute.
+
+        Returns:
+            Callable: Engine-facing callable for running the wrapped job.
+        """
         ...
 
 
 class TaskRunSpec(JobRunSpec):
+    """Run-spec adapter for applied tasks."""
+
     @property
     def in_flow_context(self) -> bool:
+        """Return whether the task is currently executing inside a flow context.
+
+        Returns:
+            bool: ``True`` when the task is invoked from within a flow run.
+        """
         task = cast(IsTask, self._job)
         return task.in_flow_context
 
     def create_default_run_callable(self) -> Callable:
+        """Return the task callable exactly as supplied to the run spec.
+
+        Returns:
+            Callable: Underlying task callable to hand to the engine.
+        """
         return self._run_callable
 
 
 class FlowRunSpec(JobRunSpec, ABC):
+    """Base run-spec adapter for flow jobs."""
+
     @property
     def flow_context(self):
+        """Return the flow context manager guarding top-level flow execution.
+
+        Returns:
+            object: Context manager shared by the wrapped flow job.
+        """
         flow = cast(IsAnyFlow, self._job)
         return flow.flow_context
 
     def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments:
+        """Bind call arguments to the wrapped flow signature.
+
+        Args:
+            *args: Positional arguments for the flow call.
+            **kwargs: Keyword arguments for the flow call.
+
+        Returns:
+            BoundArguments: Bound arguments with defaults applied.
+        """
         flow = cast(IsAnyFlow, self._job)
         return flow.get_bound_args(*args, **kwargs)
 
     def create_default_run_callable(self) -> Callable:
+        """Wrap the flow callable with its declared callable shape and flow context.
+
+        Returns:
+            Callable: Engine-facing flow callable that enters :attr:`flow_context`.
+        """
         return decorate_callable_by_type(
             self._create_default_run_callable(),
             self.param_signatures,
@@ -158,13 +243,23 @@ class FlowRunSpec(JobRunSpec, ABC):
 
 
 class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
+    """Base run spec for flows defined by ordered child-job templates."""
+
     @property
     def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
+        """Return the child jobs that make up this flow.
+
+        Returns:
+            tuple[IsFuncArgJobTemplate, ...]: Ordered child-job templates executed by
+                the flow.
+        """
         flow = cast(IsChildJobListArgJob, self._job)
         return flow.child_job_templates
 
 
 class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
+    """Run spec for linear flows that pipe each child result into the next."""
+
     def _create_default_run_callable(self) -> Callable:
         def _run_all_linear_tasks(
             *args: object,
@@ -198,6 +293,8 @@ class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
 
 
 class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
+    """Run spec for DAG flows that route named results into downstream inputs."""
+
     def _create_default_run_callable(self) -> Callable:  # noqa: C901
         def _run_all_dag_tasks(
             *args: object,
@@ -248,5 +345,7 @@ class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
 
 
 class FuncFlowRunSpec(FlowRunSpec):
+    """Run spec for callable-backed flows that execute a single wrapped callable."""
+
     def _create_default_run_callable(self) -> Callable:
         return self._run_callable

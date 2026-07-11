@@ -28,8 +28,15 @@ _RetContraT = TypeVar('_RetContraT', contravariant=True)
 
 
 class HasJobCreator(Protocol):
+    """Protocol for objects exposing a shared :class:`IsJobCreator` instance."""
+
     @property
     def job_creator(self) -> IsJobCreator:
+        """Return the shared creator object backing the job family.
+
+        Returns:
+            IsJobCreator: Shared holder for engine, config, and nested-context state.
+        """
         ...
 
 
@@ -41,14 +48,29 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[_JobTemplateT, _JobT, _Call
 
     @property
     def config(self) -> IsJobConfig:
+        """Return the job configuration visible to this instance.
+
+        Returns:
+            IsJobConfig: Active job configuration used for runtime behavior.
+        """
         ...
 
     @property
     def engine(self) -> IsEngine | None:
+        """Return the engine associated with this job, if any.
+
+        Returns:
+            IsEngine | None: Engine used for decoration and execution, or ``None``.
+        """
         ...
 
     @property
     def in_flow_context(self) -> bool:
+        """Return whether the job is currently executing inside a flow context.
+
+        Returns:
+            bool: ``True`` when a surrounding flow context is active.
+        """
         ...
 
     def __eq__(self, other: object) -> bool:
@@ -82,62 +104,143 @@ class IsFuncArgJobBase(Protocol):
     """"""
     @property
     def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
+        """Return the inspected parameter signature of the job callable.
+
+        Returns:
+            MappingProxyType[str, inspect.Parameter]: Mapping from parameter names to
+                signature entries.
+        """
         ...
 
     @property
     def return_type(self) -> type:
+        """Return the annotated return type of the job callable.
+
+        Returns:
+            type: Return annotation for the callable.
+        """
         ...
 
     @property
     def iterate_over_data_files(self) -> bool:
+        """Return whether the job should iterate over dataset items automatically.
+
+        Returns:
+            bool: ``True`` when the first dataset argument is expanded item-by-item.
+        """
         ...
 
     @property
     def output_dataset_param(self) -> str | None:
+        """Return the parameter name used for an explicit output dataset, if any.
+
+        Returns:
+            str | None: Output-dataset parameter name, or ``None`` when not configured.
+        """
         ...
 
     @property
     def output_dataset_cls(self) -> type[IsDataset] | None:
+        """Return the dataset class used for iterated outputs, if configured.
+
+        Returns:
+            type[IsDataset] | None: Output dataset type, or ``None`` when inferred.
+        """
         ...
 
     @property
     def auto_async(self) -> bool:
+        """Return whether coroutine jobs should auto-run outside flow contexts.
+
+        Returns:
+            bool: ``True`` when coroutine jobs are automatically awaited or scheduled.
+        """
         ...
 
     @property
     def persist_outputs(self) -> PersistOutputsOptions.Literals:
+        """Return the configured per-job output-persistence preference.
+
+        Returns:
+            PersistOutputsOptions.Literals: Persistence setting before config fallback.
+        """
         ...
 
     @property
     def restore_outputs(self) -> RestoreOutputsOptions.Literals:
+        """Return the configured per-job output-restore preference.
+
+        Returns:
+            RestoreOutputsOptions.Literals: Restore setting before config fallback.
+        """
         ...
 
     @property
     def output_storage_protocol(self) -> OutputStorageProtocolOptions.Literals:
+        """Return the configured output-storage protocol preference.
+
+        Returns:
+            OutputStorageProtocolOptions.Literals: Storage-protocol setting before
+                config fallback.
+        """
         ...
 
     @property
     def will_persist_outputs(self) -> PersistOutputsOptions.Literals:
+        """Return the resolved output-persistence behavior for this run.
+
+        Returns:
+            PersistOutputsOptions.Literals: Effective persistence behavior after
+                applying config-following rules.
+        """
         ...
 
     @property
     def will_restore_outputs(self) -> RestoreOutputsOptions.Literals:
+        """Return the resolved output-restore behavior for this run.
+
+        Returns:
+            RestoreOutputsOptions.Literals: Effective restore behavior after applying
+                config-following rules.
+        """
         ...
 
     @property
     def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions.Literals:
+        """Return the resolved storage protocol used for persisted outputs.
+
+        Returns:
+            OutputStorageProtocolOptions.Literals: Effective storage protocol for this
+                run.
+        """
         ...
 
     @property
     def result_key(self) -> str | None:
+        """Return the dictionary key used to wrap results, if configured.
+
+        Returns:
+            str | None: Result wrapper key, or ``None`` when results are returned raw.
+        """
         ...
 
     @property
     def fixed_params(self) -> MappingProxyType[str, object]:
+        """Return parameters that are always supplied when the job callable runs.
+
+        Returns:
+            MappingProxyType[str, object]: Read-only mapping of fixed keyword values.
+        """
         ...
 
     @property
     def param_key_map(self) -> MappingProxyType[str, str]:
+        """Return keyword-name remappings applied before calling the job callable.
+
+        Returns:
+            MappingProxyType[str, str]: Mapping from external keyword names to callable
+                parameter names.
+        """
         ...
 
     @property
@@ -155,6 +258,15 @@ class IsFuncArgJobBase(Protocol):
         ...
 
     def get_bound_args(self, *args: object, **kwargs: object) -> inspect.BoundArguments:
+        """Bind arguments to the job callable signature.
+
+        Args:
+            *args: Positional call arguments.
+            **kwargs: Keyword call arguments.
+
+        Returns:
+            inspect.BoundArguments: Bound arguments with defaults applied.
+        """
         ...
 
 
@@ -172,6 +284,8 @@ _CallableT = TypeVar('_CallableT', bound=Callable)
 
 class IsJobBaseCallable(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetCovT],
                         Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
+    """Protocol for job objects that can be called like ordinary Python callables."""
+
     def __call__(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT:
         ...
 
@@ -182,13 +296,32 @@ class IsJob(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
     """"""
     @property
     def time_of_cur_toplevel_flow_run(self) -> datetime | None:
+        """Return the start time of the active top-level flow run, if any.
+
+        Returns:
+            datetime | None: Timestamp for the current outermost flow run, or ``None``.
+        """
         ...
 
     @classmethod
     def create_job(cls, *args: object, **kwargs: object) -> _JobT:
+        """Create an applied job instance from the concrete job class.
+
+        Args:
+            *args: Positional constructor arguments.
+            **kwargs: Keyword constructor arguments.
+
+        Returns:
+            _JobT: New applied job instance.
+        """
         ...
 
     def revise(self) -> _JobTemplateT:
+        """Return a template reconstructed from this applied job.
+
+        Returns:
+            _JobTemplateT: Template carrying the current job configuration.
+        """
         ...
 
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
@@ -201,12 +334,35 @@ class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
     """"""
     @classmethod
     def create_job_template(cls, *args: object, **kwargs: object) -> _JobTemplateT:
+        """Create a job template instance from the concrete template class.
+
+        Args:
+            *args: Positional constructor arguments.
+            **kwargs: Keyword constructor arguments.
+
+        Returns:
+            _JobTemplateT: New job template instance.
+        """
         ...
 
     def run(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT:
+        """Apply the template and execute the resulting job immediately.
+
+        Args:
+            *args: Positional arguments passed to the applied job.
+            **kwargs: Keyword arguments passed to the applied job.
+
+        Returns:
+            _RetCovT: Result returned by the applied job.
+        """
         ...
 
     def apply(self) -> _JobT:
+        """Create an applied job from this template without executing it.
+
+        Returns:
+            _JobT: Applied job instance ready to be called.
+        """
         ...
 
 
@@ -229,6 +385,26 @@ class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT]
             persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
             restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
             **kwargs: object) -> _JobTemplateT:
+        """Return a template with updated callable-configuration settings.
+
+        Args:
+            *args: Positional constructor overrides for the template.
+            update: Whether omitted values should be inherited from the current template.
+            name: Optional replacement display name.
+            iterate_over_data_files: Whether dataset inputs should be processed item-wise.
+            output_dataset_param: Optional name of an explicit output-dataset parameter.
+            output_dataset_cls: Optional dataset class to use for iterated outputs.
+            auto_async: Whether coroutine jobs should auto-run outside flow contexts.
+            result_key: Optional key used to wrap the returned result in a dictionary.
+            fixed_params: Keyword arguments fixed onto every job invocation.
+            param_key_map: Mapping from external keyword names to callable parameter names.
+            persist_outputs: Per-job output-persistence preference.
+            restore_outputs: Per-job output-restore preference.
+            **kwargs: Additional constructor keyword overrides.
+
+        Returns:
+            _JobTemplateT: Refined template instance.
+        """
         ...
 
 
@@ -257,6 +433,11 @@ class IsChildJobListArgJobBase(IsFuncArgJobBase, Protocol):
     """"""
     @property
     def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
+        """Return the child-job templates owned by the flow template.
+
+        Returns:
+            tuple[IsFuncArgJobTemplate, ...]: Ordered child-job templates.
+        """
         ...
 
 
@@ -377,6 +558,26 @@ class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _C
             persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
             restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
             **kwargs: object) -> _JobTemplateT:
+        """Return a flow template with updated child jobs or callable configuration.
+
+        Args:
+            *child_job_templates: Replacement ordered child-job templates.
+            update: Whether omitted values should be inherited from the current template.
+            name: Optional replacement display name.
+            iterate_over_data_files: Whether dataset inputs should be processed item-wise.
+            output_dataset_param: Optional name of an explicit output-dataset parameter.
+            output_dataset_cls: Optional dataset class to use for iterated outputs.
+            auto_async: Whether coroutine jobs should auto-run outside flow contexts.
+            result_key: Optional key used to wrap the returned result in a dictionary.
+            fixed_params: Keyword arguments fixed onto every job invocation.
+            param_key_map: Mapping from external keyword names to callable parameter names.
+            persist_outputs: Per-job output-persistence preference.
+            restore_outputs: Per-job output-restore preference.
+            **kwargs: Additional constructor keyword overrides.
+
+        Returns:
+            _JobTemplateT: Refined flow-template instance.
+        """
         ...
 
 

@@ -188,6 +188,8 @@ else:
 
 
 class JsonScalarColumnModel(ColumnModel[list[JsonScalar], JsonScalar]):
+    """Column model whose cells are JSON scalar values."""
+
     ...
 
 
@@ -199,10 +201,14 @@ JsonMaxLevel2Types: TypeAlias = (
 
 
 class JsonMaxLevel1ColumnModel(ColumnModel[list[JsonMaxLevel1Types], JsonMaxLevel1Types]):
+    """Column model for JSON values nested at most one level deep."""
+
     ...
 
 
 class JsonMaxLevel2ColumnModel(ColumnModel[list[JsonMaxLevel2Types], JsonMaxLevel2Types]):
+    """Column model for JSON values nested at most two levels deep."""
+
     ...
 
 
@@ -596,6 +602,8 @@ class JsonScalarColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesMode
         JsonScalarColumnModel,
         JsonScalar,
 ]):
+    """Column-wise table whose cells are JSON scalar values."""
+
     ...
 
 
@@ -603,6 +611,8 @@ class JsonMaxLevel1ColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesM
         JsonMaxLevel1ColumnModel,
         JsonMaxLevel1Types,
 ]):
+    """Column-wise table whose cells allow JSON nesting up to one level."""
+
     ...
 
 
@@ -610,6 +620,8 @@ class JsonMaxLevel2ColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesM
         JsonMaxLevel2ColumnModel,
         JsonMaxLevel2Types,
 ]):
+    """Column-wise table whose cells allow JSON nesting up to two levels."""
+
     ...
 
 

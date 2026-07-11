@@ -807,6 +807,8 @@ class IsDictOfDictsContent(IsDictContent[_KeyT,
 
 
 class IsConcatenableItemSequenceLikeContent(IsItemSequenceLike[_ValT], Protocol[_ValT]):
+    """Protocol for sequence-like content that supports concatenation operations."""
+
     def __add__(
         self,
         values: IsItemSequenceLike[_ValT] | Generator[_ValT],
@@ -833,12 +835,28 @@ class IsConcatenableItemSequenceLikeColumnContent(
         IsConcatenableItemSequenceLikeContent[_ValT],
         Protocol[_ValT],
 ):
+    """Protocol for concatenable column content with padding helpers."""
+
     @classmethod
     def default_value(cls) -> _ValT:
+        """Return the value used to pad missing cells in a column.
+
+        Returns:
+            _ValT: Default placeholder value for newly created cells.
+        """
         ...  # Abstract method
 
     @classmethod
     def filled(cls, value: _ValT, length: int) -> Self:
+        """Create a column prefilled with ``length`` copies of ``value``.
+
+        Args:
+            value: Value to repeat.
+            length: Number of items to include.
+
+        Returns:
+            Self: Column instance filled with repeated values.
+        """
         ...  # Abstract method
 
 
@@ -848,6 +866,8 @@ class IsDictOfConcatenableItemSequenceLikeColumnContent(
                       | Generator[_ValT, None, None]],
         Protocol[_ConcatColumnModelT, _ValT],
 ):
+    """Protocol for mappings from column names to concatenable column content."""
+
     @override
     def __getitem__(self, key: str, /) -> _ConcatColumnModelT:
         raise AssumedToBeImplementedException

@@ -1,3 +1,5 @@
+"""Protocol extensions for standard-library style container behavior."""
+
 from collections.abc import Iterator
 from typing import overload, Protocol, runtime_checkable, SupportsIndex
 

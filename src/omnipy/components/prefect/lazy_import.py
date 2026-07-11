@@ -11,6 +11,12 @@ def set_prefect_config_path():
 
 
 def use_ephemeral_mode_for_tests():
+    """Force Prefect into ephemeral local mode when running under ``pytest``.
+
+    The test suite should not depend on external Prefect Cloud or server settings, so
+    this helper clears remote-API settings and enables ephemeral mode when ``pytest``
+    has been imported.
+    """
     if 'pytest' in sys.modules:
         os.environ['PREFECT_SERVER_ALLOW_EPHEMERAL_MODE'] = 'True'
         os.environ['PREFECT_API_KEY'] = ''

@@ -1,3 +1,5 @@
+"""Helpers and literal enums for classifying and wrapping callable shapes."""
+
 from collections.abc import AsyncGenerator, Awaitable, Generator
 from contextlib import AbstractContextManager, nullcontext
 import functools
@@ -37,26 +39,44 @@ class _AsyncGeneratorType(LiteralEnum[str]):
 
 
 class SyncCallableType(_SyncFunctionType, _SyncGeneratorType):
+    """Literal enum values for synchronous callable variants."""
+
     Literals = Literal[_SyncFunctionType.Literals, _SyncGeneratorType.Literals]
 
 
 class AsyncCallableType(_AsyncCoroutineType, _AsyncGeneratorType):
+    """Literal enum values for asynchronous callable variants."""
+
     Literals = Literal[_AsyncCoroutineType.Literals, _AsyncGeneratorType.Literals]
 
 
 class PlainCallableType(_SyncFunctionType, _AsyncCoroutineType):
+    """Literal enum values for non-generator callable variants."""
+
     Literals = Literal[_SyncFunctionType.Literals, _AsyncCoroutineType.Literals]
 
 
 class GeneratorCallableType(_SyncGeneratorType, _AsyncGeneratorType):
+    """Literal enum values for generator-based callable variants."""
+
     Literals = Literal[_SyncGeneratorType.Literals, _AsyncGeneratorType.Literals]
 
 
 class CallableType(SyncCallableType, AsyncCallableType):
+    """Combined literal enum values for every supported callable variant."""
+
     Literals = Literal[SyncCallableType.Literals, AsyncCallableType.Literals]
 
 
 def get_callable_type(callable: Callable[..., Any]) -> CallableType.Literals:
+    """Inspect a callable and classify its sync/async and generator shape.
+
+    Args:
+        callable: Callable object to inspect.
+
+    Returns:
+        CallableType.Literals: Detected callable variant.
+    """
     if inspect.isasyncgenfunction(callable):
         return CallableType.ASYNC_GENERATOR
     elif inspect.iscoroutinefunction(callable):
@@ -72,6 +92,15 @@ def _noop() -> None:
 
 
 def callable_type_from_flags(*, is_async: bool, is_generator: bool) -> CallableType.Literals:
+    """Return a callable-type literal from boolean async/generator flags.
+
+    Args:
+        is_async: Whether the callable executes asynchronously.
+        is_generator: Whether the callable yields values instead of returning once.
+
+    Returns:
+        CallableType.Literals: Callable variant matching the supplied flags.
+    """
     if is_async:
         if is_generator:
             return CallableType.ASYNC_GENERATOR
@@ -93,6 +122,22 @@ def decorate_callable_by_type(  # noqa: C901
     context_factory: Callable[[], AbstractContextManager[object]] | None = None,
     resolve_async_result: bool = False,
 ) -> Callable[_P, Any]:
+    """Wrap a callable while preserving its declared callable shape.
+
+    Args:
+        call_func: Callable to wrap.
+        param_signatures: Parameter mapping used to expose the desired signature.
+        return_type: Return annotation to expose on the wrapper.
+        call_type: Effective callable type to emulate.
+        context_factory: Optional factory producing a context manager entered for each
+            invocation.
+        resolve_async_result: Whether async-coroutine wrappers should resolve nested
+            awaitables before returning.
+
+    Returns:
+        Callable[_P, Any]: Wrapper matching ``call_type`` while preserving the supplied
+            signature metadata.
+    """
     from omnipy.util.helpers import resolve
 
     make_context = context_factory or nullcontext
@@ -220,6 +265,18 @@ def decorate_result_by_type(
     *,
     on_finished: Callable[[], None] | None = None,
 ) -> Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+    """Create a decorator that runs a callback when a result has fully finished.
+
+    The callback is delayed until generators are exhausted and awaitables resolve, so
+    completion is tracked at the end of observable consumption rather than at call time.
+
+    Args:
+        on_finished: Callback invoked when the wrapped result is fully consumed.
+
+    Returns:
+        Callable[[Callable[_P, _R]], Callable[_P, _R]]: Decorator that preserves the
+            wrapped callable while adding completion tracking.
+    """
     register_finished = on_finished or _noop
 
     def _decorator(call_func: Callable[_P, _R]) -> Callable[_P, _R]:

@@ -52,6 +52,14 @@ class IsJobRunnerEngine(IsEngine, Protocol):
     supported_job_types: frozenset[JobType.Literals]
 
     def supports(self, job_type: JobType.Literals) -> bool:
+        """Return whether the engine can initialize and run ``job_type`` jobs.
+
+        Args:
+            job_type: Job category to test.
+
+        Returns:
+            bool: ``True`` when ``job_type`` is supported by the engine.
+        """
         ...
 
     def apply_job_decorator(
@@ -60,4 +68,12 @@ class IsJobRunnerEngine(IsEngine, Protocol):
         job: IsFuncArgJob,
         job_callback_accept_decorator: Callable,
     ) -> None:
+        """Attach the engine's execution decorator to a job callback endpoint.
+
+        Args:
+            job_type: Job category selecting the run behavior.
+            job: Job instance being prepared for execution.
+            job_callback_accept_decorator: Consumer that accepts the engine-provided
+                decorator.
+        """
         ...

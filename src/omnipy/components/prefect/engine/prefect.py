@@ -21,6 +21,8 @@ if TYPE_CHECKING:
 
 
 class TaskKwargs(TypedDict, total=False):
+    """Keyword arguments accepted by Prefect's task decorator for Omnipy tasks."""
+
     name: str
     cache_policy: 'CachePolicy | type[NotSet]'
     cache_expiration: timedelta | None
@@ -28,6 +30,8 @@ class TaskKwargs(TypedDict, total=False):
 
 
 class FlowKwargs(TypedDict, total=False):
+    """Keyword arguments accepted by Prefect's flow decorator for Omnipy flows."""
+
     name: str
     flow_run_name: str
     validate_parameters: bool

@@ -74,12 +74,16 @@ class EngineChoice(LiteralEnum[str]):
 
 
 class TaskJobType(LiteralEnum[str]):
+    """Literal enum values for task job categories."""
+
     Literals = Literal['task']
 
     TASK: Literal['task'] = 'task'
 
 
 class FlowJobType(LiteralEnum[str]):
+    """Literal enum values for supported flow job categories."""
+
     Literals = Literal['linear_flow', 'dag_flow', 'func_flow']
 
     LINEAR_FLOW: Literal['linear_flow'] = 'linear_flow'
@@ -88,6 +92,8 @@ class FlowJobType(LiteralEnum[str]):
 
 
 class JobType(TaskJobType, FlowJobType):
+    """Combined literal enum values for all supported Omnipy job categories."""
+
     Literals = Literal[TaskJobType.Literals, FlowJobType.Literals]
 
 

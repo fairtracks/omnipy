@@ -306,7 +306,10 @@ class IsInt(Protocol):
     def denominator(self) -> Literal[1]: raise AssumedToBeImplementedException
     def conjugate(self) -> int: raise AssumedToBeImplementedException
     def bit_length(self) -> int: raise AssumedToBeImplementedException
-    def bit_count(self) -> int: raise AssumedToBeImplementedException
+    def bit_count(self) -> int:
+        """Return the number of set bits in the integer's absolute value."""
+
+        raise AssumedToBeImplementedException
 
     if sys.version_info >= (3, 11):
         def to_bytes(

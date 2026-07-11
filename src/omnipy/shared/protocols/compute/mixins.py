@@ -46,6 +46,11 @@ class IsUniquelyNamedJob(Protocol):
 
     @property
     def unique_run_slug(self) -> str:
+        """Return the run-specific slug generated for this job instance.
+
+        Returns:
+            str: Short slug used in per-run names and identifiers.
+        """
         ...
 
     @property
