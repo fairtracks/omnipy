@@ -297,8 +297,7 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
     def refine(self, *args: Any, update: bool = True, **kwargs: object) -> _JobTemplateT:
         """Forward refinement to the shared template lifecycle implementation.
 
-        See :meth:`~omnipy.shared.protocols.compute.job.IsFuncArgJobTemplate.refine`
-        and :meth:`~omnipy.shared.protocols.compute.job.IsChildJobListArgJobTemplate.refine`.
+        See `IsFuncArgJobTemplate.refine` and `IsChildJobListArgJobTemplate.refine`.
         """
         self_as_job_base = cast(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT], self)
         return self_as_job_base._refine(*args, update=update, **kwargs)
