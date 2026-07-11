@@ -1,6 +1,6 @@
 from typing import cast
 
-from .submission_models import SubmissionPackage, build_submission_package
+from .submission_models import build_submission_package, SubmissionPackage
 
 
 def build_sequence_submission_package() -> SubmissionPackage:
@@ -80,7 +80,8 @@ def build_external_transfer_manifest(package: SubmissionPackage) -> dict[str, ob
     metadata = cast(dict[str, object], package['submission_metadata'].to_data())
     files = cast(list[dict[str, object]], package['submission_files'].to_data())
     return {
-        'local_submission_alias': metadata['local_submission_alias'],
+        'local_submission_alias':
+            metadata['local_submission_alias'],
         'files': [{
             'local_sample_alias': file_row['local_sample_alias'],
             'file_role': file_row['file_role'],
@@ -91,7 +92,8 @@ def build_external_transfer_manifest(package: SubmissionPackage) -> dict[str, ob
     }
 
 
-def build_biosamplevault_registration_request(package: SubmissionPackage) -> list[dict[str, object]]:
+def build_biosamplevault_registration_request(
+        package: SubmissionPackage) -> list[dict[str, object]]:
     metadata = cast(dict[str, object], package['submission_metadata'].to_data())
     samples = cast(list[dict[str, object]], package['submission_samples'].to_data())
     return [{
@@ -108,11 +110,16 @@ def build_sequence_depot_submission_payload(package: SubmissionPackage) -> dict[
     samples = cast(list[dict[str, object]], package['submission_samples'].to_data())
     files = cast(list[dict[str, object]], package['submission_files'].to_data())
     return {
-        'local_submission_alias': metadata['local_submission_alias'],
-        'sequence_depot_submission_id': metadata['sequence_depot_submission_id'],
-        'project_code': metadata['project_code'],
-        'release_date': metadata['release_date'],
-        'submission_checklist_version': metadata['submission_checklist_version'],
+        'local_submission_alias':
+            metadata['local_submission_alias'],
+        'sequence_depot_submission_id':
+            metadata['sequence_depot_submission_id'],
+        'project_code':
+            metadata['project_code'],
+        'release_date':
+            metadata['release_date'],
+        'submission_checklist_version':
+            metadata['submission_checklist_version'],
         'samples': [{
             'local_sample_alias': sample['local_sample_alias'],
             'biosamplevault_sample_id': sample['biosamplevault_sample_id'],
@@ -128,11 +135,16 @@ def build_sequence_depot_submission_payload(package: SubmissionPackage) -> dict[
 
 def expected_sequence_depot_submission_payload() -> dict[str, object]:
     return {
-        'local_submission_alias': 'sub-2026-alpha',
-        'sequence_depot_submission_id': 'SEQDEPOT-SUB-2026-ALPHA',
-        'project_code': 'NORW-PATH-42',
-        'release_date': '2026-06-15',
-        'submission_checklist_version': 'ENA-CHECKLIST-1.0',
+        'local_submission_alias':
+            'sub-2026-alpha',
+        'sequence_depot_submission_id':
+            'SEQDEPOT-SUB-2026-ALPHA',
+        'project_code':
+            'NORW-PATH-42',
+        'release_date':
+            '2026-06-15',
+        'submission_checklist_version':
+            'ENA-CHECKLIST-1.0',
         'samples': [
             {
                 'local_sample_alias': 'sample-a',

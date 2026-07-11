@@ -1,6 +1,5 @@
 from collections.abc import AsyncGenerator
-from typing import Literal
-from typing import cast
+from typing import cast, Literal
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer
@@ -14,14 +13,23 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
     'river': {
         1: [
             {
-                'river_batch_id': 'river-batch-1',
-                'catchment': 'glomma-upper',
-                'sampled_at': '2026-05-03',
-                'station': 'River Mouth',
-                'sample_alias': 'River-R1',
+                'river_batch_id':
+                    'river-batch-1',
+                'catchment':
+                    'glomma-upper',
+                'sampled_at':
+                    '2026-05-03',
+                'station':
+                    'River Mouth',
+                'sample_alias':
+                    'River-R1',
                 'measurements': [
-                    {'name': 'nitrate', 'value_mg_l': 1.2},
-                    {'name': 'phosphorus', 'value_ug_l': 120.0},
+                    {
+                        'name': 'nitrate', 'value_mg_l': 1.2
+                    },
+                    {
+                        'name': 'phosphorus', 'value_ug_l': 120.0
+                    },
                 ],
             },
             {
@@ -30,50 +38,53 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
                 'sampled_at': '2026-05-10',
                 'station': 'River Mouth',
                 'sample_alias': 'River-R2',
-                'measurements': [
-                    {'name': 'nitrate', 'value_mg_l': 1.4},
-                ],
+                'measurements': [{
+                    'name': 'nitrate', 'value_mg_l': 1.4
+                },],
             },
         ],
-        2: [
-            {
-                'river_batch_id': 'river-batch-3',
-                'catchment': 'glomma-upper',
-                'sampled_at': '2026-05-17',
-                'station': 'Upstream Bend',
-                'sample_alias': 'River-R3',
-                'measurements': [
-                    {'name': 'temperature', 'value_celsius': 9.8},
-                ],
-            },
-        ],
+        2: [{
+            'river_batch_id': 'river-batch-3',
+            'catchment': 'glomma-upper',
+            'sampled_at': '2026-05-17',
+            'station': 'Upstream Bend',
+            'sample_alias': 'River-R3',
+            'measurements': [{
+                'name': 'temperature', 'value_celsius': 9.8
+            },],
+        },],
     },
     'wastewater': {
-        1: [
-            {
-                'wastewater_batch_id': 'wastewater-batch-1',
-                'catchment_code': 'glomma-upper',
-                'monitoring_date': '2026-05-03',
-                'treatment_plant': 'North Works',
-                'sample_alias': 'WW-9A',
-                'measurements': [
-                    {'metric': 'ammonium', 'value': '0.8', 'unit': 'mg/L'},
-                    {'metric': 'phosphorus', 'value': '0.15', 'unit': 'mg/L'},
-                ],
-            },
-        ],
-        2: [
-            {
-                'wastewater_batch_id': 'wastewater-batch-2',
-                'catchment_code': 'glomma-upper',
-                'monitoring_date': '2026-05-10',
-                'treatment_plant': 'North Works',
-                'sample_alias': 'WW-9B',
-                'measurements': [
-                    {'metric': 'ammonium', 'value': '0.75', 'unit': 'mg/L'},
-                ],
-            },
-        ],
+        1: [{
+            'wastewater_batch_id':
+                'wastewater-batch-1',
+            'catchment_code':
+                'glomma-upper',
+            'monitoring_date':
+                '2026-05-03',
+            'treatment_plant':
+                'North Works',
+            'sample_alias':
+                'WW-9A',
+            'measurements': [
+                {
+                    'metric': 'ammonium', 'value': '0.8', 'unit': 'mg/L'
+                },
+                {
+                    'metric': 'phosphorus', 'value': '0.15', 'unit': 'mg/L'
+                },
+            ],
+        },],
+        2: [{
+            'wastewater_batch_id': 'wastewater-batch-2',
+            'catchment_code': 'glomma-upper',
+            'monitoring_date': '2026-05-10',
+            'treatment_plant': 'North Works',
+            'sample_alias': 'WW-9B',
+            'measurements': [{
+                'metric': 'ammonium', 'value': '0.75', 'unit': 'mg/L'
+            },],
+        },],
     },
 }
 

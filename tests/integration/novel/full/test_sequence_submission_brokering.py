@@ -1,7 +1,6 @@
 import asyncio
 from inspect import isawaitable
-from typing import Annotated
-from typing import cast
+from typing import Annotated, cast
 
 import pytest
 
@@ -12,13 +11,13 @@ from ....engine.helpers.functions import assert_job_state
 from .helpers.submission_cases import (build_biosamplevault_registration_request,
                                        build_external_transfer_manifest,
                                        build_sequence_depot_submission_id_request,
-                                       build_sequence_submission_package,
                                        build_sequence_depot_submission_payload,
+                                       build_sequence_submission_package,
                                        expected_sequence_depot_submission_payload)
-from .helpers.submission_models import (SubmissionPackage,
-                                        append_workflow_event,
+from .helpers.submission_models import (append_workflow_event,
                                         assert_submission_ready_for_final_submission,
                                         clone_submission_package,
+                                        SubmissionPackage,
                                         update_submission_files,
                                         update_submission_metadata,
                                         update_submission_samples,
@@ -26,13 +25,14 @@ from .helpers.submission_models import (SubmissionPackage,
 
 
 async def test_sequence_submission_brokering(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
+        runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
 ) -> None:
     submission_package = build_sequence_submission_package()
 
     brokering_flow = broker_sequence_submission_flow.apply()
     final_package_result = brokering_flow(submission_package)
-    final_package = await final_package_result if isawaitable(final_package_result) else final_package_result
+    final_package = await final_package_result if isawaitable(
+        final_package_result) else final_package_result
 
     assert set(final_package.keys()) == {
         'submission_samples',
@@ -99,17 +99,27 @@ async def test_sequence_submission_brokering(
     ]
 
     assert cast(dict[str, object], final_package['submission_metadata'].to_data()) == {
-        'local_submission_alias': 'sub-2026-alpha',
+        'local_submission_alias':
+            'sub-2026-alpha',
         'local_sample_aliases': ['sample-b', 'sample-a'],
-        'project_code': 'NORW-PATH-42',
-        'study_title': 'Northern waterways genomic surveillance pilot',
-        'release_date': '2026-06-15',
-        'submission_checklist_version': 'ENA-CHECKLIST-1.0',
-        'transfer_status': 'completed-external',
-        'archive_status': 'submitted',
-        'sequence_depot_submission_id': 'SEQDEPOT-SUB-2026-ALPHA',
-        'external_transfer_ticket': 'XFER-SUB-2026-ALPHA',
-        'final_receipt_message': 'Submitted submission sub-2026-alpha to Sequence Depot',
+        'project_code':
+            'NORW-PATH-42',
+        'study_title':
+            'Northern waterways genomic surveillance pilot',
+        'release_date':
+            '2026-06-15',
+        'submission_checklist_version':
+            'ENA-CHECKLIST-1.0',
+        'transfer_status':
+            'completed-external',
+        'archive_status':
+            'submitted',
+        'sequence_depot_submission_id':
+            'SEQDEPOT-SUB-2026-ALPHA',
+        'external_transfer_ticket':
+            'XFER-SUB-2026-ALPHA',
+        'final_receipt_message':
+            'Submitted submission sub-2026-alpha to Sequence Depot',
         'workflow_events': [
             'metadata_normalized',
             'storage_manifest_verified',
@@ -121,7 +131,8 @@ async def test_sequence_submission_brokering(
     }
 
     assert build_external_transfer_manifest(final_package) == {
-        'local_submission_alias': 'sub-2026-alpha',
+        'local_submission_alias':
+            'sub-2026-alpha',
         'files': [
             {
                 'local_sample_alias': 'sample-a',

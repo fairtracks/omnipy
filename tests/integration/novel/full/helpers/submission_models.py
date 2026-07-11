@@ -1,6 +1,5 @@
 from collections import Counter
-from typing import cast
-from typing import Literal
+from typing import cast, Literal
 
 import omnipy as om
 import omnipy.util.pydantic as pyd
@@ -28,7 +27,8 @@ class SubmissionSampleSchema(SubmissionSchemaBase):
         'local_sample_alias',
         pre=True,
         allow_reuse=True,
-    )(_normalize_alias)
+    )(
+        _normalize_alias)
 
 
 class SubmissionFileSchema(SubmissionSchemaBase):
@@ -45,7 +45,8 @@ class SubmissionFileSchema(SubmissionSchemaBase):
         'local_sample_alias',
         pre=True,
         allow_reuse=True,
-    )(_normalize_alias)
+    )(
+        _normalize_alias)
 
 
 class SubmissionMetadataSchema(SubmissionSchemaBase):
@@ -66,7 +67,8 @@ class SubmissionMetadataSchema(SubmissionSchemaBase):
         'local_submission_alias',
         pre=True,
         allow_reuse=True,
-    )(_normalize_alias)
+    )(
+        _normalize_alias)
 
     @pyd.validator('local_sample_aliases', pre=True, allow_reuse=True)
     def _normalize_sample_alias_list(cls, values: list[str]) -> list[str]:
@@ -85,8 +87,8 @@ class SubmissionFilesTable(om.TableOfPydanticRecordsModel[SubmissionFileSchema])
     ...
 
 
-class SubmissionPackage(
-    om.Dataset[SubmissionSamplesTable | SubmissionFilesTable | SubmissionMetadataModel]):
+class SubmissionPackage(om.Dataset[SubmissionSamplesTable | SubmissionFilesTable
+                                   | SubmissionMetadataModel]):
     ...
 
 
@@ -176,8 +178,10 @@ def validate_submission_linkage(package: SubmissionPackage) -> None:
     file_roles_per_sample = Counter(
         (cast(str, file_row['local_sample_alias']), cast(str, file_row['file_role']))
         for file_row in files)
-    assert all(file_roles_per_sample[(sample_alias, 'read1')] == 1 for sample_alias in sample_aliases)
-    assert all(file_roles_per_sample[(sample_alias, 'read2')] == 1 for sample_alias in sample_aliases)
+    assert all(
+        file_roles_per_sample[(sample_alias, 'read1')] == 1 for sample_alias in sample_aliases)
+    assert all(
+        file_roles_per_sample[(sample_alias, 'read2')] == 1 for sample_alias in sample_aliases)
 
 
 def assert_submission_ready_for_final_submission(package: SubmissionPackage) -> None:

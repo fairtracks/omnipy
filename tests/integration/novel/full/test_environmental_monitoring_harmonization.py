@@ -1,9 +1,7 @@
 import asyncio
 from collections.abc import Iterable
 from inspect import isawaitable
-from typing import Annotated
-from typing import Any
-from typing import cast
+from typing import Annotated, Any, cast
 
 from aiohttp.test_utils import TestServer
 import pytest
@@ -18,7 +16,9 @@ from omnipy.components.json.flows import flatten_nested_json
 from omnipy.shared.enums.job import RunState
 
 from ....engine.helpers.functions import assert_job_state
-from .helpers.monitoring_services import build_paginated_source_urls, monitoring_service  # noqa: F401
+from .helpers.monitoring_services import build_paginated_source_urls
+
+pytest_plugins = ['tests.integration.novel.full.helpers.monitoring_services']
 
 
 class MonitoringTables(Dataset[PandasDataset]):
@@ -30,8 +30,12 @@ def _table_records(table_dataset: PandasDataset, table_name: str) -> list[dict[s
     return cast(list[dict[str, object]], records)
 
 
-def _selected_columns(records: list[dict[str, object]], *column_names: str) -> list[dict[str, object]]:
-    return [{column_name: record[column_name] for column_name in column_names} for record in records]
+def _selected_columns(records: list[dict[str, object]], *column_names:
+                      str) -> list[dict[str, object]]:
+    selected_rows = []
+    for record in records:
+        selected_rows.append({column_name: record[column_name] for column_name in column_names})
+    return selected_rows
 
 
 def _page_number(page_key: str) -> int:
@@ -52,7 +56,8 @@ def _shared_backbone(catchment_id: str, monitoring_date: str) -> str:
     return f'{catchment_id}@{monitoring_date}'
 
 
-def _normalize_river_measurements(measurements: Iterable[dict[str, object]]) -> list[dict[str, object]]:
+def _normalize_river_measurements(
+        measurements: Iterable[dict[str, object]]) -> list[dict[str, object]]:
     normalized_measurements: list[dict[str, object]] = []
 
     for measurement in measurements:
@@ -78,9 +83,8 @@ def _normalize_river_measurements(measurements: Iterable[dict[str, object]]) -> 
     return normalized_measurements
 
 
-def _normalize_wastewater_measurements(
-    measurements: Iterable[dict[str, object]],
-) -> list[dict[str, object]]:
+def _normalize_wastewater_measurements(  # noqa: E125
+        measurements: Iterable[dict[str, object]],) -> list[dict[str, object]]:
     return [{
         'analyte': measurement['metric'],
         'value_mg_l': float(cast(str, measurement['value'])),
@@ -129,8 +133,7 @@ def _sort_parent_rows(parent_rows: list[dict[str, object]]) -> list[dict[str, ob
         key=lambda row: (
             cast(str, row['monitoring_date']),
             cast(int, row['source_order']),
-            cast(str, row['sample_key']),
-        ),
+            cast(str, row['sample_key']),),
     )
 
 
@@ -141,8 +144,7 @@ def _sort_measurement_rows(measurement_rows: list[dict[str, object]]) -> list[di
             cast(str, row['monitoring_date']),
             cast(int, row['source_order']),
             cast(str, row['sample_key']),
-            cast(str, row['_omnipy_id']),
-        ),
+            cast(str, row['_omnipy_id']),),
     )
 
 
@@ -311,9 +313,7 @@ def harmonize_monitoring_batches(
 
     parent_rows = cast(list[dict[str, object]], flattened_data['measurements'])
     sorted_parent_rows = _sort_parent_rows(parent_rows)
-    parent_rows_by_id = {
-        cast(str, row['_omnipy_id']): row for row in sorted_parent_rows
-    }
+    parent_rows_by_id = {cast(str, row['_omnipy_id']): row for row in sorted_parent_rows}
 
     sample_rows = [{
         'source_type': row['source_type'],
@@ -324,7 +324,8 @@ def harmonize_monitoring_batches(
         'shared_backbone': row['shared_backbone'],
     } for row in sorted_parent_rows]
 
-    flattened_measurements = cast(list[dict[str, object]], flattened_data['measurements.measurements'])
+    flattened_measurements = cast(list[dict[str, object]],
+                                  flattened_data['measurements.measurements'])
     enriched_measurements = []
 
     for measurement in flattened_measurements:

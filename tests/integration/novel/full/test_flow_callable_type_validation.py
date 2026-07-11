@@ -9,7 +9,7 @@ from omnipy.util.helpers import resolve
 
 
 async def test_flow_callable_type_validation(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
+        runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
 ) -> None:
     @om.TaskTemplate()
     def seed_linear_value(seed: int) -> int:
@@ -48,7 +48,8 @@ async def test_flow_callable_type_validation(
     assert await resolve(linear_async_submission_flow.run(2)) == 30
     assert await resolve(linear_async_submission_flow.apply()(2)) == 30
 
-    linear_refined = linear_async_submission_flow.refine(name='linear_async_submission_flow_refined')
+    linear_refined = linear_async_submission_flow.refine(
+        name='linear_async_submission_flow_refined')
     assert linear_refined.callable_type is CallableType.ASYNC_COROUTINE
     assert linear_refined.apply().callable_type is CallableType.ASYNC_COROUTINE
     assert await resolve(linear_refined.run(3)) == 40
