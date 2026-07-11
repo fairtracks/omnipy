@@ -234,6 +234,8 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
 
 ### Task 9: Replace the mixed showcase with three readable selective integration tests
 
+**Authority:** `docs/superpowers/specs/2026-07-09-async-and-sub-flow-testing-schema-design.md` is the binding requirements source for this task's integration-test redesign. If Task 9 wording and that spec drift, follow the spec and update the plan rather than treating them as separate sources of truth.
+
 **Files:**
 - Create: `tests/integration/novel/full/test_environmental_monitoring_harmonization.py`
 - Create: `tests/integration/novel/full/test_sequence_submission_brokering.py`
