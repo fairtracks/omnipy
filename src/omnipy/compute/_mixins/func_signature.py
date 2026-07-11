@@ -21,7 +21,15 @@ class SignatureFuncJobBaseMixin:
 
     @property
     def return_type(self) -> type:
-        """Return the annotated return type of the wrapped job function."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_RETURN_TYPE_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_RETURN_TYPE_DETAILS}}
+        """Return the annotated return type of the job callable.
+
+        Returns:
+            type: Return annotation for the callable.
+"""
 
         return self._func_signature.return_annotation
 
@@ -46,7 +54,19 @@ class SignatureFuncJobBaseMixin:
         self.__signature__ = new_signature
 
     def get_bound_args(self, *args: object, **kwargs: object) -> inspect.BoundArguments:
-        """Bind call arguments to the cached job function signature."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_GET_BOUND_ARGS_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_GET_BOUND_ARGS_DETAILS}}
+        """Bind arguments to the job callable signature.
+
+        Args:
+            *args: Positional call arguments.
+            **kwargs: Keyword call arguments.
+
+        Returns:
+            inspect.BoundArguments: Bound arguments with defaults applied.
+"""
 
         bound_args = self._func_signature.bind(*args, **kwargs)
         bound_args.apply_defaults()

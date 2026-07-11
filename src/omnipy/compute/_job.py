@@ -54,10 +54,10 @@ class JobBase(
         # {{ISJOBBASE_CONFIG_SUMMARY}}
         #
         # {{ISJOBBASE_CONFIG_DETAILS}}
-        """Return the job configuration shared by this job family.
+        """Return the job configuration visible to this instance.
 
         Returns:
-            IsJobConfig: Shared job configuration resolved from the owning job creator.
+            IsJobConfig: Active job configuration used for runtime behavior.
 """
         return self.__class__.job_creator.config
 
@@ -67,17 +67,24 @@ class JobBase(
         # {{ISJOBBASE_ENGINE_SUMMARY}}
         #
         # {{ISJOBBASE_ENGINE_DETAILS}}
-        """Return the currently configured engine for this job family, if any.
+        """Return the engine associated with this job, if any.
 
         Returns:
-            IsEngine | None: Engine used to decorate applied jobs, or ``None`` when no engine has
-                been configured.
+            IsEngine | None: Engine used for decoration and execution, or ``None``.
 """
         return self.__class__.job_creator.engine
 
     @property
     def in_flow_context(self) -> bool:
-        """Return whether the job is executing inside a nested flow context."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBBASE_IN_FLOW_CONTEXT_SUMMARY}}
+        #
+        # {{ISJOBBASE_IN_FLOW_CONTEXT_DETAILS}}
+        """Return whether the job is currently executing inside a flow context.
+
+        Returns:
+            bool: ``True`` when a surrounding flow context is active.
+"""
         return self.__class__.nested_context_level > 0
 
     def __init__(self, *args: object, **kwargs: object):
@@ -233,7 +240,19 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
 
     @classmethod
     def create_job_template(cls, *args: object, **kwargs: object) -> _JobTemplateT:
-        """Create a new template instance using the shared `JobBase` factory."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBTEMPLATE_CREATE_JOB_TEMPLATE_SUMMARY}}
+        #
+        # {{ISJOBTEMPLATE_CREATE_JOB_TEMPLATE_DETAILS}}
+        """Create a job template instance from the concrete template class.
+
+        Args:
+            *args: Positional constructor arguments.
+            **kwargs: Keyword constructor arguments.
+
+        Returns:
+            _JobTemplateT: New job template instance.
+"""
         cls_as_job_base = cast(type[IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT]], cls)
         return cls_as_job_base._create_job_template(*args, **kwargs)
 
@@ -245,18 +264,38 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
             self)
 
     def run(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetT:
-        """Apply the template and execute the resulting job immediately."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBTEMPLATE_RUN_SUMMARY}}
+        #
+        # {{ISJOBTEMPLATE_RUN_DETAILS}}
+        """Apply the template and execute the resulting job immediately.
+
+        Args:
+            *args: Positional arguments passed to the applied job.
+            **kwargs: Keyword arguments passed to the applied job.
+
+        Returns:
+            _RetCovT: Result returned by the applied job.
+"""
         # TODO: Using JobTemplateMixin.run() inside flows should give error message
         return self._cast_to_job_tmpl().apply()(*args, **kwargs)
 
     def apply(self) -> _JobT:
-        """Return an executable job instance created from this template."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBTEMPLATE_APPLY_SUMMARY}}
+        #
+        # {{ISJOBTEMPLATE_APPLY_DETAILS}}
+        """Create an applied job from this template without executing it.
+
+        Returns:
+            _JobT: Applied job instance ready to be called.
+"""
         job = self._cast_to_job_tmpl()._apply()
         update_wrapper(job, self, updated=[])
         return cast(_JobT, job)
 
     def refine(self, *args: Any, update: bool = True, **kwargs: object) -> _JobTemplateT:
-        """Return a new template with updated positional or keyword configuration."""
+        """See `IsFuncArgJobTemplate.refine` and `IsChildJobListArgJobTemplate.refine`."""
         self_as_job_base = cast(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT], self)
         return self_as_job_base._refine(*args, update=update, **kwargs)
 
@@ -282,18 +321,46 @@ class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT
 
     @property
     def time_of_cur_toplevel_flow_run(self) -> datetime | None:
-        """Return the start time of the current top-level flow run, if any."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOB_TIME_OF_CUR_TOPLEVEL_FLOW_RUN_SUMMARY}}
+        #
+        # {{ISJOB_TIME_OF_CUR_TOPLEVEL_FLOW_RUN_DETAILS}}
+        """Return the start time of the active top-level flow run, if any.
+
+        Returns:
+            datetime | None: Timestamp for the current outermost flow run, or ``None``.
+"""
         self_as_job_base = cast(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT], self)
         return self_as_job_base._job_creator.time_of_cur_toplevel_nested_context_run
 
     @classmethod
     def create_job(cls, *args: object, **kwargs: object) -> _JobT:
-        """Create an executable job instance using the shared `JobBase` factory."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOB_CREATE_JOB_SUMMARY}}
+        #
+        # {{ISJOB_CREATE_JOB_DETAILS}}
+        """Create an applied job instance from the concrete job class.
+
+        Args:
+            *args: Positional constructor arguments.
+            **kwargs: Keyword constructor arguments.
+
+        Returns:
+            _JobT: New applied job instance.
+"""
         cls_as_job_base = cast(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetT], cls)
         return cls_as_job_base._create_job(*args, **kwargs)
 
     def revise(self) -> _JobTemplateT:
-        """Return a template reconstructed from this applied job instance."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOB_REVISE_SUMMARY}}
+        #
+        # {{ISJOB_REVISE_DETAILS}}
+        """Return a template reconstructed from this applied job.
+
+        Returns:
+            _JobTemplateT: Template carrying the current job configuration.
+"""
         self_as_job_base = cast(
             IsJobBase[IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetT], _JobT, _CallP, _RetT],
             self)

@@ -18,7 +18,7 @@ JobRunHookNames = tuple[InitRunHookName, ExecRunHookName]
 
 
 class JobRunDef(NamedTuple):
-    """Mapping from a job type to its run-spec class and engine hook names."""
+    """Describe the run-spec class and hook names used for one job type."""
 
     run_spec: type[JobRunSpec]
     init_hook_name: InitRunHookName
@@ -66,14 +66,18 @@ class JobRunnerEngine(Engine, ABC):
             _require_hook_override(hook_name, 'supported jobs')
 
     def supports(self, job_type: JobType.Literals) -> bool:
-        """Return whether this engine can initialize and run ``job_type`` jobs.
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBRUNNERENGINE_SUPPORTS_SUMMARY}}
+        #
+        # {{ISJOBRUNNERENGINE_SUPPORTS_DETAILS}}
+        """Return whether the engine can initialize and run ``job_type`` jobs.
 
         Args:
-            job_type: Job type to check for engine support.
+            job_type: Job category to test.
 
         Returns:
-            bool: ``True`` when the engine declares support for ``job_type``.
-        """
+            bool: ``True`` when ``job_type`` is supported by the engine.
+"""
         return job_type in self.supported_job_types
 
     def _require_support(self, job_type: JobType.Literals) -> None:
@@ -87,14 +91,18 @@ class JobRunnerEngine(Engine, ABC):
         job: IsFuncArgJob,
         job_callback_accept_decorator: Callable,
     ) -> None:
-        """Attach engine-managed execution hooks to a job callback endpoint.
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBRUNNERENGINE_APPLY_JOB_DECORATOR_SUMMARY}}
+        #
+        # {{ISJOBRUNNERENGINE_APPLY_JOB_DECORATOR_DETAILS}}
+        """Attach the engine's execution decorator to a job callback endpoint.
 
         Args:
-            job_type: Job type that selects the run spec and engine hooks to use.
+            job_type: Job category selecting the run behavior.
             job: Job instance being prepared for execution.
-            job_callback_accept_decorator: Consumer that accepts the engine-generated
-                decorator wrapping the job callable.
-        """
+            job_callback_accept_decorator: Consumer that accepts the engine-provided
+                decorator.
+"""
         self._require_support(job_type)
         job_run_spec_cls, init_state, run_job = self._job_type_to_run_spec_and_funcs(job_type)
 

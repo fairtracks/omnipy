@@ -83,40 +83,56 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def persist_outputs(self) -> PersistOutputsOptions.Literals:
-        """Return the configured persistence option for this job.
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_PERSIST_OUTPUTS_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_PERSIST_OUTPUTS_DETAILS}}
+        """Return the configured per-job output-persistence preference.
 
         Returns:
-            Effective per-job persistence setting before config fallback
-            resolution.
-        """
+            PersistOutputsOptions.Literals: Persistence setting before config fallback.
+"""
         return self._persist_outputs
 
     @property
     def restore_outputs(self) -> RestoreOutputsOptions.Literals:
-        """Return the configured restore option for this job.
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_RESTORE_OUTPUTS_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_RESTORE_OUTPUTS_DETAILS}}
+        """Return the configured per-job output-restore preference.
 
         Returns:
-            Effective per-job restore setting before config fallback resolution.
-        """
+            RestoreOutputsOptions.Literals: Restore setting before config fallback.
+"""
         return self._restore_outputs
 
     @property
     def output_storage_protocol(self) -> OutputStorageProtocolOptions.Literals:
-        """Return the configured output storage protocol option.
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_OUTPUT_STORAGE_PROTOCOL_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_OUTPUT_STORAGE_PROTOCOL_DETAILS}}
+        """Return the configured output-storage protocol preference.
 
         Returns:
-            Per-job protocol setting before config fallback resolution.
-        """
+            OutputStorageProtocolOptions.Literals: Storage-protocol setting before
+                config fallback.
+"""
         return self._output_storage_protocol
 
     @property
     def will_persist_outputs(self) -> PersistOutputsOptions.Literals:
-        """Resolve whether outputs should be persisted for this run.
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_WILL_PERSIST_OUTPUTS_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_WILL_PERSIST_OUTPUTS_DETAILS}}
+        """Return the resolved output-persistence behavior for this run.
 
         Returns:
-            ``PersistOpts.ENABLED`` or ``PersistOpts.DISABLED`` after applying
-            config-following rules.
-        """
+            PersistOutputsOptions.Literals: Effective persistence behavior after
+                applying config-following rules.
+"""
         if self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
             return self._persist_outputs
         else:
@@ -137,11 +153,16 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def will_restore_outputs(self) -> RestoreOutputsOptions.Literals:
-        """Resolve whether persisted outputs should be restored.
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_WILL_RESTORE_OUTPUTS_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_WILL_RESTORE_OUTPUTS_DETAILS}}
+        """Return the resolved output-restore behavior for this run.
 
         Returns:
-            Restore behavior for this run after applying config-following rules.
-        """
+            RestoreOutputsOptions.Literals: Effective restore behavior after applying
+                config-following rules.
+"""
         if self._restore_outputs is RestoreOpts.FOLLOW_CONFIG:
             return self._job_config.output_storage.restore_outputs
         else:
@@ -149,11 +170,16 @@ class SerializerFuncJobBaseMixin:
 
     @property
     def output_storage_protocol_to_use(self) -> OutputStorageProtocolOptions.Literals:
-        """Resolve the output storage protocol to use for persistence.
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_OUTPUT_STORAGE_PROTOCOL_TO_USE_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_OUTPUT_STORAGE_PROTOCOL_TO_USE_DETAILS}}
+        """Return the resolved storage protocol used for persisted outputs.
 
         Returns:
-            Protocol option for this run after applying config-following rules.
-        """
+            OutputStorageProtocolOptions.Literals: Effective storage protocol for this
+                run.
+"""
         if self._output_storage_protocol is ProtocolOpts.FOLLOW_CONFIG:
             return self._job_config.output_storage.protocol
         else:

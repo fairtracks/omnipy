@@ -43,10 +43,28 @@ class NameJobBaseMixin:
 
     @property
     def unique_name(self) -> str | None:
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISUNIQUELYNAMEDJOB_UNIQUE_NAME_SUMMARY}}
+        #
+        # {{ISUNIQUELYNAMEDJOB_UNIQUE_NAME_DETAILS}}
+        """Return the generated unique name used to identify the job instance.
+
+        Returns:
+            str: Unique job identifier suitable for registry lookups and logging.
+"""
         return self._unique_full_job_slug
 
     @property
     def unique_run_slug(self) -> str | None:
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISUNIQUELYNAMEDJOB_UNIQUE_RUN_SLUG_SUMMARY}}
+        #
+        # {{ISUNIQUELYNAMEDJOB_UNIQUE_RUN_SLUG_DETAILS}}
+        """Return the run-specific slug generated for this job instance.
+
+        Returns:
+            str: Short slug used in per-run names and identifiers.
+"""
         return self._unique_run_slug
 
     def _generate_unique_slugs(self) -> tuple[str, str] | tuple[None, None]:

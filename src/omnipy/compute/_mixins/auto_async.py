@@ -19,7 +19,15 @@ class AutoAsyncJobBaseMixin:
 
     @property
     def auto_async(self) -> bool:
-        """Return whether coroutine jobs should auto-run outside flow contexts."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_AUTO_ASYNC_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_AUTO_ASYNC_DETAILS}}
+        """Return whether coroutine jobs should auto-run outside flow contexts.
+
+        Returns:
+            bool: ``True`` when coroutine jobs are automatically awaited or scheduled.
+"""
 
         return self._auto_async
 

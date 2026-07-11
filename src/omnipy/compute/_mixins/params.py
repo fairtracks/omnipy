@@ -30,13 +30,30 @@ class ParamsFuncJobBaseMixin:
 
     @property
     def fixed_params(self) -> MappingProxyType[str, object]:
-        """Return the configured fixed parameter bindings."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_FIXED_PARAMS_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_FIXED_PARAMS_DETAILS}}
+        """Return parameters that are always supplied when the job callable runs.
+
+        Returns:
+            MappingProxyType[str, object]: Read-only mapping of fixed keyword values.
+"""
 
         return MappingProxyType(self._fixed_params)
 
     @property
     def param_key_map(self) -> MappingProxyType[str, str]:
-        """Return the mapping from external to job-function parameter names."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_PARAM_KEY_MAP_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_PARAM_KEY_MAP_DETAILS}}
+        """Return keyword-name remappings applied before calling the job callable.
+
+        Returns:
+            MappingProxyType[str, str]: Mapping from external keyword names to callable
+                parameter names.
+"""
 
         return MappingProxyType(self._param_key_mapper.key_map)
 

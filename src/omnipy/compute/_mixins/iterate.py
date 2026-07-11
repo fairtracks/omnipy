@@ -273,18 +273,42 @@ class IterateFuncJobBaseMixin:
 
     @property
     def iterate_over_data_files(self) -> bool:
-        """Return whether the job iterates over dataset items automatically."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_ITERATE_OVER_DATA_FILES_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_ITERATE_OVER_DATA_FILES_DETAILS}}
+        """Return whether the job should iterate over dataset items automatically.
+
+        Returns:
+            bool: ``True`` when the first dataset argument is expanded item-by-item.
+"""
 
         return self._iterate_over_data_files
 
     @property
     def output_dataset_param(self) -> str | None:
-        """Return the keyword parameter name used for an output dataset override."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_OUTPUT_DATASET_PARAM_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_OUTPUT_DATASET_PARAM_DETAILS}}
+        """Return the parameter name used for an explicit output dataset, if any.
+
+        Returns:
+            str | None: Output-dataset parameter name, or ``None`` when not configured.
+"""
 
         return self._output_dataset_param
 
     @property
     def output_dataset_cls(self) -> type[IsDataset] | None:
-        """Return the explicit output dataset class, if one is configured."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_OUTPUT_DATASET_CLS_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_OUTPUT_DATASET_CLS_DETAILS}}
+        """Return the dataset class used for iterated outputs, if configured.
+
+        Returns:
+            type[IsDataset] | None: Output dataset type, or ``None`` when inferred.
+"""
 
         return self._output_dataset_cls

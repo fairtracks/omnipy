@@ -21,6 +21,13 @@ if is_package_editable('omnipy'):
             str: Unique job identifier suitable for registry lookups and logging.
     """)
 
+    os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_UNIQUE_RUN_SLUG_SUMMARY'] = (
+        'Return the run-specific slug generated for this job instance.')
+    os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_UNIQUE_RUN_SLUG_DETAILS'] = dedent("""\
+        Returns:
+            str: Short slug used in per-run names and identifiers.
+    """)
+
     os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY'] = (
         'Regenerate the unique job name from the current base name.')
     os.environ['OMNIPY_MACRO_ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_DETAILS'] = dedent("""\
@@ -46,11 +53,15 @@ class IsUniquelyNamedJob(Protocol):
 
     @property
     def unique_run_slug(self) -> str:
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISUNIQUELYNAMEDJOB_UNIQUE_RUN_SLUG_SUMMARY}}
+        #
+        # {{ISUNIQUELYNAMEDJOB_UNIQUE_RUN_SLUG_DETAILS}}
         """Return the run-specific slug generated for this job instance.
 
         Returns:
             str: Short slug used in per-run names and identifiers.
-        """
+"""
         ...
 
     @property

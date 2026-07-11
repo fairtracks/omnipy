@@ -10,6 +10,26 @@ from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.util.helpers import is_package_editable
 
 if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_ISJOBRUNNERENGINE_SUPPORTS_SUMMARY'] = (
+        'Return whether the engine can initialize and run ``job_type`` jobs.')
+    os.environ['OMNIPY_MACRO_ISJOBRUNNERENGINE_SUPPORTS_DETAILS'] = dedent("""\
+        Args:
+            job_type: Job category to test.
+
+        Returns:
+            bool: ``True`` when ``job_type`` is supported by the engine.
+    """)
+
+    os.environ['OMNIPY_MACRO_ISJOBRUNNERENGINE_APPLY_JOB_DECORATOR_SUMMARY'] = (
+        "Attach the engine's execution decorator to a job callback endpoint.")
+    os.environ['OMNIPY_MACRO_ISJOBRUNNERENGINE_APPLY_JOB_DECORATOR_DETAILS'] = dedent("""\
+        Args:
+            job_type: Job category selecting the run behavior.
+            job: Job instance being prepared for execution.
+            job_callback_accept_decorator: Consumer that accepts the engine-provided
+                decorator.
+    """)
+
     os.environ['OMNIPY_MACRO_ISTASKRUNNERENGINE_APPLY_TASK_DECORATOR_SUMMARY'] = (
         'Attach a state-aware decorator to a task callback endpoint.')
     os.environ['OMNIPY_MACRO_ISTASKRUNNERENGINE_APPLY_TASK_DECORATOR_DETAILS'] = dedent("""\
@@ -52,6 +72,10 @@ class IsJobRunnerEngine(IsEngine, Protocol):
     supported_job_types: frozenset[JobType.Literals]
 
     def supports(self, job_type: JobType.Literals) -> bool:
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBRUNNERENGINE_SUPPORTS_SUMMARY}}
+        #
+        # {{ISJOBRUNNERENGINE_SUPPORTS_DETAILS}}
         """Return whether the engine can initialize and run ``job_type`` jobs.
 
         Args:
@@ -59,7 +83,7 @@ class IsJobRunnerEngine(IsEngine, Protocol):
 
         Returns:
             bool: ``True`` when ``job_type`` is supported by the engine.
-        """
+"""
         ...
 
     def apply_job_decorator(
@@ -68,6 +92,10 @@ class IsJobRunnerEngine(IsEngine, Protocol):
         job: IsFuncArgJob,
         job_callback_accept_decorator: Callable,
     ) -> None:
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISJOBRUNNERENGINE_APPLY_JOB_DECORATOR_SUMMARY}}
+        #
+        # {{ISJOBRUNNERENGINE_APPLY_JOB_DECORATOR_DETAILS}}
         """Attach the engine's execution decorator to a job callback endpoint.
 
         Args:
@@ -75,5 +103,5 @@ class IsJobRunnerEngine(IsEngine, Protocol):
             job: Job instance being prepared for execution.
             job_callback_accept_decorator: Consumer that accepts the engine-provided
                 decorator.
-        """
+"""
         ...

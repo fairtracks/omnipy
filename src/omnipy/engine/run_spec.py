@@ -102,67 +102,36 @@ class JobRunSpec(ABC):
 
     @property
     def name(self) -> str:
-        """Return the human-readable job name used for display and logging.
-
-        Returns:
-            str: Configured job name.
-        """
+        """See `IsUniquelyNamedJob.name`."""
         return self._job.name
 
     @property
     def unique_name(self) -> str:
-        """Return the unique identifier assigned to this job instance.
-
-        Returns:
-            str: Unique job name suitable for registries and logs.
-        """
+        """See `IsUniquelyNamedJob.unique_name`."""
         return self._job.unique_name
 
     @property
     def unique_run_slug(self) -> str:
-        """Return the unique slug used to name the current job run.
-
-        Returns:
-            str: Run-specific slug derived from the job name and run identifier.
-        """
+        """See `IsUniquelyNamedJob.unique_run_slug`."""
         return self._job.unique_run_slug
 
     @property
     def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
-        """Return the bound parameter signature for the wrapped job callable.
-
-        Returns:
-            MappingProxyType[str, inspect.Parameter]: Mapping from parameter names to
-                their inspected signature objects.
-        """
+        """See `IsFuncArgJobBase.param_signatures`."""
         return self._job.param_signatures
 
     @property
     def return_type(self) -> type:
-        """Return the annotated return type for the wrapped job callable.
-
-        Returns:
-            type: Return annotation exposed to the engine wrapper.
-        """
+        """See `IsFuncArgJobBase.return_type`."""
         return self._job.return_type
 
     @property
     def callable_type(self) -> CallableType.Literals:
-        """Return the effective sync/async and plain/generator callable shape.
-
-        Returns:
-            CallableType.Literals: Effective callable type of the wrapped job.
-        """
+        """See `IsFuncArgJobBase.callable_type`."""
         return self._job.callable_type
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None) -> None:
-        """Forward a log message to the wrapped job.
-
-        Args:
-            log_msg: Message to emit.
-            level: Logging level for the message.
-            datetime_obj: Explicit timestamp to record with the message, if any.
-        """
+        """See `CanLog.log`."""
         self._job.log(log_msg, level=level, datetime_obj=datetime_obj)
 
     @abstractmethod
@@ -180,11 +149,7 @@ class TaskRunSpec(JobRunSpec):
 
     @property
     def in_flow_context(self) -> bool:
-        """Return whether the task is currently executing inside a flow context.
-
-        Returns:
-            bool: ``True`` when the task is invoked from within a flow run.
-        """
+        """See `IsJobBase.in_flow_context`."""
         task = cast(IsTask, self._job)
         return task.in_flow_context
 
@@ -202,24 +167,12 @@ class FlowRunSpec(JobRunSpec, ABC):
 
     @property
     def flow_context(self):
-        """Return the flow context manager guarding top-level flow execution.
-
-        Returns:
-            object: Context manager shared by the wrapped flow job.
-        """
+        """See `IsFlow.flow_context`."""
         flow = cast(IsAnyFlow, self._job)
         return flow.flow_context
 
     def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments:
-        """Bind call arguments to the wrapped flow signature.
-
-        Args:
-            *args: Positional arguments for the flow call.
-            **kwargs: Keyword arguments for the flow call.
-
-        Returns:
-            BoundArguments: Bound arguments with defaults applied.
-        """
+        """See `IsFuncArgJobBase.get_bound_args`."""
         flow = cast(IsAnyFlow, self._job)
         return flow.get_bound_args(*args, **kwargs)
 
@@ -247,12 +200,7 @@ class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
 
     @property
     def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
-        """Return the child jobs that make up this flow.
-
-        Returns:
-            tuple[IsFuncArgJobTemplate, ...]: Ordered child-job templates executed by
-                the flow.
-        """
+        """See `IsChildJobListArgJobBase.child_job_templates`."""
         flow = cast(IsChildJobListArgJob, self._job)
         return flow.child_job_templates
 

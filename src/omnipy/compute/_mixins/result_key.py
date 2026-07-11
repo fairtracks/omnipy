@@ -18,7 +18,15 @@ class ResultKeyFuncJobBaseMixin:
 
     @property
     def result_key(self) -> str | None:
-        """Return the key used to wrap job results, if configured."""
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # {{ISFUNCARGJOBBASE_RESULT_KEY_SUMMARY}}
+        #
+        # {{ISFUNCARGJOBBASE_RESULT_KEY_DETAILS}}
+        """Return the dictionary key used to wrap results, if configured.
+
+        Returns:
+            str | None: Result wrapper key, or ``None`` when results are returned raw.
+"""
 
         return self._result_key
 
