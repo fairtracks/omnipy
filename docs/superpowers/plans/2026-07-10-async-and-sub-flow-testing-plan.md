@@ -236,29 +236,16 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
 - [ ] Re-run after the seam, if activated: `uv run pytest tests/compute/test_flow.py tests/engine/test_all_engines.py -v --mypy-pyproject-toml-file=pyproject.toml`
   - Expected: compute coverage is green and engine coverage is green or explicitly classified.
 
-### Task 9: Replace the mixed showcase with three readable selective integration tests
+### Task 9: Replaced by standalone integration-test slice plan
 
-**Authority:** `docs/superpowers/specs/2026-07-09-async-and-sub-flow-testing-schema-design.md` is the binding requirements source for this task's integration-test redesign. If Task 9 wording and that spec drift, follow the spec and update the plan rather than treating them as separate sources of truth.
+**Replacement notice:** Task 9 is fully replaced by `docs/superpowers/plans/2026-07-11-async-and-sub-flow-integration-test-slice-plan.md`.
 
-**Files:**
-- Create: `tests/integration/novel/full/test_environmental_monitoring_harmonization.py`
-- Create: `tests/integration/novel/full/test_sequence_submission_brokering.py`
-- Create: `tests/integration/novel/full/test_flow_callable_type_validation.py`
-- Modify or remove: `tests/integration/novel/full/test_async_subflow_scenarios.py`
-- Create as needed: `tests/integration/novel/full/helpers/*`
-- Test: `tests/integration/novel/full/test_environmental_monitoring_harmonization.py`
-- Test: `tests/integration/novel/full/test_sequence_submission_brokering.py`
-- Test: `tests/integration/novel/full/test_flow_callable_type_validation.py`
+Treat that document as the canonical implementation authority for:
+- Scenario A: environmental monitoring harmonization
+- Scenario B+C: sequence submission brokering
+- Separate callable-type / `refine()` / `revise()` validation coverage
 
-- [ ] Add extracted aiohttp mock-service helpers and URL fixtures for Scenario A, following the `tests/components/remote/` pattern so the test body stays simple.
-- [ ] Add Scenario A as a narrative integration test that uses mock GET endpoints plus real `Dataset.load()` / `load_into()` behavior, an async parent flow, a harmonization subflow, Omnipy flattening, and a Dataset output with `samples` and `measurements` as `PandasDataset` members.
-- [ ] Add Scenario B+C as a narrative integration test that uses typed Pydantic-backed Omnipy models/datasets for `submission_samples`, `submission_files`, and `submission_metadata`, with JSON-shaped async task adapters standing in for POST-like service calls to `BioSampleVault` and `Sequence Depot`.
-- [ ] Make Scenario B+C validation visible through the models themselves, including lowercasing local aliases, validating links across `local_submission_alias` / `local_sample_alias`, paired-end FASTQ manifest linkage, and final receipt state in `submission_metadata`.
-- [ ] Before finalizing the third integration test, confirm whether construction-time and child-composition `refine()` / `revise()` callable-type validation is already covered by existing behavior or by Task 8's activated seam; if not, stop and route the missing validation work back to Task 8 before hardening the expectation.
-- [ ] Add a third, non-scenario integration test focused only on readable callable-type and `refine()` / `revise()` behavior for linear and DAG flows, including the intended async-lifting rule once verified against actual code requirements.
-- [ ] Remove or fully replace the current `test_async_subflow_scenarios.py` presentation so no mixed scenario-name branching remains.
-- [ ] Run: `uv run pytest tests/integration/novel/full/test_environmental_monitoring_harmonization.py tests/integration/novel/full/test_sequence_submission_brokering.py tests/integration/novel/full/test_flow_callable_type_validation.py -v --mypy-pyproject-toml-file=pyproject.toml`
-  - Expected: the new integration slice is green except for any intentionally classified support gap, and each file remains readable on its own.
+The binding requirements source remains `docs/superpowers/specs/2026-07-09-async-and-sub-flow-testing-schema-design.md`. Any other references to “Task 9” in this plan now mean the replacement plan above.
 
 ### Task 10: Final verification, support-gap audit, and handoff evidence
 
