@@ -1,11 +1,9 @@
 from collections.abc import AsyncGenerator
-from typing import cast, Literal
+from typing import Literal, cast
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 import pytest
-
-from omnipy import HttpUrlDataset, HttpUrlModel
 
 MonitoringSource = Literal['river', 'wastewater']
 
@@ -89,29 +87,21 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
 }
 
 
-def create_monitoring_service_app() -> web.Application:
+def create_monitoring_service_app(source: MonitoringSource) -> web.Application:
     async def _monitoring_endpoint(request: web.Request) -> web.Response:
-        source = cast(MonitoringSource, request.match_info['source'])
         page = int(request.query.get('page', '1'))
         return web.json_response(_MONITORING_PAGES[source][page])
 
     app = web.Application()
-    app.router.add_route('GET', '/{source}', _monitoring_endpoint)
+    app.router.add_route('GET', f'/{source}', _monitoring_endpoint)
     return app
 
 
 @pytest.fixture(scope='function')
-async def monitoring_service(aiohttp_server) -> AsyncGenerator[TestServer, None]:
-    yield await aiohttp_server(create_monitoring_service_app())
+async def river_service(aiohttp_server) -> AsyncGenerator[TestServer, None]:
+    yield await aiohttp_server(create_monitoring_service_app('river'))
 
 
-def build_paginated_source_urls(server: TestServer, source: MonitoringSource) -> HttpUrlDataset:
-    base_url = str(server.make_url(f'/{source}'))
-    urls = HttpUrlDataset()
-
-    for page in sorted(_MONITORING_PAGES[source]):
-        url = HttpUrlModel(base_url)
-        url.query['page'] = str(page)
-        urls[f'{source}_page_{page}'] = url
-
-    return urls
+@pytest.fixture(scope='function')
+async def wastewater_service(aiohttp_server) -> AsyncGenerator[TestServer, None]:
+    yield await aiohttp_server(create_monitoring_service_app('wastewater'))

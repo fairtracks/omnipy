@@ -8,6 +8,7 @@ import pytest
 
 from omnipy import (Dataset,
                     FuncFlowTemplate,
+                    HttpUrlModel,
                     HttpUrlDataset,
                     JsonListOfDictsDataset,
                     PandasDataset,
@@ -16,7 +17,6 @@ from omnipy.components.json.flows import flatten_nested_json
 from omnipy.shared.enums.job import RunState
 
 from ....engine.helpers.functions import assert_job_state
-from .helpers.monitoring_services import build_paginated_source_urls
 
 pytest_plugins = ['tests.integration.novel.full.helpers.monitoring_services']
 
@@ -28,6 +28,23 @@ class MonitoringTables(Dataset[PandasDataset]):
 def _table_records(table_dataset: PandasDataset, table_name: str) -> list[dict[str, object]]:
     records = cast(Any, table_dataset[table_name].content).to_dict(orient='records')
     return cast(list[dict[str, object]], records)
+
+
+def build_paginated_source_urls(base_url: str, source_name: str, page_count: int) -> HttpUrlDataset:
+    urls = HttpUrlDataset()
+
+    for page in range(1, page_count + 1):
+        url = HttpUrlModel(base_url)
+        url.query['page'] = str(page)
+        urls[f'{source_name}_page_{page}'] = url
+
+    return urls
+
+
+def _service_base_url(service: TestServer, source_name: str) -> str:
+    port = service.make_url('/').port
+    assert port is not None
+    return f'http://localhost:{port}/{source_name}'
 
 
 def _selected_columns(records: list[dict[str, object]], *column_names:
@@ -150,10 +167,19 @@ def _sort_measurement_rows(measurement_rows: list[dict[str, object]]) -> list[di
 
 async def test_environmental_monitoring_harmonization(
     runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
-    monitoring_service: Annotated[TestServer, pytest.fixture],
+    river_service: Annotated[TestServer, pytest.fixture],
+    wastewater_service: Annotated[TestServer, pytest.fixture],
 ) -> None:
-    river_urls = build_paginated_source_urls(monitoring_service, 'river')
-    wastewater_urls = build_paginated_source_urls(monitoring_service, 'wastewater')
+    river_urls = build_paginated_source_urls(
+        _service_base_url(river_service, 'river'),
+        'river',
+        page_count=2,
+    )
+    wastewater_urls = build_paginated_source_urls(
+        _service_base_url(wastewater_service, 'wastewater'),
+        'wastewater',
+        page_count=2,
+    )
 
     monitoring_flow = environmental_monitoring_harmonization_flow.apply()
     harmonized_tables_result = monitoring_flow(river_urls, wastewater_urls)
