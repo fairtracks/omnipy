@@ -53,6 +53,7 @@
 - Nested async support-gap case with explicit expectation handling → **Task 7**
 - Nested parameter routing across a parent/child flow boundary → **Tasks 6 and 9**
 - Targeted refine/revise case involving child-flow replacement inside a DAG parent → **Tasks 6, 8, and 9**
+- Construction-time and child-composition `refine()` / `revise()` callable-type validation exercised by the third integration test → **Tasks 8 and 9**
 - Optional compute validation only if red tests prove a seam is needed → **Task 8**
 - Selective narrative integration coverage only → **Task 9**
 
@@ -62,6 +63,7 @@
 - `tests/engine/test_all_engines.py::test_nested_flow_semantic_floor_all_production_engines` covers child-flow composition, mixed sync/async behavior, nested routing, and explicit support-gap classification.
 - `tests/compute/test_flow.py` only grows if red engine tests prove a callable-type or async-resolution seam.
 - `tests/integration/novel/full/` holds three readable integration tests: scenario A, scenario B+C, and a separate callable-type / `refine()` / `revise()` slice, without recreating the engine matrix.
+- The third integration test only asserts callable-type validation behavior that already exists or that Task 8 adds as the narrow validation seam; it must not invent a second validation path.
 - Final verification is green except for deliberately documented support gaps, preferably expressed as engine-specific `xfail(strict=True)`.
 
 ## Support-gap policy for implementation
@@ -216,6 +218,8 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
 
 ### Task 8: Add validation-only compute coverage and a narrow production seam only if red tests prove one is needed
 
+**Ownership note:** Task 8 owns any construction-time or `refine()` / `revise()` callable-type validation routines later exercised readably by Task 9's third integration test. If Task 9 reveals that the validation behavior itself is missing, route that gap back here rather than adding a second validation seam in integration-only code.
+
 **Files:**
 - Modify: `tests/compute/test_flow.py`
 - Modify only if needed: `src/omnipy/compute/_joblist_job.py`
@@ -223,7 +227,7 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
 - Test: `tests/compute/test_flow.py`
 - Test: `tests/engine/test_all_engines.py`
 
-- [ ] Add focused compute tests only if Tasks 6–7 expose a callable-type or async-resolution inconsistency.
+- [ ] Add focused compute tests only if Tasks 6–7 or the Task 9 validation slice expose a callable-type or async-resolution inconsistency.
 - [ ] Cover three validation points at most: construction-time callable-type lifting, `refine()` revalidation, and `revise()` revalidation.
 - [ ] Pause at **User Check-in A** before any production edit.
 - [ ] If needed, implement only the smallest seam in `ChildJobListArgJobBase` or `run_spec` that makes the existing intended behavior explicit.
@@ -250,6 +254,7 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
 - [ ] Add Scenario A as a narrative integration test that uses mock GET endpoints plus real `Dataset.load()` / `load_into()` behavior, an async parent flow, a harmonization subflow, Omnipy flattening, and a Dataset output with `samples` and `measurements` as `PandasDataset` members.
 - [ ] Add Scenario B+C as a narrative integration test that uses typed Pydantic-backed Omnipy models/datasets for `submission_samples`, `submission_files`, and `submission_metadata`, with JSON-shaped async task adapters standing in for POST-like service calls to `BioSampleVault` and `Sequence Depot`.
 - [ ] Make Scenario B+C validation visible through the models themselves, including lowercasing local aliases, validating links across `local_submission_alias` / `local_sample_alias`, paired-end FASTQ manifest linkage, and final receipt state in `submission_metadata`.
+- [ ] Before finalizing the third integration test, confirm whether construction-time and child-composition `refine()` / `revise()` callable-type validation is already covered by existing behavior or by Task 8's activated seam; if not, stop and route the missing validation work back to Task 8 before hardening the expectation.
 - [ ] Add a third, non-scenario integration test focused only on readable callable-type and `refine()` / `revise()` behavior for linear and DAG flows, including the intended async-lifting rule once verified against actual code requirements.
 - [ ] Remove or fully replace the current `test_async_subflow_scenarios.py` presentation so no mixed scenario-name branching remains.
 - [ ] Run: `uv run pytest tests/integration/novel/full/test_environmental_monitoring_harmonization.py tests/integration/novel/full/test_sequence_submission_brokering.py tests/integration/novel/full/test_flow_callable_type_validation.py -v --mypy-pyproject-toml-file=pyproject.toml`
@@ -281,6 +286,7 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
 - `FuncFlow` task-body semantics are covered in Task 4; `FuncFlow` body-calls-flow semantics are covered in Task 7.
 - Nested parent/child routing is covered in Task 6 and complemented by Scenario A and the callable-type integration slice in Task 9.
 - A targeted child-flow refine/revise replacement case is required in Task 6, while Task 9 now isolates the readable integration-level callable-type / `refine()` / `revise()` story rather than folding it into a mixed showcase.
+- The validation routines touched by the third integration test were already defined in the earlier plan through Task 8's construction + `refine()` / `revise()` callable-type seam; this update only makes that dependency explicit so Task 9 cannot drift into inventing new validation work.
 - Compute coverage stays validation-only and optional in Task 8.
 - The plan keeps `tests/engine/cases/tasks.py` as the main primitive-callable source for new flow-case primitives.
 - Support-gap handling stays explicit through Tasks 7, 8, 9, and 10.
