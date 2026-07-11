@@ -12,6 +12,8 @@ instead of introducing new runtime concepts or APIs.
   testing surface.
 - Confirm a smaller set of representative behaviors in `tests/compute/` and
   `tests/integration/`.
+- Keep the selective integration slice readable enough to double as future tutorial/documentation
+  seed material.
 - Allow failing committed tests when they document real support gaps in behavior that is believed
   to be supported today.
 
@@ -149,6 +151,7 @@ cleanly:
 - terminal-child callable-type revalidation on `refine()` / `revise()`, if a small validation fix
   is introduced
 - support-gap or failure-path behavior for at least one nested async scenario
+- typed-data validation and light normalization where the integration contract depends on them
 
 ### 5. Support-gap test policy
 
@@ -214,15 +217,83 @@ If no small validation fix is added, no compute-suite expansion is required by t
 
 #### `tests/integration/`
 
-Integration coverage should remain selective and confirm the engine-harness conclusions with a few
-realistic scenarios.
+Integration coverage should remain selective, but it should now favor narrative, user-facing tests
+in `tests/integration/novel/full/` over generic harness confirmations. These tests should be
+readable enough that they can later be adapted into documentation/tutorial examples, while still
+serving as real regression coverage.
 
-Good fits include:
+Required direction:
 
-- one async nested-flow scenario
-- one nested/composed parameter-routing scenario
-- one lifecycle/refine/revise scenario if that is better proven end-to-end than in the harness
-- reuse of known engine-specific expectation patterns where external limitations already exist
+- replace the current mixed async/subflow showcase with three clearer integration tests
+- keep scenario-oriented tests focused on meaningful data stories rather than low-level test
+  scaffolding
+- keep callable-type / `refine()` / `revise()` validation coverage in a separate non-scenario test
+  so the user-story tests stay easy to read
+
+##### Scenario A: environmental monitoring harmonization
+
+This scenario should prove a simple async + subflow story with real GET-based fetching.
+
+- Domain story: harmonize river-water and wastewater monitoring batches for the same catchment and
+  monitoring dates.
+- Service boundary: use mock HTTP GET services, built with extracted helper modules + fixtures,
+  following the existing `tests/components/remote/` aiohttp-server pattern.
+- Fetching surface: use real `Dataset.load()` / `load_into()` behavior for the GET side so this
+  currently under-tested integration path is exercised.
+- Async shape: one async parent flow with two async source-specific collection tasks; each task may
+  fetch multiple pages asynchronously from one source type.
+- Subflow shape: a harmonization subflow should normalize field names and units, then use Omnipy's
+  flattening functionality in the integrated path.
+- Output shape: return a Dataset with two `PandasDataset` members named `samples` and
+  `measurements`.
+- Assertions should stay user-facing: representative harmonized rows/values, the two-table output,
+  and the fact that the REST + flattening + subflow pieces fit together.
+
+##### Scenario B+C: sequence submission brokering
+
+This scenario should prove a more orchestration-heavy brokering workflow without pretending that the
+real third-party integrations already exist.
+
+- Domain story: broker a sequencing submission package from local metadata + file manifests +
+  storage-backed FASTQ files into fictional downstream services `BioSampleVault` and
+  `Sequence Depot`.
+- External-service boundary: use JSON-shaped request/response payloads and async task adapters for
+  the POST-like operations in v1, but keep those boundaries easy to replace later with actual mock
+  HTTP POST services.
+- Internal data shape: use small Pydantic schemas wrapped in Omnipy `Model` / `Dataset`, inspired
+  by ISA-style metadata patterns but limited to a tiny illustrative subset.
+- Required Dataset members:
+  - `submission_samples`
+  - `submission_files`
+  - `submission_metadata`
+- Linking contract:
+  - `local_submission_alias` is the internal submission identifier
+  - `local_sample_alias` is the internal sample identifier
+  - paired-end FASTQ manifest rows link to samples through `local_sample_alias`
+  - `submission_metadata` is a single record that also carries the included
+    `local_sample_aliases`
+- Validation/cleanup should be visible through typed models, including simple normalization such as
+  lowercasing local aliases and checking that sample/file/metadata linkages are consistent.
+- Orchestration contract: final Sequence Depot submission must wait for metadata cleanup,
+  manifest/storage verification, submission-ID creation, transfer completion, and BioSampleVault
+  sample-ID registration.
+- Final output: the enriched typed Dataset package plus final receipt/status stored in
+  `submission_metadata`.
+
+##### Separate integration test: callable-type and `revise()` / `refine()` validation
+
+The plan should also include one separate, readable integration test focused on outer callable-type
+behavior for linear and DAG flows when child composition changes.
+
+- This test is intentionally not scenario-oriented.
+- It should cover the relevant variations around construction, `refine()`, and `revise()` where
+  child composition changes may require revalidation.
+- It should explicitly include the async-lifting rule that is intended by the production code, but
+  implementation must verify the actual code requirement before hard-coding the expectation. If the
+  intended rule is ambiguous between “terminal child decides” and “any async child lifts outer
+  callable type to async,” pause and confirm rather than silently choosing one.
+- If the current attempted integration test already touches this area, replace it with a much more
+  readable version rather than keeping the existing scenario-style presentation.
 
 ### 7. Boundaries for supporting code changes
 
@@ -260,6 +331,8 @@ This design is successful if the resulting plan leads to:
    expectations are used intentionally rather than ambiguously.
 8. Committed failing tests being acceptable where they document real unsupported-yet-claimed
    behavior.
+9. Selective integration tests that are readable enough to seed future tutorials, with scenario A,
+   scenario B+C, and a separate callable-type / `refine()` / `revise()` integration slice.
 
 ## Risks and mitigations
 

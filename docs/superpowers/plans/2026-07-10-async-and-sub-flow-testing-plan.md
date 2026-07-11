@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add engine-first async and nested-flow test coverage with a complete per-production-engine 3×4 parent-flow/callable matrix, child-flow semantic-floor coverage, a child-flow refine/revise slice, and only a narrow production seam if red tests prove one is needed.
+**Goal:** Add engine-first async and nested-flow test coverage with a complete per-production-engine 3×4 parent-flow/callable matrix, child-flow semantic-floor coverage, scenario-based integration tests that can later seed tutorials, and only a narrow production seam if red tests prove one is needed.
 
 **Architecture:** Keep `tests/engine/` as the main authority, but build the new parity cases with real `TaskTemplate`, `LinearFlowTemplate`, `DagFlowTemplate`, and `FuncFlowTemplate` jobs under `LocalRunner` and `PrefectEngine`. Use a concrete `ComposedFlowCase` with a `build_job_func` closure per case so each case owns its topology, routing, and assertions while the helper layer only wires engine, registry, and applied job.
 
@@ -32,8 +32,16 @@
   - Narrow callable-type consistency seam for child-job-list flows.
 - Modify only if red tests require it: `src/omnipy/engine/run_spec.py`
   - Narrow async-resolution seam if nested async child flows are intended to work but are not drained consistently.
-- Create: `tests/integration/reused/compute/test_async_and_subflows_with_all_engines.py`
-  - Three end-to-end confirmations: nested async child flow, parent/child parameter routing, and child-flow refine/revise replacement.
+- Create: `tests/integration/novel/full/test_environmental_monitoring_harmonization.py`
+  - Scenario A: mock-GET environmental monitoring harmonization using `Dataset.load()` and Omnipy flattening, returning `samples` and `measurements` as `PandasDataset` members.
+- Create: `tests/integration/novel/full/test_sequence_submission_brokering.py`
+  - Scenario B+C: typed Dataset-centric submission brokering for `BioSampleVault` and `Sequence Depot`, with JSON-shaped external adapters and final receipt state.
+- Create: `tests/integration/novel/full/test_flow_callable_type_validation.py`
+  - Separate readable integration coverage for callable-type lifting and `refine()` / `revise()` revalidation interactions.
+- Modify or remove: `tests/integration/novel/full/test_async_subflow_scenarios.py`
+  - Replace the current mixed showcase with the new split integration coverage; keep no hard-to-follow scenario branching.
+- Create as needed under `tests/integration/novel/full/helpers/`
+  - Extracted mock aiohttp services, URL fixtures, payload builders, and shared typed models/helpers for the new narrative tests.
 
 ## Coverage ledger
 
@@ -46,14 +54,14 @@
 - Nested parameter routing across a parent/child flow boundary → **Tasks 6 and 9**
 - Targeted refine/revise case involving child-flow replacement inside a DAG parent → **Tasks 6, 8, and 9**
 - Optional compute validation only if red tests prove a seam is needed → **Task 8**
-- Selective integration confirmations only → **Task 9**
+- Selective narrative integration coverage only → **Task 9**
 
 ## Acceptance criteria
 
 - `tests/engine/test_all_engines.py::test_flow_matrix_all_production_engines` runs the full 3×4 matrix across `LocalRunner` and `PrefectEngine`.
 - `tests/engine/test_all_engines.py::test_nested_flow_semantic_floor_all_production_engines` covers child-flow composition, mixed sync/async behavior, nested routing, and explicit support-gap classification.
 - `tests/compute/test_flow.py` only grows if red engine tests prove a callable-type or async-resolution seam.
-- `tests/integration/reused/compute/test_async_and_subflows_with_all_engines.py` stays selective and confirms the highest-value real scenarios rather than duplicating the matrix.
+- `tests/integration/novel/full/` holds three readable integration tests: scenario A, scenario B+C, and a separate callable-type / `refine()` / `revise()` slice, without recreating the engine matrix.
 - Final verification is green except for deliberately documented support gaps, preferably expressed as engine-specific `xfail(strict=True)`.
 
 ## Support-gap policy for implementation
@@ -224,27 +232,35 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
 - [ ] Re-run after the seam, if activated: `uv run pytest tests/compute/test_flow.py tests/engine/test_all_engines.py -v --mypy-pyproject-toml-file=pyproject.toml`
   - Expected: compute coverage is green and engine coverage is green or explicitly classified.
 
-### Task 9: Add three selective integration confirmations
+### Task 9: Replace the mixed showcase with three readable selective integration tests
 
 **Files:**
-- Create: `tests/integration/reused/compute/test_async_and_subflows_with_all_engines.py`
-- Test: `tests/integration/reused/compute/test_async_and_subflows_with_all_engines.py`
+- Create: `tests/integration/novel/full/test_environmental_monitoring_harmonization.py`
+- Create: `tests/integration/novel/full/test_sequence_submission_brokering.py`
+- Create: `tests/integration/novel/full/test_flow_callable_type_validation.py`
+- Modify or remove: `tests/integration/novel/full/test_async_subflow_scenarios.py`
+- Create as needed: `tests/integration/novel/full/helpers/*`
+- Test: `tests/integration/novel/full/test_environmental_monitoring_harmonization.py`
+- Test: `tests/integration/novel/full/test_sequence_submission_brokering.py`
+- Test: `tests/integration/novel/full/test_flow_callable_type_validation.py`
 
-- [ ] Add one nested async child-flow confirmation using real templates under all engines.
-- [ ] Add one parent/child parameter-routing confirmation.
-- [ ] Add one child-flow refine/revise replacement confirmation unless Task 8 already proves the same end-to-end behavior more directly.
-- [ ] Keep this file selective; do not recreate the matrix here.
-- [ ] Run: `uv run pytest tests/integration/reused/compute/test_async_and_subflows_with_all_engines.py -v --mypy-pyproject-toml-file=pyproject.toml`
-  - Expected: the file is green except for any intentionally classified engine-specific support gap.
+- [ ] Add extracted aiohttp mock-service helpers and URL fixtures for Scenario A, following the `tests/components/remote/` pattern so the test body stays simple.
+- [ ] Add Scenario A as a narrative integration test that uses mock GET endpoints plus real `Dataset.load()` / `load_into()` behavior, an async parent flow, a harmonization subflow, Omnipy flattening, and a Dataset output with `samples` and `measurements` as `PandasDataset` members.
+- [ ] Add Scenario B+C as a narrative integration test that uses typed Pydantic-backed Omnipy models/datasets for `submission_samples`, `submission_files`, and `submission_metadata`, with JSON-shaped async task adapters standing in for POST-like service calls to `BioSampleVault` and `Sequence Depot`.
+- [ ] Make Scenario B+C validation visible through the models themselves, including lowercasing local aliases, validating links across `local_submission_alias` / `local_sample_alias`, paired-end FASTQ manifest linkage, and final receipt state in `submission_metadata`.
+- [ ] Add a third, non-scenario integration test focused only on readable callable-type and `refine()` / `revise()` behavior for linear and DAG flows, including the intended async-lifting rule once verified against actual code requirements.
+- [ ] Remove or fully replace the current `test_async_subflow_scenarios.py` presentation so no mixed scenario-name branching remains.
+- [ ] Run: `uv run pytest tests/integration/novel/full/test_environmental_monitoring_harmonization.py tests/integration/novel/full/test_sequence_submission_brokering.py tests/integration/novel/full/test_flow_callable_type_validation.py -v --mypy-pyproject-toml-file=pyproject.toml`
+  - Expected: the new integration slice is green except for any intentionally classified support gap, and each file remains readable on its own.
 
 ### Task 10: Final verification, support-gap audit, and handoff evidence
 
 **Files:**
 - Modify only if cleanup from earlier tasks is needed: files already touched above
 
-- [ ] Run the focused verification stack: `uv run pytest tests/engine/test_all_engines.py tests/compute/test_flow.py tests/integration/reused/compute/test_async_and_subflows_with_all_engines.py -v --mypy-pyproject-toml-file=pyproject.toml`
+- [ ] Run the focused verification stack: `uv run pytest tests/engine/test_all_engines.py tests/compute/test_flow.py tests/integration/novel/full/test_environmental_monitoring_harmonization.py tests/integration/novel/full/test_sequence_submission_brokering.py tests/integration/novel/full/test_flow_callable_type_validation.py -v --mypy-pyproject-toml-file=pyproject.toml`
   - Expected: green or explicitly classified support gaps only.
-- [ ] Run the broader dependency coverage: `uv run pytest tests/engine tests/integration/reused/compute/test_flow_with_all_engines.py tests/integration/reused/compute/test_async_and_subflows_with_all_engines.py -v --mypy-pyproject-toml-file=pyproject.toml`
+- [ ] Run the broader dependency coverage: `uv run pytest tests/engine tests/integration/reused/compute/test_flow_with_all_engines.py tests/integration/novel/full/test_environmental_monitoring_harmonization.py tests/integration/novel/full/test_sequence_submission_brokering.py tests/integration/novel/full/test_flow_callable_type_validation.py -v --mypy-pyproject-toml-file=pyproject.toml`
   - Expected: no unexpected regressions outside the new async/subflow slice.
 - [ ] Run formatting and hook validation: `uv run pre-commit run --hook-stage manual --all-files`
   - Expected: pass, or auto-fixes limited to touched files and re-verified immediately.
@@ -261,8 +277,8 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
 - The full 3×4 matrix is explicit and split across Tasks 2–4.
 - Linear and DAG parents each get child-flow coverage for `LinearFlow`, `DagFlow`, and `FuncFlow` in Tasks 5–6.
 - `FuncFlow` task-body semantics are covered in Task 4; `FuncFlow` body-calls-flow semantics are covered in Task 7.
-- Nested parent/child routing is covered in Task 6 and confirmed in Task 9.
-- A targeted child-flow refine/revise replacement case is required in Task 6 and confirmed again in Task 9.
+- Nested parent/child routing is covered in Task 6 and complemented by Scenario A and the callable-type integration slice in Task 9.
+- A targeted child-flow refine/revise replacement case is required in Task 6, while Task 9 now isolates the readable integration-level callable-type / `refine()` / `revise()` story rather than folding it into a mixed showcase.
 - Compute coverage stays validation-only and optional in Task 8.
 - The plan keeps `tests/engine/cases/tasks.py` as the main primitive-callable source for new flow-case primitives.
-- Support-gap handling stays explicit through Tasks 7, 8, and 10.
+- Support-gap handling stays explicit through Tasks 7, 8, 9, and 10.
