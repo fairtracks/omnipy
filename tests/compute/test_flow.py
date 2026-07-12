@@ -15,6 +15,7 @@ from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
                                                  IsFuncArgJobTemplate,
                                                  IsFuncFlowTemplate,
                                                  IsLinearFlowTemplate)
+from omnipy.util.callable_types import CallableType
 
 from ..helpers.functions import assert_func_wrapper
 from .cases.flows import FlowCase
@@ -459,6 +460,154 @@ def test_dag_flow_mapped_key_cannot_override_fixed_params(
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow(number=4, factor=10) == 12
+
+
+def test_linear_flow_construction_rejects_sync_authored_early_async_child(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def seed_tmpl(number: int) -> int:
+        return number + 1
+
+    @TaskTemplate()
+    async def async_transform_tmpl(number: int) -> int:
+        return number * 2
+
+    @TaskTemplate()
+    def finish_tmpl(number: int) -> int:
+        return number + 3
+
+    with pytest.raises(TypeError, match='linear/dag flow callable type'):
+
+        @LinearFlowTemplate(seed_tmpl, async_transform_tmpl, finish_tmpl)
+        def linear_flow_tmpl(number: int) -> int:
+            ...
+
+
+def test_dag_flow_construction_rejects_sync_authored_early_async_child(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def seed_tmpl(number: int) -> dict[str, int]:
+        return {'seed': number + 1}
+
+    @TaskTemplate()
+    async def async_transform_tmpl(seed: int) -> int:
+        return seed * 2
+
+    @TaskTemplate()
+    def finish_tmpl(seed: int, async_value: int) -> int:
+        return seed + async_value
+
+    with pytest.raises(TypeError, match='linear/dag flow callable type'):
+
+        @DagFlowTemplate(
+            seed_tmpl,
+            async_transform_tmpl.refine(param_key_map={'seed': 'seed'}, result_key='async_value'),
+            finish_tmpl,
+        )
+        def dag_flow_tmpl(number: int) -> int:
+            ...
+
+
+def test_linear_flow_refine_rechecks_callable_type_against_child_list(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def seed_tmpl(number: int) -> int:
+        return number + 1
+
+    @TaskTemplate()
+    def sync_middle_tmpl(number: int) -> int:
+        return number * 2
+
+    @TaskTemplate()
+    async def async_middle_tmpl(number: int) -> int:
+        return number * 2
+
+    @TaskTemplate()
+    def finish_tmpl(number: int) -> int:
+        return number + 3
+
+    @LinearFlowTemplate(seed_tmpl, sync_middle_tmpl, finish_tmpl)
+    def linear_flow_tmpl(number: int) -> int:
+        ...
+
+    assert linear_flow_tmpl.callable_type is CallableType.SYNC_FUNCTION
+
+    with pytest.raises(TypeError, match='linear/dag flow callable type'):
+        linear_flow_tmpl.refine(seed_tmpl, async_middle_tmpl, finish_tmpl, update=False)
+
+
+def test_dag_flow_refine_rechecks_callable_type_against_child_list(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def seed_tmpl(number: int) -> dict[str, int]:
+        return {'seed': number + 1}
+
+    @TaskTemplate()
+    def sync_middle_tmpl(seed: int) -> int:
+        return seed * 2
+
+    @TaskTemplate()
+    async def async_middle_tmpl(seed: int) -> int:
+        return seed * 2
+
+    @TaskTemplate()
+    def finish_tmpl(seed: int, value: int) -> int:
+        return seed + value
+
+    @DagFlowTemplate(
+        seed_tmpl,
+        sync_middle_tmpl.refine(param_key_map={'seed': 'seed'}, result_key='value'),
+        finish_tmpl,
+    )
+    def dag_flow_tmpl(number: int) -> int:
+        ...
+
+    assert dag_flow_tmpl.callable_type is CallableType.SYNC_FUNCTION
+
+    with pytest.raises(TypeError, match='linear/dag flow callable type'):
+        dag_flow_tmpl.refine(
+            seed_tmpl,
+            async_middle_tmpl.refine(param_key_map={'seed': 'seed'}, result_key='value'),
+            finish_tmpl,
+            update=False,
+        )
+
+
+def test_dag_flow_revise_rechecks_callable_type_against_child_list(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def seed_tmpl(number: int) -> dict[str, int]:
+        return {'seed': number + 1}
+
+    @TaskTemplate()
+    def sync_middle_tmpl(seed: int) -> int:
+        return seed * 2
+
+    @TaskTemplate()
+    async def async_middle_tmpl(seed: int) -> int:
+        return seed * 2
+
+    @TaskTemplate()
+    def finish_tmpl(seed: int, value: int) -> int:
+        return seed + value
+
+    @DagFlowTemplate(
+        seed_tmpl,
+        sync_middle_tmpl.refine(param_key_map={'seed': 'seed'}, result_key='value'),
+        finish_tmpl,
+    )
+    def dag_flow_tmpl(number: int) -> int:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    revised_children = list(dag_flow.child_job_templates)
+    revised_children[1] = async_middle_tmpl.refine(
+        param_key_map={'seed': 'seed'},
+        result_key='value',
+    )
+
+    with pytest.raises(TypeError, match='linear/dag flow callable type'):
+        dag_flow.revise().refine(*revised_children, update=False)
 
 
 def mypy_fix_mock_task_template_assert_same_time(

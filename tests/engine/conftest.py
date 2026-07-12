@@ -10,6 +10,7 @@ from omnipy.components.prefect.lazy_import import prefect_test_harness
 from omnipy.engine.local import LocalRunner
 from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import IsFlowTemplate, IsTaskTemplate
+from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
