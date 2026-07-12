@@ -37,8 +37,6 @@ _CallableT = TypeVar('_CallableT')
 _RetT = TypeVar('_RetT')
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_TASK_CORE_TEMPLATE_SUMMARY'] = 'Implement the core template behavior.'
-
     os.environ['OMNIPY_MACRO_TASK_WRAP_INITIALIZER_DECORATOR_SUMMARY'] = dedent("""\
         Wrap a template initializer as a callable decorator factory.""")
 
@@ -74,7 +72,15 @@ class TaskTemplateCore(
         TaskBase,
         Generic[_CallP, _RetT],
 ):
-    """"""
+    """Implement the core template behavior for tasks.
+
+    A task template wraps a Python callable that performs a single unit of work
+    as a task. Use this when the work can be expressed as a self-contained
+    function call.
+
+    Instances are normally produced through the ``TaskTemplate`` decorator
+    factory rather than by direct construction.
+    """
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsTask[_CallP, _RetT]]:
         """Return the executable task type produced by this template.

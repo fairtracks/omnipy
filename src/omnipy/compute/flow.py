@@ -56,9 +56,6 @@ _CallableT = TypeVar('_CallableT')
 _RetT = TypeVar('_RetT')
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_FLOW_CORE_TEMPLATE_SUMMARY'] = dedent("""\
-        Implement the core template behavior for flows.""")
-
     os.environ['OMNIPY_MACRO_FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY'] = dedent("""\
         Wrap a template initializer as a callable decorator factory.""")
 
@@ -346,10 +343,10 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
                                             IsFuncFlow[_CallP, _RetT],
                                             _CallP,
                                             _RetT],
-                           FlowBase,
-                           Generic[_CallP, _RetT]):
+                            FlowBase,
+                            Generic[_CallP, _RetT]):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # {{FLOW_CORE_TEMPLATE_SUMMARY}}
+    # Implement the core template behavior for flows.
     #
     # A function flow template wraps a Python callable that orchestrates work as
     # a flow. Use this when the control flow is easiest to express directly in
