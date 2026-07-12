@@ -178,7 +178,17 @@ def decorate_callable_by_type(  # noqa: C901
 
         async def _async_generator_wrapper(*args: _P.args, **kwargs: _P.kwargs):
             with make_context():
-                job_result = call_func(*args, **kwargs)
+                job_result = await resolve(call_func(*args, **kwargs))
+
+                if isinstance(job_result, GeneratorType):
+                    for value in job_result:
+                        yield value
+                    return
+
+                if not isinstance(job_result, AsyncGeneratorType):
+                    raise TypeError('Async generator callable resolved to unsupported result type: '
+                                    f'{type(job_result).__name__}')
+
                 sent = None
                 try:
                     while True:
