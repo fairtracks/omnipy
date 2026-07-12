@@ -210,6 +210,18 @@ def test_property_param_key_map_validation_task() -> None:
         TaskTemplate(param_key_map={'number': 'same', 'exponent': 'same'})(power_m1_func)
 
 
+def test_property_param_key_map_identity_mapping_task() -> None:
+    identity_tmpl = TaskTemplate(param_key_map=dict(number='number'))(power_m1_func)
+
+    for identity_job in identity_tmpl, identity_tmpl.apply():
+        assert identity_job.param_key_map == {
+            'number': 'number',
+        }
+
+    identity_task = identity_tmpl.apply()
+    assert identity_task(number=4, exponent=2) == 15
+
+
 def test_property_param_key_map_kwargs_task() -> None:
     """Test parameter key maps work with kwargs-style tasks."""
 

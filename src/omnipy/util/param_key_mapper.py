@@ -20,6 +20,7 @@ class ParamKeyMapper:
     def __init__(self, key_map: Mapping[str, str] | Iterable[tuple[str, str]]):
         self.key_map = dict(key_map)
         self._inverse_key_map = {val: key for key, val in self.key_map.items()}
+        self._identity_keys = {key for key, value in self.key_map.items() if key == value}
 
         if len(self.key_map) != len(self._inverse_key_map):
             raise ValueError('Some values were dropped when translating to the inverse key_map!')
@@ -39,7 +40,9 @@ class ParamKeyMapper:
 
     def delete_matching_keys(self, params: Mapping[str, Any], inverse: bool):
         key_map = self._get_key_map(inverse)
-        return {key: params[key] for key in params if key not in key_map}
+        return {
+            key: params[key] for key in params if key not in key_map or key in self._identity_keys
+        }
 
     def map_matching_keys_delete_inverse_matches_keep_rest(self,
                                                            params: Mapping[str, Any],

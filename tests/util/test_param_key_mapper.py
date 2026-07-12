@@ -201,6 +201,19 @@ def test_map_matching_keys_delete_inverse_matches_keep_rest_empty():
         inverse=True,
     ) == dict()
 
+
+def test_map_matching_keys_delete_inverse_matches_keep_rest_identity_mapping():
+    param_key_mapper = ParamKeyMapper({'base': 'base'})
+
+    assert param_key_mapper.map_matching_keys_delete_inverse_matches_keep_rest(
+        dict(base=7),
+        inverse=False,
+    ) == dict(base=7)
+    assert param_key_mapper.map_matching_keys_delete_inverse_matches_keep_rest(
+        dict(base=7),
+        inverse=True,
+    ) == dict(base=7)
+
     param_key_mapper = ParamKeyMapper({'abc': 'cba'})
 
     assert param_key_mapper.map_matching_keys_delete_inverse_matches_keep_rest(
