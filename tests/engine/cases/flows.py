@@ -1,5 +1,5 @@
 import asyncio
-from typing import AsyncGenerator, Awaitable, cast, Generator
+from typing import AsyncGenerator, AsyncIterator, Awaitable, cast, Generator
 
 import pytest_cases as pc
 
@@ -1825,6 +1825,101 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_generato
 
 
 @pc.case(
+    id='linear-flow-early-async-generator-terminal-sync-function',
+    tags=['semantic-floor', 'linear-flow-early-async-generator'],
+)
+def case_linear_flow_early_async_generator_terminal_sync_function(  # noqa: C901
+) -> ComposedFlowCase[[int], AsyncGenerator]:  # noqa: C901
+    expected_callable_type = CallableType.ASYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def emit_async_values(number: int) -> AsyncGenerator:
+            for value in range(number, number + 3):
+                await asyncio.sleep(0)
+                yield value
+
+        @TaskTemplate()
+        def pass_values_through(values: AsyncGenerator) -> AsyncIterator[int]:
+            return values
+
+        @LinearFlowTemplate(emit_async_values, pass_values_through)
+        async def linear_flow_early_async_generator_terminal_sync_function(
+                number: int) -> AsyncGenerator:
+            async for _ in Void():  # For async-generator signature only; never run.
+                yield _
+
+        return apply_job(linear_flow_early_async_generator_terminal_sync_function,
+                         engine,
+                         registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job.callable_type is expected_callable_type
+        result = job(2)
+        values = []
+        async for value in result:
+            values.append(value)
+        assert values == [2, 3, 4]
+        assert_job_state(job, [RunState.FINISHED])
+
+    return ComposedFlowCase[[int], AsyncGenerator](
+        name='linear-flow-early-async-generator-terminal-sync-function',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='linear-flow-early-async-generator-terminal-sync-generator',
+    tags=['semantic-floor', 'linear-flow-early-async-generator'],
+)
+def case_linear_flow_early_async_generator_terminal_sync_generator(  # noqa: C901
+) -> ComposedFlowCase[[int], AsyncGenerator]:  # noqa: C901
+    expected_callable_type = CallableType.ASYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def emit_async_values(number: int) -> AsyncGenerator:
+            for value in range(number, number + 3):
+                await asyncio.sleep(0)
+                yield value
+
+        @TaskTemplate()
+        def emit_sync_wrapped_values(values: AsyncGenerator) -> Generator:
+            yield values
+
+        @LinearFlowTemplate(emit_async_values, emit_sync_wrapped_values)
+        async def linear_flow_early_async_generator_terminal_sync_generator(
+                number: int) -> AsyncGenerator:
+            async for _ in Void():  # For async-generator signature only; never run.
+                yield _
+
+        return apply_job(linear_flow_early_async_generator_terminal_sync_generator,
+                         engine,
+                         registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job.callable_type is expected_callable_type
+        result = job(2)
+        wrapped_values = []
+        async for values in result:
+            nested_values = []
+            async for value in values:
+                nested_values.append(value)
+            wrapped_values.append(tuple(nested_values))
+        assert wrapped_values == [(2, 3, 4)]
+        assert_job_state(job, [RunState.FINISHED])
+
+    return ComposedFlowCase[[int], AsyncGenerator](
+        name='linear-flow-early-async-generator-terminal-sync-generator',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
     id='linear-flow-early-async-terminal-sync-function',
     tags=['semantic-floor', 'linear-flow-early-async-function'],
 )
@@ -2156,6 +2251,107 @@ def case_dag_flow_early_sync_generator_terminal_async_generator(  # noqa: C901
 
     return ComposedFlowCase[[int], AsyncGenerator](
         name='dag-flow-early-sync-generator-terminal-async-generator',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='dag-flow-early-async-generator-terminal-sync-function',
+    tags=['semantic-floor', 'dag-flow-early-async-generator'],
+)
+def case_dag_flow_early_async_generator_terminal_sync_function(  # noqa: C901
+) -> ComposedFlowCase[[int], AsyncGenerator]:  # noqa: C901
+    expected_callable_type = CallableType.ASYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def emit_async_values(number: int) -> AsyncGenerator:
+            for value in range(number, number + 3):
+                await asyncio.sleep(0)
+                yield value
+
+        @FuncFlowTemplate()
+        async def async_values_child_flow(number: int) -> AsyncGenerator:
+            async for value in emit_async_values(number):
+                yield value
+
+        @TaskTemplate()
+        def pass_values_through(values: AsyncGenerator) -> AsyncIterator[int]:
+            return values
+
+        @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), pass_values_through)
+        async def dag_flow_early_async_generator_terminal_sync_function(
+                number: int) -> AsyncGenerator:
+            async for _ in Void():  # For async-generator signature only; never run.
+                yield _
+
+        return apply_job(dag_flow_early_async_generator_terminal_sync_function, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job.callable_type is expected_callable_type
+        result = job(2)
+        values = []
+        async for value in result:
+            values.append(value)
+        assert values == [2, 3, 4]
+        assert_job_state(job, [RunState.FINISHED])
+
+    return ComposedFlowCase[[int], AsyncGenerator](
+        name='dag-flow-early-async-generator-terminal-sync-function',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='dag-flow-early-async-generator-terminal-sync-generator',
+    tags=['semantic-floor', 'dag-flow-early-async-generator'],
+)
+def case_dag_flow_early_async_generator_terminal_sync_generator(  # noqa: C901
+) -> ComposedFlowCase[[int], AsyncGenerator]:  # noqa: C901
+    expected_callable_type = CallableType.ASYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def emit_async_values(number: int) -> AsyncGenerator:
+            for value in range(number, number + 3):
+                await asyncio.sleep(0)
+                yield value
+
+        @FuncFlowTemplate()
+        async def async_values_child_flow(number: int) -> AsyncGenerator:
+            async for value in emit_async_values(number):
+                yield value
+
+        @TaskTemplate()
+        def emit_sync_wrapped_values(values: AsyncGenerator) -> Generator:
+            yield values
+
+        @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), emit_sync_wrapped_values)
+        async def dag_flow_early_async_generator_terminal_sync_generator(
+                number: int) -> AsyncGenerator:
+            async for _ in Void():  # For async-generator signature only; never run.
+                yield _
+
+        return apply_job(dag_flow_early_async_generator_terminal_sync_generator, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job.callable_type is expected_callable_type
+        result = job(2)
+        wrapped_values = []
+        async for values in result:
+            nested_values = []
+            async for value in values:
+                nested_values.append(value)
+            wrapped_values.append(tuple(nested_values))
+        assert wrapped_values == [(2, 3, 4)]
+        assert_job_state(job, [RunState.FINISHED])
+
+    return ComposedFlowCase[[int], AsyncGenerator](
+        name='dag-flow-early-async-generator-terminal-sync-generator',
         build_job_func=build_job,
         run_and_assert_results_func=run_and_assert_results,
         expected_callable_type=expected_callable_type,
