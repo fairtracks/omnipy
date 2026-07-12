@@ -89,6 +89,9 @@ class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT]
         return callable_type_from_flags(is_async=is_async, is_generator=is_generator)
 
     def _validate_callable_type_against_child_job_templates(self) -> None:
+        if len(self._child_job_templates) == 0:
+            return
+
         expected_callable_type = self._effective_callable_type_from_child_job_templates()
         actual_callable_type = self.callable_type
 
