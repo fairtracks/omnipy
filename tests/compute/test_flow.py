@@ -1,6 +1,6 @@
 """Test compute flow templates and runtime behavior."""
 
-from collections.abc import Iterable
+from collections.abc import AsyncGenerator, AsyncIterator, Generator, Iterable, Iterator
 from datetime import datetime
 from typing import Annotated, Callable, cast, Type
 
@@ -506,6 +506,221 @@ def test_dag_flow_construction_rejects_sync_authored_early_async_child(
         )
         def dag_flow_tmpl(number: int) -> int:
             ...
+
+
+def test_linear_flow_construction_accepts_async_authored_early_async_child(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def seed_tmpl(number: int) -> int:
+        return number + 1
+
+    @TaskTemplate()
+    async def async_transform_tmpl(number: int) -> int:
+        return number * 2
+
+    @TaskTemplate()
+    def finish_tmpl(number: int) -> int:
+        return number + 3
+
+    @LinearFlowTemplate(seed_tmpl, async_transform_tmpl, finish_tmpl)
+    async def linear_flow_tmpl(number: int) -> int:
+        ...
+
+    assert linear_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
+    assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
+
+
+def test_dag_flow_construction_accepts_async_authored_early_async_child(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def seed_tmpl(number: int) -> dict[str, int]:
+        return {'seed': number + 1}
+
+    @TaskTemplate()
+    async def async_transform_tmpl(seed: int) -> int:
+        return seed * 2
+
+    @TaskTemplate()
+    def finish_tmpl(seed: int, async_value: int) -> int:
+        return seed + async_value
+
+    @DagFlowTemplate(
+        seed_tmpl,
+        async_transform_tmpl.refine(param_key_map={'seed': 'seed'}, result_key='async_value'),
+        finish_tmpl,
+    )
+    async def dag_flow_tmpl(number: int) -> int:
+        ...
+
+    assert dag_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
+    assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
+
+
+def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_function(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    async def emit_async_values(number: int) -> AsyncGenerator:
+        for value in range(number, number + 3):
+            yield value
+
+    @TaskTemplate()
+    def pass_values_through(values: AsyncGenerator) -> AsyncGenerator:
+        return values
+
+    @LinearFlowTemplate(emit_async_values, pass_values_through)
+    async def linear_flow_tmpl(number: int) -> AsyncGenerator:
+        ...
+
+    assert linear_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
+    assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
+
+
+def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_function(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    async def emit_async_values(number: int) -> AsyncGenerator:
+        for value in range(number, number + 3):
+            yield value
+
+    @FuncFlowTemplate()
+    async def async_values_child_flow(number: int) -> AsyncGenerator:
+        async for value in emit_async_values(number):
+            yield value
+
+    @TaskTemplate()
+    def pass_values_through(values: AsyncGenerator) -> AsyncGenerator:
+        return values
+
+    @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), pass_values_through)
+    async def dag_flow_tmpl(number: int) -> AsyncGenerator:
+        ...
+
+    assert dag_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
+    assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
+
+
+def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_generator(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    async def emit_async_values(number: int) -> AsyncGenerator:
+        for value in range(number, number + 3):
+            yield value
+
+    @TaskTemplate()
+    def emit_sync_wrapped_values(values: AsyncGenerator) -> Generator:
+        yield values
+
+    @LinearFlowTemplate(emit_async_values, emit_sync_wrapped_values)
+    async def linear_flow_tmpl(number: int) -> AsyncGenerator:
+        yield number
+
+    assert linear_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
+    assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
+
+
+def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_generator(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    async def emit_async_values(number: int) -> AsyncGenerator:
+        for value in range(number, number + 3):
+            yield value
+
+    @FuncFlowTemplate()
+    async def async_values_child_flow(number: int) -> AsyncGenerator:
+        async for value in emit_async_values(number):
+            yield value
+
+    @TaskTemplate()
+    def emit_sync_wrapped_values(values: AsyncGenerator) -> Generator:
+        yield values
+
+    @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), emit_sync_wrapped_values)
+    async def dag_flow_tmpl(number: int) -> AsyncGenerator:
+        yield number
+
+    assert dag_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
+    assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
+
+
+def test_linear_flow_uses_terminal_return_annotation_to_detect_async_generator_passthrough(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    async def emit_async_values(number: int) -> AsyncGenerator:
+        for value in range(number, number + 3):
+            yield value
+
+    @TaskTemplate()
+    def pass_values_through(values: AsyncGenerator) -> AsyncIterator[int]:
+        return values
+
+    @LinearFlowTemplate(emit_async_values, pass_values_through)
+    async def linear_flow_tmpl(number: int) -> AsyncGenerator:
+        yield number
+
+    assert linear_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
+    assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
+
+
+def test_dag_flow_uses_terminal_return_annotation_to_detect_async_generator_passthrough(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    async def emit_async_values(number: int) -> AsyncGenerator:
+        for value in range(number, number + 3):
+            yield value
+
+    @FuncFlowTemplate()
+    async def async_values_child_flow(number: int) -> AsyncGenerator:
+        async for value in emit_async_values(number):
+            yield value
+
+    @TaskTemplate()
+    def pass_values_through(values: AsyncGenerator) -> AsyncIterator[int]:
+        return values
+
+    @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), pass_values_through)
+    async def dag_flow_tmpl(number: int) -> AsyncGenerator:
+        yield number
+
+    assert dag_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
+    assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
+
+
+def test_linear_flow_without_terminal_generator_annotation_falls_back_to_sync_terminal_shape(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    async def emit_async_values(number: int) -> AsyncGenerator:
+        for value in range(number, number + 3):
+            yield value
+
+    @TaskTemplate()
+    def pass_values_through(values: AsyncGenerator):
+        return values
+
+    @LinearFlowTemplate(emit_async_values, pass_values_through)
+    async def linear_flow_tmpl(number: int) -> AsyncGenerator:
+        ...
+
+    assert linear_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
+    assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
+
+
+def test_linear_flow_uses_terminal_return_annotation_to_detect_sync_generator_passthrough(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def values(number: int) -> Generator:
+        for value in range(number, number + 3):
+            yield value
+
+    @TaskTemplate()
+    def pass_values_through(values: Generator) -> Iterator[int]:
+        return values
+
+    @LinearFlowTemplate(values, pass_values_through)
+    def linear_flow_tmpl(number: int) -> Generator:
+        yield number
+
+    assert linear_flow_tmpl.callable_type is CallableType.SYNC_GENERATOR
+    assert linear_flow_tmpl.apply().callable_type is CallableType.SYNC_GENERATOR
 
 
 def test_linear_flow_refine_rechecks_callable_type_against_child_list(
