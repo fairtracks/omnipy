@@ -10,7 +10,41 @@ from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, Typ
 from omnipy.data.model import Model
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
-from omnipy.util.helpers import is_iterable, is_non_str_byte_iterable
+from omnipy.util.helpers import is_package_editable, is_iterable, is_non_str_byte_iterable
+
+if is_package_editable('omnipy'):
+    import os
+    from textwrap import dedent
+
+    os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_INPUT'] = 'The input model or dataset type.'
+
+    os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_FIRST_INTERMEDIATE'] = (
+        'The first intermediate model or dataset type.')
+
+    os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_SECOND_INTERMEDIATE'] = (
+        'The second intermediate model or dataset type.')
+
+    os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_THIRD_INTERMEDIATE'] = (
+        'The third intermediate model or dataset type.')
+
+    os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_FOURTH_INTERMEDIATE'] = (
+        'The fourth intermediate model or dataset type.')
+
+    os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_OUTPUT'] = 'The output model or dataset type.'
+
+    os.environ['OMNIPY_MACRO_CHAIN_GENERAL_BEHAVIOR'] = dedent("""\
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
+    """)
 
 
 class NotIterableExceptStrOrBytesModel(Model[object | None]):
@@ -103,60 +137,171 @@ if TYPE_CHECKING:
 
     class Chain2(_ChainMixin, Model[_V], Generic[_U, _V]):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_2}}
+        # Convert data through a two-model chain.
+        #
+        # ``Chain2[U, V]`` produces output of type ``V`` by first parsing the
+        # input as ``U`` and then as ``V``, unless the input already parses
+        # directly with ``V``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # Examples:
+        #     >>> import omnipy as om
+        #     >>> from collections.abc import Iterable
+        #     >>> chain = om.Chain2[om.Model[Iterable[str]], om.Model[list[str]]]
+        #     >>> chain('abc')
+        #     Chain2[Model[Iterable[str]], Model[list[str]]](Model[list[str]](['a', 'b', 'c']))
         """Convert data through a two-model chain.
 
-``Chain2[U, V]`` transforms data of type ``U`` into type ``V``
-by creating a model instance of the first type, then recasting the
-result into the second model type.  This provides a lightweight
-inline dataflow pipeline within a single model object.
+        ``Chain2[U, V]`` produces output of type ``V`` by first parsing the
+        input as ``U`` and then as ``V``, unless the input already parses
+        directly with ``V``.
 
-Type Args:
-    U: The input model type.
-    V: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-Examples:
-    >>> from omnipy import Chain2
-    >>> from omnipy.components.json.models import JsonScalarModel
-    >>> chain = Chain2[str, int]
-    >>> chain('42')
-    Chain2[str, int](42)
 
-"""
+        Type Args:
+            U: The input model or dataset type.
+            V: The output model or dataset type.
+
+        Examples:
+            >>> import omnipy as om
+            >>> from collections.abc import Iterable
+            >>> chain = om.Chain2[om.Model[Iterable[str]], om.Model[list[str]]]
+            >>> chain('abc')
+            Chain2[Model[Iterable[str]], Model[list[str]]](Model[list[str]](['a', 'b', 'c']))"""
         ...
 
     class Chain3(_ChainMixin, Model[_W], Generic[_U, _V, _W]):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_3}}
+        # Convert data through a three-model chain.
+        #
+        # ``Chain3[U, V, W]`` produces output of type ``W`` by first parsing
+        # the input as ``U`` and then through the intermediate type ``V``,
+        # unless the input already parses directly with ``W``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
+        #     W: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # Examples:
+        #     >>> import omnipy as om
+        #     >>> class SplitCharsModel(om.Model[list[str] | str]):
+        #     ...     @classmethod
+        #     ...     def _parse_data(cls, data):
+        #     ...         return list(data) if isinstance(data, str) else data
+        #     >>> class TupleCharsModel(om.Model[tuple[str, ...] | list[str]]):
+        #     ...     @classmethod
+        #     ...     def _parse_data(cls, data):
+        #     ...         return tuple(data) if isinstance(data, list) else data
+        #     >>> chain = om.Chain3[om.Model[str], SplitCharsModel, TupleCharsModel]
+        #     >>> chain('abc')
+        #     Chain3[Model[str], SplitCharsModel, TupleCharsModel](TupleCharsModel(('a', 'b', 'c')))
+        #
+        # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a three-model chain.
 
-``Chain3[U, V, W]`` transforms data of type ``U`` into type ``W``
-by sequentially creating model instances of ``U``, then ``V``, then
-``W``.  Each step recasts the previous result into the next model type.
+        ``Chain3[U, V, W]`` produces output of type ``W`` by first parsing
+        the input as ``U`` and then through the intermediate type ``V``,
+        unless the input already parses directly with ``W``.
 
-Type Args:
-    U: The input model type.
-    V: The first intermediate model type.
-    W: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-"""
+
+        Type Args:
+            U: The input model or dataset type.
+            V: The first intermediate model or dataset type.
+            W: The output model or dataset type.
+
+        Examples:
+            >>> import omnipy as om
+            >>> class SplitCharsModel(om.Model[list[str] | str]):
+            ...     @classmethod
+            ...     def _parse_data(cls, data):
+            ...         return list(data) if isinstance(data, str) else data
+            >>> class TupleCharsModel(om.Model[tuple[str, ...] | list[str]]):
+            ...     @classmethod
+            ...     def _parse_data(cls, data):
+            ...         return tuple(data) if isinstance(data, list) else data
+            >>> chain = om.Chain3[om.Model[str], SplitCharsModel, TupleCharsModel]
+            >>> chain('abc')
+            Chain3[Model[str], SplitCharsModel, TupleCharsModel](TupleCharsModel(('a', 'b', 'c')))
+
+        See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
 
     class Chain4(_ChainMixin, Model[_X], Generic[_U, _V, _W, _X]):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_4}}
+        # Convert data through a four-model chain.
+        #
+        # ``Chain4[U, V, W, X]`` produces output of type ``X`` by first
+        # parsing the input as ``U`` and then through the intermediate types
+        # ``V`` and ``W``, unless the input already parses directly with
+        # ``X``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
+        #     W: {{CHAIN_TYPEARG_SECOND_INTERMEDIATE}}
+        #     X: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a four-model chain.
 
-``Chain4[U, V, W, X]`` transforms data of type ``U`` into type ``X``
-through two intermediate model types ``V`` and ``W``.
+        ``Chain4[U, V, W, X]`` produces output of type ``X`` by first
+        parsing the input as ``U`` and then through the intermediate types
+        ``V`` and ``W``, unless the input already parses directly with
+        ``X``.
 
-Type Args:
-    U: The input model type.
-    V: The first intermediate model type.
-    W: The second intermediate model type.
-    X: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-"""
+
+        Type Args:
+            U: The input model or dataset type.
+            V: The first intermediate model or dataset type.
+            W: The second intermediate model or dataset type.
+            X: The output model or dataset type.
+
+        See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
 
     class Chain5(
@@ -165,20 +310,49 @@ Type Args:
             Generic[_U, _V, _W, _X, _Y],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_5}}
+        # Convert data through a five-model chain.
+        #
+        # ``Chain5[U, V, W, X, Y]`` produces output of type ``Y`` by first
+        # parsing the input as ``U`` and then through three intermediate
+        # types, unless the input already parses directly with ``Y``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
+        #     W: {{CHAIN_TYPEARG_SECOND_INTERMEDIATE}}
+        #     X: {{CHAIN_TYPEARG_THIRD_INTERMEDIATE}}
+        #     Y: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a five-model chain.
 
-``Chain5[U, V, W, X, Y]`` transforms data of type ``U`` into type ``Y``
-through three intermediate model types.
+        ``Chain5[U, V, W, X, Y]`` produces output of type ``Y`` by first
+        parsing the input as ``U`` and then through three intermediate
+        types, unless the input already parses directly with ``Y``.
 
-Type Args:
-    U: The input model type.
-    V: The first intermediate model type.
-    W: The second intermediate model type.
-    X: The third intermediate model type.
-    Y: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-"""
+
+        Type Args:
+            U: The input model or dataset type.
+            V: The first intermediate model or dataset type.
+            W: The second intermediate model or dataset type.
+            X: The third intermediate model or dataset type.
+            Y: The output model or dataset type.
+
+        See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
 
     class Chain6(
@@ -187,83 +361,224 @@ Type Args:
             Generic[_U, _V, _W, _X, _Y, _Z],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_6}}
+        # Convert data through a six-model chain.
+        #
+        # ``Chain6[U, V, W, X, Y, Z]`` produces output of type ``Z`` by first
+        # parsing the input as ``U`` and then through four intermediate
+        # types, unless the input already parses directly with ``Z``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
+        #     W: {{CHAIN_TYPEARG_SECOND_INTERMEDIATE}}
+        #     X: {{CHAIN_TYPEARG_THIRD_INTERMEDIATE}}
+        #     Y: {{CHAIN_TYPEARG_FOURTH_INTERMEDIATE}}
+        #     Z: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a six-model chain.
 
-``Chain6[U, V, W, X, Y, Z]`` transforms data of type ``U`` into type
-``Z`` through four intermediate model types.
+        ``Chain6[U, V, W, X, Y, Z]`` produces output of type ``Z`` by first
+        parsing the input as ``U`` and then through four intermediate
+        types, unless the input already parses directly with ``Z``.
 
-Type Args:
-    U: The input model type.
-    V: The first intermediate model type.
-    W: The second intermediate model type.
-    X: The third intermediate model type.
-    Y: The fourth intermediate model type.
-    Z: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-"""
+
+        Type Args:
+            U: The input model or dataset type.
+            V: The first intermediate model or dataset type.
+            W: The second intermediate model or dataset type.
+            X: The third intermediate model or dataset type.
+            Y: The fourth intermediate model or dataset type.
+            Z: The output model or dataset type.
+
+        See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
 
 else:
 
     class Chain2(_ChainMixin, Model[_V | _U], Generic[_U, _V]):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_2}}
+        # Convert data through a two-model chain.
+        #
+        # ``Chain2[U, V]`` produces output of type ``V`` by first parsing the
+        # input as ``U`` and then as ``V``, unless the input already parses
+        # directly with ``V``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # Examples:
+        #     >>> import omnipy as om
+        #     >>> from collections.abc import Iterable
+        #     >>> chain = om.Chain2[om.Model[Iterable[str]], om.Model[list[str]]]
+        #     >>> chain('abc')
+        #     Chain2[Model[Iterable[str]], Model[list[str]]](Model[list[str]](['a', 'b', 'c']))
         """Convert data through a two-model chain.
 
-``Chain2[U, V]`` transforms data of type ``U`` into type ``V``
-by creating a model instance of the first type, then recasting the
-result into the second model type.  This provides a lightweight
-inline dataflow pipeline within a single model object.
+        ``Chain2[U, V]`` produces output of type ``V`` by first parsing the
+        input as ``U`` and then as ``V``, unless the input already parses
+        directly with ``V``.
 
-Type Args:
-    U: The input model type.
-    V: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-Examples:
-    >>> from omnipy import Chain2
-    >>> from omnipy.components.json.models import JsonScalarModel
-    >>> chain = Chain2[str, int]
-    >>> chain('42')
-    Chain2[str, int](42)
 
-"""
+        Type Args:
+            U: The input model or dataset type.
+            V: The output model or dataset type.
+
+        Examples:
+            >>> import omnipy as om
+            >>> from collections.abc import Iterable
+            >>> chain = om.Chain2[om.Model[Iterable[str]], om.Model[list[str]]]
+            >>> chain('abc')
+            Chain2[Model[Iterable[str]], Model[list[str]]](Model[list[str]](['a', 'b', 'c']))"""
         ...
 
     class Chain3(_ChainMixin, Model[_W | TypeVarStore1[_V] | _U], Generic[_U, _V, _W]):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_3}}
+        # Convert data through a three-model chain.
+        #
+        # ``Chain3[U, V, W]`` produces output of type ``W`` by first parsing
+        # the input as ``U`` and then through the intermediate type ``V``,
+        # unless the input already parses directly with ``W``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
+        #     W: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # Examples:
+        #     >>> import omnipy as om
+        #     >>> class SplitCharsModel(om.Model[list[str] | str]):
+        #     ...     @classmethod
+        #     ...     def _parse_data(cls, data):
+        #     ...         return list(data) if isinstance(data, str) else data
+        #     >>> class TupleCharsModel(om.Model[tuple[str, ...] | list[str]]):
+        #     ...     @classmethod
+        #     ...     def _parse_data(cls, data):
+        #     ...         return tuple(data) if isinstance(data, list) else data
+        #     >>> chain = om.Chain3[om.Model[str], SplitCharsModel, TupleCharsModel]
+        #     >>> chain('abc')
+        #     Chain3[Model[str], SplitCharsModel, TupleCharsModel](TupleCharsModel(('a', 'b', 'c')))
+        #
+        # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a three-model chain.
 
-``Chain3[U, V, W]`` transforms data of type ``U`` into type ``W``
-by sequentially creating model instances of ``U``, then ``V``, then
-``W``.  Each step recasts the previous result into the next model type.
+        ``Chain3[U, V, W]`` produces output of type ``W`` by first parsing
+        the input as ``U`` and then through the intermediate type ``V``,
+        unless the input already parses directly with ``W``.
 
-Type Args:
-    U: The input model type.
-    V: The first intermediate model type.
-    W: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-"""
+
+        Type Args:
+            U: The input model or dataset type.
+            V: The first intermediate model or dataset type.
+            W: The output model or dataset type.
+
+        Examples:
+            >>> import omnipy as om
+            >>> class SplitCharsModel(om.Model[list[str] | str]):
+            ...     @classmethod
+            ...     def _parse_data(cls, data):
+            ...         return list(data) if isinstance(data, str) else data
+            >>> class TupleCharsModel(om.Model[tuple[str, ...] | list[str]]):
+            ...     @classmethod
+            ...     def _parse_data(cls, data):
+            ...         return tuple(data) if isinstance(data, list) else data
+            >>> chain = om.Chain3[om.Model[str], SplitCharsModel, TupleCharsModel]
+            >>> chain('abc')
+            Chain3[Model[str], SplitCharsModel, TupleCharsModel](TupleCharsModel(('a', 'b', 'c')))
+
+        See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
 
     class Chain4(_ChainMixin,
                  Model[_X | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
                  Generic[_U, _V, _W, _X]):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_4}}
+        # Convert data through a four-model chain.
+        #
+        # ``Chain4[U, V, W, X]`` produces output of type ``X`` by first
+        # parsing the input as ``U`` and then through the intermediate types
+        # ``V`` and ``W``, unless the input already parses directly with
+        # ``X``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
+        #     W: {{CHAIN_TYPEARG_SECOND_INTERMEDIATE}}
+        #     X: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a four-model chain.
 
-``Chain4[U, V, W, X]`` transforms data of type ``U`` into type ``X``
-through two intermediate model types ``V`` and ``W``.
+        ``Chain4[U, V, W, X]`` produces output of type ``X`` by first
+        parsing the input as ``U`` and then through the intermediate types
+        ``V`` and ``W``, unless the input already parses directly with
+        ``X``.
 
-Type Args:
-    U: The input model type.
-    V: The first intermediate model type.
-    W: The second intermediate model type.
-    X: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-"""
+
+        Type Args:
+            U: The input model or dataset type.
+            V: The first intermediate model or dataset type.
+            W: The second intermediate model or dataset type.
+            X: The output model or dataset type.
+
+        See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
 
     class Chain5(
@@ -272,20 +587,49 @@ Type Args:
             Generic[_U, _V, _W, _X, _Y],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_5}}
+        # Convert data through a five-model chain.
+        #
+        # ``Chain5[U, V, W, X, Y]`` produces output of type ``Y`` by first
+        # parsing the input as ``U`` and then through three intermediate
+        # types, unless the input already parses directly with ``Y``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
+        #     W: {{CHAIN_TYPEARG_SECOND_INTERMEDIATE}}
+        #     X: {{CHAIN_TYPEARG_THIRD_INTERMEDIATE}}
+        #     Y: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a five-model chain.
 
-``Chain5[U, V, W, X, Y]`` transforms data of type ``U`` into type ``Y``
-through three intermediate model types.
+        ``Chain5[U, V, W, X, Y]`` produces output of type ``Y`` by first
+        parsing the input as ``U`` and then through three intermediate
+        types, unless the input already parses directly with ``Y``.
 
-Type Args:
-    U: The input model type.
-    V: The first intermediate model type.
-    W: The second intermediate model type.
-    X: The third intermediate model type.
-    Y: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-"""
+
+        Type Args:
+            U: The input model or dataset type.
+            V: The first intermediate model or dataset type.
+            W: The second intermediate model or dataset type.
+            X: The third intermediate model or dataset type.
+            Y: The output model or dataset type.
+
+        See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
 
     class Chain6(
@@ -295,21 +639,51 @@ Type Args:
             Generic[_U, _V, _W, _X, _Y, _Z],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CHAIN_DOC_6}}
+        # Convert data through a six-model chain.
+        #
+        # ``Chain6[U, V, W, X, Y, Z]`` produces output of type ``Z`` by first
+        # parsing the input as ``U`` and then through four intermediate
+        # types, unless the input already parses directly with ``Z``.
+        #
+        # {{CHAIN_GENERAL_BEHAVIOR}}
+        #
+        # Type Args:
+        #     U: {{CHAIN_TYPEARG_INPUT}}
+        #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
+        #     W: {{CHAIN_TYPEARG_SECOND_INTERMEDIATE}}
+        #     X: {{CHAIN_TYPEARG_THIRD_INTERMEDIATE}}
+        #     Y: {{CHAIN_TYPEARG_FOURTH_INTERMEDIATE}}
+        #     Z: {{CHAIN_TYPEARG_OUTPUT}}
+        #
+        # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a six-model chain.
 
-``Chain6[U, V, W, X, Y, Z]`` transforms data of type ``U`` into type
-``Z`` through four intermediate model types.
+        ``Chain6[U, V, W, X, Y, Z]`` produces output of type ``Z`` by first
+        parsing the input as ``U`` and then through four intermediate
+        types, unless the input already parses directly with ``Z``.
 
-Type Args:
-    U: The input model type.
-    V: The first intermediate model type.
-    W: The second intermediate model type.
-    X: The third intermediate model type.
-    Y: The fourth intermediate model type.
-    Z: The output model type.
+        This provides a lightweight inline dataflow pipeline within a single
+        model.
+        
+        Chain type parameters must be model or dataset types. Input data may
+        be any content that validates directly against the output type or,
+        if that fails, against the first type in the chain. When the input
+        validates against the output type, the chain short-circuits
+        immediately. Otherwise, the data is validated against the first type
+        and then validated forward through each subsequent model or dataset
+        type until the output type is reached. The final result conforms to
+        the output type unless validation fails during the chain.
 
-"""
+
+        Type Args:
+            U: The input model or dataset type.
+            V: The first intermediate model or dataset type.
+            W: The second intermediate model or dataset type.
+            X: The third intermediate model or dataset type.
+            Y: The fourth intermediate model or dataset type.
+            Z: The output model or dataset type.
+
+        See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
 
 
