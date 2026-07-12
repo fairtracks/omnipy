@@ -1121,6 +1121,328 @@ def case_func_flow_mixed_sync_async() -> ComposedFlowCase[[int], Awaitable[int]]
 
 
 @pc.case(
+    id='func-flow-sync-generator-child-sync-function',
+    tags=['semantic-floor', 'func-flow-child-sg-parent-sf'],
+)
+def case_func_flow_sync_generator_child_sync_function() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        def values(number: int) -> Generator:
+            for value in range(number, number + 3):
+                yield value
+
+        @FuncFlowTemplate()
+        def func_flow_sync_generator_child_sync_function(number: int) -> int:
+            return sum(values(number))
+
+        return apply_job(func_flow_sync_generator_child_sync_function, engine, registry)
+
+    def run_and_assert_results(job: IsFuncArgJob) -> None:
+        assert job(2) == 9
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='func-flow-sync-generator-child-sync-function',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-async-coroutine-child-async-generator',
+    tags=['semantic-floor', 'func-flow-child-ac-parent-ag'],
+)
+def case_func_flow_async_coroutine_child_async_generator(
+) -> ComposedFlowCase[[int], AsyncGenerator]:
+    expected_callable_type = CallableType.ASYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def compute_start(number: int) -> int:
+            await asyncio.sleep(0)
+            return number * 2
+
+        @FuncFlowTemplate()
+        async def func_flow_async_coroutine_child_async_generator(number: int) -> AsyncGenerator:
+            start = await compute_start(number)
+            for value in range(start, start + 3):
+                await asyncio.sleep(0)
+                yield value
+
+        return apply_job(func_flow_async_coroutine_child_async_generator, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        values = []
+        async for value in job(3):
+            values.append(value)
+        assert values == [6, 7, 8]
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], AsyncGenerator](
+        name='func-flow-async-coroutine-child-async-generator',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-async-generator-child-async-coroutine',
+    tags=['semantic-floor', 'func-flow-child-ag-parent-ac'],
+)
+def case_func_flow_async_generator_child_async_coroutine(
+) -> ComposedFlowCase[[int], Awaitable[int]]:
+    expected_callable_type = CallableType.ASYNC_COROUTINE
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def emit_async_values(number: int) -> AsyncGenerator:
+            for value in range(number, number + 3):
+                await asyncio.sleep(0)
+                yield value
+
+        @FuncFlowTemplate()
+        async def func_flow_async_generator_child_async_coroutine(number: int) -> int:
+            total = 0
+            async for value in emit_async_values(number):
+                total += value
+            return total
+
+        return apply_job(func_flow_async_generator_child_async_coroutine, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        result = await resolve(job(2))
+        assert result == 9
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], Awaitable[int]](
+        name='func-flow-async-generator-child-async-coroutine',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-async-generator-child-sync-generator',
+    tags=['semantic-floor', 'func-flow-child-ag-parent-sg'],
+)
+def case_func_flow_async_generator_child_sync_generator(
+) -> ComposedFlowCase[[int], Generator]:
+    expected_callable_type = CallableType.SYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def emit_async_values(number: int) -> AsyncGenerator:
+            for value in range(number, number + 3):
+                await asyncio.sleep(0)
+                yield value
+
+        @FuncFlowTemplate()
+        def func_flow_async_generator_child_sync_generator(number: int) -> Generator:
+            yield emit_async_values(number)
+
+        return apply_job(func_flow_async_generator_child_sync_generator, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        nested_generators = tuple(job(2))
+        assert len(nested_generators) == 1
+
+        nested_values = []
+        async for value in nested_generators[0]:
+            nested_values.append(value)
+
+        assert nested_values == [2, 3, 4]
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], Generator](
+        name='func-flow-async-generator-child-sync-generator',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-sync-generator-child-async-coroutine',
+    tags=['semantic-floor', 'func-flow-child-sg-parent-ac'],
+)
+def case_func_flow_sync_generator_child_async_coroutine(
+) -> ComposedFlowCase[[int], Awaitable[int]]:
+    expected_callable_type = CallableType.ASYNC_COROUTINE
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        def values(number: int) -> Generator:
+            for value in range(number, number + 3):
+                yield value
+
+        @FuncFlowTemplate()
+        async def func_flow_sync_generator_child_async_coroutine(number: int) -> int:
+            await asyncio.sleep(0)
+            return sum(values(number))
+
+        return apply_job(func_flow_sync_generator_child_async_coroutine, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        result = await resolve(job(2))
+        assert result == 9
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], Awaitable[int]](
+        name='func-flow-sync-generator-child-async-coroutine',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-sync-generator-child-async-generator',
+    tags=['semantic-floor', 'func-flow-child-sg-parent-ag'],
+)
+def case_func_flow_sync_generator_child_async_generator(
+) -> ComposedFlowCase[[int], AsyncGenerator]:
+    expected_callable_type = CallableType.ASYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        def values(number: int) -> Generator:
+            for value in range(number, number + 3):
+                yield value
+
+        @FuncFlowTemplate()
+        async def func_flow_sync_generator_child_async_generator(number: int) -> AsyncGenerator:
+            for value in values(number):
+                await asyncio.sleep(0)
+                yield value * 2
+
+        return apply_job(func_flow_sync_generator_child_async_generator, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        values = []
+        async for value in job(2):
+            values.append(value)
+        assert values == [4, 6, 8]
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], AsyncGenerator](
+        name='func-flow-sync-generator-child-async-generator',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-async-coroutine-child-sync-generator',
+    tags=['semantic-floor', 'func-flow-child-ac-parent-sg'],
+)
+def case_func_flow_async_coroutine_child_sync_generator(
+) -> ComposedFlowCase[[int], Generator]:
+    expected_callable_type = CallableType.SYNC_GENERATOR
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def compute_value(number: int) -> int:
+            await asyncio.sleep(0)
+            return number * 2
+
+        @FuncFlowTemplate()
+        def func_flow_async_coroutine_child_sync_generator(number: int) -> Generator:
+            yield compute_value(number)
+            yield compute_value(number + 1)
+
+        return apply_job(func_flow_async_coroutine_child_sync_generator, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        yielded_awaitables = tuple(job(3))
+        assert len(yielded_awaitables) == 2
+
+        resolved_values = [await resolve(awaitable) for awaitable in yielded_awaitables]
+        assert resolved_values == [6, 8]
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], Generator](
+        name='func-flow-async-coroutine-child-sync-generator',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-async-coroutine-child-sync-function',
+    tags=['semantic-floor', 'func-flow-child-ac-parent-sf'],
+)
+def case_func_flow_async_coroutine_child_sync_function() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def compute_value(number: int) -> int:
+            await asyncio.sleep(0)
+            return number * 2
+
+        @FuncFlowTemplate()
+        def func_flow_async_coroutine_child_sync_function(number: int):
+            return compute_value(number)
+
+        return apply_job(func_flow_async_coroutine_child_sync_function, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        result = await resolve(job(3))
+        assert result == 6
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='func-flow-async-coroutine-child-sync-function',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-async-generator-child-sync-function',
+    tags=['semantic-floor', 'func-flow-child-ag-parent-sf'],
+)
+def case_func_flow_async_generator_child_sync_function() -> ComposedFlowCase[[int], int]:
+    expected_callable_type = CallableType.SYNC_FUNCTION
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        @TaskTemplate()
+        async def emit_async_values(number: int) -> AsyncGenerator:
+            for value in range(number, number + 3):
+                await asyncio.sleep(0)
+                yield value
+
+        @FuncFlowTemplate()
+        def func_flow_async_generator_child_sync_function(number: int):
+            return emit_async_values(number)
+
+        return apply_job(func_flow_async_generator_child_sync_function, engine, registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        result = await resolve(job(2))
+        values = []
+        async for value in result:
+            values.append(value)
+        assert values == [2, 3, 4]
+        assert_case_callable_type_and_finished_state(job, expected_callable_type)
+
+    return ComposedFlowCase[[int], int](
+        name='func-flow-async-generator-child-sync-function',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
     id='linear-flow-early-async-terminal-sync-generator',
     tags=['semantic-floor', 'linear-flow-early-async-generator'],
 )
