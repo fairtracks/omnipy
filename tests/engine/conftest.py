@@ -10,7 +10,6 @@ from omnipy.components.prefect.lazy_import import prefect_test_harness
 from omnipy.engine.local import LocalRunner
 from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import IsFlowTemplate, IsTaskTemplate
-from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
@@ -345,8 +344,8 @@ def all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg(
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_flow_matrix_cases_all_engines_assert_runstate_mock_reg(
     job_case: ComposedFlowCase,
-    engine: IsEngine,
-    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    engine: IsJobRunnerEngine,
+    engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
     if engine_decorator:
@@ -366,8 +365,8 @@ def all_flow_matrix_cases_all_engines_assert_runstate_mock_reg(
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg(
     job_case: ComposedFlowCase,
-    engine: IsEngine,
-    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    engine: IsJobRunnerEngine,
+    engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
     if engine_decorator:

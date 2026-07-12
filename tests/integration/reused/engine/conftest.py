@@ -13,7 +13,7 @@ from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
                                                  IsFuncFlowTemplate,
                                                  IsLinearFlowTemplate,
                                                  IsTaskTemplate)
-from omnipy.shared.protocols.engine.base import IsEngine
+from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
 from ....engine.conftest import all_flow_matrix_cases_all_engines_assert_runstate_mock_reg  # noqa
@@ -94,8 +94,8 @@ def all_func_types_real_jobs_all_engines_real_reg(
                        Type[IsLinearFlowTemplate],
                        Type[IsDagFlowTemplate],
                        Type[IsFuncFlowTemplate]],
-    engine: IsEngine,
-    engine_decorator: Callable[[IsEngine], IsEngine] | None,
+    engine: IsJobRunnerEngine,
+    engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
     """Provide all func types real jobs all engines real reg."""
