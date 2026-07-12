@@ -1443,9 +1443,10 @@ def case_dag_flow_early_async_generator_terminal_async_coroutine(  # noqa: C901
                 await asyncio.sleep(0)
                 yield value
 
-        @TaskTemplate()
-        def wrap_async_values(number: int) -> dict[str, AsyncGenerator]:
-            return {'values': emit_async_values(number)}
+        @FuncFlowTemplate()
+        async def async_values_child_flow(number: int) -> AsyncGenerator:
+            async for value in emit_async_values(number):
+                yield value
 
         @TaskTemplate()
         async def sum_async_values(values: AsyncGenerator) -> int:
@@ -1454,10 +1455,7 @@ def case_dag_flow_early_async_generator_terminal_async_coroutine(  # noqa: C901
                 total += value
             return total
 
-        @DagFlowTemplate(
-            wrap_async_values,
-            sum_async_values,
-        )
+        @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), sum_async_values)
         async def dag_flow_early_async_generator_terminal_async_coroutine(number: int) -> int:
             ...
 
@@ -1492,9 +1490,10 @@ def case_dag_flow_early_async_generator_terminal_async_generator(  # noqa: C901
                 await asyncio.sleep(0)
                 yield value
 
-        @TaskTemplate()
-        def wrap_async_values(number: int) -> dict[str, AsyncGenerator]:
-            return {'values': emit_async_values(number)}
+        @FuncFlowTemplate()
+        async def async_values_child_flow(number: int) -> AsyncGenerator:
+            async for value in emit_async_values(number):
+                yield value
 
         @TaskTemplate()
         async def emit_async_series(values: AsyncGenerator) -> AsyncGenerator:
@@ -1502,10 +1501,7 @@ def case_dag_flow_early_async_generator_terminal_async_generator(  # noqa: C901
                 await asyncio.sleep(0)
                 yield value * 2
 
-        @DagFlowTemplate(
-            wrap_async_values,
-            emit_async_series,
-        )
+        @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), emit_async_series)
         async def dag_flow_early_async_generator_terminal_async_generator(
                 number: int) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
@@ -1646,9 +1642,10 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_coroutin
                 await asyncio.sleep(0)
                 yield value
 
-        @TaskTemplate()
-        def wrap_async_values(number: int) -> dict[str, AsyncGenerator]:
-            return {'values': emit_async_values(number)}
+        @FuncFlowTemplate()
+        async def async_values_child_flow(number: int) -> AsyncGenerator:
+            async for value in emit_async_values(number):
+                yield value
 
         @TaskTemplate()
         def compute_offset(number: int) -> int:
@@ -1662,10 +1659,9 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_coroutin
             return total + offset
 
         @DagFlowTemplate(
-            wrap_async_values,
+            async_values_child_flow.refine(result_key='values'),
             compute_offset.refine(result_key='offset'),
-            sum_async_values,
-        )
+            sum_async_values)
         async def dag_flow_early_async_generator_independent_sync_terminal_async_coroutine(
                 number: int) -> int:
             ...
@@ -1781,9 +1777,10 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_generato
                 await asyncio.sleep(0)
                 yield value
 
-        @TaskTemplate()
-        def wrap_async_values(number: int) -> dict[str, AsyncGenerator]:
-            return {'values': emit_async_values(number)}
+        @FuncFlowTemplate()
+        async def async_values_child_flow(number: int) -> AsyncGenerator:
+            async for value in emit_async_values(number):
+                yield value
 
         @TaskTemplate()
         def compute_offset(number: int) -> int:
@@ -1796,10 +1793,9 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_generato
                 yield value + offset
 
         @DagFlowTemplate(
-            wrap_async_values,
+            async_values_child_flow.refine(result_key='values'),
             compute_offset.refine(result_key='offset'),
-            emit_async_from_values,
-        )
+            emit_async_from_values)
         async def dag_flow_early_async_generator_independent_sync_terminal_async_generator(
                 number: int) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
