@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from time import sleep
-from typing import Callable, cast, Type
+from typing import AsyncIterator, Callable, cast, Type
 
 from omnipy.shared.enums.job import JobType, RunState
 from omnipy.shared.protocols.compute.job import (HasJobCreator,
@@ -154,6 +154,10 @@ def create_linear_flow_with_two_func_tasks(
     def _passthrough_generator_task(arg):
         yield from arg
 
+    @task_template_cls()
+    def _passthrough_async_generator_task(arg) -> AsyncIterator:
+        return arg
+
     task_template_func = task_template_cls(name=name)(func)
     if task_template_func.callable_type is CallableType.SYNC_GENERATOR:
         # This is needed as Prefect 3 coerces returned generators from
@@ -161,6 +165,8 @@ def create_linear_flow_with_two_func_tasks(
         # wrapping a generator function, the generator is recognized and
         # handled.
         passthrough_task = _passthrough_generator_task
+    elif task_template_func.callable_type is CallableType.ASYNC_GENERATOR:
+        passthrough_task = _passthrough_async_generator_task
     else:
         passthrough_task = _passthrough_task
 
