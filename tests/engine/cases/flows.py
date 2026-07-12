@@ -1466,7 +1466,7 @@ def case_dag_flow_early_async_generator_terminal_async_coroutine(  # noqa: C901
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         assert job.callable_type is expected_callable_type
         result = await resolve(job(2))
-        assert result == 21
+        assert result == 9
         assert_job_state(job, [RunState.FINISHED])
 
     return ComposedFlowCase[[int], Awaitable[int]](
@@ -1568,7 +1568,7 @@ def case_linear_flow_early_async_generator_middle_sync_terminal_async_coroutine(
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         assert job.callable_type is expected_callable_type
         result = await resolve(job(2))
-        assert result == 21
+        assert result == 9
         assert_job_state(job, [RunState.FINISHED])
 
     return ComposedFlowCase[[int], Awaitable[int]](
@@ -1679,7 +1679,7 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_coroutin
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         assert job.callable_type is expected_callable_type
         result = await resolve(job(2))
-        assert result == 9
+        assert result == 21
         assert_job_state(job, [RunState.FINISHED])
 
     return ComposedFlowCase[[int], Awaitable[int]](
