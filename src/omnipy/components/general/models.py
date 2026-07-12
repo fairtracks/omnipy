@@ -201,20 +201,6 @@ if TYPE_CHECKING:
         #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
         #     W: {{CHAIN_TYPEARG_OUTPUT}}
         #
-        # Examples:
-        #     >>> import omnipy as om
-        #     >>> class SplitCharsModel(om.Model[list[str] | str]):
-        #     ...     @classmethod
-        #     ...     def _parse_data(cls, data):
-        #     ...         return list(data) if isinstance(data, str) else data
-        #     >>> class TupleCharsModel(om.Model[tuple[str, ...] | list[str]]):
-        #     ...     @classmethod
-        #     ...     def _parse_data(cls, data):
-        #     ...         return tuple(data) if isinstance(data, list) else data
-        #     >>> chain = om.Chain3[om.Model[str], SplitCharsModel, TupleCharsModel]
-        #     >>> chain('abc')
-        #     Chain3[Model[str], SplitCharsModel, TupleCharsModel](TupleCharsModel(('a', 'b', 'c')))
-        #
         # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a three-model chain.
 
@@ -239,20 +225,6 @@ if TYPE_CHECKING:
             U: The input model or dataset type.
             V: The first intermediate model or dataset type.
             W: The output model or dataset type.
-
-        Examples:
-            >>> import omnipy as om
-            >>> class SplitCharsModel(om.Model[list[str] | str]):
-            ...     @classmethod
-            ...     def _parse_data(cls, data):
-            ...         return list(data) if isinstance(data, str) else data
-            >>> class TupleCharsModel(om.Model[tuple[str, ...] | list[str]]):
-            ...     @classmethod
-            ...     def _parse_data(cls, data):
-            ...         return tuple(data) if isinstance(data, list) else data
-            >>> chain = om.Chain3[om.Model[str], SplitCharsModel, TupleCharsModel]
-            >>> chain('abc')
-            Chain3[Model[str], SplitCharsModel, TupleCharsModel](TupleCharsModel(('a', 'b', 'c')))
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
@@ -476,20 +448,6 @@ else:
         #     V: {{CHAIN_TYPEARG_FIRST_INTERMEDIATE}}
         #     W: {{CHAIN_TYPEARG_OUTPUT}}
         #
-        # Examples:
-        #     >>> import omnipy as om
-        #     >>> class SplitCharsModel(om.Model[list[str] | str]):
-        #     ...     @classmethod
-        #     ...     def _parse_data(cls, data):
-        #     ...         return list(data) if isinstance(data, str) else data
-        #     >>> class TupleCharsModel(om.Model[tuple[str, ...] | list[str]]):
-        #     ...     @classmethod
-        #     ...     def _parse_data(cls, data):
-        #     ...         return tuple(data) if isinstance(data, list) else data
-        #     >>> chain = om.Chain3[om.Model[str], SplitCharsModel, TupleCharsModel]
-        #     >>> chain('abc')
-        #     Chain3[Model[str], SplitCharsModel, TupleCharsModel](TupleCharsModel(('a', 'b', 'c')))
-        #
         # See [`Chain2`][omnipy.components.general.models.Chain2] for an example.
         """Convert data through a three-model chain.
 
@@ -514,20 +472,6 @@ else:
             U: The input model or dataset type.
             V: The first intermediate model or dataset type.
             W: The output model or dataset type.
-
-        Examples:
-            >>> import omnipy as om
-            >>> class SplitCharsModel(om.Model[list[str] | str]):
-            ...     @classmethod
-            ...     def _parse_data(cls, data):
-            ...         return list(data) if isinstance(data, str) else data
-            >>> class TupleCharsModel(om.Model[tuple[str, ...] | list[str]]):
-            ...     @classmethod
-            ...     def _parse_data(cls, data):
-            ...         return tuple(data) if isinstance(data, list) else data
-            >>> chain = om.Chain3[om.Model[str], SplitCharsModel, TupleCharsModel]
-            >>> chain('abc')
-            Chain3[Model[str], SplitCharsModel, TupleCharsModel](TupleCharsModel(('a', 'b', 'c')))
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
