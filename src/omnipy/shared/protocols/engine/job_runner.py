@@ -30,42 +30,6 @@ if is_package_editable('omnipy'):
                 decorator.
     """)
 
-    os.environ['OMNIPY_MACRO_ISTASKRUNNERENGINE_APPLY_TASK_DECORATOR_SUMMARY'] = (
-        'Attach a state-aware decorator to a task callback endpoint.')
-    os.environ['OMNIPY_MACRO_ISTASKRUNNERENGINE_APPLY_TASK_DECORATOR_DETAILS'] = dedent("""\
-        Args:
-            task: Task object being prepared for execution.
-            job_callback_accept_decorator: Consumer that accepts a task decorator.
-    """)
-
-    os.environ['OMNIPY_MACRO_ISLINEARFLOWRUNNERENGINE_APPLY_LINEAR_FLOW_DECORATOR_SUMMARY'] = (
-        'Attach a state-aware decorator to a linear-flow callback endpoint.')
-    os.environ['OMNIPY_MACRO_ISLINEARFLOWRUNNERENGINE_APPLY_LINEAR_FLOW_DECORATOR_DETAILS'] = (
-        dedent("""\
-        Args:
-            linear_flow: Linear flow object being prepared for execution.
-            job_callback_accept_decorator: Consumer that accepts a flow decorator.
-    """))
-
-    os.environ['OMNIPY_MACRO_ISDAGFLOWRUNNERENGINE_APPLY_DAG_FLOW_DECORATOR_SUMMARY'] = (
-        'Attach a state-aware decorator to a DAG-flow callback endpoint.')
-    os.environ['OMNIPY_MACRO_ISDAGFLOWRUNNERENGINE_APPLY_DAG_FLOW_DECORATOR_DETAILS'] = (
-        dedent("""\
-        Args:
-            dag_flow: DAG flow object being prepared for execution.
-            job_callback_accept_decorator: Consumer that accepts a flow decorator.
-    """))
-
-    os.environ['OMNIPY_MACRO_ISFUNCFLOWRUNNERENGINE_APPLY_FUNC_FLOW_DECORATOR_SUMMARY'] = (
-        'Attach a state-aware decorator to a function-flow callback endpoint.')
-    os.environ['OMNIPY_MACRO_ISFUNCFLOWRUNNERENGINE_APPLY_FUNC_FLOW_DECORATOR_DETAILS'] = (
-        dedent("""\
-        Args:
-            func_flow: Function flow object being prepared for execution.
-            job_callback_accept_decorator: Consumer that accepts a flow decorator.
-    """))
-
-
 @runtime_checkable
 class IsJobRunnerEngine(IsEngine, Protocol):
     """"""
