@@ -4,6 +4,9 @@ from typing import AsyncGenerator, AsyncIterator, Generator
 from omnipy.compute.task import TaskTemplate
 
 
+## Sync scalar tasks: unary int -> int
+
+
 @TaskTemplate()
 def add_one(number: int) -> int:
     return number + 1
@@ -24,6 +27,9 @@ def square_number(number: int) -> int:
     return number * number
 
 
+## Sync scalar tasks: binary (int, int) -> int
+
+
 @TaskTemplate()
 def add_two_numbers(left_value: int, right_value: int) -> int:
     return left_value + right_value
@@ -39,9 +45,15 @@ def multiply_numbers(left_value: int, right_value: int) -> int:
     return left_value * right_value
 
 
+## Sync reducer tasks: Generator -> int
+
+
 @TaskTemplate()
 def sum_values(values: Generator) -> int:
     return sum(values)
+
+
+## Sync adapter tasks: structural special cases
 
 
 @TaskTemplate()
@@ -52,6 +64,9 @@ def pass_async_values_through(values: AsyncGenerator) -> AsyncIterator[int]:
 @TaskTemplate()
 def compute_base(number: int) -> dict[str, int]:
     return {'base': number + 1}
+
+
+## Sync generator tasks
 
 
 @TaskTemplate()
@@ -83,10 +98,16 @@ def generate_window(start: int, window_size: int) -> Generator:
         yield value
 
 
+## Async scalar tasks: unary int -> int
+
+
 @TaskTemplate()
 async def async_double_number(number: int) -> int:
     await asyncio.sleep(0)
     return number * 2
+
+
+## Async scalar tasks: timing-sensitive
 
 
 @TaskTemplate()
@@ -105,6 +126,9 @@ async def wait_and_return_milliseconds(milliseconds: int) -> int:
 async def multiply_milliseconds_after_wait(wait_milliseconds: int, multiplier: int) -> int:
     await asyncio.sleep(wait_milliseconds / 1000)
     return wait_milliseconds * multiplier
+
+
+## Async reducer tasks
 
 
 @TaskTemplate()
@@ -129,6 +153,9 @@ async def sum_values_async(values: Generator) -> int:
     return sum(values) * 2
 
 
+## Async generator tasks: int -> AsyncGenerator
+
+
 @TaskTemplate()
 async def emit_async_values(number: int) -> AsyncGenerator:
     for value in range(number, number + 3):
@@ -148,6 +175,9 @@ async def emit_stepped_series(start: int, step: int) -> AsyncGenerator:
     for index in range(4):
         await asyncio.sleep(0)
         yield start + step * index
+
+
+## Async generator tasks: stream transforms
 
 
 @TaskTemplate()
