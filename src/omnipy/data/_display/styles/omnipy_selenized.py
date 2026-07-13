@@ -30,30 +30,14 @@
 # SOFTWARE.
 """Bundled Selenized-derived color styles used by the display subsystem."""
 
-import os
-from textwrap import dedent
-
 import pygments.style
-
-from omnipy.util.helpers import is_package_editable
 
 from .helpers import Base16Colors, get_styles_from_base16_colors
 
-if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_SELENIZED_STYLE_INTERFACE_SUMMARY'] = dedent("""\
-        Define the interface for one of the Omnipy Selenized style variants.
-    # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # )
-    #
-    #
-    # class OmnipySelenizedBlackStyle(pygments.style.Style):
-    # # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # # {{SELENIZED_STYLE_INTERFACE_SUMMARY}}
-    #
-    """)
-
 
 class OmnipySelenizedBlackStyle(pygments.style.Style):
+    """High-contrast dark Selenized variant for black backgrounds."""
+
     name = 'omnipy-selenized-black'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'dark'
@@ -83,6 +67,8 @@ class OmnipySelenizedBlackStyle(pygments.style.Style):
 
 
 class OmnipySelenizedDarkStyle(pygments.style.Style):
+    """High-contrast dark Selenized variant for dark backgrounds."""
+
     name = 'omnipy-selenized-dark'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'dark'
@@ -112,6 +98,8 @@ class OmnipySelenizedDarkStyle(pygments.style.Style):
 
 
 class OmnipySelenizedLightStyle(pygments.style.Style):
+    """High-contrast light Selenized variant for cream backgrounds."""
+
     name = 'omnipy-selenized-light'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'light'
@@ -141,6 +129,8 @@ class OmnipySelenizedLightStyle(pygments.style.Style):
 
 
 class OmnipySelenizedWhiteStyle(pygments.style.Style):
+    """High-contrast light Selenized variant for white backgrounds."""
+
     name = 'omnipy-selenized-white'
     author = 'Jan Warchol / adapted to base16 by ali / modified by Sveinung Gundersen'
     variant = 'light'

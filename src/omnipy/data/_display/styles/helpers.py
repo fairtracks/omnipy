@@ -28,26 +28,7 @@ Base16.Deprecated
 
 
 class Base16Colors(pyd.BaseModel):
-    """Define the ``Base16Colors`` interface.
-
-    Attributes:
-        base00: (str) Public attribute on the protocol/class.
-        base01: (str) Public attribute on the protocol/class.
-        base02: (str) Public attribute on the protocol/class.
-        base03: (str) Public attribute on the protocol/class.
-        base04: (str) Public attribute on the protocol/class.
-        base05: (str) Public attribute on the protocol/class.
-        base06: (str) Public attribute on the protocol/class.
-        base07: (str) Public attribute on the protocol/class.
-        base08: (str) Public attribute on the protocol/class.
-        base09: (str) Public attribute on the protocol/class.
-        base0A: (str) Public attribute on the protocol/class.
-        base0B: (str) Public attribute on the protocol/class.
-        base0C: (str) Public attribute on the protocol/class.
-        base0D: (str) Public attribute on the protocol/class.
-        base0E: (str) Public attribute on the protocol/class.
-        base0F: (str) Public attribute on the protocol/class.
-    """
+    """Sixteen-color Base16 palette definition."""
 
     base00: str
     base01: str
@@ -68,14 +49,7 @@ class Base16Colors(pyd.BaseModel):
 
 
 class Base16Theme(pyd.BaseModel):
-    """Define the ``Base16Theme`` interface.
-
-    Attributes:
-        name: (str) Public attribute on the protocol/class.
-        author: (str) Public attribute on the protocol/class.
-        variant: (str) Public attribute on the protocol/class.
-        palette: (Base16Colors) Public attribute on the protocol/class.
-    """
+    """Named Base16 theme with author metadata and a palette."""
 
     name: str
     author: str

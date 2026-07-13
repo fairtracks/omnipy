@@ -240,7 +240,7 @@ def call_super_if_available(call_super_before_method: bool):
             Returns:
                 Result from the decorated method alone or composed with
                 ``super()`` based on ``call_super_before_method``.
-        """
+            """
             method = getattr(self._method, '__func__', self._method)
             super_method: Callable[[_ArgT], _ArgT] | None = getattr(
                 super(self._cls_of_decorated_method, self._calling_obj_or_cls),
@@ -304,7 +304,7 @@ class class_or_instance_method(Generic[T, _DecoratedP, _DecoratedR], object):
 
             Returns:
                 Result produced by ``self._decorated_func``.
-        """
+            """
             return self._decorated_func(instance, cls, *args, **kwargs)
 
         return _func

@@ -10,15 +10,13 @@ _ValT = TypeVar('_ValT', bound=object)
 
 @runtime_checkable
 class IsCallableParamAfterSelf(Protocol):
-    """Define the ``IsCallableParamAfterSelf`` interface.
-    """
+    """Protocol for callbacks whose callable argument follows ``self``."""
     def __call__(self, callable_arg: Callable, /, *args: object, **kwargs: object) -> None:
         ...
 
 
 class IsWeakKeyRefContainer(Protocol[_AnyKeyT, _ValT]):
-    """Define the ``IsWeakKeyRefContainer`` interface.
-    """
+    """Protocol for weak-key containers with mapping-style access."""
     def __contains__(self, key: _AnyKeyT) -> bool:
         ...
 
