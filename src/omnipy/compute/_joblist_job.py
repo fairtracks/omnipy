@@ -8,10 +8,7 @@ and the ordered task list across refine/apply/revise operations.
 
 from collections.abc import AsyncGenerator, AsyncIterator, Generator, Iterator
 import inspect
-from typing import Any, Callable, Generic, ParamSpec, get_args, get_origin
-
-
-from typing import Callable, Generic, ParamSpec
+from typing import Any, Callable, Generic, get_args, get_origin, ParamSpec
 
 from typing_extensions import TypeVar
 
@@ -81,10 +78,11 @@ class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT]
         )):
             is_generator = self._return_annotation_is_generator_like(terminal_child.return_type)
 
-        is_async = any(child_job_template.callable_type in (
-            CallableType.ASYNC_COROUTINE,
-            CallableType.ASYNC_GENERATOR,
-        ) for child_job_template in self._child_job_templates)
+        is_async = any(
+            child_job_template.callable_type in (
+                CallableType.ASYNC_COROUTINE,
+                CallableType.ASYNC_GENERATOR,
+            ) for child_job_template in self._child_job_templates)
 
         return callable_type_from_flags(is_async=is_async, is_generator=is_generator)
 
