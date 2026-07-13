@@ -742,8 +742,7 @@ def called_from_omnipy_tests() -> bool:
         if module is not None \
                 and module.__name__.startswith('tests') \
                 and module.__file__ is not None \
-                and ('omnipy/tests' in module.__file__
-                     or ('/omnipy/' in module.__file__ and '/tests/' in module.__file__)):
+                and 'omnipy/tests' in module.__file__:
             return True
     return False
 

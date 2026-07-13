@@ -354,7 +354,17 @@ def case_syntax_styling_expectations_colorized_terminal(
                         '\x1b[38;2;0;0;0m]\x1b[0m'
                         '\x1b[38;2;0;0;0m}\x1b[0m'
                         '\x1b[38;2;0;0;0m)\x1b[0m\n')
-            case 'w-frame-dark-color-w-wrap-auto' | 'w-frame-dark-color-w-wrap-256':
+            case 'w-frame-dark-color-w-wrap-auto':
+                return ("\x1b[37;100m'\x1b[0m\x1b[37;100mabc\x1b[0m"
+                        "\x1b[37;100m'\x1b[0m\x1b[97;100m:\x1b[0m"
+                        '\x1b[97;100m \x1b[0m\x1b[100m  \x1b[0m\n'
+                        '\x1b[97;100m[\x1b[0m\x1b[37;100m123\x1b[0m'
+                        '\x1b[97;100m,\x1b[0m\x1b[97;100m \x1b[0m'
+                        '\x1b[100m   \x1b[0m\n'
+                        '\x1b[37;100m234\x1b[0m\x1b[97;100m]\x1b[0m'
+                        '\x1b[97;100m}\x1b[0m\x1b[97;100m)\x1b[0m'
+                        '\x1b[100m   \x1b[0m\n')
+            case 'w-frame-dark-color-w-wrap-256':
                 return ("\x1b[38;5;174;48;5;237m'\x1b[0m"
                         '\x1b[38;5;174;48;5;237mabc\x1b[0m'
                         "\x1b[38;5;174;48;5;237m'\x1b[0m"
@@ -388,7 +398,14 @@ def case_syntax_styling_expectations_colorized_terminal(
                         '\x1b[38;2;240;239;208;48;2;63;63;63m}\x1b[0m'
                         '\x1b[38;2;240;239;208;48;2;63;63;63m)\x1b[0m'
                         '\x1b[48;2;63;63;63m   \x1b[0m\n')
-            case 'w-frame-dark-color-w-wrap-auto-no-bg' | 'w-frame-dark-color-w-wrap-256-no-bg':
+            case 'w-frame-dark-color-w-wrap-auto-no-bg':
+                return ("\x1b[37m'\x1b[0m\x1b[37mabc\x1b[0m\x1b[37m'\x1b[0m"
+                        '\x1b[97m:\x1b[0m\x1b[97m \x1b[0m\n'
+                        '\x1b[97m[\x1b[0m\x1b[37m123\x1b[0m\x1b[97m,\x1b[0m'
+                        '\x1b[97m \x1b[0m\n'
+                        '\x1b[37m234\x1b[0m\x1b[97m]\x1b[0m\x1b[97m}\x1b[0m'
+                        '\x1b[97m)\x1b[0m\n')
+            case 'w-frame-dark-color-w-wrap-256-no-bg':
                 return ("\x1b[38;5;174m'\x1b[0m\x1b[38;5;174mabc\x1b[0m"
                         "\x1b[38;5;174m'\x1b[0m\x1b[38;5;230m:\x1b[0m"
                         '\x1b[38;5;188m \x1b[0m\n'
