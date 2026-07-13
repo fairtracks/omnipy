@@ -12,8 +12,6 @@ from omnipy.shared.protocols.compute.job import (HasJobCreator,
                                                  IsFlowTemplate,
                                                  IsFuncArgJob,
                                                  IsFuncArgJobTemplate,
-                                                 IsFuncFlow,
-                                                 IsFuncFlowTemplate,
                                                  IsJob,
                                                  IsJobBase,
                                                  IsLinearFlow,
@@ -202,41 +200,6 @@ def create_dag_flow_with_two_func_tasks(
     return dag_flow_template.apply()
 
 
-def create_func_flow_with_two_func_tasks(
-    name: str,
-    func: Callable,
-    task_template_cls: type[IsTaskTemplate],
-    func_flow_template_cls: type[IsFuncFlowTemplate],
-    engine: IsJobRunnerEngine,
-    registry: IsRunStateRegistry | None,
-) -> IsFuncFlow:
-
-    """Provide create func flow with two func tasks for test reuse."""
-    task_template = task_template_cls(name=name)(func)
-
-    task_template_cls.job_creator.set_engine(engine)  # type: ignore[attr-defined]
-    if registry:
-        engine.set_registry(registry)
-
-    if task_template.callable_type is CallableType.SYNC_GENERATOR:
-
-        @func_flow_template_cls(name=name)
-        def sync_generator_func_flow_template(*args: object, **kwargs: object):
-            task_template(*args, **kwargs)
-            yield from task_template(*args, **kwargs)
-
-        return sync_generator_func_flow_template.apply()
-
-    else:
-
-        @func_flow_template_cls(name=name)
-        def plain_func_flow_template(*args: object, **kwargs: object) -> object:
-            task_template(*args, **kwargs)
-            return task_template(*args, **kwargs)
-
-        return plain_func_flow_template.apply()
-
-
 def update_job_case_with_job(
     job_case: JobCase,
     job_type: JobType.Literals,
@@ -277,16 +240,6 @@ def update_job_case_with_job(
             engine,
             registry,
         )
-    elif job_type == JobType.FUNC_FLOW:
-        job_case.job = create_func_flow_with_two_func_tasks(
-            job_case.name,
-            job_case.job_func,
-            task_template_cls,
-            cast(type[IsFuncFlowTemplate], flow_template_cls),
-            engine,
-            registry,
-        )
-
     return job_case
 
 
