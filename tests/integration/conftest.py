@@ -2,6 +2,7 @@
 
 from typing import Annotated
 
+from prefect.settings import PREFECT_FLOWS_HEARTBEAT_FREQUENCY, temporary_settings
 import pytest
 import pytest_cases as pc
 
@@ -19,5 +20,6 @@ def runtime_all_engines(runtime: Annotated[IsRuntime, pytest.fixture], engine: s
 
 @pytest.fixture(autouse=True, scope='package')
 def prefect_test_fixture():
-    with prefect_test_harness():
-        yield
+    with temporary_settings({PREFECT_FLOWS_HEARTBEAT_FREQUENCY: None}):
+        with prefect_test_harness():
+            yield

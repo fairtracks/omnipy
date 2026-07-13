@@ -2,6 +2,7 @@
 
 from typing import Callable, Type
 
+from prefect.settings import PREFECT_FLOWS_HEARTBEAT_FREQUENCY, temporary_settings
 import pytest
 import pytest_cases as pc
 
@@ -28,8 +29,9 @@ from .helpers.mocks import (MockDagFlowTemplate,
 
 @pytest.fixture(autouse=True, scope='package')
 def prefect_test_fixture():
-    with prefect_test_harness():
-        yield
+    with temporary_settings({PREFECT_FLOWS_HEARTBEAT_FREQUENCY: None}):
+        with prefect_test_harness():
+            yield
 
 
 # Mock job templates
@@ -115,9 +117,9 @@ def mock_func_flow_job_runner_cls(func_flow_job_runner_cls):
 
 
 @pc.fixture(scope='function')
-@pc.parametrize(engine=[LocalRunner(), PrefectEngine()], ids=['[local]', '[prefect]'])
-def all_engines(engine) -> IsJobRunnerEngine:
-    return engine
+@pc.parametrize(engine_cls=[LocalRunner, PrefectEngine], ids=['[local]', '[prefect]'])
+def all_engines(engine_cls: type[IsJobRunnerEngine]) -> IsJobRunnerEngine:
+    return engine_cls()
 
 
 # Engine decorators

@@ -1559,14 +1559,14 @@ def case_linear_flow_early_sync_generator_terminal_sync_function(  # noqa: C901
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
-        @LinearFlowTemplate(emit_three_values, sum_values, add_one)
+        @LinearFlowTemplate(emit_three_values, sum_values)
         def linear_flow_early_sync_generator_terminal_sync_function(number: int) -> int:
             ...
 
         return apply_job(linear_flow_early_sync_generator_terminal_sync_function, engine, registry)
 
     def run_and_assert_results(job: IsFuncArgJob) -> None:
-        assert_sync_result(job, expected_callable_type, 10, 2)
+        assert_sync_result(job, expected_callable_type, 9, 2)
 
     return ComposedFlowCase[[int], int](
         name='linear-flow-early-sync-generator-terminal-sync-function',
