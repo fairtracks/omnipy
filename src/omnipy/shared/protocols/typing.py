@@ -714,9 +714,9 @@ class IsItemSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
     """Protocol with the same interface as the abstract class `typing.Sequence`.
 
     Note that with no custom handling, as is typically done in a type
-    checker, the ``str``, ``bytes``, and ``bytearray`` types will not be
+    checker, the `string`, `bytes`, and `bytearray` types will not be
     considered Sequences by this protocol, due to differences in the
-    ``__contains__`` method.
+    `__contains__` method.
     """
     @overload
     # @abstractmethod
@@ -731,23 +731,16 @@ class IsItemSequence(Reversible[_T_co], Collection[_T_co], Protocol[_T_co]):
     # def index(self, value: Any, start: int = 0, stop: int = ..., /) -> int:
     # Omnipy: start and stop removed to support range as IsItemSequence
     def index(self, value: Any, /) -> int:
-        """Return the position of ``value`` in the sequence.
+        """
+        S.index(value, [start, [stop]]) -> integer -- return first index of value.
+        Raises ValueError if the value is not present.
 
-        Args:
-            value: Element to locate.
-
-        Returns:
-            int: Zero-based index of the first matching element.
+        Supporting start and stop arguments is optional, but recommended.
         """
         raise AssumedToBeImplementedException
     def count(self, value: Any, /) -> int:
-        """Return how many times ``value`` appears in the sequence.
-
-        Args:
-            value: Element to count.
-
-        Returns:
-            int: Number of matching elements.
+        """
+        S.count(value) -> integer -- return number of occurrences of value
         """
         raise AssumedToBeImplementedException
 
@@ -761,11 +754,8 @@ class IsMutableSequence(IsItemSequence[_T], Protocol[_T]):
 
     # @abstractmethod
     def insert(self, index: int, value: _T, /) -> None:
-        """Insert ``value`` before ``index``.
-
-        Args:
-            index: Position where the value should be inserted.
-            value: Element to insert.
+        """
+        S.insert(index, value) -- insert value before index
         """
         raise AssumedToBeImplementedException
 
@@ -798,45 +788,40 @@ class IsMutableSequence(IsItemSequence[_T], Protocol[_T]):
 
     # Mixin methods
     def append(self, value: _T, /) -> None:
-        """Append ``value`` to the end of the sequence.
-
-        Args:
-            value: Element to append.
+        """
+        S.append(value) -- append value to the end of the sequence
         """
         raise AssumedToBeImplementedException
 
     def clear(self) -> None:
-        """Remove all items from the sequence."""
+        """
+        S.clear() -> None -- remove all items from S
+        """
         raise AssumedToBeImplementedException
 
     def extend(self, values: Iterable[_T], /) -> None:
-        """Append all values from an iterable.
-
-        Args:
-            values: Elements to append in order.
+        """
+        S.extend(iterable) -- extend sequence by appending elements from the iterable
         """
         raise AssumedToBeImplementedException
 
     def reverse(self) -> None:
-        """Reverse the sequence in place."""
+        """
+        S.reverse() -- reverse *IN PLACE*
+        """
         raise AssumedToBeImplementedException
 
     def pop(self, index: int = -1, /) -> _T:
-        """Remove and return one element from the sequence.
-
-        Args:
-            index: Position of the element to remove. Defaults to the last item.
-
-        Returns:
-            _T: Removed element.
+        """
+        S.pop([index]) -> item -- remove and return item at index (default last).
+        Raise IndexError if list is empty or index is out of range.
         """
         raise AssumedToBeImplementedException
 
     def remove(self, value: _T, /) -> None:
-        """Remove the first matching element.
-
-        Args:
-            value: Element to remove.
+        """
+        S.remove(value) -- remove first occurrence of value.
+        Raise ValueError if the value is not present.
         """
         raise AssumedToBeImplementedException
 
@@ -882,7 +867,7 @@ class IsMutableSet(IsAbstractSet[_T], Protocol[_T]):
 
 # class MappingView(Sized):
 class IsMappingView(Protocol):
-    """Protocol for lightweight view objects over mapping content."""
+    """Protocol mirroring the ``typing.MappingView`` abstract interface."""
     # __slots__ = ("_mapping",)
     # def __init__(self, mapping: Sized) -> None: ...  # undocumented
     def __len__(self) -> int: raise AssumedToBeImplementedException
@@ -939,7 +924,11 @@ class IsValuesView(IsMappingView, Collection[_VT_co], Protocol[_VT_co]):
 # class Mapping(Collection[_KT], Generic[_KT, _VT_co]):
 @runtime_checkable
 class IsMapping(Collection[_KT], Protocol[_KT, _VT_co]):  # type: ignore[misc]
-    """Protocol mirroring the ``typing.Mapping`` abstract interface."""
+    """Protocol mirroring the ``typing.Mapping`` abstract interface.
+
+    IsMapping is the protocol of a generic container for associating
+    key/value pairs.
+    """
 
     # TODO: We wish the key type could also be covariant, but that doesn't work,
     # see discussion in https://github.com/python/typing/pull/273.
@@ -954,14 +943,8 @@ class IsMapping(Collection[_KT], Protocol[_KT, _VT_co]):  # type: ignore[misc]
     @overload
     def get(self, key: _KT, default: _T, /) -> _VT_co | _T: raise AssumedToBeImplementedException
     def get(self, key: _KT, default: None | _VT_co | _T = None, /) -> _VT_co | _T | None:
-        """Return the value for ``key`` or ``default`` when absent.
-
-        Args:
-            key: Mapping key to look up.
-            default: Fallback value returned when the key is missing.
-
-        Returns:
-            _VT_co | _T | None: Stored value or the supplied fallback.
+        """
+        D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.
         """
         raise AssumedToBeImplementedException
 
@@ -973,18 +956,14 @@ class IsMapping(Collection[_KT], Protocol[_KT, _VT_co]):  # type: ignore[misc]
     #     raise AssumedToBeImplementedException
 
     def keys(self) -> IsKeysView[_KT]:
-        """Return a dynamic view over the mapping's keys.
-
-        Returns:
-            IsKeysView[_KT]: View object exposing the current keys.
+        """
+        D.keys() -> a set-like object providing a view on D's keys
         """
         raise AssumedToBeImplementedException
 
     def values(self) -> IsValuesView[_VT_co]:
-        """Return a dynamic view over the mapping's values.
-
-        Returns:
-            IsValuesView[_VT_co]: View object exposing the current values.
+        """
+        D.values() -> an object providing a view on D's values
         """
         raise AssumedToBeImplementedException
 
@@ -993,7 +972,11 @@ class IsMapping(Collection[_KT], Protocol[_KT, _VT_co]):  # type: ignore[misc]
 
 # class MutableMapping(Mapping[_KT, _VT]):
 class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
-    """Protocol mirroring the ``typing.MutableMapping`` abstract interface."""
+    """Protocol mirroring the ``typing.MutableMapping`` abstract interface.
+
+    IsMutableMapping is the protocol of a generic mutable container for
+    associating key/value pairs.
+    """
 
     # @abstractmethod
     def __setitem__(self, key: _KT, value: _VT, /) -> None: raise AssumedToBeImplementedException
@@ -1001,7 +984,9 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
     def __delitem__(self, key: _KT, /) -> None: raise AssumedToBeImplementedException
 
     def clear(self) -> None:
-        """Remove all items from the mapping."""
+        """
+        D.clear() -> None.  Remove all items from D.
+        """
         raise AssumedToBeImplementedException
 
     @overload
@@ -1011,22 +996,16 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
     @overload
     def pop(self, key: _KT, default: _T, /) -> _VT | _T: raise AssumedToBeImplementedException
     def pop(self, key: _KT, default: None | _VT | _T = None, /) -> _VT | _T | None:
-        """Remove and return one value from the mapping.
-
-        Args:
-            key: Mapping key to remove.
-            default: Fallback returned when the key is missing.
-
-        Returns:
-            _VT | _T | None: Removed value or the supplied fallback.
+        """
+        D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
+        If key is not found, d is returned if given, otherwise KeyError is raised.
         """
         raise AssumedToBeImplementedException
 
     def popitem(self) -> tuple[_KT, _VT]:
-        """Remove and return one key-value pair.
-
-        Returns:
-            tuple[_KT, _VT]: Removed key-value pair.
+        """
+        D.popitem() -> (k, v), remove and return some (key, value) pair
+           as a 2-tuple; but raise KeyError if D is empty.
         """
         raise AssumedToBeImplementedException
 
@@ -1040,14 +1019,8 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
     # def setdefault(self: MutableMapping[_KT, _T | None], key: _KT, default: None = None, /) -> _T | None: ...
     # @overload
     def setdefault(self, key: _KT, default: _VT, /) -> _VT:
-        """Return the value for ``key``, inserting ``default`` when absent.
-
-        Args:
-            key: Mapping key to look up or initialize.
-            default: Value to insert when the key is missing.
-
-        Returns:
-            _VT: Existing or newly inserted value.
+        """
+        D.setdefault(k[,d]) -> D.get(k,d), also set D[k]=d if k not in D
         """
         raise AssumedToBeImplementedException
     # def setdefault(self: IsMutableMapping[_KT, _VT] | IsMutableMapping[_KT, _T | None], key: _KT, default: _VT | None = None, /) -> _VT | _T | None: raise AssumedToBeImplementedException
@@ -1089,11 +1062,11 @@ class IsMutableMapping(IsMapping[_KT, _VT], Protocol[_KT, _VT]):
         /,
         **kwargs: _VT,
     ) -> None:
-        """Update the mapping from another mapping, iterable, or keyword pairs.
-
-        Args:
-            m: Optional mapping or iterable of key-value pairs to merge in.
-            kwargs: Additional keyword pairs to merge in.
+        """
+        D.update([E, ]**F) -> None.  Update D from mapping/iterable E and F.
+        If E present and has a .keys() method, does:     for k in E: D[k] = E[k]
+        If E present and lacks .keys() method, does:     for (k, v) in E: D[k] = v
+        In either case, this is followed by: for k, v in F.items(): D[k] = v
         """
         raise AssumedToBeImplementedException
 

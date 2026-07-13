@@ -97,23 +97,23 @@ _T_contra = TypeVar('_T_contra', contravariant=True)
 
 
 class SupportsBool(Protocol):
-    """Define the ``SupportsBool`` interface.
-    """
+    """Protocol for values that implement truth testing."""
+
     def __bool__(self) -> bool:
         ...
 
 
 # Comparison protocols
 class SupportsDunderLT(Protocol[_T_contra]):
-    """Define the ``SupportsDunderLT`` interface.
-    """
+    """Protocol for values that implement ``__lt__`` comparisons."""
+
     def __lt__(self, other: _T_contra, /) -> SupportsBool:
         ...
 
 
 class SupportsDunderGT(Protocol[_T_contra]):
-    """Define the ``SupportsDunderGT`` interface.
-    """
+    """Protocol for values that implement ``__gt__`` comparisons."""
+
     def __gt__(self, other: _T_contra, /) -> SupportsBool:
         ...
 
@@ -219,8 +219,8 @@ SupportsRichComparisonT = TypeVar(
 
 
 class SupportsTrunc(Protocol):
-    """Define the ``SupportsTrunc`` interface.
-    """
+    """Protocol for values that implement ``__trunc__``."""
+
     def __trunc__(self) -> int:
         ...
 
@@ -235,8 +235,8 @@ class SupportsTrunc(Protocol):
 
 # stable
 class SupportsKeysAndGetItem(Protocol[_KT, _VT_co]):
-    """Define the ``SupportsKeysAndGetItem`` interface.
-    """
+    """Protocol for mapping-like objects exposing ``keys`` and ``__getitem__``."""
+
     def keys(self) -> Iterable[_KT]:
         ...
 
@@ -422,8 +422,7 @@ class SupportsGetItem(Protocol[_KT_contra, _VT_co]):
 
 # @runtime_checkable
 class Buffer(Protocol):
-    """Define the ``Buffer`` interface.
-    """
+    """Protocol for objects that expose the PEP 688 buffer interface."""
 
     __slots__ = ()
 

@@ -306,10 +306,7 @@ class IsInt(Protocol):
     def denominator(self) -> Literal[1]: raise AssumedToBeImplementedException
     def conjugate(self) -> int: raise AssumedToBeImplementedException
     def bit_length(self) -> int: raise AssumedToBeImplementedException
-    def bit_count(self) -> int:
-        """Return the number of set bits in the integer's absolute value."""
-
-        raise AssumedToBeImplementedException
+    def bit_count(self) -> int: raise AssumedToBeImplementedException
 
     if sys.version_info >= (3, 11):
         def to_bytes(
@@ -537,7 +534,7 @@ class _TranslateTable(Protocol):
 # @disjoint_base
 # class str(Sequence[str]):
 class IsStr(IsItemSequence[str], Protocol):
-    """Protocol mirroring the builtin ``str`` interface used by Omnipy typing."""
+    """Protocol used by Omnipy typing mirroring the builtin ``str`` interface."""
     # @overload
     # def __new__(cls, object: object = "") -> Self: ...
     # @overload
@@ -854,7 +851,7 @@ class IsStr(IsItemSequence[str], Protocol):
 # @disjoint_base
 # class bytes(Sequence[int]):
 class IsBytes(IsItemSequence[int], Protocol):
-    """Protocol mirroring the builtin ``bytes`` interface used by Omnipy typing."""
+    """Protocol used by Omnipy typing mirroring the builtin ``bytes`` interface."""
 
     # @overload
     # def __new__(cls, o: Iterable[SupportsIndex] | SupportsIndex | SupportsBytes | ReadableBuffer, #             /) -> Self: ...
@@ -942,16 +939,6 @@ class IsBytes(IsItemSequence[int], Protocol):
         end: SupportsIndex | None = None,
         /,
     ) -> bool:
-        """Return whether the byte sequence starts with the given prefix.
-
-        Args:
-            prefix: Prefix or tuple of prefixes to test.
-            start: Optional inclusive start offset.
-            end: Optional exclusive end offset.
-
-        Returns:
-            bool: ``True`` when the selected slice starts with ``prefix``.
-        """
         raise AssumedToBeImplementedException
     # def strip(self, bytes: ReadableBuffer | None = None, /) -> bytes: ...
     def strip(self, bytes: ReadableBuffer | None = None, /) -> Self: raise AssumedToBeImplementedException
@@ -1329,7 +1316,7 @@ class IsBool(IsInt, Protocol):
 # @disjoint_base
 # class tuple(Sequence[_T_co]):
 class IsTuple(IsItemSequence[_T_co], Protocol[_T_co]):  # type: ignore[misc]
-    """Protocol mirroring the builtin ``tuple`` interface used by Omnipy typing."""
+    """Protocol used by Omnipy typing mirroring the builtin ``tuple`` interface."""
     # def __new__(cls, iterable: Iterable[_T_co] = (), /) -> Self: ...
     def __len__(self) -> int: raise AssumedToBeImplementedException
     def __contains__(self, key: object, /) -> bool: raise AssumedToBeImplementedException
