@@ -34,10 +34,10 @@ class LocalRunner(JobRunnerEngine):
 
         Args:
             cls: Engine subclass whose configuration class is being requested.
-        
+
         Returns:
             Type[IsJobRunnerConfig]: Configuration class used to instantiate engine settings.
-"""
+        """
         return cast(Type[IsLocalRunnerConfig], LocalRunnerConfig)
 
     def _init_task(self, task: TaskRunSpec) -> object:

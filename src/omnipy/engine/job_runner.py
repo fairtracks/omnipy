@@ -74,10 +74,10 @@ class JobRunnerEngine(Engine, ABC):
 
         Args:
             job_type: Job category to test.
-        
+
         Returns:
             bool: ``True`` when ``job_type`` is supported by the engine.
-"""
+        """
         return job_type in self.supported_job_types
 
     def _require_support(self, job_type: JobType.Literals) -> None:
@@ -102,7 +102,7 @@ class JobRunnerEngine(Engine, ABC):
             job: Job instance being prepared for execution.
             job_callback_accept_decorator: Consumer that accepts the engine-provided
                 decorator.
-"""
+        """
         self._require_support(job_type)
         job_run_spec_cls, init_state, run_job = self._job_type_to_run_spec_and_funcs(job_type)
 

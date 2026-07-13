@@ -95,7 +95,6 @@ async def _drain_async_results(
 
 class JobRunSpec(ABC):
     """Base adapter exposing engine-facing metadata and callables for a job."""
-
     def __init__(self, job: IsFuncArgJob, run_callable: Callable) -> None:
         self._job = job
         self._run_callable = run_callable
@@ -104,7 +103,8 @@ class JobRunSpec(ABC):
     def name(self) -> str:
         """Proxies to the wrapped job's display name.
 
-        See [`IsUniquelyNamedJob.name`][omnipy.shared.protocols.compute.mixins.IsUniquelyNamedJob.name].
+        See [`IsUniquelyNamedJob.name`]
+        [omnipy.shared.protocols.compute.mixins.IsUniquelyNamedJob.name].
         """
         return self._job.name
 
@@ -112,7 +112,8 @@ class JobRunSpec(ABC):
     def unique_name(self) -> str:
         """Proxies to the wrapped job's unique registry name.
 
-        See [`IsUniquelyNamedJob.unique_name`][omnipy.shared.protocols.compute.mixins.IsUniquelyNamedJob.unique_name].
+        See [`IsUniquelyNamedJob.unique_name`]
+        [omnipy.shared.protocols.compute.mixins.IsUniquelyNamedJob.unique_name].
         """
         return self._job.unique_name
 
@@ -120,7 +121,8 @@ class JobRunSpec(ABC):
     def unique_run_slug(self) -> str:
         """Proxies to the wrapped job's run-specific slug.
 
-        See [`IsUniquelyNamedJob.unique_run_slug`][omnipy.shared.protocols.compute.mixins.IsUniquelyNamedJob.unique_run_slug].
+        See [`IsUniquelyNamedJob.unique_run_slug`]
+        [omnipy.shared.protocols.compute.mixins.IsUniquelyNamedJob.unique_run_slug].
         """
         return self._job.unique_run_slug
 
@@ -128,7 +130,8 @@ class JobRunSpec(ABC):
     def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
         """Proxies to the wrapped job's callable parameter metadata.
 
-        See [`IsFuncArgJobBase.param_signatures`][omnipy.shared.protocols.compute.job.IsFuncArgJobBase.param_signatures].
+        See [`IsFuncArgJobBase.param_signatures`]
+        [omnipy.shared.protocols.compute.job.IsFuncArgJobBase.param_signatures].
         """
         return self._job.param_signatures
 
@@ -136,7 +139,8 @@ class JobRunSpec(ABC):
     def return_type(self) -> type:
         """Proxies to the wrapped job's annotated return type.
 
-        See [`IsFuncArgJobBase.return_type`][omnipy.shared.protocols.compute.job.IsFuncArgJobBase.return_type].
+        See [`IsFuncArgJobBase.return_type`]
+        [omnipy.shared.protocols.compute.job.IsFuncArgJobBase.return_type].
         """
         return self._job.return_type
 
@@ -144,7 +148,8 @@ class JobRunSpec(ABC):
     def callable_type(self) -> CallableType.Literals:
         """Proxies to the wrapped job's callable-shape classification.
 
-        See [`IsFuncArgJobBase.callable_type`][omnipy.shared.protocols.compute.job.IsFuncArgJobBase.callable_type].
+        See [`IsFuncArgJobBase.callable_type`]
+        [omnipy.shared.protocols.compute.job.IsFuncArgJobBase.callable_type].
         """
         return self._job.callable_type
 
@@ -167,12 +172,12 @@ class JobRunSpec(ABC):
 
 class TaskRunSpec(JobRunSpec):
     """Run-spec adapter for applied tasks."""
-
     @property
     def in_flow_context(self) -> bool:
         """Proxies whether the wrapped task is running inside a flow.
 
-        See [`IsJobBase.in_flow_context`][omnipy.shared.protocols.compute.job.IsJobBase.in_flow_context].
+        See [`IsJobBase.in_flow_context`]
+        [omnipy.shared.protocols.compute.job.IsJobBase.in_flow_context].
         """
         task = cast(IsTask, self._job)
         return task.in_flow_context
@@ -188,7 +193,6 @@ class TaskRunSpec(JobRunSpec):
 
 class FlowRunSpec(JobRunSpec, ABC):
     """Base run-spec adapter for flow jobs."""
-
     @property
     def flow_context(self):
         """Proxies the wrapped flow's nested execution context.
@@ -201,7 +205,8 @@ class FlowRunSpec(JobRunSpec, ABC):
     def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments:
         """Proxies argument binding to the wrapped flow callable.
 
-        See [`IsFuncArgJobBase.get_bound_args`][omnipy.shared.protocols.compute.job.IsFuncArgJobBase.get_bound_args].
+        See [`IsFuncArgJobBase.get_bound_args`]
+        [omnipy.shared.protocols.compute.job.IsFuncArgJobBase.get_bound_args].
         """
         flow = cast(IsAnyFlow, self._job)
         return flow.get_bound_args(*args, **kwargs)
@@ -227,12 +232,12 @@ class FlowRunSpec(JobRunSpec, ABC):
 
 class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
     """Base run spec for flows defined by ordered child-job templates."""
-
     @property
     def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
         """Proxies the wrapped flow's ordered child templates.
 
-        See [`IsChildJobListArgJobBase.child_job_templates`][omnipy.shared.protocols.compute.job.IsChildJobListArgJobBase.child_job_templates].
+        See [`IsChildJobListArgJobBase.child_job_templates`]
+        [omnipy.shared.protocols.compute.job.IsChildJobListArgJobBase.child_job_templates].
         """
         flow = cast(IsChildJobListArgJob, self._job)
         return flow.child_job_templates
@@ -240,7 +245,6 @@ class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
 
 class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
     """Run spec for linear flows that pipe each child result into the next."""
-
     def _create_default_run_callable(self) -> Callable:
         def _run_all_linear_tasks(
             *args: object,
@@ -275,7 +279,6 @@ class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
 
 class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
     """Run spec for DAG flows that route named results into downstream inputs."""
-
     def _create_default_run_callable(self) -> Callable:  # noqa: C901
         def _run_all_dag_tasks(
             *args: object,
@@ -327,6 +330,5 @@ class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
 
 class FuncFlowRunSpec(FlowRunSpec):
     """Run spec for callable-backed flows that execute a single wrapped callable."""
-
     def _create_default_run_callable(self) -> Callable:
         return self._run_callable

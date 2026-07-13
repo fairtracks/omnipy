@@ -113,7 +113,7 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
 
         Rebuilds the data, engine, job, and root-log config sections and then refreshes runtime
         subscriptions when the config is attached to a runtime object.
-"""
+        """
 
         prev_back = self._back
         self._back = None
@@ -162,7 +162,7 @@ class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
 
         Args:
             ui_type: Detected user-interface type for the current runtime.
-"""
+        """
 
         if UserInterfaceType.is_jupyter_in_browser(ui_type):
             from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
@@ -212,11 +212,11 @@ class Runtime(DataPublisher):
         This method rebuilds the callback graph that keeps configuration, engines, registries,
         logging, and reactive UI objects synchronized. Call it after replacing runtime subobjects
         manually.
-        
+
         Raises:
             AssertionError: If a Jupyter UI is detected but reactive objects are unexpectedly
                 missing.
-"""
+        """
 
         self.reset_backlinks()
 

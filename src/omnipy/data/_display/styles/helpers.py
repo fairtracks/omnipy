@@ -29,7 +29,7 @@ Base16.Deprecated
 
 class Base16Colors(pyd.BaseModel):
     """Define the ``Base16Colors`` interface.
-    
+
     Attributes:
         base00: (str) Public attribute on the protocol/class.
         base01: (str) Public attribute on the protocol/class.
@@ -69,7 +69,7 @@ class Base16Colors(pyd.BaseModel):
 
 class Base16Theme(pyd.BaseModel):
     """Define the ``Base16Theme`` interface.
-    
+
     Attributes:
         name: (str) Public attribute on the protocol/class.
         author: (str) Public attribute on the protocol/class.

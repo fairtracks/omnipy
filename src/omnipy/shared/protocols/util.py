@@ -7,7 +7,6 @@ from typing_extensions import Self
 
 class IsDataPublisher(Protocol):
     """Protocol for objects that publish change notifications to subscribers."""
-
     def subscribe_attr(self, attr_name: str, callback_fun: Callable[..., None]):
         """Subscribe to updates for one named attribute.
 

@@ -39,7 +39,7 @@ class NameJobBaseMixin:
 
         Returns:
             str: Human-readable name used as the basis for display and registration.
-"""
+        """
 
         return self._name
 
@@ -53,7 +53,7 @@ class NameJobBaseMixin:
 
         Returns:
             str: Unique job identifier suitable for registry lookups and logging.
-"""
+        """
         return self._unique_full_job_slug
 
     @property
@@ -66,7 +66,7 @@ class NameJobBaseMixin:
 
         Returns:
             str: Short slug used in per-run names and identifiers.
-"""
+        """
         return self._unique_run_slug
 
     def _generate_unique_slugs(self) -> tuple[str, str] | tuple[None, None]:
@@ -94,7 +94,7 @@ class NameJobMixin:
 
         Updates the stored unique identifier so later registry entries and log messages use a
         fresh value.
-"""
+        """
 
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
         self_as_name_job_base_mixin._regenerate_unique_slugs()

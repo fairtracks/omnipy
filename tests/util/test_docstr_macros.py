@@ -22,7 +22,8 @@ from omnipy.util.docstr_macros import (expand_macros,
 
 
 def _load_expand_docstr_macros_hook_module():
-    hook_path = Path(__file__).resolve().parents[2] / '.pre-commit-hooks' / 'expand_docstr_macros.py'
+    hook_path = Path(
+        __file__).resolve().parents[2] / '.pre-commit-hooks' / 'expand_docstr_macros.py'
     spec = importlib.util.spec_from_file_location('expand_docstr_macros_hook', hook_path)
     assert spec and spec.loader
 

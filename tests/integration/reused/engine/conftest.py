@@ -3,6 +3,7 @@
 from typing import Annotated, Callable, Type
 
 import pytest
+from pytest_cases import filters
 import pytest_cases as pc
 
 from omnipy.compute.flow import DagFlowTemplate, LinearFlowTemplate
@@ -35,7 +36,6 @@ from ....engine.conftest import \
 from ....engine.conftest import all_engines
 from ....engine.helpers.classes import JobCase
 from ....engine.helpers.functions import update_job_case_with_job
-from pytest_cases import filters
 
 
 @pc.fixture(scope='function')
@@ -52,10 +52,7 @@ def all_job_classes(
     dag_flow_template_cls: Type[IsDagFlowTemplate],
 ):
     """Provide all job classes."""
-    return (job_type,
-            task_template_cls,
-            linear_flow_template_cls,
-            dag_flow_template_cls)
+    return (job_type, task_template_cls, linear_flow_template_cls, dag_flow_template_cls)
 
 
 @pc.fixture(scope='function', name='plain_engine')
@@ -82,11 +79,9 @@ def run_state_registry(
 @pc.parametrize_with_cases(
     'job_case',
     cases='....engine.cases.tasks',
-    filter=~(
-        filters.id_has_prefix('sync-function-power(')
-        | filters.id_has_prefix('sync-generator-range')
-        | filters.id_has_prefix('async-generator-range')
-    ),
+    filter=~(filters.id_has_prefix('sync-function-power(')
+             | filters.id_has_prefix('sync-generator-range')
+             | filters.id_has_prefix('async-generator-range')),
 )
 @pc.parametrize('job_classes', [all_job_classes], ids=[''])
 @pc.parametrize('engine', [all_engines], ids=[''])
@@ -103,10 +98,7 @@ def all_func_types_real_jobs_all_engines_real_reg(
     registry: IsRunStateRegistry | None,
 ):
     """Provide all func types real jobs all engines real reg."""
-    (job_type,
-     task_template_cls,
-     linear_flow_template_cls,
-     dag_flow_template_cls) = job_classes
+    (job_type, task_template_cls, linear_flow_template_cls, dag_flow_template_cls) = job_classes
 
     if job_type == JobType.LINEAR_FLOW:
         flow_template_cls = linear_flow_template_cls
@@ -134,14 +126,13 @@ all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg = \
 @pc.parametrize_with_cases(
     'job_case',
     cases='....engine.cases.tasks',
-    filter=(
-        filters.id_has_prefix('sync-function-power(')
-        | filters.id_has_prefix('sync-generator-range')
-        | filters.id_has_prefix('async-generator-range')
-    ),
+    filter=(filters.id_has_prefix('sync-function-power(')
+            | filters.id_has_prefix('sync-generator-range')
+            | filters.id_has_prefix('async-generator-range')),
 )
 @pc.parametrize(
-    'job_classes', [
+    'job_classes',
+    [
         (JobType.TASK, TaskTemplate, LinearFlowTemplate, DagFlowTemplate),
     ],
     ids=['task-only'],
@@ -159,10 +150,7 @@ def base_task_only_real_jobs_all_engines_real_reg(
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
-    (job_type,
-     task_template_cls,
-     linear_flow_template_cls,
-     dag_flow_template_cls) = job_classes
+    (job_type, task_template_cls, linear_flow_template_cls, dag_flow_template_cls) = job_classes
 
     return update_job_case_with_job(
         job_case,

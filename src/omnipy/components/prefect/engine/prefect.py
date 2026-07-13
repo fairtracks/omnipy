@@ -62,10 +62,10 @@ class PrefectEngine(JobRunnerEngine):
 
         Args:
             cls: Engine subclass whose configuration class is being requested.
-        
+
         Returns:
             Type[IsJobRunnerConfig]: Configuration class used to instantiate engine settings.
-"""
+        """
 
         return cast(Type[IsPrefectEngineConfig], PrefectEngineConfig)
 

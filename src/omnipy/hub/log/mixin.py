@@ -21,7 +21,7 @@ class LogMixin:
 
         Returns:
             Logger: Logger used by the object for Omnipy log messages.
-"""
+        """
         return self._logger
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None):
@@ -35,7 +35,7 @@ class LogMixin:
             log_msg: Message text to send to the logger.
             level: Standard library logging level.
             datetime_obj: Timestamp to attach to the record instead of wall-clock time.
-"""
+        """
         if self._logger is not None:
             create_time = datetime_obj.timestamp() if datetime_obj else time.time()
             self._logger.log(level, log_msg, extra=dict(timestamp=create_time))

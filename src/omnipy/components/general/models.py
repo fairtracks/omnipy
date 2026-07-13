@@ -10,7 +10,7 @@ from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, Typ
 from omnipy.data.model import Model
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
-from omnipy.util.helpers import is_package_editable, is_iterable, is_non_str_byte_iterable
+from omnipy.util.helpers import is_iterable, is_non_str_byte_iterable, is_package_editable
 
 if is_package_editable('omnipy'):
     import os
@@ -163,7 +163,7 @@ if TYPE_CHECKING:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input
@@ -210,7 +210,7 @@ if TYPE_CHECKING:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input
@@ -256,7 +256,7 @@ if TYPE_CHECKING:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input
@@ -306,7 +306,7 @@ if TYPE_CHECKING:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input
@@ -358,7 +358,7 @@ if TYPE_CHECKING:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input
@@ -410,7 +410,7 @@ else:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input
@@ -457,7 +457,7 @@ else:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input
@@ -505,7 +505,7 @@ else:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input
@@ -555,7 +555,7 @@ else:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input
@@ -608,7 +608,7 @@ else:
 
         This provides a lightweight inline dataflow pipeline within a single
         model.
-        
+
         Chain type parameters must be model or dataset types. Input data may
         be any content that validates directly against the output type or,
         if that fails, against the first type in the chain. When the input

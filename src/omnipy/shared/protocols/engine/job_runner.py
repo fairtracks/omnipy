@@ -30,6 +30,7 @@ if is_package_editable('omnipy'):
                 decorator.
     """)
 
+
 @runtime_checkable
 class IsJobRunnerEngine(IsEngine, Protocol):
     """"""
@@ -47,7 +48,7 @@ class IsJobRunnerEngine(IsEngine, Protocol):
 
         Returns:
             bool: ``True`` when ``job_type`` is supported by the engine.
-"""
+        """
         ...
 
     def apply_job_decorator(
@@ -67,5 +68,5 @@ class IsJobRunnerEngine(IsEngine, Protocol):
             job: Job instance being prepared for execution.
             job_callback_accept_decorator: Consumer that accepts the engine-provided
                 decorator.
-"""
+        """
         ...

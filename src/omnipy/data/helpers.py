@@ -37,8 +37,7 @@ _U = TypeVar('_U')
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_TYPEVAR_STORE_MARKER_SUMMARY'] = dedent("""\
-        Distinct single-type-variable marker used when multiple stores are needed.
-    """)
+        Distinct single-type-variable marker used when multiple stores are needed.""")
 
 
 class TypeVarStore(Generic[_T]):
@@ -56,8 +55,7 @@ class DoubleTypeVarStore(Generic[_T, _U]):
 class TypeVarStore1(TypeVarStore[_T], Generic[_T]):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # {{TYPEVAR_STORE_MARKER_SUMMARY}}
-    """Distinct single-type-variable marker used when multiple stores are needed.
-"""
+    """Distinct single-type-variable marker used when multiple stores are needed."""
 
     ...
 
@@ -65,8 +63,7 @@ class TypeVarStore1(TypeVarStore[_T], Generic[_T]):
 class TypeVarStore2(TypeVarStore[_T], Generic[_T]):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # {{TYPEVAR_STORE_MARKER_SUMMARY}}
-    """Distinct single-type-variable marker used when multiple stores are needed.
-"""
+    """Distinct single-type-variable marker used when multiple stores are needed."""
 
     ...
 
@@ -74,8 +71,7 @@ class TypeVarStore2(TypeVarStore[_T], Generic[_T]):
 class TypeVarStore3(TypeVarStore[_T], Generic[_T]):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # {{TYPEVAR_STORE_MARKER_SUMMARY}}
-    """Distinct single-type-variable marker used when multiple stores are needed.
-"""
+    """Distinct single-type-variable marker used when multiple stores are needed."""
 
     ...
 
@@ -83,8 +79,7 @@ class TypeVarStore3(TypeVarStore[_T], Generic[_T]):
 class TypeVarStore4(TypeVarStore[_T], Generic[_T]):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # {{TYPEVAR_STORE_MARKER_SUMMARY}}
-    """Distinct single-type-variable marker used when multiple stores are needed.
-"""
+    """Distinct single-type-variable marker used when multiple stores are needed."""
 
     ...
 

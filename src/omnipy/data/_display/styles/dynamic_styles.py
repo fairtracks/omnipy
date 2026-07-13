@@ -28,7 +28,7 @@ _runtime: IsRuntime | None = None
 
 class TintedBase16Style(pygments.style.Style):
     """Define the ``TintedBase16Style`` interface.
-    
+
     Attributes:
         name: (str) Public attribute on the protocol/class.
         author: (str) Public attribute on the protocol/class.
@@ -42,10 +42,10 @@ class TintedBase16Style(pygments.style.Style):
 
 def fetch_base16_theme(theme_url: str) -> Base16Theme:
     """Fetch base16 theme.
-    
+
     Args:
         theme_url: (str) Argument passed to ``fetch_base16_theme()``.
-    
+
     Returns:
         Base16Theme: Result produced by ``fetch_base16_theme()``.
     """
@@ -85,11 +85,11 @@ def create_dynamic_base16_style_class(
     base16_theme: Base16Theme,
 ) -> type[TintedBase16Style]:
     """Create dynamic base16 style class.
-    
+
     Args:
         theme_key: (str) Argument passed to ``create_dynamic_base16_style_class()``.
         base16_theme: (Base16Theme) Argument passed to ``create_dynamic_base16_style_class()``.
-    
+
     Returns:
         type[TintedBase16Style]: Result produced by ``create_dynamic_base16_style_class()``.
     """
@@ -159,10 +159,10 @@ def __getattr__(attr: str) -> type[pygments.style.Style]:
 
 def resolve_and_fetch_style(style: str | AllColorStyles.Literals) -> str:
     """Resolve and fetch style.
-    
+
     Args:
         style: (str | AllColorStyles.Literals) Argument passed to ``resolve_and_fetch_style()``.
-    
+
     Returns:
         str: Result produced by ``resolve_and_fetch_style()``.
     """
@@ -183,10 +183,10 @@ def resolve_and_fetch_style(style: str | AllColorStyles.Literals) -> str:
 
 def resolve_random_style_name(name: str | AllColorStyles.Literals) -> str:
     """Resolve random style name.
-    
+
     Args:
         name: (str | AllColorStyles.Literals) Argument passed to ``resolve_random_style_name()``.
-    
+
     Returns:
         str: Result produced by ``resolve_random_style_name()``.
     """
@@ -202,10 +202,10 @@ def resolve_random_style_name(name: str | AllColorStyles.Literals) -> str:
 
 def clean_style_name(name: str | AllColorStyles.Literals) -> str:
     """Clean style name.
-    
+
     Args:
         name: (str | AllColorStyles.Literals) Argument passed to ``clean_style_name()``.
-    
+
     Returns:
         str: Result produced by ``clean_style_name()``.
     """
@@ -219,7 +219,7 @@ def clean_style_name(name: str | AllColorStyles.Literals) -> str:
 
 def install_base16_theme(theme_key: str) -> None:
     """Install base16 theme.
-    
+
     Args:
         theme_key: (str) Argument passed to ``install_base16_theme()``.
     """

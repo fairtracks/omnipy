@@ -70,7 +70,7 @@ class IsJobConfigHolder(Protocol):
 
         Returns:
             IsJobConfig: Shared job configuration used for future jobs and runtime lookups.
-"""
+        """
         ...
 
     @property
@@ -84,7 +84,7 @@ class IsJobConfigHolder(Protocol):
         Returns:
             IsEngine | None: Engine used for decorating applied jobs, or ``None`` when no engine
                 has been configured.
-"""
+        """
         ...
 
     def set_config(self, config: IsJobConfig) -> None:
@@ -96,7 +96,7 @@ class IsJobConfigHolder(Protocol):
 
         Args:
             config: Job configuration object to store for future jobs.
-"""
+        """
         ...
 
     def set_engine(self, engine: IsEngine) -> None:
@@ -108,7 +108,7 @@ class IsJobConfigHolder(Protocol):
 
         Args:
             engine: Engine that should decorate jobs created through this holder.
-"""
+        """
         ...
 
 
@@ -125,7 +125,7 @@ class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
 
         Returns:
             int: Number of currently active nested execution contexts.
-"""
+        """
         ...
 
     @property
@@ -139,5 +139,5 @@ class IsJobCreator(IsNestedContext, IsJobConfigHolder, Protocol):
         Returns:
             datetime | None: Timestamp recorded when the outermost execution context started, or
                 ``None`` when no top-level context is active.
-"""
+        """
         ...

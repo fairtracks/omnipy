@@ -65,10 +65,10 @@ class IsRunStateRegistry(Protocol):
 
         Args:
             job: Job whose current run state should be looked up.
-        
+
         Returns:
             RunState.Literals: Current run-state literal for the job.
-"""
+        """
         ...
 
     def get_job_state_datetime(self, job: IsUniquelyNamedJob, state: RunState.Literals) -> datetime:
@@ -81,10 +81,10 @@ class IsRunStateRegistry(Protocol):
         Args:
             job: Job whose transition time should be looked up.
             state: Run-state literal to query.
-        
+
         Returns:
             datetime: Timestamp recorded for the requested transition.
-"""
+        """
         ...
 
     def all_jobs(self,
@@ -97,10 +97,10 @@ class IsRunStateRegistry(Protocol):
 
         Args:
             state: Optional run-state filter limiting the returned jobs.
-        
+
         Returns:
             tuple[IsUniquelyNamedJob, ...]: Registered jobs matching the requested filter.
-"""
+        """
         ...
 
     def set_job_state(self, job: IsUniquelyNamedJob, state: RunState.Literals) -> None:
@@ -113,5 +113,5 @@ class IsRunStateRegistry(Protocol):
         Args:
             job: Job whose state transition should be recorded.
             state: New run-state literal to register.
-"""
+        """
         ...

@@ -48,7 +48,7 @@ class IsUniquelyNamedJob(Protocol):
 
         Returns:
             str: Human-readable name used as the basis for display and registration.
-"""
+        """
         ...
 
     @property
@@ -61,7 +61,7 @@ class IsUniquelyNamedJob(Protocol):
 
         Returns:
             str: Short slug used in per-run names and identifiers.
-"""
+        """
         ...
 
     @property
@@ -74,7 +74,7 @@ class IsUniquelyNamedJob(Protocol):
 
         Returns:
             str: Unique job identifier suitable for registry lookups and logging.
-"""
+        """
         ...
 
     def __init__(self, *args, name: str | None = None):
@@ -89,7 +89,7 @@ class IsUniquelyNamedJob(Protocol):
 
         Updates the stored unique identifier so later registry entries and log messages use a
         fresh value.
-"""
+        """
         ...
 
 

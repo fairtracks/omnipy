@@ -306,8 +306,7 @@ def ensure_plain_type(in_type: _SpecialForm) -> _SpecialForm:
 
 
 @overload
-def ensure_plain_type(  # pyright: ignore [reportOverlappingOverload]
-    in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias) -> type:
+def ensure_plain_type(in_type: _LiteralGenericAlias | _UnionGenericAlias | _AnnotatedAlias) -> type:
     """Type overload for literal/union/annotated aliases."""
     ...
 
@@ -743,7 +742,8 @@ def called_from_omnipy_tests() -> bool:
         if module is not None \
                 and module.__name__.startswith('tests') \
                 and module.__file__ is not None \
-                and ("omnipy/tests" in module.__file__ or ("/omnipy/" in module.__file__ and "/tests/" in module.__file__)):
+                and ('omnipy/tests' in module.__file__
+                     or ('/omnipy/' in module.__file__ and '/tests/' in module.__file__)):
             return True
     return False
 

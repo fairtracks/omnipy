@@ -65,10 +65,10 @@ class IsEngine(Protocol):
 
         Args:
             cls: Engine subclass whose configuration class is being requested.
-        
+
         Returns:
             Type[IsJobRunnerConfig]: Configuration class used to instantiate engine settings.
-"""
+        """
         ...
 
     def set_config(self, config: IsJobRunnerConfig) -> None:
@@ -80,7 +80,7 @@ class IsEngine(Protocol):
 
         Args:
             config: Runtime configuration object for the engine.
-"""
+        """
         ...
 
     def set_registry(self, registry: IsRunStateRegistry | None) -> None:
@@ -92,7 +92,7 @@ class IsEngine(Protocol):
 
         Args:
             registry: Registry implementation, or ``None`` to disable state reporting.
-"""
+        """
         ...
 
     @property
@@ -105,7 +105,7 @@ class IsEngine(Protocol):
 
         Returns:
             IsJobRunnerConfig: Active configuration object controlling engine behavior.
-"""
+        """
         ...
 
     @property
@@ -119,5 +119,5 @@ class IsEngine(Protocol):
         Returns:
             IsRunStateRegistry | None: Registry receiving job-state updates, or ``None`` when
                 state reporting is disabled.
-"""
+        """
         ...

@@ -23,14 +23,6 @@ class IsWeakKeyRefContainer(Protocol[_AnyKeyT, _ValT]):
         ...
 
     def get(self, key: _AnyKeyT) -> _ValT | None:
-        """Get.
-        
-        Args:
-            key: (_AnyKeyT) Argument passed to ``get()``.
-        
-        Returns:
-            _ValT | None: Result produced by ``get()``.
-        """
         ...
 
     def __getitem__(self, key: _AnyKeyT) -> _ValT:

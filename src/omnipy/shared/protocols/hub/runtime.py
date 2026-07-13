@@ -79,7 +79,7 @@ class IsRootLogObjects(Protocol):
 
         Args:
             config: New root logger configuration to apply.
-"""
+        """
         ...
 
     @property
@@ -92,7 +92,7 @@ class IsRootLogObjects(Protocol):
 
         Returns:
             IsRootLogConfig: Configuration currently used to construct formatter and handlers.
-"""
+        """
         ...
 
 
@@ -114,7 +114,7 @@ class IsRuntimeConfig(IsConfigBase, Protocol):
 
         Rebuilds the data, engine, job, and root-log config sections and then refreshes runtime
         subscriptions when the config is attached to a runtime object.
-"""
+        """
         ...
 
 
@@ -140,7 +140,7 @@ class IsRuntimeObjects(IsDataPublisher, Protocol):
 
         Args:
             ui_type: Detected user-interface type for the current runtime.
-"""
+        """
         ...
 
 
@@ -161,9 +161,9 @@ class IsRuntime(Protocol):
         This method rebuilds the callback graph that keeps configuration, engines, registries,
         logging, and reactive UI objects synchronized. Call it after replacing runtime subobjects
         manually.
-        
+
         Raises:
             AssertionError: If a Jupyter UI is detected but reactive objects are unexpectedly
                 missing.
-"""
+        """
         ...

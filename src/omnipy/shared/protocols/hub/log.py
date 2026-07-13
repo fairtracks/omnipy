@@ -38,7 +38,7 @@ class CanLog(Protocol):
 
         Returns:
             Logger: Logger used by the object for Omnipy log messages.
-"""
+        """
         ...
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None):
@@ -52,5 +52,5 @@ class CanLog(Protocol):
             log_msg: Message text to send to the logger.
             level: Standard library logging level.
             datetime_obj: Timestamp to attach to the record instead of wall-clock time.
-"""
+        """
         ...

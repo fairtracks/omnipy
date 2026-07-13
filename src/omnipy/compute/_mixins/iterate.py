@@ -20,8 +20,7 @@ from omnipy.shared.protocols.data import IsDataset
 JOB_TEMPLATE_ITERATE_ARG_DOCS = (
     'iterate_over_data_files: Whether dataset inputs should be processed item-wise.\n'
     'output_dataset_param: Optional name of an explicit output-dataset parameter.\n'
-    'output_dataset_cls: Optional dataset class to use for iterated outputs.'
-)
+    'output_dataset_cls: Optional dataset class to use for iterated outputs.')
 
 # Functions
 
@@ -287,7 +286,7 @@ class IterateFuncJobBaseMixin:
 
         Returns:
             bool: ``True`` when the first dataset argument is expanded item-by-item.
-"""
+        """
 
         return self._iterate_over_data_files
 
@@ -301,7 +300,7 @@ class IterateFuncJobBaseMixin:
 
         Returns:
             str | None: Output-dataset parameter name, or ``None`` when not configured.
-"""
+        """
 
         return self._output_dataset_param
 
@@ -315,6 +314,6 @@ class IterateFuncJobBaseMixin:
 
         Returns:
             type[IsDataset] | None: Output dataset type, or ``None`` when inferred.
-"""
+        """
 
         return self._output_dataset_cls

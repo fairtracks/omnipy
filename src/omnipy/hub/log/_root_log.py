@@ -50,7 +50,7 @@ class RootLogObjects(DataPublisher):
 
         Args:
             config: New root logger configuration to apply.
-"""
+        """
         self._config = config
         self._configure_all_objects()
 
@@ -64,7 +64,7 @@ class RootLogObjects(DataPublisher):
 
         Returns:
             IsRootLogConfig: Configuration currently used to construct formatter and handlers.
-"""
+        """
         return self._config
 
     def _configure_all_objects(self):

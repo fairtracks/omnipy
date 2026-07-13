@@ -29,7 +29,7 @@ class FlowContextJobMixin:
 
         Returns:
             IsNestedContext: Context manager that tracks top-level flow execution state.
-"""
+        """
         class FlowContext(AbstractContextManager):
             @classmethod
             def __enter__(cls) -> None:  # pyright: ignore [reportIncompatibleMethodOverride]
@@ -60,5 +60,5 @@ class FlowContextJobMixin:
         Returns:
             datetime | None: Timestamp from the latest top-level flow run, or ``None`` if the
                 flow has not completed one yet.
-"""
+        """
         return self._time_of_last_run

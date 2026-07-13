@@ -343,8 +343,8 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
                                             IsFuncFlow[_CallP, _RetT],
                                             _CallP,
                                             _RetT],
-                            FlowBase,
-                            Generic[_CallP, _RetT]):
+                           FlowBase,
+                           Generic[_CallP, _RetT]):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Implement the core template behavior for flows.
     #

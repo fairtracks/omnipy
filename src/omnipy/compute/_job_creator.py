@@ -34,7 +34,7 @@ class JobCreator(AbstractContextManager):
 
         Args:
             engine: Engine that should decorate jobs created through this holder.
-"""
+        """
         self._engine = engine
 
     def set_config(self, config: IsJobConfig) -> None:
@@ -46,7 +46,7 @@ class JobCreator(AbstractContextManager):
 
         Args:
             config: Job configuration object to store for future jobs.
-"""
+        """
         self._config = config
 
     def __enter__(self):
@@ -74,7 +74,7 @@ class JobCreator(AbstractContextManager):
         Returns:
             IsEngine | None: Engine used for decorating applied jobs, or ``None`` when no engine
                 has been configured.
-"""
+        """
         return self._engine
 
     @property
@@ -87,7 +87,7 @@ class JobCreator(AbstractContextManager):
 
         Returns:
             IsJobConfig: Shared job configuration used for future jobs and runtime lookups.
-"""
+        """
         return self._config
 
     @property
@@ -100,7 +100,7 @@ class JobCreator(AbstractContextManager):
 
         Returns:
             int: Number of currently active nested execution contexts.
-"""
+        """
         return self._nested_context_level
 
     @property
@@ -114,7 +114,7 @@ class JobCreator(AbstractContextManager):
         Returns:
             datetime | None: Timestamp recorded when the outermost execution context started, or
                 ``None`` when no top-level context is active.
-"""
+        """
         return self._time_of_cur_toplevel_nested_context_run
 
 
@@ -138,5 +138,5 @@ class JobBaseMeta(ABCMeta):
 
         Returns:
             int: Number of currently active nested execution contexts.
-"""
+        """
         return self.job_creator.nested_context_level

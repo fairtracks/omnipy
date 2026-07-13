@@ -3,8 +3,7 @@ from typing import AsyncGenerator, AsyncIterator, Generator
 
 from omnipy.compute.task import TaskTemplate
 
-
-## Sync scalar tasks: unary int -> int
+# Sync scalar tasks: unary int -> int
 
 
 @TaskTemplate()
@@ -27,7 +26,7 @@ def square_number(number: int) -> int:
     return number * number
 
 
-## Sync scalar tasks: binary (int, int) -> int
+# Sync scalar tasks: binary (int, int) -> int
 
 
 @TaskTemplate()
@@ -45,7 +44,7 @@ def multiply_numbers(left_value: int, right_value: int) -> int:
     return left_value * right_value
 
 
-## Sync reducer tasks: Generator -> int
+# Sync reducer tasks: Generator -> int
 
 
 @TaskTemplate()
@@ -53,7 +52,7 @@ def sum_values(values: Generator) -> int:
     return sum(values)
 
 
-## Sync adapter tasks: structural special cases
+# Sync adapter tasks: structural special cases
 
 
 @TaskTemplate()
@@ -66,7 +65,7 @@ def compute_base(number: int) -> dict[str, int]:
     return {'base': number + 1}
 
 
-## Sync generator tasks
+# Sync generator tasks
 
 
 @TaskTemplate()
@@ -98,7 +97,7 @@ def generate_window(start: int, window_size: int) -> Generator:
         yield value
 
 
-## Async scalar tasks: unary int -> int
+# Async scalar tasks: unary int -> int
 
 
 @TaskTemplate()
@@ -107,7 +106,7 @@ async def async_double_number(number: int) -> int:
     return number * 2
 
 
-## Async scalar tasks: timing-sensitive
+# Async scalar tasks: timing-sensitive
 
 
 @TaskTemplate()
@@ -128,7 +127,7 @@ async def multiply_milliseconds_after_wait(wait_milliseconds: int, multiplier: i
     return wait_milliseconds * multiplier
 
 
-## Async reducer tasks
+# Async reducer tasks
 
 
 @TaskTemplate()
@@ -153,7 +152,7 @@ async def sum_values_async(values: Generator) -> int:
     return sum(values) * 2
 
 
-## Async generator tasks: int -> AsyncGenerator
+# Async generator tasks: int -> AsyncGenerator
 
 
 @TaskTemplate()
@@ -177,7 +176,7 @@ async def emit_stepped_series(start: int, step: int) -> AsyncGenerator:
         yield start + step * index
 
 
-## Async generator tasks: stream transforms
+# Async generator tasks: stream transforms
 
 
 @TaskTemplate()

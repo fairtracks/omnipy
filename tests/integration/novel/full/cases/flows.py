@@ -82,4 +82,3 @@ def case_sync_funcflow_specialize_record_models() -> FlowCase:
         name='specialize_record_models',
         flow_template=specialize_record_models_func_flow,  # noqa
     )
-

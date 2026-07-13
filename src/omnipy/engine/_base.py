@@ -37,10 +37,10 @@ class Engine(ABC):
 
         Args:
             cls: Engine subclass whose configuration class is being requested.
-        
+
         Returns:
             Type[IsJobRunnerConfig]: Configuration class used to instantiate engine settings.
-"""
+        """
 
     def set_config(self, config: IsJobRunnerConfig) -> None:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
@@ -51,7 +51,7 @@ class Engine(ABC):
 
         Args:
             config: Runtime configuration object for the engine.
-"""
+        """
         self._config = config
         self._update_from_config()
 
@@ -64,7 +64,7 @@ class Engine(ABC):
 
         Args:
             registry: Registry implementation, or ``None`` to disable state reporting.
-"""
+        """
         self._registry = registry
 
     @property
@@ -77,7 +77,7 @@ class Engine(ABC):
 
         Returns:
             IsJobRunnerConfig: Active configuration object controlling engine behavior.
-"""
+        """
         return self._config
 
     @property
@@ -91,5 +91,5 @@ class Engine(ABC):
         Returns:
             IsRunStateRegistry | None: Registry receiving job-state updates, or ``None`` when
                 state reporting is disabled.
-"""
+        """
         return self._registry

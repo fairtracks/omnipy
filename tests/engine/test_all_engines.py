@@ -35,6 +35,5 @@ async def test_flow_matrix_all_production_engines(job_case: ComposedFlowCase) ->
 )
 @pytest.mark.asyncio
 async def test_nested_flow_semantic_floor_all_production_engines(
-    job_case: ComposedFlowCase,
-) -> None:
+        job_case: ComposedFlowCase) -> None:
     await run_job_test(job_case)

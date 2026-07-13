@@ -122,7 +122,7 @@ class SerializerFuncJobBaseMixin:
 
         Returns:
             PersistOutputsOptions.Literals: Persistence setting before config fallback.
-"""
+        """
         return self._persist_outputs
 
     @property
@@ -135,7 +135,7 @@ class SerializerFuncJobBaseMixin:
 
         Returns:
             RestoreOutputsOptions.Literals: Restore setting before config fallback.
-"""
+        """
         return self._restore_outputs
 
     @property
@@ -149,7 +149,7 @@ class SerializerFuncJobBaseMixin:
         Returns:
             OutputStorageProtocolOptions.Literals: Storage-protocol setting before
                 config fallback.
-"""
+        """
         return self._output_storage_protocol
 
     @property
@@ -163,7 +163,7 @@ class SerializerFuncJobBaseMixin:
         Returns:
             PersistOutputsOptions.Literals: Effective persistence behavior after
                 applying config-following rules.
-"""
+        """
         if self._persist_outputs is not PersistOpts.FOLLOW_CONFIG:
             return self._persist_outputs
         else:
@@ -193,7 +193,7 @@ class SerializerFuncJobBaseMixin:
         Returns:
             RestoreOutputsOptions.Literals: Effective restore behavior after applying
                 config-following rules.
-"""
+        """
         if self._restore_outputs is RestoreOpts.FOLLOW_CONFIG:
             return self._job_config.output_storage.restore_outputs
         else:
@@ -210,7 +210,7 @@ class SerializerFuncJobBaseMixin:
         Returns:
             OutputStorageProtocolOptions.Literals: Effective storage protocol for this
                 run.
-"""
+        """
         if self._output_storage_protocol is ProtocolOpts.FOLLOW_CONFIG:
             return self._job_config.output_storage.protocol
         else:

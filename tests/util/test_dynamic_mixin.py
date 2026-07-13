@@ -536,7 +536,6 @@ def test_missing_pos_args_init_param_state_mixin():
 
 def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
         mock_predefined_init_kwargs_cls):
-    """Test predefined initialization keyword arguments progressive multiple state mixins same default."""
     MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
@@ -585,7 +584,6 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
 
 def test_predefined_init_kwargs_progressive_multiple_state_mixins_different_withmixin_classes(
         mock_predefined_init_kwargs_cls):
-    """Test predefined initialization keyword arguments progressive multiple state mixins different withmixin classes."""
     MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)

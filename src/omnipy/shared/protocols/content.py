@@ -366,10 +366,10 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def difference(self, *s: Iterable[object]) -> Self:  # type: ignore [override]
         """Difference.
-        
+
         Args:
             s: (Iterable[object]) Argument passed to ``difference()``.
-        
+
         Returns:
             Self: Result produced by ``difference()``.
         """
@@ -378,7 +378,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def difference_update(self, *s: Iterable[object]) -> None:
         """Difference update.
-        
+
         Args:
             s: (Iterable[object]) Argument passed to ``difference_update()``.
         """
@@ -387,10 +387,10 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def intersection(self, *s: Iterable[object]) -> Self:  # type: ignore [override]
         """Intersection.
-        
+
         Args:
             s: (Iterable[object]) Argument passed to ``intersection()``.
-        
+
         Returns:
             Self: Result produced by ``intersection()``.
         """
@@ -399,7 +399,7 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def intersection_update(self, *s: Iterable[object]) -> None:
         """Intersection update.
-        
+
         Args:
             s: (Iterable[object]) Argument passed to ``intersection_update()``.
         """
@@ -420,10 +420,10 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
     @override
     def symmetric_difference(self, value: Iterable[object], /) -> Self | set[_ValT | _OtherT]:
         """Symmetric difference.
-        
+
         Args:
             value: (Iterable[object]) Argument passed to ``symmetric_difference()``.
-        
+
         Returns:
             Self | set[_ValT | _OtherT]: Result produced by ``symmetric_difference()``.
         """
@@ -448,10 +448,10 @@ class IsSetContent(IsSet[_ValT], Protocol[_ValT]):
         /,
     ) -> Self | set[_ValT | _OtherT]:
         """Union.
-        
+
         Args:
             value: (Iterable[object]) Argument passed to ``union()``.
-        
+
         Returns:
             Self | set[_ValT | _OtherT]: Result produced by ``union()``.
         """
@@ -742,11 +742,11 @@ class IsDictContent(IsDict[_KeyT, _ValT], Protocol[_KeyT, _ValT]):
         /,
     ) -> Self:
         """Fromkeys.
-        
+
         Args:
             iterable: (Iterable[_KeyT]) Argument passed to ``fromkeys()``.
             value: (_ValT | None) Argument passed to ``fromkeys()``.
-        
+
         Returns:
             Self: Result produced by ``fromkeys()``.
         """
@@ -808,7 +808,6 @@ class IsDictOfDictsContent(IsDictContent[_KeyT,
 
 class IsConcatenableItemSequenceLikeContent(IsItemSequenceLike[_ValT], Protocol[_ValT]):
     """Protocol for sequence-like content that supports concatenation operations."""
-
     def __add__(
         self,
         values: IsItemSequenceLike[_ValT] | Generator[_ValT],
@@ -836,7 +835,6 @@ class IsConcatenableItemSequenceLikeColumnContent(
         Protocol[_ValT],
 ):
     """Protocol for concatenable column content with padding helpers."""
-
     @classmethod
     def default_value(cls) -> _ValT:
         """Return the value used to pad missing cells in a column.
@@ -867,7 +865,6 @@ class IsDictOfConcatenableItemSequenceLikeColumnContent(
         Protocol[_ConcatColumnModelT, _ValT],
 ):
     """Protocol for mappings from column names to concatenable column content."""
-
     @override
     def __getitem__(self, key: str, /) -> _ConcatColumnModelT:
         raise AssumedToBeImplementedException

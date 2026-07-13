@@ -149,7 +149,7 @@ class SerializerRegistry:
         return tuple(cls for cls in self._serializer_classes if issubclass(cls, TarFileSerializer))
 
     def auto_detect(self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
-        """Try all registered serializers and return the first compatible dataset/serializer pair."""
+        """Return the first compatible dataset/serializer pair from the registry."""
 
         return self._autodetect_serializer(dataset, self.serializers)
 

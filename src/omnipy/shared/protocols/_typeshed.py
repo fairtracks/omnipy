@@ -238,11 +238,6 @@ class SupportsKeysAndGetItem(Protocol[_KT, _VT_co]):
     """Define the ``SupportsKeysAndGetItem`` interface.
     """
     def keys(self) -> Iterable[_KT]:
-        """Keys.
-        
-        Returns:
-            Iterable[_KT]: Result produced by ``keys()``.
-        """
         ...
 
     def __getitem__(self, key: _KT, /) -> _VT_co:

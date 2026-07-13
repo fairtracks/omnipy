@@ -11,8 +11,7 @@ from omnipy.util.param_key_mapper import ParamKeyMapper
 
 JOB_TEMPLATE_PARAMS_ARG_DOCS = (
     'fixed_params: Keyword arguments fixed onto every job invocation.\n'
-    'param_key_map: Mapping from external keyword names to callable parameter names.'
-)
+    'param_key_map: Mapping from external keyword names to callable parameter names.')
 
 
 class ParamsFuncJobBaseMixin:
@@ -43,7 +42,7 @@ class ParamsFuncJobBaseMixin:
 
         Returns:
             MappingProxyType[str, object]: Read-only mapping of fixed keyword values.
-"""
+        """
 
         return MappingProxyType(self._fixed_params)
 
@@ -58,7 +57,7 @@ class ParamsFuncJobBaseMixin:
         Returns:
             MappingProxyType[str, str]: Mapping from external keyword names to callable
                 parameter names.
-"""
+        """
 
         return MappingProxyType(self._param_key_mapper.key_map)
 

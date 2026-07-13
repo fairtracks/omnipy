@@ -40,7 +40,7 @@ class DataClassCreator:
 
         Returns:
             IsDataConfig: Shared configuration object used by related models and datasets.
-"""
+        """
 
         return self._config
 
@@ -53,7 +53,7 @@ class DataClassCreator:
 
         Args:
             config: Data configuration object to store for related models and datasets.
-"""
+        """
 
         self._config = config
 
@@ -164,7 +164,7 @@ class DataClassBase(Generic[ContentT], metaclass=DataClassBaseMeta):
 
         Returns:
             IsDataConfig: Shared configuration object used by related models and datasets.
-"""
+        """
 
         return self.__class__.data_class_creator.config
 

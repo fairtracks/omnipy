@@ -176,7 +176,10 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
 
 
         Example:
-            >>> DimsModeConfig.check_and_set_auto_width(80, {'dims_mode': DisplayDimensionsUpdateMode.AUTO})
+            >>> DimsModeConfig.check_and_set_auto_width(
+            ...     80,
+            ...     {'dims_mode': DisplayDimensionsUpdateMode.AUTO}
+            ... )
             80
         """
         return cls._get_available_display_dim_if_auto_dims_mode(value, values, index=0)
@@ -199,7 +202,10 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
 
 
         Example:
-            >>> DimsModeConfig.check_and_set_auto_height(24, {'dims_mode': DisplayDimensionsUpdateMode.AUTO})
+            >>> DimsModeConfig.check_and_set_auto_height(
+            ...     24,
+            ...     {'dims_mode': DisplayDimensionsUpdateMode.AUTO},
+            ... )
             24
         """
         return cls._get_available_display_dim_if_auto_dims_mode(value, values, index=1)

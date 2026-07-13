@@ -6,8 +6,7 @@ from omnipy.compute._mixins.name import NameJobBaseMixin
 from omnipy.shared.protocols.compute.job import IsJobBase
 
 JOB_TEMPLATE_RESULT_KEY_ARG_DOC = (
-    'result_key: Optional key used to wrap the returned result in a dictionary.'
-)
+    'result_key: Optional key used to wrap the returned result in a dictionary.')
 
 
 class ResultKeyFuncJobBaseMixin:
@@ -30,7 +29,7 @@ class ResultKeyFuncJobBaseMixin:
 
         Returns:
             str | None: Result wrapper key, or ``None`` when results are returned raw.
-"""
+        """
 
         return self._result_key
 

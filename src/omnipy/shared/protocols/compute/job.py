@@ -18,14 +18,13 @@ from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.shared.typedefs import GeneralDecorator
-from omnipy.util.helpers import is_package_editable
 from omnipy.util.callable_types import CallableType
+from omnipy.util.helpers import is_package_editable
 
 _CallP = ParamSpec('_CallP')
 _RetT = TypeVar('_RetT')
 _RetCovT = TypeVar('_RetCovT', covariant=True)
 _RetContraT = TypeVar('_RetContraT', contravariant=True)
-
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISJOBBASE_CONFIG_SUMMARY'] = (
@@ -218,9 +217,9 @@ if is_package_editable('omnipy'):
             _JobT: Applied job instance ready to be called.
     """)
 
+
 class HasJobCreator(Protocol):
     """Protocol for objects exposing a shared :class:`IsJobCreator` instance."""
-
     @property
     def job_creator(self) -> IsJobCreator:
         """Return the shared creator object backing the job family.
@@ -251,7 +250,7 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[_JobTemplateT, _JobT, _Call
 
         Returns:
             IsJobConfig: Active job configuration used for runtime behavior.
-"""
+        """
         ...
 
     @property
@@ -264,7 +263,7 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[_JobTemplateT, _JobT, _Call
 
         Returns:
             IsEngine | None: Engine used for decoration and execution, or ``None``.
-"""
+        """
         ...
 
     @property
@@ -277,7 +276,7 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[_JobTemplateT, _JobT, _Call
 
         Returns:
             bool: ``True`` when a surrounding flow context is active.
-"""
+        """
         ...
 
     def __eq__(self, other: object) -> bool:
@@ -333,7 +332,7 @@ class IsFuncArgJobBase(Protocol):
 
         Returns:
             type: Return annotation for the callable.
-"""
+        """
         ...
 
     @property
@@ -346,7 +345,7 @@ class IsFuncArgJobBase(Protocol):
 
         Returns:
             bool: ``True`` when the first dataset argument is expanded item-by-item.
-"""
+        """
         ...
 
     @property
@@ -359,7 +358,7 @@ class IsFuncArgJobBase(Protocol):
 
         Returns:
             str | None: Output-dataset parameter name, or ``None`` when not configured.
-"""
+        """
         ...
 
     @property
@@ -372,7 +371,7 @@ class IsFuncArgJobBase(Protocol):
 
         Returns:
             type[IsDataset] | None: Output dataset type, or ``None`` when inferred.
-"""
+        """
         ...
 
     @property
@@ -385,7 +384,7 @@ class IsFuncArgJobBase(Protocol):
 
         Returns:
             bool: ``True`` when coroutine jobs are automatically awaited or scheduled.
-"""
+        """
         ...
 
     @property
@@ -398,7 +397,7 @@ class IsFuncArgJobBase(Protocol):
 
         Returns:
             PersistOutputsOptions.Literals: Persistence setting before config fallback.
-"""
+        """
         ...
 
     @property
@@ -411,7 +410,7 @@ class IsFuncArgJobBase(Protocol):
 
         Returns:
             RestoreOutputsOptions.Literals: Restore setting before config fallback.
-"""
+        """
         ...
 
     @property
@@ -425,7 +424,7 @@ class IsFuncArgJobBase(Protocol):
         Returns:
             OutputStorageProtocolOptions.Literals: Storage-protocol setting before
                 config fallback.
-"""
+        """
         ...
 
     @property
@@ -439,7 +438,7 @@ class IsFuncArgJobBase(Protocol):
         Returns:
             PersistOutputsOptions.Literals: Effective persistence behavior after
                 applying config-following rules.
-"""
+        """
         ...
 
     @property
@@ -453,7 +452,7 @@ class IsFuncArgJobBase(Protocol):
         Returns:
             RestoreOutputsOptions.Literals: Effective restore behavior after applying
                 config-following rules.
-"""
+        """
         ...
 
     @property
@@ -467,7 +466,7 @@ class IsFuncArgJobBase(Protocol):
         Returns:
             OutputStorageProtocolOptions.Literals: Effective storage protocol for this
                 run.
-"""
+        """
         ...
 
     @property
@@ -480,7 +479,7 @@ class IsFuncArgJobBase(Protocol):
 
         Returns:
             str | None: Result wrapper key, or ``None`` when results are returned raw.
-"""
+        """
         ...
 
     @property
@@ -493,7 +492,7 @@ class IsFuncArgJobBase(Protocol):
 
         Returns:
             MappingProxyType[str, object]: Read-only mapping of fixed keyword values.
-"""
+        """
         ...
 
     @property
@@ -507,7 +506,7 @@ class IsFuncArgJobBase(Protocol):
         Returns:
             MappingProxyType[str, str]: Mapping from external keyword names to callable
                 parameter names.
-"""
+        """
         ...
 
     @property
@@ -534,10 +533,10 @@ class IsFuncArgJobBase(Protocol):
         Args:
             *args: Positional call arguments.
             **kwargs: Keyword call arguments.
-        
+
         Returns:
             inspect.BoundArguments: Bound arguments with defaults applied.
-"""
+        """
         ...
 
 
@@ -560,7 +559,6 @@ class IsJobBaseCallable(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetCovT],
     Templates and applied jobs both satisfy this contract, but they may route
     calls differently depending on whether they are inside a flow context.
     """
-
     def __call__(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT:
         ...
 
@@ -583,7 +581,7 @@ class IsJob(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
 
         Returns:
             datetime | None: Timestamp for the current outermost flow run, or ``None``.
-"""
+        """
         ...
 
     @classmethod
@@ -597,10 +595,10 @@ class IsJob(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
         Args:
             *args: Positional constructor arguments.
             **kwargs: Keyword constructor arguments.
-        
+
         Returns:
             _JobT: New applied job instance.
-"""
+        """
         ...
 
     def revise(self) -> _JobTemplateT:
@@ -612,7 +610,7 @@ class IsJob(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
 
         Returns:
             _JobTemplateT: Template carrying the current job configuration.
-"""
+        """
         ...
 
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
@@ -638,10 +636,10 @@ class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
         Args:
             *args: Positional constructor arguments.
             **kwargs: Keyword constructor arguments.
-        
+
         Returns:
             _JobTemplateT: New job template instance.
-"""
+        """
         ...
 
     def run(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT:
@@ -654,10 +652,10 @@ class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
         Args:
             *args: Positional arguments passed to the applied job.
             **kwargs: Keyword arguments passed to the applied job.
-        
+
         Returns:
             _RetCovT: Result returned by the applied job.
-"""
+        """
         ...
 
     def apply(self) -> _JobT:
@@ -669,7 +667,7 @@ class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
 
         Returns:
             _JobT: Applied job instance ready to be called.
-"""
+        """
         ...
 
 
@@ -721,7 +719,7 @@ class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT]
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
-        
+
         Returns:
             _JobTemplateT: Refined template instance.
 
@@ -771,10 +769,10 @@ class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
-        
+
         Returns:
             _JobTemplateT: New job template instance wrapping ``job_func``.
-"""
+        """
         ...
 
 
@@ -841,11 +839,12 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
-        
+
         Returns:
             _JobTemplateT: New job template instance wrapping ``job_func``.
-"""
+        """
         ...
+
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISFLOW_FLOW_CONTEXT_SUMMARY'] = (
@@ -910,7 +909,7 @@ class IsFlow(Protocol):
 
         Returns:
             IsNestedContext: Context manager that tracks top-level flow execution state.
-"""
+        """
         ...
 
     @property
@@ -924,7 +923,7 @@ class IsFlow(Protocol):
         Returns:
             datetime | None: Timestamp from the latest top-level flow run, or ``None`` if the
                 flow has not completed one yet.
-"""
+        """
         ...
 
 
@@ -976,7 +975,7 @@ class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _C
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
-        
+
         Returns:
             _JobTemplateT: Refined template instance.
 

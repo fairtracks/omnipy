@@ -29,7 +29,7 @@ class SignatureFuncJobBaseMixin:
 
         Returns:
             type: Return annotation for the callable.
-"""
+        """
 
         return self._func_signature.return_annotation
 
@@ -66,7 +66,7 @@ class SignatureFuncJobBaseMixin:
 
         Returns:
             inspect.BoundArguments: Bound arguments with defaults applied.
-"""
+        """
 
         bound_args = self._func_signature.bind(*args, **kwargs)
         bound_args.apply_defaults()

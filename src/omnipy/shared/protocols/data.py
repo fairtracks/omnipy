@@ -737,7 +737,7 @@ class IsDataClassCreator(Protocol[HasContentT, ContentT]):
 
         Returns:
             IsDataConfig: Shared configuration object used by related models and datasets.
-"""
+        """
         ...
 
     def set_config(self, config: IsDataConfig) -> None:
@@ -749,7 +749,7 @@ class IsDataClassCreator(Protocol[HasContentT, ContentT]):
 
         Args:
             config: Data configuration object to store for related models and datasets.
-"""
+        """
         ...
 
     @property
