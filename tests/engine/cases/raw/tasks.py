@@ -95,16 +95,6 @@ def sum_values(values: Generator) -> int:
 
 
 @TaskTemplate()
-def add_five_to_seed(seed: int) -> int:
-    return seed + 5
-
-
-@TaskTemplate()
-def double_seed(seed: int) -> int:
-    return seed * 2
-
-
-@TaskTemplate()
 def compute_mapped_input(seed: int) -> int:
     return seed + 5
 
@@ -122,11 +112,6 @@ def compute_offset(number: int) -> int:
 @TaskTemplate()
 def pass_async_values_through(values: AsyncGenerator) -> AsyncIterator[int]:
     return values
-
-
-@TaskTemplate()
-def compute_base_dict(number: int) -> dict[str, int]:
-    return {'base': number + 1}
 
 
 @TaskTemplate()
