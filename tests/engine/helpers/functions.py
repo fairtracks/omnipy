@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from time import sleep
-from typing import AsyncIterator, Callable, cast, Type
+from typing import AsyncGenerator, AsyncIterator, Callable, cast, Type
 
 from omnipy.shared.enums.job import JobType, RunState
 from omnipy.shared.protocols.compute.job import (HasJobCreator,
@@ -256,3 +256,83 @@ async def run_job_test(job_case: JobCase | ComposedFlowCase):
     """Provide run job test for test reuse."""
     assert job_case.job is not None
     await resolve(job_case.run_and_assert_results_func(job_case.job))
+
+
+def assert_case_callable_type_and_finished_state(
+    job: IsFuncArgJob,
+    expected_callable_type: CallableType.Literals,
+) -> None:
+    assert job.callable_type is expected_callable_type
+    assert_job_state(job, [RunState.FINISHED])
+
+
+def assert_sync_result(
+    job: IsFuncArgJob,
+    expected_callable_type: CallableType.Literals,
+    expected_result: object,
+    *args: object,
+    **kwargs: object,
+) -> None:
+    assert job.callable_type is expected_callable_type
+    assert job(*args, **kwargs) == expected_result
+    assert_job_state(job, [RunState.FINISHED])
+
+
+async def assert_async_result(
+    job: IsFuncArgJob,
+    expected_callable_type: CallableType.Literals,
+    expected_result: object,
+    *args: object,
+    **kwargs: object,
+) -> None:
+    assert job.callable_type is expected_callable_type
+    assert await resolve(job(*args, **kwargs)) == expected_result
+    assert_job_state(job, [RunState.FINISHED])
+
+
+def assert_sync_generator_result(
+    job: IsFuncArgJob,
+    expected_callable_type: CallableType.Literals,
+    expected_values: tuple[object, ...],
+    *args: object,
+    **kwargs: object,
+) -> None:
+    assert job.callable_type is expected_callable_type
+    assert tuple(job(*args, **kwargs)) == expected_values
+    assert_job_state(job, [RunState.FINISHED])
+
+
+async def collect_async_values(async_iterable: AsyncIterator | AsyncGenerator) -> list[object]:
+    values = []
+    async for value in async_iterable:
+        values.append(value)
+    return values
+
+
+async def assert_async_generator_result(
+    job: IsFuncArgJob,
+    expected_callable_type: CallableType.Literals,
+    expected_values: list[object],
+    *args: object,
+    **kwargs: object,
+) -> None:
+    assert job.callable_type is expected_callable_type
+    assert await collect_async_values(job(*args, **kwargs)) == expected_values
+    assert_job_state(job, [RunState.FINISHED])
+
+
+async def assert_nested_async_generator_result(
+    job: IsFuncArgJob,
+    expected_callable_type: CallableType.Literals,
+    expected_values: list[tuple[object, ...]],
+    *args: object,
+    **kwargs: object,
+) -> None:
+    assert job.callable_type is expected_callable_type
+
+    wrapped_values = []
+    async for values in job(*args, **kwargs):
+        wrapped_values.append(tuple(await collect_async_values(values)))
+
+    assert wrapped_values == expected_values
+    assert_job_state(job, [RunState.FINISHED])
