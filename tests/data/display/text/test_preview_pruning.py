@@ -694,8 +694,7 @@ def test_verbose_log_marks_ellipsis_skip_as_expected_noop_with_context(
 
 
 def test_verbose_granularity_log_uses_readable_json_pointer_like_path(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+        capsys: pytest.CaptureFixture[str]) -> None:
     import omnipy.shared.constants as const
 
     panel = _FakeDraftPanel(
@@ -731,13 +730,14 @@ def test_verbose_granularity_log_uses_readable_json_pointer_like_path(
     assert '[PRUNE] Granularity path selected: /data_set/0' in captured.out
 
 
-def test_granularity_pruning_reconstructs_mapping_like_parent_and_logs_pruned(
-    capsys: pytest.CaptureFixture[str],
-) -> None:
+def test_granularity_pruning_reconstructs_mapping_like_parent_and_logs_pruned(  # noqa: C901
+        capsys: pytest.CaptureFixture[str]) -> None:
     import omnipy.shared.constants as const
 
     panel = DraftPanel(
-        JsonModel({'dataset': list(range(200)), 'meta': 'x'}),
+        JsonModel({
+            'dataset': list(range(200)), 'meta': 'x'
+        }),
         frame=Frame(Dimensions(width=40, height=9)),
     )
 

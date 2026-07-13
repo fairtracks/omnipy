@@ -232,7 +232,7 @@ def _format_panel_log_context(draft_panel: Any | None) -> str:
     dims = getattr(frame, 'dims', None)
     width = getattr(dims, 'width', None)
     height = getattr(dims, 'height', None)
-    return f" | title={title!r} frame=(width={width}, height={height})"
+    return f' | title={title!r} frame=(width={width}, height={height})'
 
 
 def _effective_coarseness_threshold(
@@ -926,7 +926,7 @@ def _build_mapping_prefix_from_frozen_keys(
     return type(content)(prefix_mapping)  # type: ignore[call-arg]
 
 
-def _build_mapping_prefix_with_replaced_child(
+def _build_mapping_prefix_with_replaced_child(  # noqa: C901
     *,
     content: object,
     replacement_index: int,
@@ -947,7 +947,8 @@ def _build_mapping_prefix_with_replaced_child(
     prefix_keys = frozen_keys.keys[:replacement_index + 1]
     for idx, key in enumerate(prefix_keys):
         try:
-            value = replacement_value if idx == replacement_index else content[key]  # type: ignore[index]
+            value = replacement_value if idx == replacement_index else content[
+                key]  # type: ignore[index]
         except Exception:
             return None
         prefix_mapping[key] = value
