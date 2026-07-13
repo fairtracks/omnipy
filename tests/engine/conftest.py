@@ -205,20 +205,6 @@ def dag_flow_mock_classes(
     return job_type, task_template_cls, flow_template_cls, job_runner_cls
 
 
-@pc.fixture(scope='function')
-@pc.parametrize('job_type', [JobType.FUNC_FLOW], ids=['func_flow'])
-@pc.parametrize('task_template_cls', [pc.fixture_ref(mock_task_template)], ids=[''])
-@pc.parametrize('flow_template_cls', [pc.fixture_ref(mock_func_flow_template)], ids=[''])
-@pc.parametrize('job_runner_cls', [pc.fixture_ref(mock_func_flow_job_runner_cls)], ids=[''])
-def func_flow_mock_classes(
-    job_type: JobType.Literals,
-    task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Type[IsFlowTemplate] | None,
-    job_runner_cls: Type[IsJobRunnerEngine],
-):
-    return job_type, task_template_cls, flow_template_cls, job_runner_cls
-
-
 # test_job_runner
 
 
@@ -229,9 +215,8 @@ def func_flow_mock_classes(
         task_mock_classes,
         linear_flow_mock_classes,
         dag_flow_mock_classes,
-        func_flow_mock_classes,
     ],
-    ids=['', '', '', ''])
+    ids=['', '', ''])
 @pc.parametrize('engine_decorator', [no_verbose_config_engine_decorator])
 @pc.parametrize('registry', [no_registry], ids=[''])
 def power_mock_jobs_mock_runner_cls_no_verbose_no_reg(
@@ -264,9 +249,8 @@ def power_mock_jobs_mock_runner_cls_no_verbose_no_reg(
         task_mock_classes,
         linear_flow_mock_classes,
         dag_flow_mock_classes,
-        func_flow_mock_classes,
     ],
-    ids=['', '', '', ''])
+    ids=['', '', ''])
 @pc.parametrize('engine_decorator', [assert_runstate_engine_decorator])
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_func_types_mock_jobs_mock_runner_cls_assert_runstate_mock_reg(
@@ -302,9 +286,8 @@ def all_func_types_mock_jobs_mock_runner_cls_assert_runstate_mock_reg(
         task_mock_classes,
         linear_flow_mock_classes,
         dag_flow_mock_classes,
-        func_flow_mock_classes,
     ],
-    ids=['', '', '', ''])
+    ids=['', '', ''])
 @pc.parametrize('engine', [all_engines], ids=[''])
 @pc.parametrize('engine_decorator', [assert_runstate_engine_decorator])
 @pc.parametrize('registry', [mock_registry], ids=[''])
