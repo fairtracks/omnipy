@@ -59,7 +59,11 @@ def find_macros_in_docstring(docstring: str, macros: dict[str, str]) -> set[str]
     return macros_found
 
 
-def expand_macros(text: str, macros: dict[str, str]) -> str:
+def expand_macros(
+    text: str,
+    macros: dict[str, str],
+    default_indent: str = '',
+) -> str:
     """Expand all macros in text."""
     result = text
 
@@ -69,7 +73,7 @@ def expand_macros(text: str, macros: dict[str, str]) -> str:
             macro_index = result.find(f'{{{{{macro_name}}}}}', macro_index)
             if macro_index == -1:
                 break
-            indent = ''
+            indent = default_indent if macro_index == 0 else ''
             if macro_index > 0:
                 reversed_result_in_front_of_hit = result[macro_index - 1::-1]
                 reverse_indent_match = re.match(r'^([ \t]*)', reversed_result_in_front_of_hit)
@@ -80,7 +84,7 @@ def expand_macros(text: str, macros: dict[str, str]) -> str:
                 if i == 0:
                     replace_value += line
                 else:
-                    if macro_index == 0:
+                    if line.strip() == '':
                         replace_value += line
                     else:
                         replace_value += indent + line
@@ -159,7 +163,7 @@ def _create_docblock_with_expansion(
         return matched_docblock, False  # No macros, keep as is
 
     # Expand macros
-    expanded_docstring = expand_macros(original_docstring, macros)
+    expanded_docstring = expand_macros(original_docstring, macros, default_indent=indent)
 
     # Check if expansion changed
     if expanded_docstring == original_docstring:
@@ -175,8 +179,11 @@ def _create_docblock_with_expansion(
             comment_block_lines.append(f'{indent}#')  # No whitespace after hash char
     comment_block = '\n'.join(comment_block_lines) + '\n'
 
+    # Keep closing quotes aligned for multiline expansions that end with a newline.
+    closing_indent = indent if expanded_docstring.endswith('\n') else ''
+
     # Build complete docblock: comment + expanded docstring
-    new_docblock = f'{comment_block}{indent}{quote}{expanded_docstring}{quote}'
+    new_docblock = f'{comment_block}{indent}{quote}{expanded_docstring}{closing_indent}{quote}'
 
     if verbose:
         print('  Expanding docstring with macros')
@@ -204,8 +211,11 @@ def process_content(  # noqa: C901
     if verbose:
         print(f'Processing content with {len(macros)} macros available')
 
-    # Pattern to match docstrings with optional preceding ORIGINAL_DOCSTRING comment block
-    # Build the pattern with the marker prefix escaped properly
+    # Pattern to match docstrings with an optional preceding
+    # ORIGINAL_DOCSTRING comment block. The opener check intentionally
+    # rejects quote-only / close-literal lines so closing triple-quote
+    # lines (e.g. `"""` or `""")`) are not mistaken for docstring starts.
+    # Build the pattern with the marker prefix escaped properly.
     escaped_prefix = re.escape(ORIGINAL_DOCSTRING_PREFIX)
     pattern = rf'''
         ^([\ \t]*)                             # Capture indentation at start of line
@@ -215,6 +225,7 @@ def process_content(  # noqa: C901
             \1                                 # Same indentation before actual docstring
         )?
         ("""|\'\'\')                           # Opening quotes
+        (?![\ \t]*(?:\)|\]|,))                 # Not immediately followed by closing-call chars
         (.*?)                                  # Docstring content (non-greedy)
         \3                                     # Closing quotes (same as opening quotes)
     '''
