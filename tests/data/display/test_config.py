@@ -21,7 +21,6 @@ from omnipy.shared.enums.ui import UserInterfaceType
 
 
 def test_output_config() -> None:
-    """Test output configuration."""
     config = OutputConfig(
         tab=2,
         indent=4,
@@ -150,7 +149,6 @@ def test_output_config() -> None:
 
 
 def test_output_config_hashable() -> None:
-    """Test output configuration hashable."""
     config_1 = OutputConfig()
 
     config_2 = OutputConfig()
@@ -250,7 +248,6 @@ def test_output_config_hashable() -> None:
 
 # noinspection PyDataclass
 def test_fail_output_config_no_assignments() -> None:
-    """Test fail output configuration no assignments."""
     config = OutputConfig()
 
     with pytest.raises(AttributeError):
@@ -333,7 +330,6 @@ def test_fail_output_config_no_assignments() -> None:
 
 
 def test_fail_output_config_if_invalid_params() -> None:
-    """Test fail output configuration if invalid parameters."""
     with pytest.raises(ValueError):
         OutputConfig(tab=-1)
 
@@ -424,7 +420,6 @@ def test_fail_output_config_if_invalid_params() -> None:
 
 
 def test_output_config_default_values() -> None:
-    """Test output configuration default values."""
     config = OutputConfig()
     assert config.tab == 4
     assert config.indent == 2
@@ -461,35 +456,29 @@ def test_output_config_default_values() -> None:
 
 
 def test_fail_output_config_if_extra_params() -> None:
-    """Test fail output configuration if extra parameters."""
     with pytest.raises(TypeError):
         OutputConfig(indent=4, debug=True, extra=2)  # type: ignore
 
 
 def test_fail_output_config_no_positional_parameters() -> None:
-    """Test fail output configuration no positional parameters."""
     with pytest.raises(TypeError):
         OutputConfig(2, True)  # type: ignore
 
 
 def test_output_config_fail_invalid_syntax() -> None:
-    """Test output configuration fail invalid syntax."""
     with pytest.raises(ValueError):
         OutputConfig(syntax='invalid_syntax')
 
 
 def test_output_config_fail_invalid_style() -> None:
-    """Test output configuration fail invalid style."""
     with pytest.raises(ValueError):
         OutputConfig(style='invalid_style')
 
 
 def test_output_config_cleaned_style() -> None:
-    """Test output configuration cleaned style."""
     OutputConfig(style='ansi_dark')
 
 
 def test_output_config_fail_min_crop_width_smaller_than_min_panel_width() -> None:
-    """Test output configuration fail min crop width smaller than min panel width."""
     with pytest.raises(ValueError):
         OutputConfig(min_panel_width=10, min_crop_width=5)

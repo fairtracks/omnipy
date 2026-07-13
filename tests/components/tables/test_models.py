@@ -209,7 +209,6 @@ def test_columnwise_table_index(
     has_tag='concat',
 )
 def test_columnwise_table_concatenate_add(case: ConcatCase) -> None:
-    """Test concatenating column-wise tables with addition."""
     concat_model = case.col_wise_model + case.other
     assert concat_model.to_data() == case.expected
 
@@ -220,7 +219,6 @@ def test_columnwise_table_concatenate_add(case: ConcatCase) -> None:
     has_tag='concat',
 )
 def test_columnwise_table_concatenate_inplace_add(case: ConcatCase) -> None:
-    """Test concatenating column-wise tables with in-place addition."""
     concat_model = case.col_wise_model
     concat_model += case.other
     assert concat_model.to_data() == case.expected
@@ -232,7 +230,6 @@ def test_columnwise_table_concatenate_inplace_add(case: ConcatCase) -> None:
     has_tag=['concat', 'reverse'],
 )
 def test_columnwise_table_reverse_concatenate_add(case: ConcatCaseReverse) -> None:
-    """Test reverse-add concatenation for column-wise tables."""
     concat_model = case.other + case.col_wise_model
     assert concat_model.to_data() == case.expected_reverse
 
@@ -275,7 +272,6 @@ def test_rowwise_table_first_row_as_col_names_model_empty() -> None:
 
 
 def test_pydantic_record_model_all_required() -> None:
-    """Test pydantic record models with all required fields."""
     class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
@@ -400,7 +396,6 @@ def test_iterating_pydantic_record_model_row_wise_uses_declared_output_type() ->
 def test_iterating_pydantic_record_model_row_wise_data(
         # runtime: Annotated[IsRuntime, pytest.fixture],
 ) -> None:
-    """Test iterating pydantic record models from row-wise input."""
     persons = IteratingPersonModel([
         ['John', 'Doe', '30'],
         ['Jane', 'Doe', '25'],
@@ -432,7 +427,6 @@ def test_iterating_pydantic_record_model_row_wise_data(
 
 
 def test_pydantic_record_model_optional() -> None:
-    """Test pydantic record models with optional fields."""
     class NameRecordOptionalLastName(pyd.BaseModel):
         firstname: str
         lastname: str | None = None
@@ -505,7 +499,6 @@ def test_pydantic_record_model_base_forwards_output_type_to_row_parser() -> None
 
 
 def test_pydantic_record_model_extra_fields_config() -> None:
-    """Test pydantic record models honoring extra-field config."""
     class NameRecordNoExtraFields(pyd.BaseModel):
         firstname: str
         lastname: str | None = None
@@ -752,12 +745,10 @@ def case_rowwise_pyd_from_tsv_optional_last(
 
 @pc.parametrize_with_cases('case', cases='.', has_tag='tables')
 def test_table_of_tables_model(case: TableCase) -> None:
-    """Test table model cases built from the parametrized fixtures."""
     case.assert_func(case.model(case.data))
 
 
 def test_fail_table_of_records_model_with_optional_field_not_last() -> None:
-    """Test record tables reject optional fields before required ones."""
     class OptionalNotLastRecord(pyd.BaseModel):
         firstname: str
         lastname: str | None = None

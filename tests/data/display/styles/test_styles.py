@@ -183,7 +183,6 @@ async def test_fetch_base16_theme(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ) -> None:
-    """Test fetch Base16 theme."""
     def _test_fetch_base16_theme():
         """Provide test fetch Base16 theme."""
         base16_theme_output = fetch_base16_theme(my_base16_endpoint_url)
@@ -198,7 +197,6 @@ async def test_fetch_base16_theme_with_caching(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ) -> None:
-    """Test fetch Base16 theme with caching."""
     def _test_fetch_base16_theme():
         """Provide test fetch Base16 theme."""
         base16_theme_output = fetch_base16_theme(my_base16_intermittently_failing_endpoint_url)
@@ -213,7 +211,6 @@ async def test_fail_incorrect_system_fetch_base2_theme(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ) -> None:
-    """Test fail incorrect system fetch Base2 theme."""
     def _test_fail_incorrect_system_fetch_base2_theme():
         """Provide test fail incorrect system fetch Base2 theme."""
         with pytest.raises(ValueError):
@@ -237,7 +234,6 @@ def _assert_example_base16_style(TintedBase16Example_1Style: type[pygments.style
 
 
 def test_create_dynamic_style_class(example_base16_theme: Annotated[Base16Theme, pytest.fixture]):
-    """Test create dynamic style class."""
     TintedBase16Example_1Style = create_dynamic_base16_style_class(
         'example-1-t16',
         example_base16_theme,
@@ -247,7 +243,6 @@ def test_create_dynamic_style_class(example_base16_theme: Annotated[Base16Theme,
 
 def test_fail_create_dynamic_style_class_incorrect_theme_suffix(
         example_base16_theme: Annotated[Base16Theme, pytest.fixture]) -> None:
-    """Test fail create dynamic style class incorrect theme suffix."""
     with pytest.raises(AssertionError):
         create_dynamic_base16_style_class('my-example-1', example_base16_theme)
 
@@ -271,7 +266,6 @@ async def test_auto_create_dynamic_style_class_at_import(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ):
-    """Test auto create dynamic style class at import."""
     def _test_auto_create_dynamic_style_class_at_import():
         """Provide test auto create dynamic style class at import."""
         with _setup_base16_download_url(my_base16_endpoint_url):
@@ -288,7 +282,6 @@ async def test_install_base16_theme(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ):
-    """Test install Base16 theme."""
     def _test_install_base16_theme():
         """Provide test install Base16 theme."""
         with _setup_base16_download_url(my_base16_endpoint_url):
@@ -307,7 +300,6 @@ async def test_fail_install_base16_theme_incorrect_theme_prefix(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ):
-    """Test fail install Base16 theme incorrect theme prefix."""
     def _test_fail_install_base16_theme_incorrect_theme_prefix():
         """Provide test fail install Base16 theme incorrect theme prefix."""
         with pytest.raises(AssertionError):
@@ -323,7 +315,6 @@ async def test_fail_import_missing(
     run_sync_func: Annotated[Callable[[Callable[..., Any]], Awaitable[Any]], pytest.fixture],
     register_runtime: Annotated[Iterable[None], pytest.fixture],
 ):
-    """Test fail import missing."""
     def _test_fail_import_missing():
         """Provide test fail import missing."""
         with _setup_base16_download_url(my_base16_endpoint_url):
@@ -355,7 +346,6 @@ def test_omnipy_style_import() -> None:
     # To make sure the tests only run when the omnipy package is installed, which is required for
     # the styles to be registered with the pygments package. This is needed as the tests might be
     # run in a development environment where the omnipy package is not installed.
-    """Test omnipy style import."""
     if 'omnipy' in get_pip_installed_packages():
         installed_styles = _filter_real_styles(external=False)
         for style in installed_styles:
@@ -364,7 +354,6 @@ def test_omnipy_style_import() -> None:
 
 
 def test_dynamic_style_import(register_runtime: Annotated[Iterable[None], pytest.fixture],) -> None:
-    """Test dynamic style import."""
     installable_styles = _filter_real_styles(external=True)
     for style in random.sample(installable_styles, 3):
         print(f'Installing style: {style}...')
@@ -379,7 +368,6 @@ def test_dynamic_style_import(register_runtime: Annotated[Iterable[None], pytest
 
 def test_resolve_and_fetch_ansi_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
-    """Test resolve and fetch ANSI style."""
     style = resolve_and_fetch_style('ansi-dark')
     assert style in rich.syntax.RICH_SYNTAX_THEMES
 
@@ -389,7 +377,6 @@ def test_resolve_and_fetch_ansi_style(
 
 def test_resolve_and_fetch_recommended_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
-    """Test resolve and fetch recommended style."""
     style = resolve_and_fetch_style('omnipy-selenized-white')
     pygments_style = pygments.styles.get_style_by_name(style)
     assert pygments_style.background_color == '#ffffff'
@@ -397,7 +384,6 @@ def test_resolve_and_fetch_recommended_style(
 
 def test_resolve_and_fetch_pygments_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
-    """Test resolve and fetch pygments style."""
     style = resolve_and_fetch_style('manni-pygments')
     pygments_style = pygments.styles.get_style_by_name(style)
     assert pygments_style.background_color == '#f0f3f3'
@@ -405,7 +391,6 @@ def test_resolve_and_fetch_pygments_style(
 
 def test_resolve_and_fetch_t16_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
-    """Test resolve and fetch t16 style."""
     style = resolve_and_fetch_style('zenburn-t16')
     pygments_style = pygments.styles.get_style_by_name(style)
     assert pygments_style.background_color == '#383838'
@@ -413,7 +398,6 @@ def test_resolve_and_fetch_t16_style(
 
 def test_resolve_and_fetch_random_style(
         register_runtime: Annotated[Iterator[None], pytest.fixture]) -> None:
-    """Test resolve and fetch random style."""
     for _ in range(5):
         style = resolve_and_fetch_style('random')
         assert style in rich.syntax.RICH_SYNTAX_THEMES or pygments.styles.get_style_by_name(style)

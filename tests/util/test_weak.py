@@ -18,7 +18,6 @@ class MyDict(UserDict):
 
 
 def test_weak_key_ref_container() -> None:
-    """Test weak key ref container."""
     weak_key_ref_container = WeakKeyRefContainer[MyList | MyDict, SomeObject]()
 
     a_list = MyList([1, 3, 5])
@@ -70,7 +69,6 @@ def test_weak_key_ref_container() -> None:
 
 
 def test_weak_key_ref_container_clear() -> None:
-    """Test weak key ref container clear."""
     weak_key_ref_container = WeakKeyRefContainer[MyList, SomeObject]()
 
     a_list = MyList([1, 3, 5])

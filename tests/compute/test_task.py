@@ -15,7 +15,6 @@ from .helpers.mocks import MockLocalRunner
 
 
 def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    """Test task templates create runnable tasks."""
     task_template = TaskTemplate()(format_to_string_func)
     assert isinstance(task_template, TaskTemplateCore)
     assert_func_wrapper(task_template, format_to_string_func)
@@ -34,7 +33,6 @@ def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> 
 @pc.parametrize_with_cases('case', cases='.cases.tasks')
 def test_task_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
                   case: TaskCase) -> None:
-    """Test tasks run correctly for each task case."""
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
@@ -77,7 +75,6 @@ def test_task_run_parameter_variants(
 
 
 def test_error_missing_task_run_parameters() -> None:
-    """Test tasks fail when required parameters are missing."""
     power_m1 = TaskTemplate()(power_m1_func).apply()
 
     with pytest.raises(TypeError):

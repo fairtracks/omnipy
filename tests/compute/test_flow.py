@@ -33,7 +33,6 @@ MockJobClasses = tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
 
 
 def test_flow_context_mock() -> None:
-    """Test flow context state propagates within a flow."""
     flow_tmpl: MockFlowTemplateSubclass = MockFlowTemplateSubclass()
     flow = flow_tmpl.apply()
     job_tmpl: MockJobTemplateSubclass = MockJobTemplateSubclass()
@@ -67,7 +66,6 @@ def test_flow_context_mock() -> None:
 
 
 def test_time_of_flow_run_mock() -> None:
-    """Test flow run timestamps propagate within a flow."""
     flow_tmpl: MockFlowTemplateSubclass = MockFlowTemplateSubclass()
     flow = flow_tmpl.apply()
     job_tmpl: MockJobTemplateSubclass = MockJobTemplateSubclass()
@@ -108,7 +106,6 @@ def test_fail_init_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     flow_cls_tuple: Annotated[AnyFlowClsTuple, pytest.fixture],
 ) -> None:
-    """Test flow classes reject direct callable construction."""
     flow_cls = flow_cls_tuple.flow_cls
 
     with pytest.raises(JobStateException):
@@ -119,7 +116,6 @@ def test_fail_init_func_arg_flow_classes(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
-    """Test func-arg flow classes validate construction arguments."""
     flow_cls, flow_tmpl_cls, _ = func_arg_flow_cls_tuple
     with pytest.raises(TypeError):
         flow_cls()
@@ -148,7 +144,6 @@ def test_init_func_arg_flow_templates(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
-    """Test func-arg flow templates initialize correctly."""
     _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls()(format_to_string_func)
@@ -196,7 +191,6 @@ def test_apply_run_func_arg_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
-    """Test func-arg flow templates apply and run."""
     flow_cls, flow_tmpl_cls, _ = func_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls()(format_to_string_func)
@@ -228,7 +222,6 @@ def test_refine_func_arg_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
-    """Test func-arg flow templates can be refined."""
     _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls()(empty_dict_func)
@@ -276,7 +269,6 @@ def test_revise_func_arg_flow_cls_tuple(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
-    """Test func-arg flows revise back to templates."""
     _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
 
     flow_template = flow_tmpl_cls()(format_to_string_func)
@@ -290,7 +282,6 @@ def test_revise_func_arg_flow_cls_tuple(
 @pc.parametrize_with_cases('case', cases='.cases.flows')
 def test_flow_run_flow_cls_tuple(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
                                  case: FlowCase) -> None:
-    """Test flow cases run and return expected results."""
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
@@ -319,7 +310,6 @@ def test_flow_run_flow_cls_tuple(mock_local_runner: Annotated[MockLocalRunner, p
 
 def test_linear_flow_only_first_positional(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    """Test linear flows forward only the first positional result."""
     @TaskTemplate()
     def task_tmpl() -> tuple[int, int]:
         return 42, 42
@@ -380,7 +370,6 @@ def test_linear_flow_param_key_map_and_fixed_params(
 
 def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    """Test DAG flows ignore unmatched outputs."""
     @TaskTemplate()
     def task_tmpl() -> int:
         return 42
@@ -403,7 +392,6 @@ def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
 
 def test_dynamic_dag_flow_by_returned_dict(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    """Test DAG flows wire dependencies from returned dicts."""
     @TaskTemplate()
     def task_tmpl() -> dict[str, int]:
         return {'number': 42}

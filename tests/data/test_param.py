@@ -12,7 +12,6 @@ import omnipy.util.pydantic as pyd
 
 def test_params_parameter_lookup(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test parameters parameter lookup."""
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = 123
@@ -30,7 +29,6 @@ def test_params_parameter_lookup(
 
 def test_params_parameter_value_is_read_only(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test parameters parameter value is read only."""
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = 123
@@ -47,7 +45,6 @@ def test_params_parameter_value_is_read_only(
 
 def test_params_default_value_validation(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test parameters default value validation."""
     class MyPydanticModel(pyd.BaseModel):
         a: str
         b: int
@@ -85,7 +82,6 @@ None, instead if raising a ValidationError.
 """)
 def test_params_default_value_validation_known_issue(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test parameters default value validation known issue."""
     class MyClass:
         ...
 
@@ -98,7 +94,6 @@ def test_params_default_value_validation_known_issue(
 
 def test_params_no_default_value(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test parameters no default value."""
     with pytest.raises(ValueError):
 
         @params_dataclass
@@ -113,7 +108,6 @@ def test_params_no_default_value(
 
 def test_params_validation(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test parameters validation."""
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = 123
@@ -128,7 +122,6 @@ def test_params_validation(
 
 def test_params_copy_and_adjust(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test parameters copy and adjust."""
     class MyPydanticModel(pyd.BaseModel):
         a: str
         b: int

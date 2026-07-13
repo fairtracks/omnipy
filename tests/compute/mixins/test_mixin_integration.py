@@ -13,7 +13,6 @@ from ..helpers.classes import CustomStrDataset
 
 
 def test_iterate_over_data_files_func_signature() -> None:
-    """Test iterate mixin updates task signatures."""
     all_plus_no_iter_template = TaskTemplate(iterate_over_data_files=False)(
         all_int_dataset_plus_int_return_str_dataset_func)
 
@@ -33,7 +32,6 @@ def test_iterate_over_data_files_func_signature() -> None:
 
 
 def test_iterate_over_data_files_func_signature_output_dataset_cls() -> None:
-    """Test iterate mixin updates signatures for custom output datasets."""
     all_plus_iter_template = TaskTemplate(
         iterate_over_data_files=True, output_dataset_cls=CustomStrDataset)(
             single_int_model_plus_int_return_str_model_func)
@@ -50,7 +48,6 @@ def test_iterate_over_data_files_func_signature_output_dataset_cls() -> None:
 
 
 def test_iterate_over_data_files_func_signature_output_dataset_param() -> None:
-    """Test iterate mixin adds the output dataset parameter to signatures."""
     all_plus_iter_template = TaskTemplate(
         iterate_over_data_files=True,
         output_dataset_param='output_dataset',
@@ -75,7 +72,6 @@ def test_iterate_over_data_files_func_signature_output_dataset_param() -> None:
 
 
 def test_iterate_over_data_files_func_signature_output_dataset_param_and_cls() -> None:
-    """Test iterate mixin combines output dataset signature changes."""
     all_plus_iter_template = TaskTemplate(
         iterate_over_data_files=True,
         output_dataset_param='output_dataset',
@@ -101,7 +97,6 @@ def test_iterate_over_data_files_func_signature_output_dataset_param_and_cls() -
 
 
 def test_iterate_over_data_files() -> None:
-    """Test iterate mixin runs over dataset items."""
     task_template_cls = TaskTemplate(iterate_over_data_files=True)
     single_data_file_plus_str_template = task_template_cls(
         single_int_model_plus_int_return_str_model_func)
@@ -114,7 +109,6 @@ def test_iterate_over_data_files() -> None:
 
 
 def test_iterate_over_data_files_output_dataset_cls() -> None:
-    """Test iterate mixin returns custom output dataset classes."""
     task_template_cls = TaskTemplate(
         iterate_over_data_files=True,
         output_dataset_cls=CustomStrDataset,
@@ -130,7 +124,6 @@ def test_iterate_over_data_files_output_dataset_cls() -> None:
 
 
 def test_iterate_over_data_files_param() -> None:
-    """Test iterate mixin works with renamed dataset parameters."""
     task_template_cls = TaskTemplate(
         fixed_params=dict(number=2),
         param_key_map=dict(dataset='data_numbers'),
@@ -148,7 +141,6 @@ def test_iterate_over_data_files_param() -> None:
 
 
 def test_refine_task_template_with_other_properties_task() -> None:
-    """Test refining tasks combines multiple mixin properties."""
     # Plain task template
     power_m1_template = TaskTemplate()(power_m1_func)
     power_m1 = power_m1_template.apply()

@@ -24,7 +24,6 @@ from ..helpers.panel_assert import (assert_dims_aware_panel,
 
 
 def test_text_draft_panel_init() -> None:
-    """Test text draft panel init."""
     assert_draft_panel_subcls(DraftPanel, 'Some text')
 
     assert_draft_panel_subcls(
@@ -38,7 +37,6 @@ def test_text_draft_panel_init() -> None:
 
 
 def test_text_draft_panel_render_next_stage_simple() -> None:
-    """Test text draft panel render next stage simple."""
     text_draft_panel = DraftPanel('Some\ntext')
     assert_next_stage_panel(
         this_panel=text_draft_panel,
@@ -55,7 +53,6 @@ def test_text_draft_panel_render_next_stage_simple() -> None:
 
 
 def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
-    """Test text draft panel render next stage with representation complex."""
     draft_panel_complex = DraftPanel(
         dedent("""\
         def my_function():
@@ -79,7 +76,6 @@ def test_text_draft_panel_render_next_stage_with_repr_complex() -> None:
 
 
 def test_reflowed_text_draft_panel_init() -> None:
-    """Test reflowed text draft panel init."""
     panel_cls = ReflowedTextDraftPanel
     assert_draft_panel_subcls(panel_cls, 'Some text')
     assert_draft_panel_subcls(
@@ -110,7 +106,6 @@ def test_reflowed_text_draft_panel_init() -> None:
 
 
 def test_reflowed_text_draft_panel_hashable() -> None:
-    """Test reflowed text draft panel hashable."""
     panel_1 = ReflowedTextDraftPanel('')
     panel_2 = ReflowedTextDraftPanel('')
 
@@ -141,14 +136,12 @@ def test_reflowed_text_draft_panel_hashable() -> None:
 
 
 def test_fail_reflowed_text_draft_panel_if_extra_params() -> None:
-    """Test fail reflowed text draft panel if extra parameters."""
     with pytest.raises(TypeError):
         ReflowedTextDraftPanel('[123, 234, 345]', extra=123)  # type: ignore[call-arg]
 
 
 # noinspection PyDataclass
 def test_fail_reflowed_text_draft_panel_no_assignments() -> None:
-    """Test fail reflowed text draft panel no assignments."""
     reflowed_text_panel = ReflowedTextDraftPanel('Some text')
 
     with pytest.raises(AttributeError):
@@ -174,7 +167,6 @@ def test_fail_reflowed_text_draft_panel_no_assignments() -> None:
 )
 def test_reflowed_text_draft_panel_basic_dims_and_edge_cases(
         any_case: PanelFrameVariantTestCase[str] | PanelOutputTestCase[str]) -> None:
-    """Test reflowed text draft panel basic dims and edge cases."""
     if isinstance(any_case, PanelFrameVariantTestCase):
         case = apply_frame_variant_to_test_case(any_case, stylized_stage=False)
     else:
@@ -198,7 +190,6 @@ def test_reflowed_text_draft_panel_basic_dims_and_edge_cases(
 
 def test_reflowed_text_draft_panel_variable_width_chars() -> None:
     # Mandarin Chinese characters are double-width
-    """Test reflowed text draft panel variable width chars."""
     assert_dims_aware_panel(ReflowedTextDraftPanel('北京'), Dimensions(width=4, height=1))
 
     # Null character is zero-width
@@ -267,7 +258,6 @@ def test_reflowed_text_draft_panel_variable_width_chars() -> None:
 
 
 def test_reflowed_text_draft_panel_max_inline_container_width_incl() -> None:
-    """Test reflowed text draft panel max inline container width incl."""
     assert ReflowedTextDraftPanel('').max_inline_container_width_incl == 0
 
     assert ReflowedTextDraftPanel('(1, 2, 3)').max_inline_container_width_incl == 9
@@ -298,7 +288,6 @@ def test_reflowed_text_draft_panel_max_inline_container_width_incl() -> None:
 
 
 def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl() -> None:
-    """Test reflowed text draft panel max inline list or dict width excl."""
     assert ReflowedTextDraftPanel('').max_inline_list_or_dict_width_excl == 0
 
     # Only defined for lists and dicts, not tuples
@@ -410,7 +399,6 @@ def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl() -> None:
 
 def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl_no_counts() -> None:
     # Only defined for lists and dicts, not tuples
-    """Test reflowed text draft panel max inline list or dict width excl no counts."""
     assert ReflowedTextDraftPanel('(1, 2, 3)').max_inline_list_or_dict_width_excl == 0
 
     # Do not count lists within a string
@@ -468,7 +456,6 @@ def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl_border_cas
     #         "key:": "value"
     #     }
     # """),).max_inline_list_or_dict_width_excl == 0
-    """Test reflowed text draft panel max inline list or dict width excl border cases."""
     assert ReflowedTextDraftPanel(
         dedent("""
         {
@@ -478,7 +465,6 @@ def test_reflowed_text_draft_panel_max_inline_list_or_dict_width_excl_border_cas
 
 
 def test_reflowed_text_draft_panel_constraints_satisfaction() -> None:
-    """Test reflowed text draft panel constraints satisfaction."""
     out = dedent("""(
       [1, 2],
       {"asd": 1234567}
@@ -514,7 +500,6 @@ def test_reflowed_text_draft_panel_constraints_satisfaction() -> None:
 
 
 def test_draft_panel_render_next_stage() -> None:
-    """Test draft panel render next stage."""
     reflowed_text_panel = ReflowedTextDraftPanel('Some text')
     assert_next_stage_panel(
         this_panel=reflowed_text_panel,

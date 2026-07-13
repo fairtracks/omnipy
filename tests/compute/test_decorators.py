@@ -30,7 +30,6 @@ def test_task_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_one_template: IsTaskTemplate,
 ) -> None:
-    """Test task templates work as decorators."""
     assert isinstance(plus_one_template,
                       TaskTemplateCore)  # noqa  # Pycharm static type checker bug
     assert plus_one_template.name == 'plus_one'  # noqa  # Pycharm static type checker bug
@@ -107,7 +106,6 @@ def test_func_flow_template_as_decorator(
 
 
 def test_fail_task_template_decorator_with_func_argument() -> None:
-    """Test task template decorators reject callable arguments."""
     with pytest.raises(TypeError):
 
         def myfunc(a: Callable) -> Callable:
@@ -128,7 +126,6 @@ def test_fail_func_flow_template_decorator_with_func_argument(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_one_template,
 ) -> None:
-    """Test function flow template decorators reject callable arguments."""
     with pytest.raises(TypeError):
 
         def myfunc(a: Callable) -> Callable:

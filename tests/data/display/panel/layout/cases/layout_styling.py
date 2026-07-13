@@ -38,7 +38,6 @@ def case_layout_styling_setup_no_frame(
     panel_design: PanelDesign.Literals,
 ) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
-    """Return the layout styling setup no frame case."""
     layout: Layout = Layout()
     layout['first'] = MockStylablePlainCropPanel(
         content='Panel_1 Content', frame=Frame(Dimensions(width=7, height=2)))
@@ -69,7 +68,6 @@ def case_layout_styling_setup_frame_and_title(
     panel_design: PanelDesign.Literals,
 ) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
-    """Return the layout styling setup frame and title case."""
     layout: Layout = Layout()
     layout['first'] = MockStylablePlainCropPanel(
         content='True',
@@ -106,7 +104,6 @@ def case_layout_styling_setup_small_frame(
     panel_design: PanelDesign.Literals,
 ) -> StylizedPanelTestCaseSetup[Layout]:
     # Create a simple layout with mock panels
-    """Return the layout styling setup small frame case."""
     layout: Layout = Layout()
     layout['first'] = MockStylablePlainCropPanel(
         content='Panel_1 Content', frame=Frame(Dimensions(width=7, height=2)))
@@ -133,7 +130,6 @@ def case_layout_styling_setup_small_frame(
 def case_layout_styling_expectations_plain_terminal(
         plain_terminal: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the layout styling expectations plain terminal case."""
     no_frame_dark_color_exp_output = ('╭─────────┬─────────╮\n'
                                       '│ Panel_1 │ Panel_2 │\n'
                                       '│ Content │ Content │\n'
@@ -187,7 +183,6 @@ def case_layout_styling_expectations_plain_terminal(
 def case_layout_styling_expectations_bw_stylized_terminal(
     bw_stylized_terminal: Annotated[OutputPropertyType,
                                     pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the layout styling expectations black-and-white stylized terminal case."""
     no_frame_dark_color_exp_output = ('╭─────────┬─────────╮\n'
                                       '│ \x1b[1mPanel_1\x1b[0m │ \x1b[1mPanel_2\x1b[0m │\n'
                                       '│ \x1b[1mContent\x1b[0m │ \x1b[1mContent\x1b[0m │\n'
@@ -244,7 +239,6 @@ def case_layout_styling_expectations_bw_stylized_terminal(
 def case_layout_styling_expectations_colorized_terminal(
     colorized_terminal: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the layout styling expectations colorized terminal case."""
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         """Return exp plain output for case id."""
         match case_id:
@@ -405,7 +399,6 @@ def case_layout_styling_expectations_colorized_terminal(
 def case_layout_styling_expectations_plain_html_tag(
         plain_html_tag: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the layout styling expectations plain HTML tag case."""
     no_frame_dark_color_exp_output = ('╭─────────┬─────────╮\n'
                                       '│ Panel_1 │ Panel_2 │\n'
                                       '│ Content │ Content │\n'
@@ -484,7 +477,6 @@ def case_layout_styling_expectations_plain_html_tag(
 def case_layout_styling_expectations_bw_stylized_html_tag(
     bw_stylized_html_tag: Annotated[OutputPropertyType,
                                     pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the layout styling expectations black-and-white stylized HTML tag case."""
     no_frame_dark_color_exp_output = ('╭─────────┬─────────╮\n'
                                       '│ <span style="font-weight: bold">Panel_1</span> '
                                       '│ <span style="font-weight: bold">Panel_2</span> │\n'
@@ -574,7 +566,6 @@ def case_layout_styling_expectations_bw_stylized_html_tag(
 def case_layout_styling_expectations_colorized_html_tag(
     colorized_html_tag: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the layout styling expectations colorized HTML tag case."""
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         """Return exp plain output for case id."""
         lightbulb_dark_color_style_with_bg = 'color: #d4d2c8; background-color: #1d2331; '
@@ -789,7 +780,6 @@ def case_layout_styling_expectations_colorized_html_tag(
 def case_layout_styling_expectations_plain_html_page(
         plain_html_page: Annotated[OutputPropertyType,
                                    pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the layout styling expectations plain HTML page case."""
     light_body_style = f"""
       body {{
         color: #000000;
@@ -881,7 +871,6 @@ def case_layout_styling_expectations_plain_html_page(
 def case_layout_styling_expectations_bw_stylized_html_page(
     bw_stylized_html_page: Annotated[OutputPropertyType, pc.fixture]
 ) -> StylizedPanelOutputExpectations:
-    """Return the layout styling expectations black-and-white stylized HTML page case."""
     bold_style = '\n'.join([
         '.r2 {font-weight: bold}',
     ])
@@ -1005,7 +994,6 @@ def case_layout_styling_expectations_bw_stylized_html_page(
 def case_layout_styling_expectations_colorized_html_page(
     colorized_html_page: Annotated[OutputPropertyType,
                                    pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the layout styling expectations colorized HTML page case."""
     lightbulb_dark_style_with_bg = (
         '.r1 {color: #7e8aa1; text-decoration-color: #7e8aa1; background-color: #1d2331}')
 

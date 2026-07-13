@@ -36,7 +36,6 @@ MockClass = callable_decorator_cls(MockClassBase)
 
 
 def test_fail_plain_decorator_not_callable_arg() -> None:
-    """Test fail plain decorator not callable arg."""
     @callable_decorator_cls
     class MockClassNoCallableArg:
         def __init__(self) -> None:
@@ -59,7 +58,6 @@ def _assert_call_func(my_func):
 
 
 def test_plain_decorator() -> None:
-    """Test plain decorator."""
     @MockClass
     def my_func_1(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
@@ -74,7 +72,6 @@ def test_plain_decorator() -> None:
 
 
 def test_plain_decorator_parentheses() -> None:
-    """Test plain decorator parentheses."""
     @MockClass()
     def my_func_2(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
@@ -89,7 +86,6 @@ def test_plain_decorator_parentheses() -> None:
 
 
 def test_decorator_with_kwargs() -> None:
-    """Test decorator with keyword arguments."""
     @MockClass(param=123, other=True)
     def my_func_3(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
@@ -104,7 +100,6 @@ def test_decorator_with_kwargs() -> None:
 
 
 def test_decorator_with_args_and_kwargs() -> None:
-    """Test decorator with arguments and keyword arguments."""
     @MockClass(123, True, param=123, other=True)
     def my_func_4(*args: object, **kwargs: object) -> dict[str, object]:
         return dict(args=args, kwargs=kwargs)
@@ -119,7 +114,6 @@ def test_decorator_with_args_and_kwargs() -> None:
 
 
 def test_decorator_with_args_and_kwargs_first_arg_func() -> None:
-    """Test decorator with arguments and keyword arguments first arg func."""
     def other_func():
         pass
 
@@ -137,7 +131,6 @@ def test_decorator_with_args_and_kwargs_first_arg_func() -> None:
 
 
 def test_double_decorator_with_args_and_kwargs() -> None:
-    """Test double decorator with arguments and keyword arguments."""
     @MockClass(234, False, param=234, other=False)
     @MockClass(123, True, param=123, other=True)
     def my_func_6(*args: object, **kwargs: object) -> dict[str, Any]:
@@ -153,7 +146,6 @@ def test_double_decorator_with_args_and_kwargs() -> None:
 
 
 def test_fail_decorator_with_single_callable_arg() -> None:
-    """Test fail decorator with single callable arg."""
     @callable_decorator_cls
     class MockClassSingleCallableArg:
         def __init__(self, decorated_func: Callable, other_func: Callable) -> None:
@@ -177,7 +169,6 @@ def my_fancy_func(*args: int | str, **kwargs: bool) -> dict[str, Any]:
 
 
 def test_decorator_as_function_fancy_func() -> None:
-    """Test decorator as function fancy func."""
     my_func = MockClass(my_fancy_func)
 
     assert type(my_func) is MockClass
@@ -190,7 +181,6 @@ def test_decorator_as_function_fancy_func() -> None:
 
 
 def test_decorator_as_function_fancy_func_args_kwargs() -> None:
-    """Test decorator as function fancy func arguments keyword arguments."""
     my_func = MockClass(123, True, param=123, other=True)(my_fancy_func)
 
     assert type(my_func) is MockClass
@@ -203,7 +193,6 @@ def test_decorator_as_function_fancy_func_args_kwargs() -> None:
 
 
 def test_fail_decorator_as_function_no_args_no_func() -> None:
-    """Test fail decorator as function no arguments no func."""
     my_func = MockClass()
 
     assert type(my_func) is MockClass
@@ -217,7 +206,6 @@ def test_fail_decorator_as_function_no_args_no_func() -> None:
 
 
 def test_fail_decorator_as_function_args_and_kwargs_no_func() -> None:
-    """Test fail decorator as function arguments and keyword arguments no func."""
     my_func = MockClass(123, True, param=123, other=True)
 
     assert type(my_func) is MockClass

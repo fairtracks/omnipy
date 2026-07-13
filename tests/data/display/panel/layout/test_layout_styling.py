@@ -26,7 +26,6 @@ from ..helpers.panel_assert import assert_dims_aware_panel, strip_all_styling_fr
 
 
 def test_stylized_layout_panel_init() -> None:
-    """Test stylized layout panel init."""
     layout: Layout = Layout()
     layout['panel'] = MockStylablePlainCropPanel(content='Some Content')
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(layout))
@@ -58,14 +57,12 @@ def test_stylized_layout_panel_init() -> None:
 
 
 def test_fail_stylized_layout_panel_if_extra_params() -> None:
-    """Test fail stylized layout panel if extra parameters."""
     with pytest.raises(TypeError):
         StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()), extra=123)  # type: ignore[call-arg]
 
 
 # noinspection PyDataclass
 def test_stylized_layout_panel_immutable_properties() -> None:
-    """Test stylized layout panel immutable properties."""
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()))
 
     with pytest.raises(AttributeError):
@@ -91,7 +88,6 @@ def test_stylized_layout_panel_basic_dims_and_edge_cases(
     plain_terminal: Annotated[OutputPropertyType, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> None:
-    """Test stylized layout panel basic dims and edge cases."""
     case = prepare_test_case_for_stylized_layout(any_case, plain_terminal, output_format_accessor)
     case = set_case_config(case, min_panel_width=0)
 
@@ -131,7 +127,6 @@ def test_output_properties_of_stylized_layout_panel(
     output_test_case_setup: Annotated[StylizedPanelTestCaseSetup, pc.fixture],
     output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
 ) -> None:
-    """Test output properties of stylized layout panel."""
     case_id, content, title, frame, config = output_test_case_setup
     get_output_property, exp_plain_output_for_case_id = output_prop_expectations
 
@@ -147,7 +142,6 @@ def test_output_properties_of_stylized_layout_panel(
 
 
 def test_fail_stylized_layout_panel_render_next_stage() -> None:
-    """Test fail stylized layout panel render next stage."""
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()))
     with pytest.raises(NotImplementedError):
         layout_panel.render_next_stage()

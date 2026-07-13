@@ -4,7 +4,6 @@ from .helpers.mocks import MockEngineConfig, MockJobRunnerSubclass
 
 
 def test_engine_init() -> None:
-    """Test engine initialization from config values."""
     engine = MockJobRunnerSubclass()
     assert engine.backend_verbose is True
 

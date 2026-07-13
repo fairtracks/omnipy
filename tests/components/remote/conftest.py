@@ -109,28 +109,24 @@ async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:
 @pc.fixture(scope='function')
 async def lyrics_bytes_server_url(
         lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
-    """Return the bytes-response lyrics endpoint URL."""
     yield str(lyrics_server.make_url('/lyrics_bytes'))
 
 
 @pc.fixture(scope='function')
 async def lyrics_text_server_url(
         lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
-    """Return the text-response lyrics endpoint URL."""
     yield str(lyrics_server.make_url('/lyrics_text'))
 
 
 @pc.fixture(scope='function')
 async def lyrics_json_server_url(
         lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
-    """Return the JSON-response lyrics endpoint URL."""
     yield str(lyrics_server.make_url('/lyrics_json'))
 
 
 @pc.fixture(scope='function')
 async def timeout_lyrics_server_url(
         lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
-    """Return the flaky timeout lyrics endpoint URL."""
     yield str(lyrics_server.make_url('/timeout_lyrics'))
 
 

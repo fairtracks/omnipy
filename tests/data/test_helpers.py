@@ -9,7 +9,6 @@ from omnipy.util.pydantic import ValidationError
 
 # noinspection PyDataclass
 def test_pending_data() -> None:
-    """Test pending data."""
     with pytest.raises(TypeError):
         PendingData()  # type: ignore[call-arg]
 
@@ -27,7 +26,6 @@ def test_pending_data() -> None:
 
 # noinspection PyDataclass
 def test_failed_data() -> None:
-    """Test failed data."""
     with pytest.raises(TypeError):
         FailedData()  # type: ignore[call-arg]
 

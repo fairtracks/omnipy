@@ -68,7 +68,6 @@ from .raw.examples import (b_bool,
 
 @pc.case(id='test_json_scalar', tags=[])
 def case_json_scalar() -> CaseInfo:
-    """Return the jSON scalar case."""
     @dataclass
     class ScalarDataPoints:
         #
@@ -95,7 +94,6 @@ def case_json_scalar() -> CaseInfo:
 
 @pc.case(id='test_json_list', tags=[])
 def case_json_list() -> CaseInfo:
-    """Return the jSON list case."""
     @dataclass
     class JsonListDataPoints:
         #
@@ -123,7 +121,6 @@ def case_json_list() -> CaseInfo:
 
 @pc.case(id='test_json_dict', tags=[])
 def case_json_dict() -> CaseInfo:
-    """Return the jSON dict case."""
     @dataclass
     class JsonDictDataPoints:
         #
@@ -161,7 +158,6 @@ def case_json_dict() -> CaseInfo:
 
 @pc.case(id='test_json_list_or_dict', tags=[])
 def case_json_list_or_dict() -> CaseInfo:
-    """Return the jSON list or dict case."""
     @dataclass
     class JsonListOrDictDataPoints:
         #
@@ -189,7 +185,6 @@ def case_json_list_or_dict() -> CaseInfo:
 
 @pc.case(id='test_json', tags=[])
 def case_json() -> CaseInfo:
-    """Return the jSON case."""
     @dataclass
     class JsonDataPoints:
         #
@@ -234,7 +229,6 @@ def case_json() -> CaseInfo:
 
 @pc.case(id='test_json_nested', tags=[])
 def case_json_nested() -> CaseInfo:
-    """Return the jSON nested case."""
     _two_level_list: list[JS | list[JS] | dict[str, JS]] = b_list + [list(b_list)] + [dict(b_dict)]
     _two_level_dict: dict[str, str | list[JS] | dict[str, JS]] = {
         'a': b_str, 'b': list(b_list), 'c': dict(b_dict)
@@ -312,7 +306,6 @@ def case_json_nested() -> CaseInfo:
 
 @pc.case(id='test_json_list_on_top', tags=[])
 def case_json_list_on_top() -> CaseInfo:
-    """Return the jSON list on top case."""
     @dataclass
     class JsonListOnTopDataPoints:
 
@@ -433,7 +426,6 @@ def case_json_list_on_top() -> CaseInfo:
 
 @pc.case(id='test_json_dict_on_top', tags=[])
 def case_json_dict_on_top() -> CaseInfo:
-    """Return the jSON dict on top case."""
     @dataclass
     class JsonDictOnTopDataPoints:
 
@@ -585,7 +577,6 @@ def case_json_dict_on_top() -> CaseInfo:
 
 @pc.case(id='test_json_nested_lists', tags=[])
 def case_json_nested_lists() -> CaseInfo:
-    """Return the jSON nested lists case."""
     @dataclass
     class JsonNestedListsDataPoints:
 
@@ -669,7 +660,6 @@ def case_json_nested_lists() -> CaseInfo:
 
 @pc.case(id='test_json_nested_dicts', tags=[])
 def case_json_nested_dicts() -> CaseInfo:
-    """Return the jSON nested dicts case."""
     @dataclass
     class JsonNestedDictsDataPoints:
         #
@@ -773,7 +763,6 @@ def case_json_nested_dicts() -> CaseInfo:
 
 @pc.case(id='test_json_more_specific_types', tags=[])
 def case_json_more_specific_types() -> CaseInfo:
-    """Return the jSON more specific types case."""
     @dataclass
     class JsonMoreSpecificTypesDataPoints:
         #

@@ -12,7 +12,6 @@ from omnipy.util.setdeque import SetDeque
 
 
 def test_setdeque_init_getitem_empty() -> None:
-    """Test SetDeque initialization getitem empty."""
     setdeque_empty = SetDeque[str]()
     assert isinstance(setdeque_empty, deque)
     assert len(setdeque_empty) == 0
@@ -21,7 +20,6 @@ def test_setdeque_init_getitem_empty() -> None:
 
 
 def test_setdeque_append() -> None:
-    """Test SetDeque append."""
     setdeque = SetDeque[int]()
 
     setdeque.append(2)
@@ -65,7 +63,6 @@ def _assert_len3_setdeque_unique_vals(setdeque: SetDeque[int]) -> None:
 
 
 def test_setdeque_init_getitem_iterator() -> None:
-    """Test SetDeque initialization getitem iterator."""
     _assert_len3_setdeque_unique_vals(SetDeque[int]([1, 2, 3, 1, 2, 3]))
     _assert_len3_setdeque_unique_vals(SetDeque[int]([0, 1, 2, 3, 0, 1, 2, 3], maxlen=3))
     _assert_len3_setdeque_unique_vals(SetDeque[int](chain(range(1, 4), range(1, 4))))
@@ -75,7 +72,6 @@ def test_setdeque_init_getitem_iterator() -> None:
 
 
 def test_setdeque_appendleft() -> None:
-    """Test SetDeque appendleft."""
     setdeque = SetDeque[str]()
 
     setdeque.appendleft('b')
@@ -95,7 +91,6 @@ def test_setdeque_appendleft() -> None:
 
 
 def test_setdeque_extend() -> None:
-    """Test SetDeque extend."""
     setdeque = SetDeque[str]()
 
     setdeque.extend(['b'])
@@ -112,7 +107,6 @@ def test_setdeque_extend() -> None:
 
 
 def test_setdeque_extendleft() -> None:
-    """Test SetDeque extendleft."""
     setdeque = SetDeque[int]()
 
     setdeque.extendleft([2])
@@ -129,7 +123,6 @@ def test_setdeque_extendleft() -> None:
 
 
 def test_setdeque_insert() -> None:
-    """Test SetDeque insert."""
     setdeque = SetDeque[int]()
 
     setdeque.insert(0, 4)
@@ -162,7 +155,6 @@ def test_setdeque_insert() -> None:
 
 
 def test_setdeque_setitem() -> None:
-    """Test SetDeque setitem."""
     setdeque_empty = SetDeque[int]()
 
     with pytest.raises(IndexError):
@@ -193,7 +185,6 @@ def test_setdeque_setitem() -> None:
 
 
 def test_setdeque_add_iadd() -> None:
-    """Test SetDeque add iadd."""
     setdeque_empty = SetDeque[str]()
 
     setdeque_1 = SetDeque[str](['a', 'b', 'c'])
@@ -221,7 +212,6 @@ def test_setdeque_add_iadd() -> None:
 
 
 def test_setdeque_add_iadd_other_types() -> None:
-    """Test SetDeque add iadd other types."""
     setdeque_empty = SetDeque[str]()
 
     class OtherClass:
@@ -247,7 +237,6 @@ def test_setdeque_add_iadd_other_types() -> None:
 
 
 def test_setdeque_pop() -> None:
-    """Test SetDeque pop."""
     setdeque = SetDeque[int]([1, 2, 3])
 
     assert setdeque.pop() == 3
@@ -266,7 +255,6 @@ def test_setdeque_pop() -> None:
 
 
 def test_setdeque_popleft() -> None:
-    """Test SetDeque popleft."""
     setdeque = SetDeque[int]([1, 2, 3])
 
     assert setdeque.popleft() == 1
@@ -285,7 +273,6 @@ def test_setdeque_popleft() -> None:
 
 
 def test_setdeque_remove() -> None:
-    """Test SetDeque remove."""
     setdeque = SetDeque[int]([1, 2, 3])
 
     with pytest.raises(ValueError):
@@ -308,7 +295,6 @@ def test_setdeque_remove() -> None:
 
 
 def test_setdeque_delitem() -> None:
-    """Test SetDeque delitem."""
     setdeque = SetDeque[int]([1, 2, 3])
 
     with pytest.raises(IndexError):
@@ -338,7 +324,6 @@ def test_setdeque_delitem() -> None:
 
 
 def test_setdeque_clear() -> None:
-    """Test SetDeque clear."""
     setdeque = SetDeque[int]([1, 2, 3])
 
     setdeque.clear()
@@ -349,7 +334,6 @@ def test_setdeque_clear() -> None:
 
 
 def test_setdeque_copy_deepcopy() -> None:
-    """Test SetDeque copy deepcopy."""
     class MyClass:
         def __init__(self, a: int, b: str):
             self.a = a
@@ -390,7 +374,6 @@ def test_setdeque_copy_deepcopy() -> None:
 
 
 def test_setdeque_count() -> None:
-    """Test SetDeque count."""
     setdeque = SetDeque[int]()
 
     assert setdeque.count(1) == 0
@@ -404,7 +387,6 @@ def test_setdeque_count() -> None:
 
 
 def test_setdeque_count_speed() -> None:
-    """Test SetDeque count speed."""
     define_numbers = 'numbers = tuple(range(10000))'
 
     time_setdeque_count = timeit(
@@ -430,7 +412,6 @@ def test_setdeque_count_speed() -> None:
 
 
 def test_setdeque_index() -> None:
-    """Test SetDeque index."""
     setdeque = SetDeque[str]()
 
     with pytest.raises(ValueError):
@@ -454,7 +435,6 @@ def test_setdeque_index() -> None:
 def test_setdeque_index_missing_speed() -> None:
     # Surprisingly, the default implementation of `deque.index()` for missing values is faster than
     # a set-based implementation based on `__contains__`
-    """Test SetDeque index missing speed."""
     stmt_prefix = 'with suppress(ValueError): '
     define_numbers = 'numbers = tuple(range(10000))'
 
@@ -476,7 +456,6 @@ def test_setdeque_index_missing_speed() -> None:
 
 
 def test_setdeque_contains() -> None:
-    """Test SetDeque contains."""
     setdeque = SetDeque[int]([1, 2, 3])
 
     assert 0 not in setdeque
@@ -491,7 +470,6 @@ def test_setdeque_contains() -> None:
 
 
 def test_setdeque_contains_speed() -> None:
-    """Test SetDeque contains speed."""
     define_numbers = 'numbers = tuple(range(10000))'
     stmt_template = 'tuple(i + 5000 in {} for i in numbers)'
 
@@ -516,7 +494,6 @@ def test_setdeque_contains_speed() -> None:
 
 
 def test_setdeque_mul_rmul() -> None:
-    """Test SetDeque mul rmul."""
     setdeque = SetDeque[int]([1, 2, 3])
 
     assert setdeque * 1 == 1 * setdeque == SetDeque[int]([1, 2, 3])
@@ -537,7 +514,6 @@ def test_setdeque_mul_rmul() -> None:
 
 
 def test_setdeque_imul() -> None:
-    """Test SetDeque imul."""
     setdeque_1 = SetDeque[int]([1, 2, 3])
 
     setdeque_1 *= 1
@@ -562,7 +538,6 @@ def test_setdeque_imul() -> None:
 
 
 def test_setdeque_repr() -> None:
-    """Test SetDeque repr."""
     assert repr(SetDeque[int]()) == 'SetDeque[int]([])'
     assert repr(SetDeque[str](('a', 'b', 'c'))) == "SetDeque[str](['a', 'b', 'c'])"
 
@@ -574,7 +549,6 @@ def test_setdeque_repr() -> None:
 
 
 def test_setdeque_sizeof() -> None:
-    """Test SetDeque sizeof."""
     setdeque = SetDeque[int]([1, 2, 3])
     deque_compare = deque[int]([1, 2, 3])
     set_compare = set[int]([1, 2, 3])

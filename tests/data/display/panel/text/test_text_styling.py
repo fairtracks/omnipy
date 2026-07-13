@@ -26,7 +26,6 @@ from ..helpers.panel_assert import assert_dims_aware_panel, strip_all_styling_fr
 
 
 def test_syntax_stylized_text_panel_init() -> None:
-    """Test syntax stylized text panel init."""
     stylized_text_panel = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]'),)
 
     assert stylized_text_panel.content == '[123, 234, 345]'
@@ -60,7 +59,6 @@ def test_syntax_stylized_text_panel_init() -> None:
 
 # noinspection PyDataclass
 def test_syntax_stylized_text_panel_hashable() -> None:
-    """Test syntax stylized text panel hashable."""
     panel_1 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel(''))
     panel_2 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel(''))
 
@@ -93,7 +91,6 @@ def test_syntax_stylized_text_panel_hashable() -> None:
 
 
 def test_fail_syntax_stylized_text_panel_if_extra_params() -> None:
-    """Test fail syntax stylized text panel if extra parameters."""
     with pytest.raises(TypeError):
         SyntaxStylizedTextPanel(
             ReflowedTextDraftPanel('[123, 234, 345]'), extra=123)  # type: ignore[call-arg]
@@ -101,7 +98,6 @@ def test_fail_syntax_stylized_text_panel_if_extra_params() -> None:
 
 # noinspection PyDataclass
 def test_syntax_stylized_text_panel_no_assignments() -> None:
-    """Test syntax stylized text panel no assignments."""
     text_panel = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]',))
 
     with pytest.raises(AttributeError):
@@ -131,7 +127,6 @@ def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
     plain_terminal: Annotated[OutputPropertyType, pc.fixture],
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> None:
-    """Test syntax stylized text panel basic dims and edge cases."""
     if isinstance(any_case, PanelFrameVariantTestCase):
         if any_case.frame_variant != FrameVariant(True, True) \
                 and output_format_accessor != plain_terminal:
@@ -165,7 +160,6 @@ def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
 
 
 def test_syntax_stylized_text_panel_variable_width_chars() -> None:
-    """Test syntax stylized text panel variable width chars."""
     def _get_plain_terminal_output_from_content(
             content: str,
             config: OutputConfig = OutputConfig(),
@@ -203,7 +197,6 @@ def test_syntax_stylized_text_panel_overflow_modes(
     case: PanelOutputTestCase,
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> None:
-    """Test syntax stylized text panel overflow modes."""
     text_panel = SyntaxStylizedTextPanel(
         ReflowedTextDraftPanel(case.content, frame=case.frame, config=case.config))
     processed_text_panel = strip_all_styling_from_panel_output(text_panel, output_format_accessor)
@@ -231,7 +224,6 @@ def test_output_properties_of_syntax_stylized_text_panel(
     output_test_case_setup: Annotated[StylizedPanelTestCaseSetup, pc.fixture],
     output_prop_expectations: Annotated[StylizedPanelOutputExpectations, pc.fixture],
 ) -> None:
-    """Test output properties of syntax stylized text panel."""
     case_id, content, title, frame, config = output_test_case_setup
     get_output_property, exp_plain_output_for_case_id = output_prop_expectations
 
@@ -242,7 +234,6 @@ def test_output_properties_of_syntax_stylized_text_panel(
 
 
 def test_syntax_stylized_text_panel_json() -> None:
-    """Test syntax stylized text panel JSON."""
     json_content = '{"values": [1, 2, 3], "nested": {"key": true}}'
 
     text_panel = SyntaxStylizedTextPanel(
@@ -266,7 +257,6 @@ def test_syntax_stylized_text_panel_json() -> None:
 
 
 def test_syntax_stylized_text_panel_console_recording_not_deleted_by_filtering() -> None:
-    """Test syntax stylized text panel console recording not deleted by filtering."""
     content = 'Hello, World!'
 
     text_panel = SyntaxStylizedTextPanel(ReflowedTextDraftPanel(content))
@@ -281,7 +271,6 @@ def test_syntax_stylized_text_panel_console_recording_not_deleted_by_filtering()
 
 
 def test_fail_stylized_layout_panel_render_next_stage() -> None:
-    """Test fail stylized layout panel render next stage."""
     layout_panel = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('Some content'))
     with pytest.raises(NotImplementedError):
         layout_panel.render_next_stage()

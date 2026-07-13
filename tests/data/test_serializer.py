@@ -11,7 +11,6 @@ from .helpers.mocks import MockNumberSerializer, MockNumberToTarFileSerializer, 
 
 
 def test_number_dataset_serializer():
-    """Test number dataset serializer."""
     number_data = Dataset[Model[int]]()
 
     number_data['data_file_1'] = 35
@@ -30,7 +29,6 @@ def test_number_dataset_serializer():
 
 
 def test_number_dataset_to_tar_file_serializer():
-    """Test number dataset to tar file serializer."""
     number_data = NumberDataset()
 
     number_data['data_file_1'] = 35
@@ -52,7 +50,6 @@ def test_number_dataset_to_tar_file_serializer():
 
 
 def test_serializer_registry():
-    """Test serializer registry."""
     registry = SerializerRegistry()
 
     registry.register(MockNumberToTarFileSerializer)

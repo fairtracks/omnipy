@@ -6,7 +6,6 @@ from omnipy.data._display.constraints import Constraints, ConstraintsSatisfactio
 
 
 def test_constraints_init() -> None:
-    """Test constraints initialization."""
     constraints = Constraints()
     assert constraints.max_inline_container_width_incl is None
 
@@ -25,7 +24,6 @@ def test_constraints_init() -> None:
 
 
 def test_fail_constraints_it_invalid_params() -> None:
-    """Test fail constraints it invalid parameters."""
     with pytest.raises(ValueError):
         Constraints(max_inline_container_width_incl=-1)
 
@@ -40,7 +38,6 @@ def test_fail_constraints_it_invalid_params() -> None:
 
 
 def test_constraints_hashable() -> None:
-    """Test constraints hashable."""
     constraints_1 = Constraints()
     constraints_2 = Constraints()
     constraints_3 = Constraints(max_inline_container_width_incl=40)
@@ -58,7 +55,6 @@ def test_constraints_hashable() -> None:
 
 # noinspection PyDataclass
 def test_fail_constraints_no_assignments() -> None:
-    """Test fail constraints no assignments."""
     constraints = Constraints()
 
     with pytest.raises(AttributeError):
@@ -69,7 +65,6 @@ def test_fail_constraints_no_assignments() -> None:
 
 
 def test_constraints_satisfaction() -> None:
-    """Test constraints satisfaction."""
     with pytest.raises(TypeError):
         ConstraintsSatisfaction()  # type: ignore[call-arg]
 
@@ -111,7 +106,6 @@ def test_constraints_satisfaction() -> None:
 
 
 def test_constraints_satisfaction_immutable_properties() -> None:
-    """Test constraints satisfaction immutable properties."""
     satisfied = ConstraintsSatisfaction(Constraints())
     with pytest.raises(AttributeError):
         satisfied.max_inline_container_width_incl = True  # type: ignore[misc]
@@ -120,7 +114,6 @@ def test_constraints_satisfaction_immutable_properties() -> None:
 
 def test_constraints_satisfaction_repr() -> None:
     # Test case with no constraint limit (None)
-    """Test constraints satisfaction repr."""
     satisfied = ConstraintsSatisfaction(Constraints())
     expected = ('ConstraintsSatisfaction(max_inline_container_width_incl=None, '
                 'max_inline_list_or_dict_width_excl=None)')

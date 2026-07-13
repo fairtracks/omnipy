@@ -57,7 +57,6 @@ def sample_macros() -> dict[str, str]:
 
 
 def test_get_macros_from_env() -> None:
-    """Test loading macros from environment variables."""
     # Set up test environment variables
     os.environ['OMNIPY_MACRO_TEST1'] = 'Value 1'
     os.environ['OMNIPY_MACRO_TEST2'] = 'Value 2'
@@ -79,7 +78,6 @@ def test_get_macros_from_env() -> None:
 
 
 def test_find_macros_in_docstring(sample_macros) -> None:
-    """Test finding macros in docstrings."""
     docstring = dedent("""\
         My function.
 
@@ -91,14 +89,12 @@ def test_find_macros_in_docstring(sample_macros) -> None:
 
 
 def test_find_no_macros(sample_macros) -> None:
-    """Test when no macros are present."""
     docstring = 'Simple docstring with no macros.'
     found = find_macros_in_docstring(docstring, sample_macros)
     assert found == set()
 
 
 def test_expand_macros(sample_macros) -> None:
-    """Test expanding macros in text."""
     text = dedent("""\
         My function.
 
@@ -109,7 +105,6 @@ def test_expand_macros(sample_macros) -> None:
 
 
 def test_expand_multi_paragraph_macro_in_first_line(sample_macros) -> None:
-    """Test expansion of multi-line macro at start of docstring."""
     text = dedent("""\
         {{FULL_DESCRIPTION}}""")
 
@@ -119,7 +114,6 @@ def test_expand_multi_paragraph_macro_in_first_line(sample_macros) -> None:
 
 
 def test_hook_load_macros_imports_omnipy_before_reading_env(monkeypatch) -> None:
-    """Test hook imports omnipy before collecting macros from environment."""
     hook_module = _load_expand_docstr_macros_hook_module()
     call_order = []
 
@@ -141,7 +135,6 @@ def test_hook_load_macros_imports_omnipy_before_reading_env(monkeypatch) -> None
 
 
 def test_expand_multiple_macros(sample_macros) -> None:
-    """Test expanding multiple macros."""
     text = dedent("""\
         {{SHORT_DESCRIPTION}}
 
@@ -158,7 +151,6 @@ def test_expand_multiple_macros(sample_macros) -> None:
 
 
 def test_expand_multiple_macros_manage_indentation(sample_macros) -> None:
-    """Test expanding multiple macros."""
     text = dedent("""\
         {{SHORT_DESCRIPTION}}
 
@@ -175,7 +167,6 @@ def test_expand_multiple_macros_manage_indentation(sample_macros) -> None:
 
 
 def test_process_content_first_expansion(sample_macros) -> None:
-    """Test first-time macro expansion in content."""
     source = dedent('''\
         def my_function():
             """
@@ -210,7 +201,6 @@ def test_process_content_first_expansion(sample_macros) -> None:
 
 
 def test_process_content_first_expansion_no_whitespace_at_ends_of_docstr(sample_macros) -> None:
-    """Test first-time macro expansion in content."""
     source = dedent('''\
         def my_function():
             """My function.
@@ -239,7 +229,6 @@ def test_process_content_first_expansion_no_whitespace_at_ends_of_docstr(sample_
 
 
 def test_process_content_no_macros(sample_macros) -> None:
-    """Test content without macros is unchanged."""
     source = dedent('''\
         def my_function():
             """Simple docstring."""
@@ -253,7 +242,6 @@ def test_process_content_no_macros(sample_macros) -> None:
 
 
 def test_process_content_reexpansion(sample_macros) -> None:
-    """Test re-expansion when macro definition changes."""
     # Content that's already been processed
     source = dedent('''\
         def my_function():
@@ -292,7 +280,6 @@ def test_process_content_reexpansion(sample_macros) -> None:
 
 
 def test_process_content_reexpansion_no_whitespace_at_ends_of_docstr(sample_macros) -> None:
-    """Test re-expansion when macro definition changes."""
     # Content that's already been processed
     source = dedent('''\
         def my_function():
@@ -335,7 +322,6 @@ def test_process_content_reexpansion_no_whitespace_at_ends_of_docstr(sample_macr
 
 
 def test_process_content_mixed_text_and_macros_repeated(sample_macros) -> None:
-    """Test docstring with custom text mixed with macros."""
     source = dedent('''\
         def my_function():
             """My custom function.
@@ -388,7 +374,6 @@ def test_process_content_mixed_text_and_macros_repeated(sample_macros) -> None:
 
 
 def test_process_content_class_docstring(sample_macros) -> None:
-    """Test macro expansion in class docstrings."""
     source = dedent('''\
         class MyClass:
             """My class.
@@ -420,7 +405,6 @@ def test_process_content_class_docstring(sample_macros) -> None:
 
 
 def test_process_content_multiple_docstrings(sample_macros) -> None:
-    """Test processing multiple docstrings in same file."""
     source = dedent('''\
         class MyClass:
             """Class docstring.
@@ -473,7 +457,6 @@ def test_process_content_multiple_docstrings(sample_macros) -> None:
 
 
 def test_process_content_empty_string(sample_macros) -> None:
-    """Test processing empty content."""
     result, modified = process_content('', sample_macros)
 
     assert not modified
@@ -481,7 +464,6 @@ def test_process_content_empty_string(sample_macros) -> None:
 
 
 def test_process_content_triple_single_quotes(sample_macros) -> None:
-    """Test with triple single quote docstrings."""
     source = dedent("""\
         def my_function():
             '''My function.

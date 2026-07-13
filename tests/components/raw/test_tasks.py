@@ -11,7 +11,6 @@ from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 
 def test_decode_bytes(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    """Test decoding byte datasets with explicit and inferred encodings."""
     class DecodeCaseInfo(NamedTuple):
         bytes_data: bytes
         target_str: str

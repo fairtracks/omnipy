@@ -21,7 +21,6 @@ class SimplePanel(Panel):
 
 def test_panel():
     # Test with default frame
-    """Test panel."""
     panel = SimplePanel()
     assert panel.title == ''
     assert panel.frame == empty_frame()
@@ -62,7 +61,6 @@ def test_panel():
 
 
 def test_panel_hashable():
-    """Test panel hashable."""
     panel_1 = SimplePanel()
     panel_2 = SimplePanel()
 
@@ -93,7 +91,6 @@ def test_panel_hashable():
 
 # noinspection PyDataclass
 def test_fail_panel_no_assignments():
-    """Test fail panel no assignments."""
     panel = SimplePanel()
 
     with pytest.raises(AttributeError):

@@ -238,7 +238,6 @@ def _assert_runtime_objects_default(
 
 
 def test_config_default() -> None:
-    """Test config default."""
     _assert_runtime_config_default(RuntimeConfig(), Path.cwd())
 
 
@@ -248,7 +247,6 @@ def test_objects_default(
     ui_type: SpecifiedUserInterfaceType.Literals,
     teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture],
 ) -> None:
-    """Test objects default."""
     runtime_objects = RuntimeObjects()
     runtime_objects.setup_reactive(ui_type)
     _assert_runtime_objects_default(runtime_objects, ui_type)
@@ -259,7 +257,6 @@ def test_objects_default(
 def test_default_runtime(ui_type: SpecifiedUserInterfaceType.Literals,
                          runtime: Annotated[IsRuntime, pytest.fixture],
                          tmp_dir_path: Annotated[Path, pytest.fixture]) -> None:
-    """Test default runtime."""
     runtime.config.data.ui.detected_type = ui_type
 
     assert isinstance(runtime.config, RuntimeConfig)
@@ -271,7 +268,6 @@ def test_default_runtime(ui_type: SpecifiedUserInterfaceType.Literals,
 
 def test_data_config_http_config_for_host_default(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    """Test data config HTTP config for host default."""
     assert runtime.config.data.http.for_host['myserver.com']\
         .requests_per_time_period == 60
     runtime.config.data.http.defaults.requests_per_time_period = 30
@@ -282,7 +278,6 @@ def test_data_config_http_config_for_host_default(
 
 
 def test_data_config_display_dimensions(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    """Test data config display dimensions."""
     runtime.config.data.ui.terminal.width = 80
     runtime.config.data.ui.terminal.height = 24
     runtime.config.data.ui.terminal.dims_mode = DisplayDimensionsUpdateMode.FIXED
@@ -307,7 +302,6 @@ def test_data_config_display_dimensions(runtime: Annotated[IsRuntime, pytest.fix
 
 def test_init_runtime_config_after_data_class_creator(
         runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
-    """Test init runtime config after data class creator."""
     DataClassBase.data_class_creator.config.model.dynamically_convert_elements_to_models = True
     runtime = runtime_cls()
 
@@ -322,7 +316,6 @@ def test_init_runtime_config_after_data_class_creator(
 
 def test_init_runtime_config_after_job_creator(
         runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
-    """Test init runtime config after job creator."""
     JobBase.job_creator.config.output_storage.persist_outputs = ConfigPersistOutputsOptions.DISABLED
     runtime = runtime_cls()
 
@@ -456,7 +449,6 @@ def test_basic_runtime_subscriptions(  # noqa: C901
     subscriber_attr_names: tuple[str, ...],
     create_copy: bool,
 ) -> None:
-    """Test basic runtime subscriptions."""
     def _get_nested_attr(obj, attr_names: tuple[str, ...]) -> object:
         """Get nested attr."""
         for attr_name in attr_names:
@@ -530,7 +522,6 @@ def test_basic_runtime_subscriptions(  # noqa: C901
 
 def test_job_creator_subscribes_to_selected_engine(
         runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    """Test job creator subscribes to selected engine."""
     local_runner = runtime.objects.local
     prefect_engine = runtime.objects.prefect
 
@@ -582,7 +573,6 @@ def test_new_engine_object_updates_engine_config_if_needed(
     mock_engine_cls: type,
     mock_config_class: type,
 ) -> None:
-    """Test new engine object updates engine config if needed."""
     def _get_engine_config() -> IsJobRunnerConfig:
         """Get engine config."""
         return getattr(runtime.config.engine, engine_name)

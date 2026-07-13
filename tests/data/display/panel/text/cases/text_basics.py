@@ -54,7 +54,6 @@ def case_syntax_text_empty(
     frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
-    """Return the syntax text empty case."""
     return PanelFrameVariantTestCase(
         content='',
         config=None,
@@ -113,7 +112,6 @@ def case_syntax_text_whitespace(
     frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
-    """Return the syntax text whitespace case."""
     return PanelFrameVariantTestCase(
         content='  \n  ',
         config=None,
@@ -166,7 +164,6 @@ def case_syntax_text_empty_lines(
     frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
-    """Return the syntax text empty lines case."""
     return PanelFrameVariantTestCase(
         content='\n\n',
         config=None,
@@ -428,7 +425,6 @@ def case_syntax_text_simple_text(
     frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
-    """Return the syntax text simple text case."""
     return PanelFrameVariantTestCase(
         content='I scream,\nyou scream,\nwe all scream\nfor ice cream',
         config=None,
@@ -643,7 +639,6 @@ def case_syntax_text_double_width_chars(
     frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
-    """Return the syntax text double width chars case."""
     return PanelFrameVariantTestCase(
         # Mandarin Chinese characters are double-width
         content='北京\n北京',
@@ -884,7 +879,6 @@ def case_syntax_text_tab_char(
     frame_case: FrameTestCase[str, FrameWithWidthAndHeight],
     per_frame_variant: Annotated[FrameVariant, pc.fixture],
 ) -> PanelFrameVariantTestCase[str]:
-    """Return the syntax text tab char case."""
     return PanelFrameVariantTestCase(
         # Tab character width depends on context, filling the spaces until
         # the next tab stop (4 chars by default)

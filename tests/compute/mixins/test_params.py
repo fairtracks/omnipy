@@ -158,7 +158,6 @@ def test_property_param_key_map_default_task() -> None:
 
 
 def test_property_param_key_map_task() -> None:
-    """Test parameter key maps rename accepted arguments."""
     power_m1_template = TaskTemplate(param_key_map=dict(number='n', minus_one='m'))(power_m1_func)
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():

@@ -93,7 +93,6 @@ def _assert_pretty_repr_of_draft(
 )
 def test_pretty_repr_of_draft_multi_line_if_nested(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    """Test pretty representation of draft multi line if nested."""
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     _assert_pretty_repr_of_draft(1, '1', config=config)
@@ -183,7 +182,6 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
     [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
 )
 def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib.Literals,) -> None:
-    """Test pretty representation of draft indent."""
     config = OutputConfig(printer=pretty_printer, freedom=0, indent=4)
 
     _assert_pretty_repr_of_draft(
@@ -208,7 +206,6 @@ def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib.Literals,)
     [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
 )
 def test_pretty_repr_of_draft_in_frame(pretty_printer: PrettyPrinterLib.Literals) -> None:
-    """Test pretty representation of draft in frame."""
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     data = [[0, 1, 2], [[3, 4, 5, 6], [7, 8, 9]]]
@@ -391,7 +388,6 @@ def geometry_data() -> list:
 def test_pretty_repr_of_draft_approximately_in_frame(
         geometry_data: Annotated[list, pytest.fixture],
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    """Test pretty representation of draft approximately in frame."""
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     _assert_pretty_repr_of_draft(
@@ -541,7 +537,6 @@ def test_pretty_repr_of_draft_approximately_in_frame(
 )
 def test_pretty_repr_of_draft_one_line_wider_than_frame_dict(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    """Test pretty representation of draft one line wider than frame dict."""
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     # This is a test for the case where one line is wider than the frame
@@ -598,7 +593,6 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_dict(
 )
 def test_pretty_repr_of_draft_one_line_wider_than_frame_list(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    """Test pretty representation of draft one line wider than frame list."""
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     # This is a test for the case where one line is wider than the frame
@@ -660,7 +654,6 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_list(
 )
 def test_pretty_repr_of_draft_one_line_wider_than_frame_complex(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    """Test pretty representation of draft one line wider than frame complex."""
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     # This is a test for the case where one line is wider than the frame
@@ -727,7 +720,6 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_complex(
     [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
 )
 def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) -> None:
-    """Test pretty representation of draft models."""
     class ListOfIntsModel(Model[list[int]]):
         """Define ListOfIntsModel."""
         ...
@@ -787,7 +779,6 @@ def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) 
 )
 def test_pretty_repr_of_draft_variable_char_weight(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    """Test pretty representation of draft variable char weight."""
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     _assert_pretty_repr_of_draft(
@@ -827,7 +818,6 @@ def test_pretty_repr_of_draft_variable_char_weight(
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
         pretty_printer: PrettyPrinterLib.Literals) -> None:
-    """Test pretty representation of draft multi line if nested known issue."""
     config = OutputConfig(printer=pretty_printer, freedom=0)
     _assert_pretty_repr_of_draft(
         [1, 2, '[...]'],
@@ -840,7 +830,6 @@ def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
 
 
 def test_plain_str_pretty_print() -> None:
-    """Test plain string pretty print."""
     str_data = 'This is a plain string that should not be formatted in any way'
 
     _assert_pretty_repr_of_draft(
@@ -907,7 +896,6 @@ class ColumnPrettyPrintCase:
 
 @pc.case(tags=['column_pretty_print'])
 def case_list_of_strings() -> ColumnPrettyPrintCase:
-    """Return the list of strings case."""
     return ColumnPrettyPrintCase(
         data=['John', 'Jane', 'Jonathan'],
         expected_column_output=dedent("""\
@@ -925,7 +913,6 @@ def case_list_of_strings() -> ColumnPrettyPrintCase:
 
 @pc.parametrize_with_cases('case', cases='.', has_tag='column_pretty_print')
 def test_column_pretty_print(case: ColumnPrettyPrintCase) -> None:
-    """Test column pretty print."""
     _assert_pretty_repr_of_draft(
         case.data,
         exp_plain_output=case.expected_regular_output,

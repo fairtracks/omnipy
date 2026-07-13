@@ -21,7 +21,6 @@ from .helpers.panel_assert import assert_draft_panel_subcls, assert_next_stage_p
 
 
 def test_draft_panel_init() -> None:
-    """Test draft panel init."""
     assert_draft_panel_subcls(DraftPanel, 'Some text')
     assert_draft_panel_subcls(
         DraftPanel, (1, 2, 3), title='UnboundPanel', frame=Frame(Dimensions(None, None)))
@@ -50,7 +49,6 @@ def test_draft_panel_init() -> None:
 
 
 def test_draft_panel_hashable() -> None:
-    """Test draft panel hashable."""
     panel_1 = DraftPanel('')
     panel_2 = DraftPanel('')
 
@@ -80,7 +78,6 @@ def test_draft_panel_hashable() -> None:
 
 def test_draft_panel_mutable_not_hashable() -> None:
     # Test with mutable content
-    """Test draft panel mutable not hashable."""
     mutable_content = [1, 2, 3]
     draft_panel = DraftPanel(mutable_content)
 
@@ -90,7 +87,6 @@ def test_draft_panel_mutable_not_hashable() -> None:
 
 # noinspection PyDataclass
 def test_fail_draft_panel_no_assignments() -> None:
-    """Test fail draft panel no assignments."""
     draft_panel = DraftPanel('Some text')
 
     with pytest.raises(AttributeError):
@@ -111,7 +107,6 @@ def test_fail_draft_panel_no_assignments() -> None:
 
 
 def test_draft_panel_constraints_satisfaction() -> None:
-    """Test draft panel constraints satisfaction."""
     draft_panel = DraftPanel('Some text')
     assert draft_panel.satisfies.max_inline_container_width_incl is None
 
@@ -123,7 +118,6 @@ def test_draft_panel_constraints_satisfaction() -> None:
 def test_draft_panel_with_empty_content() -> None:
 
     # Test with empty string
-    """Test draft panel with empty content."""
     empty_string_draft_panel = DraftPanel('')
 
     assert empty_string_draft_panel.content == ''
@@ -155,7 +149,6 @@ def test_draft_panel_with_empty_content() -> None:
 
 
 def test_draft_panel_render_next_stage_with_repr_simple() -> None:
-    """Test draft panel render next stage with representation simple."""
     draft_panel = DraftPanel('Some text')
     assert_next_stage_panel(
         this_panel=draft_panel,
@@ -172,7 +165,6 @@ def test_draft_panel_render_next_stage_with_repr_simple() -> None:
 
 
 def test_draft_panel_render_next_stage_with_repr_complex() -> None:
-    """Test draft panel render next stage with representation complex."""
     draft_panel_complex = DraftPanel(
         (1, 2, 3),
         title='My text panel',
@@ -199,7 +191,6 @@ def test_draft_panel_render_next_stage_with_repr_complex() -> None:
 
 
 def test_draft_panel_render_next_stage_with_layout_simple() -> None:
-    """Test draft panel render next stage with layout simple."""
     draft_panel: DraftPanel[Layout, AnyFrame] = DraftPanel(Layout())
     assert_next_stage_panel(
         this_panel=draft_panel,
@@ -210,7 +201,6 @@ def test_draft_panel_render_next_stage_with_layout_simple() -> None:
 
 
 def test_draft_panel_render_next_stage_with_layout_complex() -> None:
-    """Test draft panel render next stage with layout complex."""
     draft_panel_complex: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
             tuple=MockStylablePlainCropPanel('(1, 2, 3)', title='Tuple panel'),
@@ -249,7 +239,6 @@ def test_draft_panel_render_next_stage_with_layout_complex() -> None:
 
 
 def test_draft_panel_render_next_stage_with_layout_half_framed() -> None:
-    """Test draft panel render next stage with layout half framed."""
     draft_panel_half_framed: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
             tuple=MockStylablePlainCropPanel(
@@ -290,7 +279,6 @@ def test_draft_panel_render_next_stage_with_layout_half_framed() -> None:
 
 
 def test_draft_panel_render_next_stage_with_layout_half_rendered() -> None:
-    """Test draft panel render next stage with layout half rendered."""
     draft_panel_half_rendered: DraftPanel[Layout, FrameWithWidthAndHeight] = DraftPanel(
         Layout(
             tuple=MockResizedStylablePlainCropPanel('(1,\n2,\n3)', title='Stage 2 tuple panel'),

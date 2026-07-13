@@ -9,7 +9,6 @@ from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 
 def test_nested_panels_with_cropped_column_models() -> None:
     # Pinning down a bug that was extremely hard to pin down
-    """Test nested panels with cropped column models."""
     panel = ResizedLayoutDraftPanel(
         DimensionsAwareDraftPanelLayout(**Layout({
             'inner':

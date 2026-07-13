@@ -9,7 +9,6 @@ from omnipy.util.range_lookup import RangeLookup
 
 def test_range_lookup(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test range lookup."""
     range_lookup = RangeLookup((range(0, 5), range(10, 15)))
     assert 0 in range_lookup
     assert 4 in range_lookup
@@ -22,7 +21,6 @@ def test_range_lookup(
 
 def test_empty_range_lookup(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test empty range lookup."""
     empty_range_lookup = RangeLookup(())
     assert 0 not in empty_range_lookup
     assert 1 not in empty_range_lookup
@@ -30,7 +28,6 @@ def test_empty_range_lookup(
 
 def test_fail_range_lookup_negative_numbers(
         skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    """Test fail range lookup negative numbers."""
     with pytest.raises(ValueError):
         RangeLookup((range(-1, 1),))
 

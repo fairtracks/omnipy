@@ -25,7 +25,6 @@ class ClearBoolChoices(LiteralEnum[bool]):
 
 
 def test_docs_clear_choices_example() -> None:
-    """Test docs clear choices example."""
     def i_need_a_clear_choice(choice: ClearBoolChoices.Literals) -> str:
         match choice:
             case ClearBoolChoices.POSITIVE:
@@ -61,14 +60,12 @@ class AllStrChoices(ClearStrChoices, UnclearStrChoices):
 
 
 def test_docs_multiple_inheritance_example() -> None:
-    """Test docs multiple inheritance example."""
     assert AllStrChoices.POSITIVE == 'yes'
     assert AllStrChoices.MAYBE == 'maybe'
     assert set(get_args(AllStrChoices.Literals)) == {'yes', 'no', 'maybe', 'possibly'}
 
 
 def test_docs_type_narrowing_exhaustiveness_check_with_return() -> None:
-    """Test docs type narrowing exhaustiveness check with return."""
     def is_unclear_choice(choice: AllStrChoices.Literals) -> TypeIs[UnclearStrChoices.Literals]:
         return choice in get_args(UnclearStrChoices.Literals)
 
@@ -90,7 +87,6 @@ def test_docs_type_narrowing_exhaustiveness_check_with_return() -> None:
 
 
 def test_docs_type_narrowing_exhaustiveness_check_with_assert_never() -> None:
-    """Test docs type narrowing exhaustiveness check with assert never."""
     def is_unclear_choice(choice: AllStrChoices.Literals) -> TypeIs[UnclearStrChoices.Literals]:
         return choice in get_args(UnclearStrChoices.Literals)
 
@@ -109,7 +105,6 @@ def test_docs_type_narrowing_exhaustiveness_check_with_assert_never() -> None:
 
 
 def test_docs_pydantic_runtime_validation() -> None:
-    """Test docs pydantic runtime validation."""
     class MyModel(pyd.BaseModel):
         clear: ClearBoolChoices.Literals
         confused: AllStrChoices.Literals

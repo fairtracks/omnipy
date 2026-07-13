@@ -5,7 +5,6 @@ from omnipy.data.model import is_model_instance
 
 
 def test_config_as_model() -> None:
-    """Test configs can be converted to models."""
     from omnipy.components.json.models import JsonDictModel
 
     class MyConfig(ConfigBase):

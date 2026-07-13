@@ -25,7 +25,6 @@ from ...helpers.protocols import AssertModelOrValFunc
 
 
 def test_bytes_dataset() -> None:
-    """Test bytes datasets accepting text and bytes inputs."""
     assert BytesDataset(dict(a=b''))['a'].content == b''
     assert BytesDataset(
         dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
@@ -44,7 +43,6 @@ def test_bytes_dataset() -> None:
 
 
 def test_strict_bytes_dataset() -> None:
-    """Test strict bytes datasets rejecting text inputs."""
     assert StrictBytesDataset(dict(a=b''))['a'].content == b''
     assert StrictBytesDataset(
         dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
@@ -57,7 +55,6 @@ def test_strict_bytes_dataset() -> None:
 
 
 def test_str_dataset() -> None:
-    """Test string datasets decoding bytes with configured encodings."""
     assert StrDataset(dict(a=''))['a'].content == ''
     assert StrDataset(dict(a='æøå'))['a'].content == 'æøå'
     assert StrDataset(dict(a=b''))['a'].content == ''
@@ -82,7 +79,6 @@ def test_str_dataset() -> None:
 
 
 def test_strict_str_dataset() -> None:
-    """Test strict string datasets rejecting bytes inputs."""
     assert StrictStrDataset(dict(a=''))['a'].content == ''
     assert StrictStrDataset(dict(a='æøå'))['a'].content == 'æøå'
 

@@ -25,7 +25,6 @@ def create_app() -> web.Application:
 
 @pc.fixture(scope='function')
 async def my_endpoint_url(aiohttp_server) -> AsyncGenerator[str, None]:
-    """Return the URL for the rate-limiting test endpoint."""
     server = await aiohttp_server(create_app())
     yield str(server.make_url('/my_endpoint'))
 
@@ -64,7 +63,6 @@ async def test_rate_limiting_client_session(
     run_time_min: float,
     run_time_max: float,
 ) -> None:
-    """Test client-side rate limiting keeps request throughput within bounds."""
     client_session = RateLimitingClientSession(requests_per_time_period, time_period_in_secs)
 
     async with client_session:

@@ -75,7 +75,6 @@ def runtime_cls(
     teardown_reset_job_creator: Annotated[None, pytest.fixture],
     teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
 ) -> Type[IsRuntime]:
-    """Return the runtime class configured for tests."""
     from omnipy.hub.runtime import Runtime
     return Runtime
 
@@ -105,7 +104,6 @@ def mock_datetime() -> datetime:
             self._now = datetime.now()
 
         def now(self, tz=None) -> datetime:  # type: ignore[override]
-            """Return the stored timestamp for the mock instance."""
             return self._now
 
     return MockDatetime(2000, 1, 1)
@@ -247,7 +245,6 @@ def pytest_collection_modifyitems(items):
         return item.__class__.__module__.startswith('pytest_mypy_plugins')
 
     def _module_name(item):
-        """Return the module name for a collected item."""
         return item.module.__name__
 
     for mypy_test, tests_per_type in itertools.groupby(items, key=_is_mypy_test):

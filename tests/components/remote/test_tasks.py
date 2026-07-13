@@ -175,7 +175,6 @@ async def test_get_from_api_endpoint_without_retry_client(
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
     case: RequestTypeCase,
 ) -> None:
-    """Test fetching remote endpoint data without an external client session."""
     if case.is_async:
         data = await case.job.run(endpoint.query_urls, **case.kwargs)
     else:

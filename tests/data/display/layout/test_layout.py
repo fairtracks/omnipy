@@ -21,7 +21,6 @@ class SimpleLayoutCase:
 
 
 def test_empty_layout() -> None:
-    """Test empty layout."""
     layout: Layout = Layout()
 
     # Check content
@@ -54,7 +53,6 @@ def simple_layout() -> SimpleLayoutCase:
 
 
 def test_layout_hashable(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test layout hashable."""
     layout_1: Layout = Layout()
     layout_2: Layout = Layout()
 
@@ -76,7 +74,6 @@ def test_layout_hashable(simple_layout: Annotated[SimpleLayoutCase, pytest.fixtu
 
 def test_basic_layout_dict_operations(
         simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test basic layout operations: adding, retrieving, counting and containment."""
     case = simple_layout
 
     # Access by name and check for object identity
@@ -93,7 +90,6 @@ def test_basic_layout_dict_operations(
 
 
 def test_layout_iteration(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test various ways of iterating over the layout panels."""
     case = simple_layout
 
     for i, (key, value) in enumerate(case.layout.items()):
@@ -113,7 +109,6 @@ def test_layout_iteration(simple_layout: Annotated[SimpleLayoutCase, pytest.fixt
 
 def test_layout_insertion_and_deletion(
         simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test insertion and deletion of panels in the layout."""
     case = simple_layout
 
     third_panel = MockStylablePlainCropPanel()
@@ -179,7 +174,6 @@ def test_layout_default_methods(simple_layout: Annotated[SimpleLayoutCase, pytes
 
 def test_layout_update_methods_and_operators(
         simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test update() and binary operators."""
     case = simple_layout
 
     # Test update() with another dict
@@ -219,7 +213,6 @@ def test_layout_update_methods_and_operators(
 
 
 def test_layout_dict_comparison(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test dictionary comparison operations."""
     case = simple_layout
 
     # Create a dict with the same content
@@ -235,7 +228,6 @@ def test_layout_dict_comparison(simple_layout: Annotated[SimpleLayoutCase, pytes
 
 def test_layout_dict_copy_and_clear(
         simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test copy() and clear() methods."""
     case = simple_layout
 
     # Check copy()
@@ -261,7 +253,6 @@ def test_layout_dict_copy_and_clear(
 
 def test_layout_simple_grid_queries(
         simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test simple grid queries."""
     case = simple_layout
 
     assert case.layout.grid.dims == Dimensions(width=2, height=1)
@@ -286,7 +277,6 @@ def test_layout_simple_grid_queries(
 
 def test_layout_simple_grid_insert_and_delete(
         simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test simple grid queries."""
     case = simple_layout
 
     third_panel = MockStylablePlainCropPanel()
@@ -315,7 +305,6 @@ def test_layout_simple_grid_insert_and_delete(
 
 def test_layout_simple_grid_get_row(
         simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
-    """Test getting a row from the grid."""
     case = simple_layout
 
     # Get the first row

@@ -36,7 +36,6 @@ class FlowCase(Generic[ArgT, ReturnT]):
     tags=['sync', 'dagflow', 'singlethread', 'pos_square_root'],
 )
 def case_sync_dagflow_pos_square_root() -> FlowCase:
-    """Return the sync dag flow pos square root case."""
     return FlowCase(
         name='pos_square_root',
         flow_template=pos_square_root_dag_flow,  # noqa
@@ -48,7 +47,6 @@ def case_sync_dagflow_pos_square_root() -> FlowCase:
     tags=['sync', 'funcflow', 'singlethread', 'pos_square_root'],
 )
 def case_sync_funcflow_pos_square_root() -> FlowCase:
-    """Return the sync function flow pos square root case."""
     return FlowCase(
         name='pos_square_root',
         flow_template=pos_square_root_func_flow,  # noqa
@@ -65,7 +63,6 @@ def case_sync_funcflow_pos_square_root() -> FlowCase:
     tags=['sync', 'dagflow', 'singlethread', 'specialize_record_models'],
 )
 def case_sync_dagflow_specialize_record_models() -> FlowCase:
-    """Return the sync dag flow specialize record models case."""
     return FlowCase(
         name='specialize_record_models',
         flow_template=specialize_record_models_dag_flow,  # noqa
@@ -77,7 +74,6 @@ def case_sync_dagflow_specialize_record_models() -> FlowCase:
     tags=['sync', 'funcflow', 'singlethread', 'specialize_record_models'],
 )
 def case_sync_funcflow_specialize_record_models() -> FlowCase:
-    """Return the sync function flow specialize record models case."""
     return FlowCase(
         name='specialize_record_models',
         flow_template=specialize_record_models_func_flow,  # noqa

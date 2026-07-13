@@ -5,7 +5,6 @@ from omnipy.components.tables.tasks import create_row_index_from_column
 
 
 def test_create_row_index_from_column():
-    """Test creating row-indexed tables from a named column."""
     in_dataset = TableListOfDictsOfJsonScalarsDataset(
         abc=[{
             'name': 'abc_0', 'x': 33.2, 'y': 14.5

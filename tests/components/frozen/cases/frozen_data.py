@@ -44,7 +44,6 @@ FSV: TypeAlias = None | int | str | complex  # for values
 
 @pc.case(id='test_frozen_tuples', tags=[])
 def case_test_frozen_tuples() -> CaseInfo:
-    """Return the test frozen tuples case."""
     @dataclass
     class FrozenTuplesDataPoints:
         #
@@ -85,7 +84,6 @@ def case_test_frozen_tuples() -> CaseInfo:
 
 @pc.case(id='test_frozen_tuples_no_type_args', tags=[])
 def case_test_frozen_tuples_no_type_args() -> CaseInfo:
-    """Return the test frozen tuples no type args case."""
     @dataclass
     class FrozenTuplesNoTypeArgsDataPoints:
         #
@@ -104,7 +102,6 @@ def case_test_frozen_tuples_no_type_args() -> CaseInfo:
 
 @pc.case(id='test_frozen_dicts', tags=[])
 def case_frozen_dicts() -> CaseInfo:
-    """Return the frozen dicts case."""
     @dataclass
     class FrozenDictsDataPoints:
         #
@@ -170,7 +167,6 @@ def case_frozen_dicts() -> CaseInfo:
     """))
 @pc.case(id='test_frozen_dicts_known_issue', tags=[])
 def case_frozen_dicts_known_issue() -> CaseInfo:
-    """Return the frozen dicts known issue case."""
     @dataclass
     class FrozenDictsDataPoints:
         #
@@ -195,7 +191,6 @@ def case_frozen_dicts_known_issue() -> CaseInfo:
 
 @pc.case(id='test_frozen_dicts_or_tuples', tags=[])
 def case_frozen_dicts_or_tuples() -> CaseInfo:
-    """Return the frozen dicts or tuples case."""
     @dataclass
     class FrozenDictsOrTuplesDataPoints:
         #
@@ -243,7 +238,6 @@ def case_frozen_dicts_or_tuples() -> CaseInfo:
 
 @pc.case(id='test_nested_frozen_dicts_or_tuples', tags=[])
 def case_nested_frozen_dicts_or_tuples() -> CaseInfo:
-    """Return the nested frozen dicts or tuples case."""
     _two_level_list: list[FSV | list[FSV] | dict[str, FSV]] = \
         f_list + [list(f_list)] + [dict(f_dict)]
     _two_level_dict: dict[str, str | list[FSV] | dict[str, FSV]] = \
@@ -321,7 +315,6 @@ def case_nested_frozen_dicts_or_tuples() -> CaseInfo:
 
 @pc.case(id='test_nested_frozen_tuples', tags=[])
 def case_nested_frozen_tuples() -> CaseInfo:
-    """Return the nested frozen tuples case."""
     @dataclass
     class NestedFrozenTuplesDataPoints:
 
@@ -368,7 +361,6 @@ def case_nested_frozen_tuples() -> CaseInfo:
 
 @pc.case(id='test_nested_frozen_dicts', tags=[])
 def case_nested_frozen_dicts() -> CaseInfo:
-    """Return the nested frozen dicts case."""
     @dataclass
     class NestedFrozenDictsDataPoints:
 
@@ -438,7 +430,6 @@ def case_nested_frozen_dicts() -> CaseInfo:
     """))
 @pc.case(id='test_nested_frozen_dicts_known_issue', tags=[])
 def case_nested_frozen_dicts_known_issue() -> CaseInfo:
-    """Return the nested frozen dicts known issue case."""
     @dataclass
     class NestedFrozenDictsDataPoints:
 

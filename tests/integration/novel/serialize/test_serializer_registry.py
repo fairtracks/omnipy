@@ -29,7 +29,6 @@ def test_serializer_registry_auto_detect_pandas_dataset(
     registry: Annotated[IsSerializerRegistry, pytest.fixture],
     pandas_dataset: Annotated[PandasDataset, pytest.fixture],
 ):
-    """Test serializer registry auto detect pandas dataset."""
     dataset, serializer = registry.auto_detect_tar_file_serializer(pandas_dataset)
     assert serializer is PandasDatasetToTarFileSerializer
 
@@ -38,7 +37,6 @@ def test_serializer_registry_auto_detect_json_table_dataset(
     registry: Annotated[IsSerializerRegistry, pytest.fixture],
     json_table_dataset: Annotated[JsonDataset, pytest.fixture],
 ):
-    """Test serializer registry auto detect JSON table dataset."""
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_table_dataset)
     assert serializer is JsonDatasetToTarFileSerializer
 
@@ -47,7 +45,6 @@ def test_serializer_registry_auto_detect_json_dataset(
     registry: Annotated[IsSerializerRegistry, pytest.fixture],
     json_dataset: Annotated[JsonDataset, pytest.fixture],
 ):
-    """Test serializer registry auto detect JSON dataset."""
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_dataset)
     assert serializer is JsonDatasetToTarFileSerializer
 
@@ -56,7 +53,6 @@ def test_serializer_registry_auto_detect_json_table_as_str_dataset(
     registry: Annotated[IsSerializerRegistry, pytest.fixture],
     json_table_as_str_dataset: Annotated[Dataset[Model[str]], pytest.fixture],
 ):
-    """Test serializer registry auto detect JSON table as string dataset."""
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_table_as_str_dataset)
     assert serializer is RawStrDatasetToTarFileSerializer
 
@@ -65,7 +61,6 @@ def test_serializer_registry_auto_detect_json_str_dataset(
     registry: Annotated[IsSerializerRegistry, pytest.fixture],
     json_str_dataset: Annotated[Dataset[Model[str]], pytest.fixture],
 ):
-    """Test serializer registry auto detect JSON string dataset."""
     dataset, serializer = registry.auto_detect_tar_file_serializer(json_str_dataset)
     assert serializer is RawStrDatasetToTarFileSerializer
 
@@ -74,7 +69,6 @@ def test_serializer_registry_auto_detect_csv_dataset(
     registry: Annotated[IsSerializerRegistry, pytest.fixture],
     csv_dataset: Annotated[StrDataset, pytest.fixture],
 ):
-    """Test serializer registry auto detect CSV dataset."""
     dataset, serializer = registry.auto_detect_tar_file_serializer(csv_dataset)
     assert serializer is RawStrDatasetToTarFileSerializer
 
@@ -83,7 +77,6 @@ def test_serializer_registry_auto_detect_str_dataset(
     registry: Annotated[IsSerializerRegistry, pytest.fixture],
     str_dataset: Annotated[StrDataset, pytest.fixture],
 ):
-    """Test serializer registry auto detect string dataset."""
     dataset, serializer = registry.auto_detect_tar_file_serializer(str_dataset)
     assert serializer is RawStrDatasetToTarFileSerializer
 
@@ -92,6 +85,5 @@ def test_serializer_registry_auto_detect_python_dataset(
     registry: Annotated[IsSerializerRegistry, pytest.fixture],
     python_dataset: Annotated[Dataset[Model[object]], pytest.fixture],
 ):
-    """Test serializer registry auto detect python dataset."""
     dataset, serializer = registry.auto_detect_tar_file_serializer(python_dataset)
     assert serializer is None

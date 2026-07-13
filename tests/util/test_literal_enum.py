@@ -8,7 +8,6 @@ from omnipy.util.literal_enum import LiteralEnum
 
 
 def test_basic_creation() -> None:
-    """Test basic creation."""
     class Status(LiteralEnum):
         Literals = Literal['active', 'inactive']
         ACTIVE: Literal['active'] = 'active'
@@ -20,7 +19,6 @@ def test_basic_creation() -> None:
 
 
 def test_creation_boolean_values() -> None:
-    """Test creation boolean values."""
     class BoolChoice(LiteralEnum):
         Literals = Literal[True, False]
         YES: Literal[True] = True
@@ -39,7 +37,6 @@ def test_creation_boolean_values() -> None:
 
 
 def test_creation_numeric_values() -> None:
-    """Test creation numeric values."""
     class Priority(LiteralEnum):
         Literals = Literal[1, 2, 3]
         LOW: Literal[1] = 1
@@ -60,7 +57,6 @@ def test_creation_numeric_values() -> None:
 
 
 def test_creation_mixed_type_values() -> None:
-    """Test creation mixed type values."""
     class Mixed(LiteralEnum):
         Literals = Literal['text', 42, True]
         TEXT: Literal['text'] = 'text'
@@ -83,7 +79,6 @@ def test_creation_mixed_type_values() -> None:
 
 
 def test_basic_inheritance() -> None:
-    """Test basic inheritance."""
     class BaseChoices(LiteralEnum):
         Literals = Literal['yes', 'no']
         YES: Literal['yes'] = 'yes'
@@ -104,7 +99,6 @@ def test_basic_inheritance() -> None:
 
 
 def test_missing_literals_attribute() -> None:
-    """Test missing literals attribute."""
     with pytest.raises(TypeError, match='must define a Literals property'):
 
         class BadEnum(LiteralEnum):
@@ -112,7 +106,6 @@ def test_missing_literals_attribute() -> None:
 
 
 def test_literals_not_literal_type() -> None:
-    """Test literals not literal type."""
     with pytest.raises(AssertionError, match='must be defined as a Literal type'):
 
         class BadEnum(LiteralEnum):
@@ -121,7 +114,6 @@ def test_literals_not_literal_type() -> None:
 
 
 def test_attribute_not_in_literals() -> None:
-    """Test attribute not in literals."""
     with pytest.raises(TypeError, match='is not defined in'):
 
         class BadEnum(LiteralEnum):
@@ -131,7 +123,6 @@ def test_attribute_not_in_literals() -> None:
 
 
 def test_missing_attribute_definition() -> None:
-    """Test missing attribute definition."""
     with pytest.raises(TypeError, match='Not all choices.*are defined as members'):
 
         class BadEnum(LiteralEnum):
@@ -142,7 +133,6 @@ def test_missing_attribute_definition() -> None:
 
 
 def test_literals_not_in_line_with_specialization() -> None:
-    """Test literals not in line with specialization."""
     with pytest.raises(TypeError, match=r'Literal values do not match the specialization'):
 
         class BadEnum(LiteralEnum[str | bool]):
@@ -154,7 +144,6 @@ def test_literals_not_in_line_with_specialization() -> None:
 
 
 def test_not_uppercase_attribute_name() -> None:
-    """Test not uppercase attribute name."""
     with pytest.raises(AssertionError, match='must be an uppercase attribute name'):
 
         class BadEnum(LiteralEnum):
@@ -163,7 +152,6 @@ def test_not_uppercase_attribute_name() -> None:
 
 
 def test_name_check_works_with_reserved_names() -> None:
-    """Test name check works with reserved names."""
     with pytest.raises(AssertionError, match='must be an uppercase attribute name'):
 
         class BadEnum(LiteralEnum):
@@ -173,7 +161,6 @@ def test_name_check_works_with_reserved_names() -> None:
 
 
 def test_attribute_lacking_annotation() -> None:
-    """Test attribute lacking annotation."""
     with pytest.raises(AssertionError, match='must be annotated as a Literal type'):
 
         class BadEnum(LiteralEnum):
@@ -182,7 +169,6 @@ def test_attribute_lacking_annotation() -> None:
 
 
 def test_attribute_wrong_annotation() -> None:
-    """Test attribute wrong annotation."""
     with pytest.raises(AssertionError, match='must be annotated as a Literal type'):
 
         class BadEnum(LiteralEnum):
@@ -191,7 +177,6 @@ def test_attribute_wrong_annotation() -> None:
 
 
 def test_attribute_incorrect_literal() -> None:
-    """Test attribute incorrect literal."""
     with pytest.raises(AssertionError, match='value of the Literal annotation must match'):
 
         class BadEnum(LiteralEnum):
@@ -200,7 +185,6 @@ def test_attribute_incorrect_literal() -> None:
 
 
 def test_attribute_too_many_literal_values() -> None:
-    """Test attribute too many literal values."""
     with pytest.raises(AssertionError, match='value of the Literal annotation must match'):
 
         class BadEnum(LiteralEnum):
@@ -209,7 +193,6 @@ def test_attribute_too_many_literal_values() -> None:
 
 
 def test_attribute_value_mismatch() -> None:
-    """Test attribute value mismatch."""
     with pytest.raises(TypeError, match='is not defined in'):
 
         class BadEnum(LiteralEnum):
@@ -219,7 +202,6 @@ def test_attribute_value_mismatch() -> None:
 
 def test_empty_literals() -> None:
     # This should work but be practically useless
-    """Test empty literals."""
     class EmptyEnum(LiteralEnum):
         Literals = Literal[()]  # type: ignore[valid-type]
 
@@ -228,7 +210,6 @@ def test_empty_literals() -> None:
 
 
 def test_single_value_enum() -> None:
-    """Test single value enum."""
     class SingleEnum(LiteralEnum):
         Literals = Literal['only']
         ONLY: Literal['only'] = 'only'
@@ -239,7 +220,6 @@ def test_single_value_enum() -> None:
 
 def test_duplicate_values_different_names() -> None:
     # This should work - same value with different attribute names
-    """Test duplicate values different names."""
     class DuplicateEnum(LiteralEnum):
         Literals = Literal['same', 'same']
         FIRST: Literal['same'] = 'same'
@@ -249,7 +229,6 @@ def test_duplicate_values_different_names() -> None:
 
 
 def test_private_attributes_ignored() -> None:
-    """Test private attributes ignored."""
     class WithPrivate(LiteralEnum):
         Literals = Literal['public']
         PUBLIC: Literal['public'] = 'public'
@@ -262,7 +241,6 @@ def test_private_attributes_ignored() -> None:
 
 
 def test_names_method() -> None:
-    """Test names method."""
     class ColorsEnum(LiteralEnum):
         Literals = Literal['red', 'green']
         RED: Literal['red'] = 'red'
@@ -279,7 +257,6 @@ def test_names_method() -> None:
 
 
 def test_name_for_value() -> None:
-    """Test name for value."""
     class NumbersEnum(LiteralEnum):
         Literals = Literal['one', 'two']
         ONE: Literal['one'] = 'one'
@@ -314,7 +291,6 @@ def test_name_for_value() -> None:
 
 
 def test_contains() -> None:
-    """Test contains."""
     class ColorsEnum(LiteralEnum):
         Literals = Literal['red', 'green']
         RED: Literal['red'] = 'red'
@@ -352,7 +328,6 @@ def test_contains() -> None:
 
 
 def test_iteration() -> None:
-    """Test iteration."""
     class NumbersEnum(LiteralEnum):
         Literals = Literal['one', 'two']
         ONE: Literal['one'] = 'one'
@@ -385,7 +360,6 @@ def test_iteration() -> None:
 
 
 def test_random_choice() -> None:
-    """Test random choice."""
     class RandomEnum(LiteralEnum):
         Literals = Literal['apple', 'banana']
         APPLE: Literal['apple'] = 'apple'
@@ -413,7 +387,6 @@ def test_random_choice() -> None:
 
 
 def test_random_choice_no_excluded_prefixes() -> None:
-    """Test random choice no excluded prefixes."""
     class RandomEnum(LiteralEnum):
         Literals = Literal['apple', 'auto', 'random-fruit']
         APPLE: Literal['apple'] = 'apple'
@@ -426,7 +399,6 @@ def test_random_choice_no_excluded_prefixes() -> None:
 
 
 def test_is_random_choice_val() -> None:
-    """Test is random choice val."""
     class RandomEnum(LiteralEnum):
         Literals = Literal['apple', 'auto', 'random-fruit']
         APPLE: Literal['apple'] = 'apple'

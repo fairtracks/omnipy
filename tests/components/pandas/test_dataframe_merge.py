@@ -18,7 +18,6 @@ def test_join_tables(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case: TablePairCase,
 ):
-    """Test joining two pandas tables for each supported join type."""
     from omnipy.components.pandas.lazy_import import pd
 
     table_1 = PandasModel(convert_testcase_table_to_dataframe(case.table_1))
@@ -40,7 +39,6 @@ def test_cartesian_product_of_tables(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case: TablePairCase,
 ):
-    """Test computing the cartesian product of two pandas tables."""
     from omnipy.components.pandas.lazy_import import pd
 
     table_1 = PandasModel(convert_testcase_table_to_dataframe(case.table_1))

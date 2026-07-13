@@ -12,7 +12,6 @@ from ..helpers.panel_assert import assert_draft_panel_subcls, assert_next_stage_
 
 
 def test_bytes_draft_panel_init() -> None:
-    """Test bytes draft panel init."""
     assert_draft_panel_subcls(DraftPanel, b'\xc3\xa6\xc3\xb8\xc3\xa5')
 
     assert_draft_panel_subcls(
@@ -26,7 +25,6 @@ def test_bytes_draft_panel_init() -> None:
 
 
 def test_bytes_draft_panel_render_next_stage_simple() -> None:
-    """Test bytes draft panel render next stage simple."""
     text_draft_panel = DraftPanel(b'\xc3\xa6\xc3\xb8\xc3\xa5')
     assert_next_stage_panel(
         this_panel=text_draft_panel,
@@ -43,7 +41,6 @@ def test_bytes_draft_panel_render_next_stage_simple() -> None:
 
 
 def test_bytes_draft_panel_render_next_stage_with_repr_complex() -> None:
-    """Test bytes draft panel render next stage with representation complex."""
     draft_panel_complex = DraftPanel(
         b'\xc3\xa6\xc3\xb8\xc3\xa5',
         title='My repr panel',

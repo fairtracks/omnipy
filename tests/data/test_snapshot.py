@@ -50,7 +50,6 @@ def _take_snapshot(snapshot_holder: IsSnapshotHolder, obj: HasContent) -> None:
 
 
 def test_snapshot_holder_all_are_empty_and_clear() -> None:
-    """Test snapshot holder all are empty and clear."""
     snapshot_holder = SnapshotHolder[MyList, list]()
     assert snapshot_holder.all_are_empty()
 
@@ -94,7 +93,6 @@ def test_snapshot_holder_all_are_empty_and_clear() -> None:
 
 # TODO: Refactor into smaller tests
 def test_snapshots() -> None:
-    """Test snapshots."""
     snapshot_holder = SnapshotHolder[MyList | MyDict, list | dict]()
 
     my_list = MyList([1, 3, 5])
@@ -174,7 +172,6 @@ def test_snapshots() -> None:
 
 
 def test_snapshot_deepcopy_reuse_objects() -> None:
-    """Test snapshot deepcopy reuse objects."""
     snapshot_holder = SnapshotHolder['MyMemoDeletingList', list | dict]()
 
     # def finalize(content_id: int) -> None:
@@ -255,7 +252,6 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
 
 
 def test_snapshot_deepcopy_exception_cleanup() -> None:
-    """Test snapshot deepcopy exception cleanup."""
     class Dynamite:
         def __deepcopy__(self, memo={}):
             memo[id(memo)].append(self)
@@ -289,7 +285,6 @@ def test_snapshot_deepcopy_exception_cleanup() -> None:
 
 
 def test_snapshot_holder_deepcopy_memo_status_delete_and_clear() -> None:
-    """Test snapshot holder deepcopy memo status delete and clear."""
     snapshot_holder = SnapshotHolder[MyList, list | dict]()
 
     my_first_list = MyList([1, 3, 5])

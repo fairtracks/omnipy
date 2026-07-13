@@ -4,7 +4,6 @@ from omnipy.util.param_key_mapper import ParamKeyMapper
 
 
 def test_map_matching_keys():
-    """Test map matching keys."""
     param_key_mapper = ParamKeyMapper(dict(
         long_key='long',
         longer_key='longer',
@@ -39,7 +38,6 @@ def test_map_matching_keys():
 
 
 def test_map_matching_keys_empty():
-    """Test map matching keys empty."""
     param_key_mapper = ParamKeyMapper({})
     assert param_key_mapper.map_matching_keys(
         dict(abc=123),
@@ -108,7 +106,6 @@ def test_map_matching_keys_empty():
 
 
 def test_delete_matching_keys():
-    """Test delete matching keys."""
     param_key_mapper = ParamKeyMapper(dict(
         long_key='long',
         longer_key='longer',
@@ -126,7 +123,6 @@ def test_delete_matching_keys():
 
 
 def test_delete_matching_keys_empty():
-    """Test delete matching keys empty."""
     param_key_mapper = ParamKeyMapper(dict())
 
     assert param_key_mapper.delete_matching_keys(
@@ -163,7 +159,6 @@ def test_delete_matching_keys_empty():
 
 
 def test_map_matching_keys_delete_inverse_matches_keep_rest():
-    """Test map matching keys delete inverse matches keep rest."""
     param_key_mapper = ParamKeyMapper(dict(
         long_key='long',
         longer_key='longer',
@@ -181,7 +176,6 @@ def test_map_matching_keys_delete_inverse_matches_keep_rest():
 
 
 def test_map_matching_keys_delete_inverse_matches_keep_rest_empty():
-    """Test map matching keys delete inverse matches keep rest empty."""
     param_key_mapper = ParamKeyMapper(dict())
     assert param_key_mapper.map_matching_keys_delete_inverse_matches_keep_rest(
         dict(abc=123),

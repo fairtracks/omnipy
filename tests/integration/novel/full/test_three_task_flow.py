@@ -16,7 +16,6 @@ from .cases.flows import FlowCase
 def test_specialize_record_models_signature_and_return_type_func(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-    """Test specialize record models signature and return type func."""
     for flow_obj in case.flow_template, case.flow_template.apply():
         assert flow_obj.param_signatures == {
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
@@ -29,7 +28,6 @@ def test_specialize_record_models_signature_and_return_type_func(
 def test_run_three_task_flow(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-    """Test run three task flow."""
     pos_square_root_tmpl = case.flow_template
     assert pos_square_root_tmpl.run(4, 'result') == {'pos_square_root': 'RESULT: 2.0'}
 
@@ -44,7 +42,6 @@ def test_run_three_task_flow(
 def test_refine_three_task_flow(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-    """Test refine three task flow."""
     pos_square_root_tmpl = case.flow_template.refine(
         name='pos_sqrt',
         fixed_params=dict(text='='),
@@ -69,7 +66,6 @@ def test_refine_three_task_flow(
 def test_revise_refine_three_task_flow(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-    """Test revise refine three task flow."""
     pos_square_root = case.flow_template.refine(
         name='pos_sqrt',
         fixed_params=dict(text='='),
@@ -90,7 +86,6 @@ def test_revise_refine_three_task_flow(
 def test_revise_refine_three_task_dagflow_alternative(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-    """Test revise refine three task dag flow alternative."""
     pos_square_root = case.flow_template.refine(
         name='pos_sqrt',
         fixed_params=dict(text='='),

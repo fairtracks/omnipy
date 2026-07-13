@@ -17,7 +17,6 @@ from .helpers.models import PydanticParentModel
 
 
 def test_is_model_instance() -> None:
-    """Test is model instance."""
     assert not is_model_instance(123)
     assert is_model_instance(Model[int](123))
     assert not is_model_instance(None)
@@ -26,7 +25,6 @@ def test_is_model_instance() -> None:
 
 
 def test_is_model_subclass() -> None:
-    """Test is model subclass."""
     assert not is_model_subclass(int)
     assert is_model_subclass(Model[int])
 
@@ -41,7 +39,6 @@ def test_is_model_subclass() -> None:
 
 
 def test_obj_or_model_content_isinstance_for_regular_objects() -> None:
-    """Test obj or model content isinstance for regular objects."""
     assert obj_or_model_content_isinstance(123, int)
     assert obj_or_model_content_isinstance('abc', str)
     assert obj_or_model_content_isinstance([1, 2, 3], list)
@@ -66,7 +63,6 @@ def test_obj_or_model_content_isinstance_for_regular_objects() -> None:
 
 
 def test_obj_or_model_content_isinstance_for_models() -> None:
-    """Test obj or model content isinstance for models."""
     assert obj_or_model_content_isinstance(Model[int](123), int)
     assert obj_or_model_content_isinstance(Model[str]('abc'), str)
     assert obj_or_model_content_isinstance(Model[list[int]]([1, 2, 3]), list)
@@ -94,7 +90,6 @@ def test_obj_or_model_content_isinstance_for_models() -> None:
 
 
 def test_all_model_type_variants() -> None:
-    """Test all model type variants."""
     from omnipy.data._typing.helpers import all_model_type_variants
 
     class MyModel(Model[list[int] | float | Model[list[str] | list[int]]]):
@@ -105,7 +100,6 @@ def test_all_model_type_variants() -> None:
 
 
 def test_all_dataset_type_variants() -> None:
-    """Test all dataset type variants."""
     from omnipy.data._typing.helpers import all_dataset_type_variants
     from omnipy.data.dataset import Dataset
 
@@ -117,7 +111,6 @@ def test_all_dataset_type_variants() -> None:
 
 
 def test_is_pydantic_model() -> None:
-    """Test is pydantic model."""
     class PydanticModel(pyd.BaseModel):
         ...
 

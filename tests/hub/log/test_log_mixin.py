@@ -17,7 +17,6 @@ from ..helpers.functions import assert_log_line_from_stream, format_datetime_obj
 
 @pc.case(id='my_class_as_regular_log_mixin_subclass')
 def case_my_class_as_regular_log_mixin_subclass() -> Type:
-    """Return the my class as regular log mixin subclass case."""
     class MyClass(LogMixin):
         """Define MyClass."""
         def __init__(self, foo: int, bar: bool = True, **kwargs: object):
@@ -30,7 +29,6 @@ def case_my_class_as_regular_log_mixin_subclass() -> Type:
 
 @pc.case(id='my_class_as_dynamic_log_mixin_subclass')
 def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
-    """Return the my class as dynamic log mixin subclass case."""
     class MyClass(DynamicMixinAcceptor):
         """Define MyClass."""
         def __init__(self, foo: int, bar: bool = True, **kwargs: object):
@@ -46,7 +44,6 @@ def test_default_log(
     runtime: Annotated[IsRuntime, pytest.fixture],
     my_class_with_log_mixin: Annotated[Type, pytest.fixture],
 ):
-    """Test default log."""
     my_stdout = StringIO()
     runtime.config.root_log.stdout = my_stdout
 

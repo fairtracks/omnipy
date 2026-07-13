@@ -20,7 +20,6 @@ from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, T
 
 # TODO: After Pydantic v2 support: Add "-> None" to all tests to open up for mypy syntax checking
 def test_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
-    """Test table models."""
     GeneralTable([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
 
     TableTemplate[MyRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
@@ -30,7 +29,6 @@ def test_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
 
 
 def test_dataset_with_multiple_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
-    """Test dataset with multiple table models."""
     my_dataset = MultiModelDataset[GeneralTable]()
 
     my_dataset['a'] = [{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}]
@@ -83,7 +81,6 @@ MultiModelDataset as having two classes is useful for task typing, see e.g. the 
 definition of 'specialize_record_models' below.
 """)
 def test_dataset_with_multiple_table_models_json_schema():
-    """Test dataset with multiple table models JSON schema."""
     my_dataset = MultiModelDataset[GeneralTable]()
 
     my_dataset.set_model('a', TableTemplate[MyRecordSchema])
@@ -97,7 +94,6 @@ def test_dataset_with_multiple_table_models_json_schema():
 def test_specialize_record_models_signature_and_return_type_func(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-    """Test specialize record models signature and return type func."""
     for flow_obj in case.flow_template, case.flow_template.apply():
         assert inspect.signature(flow_obj).parameters == {
             'tables':
@@ -118,7 +114,6 @@ def test_run_specialize_record_models_consistent_types(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         skip_test_if_dynamically_convert_elements_to_models,
         case: FlowCase):
-    """Test run specialize record models consistent types."""
     specialize_record_models = case.flow_template.apply()
 
     old_dataset = Dataset[GeneralTable]()
@@ -141,7 +136,6 @@ def test_run_specialize_record_models_consistent_types(
 def test_fail_run_specialize_record_models_inconsistent_types(
         runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
         case: FlowCase):
-    """Test fail run specialize record models inconsistent types."""
     specialize_record_models = case.flow_template.apply()
 
     old_dataset = Dataset[GeneralTable]()

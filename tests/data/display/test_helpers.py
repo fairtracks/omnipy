@@ -4,7 +4,6 @@ from omnipy.data._display.helpers import soft_wrap_words, UnicodeCharWidthMap
 
 
 def test_unicode_char_width_map() -> None:
-    """Test unicode char width map."""
     map = UnicodeCharWidthMap()
     assert map['\0'] == 0
     assert map['\x1f'] == 0

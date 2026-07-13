@@ -87,7 +87,6 @@ def test_job_state_transitions(
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
-    """Test job state transitions."""
     for job_a, job_b in [(task_a, task_b), (dag_flow_a, dag_flow_b)]:
         registry = RunStateRegistry()
 
@@ -138,7 +137,6 @@ def test_fail_job_state_transitions(
     task_a: Annotated[IsTask, pytest.fixture],
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
 ):
-    """Test fail job state transitions."""
     for job_a in [task_a, dag_flow_a]:
         registry = RunStateRegistry()
 
@@ -180,7 +178,6 @@ def test_datetime_of_state_change_event(
     task_a: Annotated[IsTask, pytest.fixture],
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
 ):
-    """Test datetime of state change event."""
     for job_a in [task_a, dag_flow_a]:
         registry = RunStateRegistry()
         cur_time = datetime.now()
@@ -212,7 +209,6 @@ def test_fail_job_key_error(
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
-    """Test fail job key error."""
     for job_a, job_b in [(task_a, task_b), (dag_flow_a, dag_flow_b)]:
         registry = RunStateRegistry()
 
@@ -242,7 +238,6 @@ def test_same_unique_name_different_job(
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
-    """Test same unique name different job."""
     for job_a, job_b in [(task_a, task_b), (dag_flow_a, dag_flow_b)]:
         job_b = copy(job_b)
         job_b.name = job_a.name
@@ -268,7 +263,6 @@ def test_state_change_logging(
     dag_flow_a: Annotated[IsDagFlow, pytest.fixture],
     dag_flow_b: Annotated[IsDagFlow, pytest.fixture],
 ):
-    """Test state change logging."""
     my_stdout = StringIO()
     runtime.config.root_log.stdout = my_stdout
 

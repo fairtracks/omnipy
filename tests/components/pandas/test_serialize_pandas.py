@@ -10,7 +10,6 @@ from .helpers.asserts import assert_pandas_dataset_equals
 
 
 def test_pandas_dataset_serializer_to_tar_file():
-    """Test serializing and deserializing a pandas dataset tar archive."""
     pandas_data = PandasDataset()
     pandas_data.from_data({'data_file_1': [{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]})
     pandas_data.from_data({'data_file_2': [{'a': 'abc', 'b': 12}, {'c': 'bcd'}]})

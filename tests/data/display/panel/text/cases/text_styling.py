@@ -30,7 +30,6 @@ from ...helpers.panel_assert import (fill_html_page_template,
 @pc.case(id='wrap_horizontal', tags=['overflow_modes', 'syntax_text'])
 def case_syntax_styling_wrap_horizontal(
         common_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
-    """Return the syntax styling wrap horizontal case."""
     return PanelOutputTestCase(  # pyright: ignore [reportCallIssue]
         content=common_content,
         frame=Frame(Dimensions(22, None)),
@@ -49,7 +48,6 @@ def case_syntax_styling_wrap_horizontal(
 @pc.case(id='ellipsis_horizontal', tags=['overflow_modes', 'syntax_text'])
 def case_syntax_styling_ellipsis_horizontal(
         common_text_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
-    """Return the syntax styling ellipsis horizontal case."""
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(22, None)),
@@ -66,7 +64,6 @@ def case_syntax_styling_ellipsis_horizontal(
 @pc.case(id='crop_horizontal', tags=['overflow_modes', 'syntax_text'])
 def case_syntax_styling_crop_horizontal(
         common_text_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
-    """Return the syntax styling crop horizontal case."""
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(22, None)),
@@ -83,7 +80,6 @@ def case_syntax_styling_crop_horizontal(
 @pc.case(id='wrap_small_frame', tags=['overflow_modes', 'syntax_text'])
 def case_syntax_styling_wrap_small_frame(
         common_text_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
-    """Return the syntax styling wrap small frame case."""
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(10, 8)),
@@ -106,7 +102,6 @@ def case_syntax_styling_wrap_small_frame(
 @pc.case(id='wrap_crop_bottom', tags=['overflow_modes', 'syntax_text'])
 def case_syntax_styling_wrap_crop_bottom(
         common_text_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
-    """Return the syntax styling wrap crop bottom case."""
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(10, 4)),
@@ -128,7 +123,6 @@ def case_syntax_styling_wrap_crop_bottom(
 @pc.case(id='wrap_crop_top', tags=['overflow_modes', 'syntax_text'])
 def case_syntax_styling_wrap_crop_top(
         common_text_content: Annotated[str, pc.fixture]) -> PanelOutputTestCase[str]:
-    """Return the syntax styling wrap crop top case."""
     return PanelOutputTestCase(
         content=common_text_content,
         frame=Frame(Dimensions(10, 1)),
@@ -148,7 +142,6 @@ def case_syntax_styling_wrap_crop_top(
 @pc.case(id='no-frame-default-color', tags=['setup', 'syntax_text'])
 def case_syntax_styling_setup_no_frame_or_configs(
         solid_background: bool) -> StylizedPanelTestCaseSetup[str]:
-    """Return the syntax styling setup no frame or configs case."""
     return StylizedPanelTestCaseSetup(
         case_id='no-frame-default-color' + ('-no-bg' if not solid_background else ''),
         content="MyClass({'abc': [123, 234]})",
@@ -177,7 +170,6 @@ def case_syntax_styling_setup_no_frame_color_config(
         css_font_weight: int | None,
         css_line_height: float | None,
         solid_background: bool) -> StylizedPanelTestCaseSetup[str]:
-    """Return the syntax styling setup no frame color config case."""
     case_id = 'no-frame-light-color' \
               + ('-no-fonts' if css_font_weight is None else '') \
               + ('-font-styling-only' if css_font_weight == 500 else '') \
@@ -212,7 +204,6 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
     color_system: DisplayColorSystem.Literals,
     solid_background: bool,
 ) -> StylizedPanelTestCaseSetup[str]:
-    """Return the syntax styling setup small frame color and overflow config case."""
     case_id = f'w-frame-dark-color-w-wrap-{color_system}' + \
               ('-no-bg' if not solid_background else '')
 
@@ -243,7 +234,6 @@ def case_syntax_styling_setup_small_frame_color_and_overflow_config(
 def case_syntax_styling_expectations_plain_terminal(
         plain_terminal: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the syntax styling expectations plain terminal case."""
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         """Return exp plain output for case id."""
         match case_id:
@@ -280,7 +270,6 @@ def case_syntax_styling_expectations_plain_terminal(
 def case_syntax_styling_expectations_bw_stylized_terminal(
     bw_stylized_terminal: Annotated[OutputPropertyType,
                                     pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the syntax styling expectations black-and-white stylized terminal case."""
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         """Return exp plain output for case id."""
         match case_id:
@@ -319,7 +308,6 @@ def case_syntax_styling_expectations_bw_stylized_terminal(
 def case_syntax_styling_expectations_colorized_terminal(
     colorized_terminal: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the syntax styling expectations colorized terminal case."""
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         """Return exp plain output for case id."""
         match case_id:
@@ -435,7 +423,6 @@ def case_syntax_styling_expectations_colorized_terminal(
 def case_syntax_styling_expectations_plain_html_tag(
         plain_html_tag: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the syntax styling expectations plain HTML tag case."""
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         """Return exp plain output for case id."""
         match case_id:
@@ -473,7 +460,6 @@ def case_syntax_styling_expectations_plain_html_tag(
 def case_syntax_styling_expectations_bw_stylized_html_tag(
     bw_stylized_html_tag: Annotated[OutputPropertyType,
                                     pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the syntax styling expectations black-and-white stylized HTML tag case."""
     def _exp_plain_output_for_case_id(case_id: str) -> str:
         """Return exp plain output for case id."""
         match case_id:
@@ -514,7 +500,6 @@ def case_syntax_styling_expectations_bw_stylized_html_tag(
 def case_syntax_styling_expectations_colorized_html_tag(
     colorized_html_tag: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the syntax styling expectations colorized HTML tag case."""
     no_frame_default_color_exp_output = (
         'MyClass({'
         '<span style="color: #808000; text-decoration-color: #808000">'
@@ -610,7 +595,6 @@ def case_syntax_styling_expectations_colorized_html_tag(
 def case_syntax_styling_expectations_plain_html_page(
         plain_html_page: Annotated[OutputPropertyType,
                                    pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the syntax styling expectations plain HTML page case."""
     bw_light_body_style = f"""
       body {{
         color: #000000;
@@ -659,7 +643,6 @@ def case_syntax_styling_expectations_plain_html_page(
 def case_syntax_styling_expectations_bw_stylized_html_page(
     bw_stylized_html_page: Annotated[OutputPropertyType, pc.fixture]
 ) -> StylizedPanelOutputExpectations:
-    """Return the syntax styling expectations black-and-white stylized HTML page case."""
     bold_style = '.r2 {font-weight: bold}'
 
     bw_light_body_style = f"""
@@ -721,7 +704,6 @@ def case_syntax_styling_expectations_bw_stylized_html_page(
 def case_syntax_styling_expectations_colorized_html_page(
     colorized_html_page: Annotated[OutputPropertyType,
                                    pc.fixture]) -> StylizedPanelOutputExpectations:
-    """Return the syntax styling expectations colorized HTML page case."""
     ansi_dark_style = '\n'.join([
         '.r1 {color: #808000; text-decoration-color: #808000}',
         '.r2 {color: #0000ff; text-decoration-color: #0000ff}',

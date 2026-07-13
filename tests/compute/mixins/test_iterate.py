@@ -17,7 +17,6 @@ from ..cases.raw.functions import data_import_func
 
 
 def test_fail_property_iterate_over_data_files_no_arg_task() -> None:
-    """Test iterate_over_data_files requires a dataset argument."""
     with pytest.raises(ValueError):
         TaskTemplate(iterate_over_data_files=True)(data_import_func)
 

@@ -11,7 +11,6 @@ from ...helpers.protocols import AssertModelOrValFunc
 
 def test_http_url_dataset(
         assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]) -> None:
-    """Test storing and reading HTTP URLs in a dataset."""
     urls = HttpUrlDataset()
     urls['url1'] = 'http://abc.net'  # type: ignore[assignment]
     urls['url2'] = 'https://user:pass@cba.com/def?ghi=jkl#mno'  # type: ignore[assignment]
