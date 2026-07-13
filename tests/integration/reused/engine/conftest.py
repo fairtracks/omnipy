@@ -36,6 +36,7 @@ from ....engine.conftest import \
 from ....engine.conftest import all_engines
 from ....engine.helpers.classes import JobCase
 from ....engine.helpers.functions import update_job_case_with_job
+from pytest_cases import filters
 
 
 @pc.fixture(scope='function')
@@ -82,7 +83,15 @@ def run_state_registry(
 
 
 @pc.fixture(scope='function')
-@pc.parametrize_with_cases('job_case', cases='....engine.cases.tasks')
+@pc.parametrize_with_cases(
+    'job_case',
+    cases='....engine.cases.tasks',
+    filter=~(
+        filters.id_has_prefix('sync-function-power(')
+        | filters.id_has_prefix('sync-generator-range')
+        | filters.id_has_prefix('async-generator-range')
+    ),
+)
 @pc.parametrize('job_classes', [all_job_classes], ids=[''])
 @pc.parametrize('engine', [all_engines], ids=[''])
 @pc.parametrize('engine_decorator', [no_engine_decorator])
@@ -127,3 +136,50 @@ def all_func_types_real_jobs_all_engines_real_reg(
 
 all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg = \
     all_func_types_real_jobs_all_engines_real_reg
+
+
+@pc.fixture(scope='function')
+@pc.parametrize_with_cases(
+    'job_case',
+    cases='....engine.cases.tasks',
+    filter=(
+        filters.id_has_prefix('sync-function-power(')
+        | filters.id_has_prefix('sync-generator-range')
+        | filters.id_has_prefix('async-generator-range')
+    ),
+)
+@pc.parametrize(
+    'job_classes', [
+        (JobType.TASK, TaskTemplate, LinearFlowTemplate, DagFlowTemplate, FuncFlowTemplate),
+    ],
+    ids=['task-only'],
+)
+@pc.parametrize('engine', [all_engines], ids=[''])
+@pc.parametrize('engine_decorator', [no_engine_decorator])
+@pc.parametrize('registry', [run_state_registry], ids=[''])
+def base_task_only_real_jobs_all_engines_real_reg(
+    job_case: JobCase,
+    job_classes: tuple[JobType.Literals,
+                       Type[IsTaskTemplate],
+                       Type[IsLinearFlowTemplate],
+                       Type[IsDagFlowTemplate],
+                       Type[IsFuncFlowTemplate]],
+    engine: IsJobRunnerEngine,
+    engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
+    registry: IsRunStateRegistry | None,
+):
+    (job_type,
+     task_template_cls,
+     linear_flow_template_cls,
+     dag_flow_template_cls,
+     func_flow_template_cls) = job_classes
+
+    return update_job_case_with_job(
+        job_case,
+        job_type,
+        task_template_cls,
+        None,
+        engine,
+        engine_decorator,
+        registry,
+    )
