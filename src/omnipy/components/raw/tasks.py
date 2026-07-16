@@ -7,6 +7,7 @@ from io import StringIO
 from itertools import chain
 from operator import add, ior
 import os
+from typing import Iterable, Iterator
 
 from chardet import UniversalDetector
 from typing_extensions import TypeVar
@@ -26,7 +27,7 @@ def decode_bytes(data: Model[bytes], encoding: str | None = None) -> str:
 
     if encoding is None:
         detector = UniversalDetector()
-        for line in data.splitlines():
+        for line in data.splitlines():  # type: ignore[attr-defined]
             detector.feed(line)
             if detector.done:
                 break
@@ -47,7 +48,7 @@ def decode_bytes(data: Model[bytes], encoding: str | None = None) -> str:
         if encoding is None:
             encoding = 'ascii'
 
-    return data.decode(encoding)
+    return data.decode(encoding)  # type: ignore[attr-defined]
 
 
 @TaskTemplate(iterate_over_data_files=True)
@@ -94,22 +95,49 @@ _SequenceModelT = TypeVar(
     '_SequenceModelT', bound=Model, default=Model[str | bytes | list | tuple | deque])
 
 
+def _iter_dataset_values(datasets: Iterable[Dataset[_SequenceModelT]]) -> Iterator[_SequenceModelT]:
+    for dataset in datasets:
+        yield from dataset.values()
+
+
+def _concat_dataset_values(datasets: Iterable[Dataset[_SequenceModelT]]) -> _SequenceModelT:
+    return reduce(add, _iter_dataset_values(datasets))  # pyright: ignore[reportArgumentType]
+
+
 @TaskTemplate()
-def concat_all(dataset: Dataset[_SequenceModelT]) -> _SequenceModelT:
+def concat_all_args(*datasets: Dataset[_SequenceModelT]) -> _SequenceModelT:
     """Concatenate all dataset values using their native addition semantics."""
 
-    return reduce(add, (val for val in dataset.values()))
+    return _concat_dataset_values(datasets)
+
+
+@TaskTemplate()
+def concat_all_kwargs(**datasets: Dataset[_SequenceModelT]) -> _SequenceModelT:
+    """Concatenate all dataset values from named datasets using native addition semantics."""
+
+    return _concat_dataset_values(datasets.values())
 
 
 _UniqueModelT = TypeVar('_UniqueModelT', bound=Model, default=Model[dict | set | SetDeque])
 
 
-@TaskTemplate()
-def union_all(dataset: Dataset[_UniqueModelT]) -> _UniqueModelT:
-    """Union all dataset values using their native set-like merge semantics."""
-
-    all_vals = tuple(val for val in dataset.values())
+def _union_dataset_values(datasets: Iterable[Dataset[_UniqueModelT]]) -> _UniqueModelT:
+    all_vals = tuple(_iter_dataset_values(datasets))
     assert len(all_vals) > 0
     first_val = deepcopy(all_vals[0])
 
     return reduce(ior, chain((first_val,), all_vals[1:]))
+
+
+@TaskTemplate()
+def union_all_kwargs(**datasets: Dataset[_UniqueModelT]) -> _UniqueModelT:
+    """Union all dataset values using their native set-like merge semantics."""
+
+    return _union_dataset_values(datasets.values())
+
+
+@TaskTemplate()
+def union_all_args(*datasets: Dataset[_UniqueModelT]) -> _UniqueModelT:
+    """Union all dataset values from positional datasets using native set-like semantics."""
+
+    return _union_dataset_values(datasets)

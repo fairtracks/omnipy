@@ -4,7 +4,11 @@ from typing import Annotated, NamedTuple
 
 import pytest
 
-from omnipy.components.raw.tasks import decode_bytes
+from omnipy.components.raw.tasks import (concat_all_args,
+                                         concat_all_kwargs,
+                                         decode_bytes,
+                                         union_all_args,
+                                         union_all_kwargs)
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.protocols.hub.runtime import IsRuntime
@@ -39,3 +43,53 @@ def test_decode_bytes(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     assert decode_bytes.run(
         Dataset[Model[bytes]](dict([(case.encoding, case.bytes_data) for case in test_cases])),
         encoding=None).to_data() == dict([(case.encoding, case.target_str) for case in test_cases])
+
+
+def test_concat_all_args_accepts_positional_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[list[int]]](a=[1], b=[2])
+    middle_dataset = Dataset[Model[list[int]]](c=[3])
+    right_dataset = Dataset[Model[list[int]]](d=[4])
+
+    assert concat_all_args.run(left_dataset, middle_dataset,
+                               right_dataset).to_data() == [1, 2, 3, 4]
+
+
+def test_concat_all_kwargs_accepts_named_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[list[int]]](a=[1], b=[2])
+    middle_dataset = Dataset[Model[list[int]]](c=[3])
+    right_dataset = Dataset[Model[list[int]]](d=[4])
+
+    assert concat_all_kwargs.run(
+        left=left_dataset, middle=middle_dataset, right=right_dataset).to_data() == [1, 2, 3, 4]
+
+
+def test_union_all_kwargs_accepts_named_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[dict[str, int]]](a={'a': 1})
+    middle_dataset = Dataset[Model[dict[str, int]]](b={'b': 2})
+    right_dataset = Dataset[Model[dict[str, int]]](c={'c': 3})
+
+    assert union_all_kwargs.run(
+        left=left_dataset,
+        middle=middle_dataset,
+        right=right_dataset,
+    ).to_data() == {
+        'a': 1,
+        'b': 2,
+        'c': 3,
+    }
+
+
+def test_union_all_args_accepts_positional_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[dict[str, int]]](a={'a': 1})
+    middle_dataset = Dataset[Model[dict[str, int]]](b={'b': 2})
+    right_dataset = Dataset[Model[dict[str, int]]](c={'c': 3})
+
+    assert union_all_args.run(left_dataset, middle_dataset, right_dataset).to_data() == {
+        'a': 1,
+        'b': 2,
+        'c': 3,
+    }
