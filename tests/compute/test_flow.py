@@ -368,6 +368,61 @@ def test_linear_flow_param_key_map_and_fixed_params(
     assert linear_flow(number=3, step=4, factor=10) == 14
 
 
+def test_linear_flow_forwards_all_kwargs_to_child_var_keyword_param(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def add_one_tmpl(number: int) -> int:
+        return number + 1
+
+    @TaskTemplate()
+    def collect_kwargs_tmpl(number: int, **all_kwargs: object) -> dict[str, object]:
+        return dict(number=number, **all_kwargs)
+
+    @LinearFlowTemplate(add_one_tmpl, collect_kwargs_tmpl)
+    def linear_flow_tmpl(number: int, factor: int, offset: int) -> dict[str, object]:
+        ...
+
+    linear_flow = linear_flow_tmpl.apply()
+    assert linear_flow(number=4, factor=3, offset=2) == {'number': 5, 'factor': 3, 'offset': 2}
+
+
+def test_linear_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_params(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def add_one_tmpl(number: int) -> int:
+        return number + 1
+
+    @TaskTemplate()
+    def collect_kwargs_tmpl(number: int, add: int, mult: int,
+                            **all_kwargs: object) -> dict[str, object]:
+        return dict(number=number, add=add, mult=mult, **all_kwargs)
+
+    refined_collect_kwargs_tmpl = collect_kwargs_tmpl.refine(
+        param_key_map=dict(add='step', mult='factor'),
+        fixed_params=dict(mult=2),
+    )
+
+    @LinearFlowTemplate(add_one_tmpl, refined_collect_kwargs_tmpl)
+    def linear_flow_tmpl(number: int, step: int, factor: int, offset: int,
+                         note: str) -> dict[str, object]:
+        ...
+
+    linear_flow = linear_flow_tmpl.apply()
+    assert linear_flow(
+        number=4,
+        step=3,
+        factor=99,
+        offset=2,
+        note='kept',
+    ) == {
+        'number': 5,
+        'add': 3,
+        'mult': 2,
+        'offset': 2,
+        'note': 'kept',
+    }
+
+
 def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     @TaskTemplate()
@@ -429,6 +484,69 @@ def test_dag_flow_forwards_later_kwargs_and_respects_mapped_fixed_params(
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow(number=4, factor=10, offset=5) == 17
+
+
+def test_dag_flow_forwards_all_kwargs_to_child_var_keyword_param(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def seed_tmpl(number: int) -> dict[str, int]:
+        return {'number': number + 1}
+
+    @TaskTemplate()
+    def collect_kwargs_tmpl(number: int, **all_kwargs: object) -> dict[str, object]:
+        return dict(number=number, **all_kwargs)
+
+    @DagFlowTemplate(seed_tmpl, collect_kwargs_tmpl)
+    def dag_flow_tmpl(number: int, factor: int, offset: int) -> dict[str, object]:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    assert dag_flow(
+        number=4,
+        factor=3,
+        offset=2,
+    ) == {
+        'number': 5,
+        'factor': 3,
+        'offset': 2,
+    }
+
+
+def test_dag_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_params(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def seed_tmpl(number: int) -> dict[str, int]:
+        return {'number': number + 1}
+
+    @TaskTemplate()
+    def collect_kwargs_tmpl(number: int, add: int, mult: int,
+                            **all_kwargs: object) -> dict[str, object]:
+        return dict(number=number, add=add, mult=mult, **all_kwargs)
+
+    refined_collect_kwargs_tmpl = collect_kwargs_tmpl.refine(
+        param_key_map=dict(add='step', mult='factor'),
+        fixed_params=dict(mult=2),
+    )
+
+    @DagFlowTemplate(seed_tmpl, refined_collect_kwargs_tmpl)
+    def dag_flow_tmpl(number: int, step: int, factor: int, offset: int,
+                      note: str) -> dict[str, object]:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    assert dag_flow(
+        number=4,
+        step=3,
+        factor=99,
+        offset=2,
+        note='kept',
+    ) == {
+        'number': 5,
+        'add': 3,
+        'mult': 2,
+        'offset': 2,
+        'note': 'kept',
+    }
 
 
 def test_dag_flow_mapped_key_cannot_override_fixed_params(

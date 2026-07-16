@@ -64,9 +64,45 @@ def _keyword_param_keys_for_job(job: IsFuncArgJobTemplate,
     return mapped_keyword_param_keys
 
 
+def _accepts_var_keyword_args(job: IsFuncArgJobTemplate) -> bool:
+    return any(
+        param.kind is inspect.Parameter.VAR_KEYWORD
+        for param in inspect.signature(job).parameters.values())
+
+
 def _collect_matching_kwargs_for_job(job: IsFuncArgJobTemplate,
                                      kwargs: Mapping[str, object],
                                      positional_arg_count: int = 0) -> dict[str, object]:
+    if _accepts_var_keyword_args(job):
+        matched_kwargs = dict(kwargs)
+
+        positional_params = [
+            param for param in inspect.signature(job).parameters.values()
+            if param.kind in (inspect.Parameter.POSITIONAL_ONLY,
+                              inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        ]
+        consumed_positional_kw_keys = {
+            param.name
+            for param in positional_params[:positional_arg_count]
+            if param.kind is inspect.Parameter.POSITIONAL_OR_KEYWORD
+        }
+
+        param_key_map = job.param_key_map if hasattr(job, 'param_key_map') else {}
+        consumed_external_keys = {
+            param_key_map.get(param_key, param_key) for param_key in consumed_positional_kw_keys
+        }
+        for key in consumed_external_keys:
+            matched_kwargs.pop(key, None)
+
+        if hasattr(job, 'fixed_params'):
+            fixed_keys = {
+                param_key_map.get(param_key, param_key) for param_key in job.fixed_params.keys()
+            }
+            for key in fixed_keys:
+                matched_kwargs.pop(key, None)
+
+        return matched_kwargs
+
     param_keys = _keyword_param_keys_for_job(job, positional_arg_count)
     return {key: val for key, val in kwargs.items() if key in param_keys}
 
