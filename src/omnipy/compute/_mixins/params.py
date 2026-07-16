@@ -10,8 +10,10 @@ from omnipy.util.helpers import repr_max_len
 from omnipy.util.param_key_mapper import ParamKeyMapper
 
 JOB_TEMPLATE_PARAMS_ARG_DOCS = (
-    'fixed_params: Keyword arguments fixed onto every job invocation.\n'
-    'param_key_map: Mapping from external keyword names to callable parameter names.')
+    'fixed_params: Fixed keyword-argument values for the job. May not '
+    '    target *args or **kwargs-style params.\n'
+    'param_key_map: Mapping from external keyword names to callable '
+    '    parameter names. May not target *args or **kwargs-style params.')
 
 
 class ParamsFuncJobBaseMixin:

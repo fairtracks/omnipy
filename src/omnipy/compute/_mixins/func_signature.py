@@ -33,12 +33,45 @@ class SignatureFuncJobBaseMixin:
 
         return self._func_signature.return_annotation
 
+    def _check_param_keys_do_not_target_var_params(self,
+                                                   param_keys: Iterable[str],
+                                                   modifier_kwarg_key: str) -> None:
+        """Reject direct targeting of ``*args``/``**kwargs`` parameter names.
+
+        Parameter-modifier APIs such as ``fixed_params`` and
+        ``param_key_map`` operate on concrete callable parameter names.
+        Var-positional and var-keyword parameters collect arguments
+        structurally rather than through a meaningful caller-facing key,
+        so their parameter names may not be targeted directly.
+        """
+        var_param_kinds_by_name = {
+            param.name: param.kind
+            for param in self.param_signatures.values()
+            if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)
+        }
+
+        if not var_param_kinds_by_name:
+            return
+
+        for param_key in param_keys:
+            if param_key in var_param_kinds_by_name:
+                param_kind = var_param_kinds_by_name[param_key]
+                raise KeyError(
+                    f'Parameter "{param_key}" is a {param_kind.name} parameter in the job '
+                    'function signature, so it may not be targeted directly by the '
+                    f'"{modifier_kwarg_key}" modifier. Target concrete keyword names '
+                    'instead.')
+
     def _check_param_keys_in_func_signature(self,
                                             param_keys: Iterable[str],
                                             modifier_kwarg_key: str) -> None:
-        if any(param.kind == inspect.Parameter.VAR_KEYWORD
-               for param in self.param_signatures.values()):
-            return
+        """Validate modifier keys against the job function signature.
+
+        In addition to checking that targeted names exist, this rejects
+        direct targeting of var-positional and var-keyword parameter
+        names.
+        """
+        self._check_param_keys_do_not_target_var_params(param_keys, modifier_kwarg_key)
 
         for param_key in param_keys:
             if param_key not in self.param_signatures:

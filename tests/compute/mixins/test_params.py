@@ -6,7 +6,7 @@ import pytest
 
 from omnipy.compute.task import TaskTemplate
 
-from ..cases.raw.functions import kwargs_func, power_m1_func
+from ..cases.raw.functions import args_func, kwargs_func, power_m1_func
 
 
 def test_property_fixed_params_default_task() -> None:
@@ -236,6 +236,34 @@ def test_property_param_key_map_kwargs_task() -> None:
     assert kwargs_task(num=2, bool=False) == "{'number': 2, 'boolean': False}"
     assert kwargs_task(num=2, bool=False, text='message') == \
            "{'number': 2, 'boolean': False, 'text': 'message'}"
+
+
+def test_error_property_param_key_map_var_positional_param_task() -> None:
+    """Test param_key_map may not target the VAR_POSITIONAL parameter itself."""
+
+    with pytest.raises(KeyError, match='VAR_POSITIONAL'):
+        TaskTemplate(param_key_map=dict(args='payload'))(args_func)
+
+
+def test_error_property_fixed_params_var_positional_param_task() -> None:
+    """Test fixed_params may not target the VAR_POSITIONAL parameter itself."""
+
+    with pytest.raises(KeyError, match='VAR_POSITIONAL'):
+        TaskTemplate(fixed_params=dict(args=(1, 2, 3)))(args_func)
+
+
+def test_error_property_param_key_map_var_keyword_param_task() -> None:
+    """Test param_key_map may not target the VAR_KEYWORD parameter itself."""
+
+    with pytest.raises(KeyError, match='VAR_KEYWORD'):
+        TaskTemplate(param_key_map=dict(kwargs='payload'))(kwargs_func)
+
+
+def test_error_property_fixed_params_var_keyword_param_task() -> None:
+    """Test fixed_params may not target the VAR_KEYWORD parameter itself."""
+
+    with pytest.raises(KeyError, match='VAR_KEYWORD'):
+        TaskTemplate(fixed_params=dict(kwargs={'inner': 'fixed'}))(kwargs_func)
 
 
 def test_error_properties_param_key_map_and_fixed_params_unmatched_params_task() -> None:

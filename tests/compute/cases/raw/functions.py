@@ -55,6 +55,11 @@ def kwargs_func(**kwargs: object) -> str:
     return repr(kwargs)
 
 
+def args_func(*args: object) -> tuple[object, ...]:
+    """Return args func."""
+    return args
+
+
 def all_int_dataset_plus_int_return_str_dataset_func(
     dataset: Dataset[Model[int]],
     number: int,

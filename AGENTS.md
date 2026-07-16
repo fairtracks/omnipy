@@ -17,6 +17,10 @@
 - Python formatting is `yapf` + `isort`; linting is `flake8`; Python line length is 100 with single quotes.
 - Commit-stage pre-commit mutates Python files via `.pre-commit-hooks/expand_docstr_macros.py`. If you edit macro-managed docstrings or `omnipy.util.docstr_macros`, run that hook or expect rewrites.
 
+## Typing
+
+- Do not use `cast(object, ...)` / `cast(object, self)` merely to suppress type-checker warnings about suspicious casts. Treat that pattern as a typing escape hatch to avoid in Omnipy code unless explicitly requested.
+
 ## Architecture
 
 - Core layout: `src/omnipy/` for library code, `tests/` for mirrored tests plus `integration/`, and `docs/` for user docs.
