@@ -1,4 +1,4 @@
-"""General tasks for splitting, importing, and converting datasets."""
+"""General tasks for splitting, importing, and creating datasets and models."""
 
 from io import IOBase
 import os
@@ -13,6 +13,7 @@ from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsDataset
 
 _DatasetT = TypeVar('_DatasetT', bound=IsDataset)
+_ModelT = TypeVar('_ModelT', bound=Model)
 # @TaskTemplate()
 # def cast_dataset(dataset: Dataset, cast_model: Callable[[], _ModelT]) -> _ModelT:
 #     out_dataset: Dataset[_ModelT] = Dataset[cast_model]()
@@ -80,15 +81,71 @@ def import_directory(
 
 
 @TaskTemplate()
-def convert_dataset(dataset: Dataset, dataset_cls: type[_DatasetT], **kwargs: object) -> _DatasetT:
-    """Convert a dataset into another dataset class.
+def create_dataset_args(*args: object, dataset_cls: type[_DatasetT]) -> _DatasetT:
+    """Create a dataset from one or more positional payload objects.
+
+    With no positional inputs, an empty dataset is created. A single positional input is
+    forwarded unchanged. Multiple positional inputs are forwarded as the iterable of
+    ``(key, value)`` pairs accepted by :class:`~omnipy.data.dataset.Dataset`.
 
     Args:
-        dataset: Source dataset to convert.
-        dataset_cls: Target dataset class.
-        **kwargs: Extra keyword arguments forwarded to ``dataset_cls``.
+        *args: Positional payload passed to the dataset constructor.
+        dataset_cls: Dataset class to instantiate.
 
     Returns:
         A dataset instance of type ``dataset_cls``.
     """
-    return dataset_cls(dataset, **kwargs)  # type: ignore[arg-type]
+    if len(args) == 0:
+        return dataset_cls()
+    if len(args) == 1:
+        return dataset_cls(args[0])  # type: ignore[arg-type]
+    return dataset_cls(args)  # type: ignore[arg-type]
+
+
+@TaskTemplate()
+def create_dataset_kwargs(*, dataset_cls: type[_DatasetT], **data: object) -> _DatasetT:
+    """Create a dataset from named model or sub-dataset inputs.
+
+    Args:
+        dataset_cls: Dataset class to instantiate.
+        **data: Named dataset entries forwarded as keyword arguments to ``dataset_cls``.
+
+    Returns:
+        A dataset instance of type ``dataset_cls``.
+    """
+    return dataset_cls(**data)  # type: ignore[arg-type]
+
+
+@TaskTemplate()
+def create_model_args(*args: object, model_cls: type[_ModelT]) -> _ModelT:
+    """Create a model from positional inputs.
+
+    A single positional input is forwarded unchanged. Multiple positional inputs are packed into the
+    tuple normally represented by ``*args`` before model construction.
+
+    Args:
+        *args: Positional payload values to turn into the model root value.
+        model_cls: Model class to instantiate.
+
+    Returns:
+        A model instance of type ``model_cls``.
+    """
+    if len(args) == 0:
+        return model_cls()  # type: ignore[call-arg]
+    if len(args) == 1:
+        return model_cls(args[0])  # type: ignore[arg-type]
+    return model_cls(args)  # type: ignore[arg-type]
+
+
+@TaskTemplate()
+def create_model_kwargs(*, model_cls: type[_ModelT], **data: object) -> _ModelT:
+    """Create a model from named keyword inputs.
+
+    Args:
+        model_cls: Model class to instantiate.
+        **data: Named values forwarded as keyword arguments to ``model_cls``.
+
+    Returns:
+        A model instance of type ``model_cls``.
+    """
+    return model_cls(**data)  # type: ignore[arg-type]
