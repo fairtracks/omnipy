@@ -1,3 +1,5 @@
+import os
+from textwrap import dedent
 from typing import Callable, Generic, ParamSpec, TypeVar
 
 from omnipy.compute._job import JobBase
@@ -10,9 +12,31 @@ from omnipy.compute._mixins.serialize import SerializerFuncJobBaseMixin
 from omnipy.shared._typedefs import _JobT, _JobTemplateT
 from omnipy.shared.typedefs import GeneralDecorator
 from omnipy.util.callable_types import CallableType, get_callable_type
+from omnipy.util.helpers import is_package_editable
 
 _CallP = ParamSpec('_CallP')
 _RetT = TypeVar('_RetT')
+
+if is_package_editable('omnipy'):
+    _JOB_TEMPLATE_SHARED_KWARG_DOCS = '\n'.join(
+        (os.environ['OMNIPY_MACRO_JOB_TEMPLATE_NAME_ARG_DOC'],
+         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_ITERATE_ARG_DOCS'],
+         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_AUTO_ASYNC_ARG_DOC'],
+         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_RESULT_KEY_ARG_DOC'],
+         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_PARAMS_ARG_DOCS'],
+         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SERIALIZE_ARG_DOC'],
+         '**kwargs: Additional constructor keyword overrides.'))
+
+    print(_JOB_TEMPLATE_SHARED_KWARG_DOCS)
+
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_REFINE_COMMON_ARGS'] = dedent("""\
+            update: Whether omitted values should be inherited from the
+                current template.
+            """) + _JOB_TEMPLATE_SHARED_KWARG_DOCS
+
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_INIT_CALL_COMMON_ARGS'] = dedent("""\
+            job_func: Python callable to wrap as a job template.
+            """) + _JOB_TEMPLATE_SHARED_KWARG_DOCS
 
 
 class PlainFuncArgJobBase(JobBase[_JobTemplateT, _JobT, _CallP, _RetT],

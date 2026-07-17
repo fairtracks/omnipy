@@ -4,6 +4,8 @@ import asyncio
 import functools
 import inspect
 from inspect import Parameter, signature
+import os
+from textwrap import dedent
 from typing import Any, Callable, cast, Coroutine
 
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
@@ -16,11 +18,15 @@ from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import is_model_subclass, Model
 from omnipy.shared.protocols.compute.job import IsJobBase, IsPlainFuncArgJobBase
 from omnipy.shared.protocols.data import IsDataset
+from omnipy.util.helpers import is_package_editable
 
-JOB_TEMPLATE_ITERATE_ARG_DOCS = (
-    'iterate_over_data_files: Whether dataset inputs should be processed item-wise.\n'
-    'output_dataset_param: Optional name of an explicit output-dataset parameter.\n'
-    'output_dataset_cls: Optional dataset class to use for iterated outputs.')
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_ITERATE_ARG_DOCS'] = dedent("""\
+            iterate_over_data_files: Whether dataset inputs should be
+                processed item-wise. output_dataset_param: Optional name of
+                an explicit output-dataset parameter.
+            output_dataset_cls: Optional dataset class to use for iterated
+                outputs.""")
 
 # Functions
 

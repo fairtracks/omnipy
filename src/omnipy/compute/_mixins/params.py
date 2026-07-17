@@ -1,19 +1,22 @@
 """Mixin for binding fixed parameters and parameter key remapping to jobs."""
-
+import os
+from textwrap import dedent
 from types import MappingProxyType
 from typing import cast, Iterable, Mapping
 
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute._mixins.name import NameJobBaseMixin
 from omnipy.shared.protocols.compute.job import IsJobBase
-from omnipy.util.helpers import repr_max_len
+from omnipy.util.helpers import is_package_editable, repr_max_len
 from omnipy.util.param_key_mapper import ParamKeyMapper
 
-JOB_TEMPLATE_PARAMS_ARG_DOCS = (
-    'fixed_params: Fixed keyword-argument values for the job. May not '
-    '    target *args or **kwargs-style params.\n'
-    'param_key_map: Mapping from external keyword names to callable '
-    '    parameter names. May not target *args or **kwargs-style params.')
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_PARAMS_ARG_DOCS'] = dedent("""\
+            fixed_params: Fixed keyword-argument values for the job. May not
+                target *args or **kwargs-style params.
+            param_key_map: Mapping from external keyword names to callable
+                parameter names. May not target *args or **kwargs-style
+                params.""")
 
 
 class ParamsFuncJobBaseMixin:

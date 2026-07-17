@@ -695,34 +695,47 @@ class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT]
             restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
             **kwargs: object) -> _JobTemplateT:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # Return a template with updated callable-configuration settings.
+        # Return a template with updated configuration.
         #
         # Args:
         #     *args: Positional constructor overrides for the template.
+        #     {{JOB_TEMPLATE_REFINE_COMMON_ARGS}}
         #
-        # {{JOB_TEMPLATE_REFINE_COMMON_ARGS}}
+        # Returns:
+        #     _JobTemplateT: Refined template instance.
         #
-        """Return a template with updated callable-configuration settings.
+        """Return a template with updated configuration.
 
         Args:
             *args: Positional constructor overrides for the template.
-
-            update: Whether omitted values should be inherited from the current template.
-            name: Optional replacement display name.
-            iterate_over_data_files: Whether dataset inputs should be processed item-wise.
-            output_dataset_param: Optional name of an explicit output-dataset parameter.
-            output_dataset_cls: Optional dataset class to use for iterated outputs.
-            auto_async: Whether coroutine jobs should auto-run outside flow contexts.
-            result_key: Optional key used to wrap the returned result in a dictionary.
-            fixed_params: Keyword arguments fixed onto every job invocation.
-            param_key_map: Mapping from external keyword names to callable parameter names.
+            update: Whether omitted values should be inherited from the
+                current template.
+            name: Name of the job template. If not provided, the name of the
+                wrapped callable is used.
+            iterate_over_data_files: Whether dataset inputs should be
+                processed item-wise. output_dataset_param: Optional name of
+                an explicit output-dataset parameter.
+            output_dataset_cls: Optional dataset class to use for iterated
+                outputs.
+            auto_async: Whether coroutine jobs at the outermost level (not
+                in a flow context) should be automatically run in accordance
+                with context (use existing event loop, if available,
+                otherwise create temporary event loop and run coroutine
+                until completion).)
+            result_key: Optional key used to wrap the returned result in a
+                dictionary. Especially useful in DAG flows to avoid name
+                collisions.
+            fixed_params: Fixed keyword-argument values for the job. May not
+                target *args or **kwargs-style params.
+            param_key_map: Mapping from external keyword names to callable
+                parameter names. May not target *args or **kwargs-style
+                params.
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
 
         Returns:
             _JobTemplateT: Refined template instance.
-
         """
         ...
 
@@ -753,19 +766,35 @@ class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
         # Create a job template around ``job_func``.
         #
         # Args:
-        # {{JOB_TEMPLATE_INIT_CALL_COMMON_ARGS}}
+        #     {{JOB_TEMPLATE_INIT_CALL_COMMON_ARGS}}
+        #
+        # Returns:
+        #     _JobTemplateT: New job template instance wrapping ``job_func``.
+        #
         """Create a job template around ``job_func``.
 
         Args:
             job_func: Python callable to wrap as a job template.
-            name: Optional replacement display name.
-            iterate_over_data_files: Whether dataset inputs should be processed item-wise.
-            output_dataset_param: Optional name of an explicit output-dataset parameter.
-            output_dataset_cls: Optional dataset class to use for iterated outputs.
-            auto_async: Whether coroutine jobs should auto-run outside flow contexts.
-            result_key: Optional key used to wrap the returned result in a dictionary.
-            fixed_params: Keyword arguments fixed onto every job invocation.
-            param_key_map: Mapping from external keyword names to callable parameter names.
+            name: Name of the job template. If not provided, the name of the
+                wrapped callable is used.
+            iterate_over_data_files: Whether dataset inputs should be
+                processed item-wise. output_dataset_param: Optional name of
+                an explicit output-dataset parameter.
+            output_dataset_cls: Optional dataset class to use for iterated
+                outputs.
+            auto_async: Whether coroutine jobs at the outermost level (not
+                in a flow context) should be automatically run in accordance
+                with context (use existing event loop, if available,
+                otherwise create temporary event loop and run coroutine
+                until completion).)
+            result_key: Optional key used to wrap the returned result in a
+                dictionary. Especially useful in DAG flows to avoid name
+                collisions.
+            fixed_params: Fixed keyword-argument values for the job. May not
+                target *args or **kwargs-style params.
+            param_key_map: Mapping from external keyword names to callable
+                parameter names. May not target *args or **kwargs-style
+                params.
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
@@ -819,23 +848,39 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
         # Create a flow template around ``job_func`` and child jobs.
         #
         # Args:
-        #     *child_job_templates: Ordered child-job templates owned by the flow template.
+        #     *child_job_templates: Ordered child-job templates owned by the
+        #         flow template.
+        #     {{JOB_TEMPLATE_INIT_CALL_COMMON_ARGS}}
         #
-        # {{JOB_TEMPLATE_INIT_CALL_COMMON_ARGS}}
+        # Returns:
+        #     _JobTemplateT: New job template instance wrapping ``job_func``.
+        #
         """Create a flow template around ``job_func`` and child jobs.
 
         Args:
-            *child_job_templates: Ordered child-job templates owned by the flow template.
-
+            *child_job_templates: Ordered child-job templates owned by the
+                flow template.
             job_func: Python callable to wrap as a job template.
-            name: Optional replacement display name.
-            iterate_over_data_files: Whether dataset inputs should be processed item-wise.
-            output_dataset_param: Optional name of an explicit output-dataset parameter.
-            output_dataset_cls: Optional dataset class to use for iterated outputs.
-            auto_async: Whether coroutine jobs should auto-run outside flow contexts.
-            result_key: Optional key used to wrap the returned result in a dictionary.
-            fixed_params: Keyword arguments fixed onto every job invocation.
-            param_key_map: Mapping from external keyword names to callable parameter names.
+            name: Name of the job template. If not provided, the name of the
+                wrapped callable is used.
+            iterate_over_data_files: Whether dataset inputs should be
+                processed item-wise. output_dataset_param: Optional name of
+                an explicit output-dataset parameter.
+            output_dataset_cls: Optional dataset class to use for iterated
+                outputs.
+            auto_async: Whether coroutine jobs at the outermost level (not
+                in a flow context) should be automatically run in accordance
+                with context (use existing event loop, if available,
+                otherwise create temporary event loop and run coroutine
+                until completion).)
+            result_key: Optional key used to wrap the returned result in a
+                dictionary. Especially useful in DAG flows to avoid name
+                collisions.
+            fixed_params: Fixed keyword-argument values for the job. May not
+                target *args or **kwargs-style params.
+            param_key_map: Mapping from external keyword names to callable
+                parameter names. May not target *args or **kwargs-style
+                params.
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
@@ -951,34 +996,49 @@ class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _C
             restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
             **kwargs: object) -> _JobTemplateT:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # Return a flow template with updated child jobs or callable configuration.
+        # Return a flow template with updated child jobs or configuration.
         #
         # Args:
-        #     *child_job_templates: Replacement ordered child-job templates.
+        #     *child_job_templates: Ordered templates of child jobs to be
+        #         run as part of the flow.
+        #     {{JOB_TEMPLATE_REFINE_COMMON_ARGS}}
         #
-        # {{JOB_TEMPLATE_REFINE_COMMON_ARGS}}
+        # Returns:
+        #     _JobTemplateT: Refined template instance.
         #
-        """Return a flow template with updated child jobs or callable configuration.
+        """Return a flow template with updated child jobs or configuration.
 
         Args:
-            *child_job_templates: Replacement ordered child-job templates.
-
-            update: Whether omitted values should be inherited from the current template.
-            name: Optional replacement display name.
-            iterate_over_data_files: Whether dataset inputs should be processed item-wise.
-            output_dataset_param: Optional name of an explicit output-dataset parameter.
-            output_dataset_cls: Optional dataset class to use for iterated outputs.
-            auto_async: Whether coroutine jobs should auto-run outside flow contexts.
-            result_key: Optional key used to wrap the returned result in a dictionary.
-            fixed_params: Keyword arguments fixed onto every job invocation.
-            param_key_map: Mapping from external keyword names to callable parameter names.
+            *child_job_templates: Ordered templates of child jobs to be
+                run as part of the flow.
+            update: Whether omitted values should be inherited from the
+                current template.
+            name: Name of the job template. If not provided, the name of the
+                wrapped callable is used.
+            iterate_over_data_files: Whether dataset inputs should be
+                processed item-wise. output_dataset_param: Optional name of
+                an explicit output-dataset parameter.
+            output_dataset_cls: Optional dataset class to use for iterated
+                outputs.
+            auto_async: Whether coroutine jobs at the outermost level (not
+                in a flow context) should be automatically run in accordance
+                with context (use existing event loop, if available,
+                otherwise create temporary event loop and run coroutine
+                until completion).)
+            result_key: Optional key used to wrap the returned result in a
+                dictionary. Especially useful in DAG flows to avoid name
+                collisions.
+            fixed_params: Fixed keyword-argument values for the job. May not
+                target *args or **kwargs-style params.
+            param_key_map: Mapping from external keyword names to callable
+                parameter names. May not target *args or **kwargs-style
+                params.
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
             **kwargs: Additional constructor keyword overrides.
 
         Returns:
             _JobTemplateT: Refined template instance.
-
         """
         ...
 

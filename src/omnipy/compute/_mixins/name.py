@@ -1,11 +1,15 @@
 """Mixins for assigning stable display names and unique names to jobs."""
-
+import os
+from textwrap import dedent
 from typing import Callable, cast
 
-from omnipy.util.helpers import generate_run_slug, get_full_job_slug
+from omnipy.util.helpers import generate_run_slug, get_full_job_slug, is_package_editable
 from omnipy.util.mixin import strip_mixins_suffix
 
-JOB_TEMPLATE_NAME_ARG_DOC = 'name: Optional replacement display name.'
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_NAME_ARG_DOC'] = dedent("""\
+            name: Name of the job template. If not provided, the name of the
+                wrapped callable is used.""")
 
 
 class NameJobBaseMixin:

@@ -1,12 +1,17 @@
 """Mixin for wrapping job results under a configured dictionary key."""
-
+import os
+from textwrap import dedent
 from typing import cast
 
 from omnipy.compute._mixins.name import NameJobBaseMixin
 from omnipy.shared.protocols.compute.job import IsJobBase
+from omnipy.util.helpers import is_package_editable
 
-JOB_TEMPLATE_RESULT_KEY_ARG_DOC = (
-    'result_key: Optional key used to wrap the returned result in a dictionary.')
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_RESULT_KEY_ARG_DOC'] = dedent("""\
+            result_key: Optional key used to wrap the returned result in a
+                dictionary. Especially useful in DAG flows to avoid name
+                collisions.""")
 
 
 class ResultKeyFuncJobBaseMixin:

@@ -2,13 +2,20 @@
 
 import asyncio
 from inspect import iscoroutinefunction
+import os
+from textwrap import dedent
 from typing import Callable, cast, Coroutine
 
 from omnipy.shared.protocols.compute.job import IsJobBase
-from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
+from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running, is_package_editable
 
-JOB_TEMPLATE_AUTO_ASYNC_ARG_DOC = (
-    'auto_async: Whether coroutine jobs should auto-run outside flow contexts.')
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_AUTO_ASYNC_ARG_DOC'] = dedent("""\
+            auto_async: Whether coroutine jobs at the outermost level (not
+                in a flow context) should be automatically run in accordance
+                with context (use existing event loop, if available,
+                otherwise create temporary event loop and run coroutine
+                until completion).)""")
 
 
 class AutoAsyncJobBaseMixin:

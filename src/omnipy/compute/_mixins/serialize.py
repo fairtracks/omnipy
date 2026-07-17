@@ -17,16 +17,12 @@ Attributes:
 from datetime import datetime
 import os
 from pathlib import Path
-from textwrap import indent
+from textwrap import dedent
 from typing import cast, Generator, Type
 
 from omnipy.components import get_serializer_registry
-from omnipy.compute._mixins.auto_async import JOB_TEMPLATE_AUTO_ASYNC_ARG_DOC
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
-from omnipy.compute._mixins.iterate import JOB_TEMPLATE_ITERATE_ARG_DOCS
-from omnipy.compute._mixins.name import JOB_TEMPLATE_NAME_ARG_DOC, NameJobBaseMixin
-from omnipy.compute._mixins.params import JOB_TEMPLATE_PARAMS_ARG_DOCS
-from omnipy.compute._mixins.result_key import JOB_TEMPLATE_RESULT_KEY_ARG_DOC
+from omnipy.compute._mixins.name import NameJobBaseMixin
 from omnipy.data.dataset import Dataset
 from omnipy.shared.enums.job import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.shared.enums.job import (OutputStorageProtocolOptions,
@@ -39,30 +35,9 @@ from omnipy.util.helpers import get_job_name_slug, is_package_editable
 from omnipy.util.mixin import strip_mixins_suffix
 
 if is_package_editable('omnipy'):
-    _JOB_TEMPLATE_SHARED_KWARG_DOCS = indent(
-        '\n'.join((
-            JOB_TEMPLATE_NAME_ARG_DOC,
-            JOB_TEMPLATE_ITERATE_ARG_DOCS,
-            JOB_TEMPLATE_AUTO_ASYNC_ARG_DOC,
-            JOB_TEMPLATE_RESULT_KEY_ARG_DOC,
-            JOB_TEMPLATE_PARAMS_ARG_DOCS,
-            'persist_outputs: Per-job output-persistence preference.',
-            'restore_outputs: Per-job output-restore preference.',
-            '**kwargs: Additional constructor keyword overrides.',
-        )),
-        '    ')
-
-    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_REFINE_COMMON_ARGS'] = (
-        '    update: Whether omitted values should be inherited from the current template.\n'
-        f'{_JOB_TEMPLATE_SHARED_KWARG_DOCS}\n\n'
-        'Returns:\n'
-        '    _JobTemplateT: Refined template instance.\n')
-
-    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_INIT_CALL_COMMON_ARGS'] = (
-        '    job_func: Python callable to wrap as a job template.\n'
-        f'{_JOB_TEMPLATE_SHARED_KWARG_DOCS}\n\n'
-        'Returns:\n'
-        '    _JobTemplateT: New job template instance wrapping ``job_func``.\n')
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SERIALIZE_ARG_DOC'] = dedent("""\
+            persist_outputs: Per-job output-persistence preference.
+            restore_outputs: Per-job output-restore preference.""")
 
 PersistOpts = PersistOutputsOptions
 """Options enum for controlling whether job outputs are persisted."""
