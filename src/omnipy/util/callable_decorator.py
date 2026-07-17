@@ -1,26 +1,30 @@
-"""Support class-based decorators that behave like function decorators.
+"""Support class-based decorators that behave like callable decorators.
 
 This module exposes a meta-decorator for turning ordinary classes into decorator
 factories for callables. It preserves wrapped-function metadata, supports both
 ``@decorator`` and ``@decorator(...)`` syntax, and bridges the gap between Python's
-class-level special-method lookup and instance-level decoration state.
+class-level special-method lookup and instance-level decoration state. An optional
+hook can disambiguate when a single callable argument should be treated as a
+decorator argument instead of as the decorated callable.
 """
 
 from functools import update_wrapper
 from types import MethodWrapperType
-from typing import Callable, cast, Concatenate, ParamSpec, TypeVar
+from typing import Any, Callable, cast, Concatenate, ParamSpec, TypeVar
 
 from omnipy.shared.protocols._util import IsCallableParamAfterSelf
 
 _InitP = ParamSpec('_InitP')
 _CallP = ParamSpec('_CallP')
-_RetT = TypeVar('_RetT', contravariant=True)
+_RetT = TypeVar('_RetT')
 _DecoratedT = TypeVar('_DecoratedT')
 
 
 def callable_decorator_cls(  # noqa: C901
-    cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP], _DecoratedT]) -> \
-        Callable[_InitP, Callable[[Callable[_CallP, _RetT]], _DecoratedT]]:
+    cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP], _DecoratedT],
+    *,
+    single_callable_arg_is_decorator_arg: Callable[[object], bool] | None = None,
+) -> Callable[_InitP, Callable[[Callable[_CallP, _RetT]], _DecoratedT]]:
     """
     "Meta-decorator" that allows any class to function as a decorator for a callable.
 
@@ -28,17 +32,24 @@ def callable_decorator_cls(  # noqa: C901
     to be annotated as a callable.
 
     Arguments and keyword arguments to the class decorator are supported.
+
+    Args:
+        cls: Class to adapt into a callable decorator.
+        single_callable_arg_is_decorator_arg: Optional disambiguation hook for the
+            single-argument callable case. Return ``True`` to treat that callable as
+            a decorator argument (``@decorator(callable_arg)``), not as the decorated
+            callable (``@decorator``).
     """
 
     # Retain existing __call__ method, if present, except for built-in classes (e.g. int, str),
     # whose call method is a MethodWrapperType.
-    if not isinstance(cls.__call__, MethodWrapperType):  # type: ignore[operator]
-        cls._wrapped_call: Callable = cast(  # type: ignore[attr-defined, misc]
-            Callable, cls.__call__)  # type: ignore[operator]
+    cls_obj = cast(type[Any], cls)
+    if not isinstance(cls_obj.__call__, MethodWrapperType):
+        cls_obj._wrapped_call = cls_obj.__call__
 
     def _forward_call_to_obj_if_callable(self, *args: object, **kwargs: object) -> _DecoratedT:
         """
-        __call__ method at the class level which forward the call to instance-level call methods,
+        __call__ method at the class level that forwards the call to instance-level call methods,
         if present (hardcoded as '_obj_call()'). This is needed due to the peculiarity that Python
         only looks up special methods (with double underscores) at the class level, and not at the
         instance level. Used in the decoration process to forward __call__ calls to the object level
@@ -90,7 +101,9 @@ def callable_decorator_cls(  # noqa: C901
                 _wrapped_init(self, callable_arg, *args_list, **kwargs)
                 update_wrapper(self, callable_arg, updated=[])
 
-            if len(args_list) == 1 and _real_callable(args_list[0]):
+            if (len(args_list) == 1 and _real_callable(args_list[0])
+                    and not (single_callable_arg_is_decorator_arg
+                             and single_callable_arg_is_decorator_arg(args_list[0]))):
                 # If no parentheses used in the decoration syntax (e.g. @decorator)
                 # then decorate the callable directly
                 _callable_arg = cast(Callable[_CallP, _RetT], args_list[0])
@@ -101,8 +114,8 @@ def callable_decorator_cls(  # noqa: C901
                 # then add an instance-level _obj_call method, which are again callable by the
                 # class-level __call__ method. When this method is called, the provided
                 # _callable_arg is decorated.
-                def _init_as_obj_call_method(
-                        self, _callable_arg: Callable[_CallP, _RetT]) -> _DecoratedT:  # noqa
+                def _init_as_obj_call_method(self, _callable_arg: Callable[_CallP,
+                                                                           _RetT]) -> _DecoratedT:
                     _init(_callable_arg)
                     del self._obj_call
                     return self
