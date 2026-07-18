@@ -11,6 +11,7 @@ _DEFAULT_WIDTH_STABILIZATION_WINDOW = 2
 _DEFAULT_COARSENESS_ALPHA = 0.4
 _DEFAULT_MAX_DESCENT_DEPTH = 5
 _DEFAULT_MAX_PROMOTIONS = 3
+DEFAULT_HIDDEN_CHUNKS_PRUNING_THRESHOLD = 1
 
 _probe_render_active_ctx_var: ContextVar[bool] = ContextVar(
     '_probe_render_active_ctx_var',
@@ -580,8 +581,15 @@ def _should_apply_prefix_reduction(*, content: object, total_chunks: int, prefix
     Returns:
         ``True`` when the reduction should be applied.
     """
-    if _looks_like_mapping(content):
-        return (total_chunks - prefix_size) >= 2
+    hidden_chunks = total_chunks - prefix_size
+
+    if isinstance(content, (str, bytes, bytearray)):
+        return True
+
+    # Keep tiny hidden tails for container-like content to avoid observable
+    # content changes when only one trailing element would be omitted.
+    if _looks_like_mapping(content) or _is_sliceable(content):
+        return hidden_chunks > DEFAULT_HIDDEN_CHUNKS_PRUNING_THRESHOLD
 
     return True
 
@@ -947,8 +955,10 @@ def _build_mapping_prefix_with_replaced_child(  # noqa: C901
     prefix_keys = frozen_keys.keys[:replacement_index + 1]
     for idx, key in enumerate(prefix_keys):
         try:
-            value = replacement_value if idx == replacement_index else content[
-                key]  # type: ignore[index]
+            if idx == replacement_index:
+                value = replacement_value
+            else:
+                value = content[key]  # type: ignore[index]
         except Exception:
             return None
         prefix_mapping[key] = value
