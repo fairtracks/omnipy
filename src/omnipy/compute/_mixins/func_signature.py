@@ -62,16 +62,14 @@ class SignatureFuncJobBaseMixin:
                     f'"{modifier_kwarg_key}" modifier. Target concrete keyword names '
                     'instead.')
 
-    def _check_param_keys_in_func_signature(self,
-                                            param_keys: Iterable[str],
-                                            modifier_kwarg_key: str) -> None:
-        """Validate modifier keys against the job function signature.
-
-        In addition to checking that targeted names exist, this rejects
-        direct targeting of var-positional and var-keyword parameter
-        names.
-        """
-        self._check_param_keys_do_not_target_var_params(param_keys, modifier_kwarg_key)
+    def _check_param_keys_in_func_signature(
+        self,
+        param_keys: Iterable[str],
+        modifier_kwarg_key: str,
+    ):
+        if any(param.kind == inspect.Parameter.VAR_KEYWORD
+               for param in self.param_signatures.values()):
+            return
 
         for param_key in param_keys:
             if param_key not in self.param_signatures:
@@ -80,6 +78,20 @@ class SignatureFuncJobBaseMixin:
                                'signature of the job function are '
                                f'allowed as keys in the "{modifier_kwarg_key}" modifier: '
                                f"{', '.join(key for key in self.param_signatures.keys())}")
+
+    def _check_param_keys(
+        self,
+        param_keys: Iterable[str],
+        modifier_kwarg_key: str,
+    ) -> None:
+        """Validate modifier keys against the job function signature.
+
+        In addition to checking that targeted names exist, this rejects
+        direct targeting of var-positional and var-keyword parameter
+        names.
+        """
+        self._check_param_keys_do_not_target_var_params(param_keys, modifier_kwarg_key)
+        self._check_param_keys_in_func_signature(param_keys, modifier_kwarg_key)
 
     def _update_func_signature(self, new_signature: inspect.Signature):
         # self._job_func.__signature__ = new_signature

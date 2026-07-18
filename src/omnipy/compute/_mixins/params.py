@@ -32,10 +32,14 @@ class ParamsFuncJobBaseMixin:
         self._fixed_params = dict(fixed_params) if fixed_params is not None else {}
         self._param_key_mapper = ParamKeyMapper(param_key_map if param_key_map is not None else {})
 
-        self_as_signature_func_job_base_mixin._check_param_keys_in_func_signature(
-            self.fixed_params.keys(), 'fixed_params')
-        self_as_signature_func_job_base_mixin._check_param_keys_in_func_signature(
-            self.param_key_map.keys(), 'param_key_map')
+        self_as_signature_func_job_base_mixin._check_param_keys(
+            self.fixed_params.keys(),
+            'fixed_params',
+        )
+        self_as_signature_func_job_base_mixin._check_param_keys(
+            self.param_key_map.keys(),
+            'param_key_map',
+        )
 
     @property
     def fixed_params(self) -> MappingProxyType[str, object]:
