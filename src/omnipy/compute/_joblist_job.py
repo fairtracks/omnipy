@@ -63,16 +63,20 @@ if is_package_editable('omnipy'):
             >>> import omnipy as om
             >>> class TextModel(om.Model[str]):
             ...     ...
+
             >>> class TextDataset(om.Dataset[TextModel]):
             ...     ...
+
             >>> @om.LinearFlowTemplate(TextModel)
             ... def wrap_text(raw_text: str) -> TextModel:
             ...     return TextModel(raw_text)
+
             >>> wrap_text.run('hello').content
             'hello'
             >>> @om.DagFlowTemplate(TextDataset)
             ... def collect_texts(first: str, second: str) -> TextDataset:
             ...     return TextDataset({'first': first, 'second': second})
+
             >>> collect_texts.run(first='hello', second='bye') == TextDataset({
             ...     'first': 'hello',
             ...     'second': 'bye',
@@ -106,10 +110,12 @@ if is_package_editable('omnipy'):
         Examples:
             >>> import omnipy as om
             >>> from collections.abc import Iterator
+
             >>> @om.TaskTemplate()
             ... def emit_lines() -> Iterator[str]:
             ...     yield 'first'
             ...     yield 'second'
+
             >>> @om.LinearFlowTemplate(emit_lines)
             ... def line_stream() -> Iterator[str]:
             ...     yield from om.Void()
@@ -136,17 +142,21 @@ if is_package_editable('omnipy'):
             >>> import omnipy as om
             >>> class TextModel(om.Model[str]):
             ...     ...
+
             >>> class TextDataset(om.Dataset[TextModel]):
             ...     ...
+
             >>> @om.TaskTemplate(iterate_over_data_files=True)
             ... def strip_text(data_file: TextModel) -> TextModel:
             ...     return data_file.content.strip()
+
             >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
             ... def add_suffix(
             ...     data_file: TextModel,
             ...     suffix: str,
             ... ) -> TextModel:
             ...     return f'{data_file.content}{suffix}'
+
             >>> suffix_each = add_suffix.refine(param_key_map={'suffix': 'ending'})
             >>> @om.LinearFlowTemplate(strip_text, suffix_each)
             ... def linear_flow(
@@ -154,6 +164,7 @@ if is_package_editable('omnipy'):
             ...     ending: str,
             ... ) -> TextDataset:
             ...     return dataset
+
             >>> text_files = TextDataset({'a': ' hi', 'b': 'bye '})
             >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
             >>> linear_flow.run(text_files, ending='!') == expected
@@ -182,17 +193,21 @@ if is_package_editable('omnipy'):
             >>> import omnipy as om
             >>> class TextModel(om.Model[str]):
             ...     ...
+
             >>> class TextDataset(om.Dataset[TextModel]):
             ...     ...
+
             >>> @om.TaskTemplate()
             ... def uppercase(data_file: TextModel) -> TextModel:
             ...     return data_file.content.upper()
+
             >>> @om.TaskTemplate()
             ... def append_suffix(
             ...     data_file: TextModel,
             ...     suffix: str,
             ... ) -> TextModel:
             ...     return f'{data_file.content}{suffix}'
+
             >>> @om.TaskTemplate()
             ... def combine_texts(
             ...     left_dataset: TextDataset,
@@ -205,6 +220,7 @@ if is_package_editable('omnipy'):
             ...             f'{right_dataset[title].content}'
             ...         )
             ...     return merged
+
             >>> @om.DagFlowTemplate(
             ...     uppercase.refine(
             ...         iterate_over_data_files=True,
@@ -227,6 +243,7 @@ if is_package_editable('omnipy'):
             ...     ending: str,
             ... ) -> TextDataset:
             ...     return dataset
+
             >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
             >>> expected = TextDataset({
             ...     'a': 'HI|hi!',

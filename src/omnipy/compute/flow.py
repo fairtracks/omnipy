@@ -72,8 +72,10 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 >>> import omnipy as om
                 >>> class TextModel(om.Model[str]):
                 ...     ...
+
                 >>> class TextDataset(om.Dataset[TextModel]):
                 ...     ...
+
                 >>> @om.FuncFlowTemplate()
                 ... def append_suffix_to_all(
                 ...     dataset: TextDataset,
@@ -83,6 +85,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 ...     for title, data_file in dataset.items():
                 ...         output_dataset[title] = f'{data_file.content}{suffix}'
                 ...     return output_dataset
+
                 >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
                 >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
                 >>> append_suffix_to_all.run(text_files, '!') == expected
@@ -108,16 +111,20 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 >>> import omnipy as om
                 >>> class TextModel(om.Model[str]):
                 ...     ...
+
                 >>> class TextDataset(om.Dataset[TextModel]):
                 ...     ...
+
                 >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
                 ... def normalize_text(data_file: TextModel) -> TextModel:
                 ...     return data_file.content.strip().lower()
+
                 >>> @om.LinearFlowTemplate(normalize_text)
                 ... def clean_texts(
                 ...     dataset: TextDataset,
                 ... ) -> TextDataset:
                 ...     return dataset
+
                 >>> text_files = TextDataset({'a': ' Hi ', 'b': 'BYE '})
                 >>> expected = TextDataset({'a': 'hi', 'b': 'bye'})
                 >>> clean_texts.run(text_files) == expected
@@ -147,11 +154,14 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 >>> import omnipy as om
                 >>> class TextModel(om.Model[str]):
                 ...     ...
+
                 >>> class TextDataset(om.Dataset[TextModel]):
                 ...     ...
+
                 >>> @om.TaskTemplate(iterate_over_data_files=True)
                 ... def uppercase(data_file: TextModel) -> TextModel:
                 ...     return data_file.content.upper()
+
                 >>> @om.TaskTemplate()
                 ... def join_texts(
                 ...     upper: TextDataset,
@@ -161,6 +171,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 ...     for title in upper:
                 ...         merged[title] = f'{upper[title].content}|{original[title].content}'
                 ...     return merged
+
                 >>> @om.DagFlowTemplate(
                 ...     uppercase.refine(result_key='upper'),
                 ...     join_texts.refine(param_key_map={'upper': 'upper', 'original': 'dataset'}),
@@ -169,6 +180,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 ...     dataset: TextDataset,
                 ... ) -> TextDataset:
                 ...     return dataset
+
                 >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
                 >>> expected = TextDataset({'a': 'HI|hi', 'b': 'BYE|bye'})
                 >>> my_dag.run(text_files) == expected
@@ -248,16 +260,20 @@ class LinearFlowTemplateCore(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def normalize_text(data_file: TextModel) -> TextModel:
         ...     return data_file.content.strip().lower()
+
         >>> @om.LinearFlowTemplate(normalize_text)
         ... def clean_texts(
         ...     dataset: TextDataset,
         ... ) -> TextDataset:
         ...     return dataset
+
         >>> text_files = TextDataset({'a': ' Hi ', 'b': 'BYE '})
         >>> expected = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> clean_texts.run(text_files) == expected
@@ -279,16 +295,20 @@ class LinearFlowTemplateCore(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.LinearFlowTemplate(TextModel)
         ... def wrap_text(raw_text: str) -> TextModel:
         ...     return TextModel(raw_text)
+
         >>> wrap_text.run('hello').content
         'hello'
         >>> @om.DagFlowTemplate(TextDataset)
         ... def collect_texts(first: str, second: str) -> TextDataset:
         ...     return TextDataset({'first': first, 'second': second})
+
         >>> collect_texts.run(first='hello', second='bye') == TextDataset({
         ...     'first': 'hello',
         ...     'second': 'bye',
@@ -320,10 +340,12 @@ class LinearFlowTemplateCore(
     Examples:
         >>> import omnipy as om
         >>> from collections.abc import Iterator
+
         >>> @om.TaskTemplate()
         ... def emit_lines() -> Iterator[str]:
         ...     yield 'first'
         ...     yield 'second'
+
         >>> @om.LinearFlowTemplate(emit_lines)
         ... def line_stream() -> Iterator[str]:
         ...     yield from om.Void()
@@ -361,6 +383,7 @@ class LinearFlowTemplateCore(
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
         ...     return number + other
+
         >>> plus_one = plus_other.refine(fixed_params={'other': 1})
         >>> plus_one.run(4)
         5
@@ -376,14 +399,17 @@ class LinearFlowTemplateCore(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -407,17 +433,21 @@ class LinearFlowTemplateCore(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True)
         ... def strip_text(data_file: TextModel) -> TextModel:
         ...     return data_file.content.strip()
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> suffix_each = add_suffix.refine(param_key_map={'suffix': 'ending'})
         >>> @om.LinearFlowTemplate(strip_text, suffix_each)
         ... def linear_flow(
@@ -425,6 +455,7 @@ class LinearFlowTemplateCore(
         ...     ending: str,
         ... ) -> TextDataset:
         ...     return dataset
+
         >>> text_files = TextDataset({'a': ' hi', 'b': 'bye '})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> linear_flow.run(text_files, ending='!') == expected
@@ -460,6 +491,7 @@ class LinearFlowTemplateCore(
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
         ...     return number + 1
+
         >>> plus_one.run(1)
         2
         >>> applied_job = plus_one.apply()
@@ -538,16 +570,20 @@ def LinearFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def normalize_text(data_file: TextModel) -> TextModel:
         ...     return data_file.content.strip().lower()
+
         >>> @om.LinearFlowTemplate(normalize_text)
         ... def clean_texts(
         ...     dataset: TextDataset,
         ... ) -> TextDataset:
         ...     return dataset
+
         >>> text_files = TextDataset({'a': ' Hi ', 'b': 'BYE '})
         >>> expected = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> clean_texts.run(text_files) == expected
@@ -569,16 +605,20 @@ def LinearFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.LinearFlowTemplate(TextModel)
         ... def wrap_text(raw_text: str) -> TextModel:
         ...     return TextModel(raw_text)
+
         >>> wrap_text.run('hello').content
         'hello'
         >>> @om.DagFlowTemplate(TextDataset)
         ... def collect_texts(first: str, second: str) -> TextDataset:
         ...     return TextDataset({'first': first, 'second': second})
+
         >>> collect_texts.run(first='hello', second='bye') == TextDataset({
         ...     'first': 'hello',
         ...     'second': 'bye',
@@ -610,10 +650,12 @@ def LinearFlowTemplate(
     Examples:
         >>> import omnipy as om
         >>> from collections.abc import Iterator
+
         >>> @om.TaskTemplate()
         ... def emit_lines() -> Iterator[str]:
         ...     yield 'first'
         ...     yield 'second'
+
         >>> @om.LinearFlowTemplate(emit_lines)
         ... def line_stream() -> Iterator[str]:
         ...     yield from om.Void()
@@ -651,6 +693,7 @@ def LinearFlowTemplate(
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
         ...     return number + other
+
         >>> plus_one = plus_other.refine(fixed_params={'other': 1})
         >>> plus_one.run(4)
         5
@@ -666,14 +709,17 @@ def LinearFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -697,17 +743,21 @@ def LinearFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True)
         ... def strip_text(data_file: TextModel) -> TextModel:
         ...     return data_file.content.strip()
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> suffix_each = add_suffix.refine(param_key_map={'suffix': 'ending'})
         >>> @om.LinearFlowTemplate(strip_text, suffix_each)
         ... def linear_flow(
@@ -715,6 +765,7 @@ def LinearFlowTemplate(
         ...     ending: str,
         ... ) -> TextDataset:
         ...     return dataset
+
         >>> text_files = TextDataset({'a': ' hi', 'b': 'bye '})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> linear_flow.run(text_files, ending='!') == expected
@@ -750,6 +801,7 @@ def LinearFlowTemplate(
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
         ...     return number + 1
+
         >>> plus_one.run(1)
         2
         >>> applied_job = plus_one.apply()
@@ -903,11 +955,14 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True)
         ... def uppercase(data_file: TextModel) -> TextModel:
         ...     return data_file.content.upper()
+
         >>> @om.TaskTemplate()
         ... def join_texts(
         ...     upper: TextDataset,
@@ -917,6 +972,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         ...     for title in upper:
         ...         merged[title] = f'{upper[title].content}|{original[title].content}'
         ...     return merged
+
         >>> @om.DagFlowTemplate(
         ...     uppercase.refine(result_key='upper'),
         ...     join_texts.refine(param_key_map={'upper': 'upper', 'original': 'dataset'}),
@@ -925,6 +981,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         ...     dataset: TextDataset,
         ... ) -> TextDataset:
         ...     return dataset
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'HI|hi', 'b': 'BYE|bye'})
         >>> my_dag.run(text_files) == expected
@@ -946,16 +1003,20 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.LinearFlowTemplate(TextModel)
         ... def wrap_text(raw_text: str) -> TextModel:
         ...     return TextModel(raw_text)
+
         >>> wrap_text.run('hello').content
         'hello'
         >>> @om.DagFlowTemplate(TextDataset)
         ... def collect_texts(first: str, second: str) -> TextDataset:
         ...     return TextDataset({'first': first, 'second': second})
+
         >>> collect_texts.run(first='hello', second='bye') == TextDataset({
         ...     'first': 'hello',
         ...     'second': 'bye',
@@ -987,10 +1048,12 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     Examples:
         >>> import omnipy as om
         >>> from collections.abc import Iterator
+
         >>> @om.TaskTemplate()
         ... def emit_lines() -> Iterator[str]:
         ...     yield 'first'
         ...     yield 'second'
+
         >>> @om.LinearFlowTemplate(emit_lines)
         ... def line_stream() -> Iterator[str]:
         ...     yield from om.Void()
@@ -1028,6 +1091,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
         ...     return number + other
+
         >>> plus_one = plus_other.refine(fixed_params={'other': 1})
         >>> plus_one.run(4)
         5
@@ -1043,14 +1107,17 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -1078,17 +1145,21 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate()
         ... def uppercase(data_file: TextModel) -> TextModel:
         ...     return data_file.content.upper()
+
         >>> @om.TaskTemplate()
         ... def append_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> @om.TaskTemplate()
         ... def combine_texts(
         ...     left_dataset: TextDataset,
@@ -1101,6 +1172,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         ...             f'{right_dataset[title].content}'
         ...         )
         ...     return merged
+
         >>> @om.DagFlowTemplate(
         ...     uppercase.refine(
         ...         iterate_over_data_files=True,
@@ -1123,6 +1195,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         ...     ending: str,
         ... ) -> TextDataset:
         ...     return dataset
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({
         ...     'a': 'HI|hi!',
@@ -1161,6 +1234,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
         ...     return number + 1
+
         >>> plus_one.run(1)
         2
         >>> applied_job = plus_one.apply()
@@ -1238,11 +1312,14 @@ def DagFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True)
         ... def uppercase(data_file: TextModel) -> TextModel:
         ...     return data_file.content.upper()
+
         >>> @om.TaskTemplate()
         ... def join_texts(
         ...     upper: TextDataset,
@@ -1252,6 +1329,7 @@ def DagFlowTemplate(
         ...     for title in upper:
         ...         merged[title] = f'{upper[title].content}|{original[title].content}'
         ...     return merged
+
         >>> @om.DagFlowTemplate(
         ...     uppercase.refine(result_key='upper'),
         ...     join_texts.refine(param_key_map={'upper': 'upper', 'original': 'dataset'}),
@@ -1260,6 +1338,7 @@ def DagFlowTemplate(
         ...     dataset: TextDataset,
         ... ) -> TextDataset:
         ...     return dataset
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'HI|hi', 'b': 'BYE|bye'})
         >>> my_dag.run(text_files) == expected
@@ -1281,16 +1360,20 @@ def DagFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.LinearFlowTemplate(TextModel)
         ... def wrap_text(raw_text: str) -> TextModel:
         ...     return TextModel(raw_text)
+
         >>> wrap_text.run('hello').content
         'hello'
         >>> @om.DagFlowTemplate(TextDataset)
         ... def collect_texts(first: str, second: str) -> TextDataset:
         ...     return TextDataset({'first': first, 'second': second})
+
         >>> collect_texts.run(first='hello', second='bye') == TextDataset({
         ...     'first': 'hello',
         ...     'second': 'bye',
@@ -1322,10 +1405,12 @@ def DagFlowTemplate(
     Examples:
         >>> import omnipy as om
         >>> from collections.abc import Iterator
+
         >>> @om.TaskTemplate()
         ... def emit_lines() -> Iterator[str]:
         ...     yield 'first'
         ...     yield 'second'
+
         >>> @om.LinearFlowTemplate(emit_lines)
         ... def line_stream() -> Iterator[str]:
         ...     yield from om.Void()
@@ -1363,6 +1448,7 @@ def DagFlowTemplate(
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
         ...     return number + other
+
         >>> plus_one = plus_other.refine(fixed_params={'other': 1})
         >>> plus_one.run(4)
         5
@@ -1378,14 +1464,17 @@ def DagFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -1413,17 +1502,21 @@ def DagFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate()
         ... def uppercase(data_file: TextModel) -> TextModel:
         ...     return data_file.content.upper()
+
         >>> @om.TaskTemplate()
         ... def append_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> @om.TaskTemplate()
         ... def combine_texts(
         ...     left_dataset: TextDataset,
@@ -1436,6 +1529,7 @@ def DagFlowTemplate(
         ...             f'{right_dataset[title].content}'
         ...         )
         ...     return merged
+
         >>> @om.DagFlowTemplate(
         ...     uppercase.refine(
         ...         iterate_over_data_files=True,
@@ -1458,6 +1552,7 @@ def DagFlowTemplate(
         ...     ending: str,
         ... ) -> TextDataset:
         ...     return dataset
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({
         ...     'a': 'HI|hi!',
@@ -1496,6 +1591,7 @@ def DagFlowTemplate(
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
         ...     return number + 1
+
         >>> plus_one.run(1)
         2
         >>> applied_job = plus_one.apply()
@@ -1655,8 +1751,10 @@ class FuncFlowTemplateCore(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.FuncFlowTemplate()
         ... def append_suffix_to_all(
         ...     dataset: TextDataset,
@@ -1666,6 +1764,7 @@ class FuncFlowTemplateCore(
         ...     for title, data_file in dataset.items():
         ...         output_dataset[title] = f'{data_file.content}{suffix}'
         ...     return output_dataset
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> append_suffix_to_all.run(text_files, '!') == expected
@@ -1701,6 +1800,7 @@ class FuncFlowTemplateCore(
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
         ...     return number + other
+
         >>> plus_one = plus_other.refine(fixed_params={'other': 1})
         >>> plus_one.run(4)
         5
@@ -1716,14 +1816,17 @@ class FuncFlowTemplateCore(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -1759,6 +1862,7 @@ class FuncFlowTemplateCore(
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
         ...     return number + 1
+
         >>> plus_one.run(1)
         2
         >>> applied_job = plus_one.apply()
@@ -1834,8 +1938,10 @@ def FuncFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.FuncFlowTemplate()
         ... def append_suffix_to_all(
         ...     dataset: TextDataset,
@@ -1845,6 +1951,7 @@ def FuncFlowTemplate(
         ...     for title, data_file in dataset.items():
         ...         output_dataset[title] = f'{data_file.content}{suffix}'
         ...     return output_dataset
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> append_suffix_to_all.run(text_files, '!') == expected
@@ -1880,6 +1987,7 @@ def FuncFlowTemplate(
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
         ...     return number + other
+
         >>> plus_one = plus_other.refine(fixed_params={'other': 1})
         >>> plus_one.run(4)
         5
@@ -1895,14 +2003,17 @@ def FuncFlowTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -1938,6 +2049,7 @@ def FuncFlowTemplate(
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
         ...     return number + 1
+
         >>> plus_one.run(1)
         2
         >>> applied_job = plus_one.apply()

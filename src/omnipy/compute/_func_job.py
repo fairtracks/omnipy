@@ -40,6 +40,7 @@ if is_package_editable('omnipy'):
             >>> @om.TaskTemplate()
             ... def plus_one(number: int) -> int:
             ...     return number + 1
+
             >>> plus_one.run(1)
             2
             >>> applied_job = plus_one.apply()
@@ -87,6 +88,7 @@ if is_package_editable('omnipy'):
             >>> @om.TaskTemplate()
             ... def plus_other(number: int, other: int) -> int:
             ...     return number + other
+
             >>> plus_one = plus_other.refine(fixed_params={'other': 1})
             >>> plus_one.run(4)
             5
@@ -102,14 +104,17 @@ if is_package_editable('omnipy'):
             >>> import omnipy as om
             >>> class TextModel(om.Model[str]):
             ...     ...
+
             >>> class TextDataset(om.Dataset[TextModel]):
             ...     ...
+
             >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
             ... def add_suffix(
             ...     data_file: TextModel,
             ...     suffix: str,
             ... ) -> TextModel:
             ...     return f'{data_file.content}{suffix}'
+
             >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
             >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
             >>> add_suffix.run(text_files, suffix='!') == expected

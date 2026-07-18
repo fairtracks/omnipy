@@ -50,8 +50,10 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 >>> import omnipy as om
                 >>> class TextModel(om.Model[str]):
                 ...     ...
+
                 >>> class TextDataset(om.Dataset[TextModel]):
                 ...     ...
+
                 >>> @om.TaskTemplate()
                 ... def add_suffix(
                 ...     dataset: TextDataset,
@@ -60,6 +62,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 ...     for data_file_name, value in dataset.items():
                 ...         dataset[data_file_name] = f'{value}{suffix}'
                 ...     return dataset
+
                 >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
                 >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
                 >>> add_suffix.run(text_files, suffix='!') == expected
@@ -128,8 +131,10 @@ class TaskTemplateCore(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate()
         ... def add_suffix(
         ...     dataset: TextDataset,
@@ -138,6 +143,7 @@ class TaskTemplateCore(
         ...     for data_file_name, value in dataset.items():
         ...         dataset[data_file_name] = f'{value}{suffix}'
         ...     return dataset
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -173,6 +179,7 @@ class TaskTemplateCore(
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
         ...     return number + other
+
         >>> plus_one = plus_other.refine(fixed_params={'other': 1})
         >>> plus_one.run(4)
         5
@@ -188,14 +195,17 @@ class TaskTemplateCore(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -231,6 +241,7 @@ class TaskTemplateCore(
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
         ...     return number + 1
+
         >>> plus_one.run(1)
         2
         >>> applied_job = plus_one.apply()
@@ -304,8 +315,10 @@ def TaskTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate()
         ... def add_suffix(
         ...     dataset: TextDataset,
@@ -314,6 +327,7 @@ def TaskTemplate(
         ...     for data_file_name, value in dataset.items():
         ...         dataset[data_file_name] = f'{value}{suffix}'
         ...     return dataset
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -349,6 +363,7 @@ def TaskTemplate(
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
         ...     return number + other
+
         >>> plus_one = plus_other.refine(fixed_params={'other': 1})
         >>> plus_one.run(4)
         5
@@ -364,14 +379,17 @@ def TaskTemplate(
         >>> import omnipy as om
         >>> class TextModel(om.Model[str]):
         ...     ...
+
         >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
+
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
         ...     data_file: TextModel,
         ...     suffix: str,
         ... ) -> TextModel:
         ...     return f'{data_file.content}{suffix}'
+
         >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
         >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
         >>> add_suffix.run(text_files, suffix='!') == expected
@@ -407,6 +425,7 @@ def TaskTemplate(
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
         ...     return number + 1
+
         >>> plus_one.run(1)
         2
         >>> applied_job = plus_one.apply()
