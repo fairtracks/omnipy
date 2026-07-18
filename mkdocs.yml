@@ -176,6 +176,7 @@ plugins:
             - "!^pyd"
           summary: true
           docstring_style: google
+          show_docstring_examples: true
           docstring_options:
             returns_multiple_items: false
           docstring_section_style: spacy
