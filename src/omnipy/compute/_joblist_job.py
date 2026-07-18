@@ -47,6 +47,8 @@ if is_package_editable('omnipy'):
                 called on the parent job template.""")
 
     os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'] = dedent("""\
+        ### Child jobs and data classes
+
         Child-job templates may be
         [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
         instances.
@@ -58,12 +60,21 @@ if is_package_editable('omnipy'):
         input in linear flows or from keyword-matched input in DAG flows.
 
         Example:
-            ``@LinearFlowTemplate(MyDataset)``
-            ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
-            ``@DagFlowTemplate(MyModel, extract_number)``
-            ``def read_model(number: int) -> int: ...``""")
+            >>> import omnipy as om
+            >>> class NumberModel(om.Model[int]):
+            ...     ...
+            >>> class NumberDataset(om.Dataset[NumberModel]):
+            ...     ...
+            >>> @om.LinearFlowTemplate(NumberDataset)
+            ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
+            ...     ...
+            >>> @om.DagFlowTemplate(NumberModel)
+            ... def build_model(number: int) -> NumberModel:
+            ...     ...""")
 
     os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'] = dedent("""\
+        ### Callable-type validation
+
         For linear and DAG flows, the outer callable is primarily declarative:
         its signature exposes the public flow interface, while child jobs define
         the executed body.
@@ -79,17 +90,29 @@ if is_package_editable('omnipy'):
         Mismatches raise ``TypeError`` when the flow template is created.""")
 
     os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'] = dedent("""\
+        ### Generator shorthand with ``Void``
+
         When the validated outer callable must be a generator or
         async-generator only to expose the correct public signature, use
         [Void][omnipy.compute.helpers.Void] in the body:
 
-        ``yield from Void()`` for sync generator flows, or
-        ``async for item in Void(): yield item`` for async generator flows.
+        Example:
+            >>> import omnipy as om
+            >>> from collections.abc import Iterator
+            >>> @om.TaskTemplate()
+            ... def emit_numbers() -> Iterator[int]:
+            ...     yield 1
+            ...     yield 2
+            >>> @om.LinearFlowTemplate(emit_numbers)
+            ... def number_stream() -> Iterator[int]:
+            ...     yield from om.Void()
 
         This shorthand exists only to satisfy the declared outer callable type;
         the child jobs still perform the actual flow work.""")
 
     os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_ORCHESTRATION'] = dedent("""\
+        ### Linear orchestration
+
         Linear flows run child jobs strictly in declaration order.
 
         The first child receives the caller's positional and keyword inputs.
@@ -103,12 +126,26 @@ if is_package_editable('omnipy'):
         parameter names.
 
         Example:
-            ``transform = transform_tmpl.refine(param_key_map={'add': 'step'},``
-            ``fixed_params={'mult': 2})``
-            ``@LinearFlowTemplate(identity_tmpl, transform)``
-            ``def linear_flow(number: int, step: int) -> int: ...``""")
+            >>> import omnipy as om
+            >>> @om.TaskTemplate()
+            ... def identity_tmpl(number: int) -> int:
+            ...     return number
+            >>> @om.TaskTemplate()
+            ... def transform_tmpl(number: int, add: int, mult: int) -> int:
+            ...     return (number + add) * mult
+            >>> transform = transform_tmpl.refine(
+            ...     param_key_map={'add': 'step'},
+            ...     fixed_params={'mult': 2},
+            ... )
+            >>> @om.LinearFlowTemplate(identity_tmpl, transform)
+            ... def linear_flow(number: int, step: int) -> int:
+            ...     return number
+            >>> linear_flow.run(3, step=4)
+            14""")
 
     os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_ORCHESTRATION'] = dedent("""\
+        ### DAG orchestration
+
         DAG flows route values by keyword name instead of chaining every child
         result positionally.
 
@@ -126,17 +163,30 @@ if is_package_editable('omnipy'):
         pins selected child inputs regardless of what earlier branches produce.
 
         Example:
-            ``@DagFlowTemplate(``
-            ``    add_two.refine(result_key='base'),``
-            ``    square_number.refine(result_key='bonus'),``
-            ``    add_two_numbers.refine(``
-            ``        param_key_map={``
-            ``            'left_value': 'base',``
-            ``            'right_value': 'bonus',``
-            ``        },``
-            ``    ),``
-            ``)``
-            ``def dag_flow(number: int) -> int: ...``""")
+            >>> import omnipy as om
+            >>> @om.TaskTemplate()
+            ... def add_two(number: int) -> int:
+            ...     return number + 2
+            >>> @om.TaskTemplate()
+            ... def square_number(number: int) -> int:
+            ...     return number * number
+            >>> @om.TaskTemplate()
+            ... def add_two_numbers(left_value: int, right_value: int) -> int:
+            ...     return left_value + right_value
+            >>> @om.DagFlowTemplate(
+            ...     add_two.refine(result_key='base'),
+            ...     square_number.refine(result_key='bonus'),
+            ...     add_two_numbers.refine(
+            ...         param_key_map={
+            ...             'left_value': 'base',
+            ...             'right_value': 'bonus',
+            ...         },
+            ...     ),
+            ... )
+            ... def dag_flow(number: int) -> int:
+            ...     return number
+            >>> dag_flow.run(3)
+            14""")
 
 
 class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT],

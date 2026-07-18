@@ -19,6 +19,8 @@ _RetT = TypeVar('_RetT')
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'] = dedent("""\
+        ### Lifecycle
+
         Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
         to create a runnable job with engine decorators and current config attached.
         Call the resulting applied job with runtime arguments.
@@ -33,20 +35,30 @@ if is_package_editable('omnipy'):
         Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
         reconstruct a template from that job's current configuration.
 
-        Typical lifecycle:
-            ``result = template.run(...)``
-            ``applied_job = template.apply()``
-            ``result = applied_job(...)``
-            ``refined_template = template.refine(name='new_name')``
-            ``revised_template = applied_job.revise()``""")
+        Example:
+            >>> import omnipy as om
+            >>> @om.TaskTemplate()
+            ... def plus_one(number: int) -> int:
+            ...     return number + 1
+            >>> plus_one.run(1)
+            2
+            >>> applied_job = plus_one.apply()
+            >>> applied_job(2)
+            3
+            >>> refined_template = plus_one.refine(name='plus_one_renamed')
+            >>> revised_template = applied_job.revise()""")
 
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'] = dedent("""\
-        Decorator syntax:
-            ``@...Template(...)`` wraps a Python callable as a reusable job
-            template. The wrapped callable defines the public outer signature
-            seen by template users and by applied jobs created from it.""")
+        ### Decorator usage
+
+        Apply the template factory as a decorator to a Python callable.
+        The wrapped callable becomes a reusable job template whose public outer
+        signature is visible to template users and to the applied jobs created
+        from it.""")
 
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'] = dedent("""\
+        ### Outer signature and modifiers
+
         The wrapped callable's parameter list and return annotation define the
         outer interface of the template.
 
@@ -63,12 +75,24 @@ if is_package_editable('omnipy'):
         which is especially useful when a downstream DAG step should receive
         the result under a predictable name.
 
-        Example modifier usage:
-            ``plus_one = plus_other.refine(fixed_params={'other': 1})``
-            ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
-            ``plus_one_dict = plus_one.refine(result_key='number')``""")
+        Example:
+            >>> import omnipy as om
+            >>> @om.TaskTemplate()
+            ... def plus_other(number: int, other: int) -> int:
+            ...     return number + other
+            >>> plus_one = plus_other.refine(fixed_params={'other': 1})
+            >>> plus_one.run(4)
+            5
+            >>> plus_x = plus_other.refine(param_key_map={'other': 'x'})
+            >>> plus_x.run(4, x=3)
+            7
+            >>> plus_one_dict = plus_one.refine(result_key='number')
+            >>> plus_one_dict.run(4)
+            {'number': 5}""")
 
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'] = dedent("""\
+        ### Tasks and flows
+
         Tasks are terminal jobs: they wrap one callable and execute one compute
         step.
 

@@ -63,12 +63,20 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             dependency graph."""),
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
         dedent("""\
+            ### Wrapped callable
+
             The wrapped callable defines both the implementation and the public
             outer signature of the flow.
 
             Example:
-                ``@FuncFlowTemplate()``
-                ``def repeat_plus_one(number: int, n: int) -> int: ...``"""),
+                >>> import omnipy as om
+                >>> @om.FuncFlowTemplate()
+                ... def repeat_plus_one(number: int, n: int) -> int:
+                ...     for _ in range(n):
+                ...         number += 1
+                ...     return number
+                >>> repeat_plus_one.run(1, 2)
+                3"""),
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
@@ -81,12 +89,21 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             should proceed step by step in a fixed declaration order."""),
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
         dedent("""\
+            ### Outer callable and child jobs
+
             The wrapped callable defines the public outer signature of the flow,
             while the child-job list defines the executed body.
 
             Example:
-                ``@LinearFlowTemplate(plus_one, plus_one)``
-                ``def plus_two(number: int) -> int: ...``"""),
+                >>> import omnipy as om
+                >>> @om.TaskTemplate()
+                ... def plus_one(number: int) -> int:
+                ...     return number + 1
+                >>> @om.LinearFlowTemplate(plus_one, plus_one)
+                ... def plus_two(number: int) -> int:
+                ...     return number
+                >>> plus_two.run(1)
+                3"""),
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
@@ -103,12 +120,27 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             when flow steps branch and join but must not form cycles."""),
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
         dedent("""\
+            ### Outer callable and child jobs
+
             The wrapped callable defines the public outer signature of the flow,
             while the child-job list defines the executed body.
 
             Example:
-                ``@DagFlowTemplate(start, branch, merge)``
-                ``def my_dag(number: int) -> int: ...``"""),
+                >>> import omnipy as om
+                >>> @om.TaskTemplate()
+                ... def start(number: int) -> int:
+                ...     return number + 1
+                >>> @om.TaskTemplate()
+                ... def branch(number: int) -> int:
+                ...     return number * 2
+                >>> @om.TaskTemplate()
+                ... def merge(start: int, branch: int) -> int:
+                ...     return start + branch
+                >>> @om.DagFlowTemplate(start, branch, merge)
+                ... def my_dag(number: int) -> int:
+                ...     return number
+                >>> my_dag.run(3)
+                10"""),
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
@@ -168,17 +200,30 @@ class LinearFlowTemplateCore(
     list of child job templates that run sequentially. Use this when work
     should proceed step by step in a fixed declaration order.
 
-    Decorator syntax:
-        ``@...Template(...)`` wraps a Python callable as a reusable job
-        template. The wrapped callable defines the public outer signature
-        seen by template users and by applied jobs created from it.
+    ### Decorator usage
+
+    Apply the template factory as a decorator to a Python callable.
+    The wrapped callable becomes a reusable job template whose public outer
+    signature is visible to template users and to the applied jobs created
+    from it.
+
+    ### Outer callable and child jobs
 
     The wrapped callable defines the public outer signature of the flow,
     while the child-job list defines the executed body.
 
     Example:
-        ``@LinearFlowTemplate(plus_one, plus_one)``
-        ``def plus_two(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_one(number: int) -> int:
+        ...     return number + 1
+        >>> @om.LinearFlowTemplate(plus_one, plus_one)
+        ... def plus_two(number: int) -> int:
+        ...     return number
+        >>> plus_two.run(1)
+        3
+
+    ### Child jobs and data classes
 
     Child-job templates may be
     [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
@@ -191,10 +236,19 @@ class LinearFlowTemplateCore(
     input in linear flows or from keyword-matched input in DAG flows.
 
     Example:
-        ``@LinearFlowTemplate(MyDataset)``
-        ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
-        ``@DagFlowTemplate(MyModel, extract_number)``
-        ``def read_model(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> class NumberModel(om.Model[int]):
+        ...     ...
+        >>> class NumberDataset(om.Dataset[NumberModel]):
+        ...     ...
+        >>> @om.LinearFlowTemplate(NumberDataset)
+        ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
+        ...     ...
+        >>> @om.DagFlowTemplate(NumberModel)
+        ... def build_model(number: int) -> NumberModel:
+        ...     ...
+
+    ### Callable-type validation
 
     For linear and DAG flows, the outer callable is primarily declarative:
     its signature exposes the public flow interface, while child jobs define
@@ -210,15 +264,27 @@ class LinearFlowTemplateCore(
     and async outer callables are required when child composition is async.
     Mismatches raise ``TypeError`` when the flow template is created.
 
+    ### Generator shorthand with ``Void``
+
     When the validated outer callable must be a generator or
     async-generator only to expose the correct public signature, use
     [Void][omnipy.compute.helpers.Void] in the body:
 
-    ``yield from Void()`` for sync generator flows, or
-    ``async for item in Void(): yield item`` for async generator flows.
+    Example:
+        >>> import omnipy as om
+        >>> from collections.abc import Iterator
+        >>> @om.TaskTemplate()
+        ... def emit_numbers() -> Iterator[int]:
+        ...     yield 1
+        ...     yield 2
+        >>> @om.LinearFlowTemplate(emit_numbers)
+        ... def number_stream() -> Iterator[int]:
+        ...     yield from om.Void()
 
     This shorthand exists only to satisfy the declared outer callable type;
     the child jobs still perform the actual flow work.
+
+    ### Outer signature and modifiers
 
     The wrapped callable's parameter list and return annotation define the
     outer interface of the template.
@@ -236,10 +302,22 @@ class LinearFlowTemplateCore(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example modifier usage:
-        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
-        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
-        ``plus_one_dict = plus_one.refine(result_key='number')``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_other(number: int, other: int) -> int:
+        ...     return number + other
+        >>> plus_one = plus_other.refine(fixed_params={'other': 1})
+        >>> plus_one.run(4)
+        5
+        >>> plus_x = plus_other.refine(param_key_map={'other': 'x'})
+        >>> plus_x.run(4, x=3)
+        7
+        >>> plus_one_dict = plus_one.refine(result_key='number')
+        >>> plus_one_dict.run(4)
+        {'number': 5}
+
+    ### Linear orchestration
 
     Linear flows run child jobs strictly in declaration order.
 
@@ -254,10 +332,24 @@ class LinearFlowTemplateCore(
     parameter names.
 
     Example:
-        ``transform = transform_tmpl.refine(param_key_map={'add': 'step'},``
-        ``fixed_params={'mult': 2})``
-        ``@LinearFlowTemplate(identity_tmpl, transform)``
-        ``def linear_flow(number: int, step: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def identity_tmpl(number: int) -> int:
+        ...     return number
+        >>> @om.TaskTemplate()
+        ... def transform_tmpl(number: int, add: int, mult: int) -> int:
+        ...     return (number + add) * mult
+        >>> transform = transform_tmpl.refine(
+        ...     param_key_map={'add': 'step'},
+        ...     fixed_params={'mult': 2},
+        ... )
+        >>> @om.LinearFlowTemplate(identity_tmpl, transform)
+        ... def linear_flow(number: int, step: int) -> int:
+        ...     return number
+        >>> linear_flow.run(3, step=4)
+        14
+
+    ### Tasks and flows
 
     Tasks are terminal jobs: they wrap one callable and execute one compute
     step.
@@ -265,6 +357,8 @@ class LinearFlowTemplateCore(
     Flows are orchestration jobs: they may contain child tasks and child
     flows, so larger pipelines can be assembled hierarchically from smaller
     reusable pieces.
+
+    ### Lifecycle
 
     Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
     to create a runnable job with engine decorators and current config attached.
@@ -280,12 +374,18 @@ class LinearFlowTemplateCore(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Typical lifecycle:
-        ``result = template.run(...)``
-        ``applied_job = template.apply()``
-        ``result = applied_job(...)``
-        ``refined_template = template.refine(name='new_name')``
-        ``revised_template = applied_job.revise()``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_one(number: int) -> int:
+        ...     return number + 1
+        >>> plus_one.run(1)
+        2
+        >>> applied_job = plus_one.apply()
+        >>> applied_job(2)
+        3
+        >>> refined_template = plus_one.refine(name='plus_one_renamed')
+        >>> revised_template = applied_job.revise()
 
     Instances are normally produced through the [LinearFlowTemplate][]
     decorator factory rather than by direct construction.
@@ -341,17 +441,30 @@ def LinearFlowTemplate(
     list of child job templates that run sequentially. Use this when work
     should proceed step by step in a fixed declaration order.
 
-    Decorator syntax:
-        ``@...Template(...)`` wraps a Python callable as a reusable job
-        template. The wrapped callable defines the public outer signature
-        seen by template users and by applied jobs created from it.
+    ### Decorator usage
+
+    Apply the template factory as a decorator to a Python callable.
+    The wrapped callable becomes a reusable job template whose public outer
+    signature is visible to template users and to the applied jobs created
+    from it.
+
+    ### Outer callable and child jobs
 
     The wrapped callable defines the public outer signature of the flow,
     while the child-job list defines the executed body.
 
     Example:
-        ``@LinearFlowTemplate(plus_one, plus_one)``
-        ``def plus_two(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_one(number: int) -> int:
+        ...     return number + 1
+        >>> @om.LinearFlowTemplate(plus_one, plus_one)
+        ... def plus_two(number: int) -> int:
+        ...     return number
+        >>> plus_two.run(1)
+        3
+
+    ### Child jobs and data classes
 
     Child-job templates may be
     [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
@@ -364,10 +477,19 @@ def LinearFlowTemplate(
     input in linear flows or from keyword-matched input in DAG flows.
 
     Example:
-        ``@LinearFlowTemplate(MyDataset)``
-        ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
-        ``@DagFlowTemplate(MyModel, extract_number)``
-        ``def read_model(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> class NumberModel(om.Model[int]):
+        ...     ...
+        >>> class NumberDataset(om.Dataset[NumberModel]):
+        ...     ...
+        >>> @om.LinearFlowTemplate(NumberDataset)
+        ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
+        ...     ...
+        >>> @om.DagFlowTemplate(NumberModel)
+        ... def build_model(number: int) -> NumberModel:
+        ...     ...
+
+    ### Callable-type validation
 
     For linear and DAG flows, the outer callable is primarily declarative:
     its signature exposes the public flow interface, while child jobs define
@@ -383,15 +505,27 @@ def LinearFlowTemplate(
     and async outer callables are required when child composition is async.
     Mismatches raise ``TypeError`` when the flow template is created.
 
+    ### Generator shorthand with ``Void``
+
     When the validated outer callable must be a generator or
     async-generator only to expose the correct public signature, use
     [Void][omnipy.compute.helpers.Void] in the body:
 
-    ``yield from Void()`` for sync generator flows, or
-    ``async for item in Void(): yield item`` for async generator flows.
+    Example:
+        >>> import omnipy as om
+        >>> from collections.abc import Iterator
+        >>> @om.TaskTemplate()
+        ... def emit_numbers() -> Iterator[int]:
+        ...     yield 1
+        ...     yield 2
+        >>> @om.LinearFlowTemplate(emit_numbers)
+        ... def number_stream() -> Iterator[int]:
+        ...     yield from om.Void()
 
     This shorthand exists only to satisfy the declared outer callable type;
     the child jobs still perform the actual flow work.
+
+    ### Outer signature and modifiers
 
     The wrapped callable's parameter list and return annotation define the
     outer interface of the template.
@@ -409,10 +543,22 @@ def LinearFlowTemplate(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example modifier usage:
-        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
-        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
-        ``plus_one_dict = plus_one.refine(result_key='number')``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_other(number: int, other: int) -> int:
+        ...     return number + other
+        >>> plus_one = plus_other.refine(fixed_params={'other': 1})
+        >>> plus_one.run(4)
+        5
+        >>> plus_x = plus_other.refine(param_key_map={'other': 'x'})
+        >>> plus_x.run(4, x=3)
+        7
+        >>> plus_one_dict = plus_one.refine(result_key='number')
+        >>> plus_one_dict.run(4)
+        {'number': 5}
+
+    ### Linear orchestration
 
     Linear flows run child jobs strictly in declaration order.
 
@@ -427,10 +573,24 @@ def LinearFlowTemplate(
     parameter names.
 
     Example:
-        ``transform = transform_tmpl.refine(param_key_map={'add': 'step'},``
-        ``fixed_params={'mult': 2})``
-        ``@LinearFlowTemplate(identity_tmpl, transform)``
-        ``def linear_flow(number: int, step: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def identity_tmpl(number: int) -> int:
+        ...     return number
+        >>> @om.TaskTemplate()
+        ... def transform_tmpl(number: int, add: int, mult: int) -> int:
+        ...     return (number + add) * mult
+        >>> transform = transform_tmpl.refine(
+        ...     param_key_map={'add': 'step'},
+        ...     fixed_params={'mult': 2},
+        ... )
+        >>> @om.LinearFlowTemplate(identity_tmpl, transform)
+        ... def linear_flow(number: int, step: int) -> int:
+        ...     return number
+        >>> linear_flow.run(3, step=4)
+        14
+
+    ### Tasks and flows
 
     Tasks are terminal jobs: they wrap one callable and execute one compute
     step.
@@ -438,6 +598,8 @@ def LinearFlowTemplate(
     Flows are orchestration jobs: they may contain child tasks and child
     flows, so larger pipelines can be assembled hierarchically from smaller
     reusable pieces.
+
+    ### Lifecycle
 
     Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
     to create a runnable job with engine decorators and current config attached.
@@ -453,12 +615,18 @@ def LinearFlowTemplate(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Typical lifecycle:
-        ``result = template.run(...)``
-        ``applied_job = template.apply()``
-        ``result = applied_job(...)``
-        ``refined_template = template.refine(name='new_name')``
-        ``revised_template = applied_job.revise()``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_one(number: int) -> int:
+        ...     return number + 1
+        >>> plus_one.run(1)
+        2
+        >>> applied_job = plus_one.apply()
+        >>> applied_job(2)
+        3
+        >>> refined_template = plus_one.refine(name='plus_one_renamed')
+        >>> revised_template = applied_job.revise()
 
     Args:
         *child_job_templates: Ordered templates of child jobs to be
@@ -589,17 +757,36 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     templates whose dependencies form a directed acyclic graph. Use this
     when flow steps branch and join but must not form cycles.
 
-    Decorator syntax:
-        ``@...Template(...)`` wraps a Python callable as a reusable job
-        template. The wrapped callable defines the public outer signature
-        seen by template users and by applied jobs created from it.
+    ### Decorator usage
+
+    Apply the template factory as a decorator to a Python callable.
+    The wrapped callable becomes a reusable job template whose public outer
+    signature is visible to template users and to the applied jobs created
+    from it.
+
+    ### Outer callable and child jobs
 
     The wrapped callable defines the public outer signature of the flow,
     while the child-job list defines the executed body.
 
     Example:
-        ``@DagFlowTemplate(start, branch, merge)``
-        ``def my_dag(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def start(number: int) -> int:
+        ...     return number + 1
+        >>> @om.TaskTemplate()
+        ... def branch(number: int) -> int:
+        ...     return number * 2
+        >>> @om.TaskTemplate()
+        ... def merge(start: int, branch: int) -> int:
+        ...     return start + branch
+        >>> @om.DagFlowTemplate(start, branch, merge)
+        ... def my_dag(number: int) -> int:
+        ...     return number
+        >>> my_dag.run(3)
+        10
+
+    ### Child jobs and data classes
 
     Child-job templates may be
     [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
@@ -612,10 +799,19 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     input in linear flows or from keyword-matched input in DAG flows.
 
     Example:
-        ``@LinearFlowTemplate(MyDataset)``
-        ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
-        ``@DagFlowTemplate(MyModel, extract_number)``
-        ``def read_model(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> class NumberModel(om.Model[int]):
+        ...     ...
+        >>> class NumberDataset(om.Dataset[NumberModel]):
+        ...     ...
+        >>> @om.LinearFlowTemplate(NumberDataset)
+        ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
+        ...     ...
+        >>> @om.DagFlowTemplate(NumberModel)
+        ... def build_model(number: int) -> NumberModel:
+        ...     ...
+
+    ### Callable-type validation
 
     For linear and DAG flows, the outer callable is primarily declarative:
     its signature exposes the public flow interface, while child jobs define
@@ -631,15 +827,27 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     and async outer callables are required when child composition is async.
     Mismatches raise ``TypeError`` when the flow template is created.
 
+    ### Generator shorthand with ``Void``
+
     When the validated outer callable must be a generator or
     async-generator only to expose the correct public signature, use
     [Void][omnipy.compute.helpers.Void] in the body:
 
-    ``yield from Void()`` for sync generator flows, or
-    ``async for item in Void(): yield item`` for async generator flows.
+    Example:
+        >>> import omnipy as om
+        >>> from collections.abc import Iterator
+        >>> @om.TaskTemplate()
+        ... def emit_numbers() -> Iterator[int]:
+        ...     yield 1
+        ...     yield 2
+        >>> @om.LinearFlowTemplate(emit_numbers)
+        ... def number_stream() -> Iterator[int]:
+        ...     yield from om.Void()
 
     This shorthand exists only to satisfy the declared outer callable type;
     the child jobs still perform the actual flow work.
+
+    ### Outer signature and modifiers
 
     The wrapped callable's parameter list and return annotation define the
     outer interface of the template.
@@ -657,10 +865,22 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example modifier usage:
-        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
-        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
-        ``plus_one_dict = plus_one.refine(result_key='number')``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_other(number: int, other: int) -> int:
+        ...     return number + other
+        >>> plus_one = plus_other.refine(fixed_params={'other': 1})
+        >>> plus_one.run(4)
+        5
+        >>> plus_x = plus_other.refine(param_key_map={'other': 'x'})
+        >>> plus_x.run(4, x=3)
+        7
+        >>> plus_one_dict = plus_one.refine(result_key='number')
+        >>> plus_one_dict.run(4)
+        {'number': 5}
+
+    ### DAG orchestration
 
     DAG flows route values by keyword name instead of chaining every child
     result positionally.
@@ -679,17 +899,32 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     pins selected child inputs regardless of what earlier branches produce.
 
     Example:
-        ``@DagFlowTemplate(``
-        ``    add_two.refine(result_key='base'),``
-        ``    square_number.refine(result_key='bonus'),``
-        ``    add_two_numbers.refine(``
-        ``        param_key_map={``
-        ``            'left_value': 'base',``
-        ``            'right_value': 'bonus',``
-        ``        },``
-        ``    ),``
-        ``)``
-        ``def dag_flow(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def add_two(number: int) -> int:
+        ...     return number + 2
+        >>> @om.TaskTemplate()
+        ... def square_number(number: int) -> int:
+        ...     return number * number
+        >>> @om.TaskTemplate()
+        ... def add_two_numbers(left_value: int, right_value: int) -> int:
+        ...     return left_value + right_value
+        >>> @om.DagFlowTemplate(
+        ...     add_two.refine(result_key='base'),
+        ...     square_number.refine(result_key='bonus'),
+        ...     add_two_numbers.refine(
+        ...         param_key_map={
+        ...             'left_value': 'base',
+        ...             'right_value': 'bonus',
+        ...         },
+        ...     ),
+        ... )
+        ... def dag_flow(number: int) -> int:
+        ...     return number
+        >>> dag_flow.run(3)
+        14
+
+    ### Tasks and flows
 
     Tasks are terminal jobs: they wrap one callable and execute one compute
     step.
@@ -697,6 +932,8 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     Flows are orchestration jobs: they may contain child tasks and child
     flows, so larger pipelines can be assembled hierarchically from smaller
     reusable pieces.
+
+    ### Lifecycle
 
     Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
     to create a runnable job with engine decorators and current config attached.
@@ -712,12 +949,18 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Typical lifecycle:
-        ``result = template.run(...)``
-        ``applied_job = template.apply()``
-        ``result = applied_job(...)``
-        ``refined_template = template.refine(name='new_name')``
-        ``revised_template = applied_job.revise()``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_one(number: int) -> int:
+        ...     return number + 1
+        >>> plus_one.run(1)
+        2
+        >>> applied_job = plus_one.apply()
+        >>> applied_job(2)
+        3
+        >>> refined_template = plus_one.refine(name='plus_one_renamed')
+        >>> revised_template = applied_job.revise()
 
     Instances are normally produced through the [DagFlowTemplate][] decorator
     factory rather than by direct construction.
@@ -772,17 +1015,36 @@ def DagFlowTemplate(
     templates whose dependencies form a directed acyclic graph. Use this
     when flow steps branch and join but must not form cycles.
 
-    Decorator syntax:
-        ``@...Template(...)`` wraps a Python callable as a reusable job
-        template. The wrapped callable defines the public outer signature
-        seen by template users and by applied jobs created from it.
+    ### Decorator usage
+
+    Apply the template factory as a decorator to a Python callable.
+    The wrapped callable becomes a reusable job template whose public outer
+    signature is visible to template users and to the applied jobs created
+    from it.
+
+    ### Outer callable and child jobs
 
     The wrapped callable defines the public outer signature of the flow,
     while the child-job list defines the executed body.
 
     Example:
-        ``@DagFlowTemplate(start, branch, merge)``
-        ``def my_dag(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def start(number: int) -> int:
+        ...     return number + 1
+        >>> @om.TaskTemplate()
+        ... def branch(number: int) -> int:
+        ...     return number * 2
+        >>> @om.TaskTemplate()
+        ... def merge(start: int, branch: int) -> int:
+        ...     return start + branch
+        >>> @om.DagFlowTemplate(start, branch, merge)
+        ... def my_dag(number: int) -> int:
+        ...     return number
+        >>> my_dag.run(3)
+        10
+
+    ### Child jobs and data classes
 
     Child-job templates may be
     [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
@@ -795,10 +1057,19 @@ def DagFlowTemplate(
     input in linear flows or from keyword-matched input in DAG flows.
 
     Example:
-        ``@LinearFlowTemplate(MyDataset)``
-        ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
-        ``@DagFlowTemplate(MyModel, extract_number)``
-        ``def read_model(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> class NumberModel(om.Model[int]):
+        ...     ...
+        >>> class NumberDataset(om.Dataset[NumberModel]):
+        ...     ...
+        >>> @om.LinearFlowTemplate(NumberDataset)
+        ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
+        ...     ...
+        >>> @om.DagFlowTemplate(NumberModel)
+        ... def build_model(number: int) -> NumberModel:
+        ...     ...
+
+    ### Callable-type validation
 
     For linear and DAG flows, the outer callable is primarily declarative:
     its signature exposes the public flow interface, while child jobs define
@@ -814,15 +1085,27 @@ def DagFlowTemplate(
     and async outer callables are required when child composition is async.
     Mismatches raise ``TypeError`` when the flow template is created.
 
+    ### Generator shorthand with ``Void``
+
     When the validated outer callable must be a generator or
     async-generator only to expose the correct public signature, use
     [Void][omnipy.compute.helpers.Void] in the body:
 
-    ``yield from Void()`` for sync generator flows, or
-    ``async for item in Void(): yield item`` for async generator flows.
+    Example:
+        >>> import omnipy as om
+        >>> from collections.abc import Iterator
+        >>> @om.TaskTemplate()
+        ... def emit_numbers() -> Iterator[int]:
+        ...     yield 1
+        ...     yield 2
+        >>> @om.LinearFlowTemplate(emit_numbers)
+        ... def number_stream() -> Iterator[int]:
+        ...     yield from om.Void()
 
     This shorthand exists only to satisfy the declared outer callable type;
     the child jobs still perform the actual flow work.
+
+    ### Outer signature and modifiers
 
     The wrapped callable's parameter list and return annotation define the
     outer interface of the template.
@@ -840,10 +1123,22 @@ def DagFlowTemplate(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example modifier usage:
-        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
-        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
-        ``plus_one_dict = plus_one.refine(result_key='number')``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_other(number: int, other: int) -> int:
+        ...     return number + other
+        >>> plus_one = plus_other.refine(fixed_params={'other': 1})
+        >>> plus_one.run(4)
+        5
+        >>> plus_x = plus_other.refine(param_key_map={'other': 'x'})
+        >>> plus_x.run(4, x=3)
+        7
+        >>> plus_one_dict = plus_one.refine(result_key='number')
+        >>> plus_one_dict.run(4)
+        {'number': 5}
+
+    ### DAG orchestration
 
     DAG flows route values by keyword name instead of chaining every child
     result positionally.
@@ -862,17 +1157,32 @@ def DagFlowTemplate(
     pins selected child inputs regardless of what earlier branches produce.
 
     Example:
-        ``@DagFlowTemplate(``
-        ``    add_two.refine(result_key='base'),``
-        ``    square_number.refine(result_key='bonus'),``
-        ``    add_two_numbers.refine(``
-        ``        param_key_map={``
-        ``            'left_value': 'base',``
-        ``            'right_value': 'bonus',``
-        ``        },``
-        ``    ),``
-        ``)``
-        ``def dag_flow(number: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def add_two(number: int) -> int:
+        ...     return number + 2
+        >>> @om.TaskTemplate()
+        ... def square_number(number: int) -> int:
+        ...     return number * number
+        >>> @om.TaskTemplate()
+        ... def add_two_numbers(left_value: int, right_value: int) -> int:
+        ...     return left_value + right_value
+        >>> @om.DagFlowTemplate(
+        ...     add_two.refine(result_key='base'),
+        ...     square_number.refine(result_key='bonus'),
+        ...     add_two_numbers.refine(
+        ...         param_key_map={
+        ...             'left_value': 'base',
+        ...             'right_value': 'bonus',
+        ...         },
+        ...     ),
+        ... )
+        ... def dag_flow(number: int) -> int:
+        ...     return number
+        >>> dag_flow.run(3)
+        14
+
+    ### Tasks and flows
 
     Tasks are terminal jobs: they wrap one callable and execute one compute
     step.
@@ -880,6 +1190,8 @@ def DagFlowTemplate(
     Flows are orchestration jobs: they may contain child tasks and child
     flows, so larger pipelines can be assembled hierarchically from smaller
     reusable pieces.
+
+    ### Lifecycle
 
     Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
     to create a runnable job with engine decorators and current config attached.
@@ -895,12 +1207,18 @@ def DagFlowTemplate(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Typical lifecycle:
-        ``result = template.run(...)``
-        ``applied_job = template.apply()``
-        ``result = applied_job(...)``
-        ``refined_template = template.refine(name='new_name')``
-        ``revised_template = applied_job.revise()``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_one(number: int) -> int:
+        ...     return number + 1
+        >>> plus_one.run(1)
+        2
+        >>> applied_job = plus_one.apply()
+        >>> applied_job(2)
+        3
+        >>> refined_template = plus_one.refine(name='plus_one_renamed')
+        >>> revised_template = applied_job.revise()
 
     Args:
         *child_job_templates: Ordered templates of child jobs to be
@@ -1037,17 +1355,29 @@ class FuncFlowTemplateCore(
     express directly in Python instead of as an explicit task list or
     dependency graph.
 
-    Decorator syntax:
-        ``@...Template(...)`` wraps a Python callable as a reusable job
-        template. The wrapped callable defines the public outer signature
-        seen by template users and by applied jobs created from it.
+    ### Decorator usage
+
+    Apply the template factory as a decorator to a Python callable.
+    The wrapped callable becomes a reusable job template whose public outer
+    signature is visible to template users and to the applied jobs created
+    from it.
+
+    ### Wrapped callable
 
     The wrapped callable defines both the implementation and the public
     outer signature of the flow.
 
     Example:
-        ``@FuncFlowTemplate()``
-        ``def repeat_plus_one(number: int, n: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.FuncFlowTemplate()
+        ... def repeat_plus_one(number: int, n: int) -> int:
+        ...     for _ in range(n):
+        ...         number += 1
+        ...     return number
+        >>> repeat_plus_one.run(1, 2)
+        3
+
+    ### Outer signature and modifiers
 
     The wrapped callable's parameter list and return annotation define the
     outer interface of the template.
@@ -1065,10 +1395,22 @@ class FuncFlowTemplateCore(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example modifier usage:
-        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
-        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
-        ``plus_one_dict = plus_one.refine(result_key='number')``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_other(number: int, other: int) -> int:
+        ...     return number + other
+        >>> plus_one = plus_other.refine(fixed_params={'other': 1})
+        >>> plus_one.run(4)
+        5
+        >>> plus_x = plus_other.refine(param_key_map={'other': 'x'})
+        >>> plus_x.run(4, x=3)
+        7
+        >>> plus_one_dict = plus_one.refine(result_key='number')
+        >>> plus_one_dict.run(4)
+        {'number': 5}
+
+    ### Tasks and flows
 
     Tasks are terminal jobs: they wrap one callable and execute one compute
     step.
@@ -1076,6 +1418,8 @@ class FuncFlowTemplateCore(
     Flows are orchestration jobs: they may contain child tasks and child
     flows, so larger pipelines can be assembled hierarchically from smaller
     reusable pieces.
+
+    ### Lifecycle
 
     Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
     to create a runnable job with engine decorators and current config attached.
@@ -1091,12 +1435,18 @@ class FuncFlowTemplateCore(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Typical lifecycle:
-        ``result = template.run(...)``
-        ``applied_job = template.apply()``
-        ``result = applied_job(...)``
-        ``refined_template = template.refine(name='new_name')``
-        ``revised_template = applied_job.revise()``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_one(number: int) -> int:
+        ...     return number + 1
+        >>> plus_one.run(1)
+        2
+        >>> applied_job = plus_one.apply()
+        >>> applied_job(2)
+        3
+        >>> refined_template = plus_one.refine(name='plus_one_renamed')
+        >>> revised_template = applied_job.revise()
 
     Instances are normally produced through the [FuncFlowTemplate][] decorator
     factory rather than by direct construction.
@@ -1149,17 +1499,29 @@ def FuncFlowTemplate(
     express directly in Python instead of as an explicit task list or
     dependency graph.
 
-    Decorator syntax:
-        ``@...Template(...)`` wraps a Python callable as a reusable job
-        template. The wrapped callable defines the public outer signature
-        seen by template users and by applied jobs created from it.
+    ### Decorator usage
+
+    Apply the template factory as a decorator to a Python callable.
+    The wrapped callable becomes a reusable job template whose public outer
+    signature is visible to template users and to the applied jobs created
+    from it.
+
+    ### Wrapped callable
 
     The wrapped callable defines both the implementation and the public
     outer signature of the flow.
 
     Example:
-        ``@FuncFlowTemplate()``
-        ``def repeat_plus_one(number: int, n: int) -> int: ...``
+        >>> import omnipy as om
+        >>> @om.FuncFlowTemplate()
+        ... def repeat_plus_one(number: int, n: int) -> int:
+        ...     for _ in range(n):
+        ...         number += 1
+        ...     return number
+        >>> repeat_plus_one.run(1, 2)
+        3
+
+    ### Outer signature and modifiers
 
     The wrapped callable's parameter list and return annotation define the
     outer interface of the template.
@@ -1177,10 +1539,22 @@ def FuncFlowTemplate(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example modifier usage:
-        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
-        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
-        ``plus_one_dict = plus_one.refine(result_key='number')``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_other(number: int, other: int) -> int:
+        ...     return number + other
+        >>> plus_one = plus_other.refine(fixed_params={'other': 1})
+        >>> plus_one.run(4)
+        5
+        >>> plus_x = plus_other.refine(param_key_map={'other': 'x'})
+        >>> plus_x.run(4, x=3)
+        7
+        >>> plus_one_dict = plus_one.refine(result_key='number')
+        >>> plus_one_dict.run(4)
+        {'number': 5}
+
+    ### Tasks and flows
 
     Tasks are terminal jobs: they wrap one callable and execute one compute
     step.
@@ -1188,6 +1562,8 @@ def FuncFlowTemplate(
     Flows are orchestration jobs: they may contain child tasks and child
     flows, so larger pipelines can be assembled hierarchically from smaller
     reusable pieces.
+
+    ### Lifecycle
 
     Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
     to create a runnable job with engine decorators and current config attached.
@@ -1203,12 +1579,18 @@ def FuncFlowTemplate(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Typical lifecycle:
-        ``result = template.run(...)``
-        ``applied_job = template.apply()``
-        ``result = applied_job(...)``
-        ``refined_template = template.refine(name='new_name')``
-        ``revised_template = applied_job.revise()``
+    Example:
+        >>> import omnipy as om
+        >>> @om.TaskTemplate()
+        ... def plus_one(number: int) -> int:
+        ...     return number + 1
+        >>> plus_one.run(1)
+        2
+        >>> applied_job = plus_one.apply()
+        >>> applied_job(2)
+        3
+        >>> refined_template = plus_one.refine(name='plus_one_renamed')
+        >>> revised_template = applied_job.revise()
 
     Args:
         name: Name of the job template. If not provided, the name of the
