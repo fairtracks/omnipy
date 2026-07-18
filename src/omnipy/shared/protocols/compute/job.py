@@ -769,7 +769,8 @@ class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
         # Create a job template around ``job_func``.
         #
         # Args:
-        #     {{JOB_TEMPLATE_INIT_CALL_COMMON_ARGS}}
+        #     {{JOB_TEMPLATE_JOB_FUNC_ARG}}
+        #     {{JOB_TEMPLATE_SHARED_KWARG_DOCS}}
         #
         # Returns:
         #     _JobTemplateT: New job template instance wrapping ``job_func``.
@@ -853,9 +854,9 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
         # Create a flow template around ``job_func`` and child jobs.
         #
         # Args:
-        #     *child_job_templates: Ordered child-job templates owned by the
-        #         flow template.
-        #     {{JOB_TEMPLATE_INIT_CALL_COMMON_ARGS}}
+        #     {{JOB_TEMPLATE_JOB_FUNC_ARG}}
+        #     {{JOB_TEMPLATE_CHILD_JOB_TEMPLATES_ARGS}}
+        #     {{JOB_TEMPLATE_SHARED_KWARG_DOCS}}
         #
         # Returns:
         #     _JobTemplateT: New job template instance wrapping ``job_func``.
@@ -863,9 +864,13 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
         """Create a flow template around ``job_func`` and child jobs.
 
         Args:
-            *child_job_templates: Ordered child-job templates owned by the
-                flow template.
             job_func: Python callable to wrap as a job template.
+            *child_job_templates: Ordered templates of child jobs to be
+                run as part of the parent job. Model and Dataset subclasses
+                are also allowed, in which case they are converted to
+                create_X_from_args (if linear flow) or create_X_from_kwargs
+                (if DAG flow) job templates, respectively, when apply() is
+                called on the parent job template.
             name: Name of the job template. If not provided, the name of the
                 wrapped callable is used.
             iterate_over_data_files: Whether dataset inputs should be
@@ -1004,8 +1009,7 @@ class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _C
         # Return a flow template with updated child jobs or configuration.
         #
         # Args:
-        #     *child_job_templates: Ordered templates of child jobs to be
-        #         run as part of the flow.
+        #     {{JOB_TEMPLATE_CHILD_JOB_TEMPLATES_ARGS}}
         #     {{JOB_TEMPLATE_REFINE_COMMON_ARGS}}
         #
         # Returns:
@@ -1015,7 +1019,11 @@ class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _C
 
         Args:
             *child_job_templates: Ordered templates of child jobs to be
-                run as part of the flow.
+                run as part of the parent job. Model and Dataset subclasses
+                are also allowed, in which case they are converted to
+                create_X_from_args (if linear flow) or create_X_from_kwargs
+                (if DAG flow) job templates, respectively, when apply() is
+                called on the parent job template.
             update: Whether omitted values should be inherited from the
                 current template.
             name: Name of the job template. If not provided, the name of the

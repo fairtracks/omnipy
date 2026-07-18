@@ -8,6 +8,8 @@ and the ordered task list across refine/apply/revise operations.
 
 from collections.abc import AsyncGenerator, AsyncIterator, Generator, Iterator
 import inspect
+import os
+from textwrap import dedent
 from typing import (Any,
                     Callable,
                     ClassVar,
@@ -30,9 +32,19 @@ from omnipy.shared._typedefs import _JobT, _JobTemplateT
 from omnipy.shared.protocols.compute.job import ChildJobTemplateLike, IsFuncArgJobTemplate
 from omnipy.shared.protocols.data import IsDataset, IsModel
 from omnipy.util.callable_types import callable_type_from_flags, CallableType
+from omnipy.util.helpers import is_package_editable
 
 _CallP = ParamSpec('_CallP')
 _RetT = TypeVar('_RetT')
+
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_CHILD_JOB_TEMPLATES_ARGS'] = dedent("""\
+            *child_job_templates: Ordered templates of child jobs to be
+                run as part of the parent job. Model and Dataset subclasses
+                are also allowed, in which case they are converted to
+                create_X_from_args (if linear flow) or create_X_from_kwargs
+                (if DAG flow) job templates, respectively, when apply() is
+                called on the parent job template.""")
 
 
 class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT],

@@ -27,16 +27,15 @@ if is_package_editable('omnipy'):
          os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SERIALIZE_ARG_DOC'],
          '**kwargs: Additional constructor keyword overrides.'))
 
-    print(_JOB_TEMPLATE_SHARED_KWARG_DOCS)
-
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_REFINE_COMMON_ARGS'] = dedent("""\
             update: Whether omitted values should be inherited from the
                 current template.
             """) + _JOB_TEMPLATE_SHARED_KWARG_DOCS
 
-    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_INIT_CALL_COMMON_ARGS'] = dedent("""\
-            job_func: Python callable to wrap as a job template.
-            """) + _JOB_TEMPLATE_SHARED_KWARG_DOCS
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SHARED_KWARG_DOCS'] = _JOB_TEMPLATE_SHARED_KWARG_DOCS
+
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_JOB_FUNC_ARG'] = dedent("""\
+            job_func: Python callable to wrap as a job template.""")
 
 
 class PlainFuncArgJobBase(JobBase[_JobTemplateT, _JobT, _CallP, _RetT],
