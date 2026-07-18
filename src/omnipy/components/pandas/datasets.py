@@ -15,7 +15,7 @@ class PandasDataset(Dataset[PandasModel]):
     This dataset maps each data file name to a table represented by
     :class:`~omnipy.components.pandas.models.PandasModel`.
 
-    Example:
+    Examples:
         >>> dataset = PandasDataset({'table': [{'id': 1, 'value': 'a'}]})
         >>> tuple(dataset.keys())
         ('table',)

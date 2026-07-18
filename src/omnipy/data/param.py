@@ -32,7 +32,7 @@ class _ParamsMeta(pyd.ModelMetaclass):
             ValueError: If a field uses ``default_factory`` or is missing a required default.
             pyd.ValidationError: If one or more declared default values fail model validation.
 
-        Example:
+        Examples:
             >>> class MyParams(ParamsBase):
             ...     limit: int = 5
             >>> MyParams.limit
@@ -71,7 +71,7 @@ class _ParamsMeta(pyd.ModelMetaclass):
         Raises:
             AttributeError: If ``attr`` is not a defined params field.
 
-        Example:
+        Examples:
             >>> class MyParams(ParamsBase):
             ...     retries: int = 3
             >>> MyParams.retries
@@ -96,7 +96,7 @@ class _ParamsMeta(pyd.ModelMetaclass):
         Raises:
             KeyError: If ``attr`` is not present in ``model_cls.__fields__``.
 
-        Example:
+        Examples:
             >>> class MyParams(ParamsBase):
             ...     threshold: float = 0.75
             >>> _ParamsMeta._get_param_value('threshold', MyParams)
@@ -117,7 +117,7 @@ class _ParamsMeta(pyd.ModelMetaclass):
         Raises:
             AttributeError: If ``attr`` targets a params field or unknown public attribute.
 
-        Example:
+        Examples:
             >>> class MyParams(ParamsBase):
             ...     retries: int = 3
             >>> MyParams.retries = 5
@@ -217,7 +217,7 @@ def bind_adjust_model_func(
         Raises:
             AttributeError: If any positional argument is supplied.
 
-        Example:
+        Examples:
             >>> adjust_model = bind_adjust_model_func(clone_model_func, params_cls)
             >>> NewModel = adjust_model('NewModel', retries=2)
         """
@@ -270,7 +270,7 @@ def bind_adjust_dataset_func(
         Raises:
             AttributeError: If any positional argument is supplied.
 
-        Example:
+        Examples:
             >>> adjust_dataset = bind_adjust_dataset_func(clone_dataset_func, model_cls, params_cls)
             >>> NewDataset = adjust_dataset('NewDataset', 'NewModel', retries=2)
         """
@@ -306,7 +306,7 @@ def params_dataclass(cls: type[_ParamsT]) -> type[_ParamsT]:
         Returns:
             The dataclass-decorated class.
 
-        Example:
+        Examples:
             >>> @params_dataclass
             ... class P:
             ...     x: int = 1

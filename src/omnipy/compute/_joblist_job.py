@@ -59,7 +59,7 @@ if is_package_editable('omnipy'):
         templates that construct the requested data object from positional
         input in linear flows or from keyword-matched input in DAG flows.
 
-        Example:
+        Examples:
             >>> import omnipy as om
             >>> class NumberModel(om.Model[int]):
             ...     ...
@@ -96,7 +96,7 @@ if is_package_editable('omnipy'):
         async-generator only to expose the correct public signature, use
         [Void][omnipy.compute.helpers.Void] in the body:
 
-        Example:
+        Examples:
             >>> import omnipy as om
             >>> from collections.abc import Iterator
             >>> @om.TaskTemplate()
@@ -125,7 +125,7 @@ if is_package_editable('omnipy'):
         different external keyword names than their underlying callable
         parameter names.
 
-        Example:
+        Examples:
             >>> import omnipy as om
             >>> @om.TaskTemplate()
             ... def identity_tmpl(number: int) -> int:
@@ -162,7 +162,7 @@ if is_package_editable('omnipy'):
         using different internal callable parameter names, and ``fixed_params``
         pins selected child inputs regardless of what earlier branches produce.
 
-        Example:
+        Examples:
             >>> import omnipy as om
             >>> @om.TaskTemplate()
             ... def add_two(number: int) -> int:

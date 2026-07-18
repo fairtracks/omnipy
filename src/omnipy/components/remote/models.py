@@ -43,7 +43,7 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
     Raises:
         AssertionError: If tuple-like input does not contain key-value pairs.
 
-    Example:
+    Examples:
         >>> params = QueryParamsModel('name=alice&lang=en')
         >>> str(params)
         'name=alice&lang=en'
@@ -142,7 +142,7 @@ class UrlPathModel(Model[PurePosixPath | str]):
     Raises:
         TypeError: If input cannot be converted to ``PurePosixPath``.
 
-    Example:
+    Examples:
         >>> path = UrlPathModel('/api')
         >>> str(path / 'users')
         '/api/users'
@@ -233,7 +233,7 @@ class UrlDataclassModel(pyd.BaseModel):
     Raises:
         pyd.ValidationError: If any URL part violates model field constraints.
 
-    Example:
+    Examples:
         >>> parts = UrlDataclassModel(scheme='https', host='example.com')
         >>> str(parts)
         'https://example.com/'
@@ -294,7 +294,7 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
         AssertionError: If the URL scheme is not ``http`` or ``https``.
         pyd.ValidationError: If URL parsing fails.
 
-    Example:
+    Examples:
         >>> url = HttpUrlModel('https://example.com/path?q=1')
         >>> str(url)
         'https://example.com/path?q=1'

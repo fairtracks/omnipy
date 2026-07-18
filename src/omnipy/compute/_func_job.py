@@ -35,7 +35,7 @@ if is_package_editable('omnipy'):
         Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
         reconstruct a template from that job's current configuration.
 
-        Example:
+        Examples:
             >>> import omnipy as om
             >>> @om.TaskTemplate()
             ... def plus_one(number: int) -> int:
@@ -75,7 +75,8 @@ if is_package_editable('omnipy'):
         which is especially useful when a downstream DAG step should receive
         the result under a predictable name.
 
-        Example:
+        Examples:
+            >>> # With modifiers
             >>> import omnipy as om
             >>> @om.TaskTemplate()
             ... def plus_other(number: int, other: int) -> int:

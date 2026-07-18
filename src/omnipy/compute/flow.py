@@ -68,7 +68,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             The wrapped callable defines both the implementation and the public
             outer signature of the flow.
 
-            Example:
+            Examples:
                 >>> import omnipy as om
                 >>> @om.FuncFlowTemplate()
                 ... def repeat_plus_one(number: int, n: int) -> int:
@@ -94,7 +94,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             The wrapped callable defines the public outer signature of the flow,
             while the child-job list defines the executed body.
 
-            Example:
+            Examples:
                 >>> import omnipy as om
                 >>> @om.TaskTemplate()
                 ... def plus_one(number: int) -> int:
@@ -125,7 +125,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             The wrapped callable defines the public outer signature of the flow,
             while the child-job list defines the executed body.
 
-            Example:
+            Examples:
                 >>> import omnipy as om
                 >>> @om.TaskTemplate()
                 ... def start(number: int) -> int:
@@ -212,7 +212,7 @@ class LinearFlowTemplateCore(
     The wrapped callable defines the public outer signature of the flow,
     while the child-job list defines the executed body.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -235,7 +235,7 @@ class LinearFlowTemplateCore(
     templates that construct the requested data object from positional
     input in linear flows or from keyword-matched input in DAG flows.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> class NumberModel(om.Model[int]):
         ...     ...
@@ -270,7 +270,7 @@ class LinearFlowTemplateCore(
     async-generator only to expose the correct public signature, use
     [Void][omnipy.compute.helpers.Void] in the body:
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> from collections.abc import Iterator
         >>> @om.TaskTemplate()
@@ -302,7 +302,8 @@ class LinearFlowTemplateCore(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example:
+    Examples:
+        >>> # With modifiers
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
@@ -331,7 +332,7 @@ class LinearFlowTemplateCore(
     different external keyword names than their underlying callable
     parameter names.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def identity_tmpl(number: int) -> int:
@@ -374,7 +375,7 @@ class LinearFlowTemplateCore(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -453,7 +454,7 @@ def LinearFlowTemplate(
     The wrapped callable defines the public outer signature of the flow,
     while the child-job list defines the executed body.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -476,7 +477,7 @@ def LinearFlowTemplate(
     templates that construct the requested data object from positional
     input in linear flows or from keyword-matched input in DAG flows.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> class NumberModel(om.Model[int]):
         ...     ...
@@ -511,7 +512,7 @@ def LinearFlowTemplate(
     async-generator only to expose the correct public signature, use
     [Void][omnipy.compute.helpers.Void] in the body:
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> from collections.abc import Iterator
         >>> @om.TaskTemplate()
@@ -543,7 +544,8 @@ def LinearFlowTemplate(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example:
+    Examples:
+        >>> # With modifiers
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
@@ -572,7 +574,7 @@ def LinearFlowTemplate(
     different external keyword names than their underlying callable
     parameter names.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def identity_tmpl(number: int) -> int:
@@ -615,7 +617,7 @@ def LinearFlowTemplate(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -769,7 +771,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     The wrapped callable defines the public outer signature of the flow,
     while the child-job list defines the executed body.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def start(number: int) -> int:
@@ -798,7 +800,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     templates that construct the requested data object from positional
     input in linear flows or from keyword-matched input in DAG flows.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> class NumberModel(om.Model[int]):
         ...     ...
@@ -833,7 +835,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     async-generator only to expose the correct public signature, use
     [Void][omnipy.compute.helpers.Void] in the body:
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> from collections.abc import Iterator
         >>> @om.TaskTemplate()
@@ -865,7 +867,8 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example:
+    Examples:
+        >>> # With modifiers
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
@@ -898,7 +901,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     using different internal callable parameter names, and ``fixed_params``
     pins selected child inputs regardless of what earlier branches produce.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def add_two(number: int) -> int:
@@ -949,7 +952,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -1027,7 +1030,7 @@ def DagFlowTemplate(
     The wrapped callable defines the public outer signature of the flow,
     while the child-job list defines the executed body.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def start(number: int) -> int:
@@ -1056,7 +1059,7 @@ def DagFlowTemplate(
     templates that construct the requested data object from positional
     input in linear flows or from keyword-matched input in DAG flows.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> class NumberModel(om.Model[int]):
         ...     ...
@@ -1091,7 +1094,7 @@ def DagFlowTemplate(
     async-generator only to expose the correct public signature, use
     [Void][omnipy.compute.helpers.Void] in the body:
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> from collections.abc import Iterator
         >>> @om.TaskTemplate()
@@ -1123,7 +1126,8 @@ def DagFlowTemplate(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example:
+    Examples:
+        >>> # With modifiers
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
@@ -1156,7 +1160,7 @@ def DagFlowTemplate(
     using different internal callable parameter names, and ``fixed_params``
     pins selected child inputs regardless of what earlier branches produce.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def add_two(number: int) -> int:
@@ -1207,7 +1211,7 @@ def DagFlowTemplate(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -1367,7 +1371,7 @@ class FuncFlowTemplateCore(
     The wrapped callable defines both the implementation and the public
     outer signature of the flow.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.FuncFlowTemplate()
         ... def repeat_plus_one(number: int, n: int) -> int:
@@ -1395,7 +1399,8 @@ class FuncFlowTemplateCore(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example:
+    Examples:
+        >>> # With modifiers
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
@@ -1435,7 +1440,7 @@ class FuncFlowTemplateCore(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -1511,7 +1516,7 @@ def FuncFlowTemplate(
     The wrapped callable defines both the implementation and the public
     outer signature of the flow.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.FuncFlowTemplate()
         ... def repeat_plus_one(number: int, n: int) -> int:
@@ -1539,7 +1544,8 @@ def FuncFlowTemplate(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example:
+    Examples:
+        >>> # With modifiers
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
@@ -1579,7 +1585,7 @@ def FuncFlowTemplate(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:

@@ -369,7 +369,7 @@ class IsDisplayMethod(Protocol):
         NotImplementedError: Raised by concrete implementations when the
             protocol contract is not implemented.
 
-    Example:
+    Examples:
         >>> def preview(*, ui=UserInterfaceType.AUTO, **kwargs) -> object:
         ...     return None
     """
@@ -426,7 +426,7 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         NotImplementedError: Raised by concrete implementations when this
             callback protocol is not implemented.
 
-    Example:
+    Examples:
         >>> def show(*, ui=UserInterfaceType.AUTO, **kwargs) -> Element | None:
         ...     return None
     """
@@ -480,7 +480,7 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         NotImplementedError: Raised by concrete implementations when this
             callback protocol is not implemented.
 
-    Example:
+    Examples:
         >>> def open_browser(*, ui=UserInterfaceType.AUTO, **kwargs) -> None:
         ...     return None
     """
@@ -534,7 +534,7 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         NotImplementedError: Raised by concrete implementations when this
             callback protocol is not implemented.
 
-    Example:
+    Examples:
         >>> def docs(*, ui=UserInterfaceType.BROWSER_TAG, **kwargs) -> str:
         ...     return '<pre>...</pre>'
     """
@@ -589,7 +589,7 @@ class IsBaseDisplayMixin(Protocol):
         AttributeError: When a required display method attribute is missing on
             a concrete implementation.
 
-    Example:
+    Examples:
         >>> def render_preview(data: IsBaseDisplayMixin) -> None:
         ...     data.peek()
     """
@@ -615,7 +615,7 @@ class IsDatasetDisplayMixin(IsBaseDisplayMixin, Protocol):
         AttributeError: When dataset-specific display members are missing on
             a concrete implementation.
 
-    Example:
+    Examples:
         >>> def render_summary(dataset: IsDatasetDisplayMixin) -> None:
         ...     dataset.list()
     """
@@ -642,7 +642,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         NotImplementedError: If subclasses do not implement required abstract
             panel builders.
 
-    Example:
+    Examples:
         >>> class ConcreteDisplayMixin(BaseDisplayMixin):
         ...     def _default_panel(self, **kwargs) -> DraftPanel:
         ...         return DraftPanel('example')

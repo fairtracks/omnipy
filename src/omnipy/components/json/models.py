@@ -976,8 +976,7 @@ _NOTE_ON_DICT_KEYS = """
         `float`, `int`, and `bool` as strings if used as keys in JSON
         dicts/objects.
 
-        Example:
-
+        Examples:
             >>> my_dict = JsonModel({'a': None, 0.5: 12.3, 1: 123, False: True})
             >>> my_dict.to_data()
             {'a': None, '0.5': 12.3, '1': 123, 'False': True}

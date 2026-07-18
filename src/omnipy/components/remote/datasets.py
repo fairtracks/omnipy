@@ -19,7 +19,7 @@ class HttpUrlDataset(Dataset[HttpUrlModel]):
     Raises:
         TypeError: If provided values cannot be converted to ``HttpUrlModel``.
 
-    Example:
+    Examples:
         >>> urls = HttpUrlDataset({'users': 'https://example.com/users'})
         >>> str(urls['users'])
         'https://example.com/users'
@@ -41,7 +41,7 @@ class AutoResponseContentDataset(Dataset[AutoResponseContentModel]):
     Raises:
         TypeError: If provided values cannot be converted to ``AutoResponseContentModel``.
 
-    Example:
+    Examples:
         >>> responses = AutoResponseContentDataset({'a': b'data'})
         >>> 'a' in responses
         True

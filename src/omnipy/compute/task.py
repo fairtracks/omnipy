@@ -46,7 +46,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
             The wrapped callable defines both the implementation and the public
             outer signature of the task.
 
-            Example:
+            Examples:
                 >>> import omnipy as om
                 >>> @om.TaskTemplate()
                 ... def plus_one(number: int) -> int:
@@ -113,7 +113,7 @@ class TaskTemplateCore(
     The wrapped callable defines both the implementation and the public
     outer signature of the task.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -139,7 +139,8 @@ class TaskTemplateCore(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example:
+    Examples:
+        >>> # With modifiers
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
@@ -179,7 +180,7 @@ class TaskTemplateCore(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -253,7 +254,7 @@ def TaskTemplate(
     The wrapped callable defines both the implementation and the public
     outer signature of the task.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:
@@ -279,7 +280,8 @@ def TaskTemplate(
     which is especially useful when a downstream DAG step should receive
     the result under a predictable name.
 
-    Example:
+    Examples:
+        >>> # With modifiers
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_other(number: int, other: int) -> int:
@@ -319,7 +321,7 @@ def TaskTemplate(
     Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
     reconstruct a template from that job's current configuration.
 
-    Example:
+    Examples:
         >>> import omnipy as om
         >>> @om.TaskTemplate()
         ... def plus_one(number: int) -> int:

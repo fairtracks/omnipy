@@ -46,7 +46,7 @@ class JsonBaseDataset(Dataset[_JsonModelT], Generic[_JsonModelT]):
     Raises:
         Exception: Propagates validation errors from the bound JSON model type.
 
-    Example:
+    Examples:
         >>> dataset = JsonBaseDataset[JsonModel]({'item': {'a': 1}})
         >>> tuple(dataset.keys())
         ('item',)
@@ -66,7 +66,7 @@ class JsonDataset(JsonBaseDataset[JsonModel]):
     Raises:
         Exception: Propagates validation errors from ``JsonModel``.
 
-    Example:
+    Examples:
         >>> dataset = JsonDataset({'item': [1, {'a': True}]})
         >>> dataset['item'].to_data()
         [1, {'a': True}]
@@ -87,7 +87,7 @@ class JsonListOrDictDataset(JsonBaseDataset[JsonListOrDictModel]):
         Exception: Propagates validation errors when scalar JSON values are
             provided.
 
-    Example:
+    Examples:
         >>> dataset = JsonListOrDictDataset({'item': {'a': 1}})
         >>> dataset['item'].to_data()
         {'a': 1}
@@ -108,7 +108,7 @@ class JsonScalarDataset(JsonBaseDataset[JsonScalarModel]):
         Exception: Propagates validation errors when non-scalar values are
             provided.
 
-    Example:
+    Examples:
         >>> dataset = JsonScalarDataset({'answer': 42})
         >>> dataset['answer'].to_data()
         42
@@ -132,7 +132,7 @@ class JsonListDataset(JsonBaseDataset[JsonListModel]):
         Exception: Propagates validation errors when top-level values are not
             lists.
 
-    Example:
+    Examples:
         >>> dataset = JsonListDataset({'numbers': [1, 2, 3]})
         >>> dataset['numbers'].to_data()
         [1, 2, 3]
@@ -154,7 +154,7 @@ class JsonListOfScalarsDataset(JsonBaseDataset[JsonListOfScalarsModel]):
         Exception: Propagates validation errors when list items are not scalar
             JSON values.
 
-    Example:
+    Examples:
         >>> dataset = JsonListOfScalarsDataset({'scores': [1, 2, 3]})
         >>> dataset['scores'].to_data()
         [1, 2, 3]
@@ -175,7 +175,7 @@ class JsonListOfListsDataset(JsonBaseDataset[JsonListOfListsModel]):
         Exception: Propagates validation errors when top-level items are not
             JSON lists.
 
-    Example:
+    Examples:
         >>> dataset = JsonListOfListsDataset({'matrix': [[1], [2, 3]]})
         >>> dataset['matrix'].to_data()
         [[1], [2, 3]]
@@ -198,7 +198,7 @@ class JsonListOfListsOfScalarsDataset(JsonBaseDataset[JsonListOfListsOfScalarsMo
         Exception: Propagates validation errors when nested values are not JSON
             scalars.
 
-    Example:
+    Examples:
         >>> dataset = JsonListOfListsOfScalarsDataset({'matrix': [[1, 2], [3, 4]]})
         >>> dataset['matrix'].to_data()
         [[1, 2], [3, 4]]
@@ -219,7 +219,7 @@ class JsonListOfDictsDataset(JsonBaseDataset[JsonListOfDictsModel]):
         Exception: Propagates validation errors when top-level items are not
             JSON objects.
 
-    Example:
+    Examples:
         >>> dataset = JsonListOfDictsDataset({'records': [{'a': 1}, {'a': 2}]})
         >>> dataset['records'].to_data()
         [{'a': 1}, {'a': 2}]
@@ -242,7 +242,7 @@ class JsonListOfDictsOfScalarsDataset(JsonBaseDataset[JsonListOfDictsOfScalarsMo
         Exception: Propagates validation errors when object values are not JSON
             scalars.
 
-    Example:
+    Examples:
         >>> dataset = JsonListOfDictsOfScalarsDataset({'records': [{'a': 1}, {'a': 2}]})
         >>> dataset['records'].to_data()
         [{'a': 1}, {'a': 2}]
@@ -266,7 +266,7 @@ class JsonDictDataset(JsonBaseDataset[JsonDictModel]):
         Exception: Propagates validation errors when top-level values are not
             JSON objects.
 
-    Example:
+    Examples:
         >>> dataset = JsonDictDataset({'obj': {'a': [1, 2]}})
         >>> dataset['obj'].to_data()
         {'a': [1, 2]}
@@ -289,7 +289,7 @@ class JsonDictOfScalarsDataset(JsonBaseDataset[JsonDictOfScalarsModel]):
         Exception: Propagates validation errors when object values are not
             JSON scalars.
 
-    Example:
+    Examples:
         >>> dataset = JsonDictOfScalarsDataset({'item': {'a': 1, 'b': True}})
         >>> dataset['item'].to_data()
         {'a': 1, 'b': True}
@@ -311,7 +311,7 @@ class JsonDictOfListsDataset(JsonBaseDataset[JsonDictOfListsModel]):
         Exception: Propagates validation errors when object values are not JSON
             lists.
 
-    Example:
+    Examples:
         >>> dataset = JsonDictOfListsDataset({'item': {'a': [1], 'b': [2, 3]}})
         >>> dataset['item'].to_data()
         {'a': [1], 'b': [2, 3]}
@@ -334,7 +334,7 @@ class JsonDictOfListsOfScalarsDataset(JsonBaseDataset[JsonDictOfListsOfScalarsMo
         Exception: Propagates validation errors when nested list values are not
             JSON scalars.
 
-    Example:
+    Examples:
         >>> dataset = JsonDictOfListsOfScalarsDataset({'item': {'a': [1], 'b': [2, 3]}})
         >>> dataset['item'].to_data()
         {'a': [1], 'b': [2, 3]}
@@ -355,7 +355,7 @@ class JsonDictOfDictsDataset(JsonBaseDataset[JsonDictOfDictsModel]):
         Exception: Propagates validation errors when object values are not JSON
             objects.
 
-    Example:
+    Examples:
         >>> dataset = JsonDictOfDictsDataset({'item': {'a': {'x': 1}}})
         >>> dataset['item'].to_data()
         {'a': {'x': 1}}
@@ -378,7 +378,7 @@ class JsonDictOfDictsOfScalarsDataset(JsonBaseDataset[JsonDictOfDictsOfScalarsMo
         Exception: Propagates validation errors when nested values are not JSON
             scalars.
 
-    Example:
+    Examples:
         >>> dataset = JsonDictOfDictsOfScalarsDataset({'item': {'a': {'x': 1}}})
         >>> dataset['item'].to_data()
         {'a': {'x': 1}}
@@ -402,7 +402,7 @@ class JsonOnlyListsDataset(JsonBaseDataset[JsonOnlyListsModel]):
     Raises:
         Exception: Propagates validation errors when dict values are present.
 
-    Example:
+    Examples:
         >>> dataset = JsonOnlyListsDataset({'item': [1, [2, 3]]})
         >>> dataset['item'].to_data()
         [1, [2, 3]]
@@ -423,7 +423,7 @@ class JsonNestedListsDataset(JsonBaseDataset[JsonNestedListsModel]):
         Exception: Propagates validation errors when nested values include JSON
             objects.
 
-    Example:
+    Examples:
         >>> dataset = JsonNestedListsDataset({'item': [[1], [2, [3]]]})
         >>> dataset['item'].to_data()
         [[1], [2, [3]]]
@@ -444,7 +444,7 @@ class JsonOnlyDictsDataset(JsonBaseDataset[JsonOnlyDictsModel]):
     Raises:
         Exception: Propagates validation errors when list values are present.
 
-    Example:
+    Examples:
         >>> dataset = JsonOnlyDictsDataset({'item': {'a': {'b': 1}}})
         >>> dataset['item'].to_data()
         {'a': {'b': 1}}
@@ -465,7 +465,7 @@ class JsonNestedDictsDataset(JsonBaseDataset[JsonNestedDictsModel]):
         Exception: Propagates validation errors when nested values include JSON
             arrays.
 
-    Example:
+    Examples:
         >>> dataset = JsonNestedDictsDataset({'item': {'a': {'b': 1}}})
         >>> dataset['item'].to_data()
         {'a': {'b': 1}}
@@ -491,7 +491,7 @@ class JsonListOfNestedDictsDataset(JsonBaseDataset[JsonListOfNestedDictsModel]):
         Exception: Propagates validation errors when list items are not nested
             JSON objects.
 
-    Example:
+    Examples:
         >>> dataset = JsonListOfNestedDictsDataset({'item': [{'a': {'b': 1}}]})
         >>> dataset['item'].to_data()
         [{'a': {'b': 1}}]
@@ -514,7 +514,7 @@ class JsonDictOfNestedListsDataset(JsonBaseDataset[JsonDictOfNestedListsModel]):
         Exception: Propagates validation errors when object values are not
             nested JSON lists.
 
-    Example:
+    Examples:
         >>> dataset = JsonDictOfNestedListsDataset({'item': {'a': [[1], [2]]}})
         >>> dataset['item'].to_data()
         {'a': [[1], [2]]}
@@ -537,7 +537,7 @@ class JsonDictOfListsOfDictsDataset(JsonBaseDataset[JsonDictOfListsOfDictsModel]
         Exception: Propagates validation errors when object values are not
             list-of-object JSON structures.
 
-    Example:
+    Examples:
         >>> dataset = JsonDictOfListsOfDictsDataset({'item': {'a': [{'b': 1}]}})
         >>> dataset['item'].to_data()
         {'a': [{'b': 1}]}

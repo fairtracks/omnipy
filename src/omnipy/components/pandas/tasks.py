@@ -30,7 +30,7 @@ def convert_dataset_list_of_dicts_to_pandas(
         Exception: Propagates validation or conversion errors raised while
             constructing pandas-backed files.
 
-    Example:
+    Examples:
         >>> from omnipy.data.dataset import Dataset
         >>> from omnipy.data.model import Model
         >>> input_ds = Dataset[Model[list[dict[str, int]]]]({'rows': [{'a': 1}, {'a': 2}]})
@@ -68,7 +68,7 @@ def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
     Raises:
         Exception: Propagates parsing errors raised by ``pandas.read_csv``.
 
-    Example:
+    Examples:
         >>> from omnipy.data.dataset import Dataset
         >>> from omnipy.data.model import Model
         >>> ds = Dataset[Model[bytes]]({'table.csv': b'a,b\n1,2\n'})
@@ -115,7 +115,7 @@ def convert_dataset_pandas_to_csv(
     Raises:
         Exception: Propagates serialization errors raised by pandas.
 
-    Example:
+    Examples:
         >>> csv_ds = convert_dataset_pandas_to_csv.run(pandas_dataset)
         >>> isinstance(csv_ds, Dataset)
         True
@@ -149,7 +149,7 @@ def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> Pa
     Raises:
         KeyError: If one or more requested columns do not exist in a file.
 
-    Example:
+    Examples:
         >>> out_ds = extract_columns_as_files.run(pandas_dataset, ['name'])
         >>> any(key.endswith('.name') for key in out_ds.keys())
         True
@@ -185,7 +185,7 @@ def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSame
     Raises:
         Exception: Propagates concatenation errors raised by pandas.
 
-    Example:
+    Examples:
         >>> combined = concat_dataframes_across_datasets.run(dataset_list)
         >>> isinstance(combined, PandasDataset)
         True
@@ -228,7 +228,7 @@ def join_tables(table_1: PandasModel,
             determined.
         AssertionError: If ``join_type`` is not one of the supported values.
 
-    Example:
+    Examples:
         >>> joined = join_tables.run(left_table, right_table, join_type='inner', on_cols=['id'])
         >>> isinstance(joined, PandasModel)
         True
@@ -292,7 +292,7 @@ def cartesian_product(table_1: PandasModel, table_2: PandasModel) -> PandasModel
     Raises:
         Exception: Propagates merge errors raised by pandas.
 
-    Example:
+    Examples:
         >>> result = cartesian_product.run(left_table, right_table)
         >>> isinstance(result, PandasModel)
         True

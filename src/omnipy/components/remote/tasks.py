@@ -42,7 +42,7 @@ async def _call_get(url: HttpUrlModel,
     Raises:
         ConnectionError: If the response status code is not ``200``.
 
-    Example:
+    Examples:
         >>> # async for response in _call_get(HttpUrlModel('https://example.com'), session):
         >>> #     data = await response.read()
         >>> pass
@@ -78,7 +78,7 @@ def get_retry_client(
     Raises:
         KeyError: If ``retry_backoff_strategy`` is not registered.
 
-    Example:
+    Examples:
         >>> # retry_client = _get_retry_client(session, (429, 503), 5, 'exponential')
         >>> # type(retry_client).__name__
         >>> 'RetryClient'
@@ -130,7 +130,7 @@ async def get_json_from_api_endpoint(
         ConnectionError: If the endpoint response status is not ``200``.
         ValueError: If the response body cannot be decoded as JSON.
 
-    Example:
+    Examples:
         >>> # result = await get_json_from_api_endpoint(HttpUrlModel('https://api.example.com'))
         >>> # isinstance(result, JsonModel)
         >>> True
@@ -165,7 +165,7 @@ async def get_str_from_api_endpoint(
     Raises:
         ConnectionError: If the endpoint response status is not ``200``.
 
-    Example:
+    Examples:
         >>> # text = await get_str_from_api_endpoint(HttpUrlModel('https://example.com'))
         >>> # isinstance(text, StrModel)
         >>> True
@@ -200,7 +200,7 @@ async def get_bytes_from_api_endpoint(
     Raises:
         ConnectionError: If the endpoint response status is not ``200``.
 
-    Example:
+    Examples:
         >>> # blob = await get_bytes_from_api_endpoint(HttpUrlModel('https://example.com/file'))
         >>> # isinstance(blob, BytesModel)
         >>> True
@@ -238,7 +238,7 @@ async def get_auto_from_api_endpoint(
         AssertionError: If the response has no ``Content-Type`` header and no override is given.
         ConnectionError: If the endpoint response status is not ``200``.
 
-    Example:
+    Examples:
         >>> # data = await get_auto_from_api_endpoint(HttpUrlModel('https://example.com/data'))
         >>> # isinstance(data, AutoResponseContentModel)
         >>> True
@@ -288,7 +288,7 @@ def load_urls_into_new_dataset(
     Raises:
         TypeError: If fetched data cannot be parsed by ``dataset_cls``.
 
-    Example:
+    Examples:
         >>> # loaded = load_urls_into_new_dataset(HttpUrlDataset({'a': 'https://example.com'}))
         >>> # isinstance(loaded, JsonDataset)
         >>> True
@@ -315,7 +315,7 @@ async def async_load_urls_into_new_dataset(
     Raises:
         TypeError: If fetched data cannot be parsed by ``dataset_cls``.
 
-    Example:
+    Examples:
         >>> # loaded = await async_load_urls_into_new_dataset(
         >>> #     HttpUrlDataset({'a': 'https://example.com'}),
         >>> # )
@@ -341,7 +341,7 @@ class GithubRepoContext:
     Raises:
         TypeError: If field values do not match declared types.
 
-    Example:
+    Examples:
         >>> ctx = GithubRepoContext('octocat', 'hello-world', 'main', 'docs')
         >>> ctx.repo
         'hello-world'
@@ -376,7 +376,7 @@ def get_github_repo_urls(
     Raises:
         TypeError: If any input cannot be converted to expected model types.
 
-    Example:
+    Examples:
         >>> # urls = get_github_repo_urls('octocat', 'hello-world', 'main', 'README.md')
         >>> # isinstance(urls, HttpUrlDataset)
         >>> True
@@ -403,7 +403,7 @@ def _get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext, file_suffix: 
     Raises:
         TypeError: If fetched GitHub API listing cannot be parsed as JSON list data.
 
-    Example:
+    Examples:
         >>> # dataset = _get_urls_for_files_in_dir_with_suffix(ctx, '.py')
         >>> # isinstance(dataset, HttpUrlDataset)
         >>> True
@@ -436,7 +436,7 @@ async def async_get_github_repo_urls(
     Raises:
         TypeError: If any input cannot be converted to expected model types.
 
-    Example:
+    Examples:
         >>> # urls = await async_get_github_repo_urls('octocat', 'hello-world', 'main', 'README.md')
         >>> # isinstance(urls, HttpUrlDataset)
         >>> True
@@ -463,7 +463,7 @@ async def _async_get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext, f
     Raises:
         TypeError: If fetched GitHub API listing cannot be parsed as JSON list data.
 
-    Example:
+    Examples:
         >>> # dataset = await _async_get_urls_for_files_in_dir_with_suffix(ctx, '.py')
         >>> # isinstance(dataset, HttpUrlDataset)
         >>> True
@@ -486,7 +486,7 @@ def _create_api_url_for_file_list(ctx: GithubRepoContext) -> HttpUrlModel:
     Raises:
         TypeError: If context fields cannot be embedded in URL path/query values.
 
-    Example:
+    Examples:
         >>> # api_url = _create_api_url_for_file_list(ctx)
         >>> # 'api.github.com' in str(api_url)
         >>> True
@@ -515,7 +515,7 @@ def _create_url_dataset_for_files_with_suffix(
     Raises:
         KeyError: If expected ``name`` keys are missing in API response items.
 
-    Example:
+    Examples:
         >>> # urls = _create_url_dataset_for_files_with_suffix(file_list, '.py', ctx)
         >>> # isinstance(urls, HttpUrlDataset)
         >>> True

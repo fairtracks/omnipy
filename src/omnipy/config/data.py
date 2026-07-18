@@ -76,7 +76,7 @@ class ColorConfig(ConfigBase):
                 a concrete style when a recommended preset is used.
 
 
-        Example:
+        Examples:
             >>> ColorConfig.default_style({
             ...     'system': DisplayColorSystem.TRUECOLOR,
             ...     'style': RecommendedColorStyles.AUTO,
@@ -115,7 +115,7 @@ class UserInterfaceTypeConfig(ConfigBase):
                 renderer.
 
 
-        Example:
+        Examples:
             >>> ui_cfg = UserInterfaceTypeConfig()
             >>> ui_cfg.set_width_and_height(120, 40)
         """
@@ -152,7 +152,7 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
             NotImplementedError: Implementations in subclasses provide concrete
                 behavior.
 
-        Example:
+        Examples:
             >>> TerminalUserInterfaceConfig._get_available_display_dims()
             (120, 40)
         """
@@ -175,7 +175,7 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
                 the provided ``value``.
 
 
-        Example:
+        Examples:
             >>> DimsModeConfig.check_and_set_auto_width(
             ...     80,
             ...     {'dims_mode': DisplayDimensionsUpdateMode.AUTO}
@@ -201,7 +201,7 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
                 the provided ``value``.
 
 
-        Example:
+        Examples:
             >>> DimsModeConfig.check_and_set_auto_height(
             ...     24,
             ...     {'dims_mode': DisplayDimensionsUpdateMode.AUTO},
@@ -230,7 +230,7 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
                 otherwise the provided ``value``.
 
 
-        Example:
+        Examples:
             >>> DimsModeConfig._get_available_display_dim_if_auto_dims_mode(
             ...     80,
             ...     {'dims_mode': DisplayDimensionsUpdateMode.AUTO},
@@ -258,7 +258,7 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
         Raises:
             AttributeError: If ``attr`` does not exist on the instance.
 
-        Example:
+        Examples:
             >>> cfg = TerminalUserInterfaceConfig()
             >>> cfg.width
             120
@@ -286,7 +286,7 @@ class TerminalUserInterfaceConfig(DimsModeConfig):
                 Terminal width and height, or ``None`` for unavailable values.
 
 
-        Example:
+        Examples:
             >>> TerminalUserInterfaceConfig._get_available_display_dims()
             (120, 40)
         """
@@ -329,7 +329,7 @@ class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
                 Jupyter frontend code.
 
 
-        Example:
+        Examples:
             >>> JupyterUserInterfaceConfig._get_available_display_dims()
             (None, None)
         """
@@ -347,7 +347,7 @@ class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
             pyd.ValidationError: If provided ``data`` does not satisfy model
                 validation constraints.
 
-        Example:
+        Examples:
             >>> cfg = JupyterUserInterfaceConfig()
             >>> (cfg.width, cfg.height)
             (JUPYTER_DEFAULT_WIDTH, JUPYTER_DEFAULT_HEIGHT)
@@ -374,7 +374,7 @@ class BrowserUserInterfaceConfig(HtmlUserInterfaceConfig):
             pyd.ValidationError: If provided ``data`` does not satisfy model
                 validation constraints.
 
-        Example:
+        Examples:
             >>> cfg = BrowserUserInterfaceConfig()
             >>> (cfg.width, cfg.height)
             (BROWSER_DEFAULT_WIDTH, BROWSER_DEFAULT_HEIGHT)
@@ -426,7 +426,7 @@ def _get_cache_dir_path() -> str:
         str: Absolute path to the ``_cache`` directory in the current working
             directory.
 
-    Example:
+    Examples:
         >>> _get_cache_dir_path().endswith('/_cache')
         True
     """
@@ -461,7 +461,7 @@ class UserInterfaceConfig(ConfigBase):
                 ``ui_type`` is recognized as terminal, Jupyter, or browser.
             ``None``: Returned implicitly when ``ui_type`` is unsupported.
 
-        Example:
+        Examples:
             >>> cfg = UserInterfaceConfig()
             >>> cfg.get_ui_type_config(UserInterfaceType.TERMINAL)
             TerminalUserInterfaceConfig(...)
@@ -523,7 +523,7 @@ class HttpConfig(ConfigBase):
             KeyError: If ``defaults`` is missing from ``values`` during
                 validation.
 
-        Example:
+        Examples:
             >>> cfg = HttpConfig()
             >>> cfg.for_host['example.org'].retry_attempts
             5
