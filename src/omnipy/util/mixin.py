@@ -159,7 +159,7 @@ class DynamicMixinAcceptor:
         cls._init_params_per_mixin_cls.clear()
         cls.__init__.__signature__ = cls._orig_init_signature
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, *args, **kwargs) -> Self:
         if not cls.__name__.endswith(WITH_MIXINS_CLS_SUFFIX):
             cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
             obj = super(cls, cls_with_mixins).__new__(cls_with_mixins, *args, **kwargs)
