@@ -713,22 +713,23 @@ class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT]
             name: Name of the job template. If not provided, the name of the
                 wrapped callable is used.
             iterate_over_data_files: Whether dataset inputs should be
-                processed item-wise. output_dataset_param: Optional name of
-                an explicit output-dataset parameter.
+                processed item-wise.
+            output_dataset_param: Optional name of an explicit
+                output-dataset parameter.
             output_dataset_cls: Optional dataset class to use for iterated
                 outputs.
             auto_async: Whether coroutine jobs at the outermost level (not
                 in a flow context) should be automatically run in accordance
                 with context (use existing event loop, if available,
                 otherwise create temporary event loop and run coroutine
-                until completion).)
+                until completion).
             result_key: Optional key used to wrap the returned result in a
                 dictionary. Especially useful in DAG flows to avoid name
                 collisions.
             fixed_params: Fixed keyword-argument values for the job. May not
                 target *args or **kwargs-style params.
-            param_key_map: Mapping from external keyword names to callable
-                parameter names. May not target *args or **kwargs-style
+            param_key_map: Mapping from callable parameter names to external
+                keyword names. May not target *args or **kwargs-style
                 params.
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
@@ -782,22 +783,23 @@ class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
             name: Name of the job template. If not provided, the name of the
                 wrapped callable is used.
             iterate_over_data_files: Whether dataset inputs should be
-                processed item-wise. output_dataset_param: Optional name of
-                an explicit output-dataset parameter.
+                processed item-wise.
+            output_dataset_param: Optional name of an explicit
+                output-dataset parameter.
             output_dataset_cls: Optional dataset class to use for iterated
                 outputs.
             auto_async: Whether coroutine jobs at the outermost level (not
                 in a flow context) should be automatically run in accordance
                 with context (use existing event loop, if available,
                 otherwise create temporary event loop and run coroutine
-                until completion).)
+                until completion).
             result_key: Optional key used to wrap the returned result in a
                 dictionary. Especially useful in DAG flows to avoid name
                 collisions.
             fixed_params: Fixed keyword-argument values for the job. May not
                 target *args or **kwargs-style params.
-            param_key_map: Mapping from external keyword names to callable
-                parameter names. May not target *args or **kwargs-style
+            param_key_map: Mapping from callable parameter names to external
+                keyword names. May not target *args or **kwargs-style
                 params.
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
@@ -822,7 +824,7 @@ class IsChildJobListArgJobBase(IsFuncArgJobBase, Protocol):
         Model and Dataset subclasses can also be provided as child templates.
 
         Returns:
-            tuple[ChildJobLike, ...]: Ordered templates of child jobs.
+            tuple[ChildJobTemplateLike, ...]: Ordered templates of child jobs.
         """
         ...
 
@@ -874,22 +876,23 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
             name: Name of the job template. If not provided, the name of the
                 wrapped callable is used.
             iterate_over_data_files: Whether dataset inputs should be
-                processed item-wise. output_dataset_param: Optional name of
-                an explicit output-dataset parameter.
+                processed item-wise.
+            output_dataset_param: Optional name of an explicit
+                output-dataset parameter.
             output_dataset_cls: Optional dataset class to use for iterated
                 outputs.
             auto_async: Whether coroutine jobs at the outermost level (not
                 in a flow context) should be automatically run in accordance
                 with context (use existing event loop, if available,
                 otherwise create temporary event loop and run coroutine
-                until completion).)
+                until completion).
             result_key: Optional key used to wrap the returned result in a
                 dictionary. Especially useful in DAG flows to avoid name
                 collisions.
             fixed_params: Fixed keyword-argument values for the job. May not
                 target *args or **kwargs-style params.
-            param_key_map: Mapping from external keyword names to callable
-                parameter names. May not target *args or **kwargs-style
+            param_key_map: Mapping from callable parameter names to external
+                keyword names. May not target *args or **kwargs-style
                 params.
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
@@ -1029,22 +1032,23 @@ class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _C
             name: Name of the job template. If not provided, the name of the
                 wrapped callable is used.
             iterate_over_data_files: Whether dataset inputs should be
-                processed item-wise. output_dataset_param: Optional name of
-                an explicit output-dataset parameter.
+                processed item-wise.
+            output_dataset_param: Optional name of an explicit
+                output-dataset parameter.
             output_dataset_cls: Optional dataset class to use for iterated
                 outputs.
             auto_async: Whether coroutine jobs at the outermost level (not
                 in a flow context) should be automatically run in accordance
                 with context (use existing event loop, if available,
                 otherwise create temporary event loop and run coroutine
-                until completion).)
+                until completion).
             result_key: Optional key used to wrap the returned result in a
                 dictionary. Especially useful in DAG flows to avoid name
                 collisions.
             fixed_params: Fixed keyword-argument values for the job. May not
                 target *args or **kwargs-style params.
-            param_key_map: Mapping from external keyword names to callable
-                parameter names. May not target *args or **kwargs-style
+            param_key_map: Mapping from callable parameter names to external
+                keyword names. May not target *args or **kwargs-style
                 params.
             persist_outputs: Per-job output-persistence preference.
             restore_outputs: Per-job output-restore preference.
@@ -1070,7 +1074,7 @@ class IsLinearFlowTemplate(IsChildJobListArgJobTemplate['IsLinearFlowTemplate[_C
 class IsChildJobListArgJob(IsChildJobListArgJobBase,
                            IsFuncArgJob[_JobTemplateT, _JobT, _CallP, _RetCovT],
                            Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
-    """"""
+    """Protocol for applied flows that keep an ordered child-job list."""
 
 
 class IsLinearFlow(IsChildJobListArgJob['IsLinearFlowTemplate[_CallP, _RetCovT]',
@@ -1090,7 +1094,7 @@ class IsDagFlowTemplate(IsChildJobListArgJobTemplate['IsDagFlowTemplate[_CallP, 
                                                      _RetCovT],
                         IsFlowTemplate,
                         Protocol[_CallP, _RetCovT]):
-    """"""
+    """Protocol for DAG flow templates."""
     ...
 
 
@@ -1133,7 +1137,7 @@ class IsAnyFlowTemplate(IsFuncArgJobTemplate['IsAnyFlowTemplate[_CallP, _RetCovT
                                              _RetCovT],
                         IsFlowTemplate,
                         Protocol[_CallP, _RetCovT]):
-    """"""
+    """Protocol for flow templates of any concrete flow kind."""
     ...
 
 

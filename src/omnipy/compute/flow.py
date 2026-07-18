@@ -55,21 +55,68 @@ _CallP = ParamSpec('_CallP')
 _RetT = TypeVar('_RetT')
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_FUNC_FLOW_TEMPLATE_DESCRIPTION'] = dedent("""\
-        A function flow template wraps a Python callable that orchestrates
-        work as a flow. Use this when the control flow is easiest to
-        express directly in Python instead of as an explicit task list or
-        dependency graph.""")
+    os.environ['OMNIPY_MACRO_FUNC_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
+        dedent("""\
+            A function flow template wraps a Python callable that orchestrates
+            work as a flow. Use this when the control flow is easiest to
+            express directly in Python instead of as an explicit task list or
+            dependency graph."""),
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
+        dedent("""\
+            The wrapped callable defines both the implementation and the public
+            outer signature of the flow.
 
-    os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_DESCRIPTION'] = dedent("""\
-        A linear flow template wraps a Python callable together with an ordered
-        list of child job templates that run sequentially. Use this when work
-        should proceed step by step in a fixed declaration order.""")
+            Example:
+                ``@FuncFlowTemplate()``
+                ``def repeat_plus_one(number: int, n: int) -> int: ...``"""),
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
+    ))
 
-    os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_DESCRIPTION'] = dedent("""\
-        A DAG flow template wraps a Python callable together with child job
-        templates whose dependencies form a directed acyclic graph. Use this
-        when flow steps branch and join but must not form cycles.""")
+    os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
+        dedent("""\
+            A linear flow template wraps a Python callable together with an ordered
+            list of child job templates that run sequentially. Use this when work
+            should proceed step by step in a fixed declaration order."""),
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
+        dedent("""\
+            The wrapped callable defines the public outer signature of the flow,
+            while the child-job list defines the executed body.
+
+            Example:
+                ``@LinearFlowTemplate(plus_one, plus_one)``
+                ``def plus_two(number: int) -> int: ...``"""),
+        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
+        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
+        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
+        os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_ORCHESTRATION'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
+    ))
+
+    os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
+        dedent("""\
+            A DAG flow template wraps a Python callable together with child job
+            templates whose dependencies form a directed acyclic graph. Use this
+            when flow steps branch and join but must not form cycles."""),
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
+        dedent("""\
+            The wrapped callable defines the public outer signature of the flow,
+            while the child-job list defines the executed body.
+
+            Example:
+                ``@DagFlowTemplate(start, branch, merge)``
+                ``def my_dag(number: int) -> int: ...``"""),
+        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
+        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
+        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
+        os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_ORCHESTRATION'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
+    ))
 
 
 def _is_data_class_decorator_arg(arg: object) -> bool:
@@ -120,6 +167,125 @@ class LinearFlowTemplateCore(
     A linear flow template wraps a Python callable together with an ordered
     list of child job templates that run sequentially. Use this when work
     should proceed step by step in a fixed declaration order.
+
+    Decorator syntax:
+        ``@...Template(...)`` wraps a Python callable as a reusable job
+        template. The wrapped callable defines the public outer signature
+        seen by template users and by applied jobs created from it.
+
+    The wrapped callable defines the public outer signature of the flow,
+    while the child-job list defines the executed body.
+
+    Example:
+        ``@LinearFlowTemplate(plus_one, plus_one)``
+        ``def plus_two(number: int) -> int: ...``
+
+    Child-job templates may be
+    [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
+    instances.
+    This lets flows nest other flows as well as terminal tasks.
+
+    In linear and DAG flows, Model and Dataset subclasses are also allowed
+    as child-job entries. During apply, they are coerced into helper task
+    templates that construct the requested data object from positional
+    input in linear flows or from keyword-matched input in DAG flows.
+
+    Example:
+        ``@LinearFlowTemplate(MyDataset)``
+        ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
+        ``@DagFlowTemplate(MyModel, extract_number)``
+        ``def read_model(number: int) -> int: ...``
+
+    For linear and DAG flows, the outer callable is primarily declarative:
+    its signature exposes the public flow interface, while child jobs define
+    the executed body.
+
+    The outer callable type is validated against the child-job composition.
+    The terminal child determines whether the flow behaves like a function
+    or generator, and any async child lifts the full flow to an async
+    callable type.
+
+    As a result, a sync-function outer callable fits sync child execution,
+    a generator outer callable fits generator-producing terminal children,
+    and async outer callables are required when child composition is async.
+    Mismatches raise ``TypeError`` when the flow template is created.
+
+    When the validated outer callable must be a generator or
+    async-generator only to expose the correct public signature, use
+    [Void][omnipy.compute.helpers.Void] in the body:
+
+    ``yield from Void()`` for sync generator flows, or
+    ``async for item in Void(): yield item`` for async generator flows.
+
+    This shorthand exists only to satisfy the declared outer callable type;
+    the child jobs still perform the actual flow work.
+
+    The wrapped callable's parameter list and return annotation define the
+    outer interface of the template.
+
+    ``fixed_params`` permanently supplies selected callable parameters.
+
+    ``param_key_map`` renames selected callable parameters to external
+    keyword names that callers or parent flows use when supplying inputs.
+
+    ``iterate_over_data_files``, ``output_dataset_param``, and
+    ``output_dataset_cls`` adapt that outer interface for dataset-wise
+    iteration.
+
+    ``result_key`` wraps the returned value in a single-key dictionary,
+    which is especially useful when a downstream DAG step should receive
+    the result under a predictable name.
+
+    Example modifier usage:
+        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
+        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
+        ``plus_one_dict = plus_one.refine(result_key='number')``
+
+    Linear flows run child jobs strictly in declaration order.
+
+    The first child receives the caller's positional and keyword inputs.
+    Each later child receives the previous child result as its leading
+    positional input, plus any matching keyword arguments from the outer
+    flow call.
+
+    ``fixed_params`` always override caller-supplied values for the child
+    where they are configured. ``param_key_map`` lets later children expose
+    different external keyword names than their underlying callable
+    parameter names.
+
+    Example:
+        ``transform = transform_tmpl.refine(param_key_map={'add': 'step'},``
+        ``fixed_params={'mult': 2})``
+        ``@LinearFlowTemplate(identity_tmpl, transform)``
+        ``def linear_flow(number: int, step: int) -> int: ...``
+
+    Tasks are terminal jobs: they wrap one callable and execute one compute
+    step.
+
+    Flows are orchestration jobs: they may contain child tasks and child
+    flows, so larger pipelines can be assembled hierarchically from smaller
+    reusable pieces.
+
+    Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
+    to create a runnable job with engine decorators and current config attached.
+    Call the resulting applied job with runtime arguments.
+
+    Use [`run()`][omnipy.compute._job.JobTemplateMixin.run] as a shorthand for
+    ``apply()`` followed immediately by calling the applied job.
+
+    Use [`refine()`][omnipy.compute._job.JobTemplateMixin.refine] to reuse a
+    template while changing configuration such as ``name``, ``fixed_params``,
+    or ``param_key_map``.
+
+    Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
+    reconstruct a template from that job's current configuration.
+
+    Typical lifecycle:
+        ``result = template.run(...)``
+        ``applied_job = template.apply()``
+        ``result = applied_job(...)``
+        ``refined_template = template.refine(name='new_name')``
+        ``revised_template = applied_job.revise()``
 
     Instances are normally produced through the [LinearFlowTemplate][]
     decorator factory rather than by direct construction.
@@ -175,6 +341,125 @@ def LinearFlowTemplate(
     list of child job templates that run sequentially. Use this when work
     should proceed step by step in a fixed declaration order.
 
+    Decorator syntax:
+        ``@...Template(...)`` wraps a Python callable as a reusable job
+        template. The wrapped callable defines the public outer signature
+        seen by template users and by applied jobs created from it.
+
+    The wrapped callable defines the public outer signature of the flow,
+    while the child-job list defines the executed body.
+
+    Example:
+        ``@LinearFlowTemplate(plus_one, plus_one)``
+        ``def plus_two(number: int) -> int: ...``
+
+    Child-job templates may be
+    [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
+    instances.
+    This lets flows nest other flows as well as terminal tasks.
+
+    In linear and DAG flows, Model and Dataset subclasses are also allowed
+    as child-job entries. During apply, they are coerced into helper task
+    templates that construct the requested data object from positional
+    input in linear flows or from keyword-matched input in DAG flows.
+
+    Example:
+        ``@LinearFlowTemplate(MyDataset)``
+        ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
+        ``@DagFlowTemplate(MyModel, extract_number)``
+        ``def read_model(number: int) -> int: ...``
+
+    For linear and DAG flows, the outer callable is primarily declarative:
+    its signature exposes the public flow interface, while child jobs define
+    the executed body.
+
+    The outer callable type is validated against the child-job composition.
+    The terminal child determines whether the flow behaves like a function
+    or generator, and any async child lifts the full flow to an async
+    callable type.
+
+    As a result, a sync-function outer callable fits sync child execution,
+    a generator outer callable fits generator-producing terminal children,
+    and async outer callables are required when child composition is async.
+    Mismatches raise ``TypeError`` when the flow template is created.
+
+    When the validated outer callable must be a generator or
+    async-generator only to expose the correct public signature, use
+    [Void][omnipy.compute.helpers.Void] in the body:
+
+    ``yield from Void()`` for sync generator flows, or
+    ``async for item in Void(): yield item`` for async generator flows.
+
+    This shorthand exists only to satisfy the declared outer callable type;
+    the child jobs still perform the actual flow work.
+
+    The wrapped callable's parameter list and return annotation define the
+    outer interface of the template.
+
+    ``fixed_params`` permanently supplies selected callable parameters.
+
+    ``param_key_map`` renames selected callable parameters to external
+    keyword names that callers or parent flows use when supplying inputs.
+
+    ``iterate_over_data_files``, ``output_dataset_param``, and
+    ``output_dataset_cls`` adapt that outer interface for dataset-wise
+    iteration.
+
+    ``result_key`` wraps the returned value in a single-key dictionary,
+    which is especially useful when a downstream DAG step should receive
+    the result under a predictable name.
+
+    Example modifier usage:
+        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
+        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
+        ``plus_one_dict = plus_one.refine(result_key='number')``
+
+    Linear flows run child jobs strictly in declaration order.
+
+    The first child receives the caller's positional and keyword inputs.
+    Each later child receives the previous child result as its leading
+    positional input, plus any matching keyword arguments from the outer
+    flow call.
+
+    ``fixed_params`` always override caller-supplied values for the child
+    where they are configured. ``param_key_map`` lets later children expose
+    different external keyword names than their underlying callable
+    parameter names.
+
+    Example:
+        ``transform = transform_tmpl.refine(param_key_map={'add': 'step'},``
+        ``fixed_params={'mult': 2})``
+        ``@LinearFlowTemplate(identity_tmpl, transform)``
+        ``def linear_flow(number: int, step: int) -> int: ...``
+
+    Tasks are terminal jobs: they wrap one callable and execute one compute
+    step.
+
+    Flows are orchestration jobs: they may contain child tasks and child
+    flows, so larger pipelines can be assembled hierarchically from smaller
+    reusable pieces.
+
+    Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
+    to create a runnable job with engine decorators and current config attached.
+    Call the resulting applied job with runtime arguments.
+
+    Use [`run()`][omnipy.compute._job.JobTemplateMixin.run] as a shorthand for
+    ``apply()`` followed immediately by calling the applied job.
+
+    Use [`refine()`][omnipy.compute._job.JobTemplateMixin.refine] to reuse a
+    template while changing configuration such as ``name``, ``fixed_params``,
+    or ``param_key_map``.
+
+    Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
+    reconstruct a template from that job's current configuration.
+
+    Typical lifecycle:
+        ``result = template.run(...)``
+        ``applied_job = template.apply()``
+        ``result = applied_job(...)``
+        ``refined_template = template.refine(name='new_name')``
+        ``revised_template = applied_job.revise()``
+
     Args:
         *child_job_templates: Ordered templates of child jobs to be
             run as part of the parent job. Model and Dataset subclasses
@@ -185,22 +470,23 @@ def LinearFlowTemplate(
         name: Name of the job template. If not provided, the name of the
             wrapped callable is used.
         iterate_over_data_files: Whether dataset inputs should be
-            processed item-wise. output_dataset_param: Optional name of
-            an explicit output-dataset parameter.
+            processed item-wise.
+        output_dataset_param: Optional name of an explicit
+            output-dataset parameter.
         output_dataset_cls: Optional dataset class to use for iterated
             outputs.
         auto_async: Whether coroutine jobs at the outermost level (not
             in a flow context) should be automatically run in accordance
             with context (use existing event loop, if available,
             otherwise create temporary event loop and run coroutine
-            until completion).)
+            until completion).
         result_key: Optional key used to wrap the returned result in a
             dictionary. Especially useful in DAG flows to avoid name
             collisions.
         fixed_params: Fixed keyword-argument values for the job. May not
             target *args or **kwargs-style params.
-        param_key_map: Mapping from external keyword names to callable
-            parameter names. May not target *args or **kwargs-style
+        param_key_map: Mapping from callable parameter names to external
+            keyword names. May not target *args or **kwargs-style
             params.
         persist_outputs: Per-job output-persistence preference.
         restore_outputs: Per-job output-restore preference.
@@ -303,6 +589,136 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     templates whose dependencies form a directed acyclic graph. Use this
     when flow steps branch and join but must not form cycles.
 
+    Decorator syntax:
+        ``@...Template(...)`` wraps a Python callable as a reusable job
+        template. The wrapped callable defines the public outer signature
+        seen by template users and by applied jobs created from it.
+
+    The wrapped callable defines the public outer signature of the flow,
+    while the child-job list defines the executed body.
+
+    Example:
+        ``@DagFlowTemplate(start, branch, merge)``
+        ``def my_dag(number: int) -> int: ...``
+
+    Child-job templates may be
+    [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
+    instances.
+    This lets flows nest other flows as well as terminal tasks.
+
+    In linear and DAG flows, Model and Dataset subclasses are also allowed
+    as child-job entries. During apply, they are coerced into helper task
+    templates that construct the requested data object from positional
+    input in linear flows or from keyword-matched input in DAG flows.
+
+    Example:
+        ``@LinearFlowTemplate(MyDataset)``
+        ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
+        ``@DagFlowTemplate(MyModel, extract_number)``
+        ``def read_model(number: int) -> int: ...``
+
+    For linear and DAG flows, the outer callable is primarily declarative:
+    its signature exposes the public flow interface, while child jobs define
+    the executed body.
+
+    The outer callable type is validated against the child-job composition.
+    The terminal child determines whether the flow behaves like a function
+    or generator, and any async child lifts the full flow to an async
+    callable type.
+
+    As a result, a sync-function outer callable fits sync child execution,
+    a generator outer callable fits generator-producing terminal children,
+    and async outer callables are required when child composition is async.
+    Mismatches raise ``TypeError`` when the flow template is created.
+
+    When the validated outer callable must be a generator or
+    async-generator only to expose the correct public signature, use
+    [Void][omnipy.compute.helpers.Void] in the body:
+
+    ``yield from Void()`` for sync generator flows, or
+    ``async for item in Void(): yield item`` for async generator flows.
+
+    This shorthand exists only to satisfy the declared outer callable type;
+    the child jobs still perform the actual flow work.
+
+    The wrapped callable's parameter list and return annotation define the
+    outer interface of the template.
+
+    ``fixed_params`` permanently supplies selected callable parameters.
+
+    ``param_key_map`` renames selected callable parameters to external
+    keyword names that callers or parent flows use when supplying inputs.
+
+    ``iterate_over_data_files``, ``output_dataset_param``, and
+    ``output_dataset_cls`` adapt that outer interface for dataset-wise
+    iteration.
+
+    ``result_key`` wraps the returned value in a single-key dictionary,
+    which is especially useful when a downstream DAG step should receive
+    the result under a predictable name.
+
+    Example modifier usage:
+        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
+        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
+        ``plus_one_dict = plus_one.refine(result_key='number')``
+
+    DAG flows route values by keyword name instead of chaining every child
+    result positionally.
+
+    The outer flow call first binds its arguments to the outer callable
+    signature. Each child then receives the matching keyword subset from the
+    accumulated named results.
+
+    By default, a non-dictionary child result is stored under the child job
+    name. ``result_key`` stores it under a custom key instead, which is the
+    usual way to make one branch feed another. Dictionary results merge
+    directly into the accumulated named result set.
+
+    ``param_key_map`` lets a child read from externally visible DAG keys
+    using different internal callable parameter names, and ``fixed_params``
+    pins selected child inputs regardless of what earlier branches produce.
+
+    Example:
+        ``@DagFlowTemplate(``
+        ``    add_two.refine(result_key='base'),``
+        ``    square_number.refine(result_key='bonus'),``
+        ``    add_two_numbers.refine(``
+        ``        param_key_map={``
+        ``            'left_value': 'base',``
+        ``            'right_value': 'bonus',``
+        ``        },``
+        ``    ),``
+        ``)``
+        ``def dag_flow(number: int) -> int: ...``
+
+    Tasks are terminal jobs: they wrap one callable and execute one compute
+    step.
+
+    Flows are orchestration jobs: they may contain child tasks and child
+    flows, so larger pipelines can be assembled hierarchically from smaller
+    reusable pieces.
+
+    Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
+    to create a runnable job with engine decorators and current config attached.
+    Call the resulting applied job with runtime arguments.
+
+    Use [`run()`][omnipy.compute._job.JobTemplateMixin.run] as a shorthand for
+    ``apply()`` followed immediately by calling the applied job.
+
+    Use [`refine()`][omnipy.compute._job.JobTemplateMixin.refine] to reuse a
+    template while changing configuration such as ``name``, ``fixed_params``,
+    or ``param_key_map``.
+
+    Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
+    reconstruct a template from that job's current configuration.
+
+    Typical lifecycle:
+        ``result = template.run(...)``
+        ``applied_job = template.apply()``
+        ``result = applied_job(...)``
+        ``refined_template = template.refine(name='new_name')``
+        ``revised_template = applied_job.revise()``
+
     Instances are normally produced through the [DagFlowTemplate][] decorator
     factory rather than by direct construction.
     """
@@ -356,6 +772,136 @@ def DagFlowTemplate(
     templates whose dependencies form a directed acyclic graph. Use this
     when flow steps branch and join but must not form cycles.
 
+    Decorator syntax:
+        ``@...Template(...)`` wraps a Python callable as a reusable job
+        template. The wrapped callable defines the public outer signature
+        seen by template users and by applied jobs created from it.
+
+    The wrapped callable defines the public outer signature of the flow,
+    while the child-job list defines the executed body.
+
+    Example:
+        ``@DagFlowTemplate(start, branch, merge)``
+        ``def my_dag(number: int) -> int: ...``
+
+    Child-job templates may be
+    [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
+    instances.
+    This lets flows nest other flows as well as terminal tasks.
+
+    In linear and DAG flows, Model and Dataset subclasses are also allowed
+    as child-job entries. During apply, they are coerced into helper task
+    templates that construct the requested data object from positional
+    input in linear flows or from keyword-matched input in DAG flows.
+
+    Example:
+        ``@LinearFlowTemplate(MyDataset)``
+        ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
+        ``@DagFlowTemplate(MyModel, extract_number)``
+        ``def read_model(number: int) -> int: ...``
+
+    For linear and DAG flows, the outer callable is primarily declarative:
+    its signature exposes the public flow interface, while child jobs define
+    the executed body.
+
+    The outer callable type is validated against the child-job composition.
+    The terminal child determines whether the flow behaves like a function
+    or generator, and any async child lifts the full flow to an async
+    callable type.
+
+    As a result, a sync-function outer callable fits sync child execution,
+    a generator outer callable fits generator-producing terminal children,
+    and async outer callables are required when child composition is async.
+    Mismatches raise ``TypeError`` when the flow template is created.
+
+    When the validated outer callable must be a generator or
+    async-generator only to expose the correct public signature, use
+    [Void][omnipy.compute.helpers.Void] in the body:
+
+    ``yield from Void()`` for sync generator flows, or
+    ``async for item in Void(): yield item`` for async generator flows.
+
+    This shorthand exists only to satisfy the declared outer callable type;
+    the child jobs still perform the actual flow work.
+
+    The wrapped callable's parameter list and return annotation define the
+    outer interface of the template.
+
+    ``fixed_params`` permanently supplies selected callable parameters.
+
+    ``param_key_map`` renames selected callable parameters to external
+    keyword names that callers or parent flows use when supplying inputs.
+
+    ``iterate_over_data_files``, ``output_dataset_param``, and
+    ``output_dataset_cls`` adapt that outer interface for dataset-wise
+    iteration.
+
+    ``result_key`` wraps the returned value in a single-key dictionary,
+    which is especially useful when a downstream DAG step should receive
+    the result under a predictable name.
+
+    Example modifier usage:
+        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
+        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
+        ``plus_one_dict = plus_one.refine(result_key='number')``
+
+    DAG flows route values by keyword name instead of chaining every child
+    result positionally.
+
+    The outer flow call first binds its arguments to the outer callable
+    signature. Each child then receives the matching keyword subset from the
+    accumulated named results.
+
+    By default, a non-dictionary child result is stored under the child job
+    name. ``result_key`` stores it under a custom key instead, which is the
+    usual way to make one branch feed another. Dictionary results merge
+    directly into the accumulated named result set.
+
+    ``param_key_map`` lets a child read from externally visible DAG keys
+    using different internal callable parameter names, and ``fixed_params``
+    pins selected child inputs regardless of what earlier branches produce.
+
+    Example:
+        ``@DagFlowTemplate(``
+        ``    add_two.refine(result_key='base'),``
+        ``    square_number.refine(result_key='bonus'),``
+        ``    add_two_numbers.refine(``
+        ``        param_key_map={``
+        ``            'left_value': 'base',``
+        ``            'right_value': 'bonus',``
+        ``        },``
+        ``    ),``
+        ``)``
+        ``def dag_flow(number: int) -> int: ...``
+
+    Tasks are terminal jobs: they wrap one callable and execute one compute
+    step.
+
+    Flows are orchestration jobs: they may contain child tasks and child
+    flows, so larger pipelines can be assembled hierarchically from smaller
+    reusable pieces.
+
+    Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
+    to create a runnable job with engine decorators and current config attached.
+    Call the resulting applied job with runtime arguments.
+
+    Use [`run()`][omnipy.compute._job.JobTemplateMixin.run] as a shorthand for
+    ``apply()`` followed immediately by calling the applied job.
+
+    Use [`refine()`][omnipy.compute._job.JobTemplateMixin.refine] to reuse a
+    template while changing configuration such as ``name``, ``fixed_params``,
+    or ``param_key_map``.
+
+    Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
+    reconstruct a template from that job's current configuration.
+
+    Typical lifecycle:
+        ``result = template.run(...)``
+        ``applied_job = template.apply()``
+        ``result = applied_job(...)``
+        ``refined_template = template.refine(name='new_name')``
+        ``revised_template = applied_job.revise()``
+
     Args:
         *child_job_templates: Ordered templates of child jobs to be
             run as part of the parent job. Model and Dataset subclasses
@@ -366,22 +912,23 @@ def DagFlowTemplate(
         name: Name of the job template. If not provided, the name of the
             wrapped callable is used.
         iterate_over_data_files: Whether dataset inputs should be
-            processed item-wise. output_dataset_param: Optional name of
-            an explicit output-dataset parameter.
+            processed item-wise.
+        output_dataset_param: Optional name of an explicit
+            output-dataset parameter.
         output_dataset_cls: Optional dataset class to use for iterated
             outputs.
         auto_async: Whether coroutine jobs at the outermost level (not
             in a flow context) should be automatically run in accordance
             with context (use existing event loop, if available,
             otherwise create temporary event loop and run coroutine
-            until completion).)
+            until completion).
         result_key: Optional key used to wrap the returned result in a
             dictionary. Especially useful in DAG flows to avoid name
             collisions.
         fixed_params: Fixed keyword-argument values for the job. May not
             target *args or **kwargs-style params.
-        param_key_map: Mapping from external keyword names to callable
-            parameter names. May not target *args or **kwargs-style
+        param_key_map: Mapping from callable parameter names to external
+            keyword names. May not target *args or **kwargs-style
             params.
         persist_outputs: Per-job output-persistence preference.
         restore_outputs: Per-job output-restore preference.
@@ -416,6 +963,15 @@ class DagFlow(
         ],
         Generic[_CallP, _RetT],
 ):
+    """Execute a flow whose child jobs exchange data through named DAG keys.
+
+    A ``DagFlow`` routes values between child jobs by accumulated keyword name
+    rather than by one strict positional chain. Use it for branching and
+    joining pipelines whose dependencies form a directed acyclic graph.
+
+    Instances are typically produced by calling a ``DagFlowTemplate`` rather
+    than by constructing ``DagFlow`` directly.
+    """
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         """Register the engine decorator for DAG-flow execution.
 
@@ -481,6 +1037,67 @@ class FuncFlowTemplateCore(
     express directly in Python instead of as an explicit task list or
     dependency graph.
 
+    Decorator syntax:
+        ``@...Template(...)`` wraps a Python callable as a reusable job
+        template. The wrapped callable defines the public outer signature
+        seen by template users and by applied jobs created from it.
+
+    The wrapped callable defines both the implementation and the public
+    outer signature of the flow.
+
+    Example:
+        ``@FuncFlowTemplate()``
+        ``def repeat_plus_one(number: int, n: int) -> int: ...``
+
+    The wrapped callable's parameter list and return annotation define the
+    outer interface of the template.
+
+    ``fixed_params`` permanently supplies selected callable parameters.
+
+    ``param_key_map`` renames selected callable parameters to external
+    keyword names that callers or parent flows use when supplying inputs.
+
+    ``iterate_over_data_files``, ``output_dataset_param``, and
+    ``output_dataset_cls`` adapt that outer interface for dataset-wise
+    iteration.
+
+    ``result_key`` wraps the returned value in a single-key dictionary,
+    which is especially useful when a downstream DAG step should receive
+    the result under a predictable name.
+
+    Example modifier usage:
+        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
+        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
+        ``plus_one_dict = plus_one.refine(result_key='number')``
+
+    Tasks are terminal jobs: they wrap one callable and execute one compute
+    step.
+
+    Flows are orchestration jobs: they may contain child tasks and child
+    flows, so larger pipelines can be assembled hierarchically from smaller
+    reusable pieces.
+
+    Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
+    to create a runnable job with engine decorators and current config attached.
+    Call the resulting applied job with runtime arguments.
+
+    Use [`run()`][omnipy.compute._job.JobTemplateMixin.run] as a shorthand for
+    ``apply()`` followed immediately by calling the applied job.
+
+    Use [`refine()`][omnipy.compute._job.JobTemplateMixin.refine] to reuse a
+    template while changing configuration such as ``name``, ``fixed_params``,
+    or ``param_key_map``.
+
+    Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
+    reconstruct a template from that job's current configuration.
+
+    Typical lifecycle:
+        ``result = template.run(...)``
+        ``applied_job = template.apply()``
+        ``result = applied_job(...)``
+        ``refined_template = template.refine(name='new_name')``
+        ``revised_template = applied_job.revise()``
+
     Instances are normally produced through the [FuncFlowTemplate][] decorator
     factory rather than by direct construction.
     """
@@ -532,26 +1149,88 @@ def FuncFlowTemplate(
     express directly in Python instead of as an explicit task list or
     dependency graph.
 
+    Decorator syntax:
+        ``@...Template(...)`` wraps a Python callable as a reusable job
+        template. The wrapped callable defines the public outer signature
+        seen by template users and by applied jobs created from it.
+
+    The wrapped callable defines both the implementation and the public
+    outer signature of the flow.
+
+    Example:
+        ``@FuncFlowTemplate()``
+        ``def repeat_plus_one(number: int, n: int) -> int: ...``
+
+    The wrapped callable's parameter list and return annotation define the
+    outer interface of the template.
+
+    ``fixed_params`` permanently supplies selected callable parameters.
+
+    ``param_key_map`` renames selected callable parameters to external
+    keyword names that callers or parent flows use when supplying inputs.
+
+    ``iterate_over_data_files``, ``output_dataset_param``, and
+    ``output_dataset_cls`` adapt that outer interface for dataset-wise
+    iteration.
+
+    ``result_key`` wraps the returned value in a single-key dictionary,
+    which is especially useful when a downstream DAG step should receive
+    the result under a predictable name.
+
+    Example modifier usage:
+        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
+        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
+        ``plus_one_dict = plus_one.refine(result_key='number')``
+
+    Tasks are terminal jobs: they wrap one callable and execute one compute
+    step.
+
+    Flows are orchestration jobs: they may contain child tasks and child
+    flows, so larger pipelines can be assembled hierarchically from smaller
+    reusable pieces.
+
+    Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
+    to create a runnable job with engine decorators and current config attached.
+    Call the resulting applied job with runtime arguments.
+
+    Use [`run()`][omnipy.compute._job.JobTemplateMixin.run] as a shorthand for
+    ``apply()`` followed immediately by calling the applied job.
+
+    Use [`refine()`][omnipy.compute._job.JobTemplateMixin.refine] to reuse a
+    template while changing configuration such as ``name``, ``fixed_params``,
+    or ``param_key_map``.
+
+    Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
+    reconstruct a template from that job's current configuration.
+
+    Typical lifecycle:
+        ``result = template.run(...)``
+        ``applied_job = template.apply()``
+        ``result = applied_job(...)``
+        ``refined_template = template.refine(name='new_name')``
+        ``revised_template = applied_job.revise()``
+
     Args:
         name: Name of the job template. If not provided, the name of the
             wrapped callable is used.
         iterate_over_data_files: Whether dataset inputs should be
-            processed item-wise. output_dataset_param: Optional name of
-            an explicit output-dataset parameter.
+            processed item-wise.
+        output_dataset_param: Optional name of an explicit
+            output-dataset parameter.
         output_dataset_cls: Optional dataset class to use for iterated
             outputs.
         auto_async: Whether coroutine jobs at the outermost level (not
             in a flow context) should be automatically run in accordance
             with context (use existing event loop, if available,
             otherwise create temporary event loop and run coroutine
-            until completion).)
+            until completion).
         result_key: Optional key used to wrap the returned result in a
             dictionary. Especially useful in DAG flows to avoid name
             collisions.
         fixed_params: Fixed keyword-argument values for the job. May not
             target *args or **kwargs-style params.
-        param_key_map: Mapping from external keyword names to callable
-            parameter names. May not target *args or **kwargs-style
+        param_key_map: Mapping from callable parameter names to external
+            keyword names. May not target *args or **kwargs-style
             params.
         persist_outputs: Per-job output-persistence preference.
         restore_outputs: Per-job output-restore preference.
@@ -590,6 +1269,15 @@ class FuncFlow(
         ],
         Generic[_CallP, _RetT],
 ):
+    """Execute a flow backed by one coordinating callable.
+
+    A ``FuncFlow`` runs the wrapped callable itself as the flow body instead of
+    orchestrating an explicit child-job list. Use it when one callable already
+    captures the desired control flow and runtime behavior.
+
+    Instances are typically produced by calling a ``FuncFlowTemplate`` rather
+    than by constructing ``FuncFlow`` directly.
+    """
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         """Register the engine decorator for callable-backed flow execution.
 

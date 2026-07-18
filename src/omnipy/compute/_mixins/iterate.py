@@ -23,8 +23,9 @@ from omnipy.util.helpers import is_package_editable
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_ITERATE_ARG_DOCS'] = dedent("""\
             iterate_over_data_files: Whether dataset inputs should be
-                processed item-wise. output_dataset_param: Optional name of
-                an explicit output-dataset parameter.
+                processed item-wise.
+            output_dataset_param: Optional name of an explicit
+                output-dataset parameter.
             output_dataset_cls: Optional dataset class to use for iterated
                 outputs.""")
 

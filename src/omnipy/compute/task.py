@@ -34,10 +34,23 @@ _CallP = ParamSpec('_CallP')
 _RetT = TypeVar('_RetT')
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_TASK_TEMPLATE_DESCRIPTION'] = dedent("""\
-        A task template wraps a Python callable that performs a single unit of work
-        as a task. Use this when the work can be expressed as a self-contained
-        function call.""")
+    os.environ['OMNIPY_MACRO_TASK_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
+        dedent("""\
+            A task template wraps a Python callable that performs a single unit of work
+            as a task. Use this when the work can be expressed as a self-contained
+            function call."""),
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
+        dedent("""\
+            The wrapped callable defines both the implementation and the public
+            outer signature of the task.
+
+            Example:
+                ``@TaskTemplate()``
+                ``def plus_one(number: int) -> int: return number + 1``"""),
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
+        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
+    ))
 
 
 class TaskBase:
@@ -81,6 +94,67 @@ class TaskTemplateCore(
     A task template wraps a Python callable that performs a single unit of work
     as a task. Use this when the work can be expressed as a self-contained
     function call.
+
+    Decorator syntax:
+        ``@...Template(...)`` wraps a Python callable as a reusable job
+        template. The wrapped callable defines the public outer signature
+        seen by template users and by applied jobs created from it.
+
+    The wrapped callable defines both the implementation and the public
+    outer signature of the task.
+
+    Example:
+        ``@TaskTemplate()``
+        ``def plus_one(number: int) -> int: return number + 1``
+
+    The wrapped callable's parameter list and return annotation define the
+    outer interface of the template.
+
+    ``fixed_params`` permanently supplies selected callable parameters.
+
+    ``param_key_map`` renames selected callable parameters to external
+    keyword names that callers or parent flows use when supplying inputs.
+
+    ``iterate_over_data_files``, ``output_dataset_param``, and
+    ``output_dataset_cls`` adapt that outer interface for dataset-wise
+    iteration.
+
+    ``result_key`` wraps the returned value in a single-key dictionary,
+    which is especially useful when a downstream DAG step should receive
+    the result under a predictable name.
+
+    Example modifier usage:
+        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
+        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
+        ``plus_one_dict = plus_one.refine(result_key='number')``
+
+    Tasks are terminal jobs: they wrap one callable and execute one compute
+    step.
+
+    Flows are orchestration jobs: they may contain child tasks and child
+    flows, so larger pipelines can be assembled hierarchically from smaller
+    reusable pieces.
+
+    Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
+    to create a runnable job with engine decorators and current config attached.
+    Call the resulting applied job with runtime arguments.
+
+    Use [`run()`][omnipy.compute._job.JobTemplateMixin.run] as a shorthand for
+    ``apply()`` followed immediately by calling the applied job.
+
+    Use [`refine()`][omnipy.compute._job.JobTemplateMixin.refine] to reuse a
+    template while changing configuration such as ``name``, ``fixed_params``,
+    or ``param_key_map``.
+
+    Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
+    reconstruct a template from that job's current configuration.
+
+    Typical lifecycle:
+        ``result = template.run(...)``
+        ``applied_job = template.apply()``
+        ``result = applied_job(...)``
+        ``refined_template = template.refine(name='new_name')``
+        ``revised_template = applied_job.revise()``
 
     Instances are normally produced through the [TaskTemplate][] decorator
     factory rather than by direct construction.
@@ -131,26 +205,88 @@ def TaskTemplate(
     as a task. Use this when the work can be expressed as a self-contained
     function call.
 
+    Decorator syntax:
+        ``@...Template(...)`` wraps a Python callable as a reusable job
+        template. The wrapped callable defines the public outer signature
+        seen by template users and by applied jobs created from it.
+
+    The wrapped callable defines both the implementation and the public
+    outer signature of the task.
+
+    Example:
+        ``@TaskTemplate()``
+        ``def plus_one(number: int) -> int: return number + 1``
+
+    The wrapped callable's parameter list and return annotation define the
+    outer interface of the template.
+
+    ``fixed_params`` permanently supplies selected callable parameters.
+
+    ``param_key_map`` renames selected callable parameters to external
+    keyword names that callers or parent flows use when supplying inputs.
+
+    ``iterate_over_data_files``, ``output_dataset_param``, and
+    ``output_dataset_cls`` adapt that outer interface for dataset-wise
+    iteration.
+
+    ``result_key`` wraps the returned value in a single-key dictionary,
+    which is especially useful when a downstream DAG step should receive
+    the result under a predictable name.
+
+    Example modifier usage:
+        ``plus_one = plus_other.refine(fixed_params={'other': 1})``
+        ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
+        ``plus_one_dict = plus_one.refine(result_key='number')``
+
+    Tasks are terminal jobs: they wrap one callable and execute one compute
+    step.
+
+    Flows are orchestration jobs: they may contain child tasks and child
+    flows, so larger pipelines can be assembled hierarchically from smaller
+    reusable pieces.
+
+    Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
+    to create a runnable job with engine decorators and current config attached.
+    Call the resulting applied job with runtime arguments.
+
+    Use [`run()`][omnipy.compute._job.JobTemplateMixin.run] as a shorthand for
+    ``apply()`` followed immediately by calling the applied job.
+
+    Use [`refine()`][omnipy.compute._job.JobTemplateMixin.refine] to reuse a
+    template while changing configuration such as ``name``, ``fixed_params``,
+    or ``param_key_map``.
+
+    Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
+    reconstruct a template from that job's current configuration.
+
+    Typical lifecycle:
+        ``result = template.run(...)``
+        ``applied_job = template.apply()``
+        ``result = applied_job(...)``
+        ``refined_template = template.refine(name='new_name')``
+        ``revised_template = applied_job.revise()``
+
     Args:
         name: Name of the job template. If not provided, the name of the
             wrapped callable is used.
         iterate_over_data_files: Whether dataset inputs should be
-            processed item-wise. output_dataset_param: Optional name of
-            an explicit output-dataset parameter.
+            processed item-wise.
+        output_dataset_param: Optional name of an explicit
+            output-dataset parameter.
         output_dataset_cls: Optional dataset class to use for iterated
             outputs.
         auto_async: Whether coroutine jobs at the outermost level (not
             in a flow context) should be automatically run in accordance
             with context (use existing event loop, if available,
             otherwise create temporary event loop and run coroutine
-            until completion).)
+            until completion).
         result_key: Optional key used to wrap the returned result in a
             dictionary. Especially useful in DAG flows to avoid name
             collisions.
         fixed_params: Fixed keyword-argument values for the job. May not
             target *args or **kwargs-style params.
-        param_key_map: Mapping from external keyword names to callable
-            parameter names. May not target *args or **kwargs-style
+        param_key_map: Mapping from callable parameter names to external
+            keyword names. May not target *args or **kwargs-style
             params.
         persist_outputs: Per-job output-persistence preference.
         restore_outputs: Per-job output-restore preference.

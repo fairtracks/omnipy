@@ -14,8 +14,8 @@ if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_PARAMS_ARG_DOCS'] = dedent("""\
             fixed_params: Fixed keyword-argument values for the job. May not
                 target *args or **kwargs-style params.
-            param_key_map: Mapping from external keyword names to callable
-                parameter names. May not target *args or **kwargs-style
+            param_key_map: Mapping from callable parameter names to external
+                keyword names. May not target *args or **kwargs-style
                 params.""")
 
 

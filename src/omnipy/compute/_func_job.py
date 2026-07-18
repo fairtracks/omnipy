@@ -18,6 +18,64 @@ _CallP = ParamSpec('_CallP')
 _RetT = TypeVar('_RetT')
 
 if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'] = dedent("""\
+        Apply a template with [`apply()`][omnipy.compute._job.JobTemplateMixin.apply]
+        to create a runnable job with engine decorators and current config attached.
+        Call the resulting applied job with runtime arguments.
+
+        Use [`run()`][omnipy.compute._job.JobTemplateMixin.run] as a shorthand for
+        ``apply()`` followed immediately by calling the applied job.
+
+        Use [`refine()`][omnipy.compute._job.JobTemplateMixin.refine] to reuse a
+        template while changing configuration such as ``name``, ``fixed_params``,
+        or ``param_key_map``.
+
+        Use [`revise()`][omnipy.compute._job.JobMixin.revise] on an applied job to
+        reconstruct a template from that job's current configuration.
+
+        Typical lifecycle:
+            ``result = template.run(...)``
+            ``applied_job = template.apply()``
+            ``result = applied_job(...)``
+            ``refined_template = template.refine(name='new_name')``
+            ``revised_template = applied_job.revise()``""")
+
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'] = dedent("""\
+        Decorator syntax:
+            ``@...Template(...)`` wraps a Python callable as a reusable job
+            template. The wrapped callable defines the public outer signature
+            seen by template users and by applied jobs created from it.""")
+
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'] = dedent("""\
+        The wrapped callable's parameter list and return annotation define the
+        outer interface of the template.
+
+        ``fixed_params`` permanently supplies selected callable parameters.
+
+        ``param_key_map`` renames selected callable parameters to external
+        keyword names that callers or parent flows use when supplying inputs.
+
+        ``iterate_over_data_files``, ``output_dataset_param``, and
+        ``output_dataset_cls`` adapt that outer interface for dataset-wise
+        iteration.
+
+        ``result_key`` wraps the returned value in a single-key dictionary,
+        which is especially useful when a downstream DAG step should receive
+        the result under a predictable name.
+
+        Example modifier usage:
+            ``plus_one = plus_other.refine(fixed_params={'other': 1})``
+            ``plus_x = plus_other.refine(param_key_map={'other': 'x'})``
+            ``plus_one_dict = plus_one.refine(result_key='number')``""")
+
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'] = dedent("""\
+        Tasks are terminal jobs: they wrap one callable and execute one compute
+        step.
+
+        Flows are orchestration jobs: they may contain child tasks and child
+        flows, so larger pipelines can be assembled hierarchically from smaller
+        reusable pieces.""")
+
     _JOB_TEMPLATE_SHARED_KWARG_DOCS = '\n'.join(
         (os.environ['OMNIPY_MACRO_JOB_TEMPLATE_NAME_ARG_DOC'],
          os.environ['OMNIPY_MACRO_JOB_TEMPLATE_ITERATE_ARG_DOCS'],

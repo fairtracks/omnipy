@@ -46,6 +46,98 @@ if is_package_editable('omnipy'):
                 (if DAG flow) job templates, respectively, when apply() is
                 called on the parent job template.""")
 
+    os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'] = dedent("""\
+        Child-job templates may be
+        [TaskTemplate][omnipy.compute.task.TaskTemplate] or flow-template
+        instances.
+        This lets flows nest other flows as well as terminal tasks.
+
+        In linear and DAG flows, Model and Dataset subclasses are also allowed
+        as child-job entries. During apply, they are coerced into helper task
+        templates that construct the requested data object from positional
+        input in linear flows or from keyword-matched input in DAG flows.
+
+        Example:
+            ``@LinearFlowTemplate(MyDataset)``
+            ``def build_dataset(first_pair: tuple[str, int]) -> MyDataset: ...``
+            ``@DagFlowTemplate(MyModel, extract_number)``
+            ``def read_model(number: int) -> int: ...``""")
+
+    os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'] = dedent("""\
+        For linear and DAG flows, the outer callable is primarily declarative:
+        its signature exposes the public flow interface, while child jobs define
+        the executed body.
+
+        The outer callable type is validated against the child-job composition.
+        The terminal child determines whether the flow behaves like a function
+        or generator, and any async child lifts the full flow to an async
+        callable type.
+
+        As a result, a sync-function outer callable fits sync child execution,
+        a generator outer callable fits generator-producing terminal children,
+        and async outer callables are required when child composition is async.
+        Mismatches raise ``TypeError`` when the flow template is created.""")
+
+    os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'] = dedent("""\
+        When the validated outer callable must be a generator or
+        async-generator only to expose the correct public signature, use
+        [Void][omnipy.compute.helpers.Void] in the body:
+
+        ``yield from Void()`` for sync generator flows, or
+        ``async for item in Void(): yield item`` for async generator flows.
+
+        This shorthand exists only to satisfy the declared outer callable type;
+        the child jobs still perform the actual flow work.""")
+
+    os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_ORCHESTRATION'] = dedent("""\
+        Linear flows run child jobs strictly in declaration order.
+
+        The first child receives the caller's positional and keyword inputs.
+        Each later child receives the previous child result as its leading
+        positional input, plus any matching keyword arguments from the outer
+        flow call.
+
+        ``fixed_params`` always override caller-supplied values for the child
+        where they are configured. ``param_key_map`` lets later children expose
+        different external keyword names than their underlying callable
+        parameter names.
+
+        Example:
+            ``transform = transform_tmpl.refine(param_key_map={'add': 'step'},``
+            ``fixed_params={'mult': 2})``
+            ``@LinearFlowTemplate(identity_tmpl, transform)``
+            ``def linear_flow(number: int, step: int) -> int: ...``""")
+
+    os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_ORCHESTRATION'] = dedent("""\
+        DAG flows route values by keyword name instead of chaining every child
+        result positionally.
+
+        The outer flow call first binds its arguments to the outer callable
+        signature. Each child then receives the matching keyword subset from the
+        accumulated named results.
+
+        By default, a non-dictionary child result is stored under the child job
+        name. ``result_key`` stores it under a custom key instead, which is the
+        usual way to make one branch feed another. Dictionary results merge
+        directly into the accumulated named result set.
+
+        ``param_key_map`` lets a child read from externally visible DAG keys
+        using different internal callable parameter names, and ``fixed_params``
+        pins selected child inputs regardless of what earlier branches produce.
+
+        Example:
+            ``@DagFlowTemplate(``
+            ``    add_two.refine(result_key='base'),``
+            ``    square_number.refine(result_key='bonus'),``
+            ``    add_two_numbers.refine(``
+            ``        param_key_map={``
+            ``            'left_value': 'base',``
+            ``            'right_value': 'bonus',``
+            ``        },``
+            ``    ),``
+            ``)``
+            ``def dag_flow(number: int) -> int: ...``""")
+
 
 class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT],
                              Generic[_JobTemplateT, _JobT, _CallP, _RetT]):

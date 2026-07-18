@@ -15,7 +15,7 @@ if is_package_editable('omnipy'):
                 in a flow context) should be automatically run in accordance
                 with context (use existing event loop, if available,
                 otherwise create temporary event loop and run coroutine
-                until completion).)""")
+                until completion).""")
 
 
 class AutoAsyncJobBaseMixin:
