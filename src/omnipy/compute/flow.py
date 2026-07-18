@@ -16,7 +16,7 @@ Attributes:
 import inspect
 import os
 from textwrap import dedent
-from typing import Callable, cast, ClassVar, Concatenate, Generic, ParamSpec
+from typing import Callable, cast, ClassVar, Concatenate, Generic, Iterable, Mapping, ParamSpec
 
 from typing_extensions import TypeVar
 
@@ -24,15 +24,15 @@ from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
 from omnipy.compute._joblist_job import ChildJobListArgJobBase
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
-from omnipy.shared.enums.job import JobType
+from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.shared.protocols.compute.job import (HasChildJobListArgJobTemplateInit,
-                                                 HasFuncArgJobTemplateInit,
                                                  IsDagFlow,
                                                  IsDagFlowTemplate,
                                                  IsFuncFlow,
                                                  IsFuncFlowTemplate,
                                                  IsLinearFlow,
                                                  IsLinearFlowTemplate)
+from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
@@ -62,6 +62,12 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
     os.environ['OMNIPY_MACRO_FLOW_CAST_INIT_PROTOCOL_SUMMARY'] = dedent("""\
         Cast a template initializer to the shared init protocol.""")
+
+    os.environ['OMNIPY_MACRO_FUNC_FLOW_TEMPLATE_DESCRIPTION'] = dedent("""\
+        A function flow template wraps a Python callable that orchestrates
+        work as a flow. Use this when the control flow is easiest to
+        express directly in Python instead of as an explicit task list or
+        dependency graph.""")
 
 
 def _is_data_class_decorator_arg(arg: object) -> bool:
@@ -347,33 +353,38 @@ class DagFlow(
         return cast(type[IsDagFlowTemplate[_CallP, _RetT]], DagFlowTemplate)
 
 
-class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
-                                          IsFuncFlow[_CallP, _RetT],
-                                          _CallP,
-                                          _RetT],
-                           JobTemplateMixin[IsFuncFlowTemplate[_CallP, _RetT],
-                                            IsFuncFlow[_CallP, _RetT],
-                                            _CallP,
-                                            _RetT],
-                           FlowBase,
-                           Generic[_CallP, _RetT]):
+class FuncFlowTemplateCore(
+        FuncArgJobBase[
+            IsFuncFlowTemplate[_CallP, _RetT],
+            IsFuncFlow[_CallP, _RetT],
+            _CallP,
+            _RetT,
+        ],
+        JobTemplateMixin[
+            IsFuncFlowTemplate[_CallP, _RetT],
+            IsFuncFlow[_CallP, _RetT],
+            _CallP,
+            _RetT,
+        ],
+        FlowBase,
+        Generic[_CallP, _RetT],
+):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # Implement the core template behavior for flows.
+    # Implement the core template behavior for function flows.
     #
-    # A function flow template wraps a Python callable that orchestrates work as
-    # a flow. Use this when the control flow is easiest to express directly in
-    # Python instead of as an explicit task list or dependency graph.
+    # {{FUNC_FLOW_TEMPLATE_DESCRIPTION}}
     #
-    # Instances are normally produced through the ``FuncFlowTemplate`` decorator
+    # Instances are normally produced through the [FuncFlowTemplate][] decorator
     # factory rather than by direct construction.
     #
-    """Implement the core template behavior for flows.
+    """Implement the core template behavior for function flows.
 
-    A function flow template wraps a Python callable that orchestrates work as
-    a flow. Use this when the control flow is easiest to express directly in
-    Python instead of as an explicit task list or dependency graph.
+    A function flow template wraps a Python callable that orchestrates
+    work as a flow. Use this when the control flow is easiest to
+    express directly in Python instead of as an explicit task list or
+    dependency graph.
 
-    Instances are normally produced through the ``FuncFlowTemplate`` decorator
+    Instances are normally produced through the [FuncFlowTemplate][] decorator
     factory rather than by direct construction.
     """
     @classmethod
@@ -385,72 +396,85 @@ class FuncFlowTemplateCore(FuncArgJobBase[IsFuncFlowTemplate[_CallP, _RetT],
         template.
 
         Returns:
-            type[IsFuncFlow[_CallP, _RetT]]: The executable ``FuncFlow``
+            type[IsFuncFlow[_CallP, _RetT]]: The executable [FuncFlow][]
                 subclass associated with this template.
         """
         return cast(type[IsFuncFlow[_CallP, _RetT]], FuncFlow[_CallP, _RetT])
 
 
-# Needed for pyright and PyCharm
-def func_flow_template_as_callable_decorator(
-    decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsFuncFlowTemplate]) -> \
-        Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsFuncFlowTemplate[_CallP, _RetT]]]:
+_FuncFlowTemplateFactory = callable_decorator_cls(FuncFlowTemplateCore)
+
+
+def FuncFlowTemplate(
+    *,
+    name: str | None = None,
+    iterate_over_data_files: bool = False,
+    output_dataset_param: str | None = None,
+    output_dataset_cls: type[IsDataset] | None = None,
+    auto_async: bool = True,
+    result_key: str | None = None,
+    fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+    param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+    persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+    restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
+    **kwargs: object,
+) -> Callable[[Callable[_CallP, _RetT]], IsFuncFlowTemplate[_CallP, _RetT]]:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # {{FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    # Decorator-style factory for defining callable-backed coordinating flows.
+    #
+    # {{FUNC_FLOW_TEMPLATE_DESCRIPTION}}
     #
     # Args:
-    #     decorated_cls: Function-flow template initializer to adapt.
-    #
+    #     {{JOB_TEMPLATE_SHARED_KWARG_DOCS}}
     # Returns:
-    #     A decorator factory that converts a Python callable into a function flow template.
-    #
-    """Wrap a template initializer as a callable decorator factory.
+    #     FuncFlowTemplate: New FuncFlowTemplate instance wrapping ``job_func``.
+    """Decorator-style factory for defining callable-backed coordinating flows.
+
+    A function flow template wraps a Python callable that orchestrates
+    work as a flow. Use this when the control flow is easiest to
+    express directly in Python instead of as an explicit task list or
+    dependency graph.
 
     Args:
-        decorated_cls: Function-flow template initializer to adapt.
-
+        name: Name of the job template. If not provided, the name of the
+            wrapped callable is used.
+        iterate_over_data_files: Whether dataset inputs should be
+            processed item-wise. output_dataset_param: Optional name of
+            an explicit output-dataset parameter.
+        output_dataset_cls: Optional dataset class to use for iterated
+            outputs.
+        auto_async: Whether coroutine jobs at the outermost level (not
+            in a flow context) should be automatically run in accordance
+            with context (use existing event loop, if available,
+            otherwise create temporary event loop and run coroutine
+            until completion).)
+        result_key: Optional key used to wrap the returned result in a
+            dictionary. Especially useful in DAG flows to avoid name
+            collisions.
+        fixed_params: Fixed keyword-argument values for the job. May not
+            target *args or **kwargs-style params.
+        param_key_map: Mapping from external keyword names to callable
+            parameter names. May not target *args or **kwargs-style
+            params.
+        persist_outputs: Per-job output-persistence preference.
+        restore_outputs: Per-job output-restore preference.
+        **kwargs: Additional constructor keyword overrides.
     Returns:
-        A decorator factory that converts a Python callable into a function flow template.
-    """
-    return callable_decorator_cls(
-        cast(
-            Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
-                     IsFuncFlowTemplate[_CallP, _RetT]],
-            decorated_cls))
-
-
-def to_func_flow_template_init_protocol(
-    decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
-                            FuncFlowTemplateCore[_CallP, _RetT]]
-) -> HasFuncArgJobTemplateInit[IsFuncFlowTemplate[_CallP, _RetT], _CallP, _RetT]:
-    # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # {{FLOW_CAST_INIT_PROTOCOL_SUMMARY}}
-    #
-    # Args:
-    #     decorated_cls: Function-flow template initializer to cast.
-    #
-    # Returns:
-    #     The initializer typed as ``HasFuncArgJobTemplateInit``.
-    #
-    """Cast a template initializer to the shared init protocol.
-
-    Args:
-        decorated_cls: Function-flow template initializer to cast.
-
-    Returns:
-        The initializer typed as ``HasFuncArgJobTemplateInit``.
-    """
-    return cast(HasFuncArgJobTemplateInit[IsFuncFlowTemplate[_CallP, _RetT], _CallP, _RetT],
-                decorated_cls)
-
-
-FuncFlowTemplate = func_flow_template_as_callable_decorator(
-    to_func_flow_template_init_protocol(FuncFlowTemplateCore))
-"""Decorator-style factory for defining callable-backed coordinating flows.
-
-Use ``@FuncFlowTemplate()`` when a Python callable should orchestrate the flow
-imperatively.
-"""
+        FuncFlowTemplate: New FuncFlowTemplate instance wrapping ``job_func``."""
+    ret = _FuncFlowTemplateFactory(
+        name=name,
+        iterate_over_data_files=iterate_over_data_files,
+        output_dataset_param=output_dataset_param,
+        output_dataset_cls=output_dataset_cls,
+        auto_async=auto_async,
+        result_key=result_key,
+        fixed_params=fixed_params,
+        param_key_map=param_key_map,
+        persist_outputs=persist_outputs,
+        restore_outputs=restore_outputs,
+        **kwargs,
+    )
+    return cast(Callable[[Callable[_CallP, _RetT]], IsFuncFlowTemplate[_CallP, _RetT]], ret)
 
 
 class FuncFlow(
@@ -498,10 +522,10 @@ class FuncFlow(
         flow instance.
 
         Returns:
-            type[IsFuncFlowTemplate[_CallP, _RetT]]: The ``FuncFlowTemplate``
+            type[IsFuncFlowTemplate[_CallP, _RetT]]: The [FuncFlowTemplate][]
                 class associated with this flow.
         """
-        return cast(type[IsFuncFlowTemplate[_CallP, _RetT]], FuncFlowTemplate)
+        return cast(type[IsFuncFlowTemplate[_CallP, _RetT]], FuncFlowTemplateCore)
 
 
 LinearFlow.accept_mixin(FlowContextJobMixin)
