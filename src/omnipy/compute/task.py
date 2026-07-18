@@ -11,14 +11,13 @@ Attributes:
 
 import os
 from textwrap import dedent
-from typing import Callable, cast, Generic, ParamSpec, TypeVar
-
-from typing_extensions import Concatenate
+from typing import Callable, cast, Generic, Iterable, Mapping, ParamSpec, TypeVar
 
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
-from omnipy.shared.enums.job import JobType
-from omnipy.shared.protocols.compute.job import HasFuncArgJobTemplateInit, IsTask, IsTaskTemplate
+from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
+from omnipy.shared.protocols.compute.job import IsTask, IsTaskTemplate
+from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.util.callable_decorator import callable_decorator_cls
@@ -31,17 +30,14 @@ __all__ = [
     'TaskTemplateCore',
 ]
 
-_InitP = ParamSpec('_InitP')
 _CallP = ParamSpec('_CallP')
-_CallableT = TypeVar('_CallableT')
 _RetT = TypeVar('_RetT')
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_TASK_WRAP_INITIALIZER_DECORATOR_SUMMARY'] = dedent("""\
-        Wrap a template initializer as a callable decorator factory.""")
-
-    os.environ['OMNIPY_MACRO_TASK_CAST_INIT_PROTOCOL_SUMMARY'] = dedent("""\
-        Cast a template initializer to the shared init protocol.""")
+    os.environ['OMNIPY_MACRO_TASK_TEMPLATE_DESCRIPTION'] = dedent("""\
+        A task template wraps a Python callable that performs a single unit of work
+        as a task. Use this when the work can be expressed as a self-contained
+        function call.""")
 
 
 class TaskBase:
@@ -72,13 +68,21 @@ class TaskTemplateCore(
         TaskBase,
         Generic[_CallP, _RetT],
 ):
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Implement the core template behavior for tasks.
+    #
+    # {{TASK_TEMPLATE_DESCRIPTION}}
+    #
+    # Instances are normally produced through the [TaskTemplate][] decorator
+    # factory rather than by direct construction.
+    #
     """Implement the core template behavior for tasks.
 
     A task template wraps a Python callable that performs a single unit of work
     as a task. Use this when the work can be expressed as a self-contained
     function call.
 
-    Instances are normally produced through the ``TaskTemplate`` decorator
+    Instances are normally produced through the [TaskTemplate][] decorator
     factory rather than by direct construction.
     """
     @classmethod
@@ -89,74 +93,84 @@ class TaskTemplateCore(
         concrete job class that should be instantiated from a task template.
 
         Returns:
-            type[IsTask[_CallP, _RetT]]: The executable ``Task`` subclass
+            type[IsTask[_CallP, _RetT]]: The executable [Task][] subclass
                 associated with this template.
         """
         return cast(type[IsTask[_CallP, _RetT]], Task[_CallP, _RetT])
 
 
-# Needed for pyright and PyCharm
-def task_template_as_callable_decorator(
-    decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsTaskTemplate]) -> \
-        Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsTaskTemplate[_CallP, _RetT]]]:
+_TaskTemplateFactory = callable_decorator_cls(TaskTemplateCore)
+
+
+def TaskTemplate(
+    *,
+    name: str | None = None,
+    iterate_over_data_files: bool = False,
+    output_dataset_param: str | None = None,
+    output_dataset_cls: type[IsDataset] | None = None,
+    auto_async: bool = True,
+    result_key: str | None = None,
+    fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+    param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+    persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+    restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
+    **kwargs: object,
+) -> Callable[[Callable[_CallP, _RetT]], IsTaskTemplate[_CallP, _RetT]]:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # {{TASK_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    # Decorator-style factory for defining reusable callable-backed tasks.
+    #
+    # {{TASK_TEMPLATE_DESCRIPTION}}
     #
     # Args:
-    #     decorated_cls: Task-template initializer to adapt.
-    #
+    #     {{JOB_TEMPLATE_SHARED_KWARG_DOCS}}
     # Returns:
-    #     A decorator factory that converts a Python callable into a task template.
-    #
-    """Wrap a template initializer as a callable decorator factory.
+    #     TaskTemplate: New TaskTemplate instance wrapping ``job_func``.
+    """Decorator-style factory for defining reusable callable-backed tasks.
+
+    A task template wraps a Python callable that performs a single unit of work
+    as a task. Use this when the work can be expressed as a self-contained
+    function call.
 
     Args:
-        decorated_cls: Task-template initializer to adapt.
-
+        name: Name of the job template. If not provided, the name of the
+            wrapped callable is used.
+        iterate_over_data_files: Whether dataset inputs should be
+            processed item-wise. output_dataset_param: Optional name of
+            an explicit output-dataset parameter.
+        output_dataset_cls: Optional dataset class to use for iterated
+            outputs.
+        auto_async: Whether coroutine jobs at the outermost level (not
+            in a flow context) should be automatically run in accordance
+            with context (use existing event loop, if available,
+            otherwise create temporary event loop and run coroutine
+            until completion).)
+        result_key: Optional key used to wrap the returned result in a
+            dictionary. Especially useful in DAG flows to avoid name
+            collisions.
+        fixed_params: Fixed keyword-argument values for the job. May not
+            target *args or **kwargs-style params.
+        param_key_map: Mapping from external keyword names to callable
+            parameter names. May not target *args or **kwargs-style
+            params.
+        persist_outputs: Per-job output-persistence preference.
+        restore_outputs: Per-job output-restore preference.
+        **kwargs: Additional constructor keyword overrides.
     Returns:
-        A decorator factory that converts a Python callable into a task template.
-    """
-    return callable_decorator_cls(
-        cast(Callable[Concatenate[Callable[_CallP, _RetT], _InitP], IsTaskTemplate[_CallP, _RetT]],
-             decorated_cls))
-
-
-def to_task_template_init_protocol(
-    decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
-                            TaskTemplateCore[_CallP, _RetT]]
-) -> HasFuncArgJobTemplateInit[IsTaskTemplate[_CallP, _RetT], _CallP, _RetT]:
-    # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # {{TASK_CAST_INIT_PROTOCOL_SUMMARY}}
-    #
-    # Args:
-    #     decorated_cls: Task-template initializer to cast.
-    #
-    # Returns:
-    #     The initializer typed as ``HasFuncArgJobTemplateInit``.
-    #
-    """Cast a template initializer to the shared init protocol.
-
-    Args:
-        decorated_cls: Task-template initializer to cast.
-
-    Returns:
-        The initializer typed as ``HasFuncArgJobTemplateInit``.
-    """
-    return cast(HasFuncArgJobTemplateInit[IsTaskTemplate[_CallP, _RetT], _CallP, _RetT],
-                decorated_cls)
-
-
-TaskTemplate = task_template_as_callable_decorator(to_task_template_init_protocol(TaskTemplateCore))
-"""Decorator-style factory for defining reusable callable-backed tasks.
-
-Use ``@TaskTemplate()`` on a Python callable to create a reusable task
-template. Calling the resulting template produces executable ``Task``
-instances that run as single Omnipy compute steps.
-"""
-
-# Only works with mypy, not pyright or PyCharm
-#
-# TaskTemplate = callable_decorator_cls(to_task_template_init_protocol(TaskTemplateCore))
+        TaskTemplate: New TaskTemplate instance wrapping ``job_func``."""
+    ret = _TaskTemplateFactory(
+        name=name,
+        iterate_over_data_files=iterate_over_data_files,
+        output_dataset_param=output_dataset_param,
+        output_dataset_cls=output_dataset_cls,
+        auto_async=auto_async,
+        result_key=result_key,
+        fixed_params=fixed_params,
+        param_key_map=param_key_map,
+        persist_outputs=persist_outputs,
+        restore_outputs=restore_outputs,
+        **kwargs,
+    )
+    return cast(Callable[[Callable[_CallP, _RetT]], IsTaskTemplate[_CallP, _RetT]], ret)
 
 
 class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP, _RetT],
@@ -202,10 +216,10 @@ class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP
         template class corresponding to an executable task instance.
 
         Returns:
-            type[IsTaskTemplate[_CallP, _RetT]]: The ``TaskTemplate`` class
+            type[IsTaskTemplate[_CallP, _RetT]]: The [TaskTemplate][] class
                 associated with this task.
         """
-        return cast(type[IsTaskTemplate[_CallP, _RetT]], TaskTemplate)
+        return cast(type[IsTaskTemplate[_CallP, _RetT]], TaskTemplateCore)
 
 
 # TODO: Would we need the possibility to refine task templates by adding new task parameters?

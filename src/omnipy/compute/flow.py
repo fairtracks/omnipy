@@ -16,7 +16,7 @@ Attributes:
 import inspect
 import os
 from textwrap import dedent
-from typing import Callable, cast, ClassVar, Concatenate, Generic, Iterable, Mapping, ParamSpec
+from typing import Callable, cast, ClassVar, Generic, Iterable, Mapping, ParamSpec
 
 from typing_extensions import TypeVar
 
@@ -25,7 +25,7 @@ from omnipy.compute._job import JobMixin, JobTemplateMixin
 from omnipy.compute._joblist_job import ChildJobListArgJobBase
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
 from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
-from omnipy.shared.protocols.compute.job import (HasChildJobListArgJobTemplateInit,
+from omnipy.shared.protocols.compute.job import (ChildJobTemplateLike,
                                                  IsDagFlow,
                                                  IsDagFlowTemplate,
                                                  IsFuncFlow,
@@ -51,23 +51,25 @@ __all__ = [
     'LinearFlowTemplateCore',
 ]
 
-_InitP = ParamSpec('_InitP')
 _CallP = ParamSpec('_CallP')
-_CallableT = TypeVar('_CallableT')
 _RetT = TypeVar('_RetT')
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY'] = dedent("""\
-        Wrap a template initializer as a callable decorator factory.""")
-
-    os.environ['OMNIPY_MACRO_FLOW_CAST_INIT_PROTOCOL_SUMMARY'] = dedent("""\
-        Cast a template initializer to the shared init protocol.""")
-
     os.environ['OMNIPY_MACRO_FUNC_FLOW_TEMPLATE_DESCRIPTION'] = dedent("""\
         A function flow template wraps a Python callable that orchestrates
         work as a flow. Use this when the control flow is easiest to
         express directly in Python instead of as an explicit task list or
         dependency graph.""")
+
+    os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_DESCRIPTION'] = dedent("""\
+        A linear flow template wraps a Python callable together with an ordered
+        list of child job templates that run sequentially. Use this when work
+        should proceed step by step in a fixed declaration order.""")
+
+    os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_DESCRIPTION'] = dedent("""\
+        A DAG flow template wraps a Python callable together with child job
+        templates whose dependencies form a directed acyclic graph. Use this
+        when flow steps branch and join but must not form cycles.""")
 
 
 def _is_data_class_decorator_arg(arg: object) -> bool:
@@ -105,6 +107,23 @@ class LinearFlowTemplateCore(
         FlowBase,
         Generic[_CallP, _RetT],
 ):
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Implement the core template behavior for linear flows.
+    #
+    # {{LINEAR_FLOW_TEMPLATE_DESCRIPTION}}
+    #
+    # Instances are normally produced through the [LinearFlowTemplate][]
+    # decorator factory rather than by direct construction.
+    #
+    """Implement the core template behavior for linear flows.
+
+    A linear flow template wraps a Python callable together with an ordered
+    list of child job templates that run sequentially. Use this when work
+    should proceed step by step in a fixed declaration order.
+
+    Instances are normally produced through the [LinearFlowTemplate][]
+    decorator factory rather than by direct construction.
+    """
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsLinearFlow[_CallP, _RetT]]:
         """Return the executable flow type produced by this template.
@@ -114,65 +133,95 @@ class LinearFlowTemplateCore(
         template.
 
         Returns:
-            type[IsLinearFlow[_CallP, _RetT]]: The executable ``LinearFlow``
+            type[IsLinearFlow[_CallP, _RetT]]: The executable [LinearFlow][]
                 subclass associated with this template.
         """
         return cast(type[IsLinearFlow[_CallP, _RetT]], LinearFlow[_CallP, _RetT])
 
 
-# Needed for pyright and PyCharm
-def linear_flow_template_as_callable_decorator(
-    decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsLinearFlowTemplate]) -> \
-        Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsLinearFlowTemplate[_CallP, _RetT]]]:
+_LinearFlowTemplateFactory = callable_decorator_cls(
+    LinearFlowTemplateCore,
+    single_callable_arg_is_decorator_arg=_is_data_class_decorator_arg,
+)
+
+
+def LinearFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    name: str | None = None,
+    iterate_over_data_files: bool = False,
+    output_dataset_param: str | None = None,
+    output_dataset_cls: type[IsDataset] | None = None,
+    auto_async: bool = True,
+    result_key: str | None = None,
+    fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+    param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+    persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+    restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
+    **kwargs: object,
+) -> Callable[[Callable[_CallP, _RetT]], IsLinearFlowTemplate[_CallP, _RetT]]:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # {{FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    # Decorator-style factory for defining sequential flows.
+    #
+    # {{LINEAR_FLOW_TEMPLATE_DESCRIPTION}}
     #
     # Args:
-    #     decorated_cls: Linear-flow template initializer to adapt.
-    #
+    #     {{JOB_TEMPLATE_CHILD_JOB_TEMPLATES_ARGS}}
+    #     {{JOB_TEMPLATE_SHARED_KWARG_DOCS}}
     # Returns:
-    #     A decorator factory that converts a Python callable into a linear flow template.
-    #
-    """Wrap a template initializer as a callable decorator factory.
+    #     LinearFlowTemplate: New LinearFlowTemplate instance wrapping ``job_func``.
+    """Decorator-style factory for defining sequential flows.
+
+    A linear flow template wraps a Python callable together with an ordered
+    list of child job templates that run sequentially. Use this when work
+    should proceed step by step in a fixed declaration order.
 
     Args:
-        decorated_cls: Linear-flow template initializer to adapt.
-
+        *child_job_templates: Ordered templates of child jobs to be
+            run as part of the parent job. Model and Dataset subclasses
+            are also allowed, in which case they are converted to
+            create_X_from_args (if linear flow) or create_X_from_kwargs
+            (if DAG flow) job templates, respectively, when apply() is
+            called on the parent job template.
+        name: Name of the job template. If not provided, the name of the
+            wrapped callable is used.
+        iterate_over_data_files: Whether dataset inputs should be
+            processed item-wise. output_dataset_param: Optional name of
+            an explicit output-dataset parameter.
+        output_dataset_cls: Optional dataset class to use for iterated
+            outputs.
+        auto_async: Whether coroutine jobs at the outermost level (not
+            in a flow context) should be automatically run in accordance
+            with context (use existing event loop, if available,
+            otherwise create temporary event loop and run coroutine
+            until completion).)
+        result_key: Optional key used to wrap the returned result in a
+            dictionary. Especially useful in DAG flows to avoid name
+            collisions.
+        fixed_params: Fixed keyword-argument values for the job. May not
+            target *args or **kwargs-style params.
+        param_key_map: Mapping from external keyword names to callable
+            parameter names. May not target *args or **kwargs-style
+            params.
+        persist_outputs: Per-job output-persistence preference.
+        restore_outputs: Per-job output-restore preference.
+        **kwargs: Additional constructor keyword overrides.
     Returns:
-        A decorator factory that converts a Python callable into a linear flow template.
-    """
-    return callable_decorator_cls(
-        cast(
-            Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
-                     IsLinearFlowTemplate[_CallP, _RetT]],
-            decorated_cls),
-        single_callable_arg_is_decorator_arg=_is_data_class_decorator_arg)
-
-
-def to_linear_flow_template_init_protocol(
-    decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
-                            LinearFlowTemplateCore[_CallP, _RetT]]
-) -> HasChildJobListArgJobTemplateInit[IsLinearFlowTemplate[_CallP, _RetT], _CallP, _RetT]:
-    """Cast a linear-flow template initializer to the shared init protocol.
-
-    Args:
-        decorated_cls: Linear-flow template initializer to cast.
-
-    Returns:
-        The initializer typed as ``HasChildJobListArgJobTemplateInit``.
-    """
-    return cast(
-        HasChildJobListArgJobTemplateInit[IsLinearFlowTemplate[_CallP, _RetT], _CallP, _RetT],
-        decorated_cls)
-
-
-LinearFlowTemplate = linear_flow_template_as_callable_decorator(
-    to_linear_flow_template_init_protocol(LinearFlowTemplateCore))
-"""Decorator-style factory for defining sequential flows.
-
-Use ``@LinearFlowTemplate(...)`` when a flow should execute tasks in a fixed,
-step-by-step order.
-"""
+        LinearFlowTemplate: New LinearFlowTemplate instance wrapping ``job_func``."""
+    ret = _LinearFlowTemplateFactory(
+        *child_job_templates,
+        name=name,
+        iterate_over_data_files=iterate_over_data_files,
+        output_dataset_param=output_dataset_param,
+        output_dataset_cls=output_dataset_cls,
+        auto_async=auto_async,
+        result_key=result_key,
+        fixed_params=fixed_params,
+        param_key_map=param_key_map,
+        persist_outputs=persist_outputs,
+        restore_outputs=restore_outputs,
+        **kwargs,
+    )
+    return cast(Callable[[Callable[_CallP, _RetT]], IsLinearFlowTemplate[_CallP, _RetT]], ret)
 
 
 class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
@@ -222,10 +271,10 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
         template class corresponding to an executable linear flow instance.
 
         Returns:
-            type[IsLinearFlowTemplate[_CallP, _RetT]]: The ``LinearFlowTemplate``
+            type[IsLinearFlowTemplate[_CallP, _RetT]]: The [LinearFlowTemplate][]
                 class associated with this flow.
         """
-        return cast(type[IsLinearFlowTemplate[_CallP, _RetT]], LinearFlowTemplate)
+        return cast(type[IsLinearFlowTemplate[_CallP, _RetT]], LinearFlowTemplateCore)
 
 
 class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT],
@@ -240,6 +289,23 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
                           Generic[_CallP, _RetT]):
     _coerce_data_class_children_from_kwargs: ClassVar[bool] = True
 
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Implement the core template behavior for DAG flows.
+    #
+    # {{DAG_FLOW_TEMPLATE_DESCRIPTION}}
+    #
+    # Instances are normally produced through the [DagFlowTemplate][] decorator
+    # factory rather than by direct construction.
+    #
+    """Implement the core template behavior for DAG flows.
+
+    A DAG flow template wraps a Python callable together with child job
+    templates whose dependencies form a directed acyclic graph. Use this
+    when flow steps branch and join but must not form cycles.
+
+    Instances are normally produced through the [DagFlowTemplate][] decorator
+    factory rather than by direct construction.
+    """
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsDagFlow[_CallP, _RetT]]:
         """Return the executable DAG flow type produced by this template.
@@ -248,64 +314,95 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         concrete flow class to instantiate from a DAG flow template.
 
         Returns:
-            type[IsDagFlow[_CallP, _RetT]]: The executable ``DagFlow`` subclass
+            type[IsDagFlow[_CallP, _RetT]]: The executable [DagFlow][] subclass
                 associated with this template.
         """
         return cast(type[IsDagFlow[_CallP, _RetT]], DagFlow[_CallP, _RetT])
 
 
-# Needed for pyright and PyCharm
-def dag_flow_template_as_callable_decorator(
-    decorated_cls: Callable[Concatenate[_CallableT, _InitP], IsDagFlowTemplate]) -> \
-        Callable[_InitP, Callable[[Callable[_CallP, _RetT]], IsDagFlowTemplate[_CallP, _RetT]]]:
+_DagFlowTemplateFactory = callable_decorator_cls(
+    DagFlowTemplateCore,
+    single_callable_arg_is_decorator_arg=_is_data_class_decorator_arg,
+)
+
+
+def DagFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    name: str | None = None,
+    iterate_over_data_files: bool = False,
+    output_dataset_param: str | None = None,
+    output_dataset_cls: type[IsDataset] | None = None,
+    auto_async: bool = True,
+    result_key: str | None = None,
+    fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+    param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+    persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+    restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
+    **kwargs: object,
+) -> Callable[[Callable[_CallP, _RetT]], IsDagFlowTemplate[_CallP, _RetT]]:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
-    # {{FLOW_WRAP_INITIALIZER_DECORATOR_SUMMARY}}
+    # Decorator-style factory for defining directed acyclic graph flows.
+    #
+    # {{DAG_FLOW_TEMPLATE_DESCRIPTION}}
     #
     # Args:
-    #     decorated_cls: DAG-flow template initializer to adapt.
-    #
+    #     {{JOB_TEMPLATE_CHILD_JOB_TEMPLATES_ARGS}}
+    #     {{JOB_TEMPLATE_SHARED_KWARG_DOCS}}
     # Returns:
-    #     A decorator factory that converts a Python callable into a DAG flow template.
-    #
-    """Wrap a template initializer as a callable decorator factory.
+    #     DagFlowTemplate: New DagFlowTemplate instance wrapping ``job_func``.
+    """Decorator-style factory for defining directed acyclic graph flows.
+
+    A DAG flow template wraps a Python callable together with child job
+    templates whose dependencies form a directed acyclic graph. Use this
+    when flow steps branch and join but must not form cycles.
 
     Args:
-        decorated_cls: DAG-flow template initializer to adapt.
-
+        *child_job_templates: Ordered templates of child jobs to be
+            run as part of the parent job. Model and Dataset subclasses
+            are also allowed, in which case they are converted to
+            create_X_from_args (if linear flow) or create_X_from_kwargs
+            (if DAG flow) job templates, respectively, when apply() is
+            called on the parent job template.
+        name: Name of the job template. If not provided, the name of the
+            wrapped callable is used.
+        iterate_over_data_files: Whether dataset inputs should be
+            processed item-wise. output_dataset_param: Optional name of
+            an explicit output-dataset parameter.
+        output_dataset_cls: Optional dataset class to use for iterated
+            outputs.
+        auto_async: Whether coroutine jobs at the outermost level (not
+            in a flow context) should be automatically run in accordance
+            with context (use existing event loop, if available,
+            otherwise create temporary event loop and run coroutine
+            until completion).)
+        result_key: Optional key used to wrap the returned result in a
+            dictionary. Especially useful in DAG flows to avoid name
+            collisions.
+        fixed_params: Fixed keyword-argument values for the job. May not
+            target *args or **kwargs-style params.
+        param_key_map: Mapping from external keyword names to callable
+            parameter names. May not target *args or **kwargs-style
+            params.
+        persist_outputs: Per-job output-persistence preference.
+        restore_outputs: Per-job output-restore preference.
+        **kwargs: Additional constructor keyword overrides.
     Returns:
-        A decorator factory that converts a Python callable into a DAG flow template.
-    """
-    return callable_decorator_cls(
-        cast(
-            Callable[Concatenate[Callable[_CallP, _RetT], _InitP], IsDagFlowTemplate[_CallP,
-                                                                                     _RetT]],
-            decorated_cls),
-        single_callable_arg_is_decorator_arg=_is_data_class_decorator_arg)
-
-
-def to_dag_flow_template_init_protocol(
-    decorated_cls: Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
-                            DagFlowTemplateCore[_CallP, _RetT]]
-) -> HasChildJobListArgJobTemplateInit[IsDagFlowTemplate[_CallP, _RetT], _CallP, _RetT]:
-    """Cast a DAG-flow template initializer to the shared init protocol.
-
-    Args:
-        decorated_cls: DAG-flow template initializer to cast.
-
-    Returns:
-        The initializer typed as ``HasChildJobListArgJobTemplateInit``.
-    """
-    return cast(HasChildJobListArgJobTemplateInit[IsDagFlowTemplate[_CallP, _RetT], _CallP, _RetT],
-                decorated_cls)
-
-
-DagFlowTemplate = dag_flow_template_as_callable_decorator(
-    to_dag_flow_template_init_protocol(DagFlowTemplateCore))
-"""Decorator-style factory for defining directed acyclic graph flows.
-
-Use ``@DagFlowTemplate(...)`` when task dependencies form a DAG with possible
-branching and joining, but no cycles.
-"""
+        DagFlowTemplate: New DagFlowTemplate instance wrapping ``job_func``."""
+    ret = _DagFlowTemplateFactory(
+        *child_job_templates,
+        name=name,
+        iterate_over_data_files=iterate_over_data_files,
+        output_dataset_param=output_dataset_param,
+        output_dataset_cls=output_dataset_cls,
+        auto_async=auto_async,
+        result_key=result_key,
+        fixed_params=fixed_params,
+        param_key_map=param_key_map,
+        persist_outputs=persist_outputs,
+        restore_outputs=restore_outputs,
+        **kwargs,
+    )
+    return cast(Callable[[Callable[_CallP, _RetT]], IsDagFlowTemplate[_CallP, _RetT]], ret)
 
 
 class DagFlow(
@@ -347,10 +444,10 @@ class DagFlow(
         flow template class corresponding to an executable DAG flow instance.
 
         Returns:
-            type[IsDagFlowTemplate[_CallP, _RetT]]: The ``DagFlowTemplate``
+            type[IsDagFlowTemplate[_CallP, _RetT]]: The [DagFlowTemplate][]
                 class associated with this flow.
         """
-        return cast(type[IsDagFlowTemplate[_CallP, _RetT]], DagFlowTemplate)
+        return cast(type[IsDagFlowTemplate[_CallP, _RetT]], DagFlowTemplateCore)
 
 
 class FuncFlowTemplateCore(
