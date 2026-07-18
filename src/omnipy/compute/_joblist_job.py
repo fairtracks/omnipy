@@ -197,9 +197,10 @@ class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT]
         dataset_or_model: Literal['dataset', 'model']
         parent_coerces_from_kwargs: bool
 
-    _data_class_child_to_template_map: ClassVar[
-        dict[DataClassAndJobParentInfo, IsFuncArgJobTemplate],
-    ] = {
+    _data_class_child_to_template_map: ClassVar[dict[
+        DataClassAndJobParentInfo,
+        IsFuncArgJobTemplate,
+    ]] = {
         DataClassAndJobParentInfo('dataset', False): create_dataset_args,
         DataClassAndJobParentInfo('dataset', True): create_dataset_kwargs,
         DataClassAndJobParentInfo('model', False): create_model_args,
