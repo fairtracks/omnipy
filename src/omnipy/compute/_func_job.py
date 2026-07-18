@@ -71,6 +71,12 @@ if is_package_editable('omnipy'):
         ``output_dataset_cls`` adapt that outer interface for dataset-wise
         iteration.
 
+        When ``iterate_over_data_files=True`` and the inner first parameter is
+        annotated as ``Model[T]``, callers see an outer
+        ``dataset: Dataset[Model[T]]`` parameter and the outer return type
+        becomes a dataset of the per-item return type. The inner callable still
+        receives one model object at a time.
+
         ``result_key`` wraps the returned value in a single-key dictionary,
         which is especially useful when a downstream DAG step should receive
         the result under a predictable name.
@@ -89,7 +95,25 @@ if is_package_editable('omnipy'):
             7
             >>> plus_one_dict = plus_one.refine(result_key='number')
             >>> plus_one_dict.run(4)
-            {'number': 5}""")
+            {'number': 5}
+
+        Examples:
+            >>> # With dataset-wise iteration
+            >>> import omnipy as om
+            >>> class TextModel(om.Model[str]):
+            ...     ...
+            >>> class TextDataset(om.Dataset[TextModel]):
+            ...     ...
+            >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+            ... def add_suffix(
+            ...     data_file: TextModel,
+            ...     suffix: str,
+            ... ) -> TextModel:
+            ...     return f'{data_file.content}{suffix}'
+            >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+            >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+            >>> add_suffix.run(text_files, suffix='!') == expected
+            True""")
 
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'] = dedent("""\
         ### Tasks and flows

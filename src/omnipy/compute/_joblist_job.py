@@ -61,16 +61,23 @@ if is_package_editable('omnipy'):
 
         Examples:
             >>> import omnipy as om
-            >>> class NumberModel(om.Model[int]):
+            >>> class TextModel(om.Model[str]):
             ...     ...
-            >>> class NumberDataset(om.Dataset[NumberModel]):
+            >>> class TextDataset(om.Dataset[TextModel]):
             ...     ...
-            >>> @om.LinearFlowTemplate(NumberDataset)
-            ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
-            ...     ...
-            >>> @om.DagFlowTemplate(NumberModel)
-            ... def build_model(number: int) -> NumberModel:
-            ...     ...""")
+            >>> @om.LinearFlowTemplate(TextModel)
+            ... def wrap_text(raw_text: str) -> TextModel:
+            ...     return TextModel(raw_text)
+            >>> wrap_text.run('hello').content
+            'hello'
+            >>> @om.DagFlowTemplate(TextDataset)
+            ... def collect_texts(first: str, second: str) -> TextDataset:
+            ...     return TextDataset({'first': first, 'second': second})
+            >>> collect_texts.run(first='hello', second='bye') == TextDataset({
+            ...     'first': 'hello',
+            ...     'second': 'bye',
+            ... })
+            True""")
 
     os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'] = dedent("""\
         ### Callable-type validation
@@ -100,11 +107,11 @@ if is_package_editable('omnipy'):
             >>> import omnipy as om
             >>> from collections.abc import Iterator
             >>> @om.TaskTemplate()
-            ... def emit_numbers() -> Iterator[int]:
-            ...     yield 1
-            ...     yield 2
-            >>> @om.LinearFlowTemplate(emit_numbers)
-            ... def number_stream() -> Iterator[int]:
+            ... def emit_lines() -> Iterator[str]:
+            ...     yield 'first'
+            ...     yield 'second'
+            >>> @om.LinearFlowTemplate(emit_lines)
+            ... def line_stream() -> Iterator[str]:
             ...     yield from om.Void()
 
         This shorthand exists only to satisfy the declared outer callable type;
@@ -127,21 +134,30 @@ if is_package_editable('omnipy'):
 
         Examples:
             >>> import omnipy as om
-            >>> @om.TaskTemplate()
-            ... def identity_tmpl(number: int) -> int:
-            ...     return number
-            >>> @om.TaskTemplate()
-            ... def transform_tmpl(number: int, add: int, mult: int) -> int:
-            ...     return (number + add) * mult
-            >>> transform = transform_tmpl.refine(
-            ...     param_key_map={'add': 'step'},
-            ...     fixed_params={'mult': 2},
-            ... )
-            >>> @om.LinearFlowTemplate(identity_tmpl, transform)
-            ... def linear_flow(number: int, step: int) -> int:
-            ...     return number
-            >>> linear_flow.run(3, step=4)
-            14""")
+            >>> class TextModel(om.Model[str]):
+            ...     ...
+            >>> class TextDataset(om.Dataset[TextModel]):
+            ...     ...
+            >>> @om.TaskTemplate(iterate_over_data_files=True)
+            ... def strip_text(data_file: TextModel) -> TextModel:
+            ...     return data_file.content.strip()
+            >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+            ... def add_suffix(
+            ...     data_file: TextModel,
+            ...     suffix: str,
+            ... ) -> TextModel:
+            ...     return f'{data_file.content}{suffix}'
+            >>> suffix_each = add_suffix.refine(param_key_map={'suffix': 'ending'})
+            >>> @om.LinearFlowTemplate(strip_text, suffix_each)
+            ... def linear_flow(
+            ...     dataset: TextDataset,
+            ...     ending: str,
+            ... ) -> TextDataset:
+            ...     return dataset
+            >>> text_files = TextDataset({'a': ' hi', 'b': 'bye '})
+            >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+            >>> linear_flow.run(text_files, ending='!') == expected
+            True""")
 
     os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_ORCHESTRATION'] = dedent("""\
         ### DAG orchestration
@@ -164,29 +180,60 @@ if is_package_editable('omnipy'):
 
         Examples:
             >>> import omnipy as om
+            >>> class TextModel(om.Model[str]):
+            ...     ...
+            >>> class TextDataset(om.Dataset[TextModel]):
+            ...     ...
             >>> @om.TaskTemplate()
-            ... def add_two(number: int) -> int:
-            ...     return number + 2
+            ... def uppercase(data_file: TextModel) -> TextModel:
+            ...     return data_file.content.upper()
             >>> @om.TaskTemplate()
-            ... def square_number(number: int) -> int:
-            ...     return number * number
+            ... def append_suffix(
+            ...     data_file: TextModel,
+            ...     suffix: str,
+            ... ) -> TextModel:
+            ...     return f'{data_file.content}{suffix}'
             >>> @om.TaskTemplate()
-            ... def add_two_numbers(left_value: int, right_value: int) -> int:
-            ...     return left_value + right_value
+            ... def combine_texts(
+            ...     left_dataset: TextDataset,
+            ...     right_dataset: TextDataset,
+            ... ) -> TextDataset:
+            ...     merged = TextDataset()
+            ...     for title in left_dataset:
+            ...         merged[title] = (
+            ...             f'{left_dataset[title].content}|'
+            ...             f'{right_dataset[title].content}'
+            ...         )
+            ...     return merged
             >>> @om.DagFlowTemplate(
-            ...     add_two.refine(result_key='base'),
-            ...     square_number.refine(result_key='bonus'),
-            ...     add_two_numbers.refine(
+            ...     uppercase.refine(
+            ...         iterate_over_data_files=True,
+            ...         result_key='upper',
+            ...     ),
+            ...     append_suffix.refine(
+            ...         iterate_over_data_files=True,
+            ...         result_key='suffixed',
+            ...         param_key_map={'suffix': 'ending'},
+            ...     ),
+            ...     combine_texts.refine(
             ...         param_key_map={
-            ...             'left_value': 'base',
-            ...             'right_value': 'bonus',
+            ...             'left_dataset': 'upper',
+            ...             'right_dataset': 'suffixed',
             ...         },
             ...     ),
             ... )
-            ... def dag_flow(number: int) -> int:
-            ...     return number
-            >>> dag_flow.run(3)
-            14""")
+            ... def dag_flow(
+            ...     dataset: TextDataset,
+            ...     ending: str,
+            ... ) -> TextDataset:
+            ...     return dataset
+            >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+            >>> expected = TextDataset({
+            ...     'a': 'HI|hi!',
+            ...     'b': 'BYE|bye!',
+            ... })
+            >>> dag_flow.run(text_files, ending='!') == expected
+            True""")
 
 
 class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT],

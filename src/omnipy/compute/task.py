@@ -48,11 +48,22 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
             Examples:
                 >>> import omnipy as om
+                >>> class TextModel(om.Model[str]):
+                ...     ...
+                >>> class TextDataset(om.Dataset[TextModel]):
+                ...     ...
                 >>> @om.TaskTemplate()
-                ... def plus_one(number: int) -> int:
-                ...     return number + 1
-                >>> plus_one.run(1)
-                2"""),
+                ... def add_suffix(
+                ...     dataset: TextDataset,
+                ...     suffix: str,
+                ... ) -> TextModel:
+                ...     for data_file_name, value in dataset.items():
+                ...         dataset[data_file_name] = f'{value}{suffix}'
+                ...     return dataset
+                >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+                >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+                >>> add_suffix.run(text_files, suffix='!') == expected
+                True"""),
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
@@ -115,11 +126,22 @@ class TaskTemplateCore(
 
     Examples:
         >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
         >>> @om.TaskTemplate()
-        ... def plus_one(number: int) -> int:
-        ...     return number + 1
-        >>> plus_one.run(1)
-        2
+        ... def add_suffix(
+        ...     dataset: TextDataset,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     for data_file_name, value in dataset.items():
+        ...         dataset[data_file_name] = f'{value}{suffix}'
+        ...     return dataset
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
 
     ### Outer signature and modifiers
 
@@ -134,6 +156,12 @@ class TaskTemplateCore(
     ``iterate_over_data_files``, ``output_dataset_param``, and
     ``output_dataset_cls`` adapt that outer interface for dataset-wise
     iteration.
+
+    When ``iterate_over_data_files=True`` and the inner first parameter is
+    annotated as ``Model[T]``, callers see an outer
+    ``dataset: Dataset[Model[T]]`` parameter and the outer return type
+    becomes a dataset of the per-item return type. The inner callable still
+    receives one model object at a time.
 
     ``result_key`` wraps the returned value in a single-key dictionary,
     which is especially useful when a downstream DAG step should receive
@@ -154,6 +182,24 @@ class TaskTemplateCore(
         >>> plus_one_dict = plus_one.refine(result_key='number')
         >>> plus_one_dict.run(4)
         {'number': 5}
+
+    Examples:
+        >>> # With dataset-wise iteration
+        >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
 
     ### Tasks and flows
 
@@ -256,11 +302,22 @@ def TaskTemplate(
 
     Examples:
         >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
         >>> @om.TaskTemplate()
-        ... def plus_one(number: int) -> int:
-        ...     return number + 1
-        >>> plus_one.run(1)
-        2
+        ... def add_suffix(
+        ...     dataset: TextDataset,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     for data_file_name, value in dataset.items():
+        ...         dataset[data_file_name] = f'{value}{suffix}'
+        ...     return dataset
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
 
     ### Outer signature and modifiers
 
@@ -275,6 +332,12 @@ def TaskTemplate(
     ``iterate_over_data_files``, ``output_dataset_param``, and
     ``output_dataset_cls`` adapt that outer interface for dataset-wise
     iteration.
+
+    When ``iterate_over_data_files=True`` and the inner first parameter is
+    annotated as ``Model[T]``, callers see an outer
+    ``dataset: Dataset[Model[T]]`` parameter and the outer return type
+    becomes a dataset of the per-item return type. The inner callable still
+    receives one model object at a time.
 
     ``result_key`` wraps the returned value in a single-key dictionary,
     which is especially useful when a downstream DAG step should receive
@@ -295,6 +358,24 @@ def TaskTemplate(
         >>> plus_one_dict = plus_one.refine(result_key='number')
         >>> plus_one_dict.run(4)
         {'number': 5}
+
+    Examples:
+        >>> # With dataset-wise iteration
+        >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
 
     ### Tasks and flows
 

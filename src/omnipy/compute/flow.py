@@ -70,13 +70,23 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
             Examples:
                 >>> import omnipy as om
+                >>> class TextModel(om.Model[str]):
+                ...     ...
+                >>> class TextDataset(om.Dataset[TextModel]):
+                ...     ...
                 >>> @om.FuncFlowTemplate()
-                ... def repeat_plus_one(number: int, n: int) -> int:
-                ...     for _ in range(n):
-                ...         number += 1
-                ...     return number
-                >>> repeat_plus_one.run(1, 2)
-                3"""),
+                ... def append_suffix_to_all(
+                ...     dataset: TextDataset,
+                ...     suffix: str,
+                ... ) -> TextDataset:
+                ...     output_dataset = TextDataset()
+                ...     for title, data_file in dataset.items():
+                ...         output_dataset[title] = f'{data_file.content}{suffix}'
+                ...     return output_dataset
+                >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+                >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+                >>> append_suffix_to_all.run(text_files, '!') == expected
+                True"""),
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
@@ -96,14 +106,22 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
             Examples:
                 >>> import omnipy as om
-                >>> @om.TaskTemplate()
-                ... def plus_one(number: int) -> int:
-                ...     return number + 1
-                >>> @om.LinearFlowTemplate(plus_one, plus_one)
-                ... def plus_two(number: int) -> int:
-                ...     return number
-                >>> plus_two.run(1)
-                3"""),
+                >>> class TextModel(om.Model[str]):
+                ...     ...
+                >>> class TextDataset(om.Dataset[TextModel]):
+                ...     ...
+                >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+                ... def normalize_text(data_file: TextModel) -> TextModel:
+                ...     return data_file.content.strip().lower()
+                >>> @om.LinearFlowTemplate(normalize_text)
+                ... def clean_texts(
+                ...     dataset: TextDataset,
+                ... ) -> TextDataset:
+                ...     return dataset
+                >>> text_files = TextDataset({'a': ' Hi ', 'b': 'BYE '})
+                >>> expected = TextDataset({'a': 'hi', 'b': 'bye'})
+                >>> clean_texts.run(text_files) == expected
+                True"""),
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
@@ -127,20 +145,34 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
             Examples:
                 >>> import omnipy as om
+                >>> class TextModel(om.Model[str]):
+                ...     ...
+                >>> class TextDataset(om.Dataset[TextModel]):
+                ...     ...
+                >>> @om.TaskTemplate(iterate_over_data_files=True)
+                ... def uppercase(data_file: TextModel) -> TextModel:
+                ...     return data_file.content.upper()
                 >>> @om.TaskTemplate()
-                ... def start(number: int) -> int:
-                ...     return number + 1
-                >>> @om.TaskTemplate()
-                ... def branch(number: int) -> int:
-                ...     return number * 2
-                >>> @om.TaskTemplate()
-                ... def merge(start: int, branch: int) -> int:
-                ...     return start + branch
-                >>> @om.DagFlowTemplate(start, branch, merge)
-                ... def my_dag(number: int) -> int:
-                ...     return number
-                >>> my_dag.run(3)
-                10"""),
+                ... def join_texts(
+                ...     upper: TextDataset,
+                ...     original: TextDataset,
+                ... ) -> TextDataset:
+                ...     merged = TextDataset()
+                ...     for title in upper:
+                ...         merged[title] = f'{upper[title].content}|{original[title].content}'
+                ...     return merged
+                >>> @om.DagFlowTemplate(
+                ...     uppercase.refine(result_key='upper'),
+                ...     join_texts.refine(param_key_map={'upper': 'upper', 'original': 'dataset'}),
+                ... )
+                ... def my_dag(
+                ...     dataset: TextDataset,
+                ... ) -> TextDataset:
+                ...     return dataset
+                >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+                >>> expected = TextDataset({'a': 'HI|hi', 'b': 'BYE|bye'})
+                >>> my_dag.run(text_files) == expected
+                True"""),
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
         os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
@@ -214,14 +246,22 @@ class LinearFlowTemplateCore(
 
     Examples:
         >>> import omnipy as om
-        >>> @om.TaskTemplate()
-        ... def plus_one(number: int) -> int:
-        ...     return number + 1
-        >>> @om.LinearFlowTemplate(plus_one, plus_one)
-        ... def plus_two(number: int) -> int:
-        ...     return number
-        >>> plus_two.run(1)
-        3
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def normalize_text(data_file: TextModel) -> TextModel:
+        ...     return data_file.content.strip().lower()
+        >>> @om.LinearFlowTemplate(normalize_text)
+        ... def clean_texts(
+        ...     dataset: TextDataset,
+        ... ) -> TextDataset:
+        ...     return dataset
+        >>> text_files = TextDataset({'a': ' Hi ', 'b': 'BYE '})
+        >>> expected = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> clean_texts.run(text_files) == expected
+        True
 
     ### Child jobs and data classes
 
@@ -237,16 +277,23 @@ class LinearFlowTemplateCore(
 
     Examples:
         >>> import omnipy as om
-        >>> class NumberModel(om.Model[int]):
+        >>> class TextModel(om.Model[str]):
         ...     ...
-        >>> class NumberDataset(om.Dataset[NumberModel]):
+        >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
-        >>> @om.LinearFlowTemplate(NumberDataset)
-        ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
-        ...     ...
-        >>> @om.DagFlowTemplate(NumberModel)
-        ... def build_model(number: int) -> NumberModel:
-        ...     ...
+        >>> @om.LinearFlowTemplate(TextModel)
+        ... def wrap_text(raw_text: str) -> TextModel:
+        ...     return TextModel(raw_text)
+        >>> wrap_text.run('hello').content
+        'hello'
+        >>> @om.DagFlowTemplate(TextDataset)
+        ... def collect_texts(first: str, second: str) -> TextDataset:
+        ...     return TextDataset({'first': first, 'second': second})
+        >>> collect_texts.run(first='hello', second='bye') == TextDataset({
+        ...     'first': 'hello',
+        ...     'second': 'bye',
+        ... })
+        True
 
     ### Callable-type validation
 
@@ -274,11 +321,11 @@ class LinearFlowTemplateCore(
         >>> import omnipy as om
         >>> from collections.abc import Iterator
         >>> @om.TaskTemplate()
-        ... def emit_numbers() -> Iterator[int]:
-        ...     yield 1
-        ...     yield 2
-        >>> @om.LinearFlowTemplate(emit_numbers)
-        ... def number_stream() -> Iterator[int]:
+        ... def emit_lines() -> Iterator[str]:
+        ...     yield 'first'
+        ...     yield 'second'
+        >>> @om.LinearFlowTemplate(emit_lines)
+        ... def line_stream() -> Iterator[str]:
         ...     yield from om.Void()
 
     This shorthand exists only to satisfy the declared outer callable type;
@@ -297,6 +344,12 @@ class LinearFlowTemplateCore(
     ``iterate_over_data_files``, ``output_dataset_param``, and
     ``output_dataset_cls`` adapt that outer interface for dataset-wise
     iteration.
+
+    When ``iterate_over_data_files=True`` and the inner first parameter is
+    annotated as ``Model[T]``, callers see an outer
+    ``dataset: Dataset[Model[T]]`` parameter and the outer return type
+    becomes a dataset of the per-item return type. The inner callable still
+    receives one model object at a time.
 
     ``result_key`` wraps the returned value in a single-key dictionary,
     which is especially useful when a downstream DAG step should receive
@@ -318,6 +371,24 @@ class LinearFlowTemplateCore(
         >>> plus_one_dict.run(4)
         {'number': 5}
 
+    Examples:
+        >>> # With dataset-wise iteration
+        >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
+
     ### Linear orchestration
 
     Linear flows run child jobs strictly in declaration order.
@@ -334,21 +405,30 @@ class LinearFlowTemplateCore(
 
     Examples:
         >>> import omnipy as om
-        >>> @om.TaskTemplate()
-        ... def identity_tmpl(number: int) -> int:
-        ...     return number
-        >>> @om.TaskTemplate()
-        ... def transform_tmpl(number: int, add: int, mult: int) -> int:
-        ...     return (number + add) * mult
-        >>> transform = transform_tmpl.refine(
-        ...     param_key_map={'add': 'step'},
-        ...     fixed_params={'mult': 2},
-        ... )
-        >>> @om.LinearFlowTemplate(identity_tmpl, transform)
-        ... def linear_flow(number: int, step: int) -> int:
-        ...     return number
-        >>> linear_flow.run(3, step=4)
-        14
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True)
+        ... def strip_text(data_file: TextModel) -> TextModel:
+        ...     return data_file.content.strip()
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> suffix_each = add_suffix.refine(param_key_map={'suffix': 'ending'})
+        >>> @om.LinearFlowTemplate(strip_text, suffix_each)
+        ... def linear_flow(
+        ...     dataset: TextDataset,
+        ...     ending: str,
+        ... ) -> TextDataset:
+        ...     return dataset
+        >>> text_files = TextDataset({'a': ' hi', 'b': 'bye '})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> linear_flow.run(text_files, ending='!') == expected
+        True
 
     ### Tasks and flows
 
@@ -456,14 +536,22 @@ def LinearFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> @om.TaskTemplate()
-        ... def plus_one(number: int) -> int:
-        ...     return number + 1
-        >>> @om.LinearFlowTemplate(plus_one, plus_one)
-        ... def plus_two(number: int) -> int:
-        ...     return number
-        >>> plus_two.run(1)
-        3
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def normalize_text(data_file: TextModel) -> TextModel:
+        ...     return data_file.content.strip().lower()
+        >>> @om.LinearFlowTemplate(normalize_text)
+        ... def clean_texts(
+        ...     dataset: TextDataset,
+        ... ) -> TextDataset:
+        ...     return dataset
+        >>> text_files = TextDataset({'a': ' Hi ', 'b': 'BYE '})
+        >>> expected = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> clean_texts.run(text_files) == expected
+        True
 
     ### Child jobs and data classes
 
@@ -479,16 +567,23 @@ def LinearFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> class NumberModel(om.Model[int]):
+        >>> class TextModel(om.Model[str]):
         ...     ...
-        >>> class NumberDataset(om.Dataset[NumberModel]):
+        >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
-        >>> @om.LinearFlowTemplate(NumberDataset)
-        ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
-        ...     ...
-        >>> @om.DagFlowTemplate(NumberModel)
-        ... def build_model(number: int) -> NumberModel:
-        ...     ...
+        >>> @om.LinearFlowTemplate(TextModel)
+        ... def wrap_text(raw_text: str) -> TextModel:
+        ...     return TextModel(raw_text)
+        >>> wrap_text.run('hello').content
+        'hello'
+        >>> @om.DagFlowTemplate(TextDataset)
+        ... def collect_texts(first: str, second: str) -> TextDataset:
+        ...     return TextDataset({'first': first, 'second': second})
+        >>> collect_texts.run(first='hello', second='bye') == TextDataset({
+        ...     'first': 'hello',
+        ...     'second': 'bye',
+        ... })
+        True
 
     ### Callable-type validation
 
@@ -516,11 +611,11 @@ def LinearFlowTemplate(
         >>> import omnipy as om
         >>> from collections.abc import Iterator
         >>> @om.TaskTemplate()
-        ... def emit_numbers() -> Iterator[int]:
-        ...     yield 1
-        ...     yield 2
-        >>> @om.LinearFlowTemplate(emit_numbers)
-        ... def number_stream() -> Iterator[int]:
+        ... def emit_lines() -> Iterator[str]:
+        ...     yield 'first'
+        ...     yield 'second'
+        >>> @om.LinearFlowTemplate(emit_lines)
+        ... def line_stream() -> Iterator[str]:
         ...     yield from om.Void()
 
     This shorthand exists only to satisfy the declared outer callable type;
@@ -539,6 +634,12 @@ def LinearFlowTemplate(
     ``iterate_over_data_files``, ``output_dataset_param``, and
     ``output_dataset_cls`` adapt that outer interface for dataset-wise
     iteration.
+
+    When ``iterate_over_data_files=True`` and the inner first parameter is
+    annotated as ``Model[T]``, callers see an outer
+    ``dataset: Dataset[Model[T]]`` parameter and the outer return type
+    becomes a dataset of the per-item return type. The inner callable still
+    receives one model object at a time.
 
     ``result_key`` wraps the returned value in a single-key dictionary,
     which is especially useful when a downstream DAG step should receive
@@ -560,6 +661,24 @@ def LinearFlowTemplate(
         >>> plus_one_dict.run(4)
         {'number': 5}
 
+    Examples:
+        >>> # With dataset-wise iteration
+        >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
+
     ### Linear orchestration
 
     Linear flows run child jobs strictly in declaration order.
@@ -576,21 +695,30 @@ def LinearFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> @om.TaskTemplate()
-        ... def identity_tmpl(number: int) -> int:
-        ...     return number
-        >>> @om.TaskTemplate()
-        ... def transform_tmpl(number: int, add: int, mult: int) -> int:
-        ...     return (number + add) * mult
-        >>> transform = transform_tmpl.refine(
-        ...     param_key_map={'add': 'step'},
-        ...     fixed_params={'mult': 2},
-        ... )
-        >>> @om.LinearFlowTemplate(identity_tmpl, transform)
-        ... def linear_flow(number: int, step: int) -> int:
-        ...     return number
-        >>> linear_flow.run(3, step=4)
-        14
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True)
+        ... def strip_text(data_file: TextModel) -> TextModel:
+        ...     return data_file.content.strip()
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> suffix_each = add_suffix.refine(param_key_map={'suffix': 'ending'})
+        >>> @om.LinearFlowTemplate(strip_text, suffix_each)
+        ... def linear_flow(
+        ...     dataset: TextDataset,
+        ...     ending: str,
+        ... ) -> TextDataset:
+        ...     return dataset
+        >>> text_files = TextDataset({'a': ' hi', 'b': 'bye '})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> linear_flow.run(text_files, ending='!') == expected
+        True
 
     ### Tasks and flows
 
@@ -773,20 +901,34 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
 
     Examples:
         >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True)
+        ... def uppercase(data_file: TextModel) -> TextModel:
+        ...     return data_file.content.upper()
         >>> @om.TaskTemplate()
-        ... def start(number: int) -> int:
-        ...     return number + 1
-        >>> @om.TaskTemplate()
-        ... def branch(number: int) -> int:
-        ...     return number * 2
-        >>> @om.TaskTemplate()
-        ... def merge(start: int, branch: int) -> int:
-        ...     return start + branch
-        >>> @om.DagFlowTemplate(start, branch, merge)
-        ... def my_dag(number: int) -> int:
-        ...     return number
-        >>> my_dag.run(3)
-        10
+        ... def join_texts(
+        ...     upper: TextDataset,
+        ...     original: TextDataset,
+        ... ) -> TextDataset:
+        ...     merged = TextDataset()
+        ...     for title in upper:
+        ...         merged[title] = f'{upper[title].content}|{original[title].content}'
+        ...     return merged
+        >>> @om.DagFlowTemplate(
+        ...     uppercase.refine(result_key='upper'),
+        ...     join_texts.refine(param_key_map={'upper': 'upper', 'original': 'dataset'}),
+        ... )
+        ... def my_dag(
+        ...     dataset: TextDataset,
+        ... ) -> TextDataset:
+        ...     return dataset
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'HI|hi', 'b': 'BYE|bye'})
+        >>> my_dag.run(text_files) == expected
+        True
 
     ### Child jobs and data classes
 
@@ -802,16 +944,23 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
 
     Examples:
         >>> import omnipy as om
-        >>> class NumberModel(om.Model[int]):
+        >>> class TextModel(om.Model[str]):
         ...     ...
-        >>> class NumberDataset(om.Dataset[NumberModel]):
+        >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
-        >>> @om.LinearFlowTemplate(NumberDataset)
-        ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
-        ...     ...
-        >>> @om.DagFlowTemplate(NumberModel)
-        ... def build_model(number: int) -> NumberModel:
-        ...     ...
+        >>> @om.LinearFlowTemplate(TextModel)
+        ... def wrap_text(raw_text: str) -> TextModel:
+        ...     return TextModel(raw_text)
+        >>> wrap_text.run('hello').content
+        'hello'
+        >>> @om.DagFlowTemplate(TextDataset)
+        ... def collect_texts(first: str, second: str) -> TextDataset:
+        ...     return TextDataset({'first': first, 'second': second})
+        >>> collect_texts.run(first='hello', second='bye') == TextDataset({
+        ...     'first': 'hello',
+        ...     'second': 'bye',
+        ... })
+        True
 
     ### Callable-type validation
 
@@ -839,11 +988,11 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         >>> import omnipy as om
         >>> from collections.abc import Iterator
         >>> @om.TaskTemplate()
-        ... def emit_numbers() -> Iterator[int]:
-        ...     yield 1
-        ...     yield 2
-        >>> @om.LinearFlowTemplate(emit_numbers)
-        ... def number_stream() -> Iterator[int]:
+        ... def emit_lines() -> Iterator[str]:
+        ...     yield 'first'
+        ...     yield 'second'
+        >>> @om.LinearFlowTemplate(emit_lines)
+        ... def line_stream() -> Iterator[str]:
         ...     yield from om.Void()
 
     This shorthand exists only to satisfy the declared outer callable type;
@@ -862,6 +1011,12 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     ``iterate_over_data_files``, ``output_dataset_param``, and
     ``output_dataset_cls`` adapt that outer interface for dataset-wise
     iteration.
+
+    When ``iterate_over_data_files=True`` and the inner first parameter is
+    annotated as ``Model[T]``, callers see an outer
+    ``dataset: Dataset[Model[T]]`` parameter and the outer return type
+    becomes a dataset of the per-item return type. The inner callable still
+    receives one model object at a time.
 
     ``result_key`` wraps the returned value in a single-key dictionary,
     which is especially useful when a downstream DAG step should receive
@@ -883,6 +1038,24 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
         >>> plus_one_dict.run(4)
         {'number': 5}
 
+    Examples:
+        >>> # With dataset-wise iteration
+        >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
+
     ### DAG orchestration
 
     DAG flows route values by keyword name instead of chaining every child
@@ -903,29 +1076,60 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
 
     Examples:
         >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
         >>> @om.TaskTemplate()
-        ... def add_two(number: int) -> int:
-        ...     return number + 2
+        ... def uppercase(data_file: TextModel) -> TextModel:
+        ...     return data_file.content.upper()
         >>> @om.TaskTemplate()
-        ... def square_number(number: int) -> int:
-        ...     return number * number
+        ... def append_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
         >>> @om.TaskTemplate()
-        ... def add_two_numbers(left_value: int, right_value: int) -> int:
-        ...     return left_value + right_value
+        ... def combine_texts(
+        ...     left_dataset: TextDataset,
+        ...     right_dataset: TextDataset,
+        ... ) -> TextDataset:
+        ...     merged = TextDataset()
+        ...     for title in left_dataset:
+        ...         merged[title] = (
+        ...             f'{left_dataset[title].content}|'
+        ...             f'{right_dataset[title].content}'
+        ...         )
+        ...     return merged
         >>> @om.DagFlowTemplate(
-        ...     add_two.refine(result_key='base'),
-        ...     square_number.refine(result_key='bonus'),
-        ...     add_two_numbers.refine(
+        ...     uppercase.refine(
+        ...         iterate_over_data_files=True,
+        ...         result_key='upper',
+        ...     ),
+        ...     append_suffix.refine(
+        ...         iterate_over_data_files=True,
+        ...         result_key='suffixed',
+        ...         param_key_map={'suffix': 'ending'},
+        ...     ),
+        ...     combine_texts.refine(
         ...         param_key_map={
-        ...             'left_value': 'base',
-        ...             'right_value': 'bonus',
+        ...             'left_dataset': 'upper',
+        ...             'right_dataset': 'suffixed',
         ...         },
         ...     ),
         ... )
-        ... def dag_flow(number: int) -> int:
-        ...     return number
-        >>> dag_flow.run(3)
-        14
+        ... def dag_flow(
+        ...     dataset: TextDataset,
+        ...     ending: str,
+        ... ) -> TextDataset:
+        ...     return dataset
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({
+        ...     'a': 'HI|hi!',
+        ...     'b': 'BYE|bye!',
+        ... })
+        >>> dag_flow.run(text_files, ending='!') == expected
+        True
 
     ### Tasks and flows
 
@@ -1032,20 +1236,34 @@ def DagFlowTemplate(
 
     Examples:
         >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True)
+        ... def uppercase(data_file: TextModel) -> TextModel:
+        ...     return data_file.content.upper()
         >>> @om.TaskTemplate()
-        ... def start(number: int) -> int:
-        ...     return number + 1
-        >>> @om.TaskTemplate()
-        ... def branch(number: int) -> int:
-        ...     return number * 2
-        >>> @om.TaskTemplate()
-        ... def merge(start: int, branch: int) -> int:
-        ...     return start + branch
-        >>> @om.DagFlowTemplate(start, branch, merge)
-        ... def my_dag(number: int) -> int:
-        ...     return number
-        >>> my_dag.run(3)
-        10
+        ... def join_texts(
+        ...     upper: TextDataset,
+        ...     original: TextDataset,
+        ... ) -> TextDataset:
+        ...     merged = TextDataset()
+        ...     for title in upper:
+        ...         merged[title] = f'{upper[title].content}|{original[title].content}'
+        ...     return merged
+        >>> @om.DagFlowTemplate(
+        ...     uppercase.refine(result_key='upper'),
+        ...     join_texts.refine(param_key_map={'upper': 'upper', 'original': 'dataset'}),
+        ... )
+        ... def my_dag(
+        ...     dataset: TextDataset,
+        ... ) -> TextDataset:
+        ...     return dataset
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'HI|hi', 'b': 'BYE|bye'})
+        >>> my_dag.run(text_files) == expected
+        True
 
     ### Child jobs and data classes
 
@@ -1061,16 +1279,23 @@ def DagFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> class NumberModel(om.Model[int]):
+        >>> class TextModel(om.Model[str]):
         ...     ...
-        >>> class NumberDataset(om.Dataset[NumberModel]):
+        >>> class TextDataset(om.Dataset[TextModel]):
         ...     ...
-        >>> @om.LinearFlowTemplate(NumberDataset)
-        ... def build_dataset(first_pair: tuple[str, int]) -> NumberDataset:
-        ...     ...
-        >>> @om.DagFlowTemplate(NumberModel)
-        ... def build_model(number: int) -> NumberModel:
-        ...     ...
+        >>> @om.LinearFlowTemplate(TextModel)
+        ... def wrap_text(raw_text: str) -> TextModel:
+        ...     return TextModel(raw_text)
+        >>> wrap_text.run('hello').content
+        'hello'
+        >>> @om.DagFlowTemplate(TextDataset)
+        ... def collect_texts(first: str, second: str) -> TextDataset:
+        ...     return TextDataset({'first': first, 'second': second})
+        >>> collect_texts.run(first='hello', second='bye') == TextDataset({
+        ...     'first': 'hello',
+        ...     'second': 'bye',
+        ... })
+        True
 
     ### Callable-type validation
 
@@ -1098,11 +1323,11 @@ def DagFlowTemplate(
         >>> import omnipy as om
         >>> from collections.abc import Iterator
         >>> @om.TaskTemplate()
-        ... def emit_numbers() -> Iterator[int]:
-        ...     yield 1
-        ...     yield 2
-        >>> @om.LinearFlowTemplate(emit_numbers)
-        ... def number_stream() -> Iterator[int]:
+        ... def emit_lines() -> Iterator[str]:
+        ...     yield 'first'
+        ...     yield 'second'
+        >>> @om.LinearFlowTemplate(emit_lines)
+        ... def line_stream() -> Iterator[str]:
         ...     yield from om.Void()
 
     This shorthand exists only to satisfy the declared outer callable type;
@@ -1121,6 +1346,12 @@ def DagFlowTemplate(
     ``iterate_over_data_files``, ``output_dataset_param``, and
     ``output_dataset_cls`` adapt that outer interface for dataset-wise
     iteration.
+
+    When ``iterate_over_data_files=True`` and the inner first parameter is
+    annotated as ``Model[T]``, callers see an outer
+    ``dataset: Dataset[Model[T]]`` parameter and the outer return type
+    becomes a dataset of the per-item return type. The inner callable still
+    receives one model object at a time.
 
     ``result_key`` wraps the returned value in a single-key dictionary,
     which is especially useful when a downstream DAG step should receive
@@ -1142,6 +1373,24 @@ def DagFlowTemplate(
         >>> plus_one_dict.run(4)
         {'number': 5}
 
+    Examples:
+        >>> # With dataset-wise iteration
+        >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
+
     ### DAG orchestration
 
     DAG flows route values by keyword name instead of chaining every child
@@ -1162,29 +1411,60 @@ def DagFlowTemplate(
 
     Examples:
         >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
         >>> @om.TaskTemplate()
-        ... def add_two(number: int) -> int:
-        ...     return number + 2
+        ... def uppercase(data_file: TextModel) -> TextModel:
+        ...     return data_file.content.upper()
         >>> @om.TaskTemplate()
-        ... def square_number(number: int) -> int:
-        ...     return number * number
+        ... def append_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
         >>> @om.TaskTemplate()
-        ... def add_two_numbers(left_value: int, right_value: int) -> int:
-        ...     return left_value + right_value
+        ... def combine_texts(
+        ...     left_dataset: TextDataset,
+        ...     right_dataset: TextDataset,
+        ... ) -> TextDataset:
+        ...     merged = TextDataset()
+        ...     for title in left_dataset:
+        ...         merged[title] = (
+        ...             f'{left_dataset[title].content}|'
+        ...             f'{right_dataset[title].content}'
+        ...         )
+        ...     return merged
         >>> @om.DagFlowTemplate(
-        ...     add_two.refine(result_key='base'),
-        ...     square_number.refine(result_key='bonus'),
-        ...     add_two_numbers.refine(
+        ...     uppercase.refine(
+        ...         iterate_over_data_files=True,
+        ...         result_key='upper',
+        ...     ),
+        ...     append_suffix.refine(
+        ...         iterate_over_data_files=True,
+        ...         result_key='suffixed',
+        ...         param_key_map={'suffix': 'ending'},
+        ...     ),
+        ...     combine_texts.refine(
         ...         param_key_map={
-        ...             'left_value': 'base',
-        ...             'right_value': 'bonus',
+        ...             'left_dataset': 'upper',
+        ...             'right_dataset': 'suffixed',
         ...         },
         ...     ),
         ... )
-        ... def dag_flow(number: int) -> int:
-        ...     return number
-        >>> dag_flow.run(3)
-        14
+        ... def dag_flow(
+        ...     dataset: TextDataset,
+        ...     ending: str,
+        ... ) -> TextDataset:
+        ...     return dataset
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({
+        ...     'a': 'HI|hi!',
+        ...     'b': 'BYE|bye!',
+        ... })
+        >>> dag_flow.run(text_files, ending='!') == expected
+        True
 
     ### Tasks and flows
 
@@ -1373,13 +1653,23 @@ class FuncFlowTemplateCore(
 
     Examples:
         >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
         >>> @om.FuncFlowTemplate()
-        ... def repeat_plus_one(number: int, n: int) -> int:
-        ...     for _ in range(n):
-        ...         number += 1
-        ...     return number
-        >>> repeat_plus_one.run(1, 2)
-        3
+        ... def append_suffix_to_all(
+        ...     dataset: TextDataset,
+        ...     suffix: str,
+        ... ) -> TextDataset:
+        ...     output_dataset = TextDataset()
+        ...     for title, data_file in dataset.items():
+        ...         output_dataset[title] = f'{data_file.content}{suffix}'
+        ...     return output_dataset
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> append_suffix_to_all.run(text_files, '!') == expected
+        True
 
     ### Outer signature and modifiers
 
@@ -1394,6 +1684,12 @@ class FuncFlowTemplateCore(
     ``iterate_over_data_files``, ``output_dataset_param``, and
     ``output_dataset_cls`` adapt that outer interface for dataset-wise
     iteration.
+
+    When ``iterate_over_data_files=True`` and the inner first parameter is
+    annotated as ``Model[T]``, callers see an outer
+    ``dataset: Dataset[Model[T]]`` parameter and the outer return type
+    becomes a dataset of the per-item return type. The inner callable still
+    receives one model object at a time.
 
     ``result_key`` wraps the returned value in a single-key dictionary,
     which is especially useful when a downstream DAG step should receive
@@ -1414,6 +1710,24 @@ class FuncFlowTemplateCore(
         >>> plus_one_dict = plus_one.refine(result_key='number')
         >>> plus_one_dict.run(4)
         {'number': 5}
+
+    Examples:
+        >>> # With dataset-wise iteration
+        >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
 
     ### Tasks and flows
 
@@ -1518,13 +1832,23 @@ def FuncFlowTemplate(
 
     Examples:
         >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
         >>> @om.FuncFlowTemplate()
-        ... def repeat_plus_one(number: int, n: int) -> int:
-        ...     for _ in range(n):
-        ...         number += 1
-        ...     return number
-        >>> repeat_plus_one.run(1, 2)
-        3
+        ... def append_suffix_to_all(
+        ...     dataset: TextDataset,
+        ...     suffix: str,
+        ... ) -> TextDataset:
+        ...     output_dataset = TextDataset()
+        ...     for title, data_file in dataset.items():
+        ...         output_dataset[title] = f'{data_file.content}{suffix}'
+        ...     return output_dataset
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> append_suffix_to_all.run(text_files, '!') == expected
+        True
 
     ### Outer signature and modifiers
 
@@ -1539,6 +1863,12 @@ def FuncFlowTemplate(
     ``iterate_over_data_files``, ``output_dataset_param``, and
     ``output_dataset_cls`` adapt that outer interface for dataset-wise
     iteration.
+
+    When ``iterate_over_data_files=True`` and the inner first parameter is
+    annotated as ``Model[T]``, callers see an outer
+    ``dataset: Dataset[Model[T]]`` parameter and the outer return type
+    becomes a dataset of the per-item return type. The inner callable still
+    receives one model object at a time.
 
     ``result_key`` wraps the returned value in a single-key dictionary,
     which is especially useful when a downstream DAG step should receive
@@ -1559,6 +1889,24 @@ def FuncFlowTemplate(
         >>> plus_one_dict = plus_one.refine(result_key='number')
         >>> plus_one_dict.run(4)
         {'number': 5}
+
+    Examples:
+        >>> # With dataset-wise iteration
+        >>> import omnipy as om
+        >>> class TextModel(om.Model[str]):
+        ...     ...
+        >>> class TextDataset(om.Dataset[TextModel]):
+        ...     ...
+        >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
+        ... def add_suffix(
+        ...     data_file: TextModel,
+        ...     suffix: str,
+        ... ) -> TextModel:
+        ...     return f'{data_file.content}{suffix}'
+        >>> text_files = TextDataset({'a': 'hi', 'b': 'bye'})
+        >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
+        >>> add_suffix.run(text_files, suffix='!') == expected
+        True
 
     ### Tasks and flows
 
