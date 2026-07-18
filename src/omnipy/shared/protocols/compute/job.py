@@ -14,7 +14,7 @@ from omnipy.shared.enums.job import (OutputStorageProtocolOptions,
 from omnipy.shared.protocols.compute.job_creator import IsJobCreator
 from omnipy.shared.protocols.compute.mixins import IsNestedContext, IsUniquelyNamedJob
 from omnipy.shared.protocols.config import IsJobConfig
-from omnipy.shared.protocols.data import IsDataset
+from omnipy.shared.protocols.data import IsDataset, IsModel
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.shared.typedefs import GeneralDecorator
@@ -740,6 +740,9 @@ class IsFuncArgJobTemplate(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT]
         ...
 
 
+ChildJobTemplateLike = IsFuncArgJobTemplate | type[IsDataset] | type[IsModel]
+
+
 class HasFuncArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetContraT]):
     """Callable initializer protocol for templates that wrap one Python callable.
 
@@ -812,11 +815,13 @@ class IsChildJobListArgJobBase(IsFuncArgJobBase, Protocol):
     addition to its own callable-backed configuration.
     """
     @property
-    def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
-        """Return the child-job templates owned by the flow template.
+    def child_job_templates(self) -> tuple[ChildJobTemplateLike, ...]:
+        """Return the ordered templates of child jobs owned by the flow template.
+
+        Model and Dataset subclasses can also be provided as child templates.
 
         Returns:
-            tuple[IsFuncArgJobTemplate, ...]: Ordered child-job templates.
+            tuple[ChildJobLike, ...]: Ordered templates of child jobs.
         """
         ...
 
@@ -831,7 +836,7 @@ class HasChildJobListArgJobTemplateInit(Protocol[_JobTemplateT, _CallP, _RetCont
         self,
         job_func: Callable[_CallP, _RetContraT],
         /,
-        *child_job_templates: IsFuncArgJobTemplate,
+        *child_job_templates: ChildJobTemplateLike,
         name: str | None = None,
         iterate_over_data_files: bool = False,
         output_dataset_param: str | None = None,
@@ -982,7 +987,7 @@ class IsChildJobListArgJobTemplate(IsFuncArgJobTemplate[_JobTemplateT, _JobT, _C
     """
     def refine(
             self,
-            *child_job_templates: IsFuncArgJobTemplate,
+            *child_job_templates: ChildJobTemplateLike,
             update: bool = True,
             name: str | None = None,
             iterate_over_data_files: bool = False,

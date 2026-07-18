@@ -9,7 +9,10 @@ import pytest_cases as pc
 
 from omnipy.compute._job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
+from omnipy.compute.helpers import create_data_class_task_name, is_func_arg_template_child
 from omnipy.compute.task import TaskTemplate
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 from omnipy.shared.exceptions import JobStateException
 from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
                                                  IsFuncArgJobTemplate,
@@ -325,6 +328,103 @@ def test_linear_flow_only_first_positional(
 
     linear_flow = linear_flow_tmpl.apply()
     assert linear_flow() == 168
+
+
+def test_create_data_class_task_name_examples() -> None:
+    class MyDataset(Dataset[Model[int]]):
+        ...
+
+    class MyModel(Model[int]):
+        ...
+
+    assert create_data_class_task_name(
+        MyDataset, from_kwargs=False) == 'create_my_dataset_from_args'
+    assert create_data_class_task_name(MyModel, from_kwargs=False) == 'create_my_model_from_args'
+    assert create_data_class_task_name(
+        Dataset[Model[int]], from_kwargs=False) == 'create_dataset_model_int_from_args'
+    assert create_data_class_task_name(
+        Model[int | str | float], from_kwargs=True) == 'create_model_int_str_float_from_kwargs'
+
+
+def test_linear_flow_accepts_dataset_class_child_no_args(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    class MyDataset(Dataset[Model[int]]):
+        ...
+
+    @LinearFlowTemplate(MyDataset)
+    def linear_flow_tmpl() -> MyDataset:
+        ...
+
+    linear_flow = linear_flow_tmpl.apply()
+    child_template = linear_flow.child_job_templates[0]
+    assert is_func_arg_template_child(child_template)
+    assert child_template.fixed_params['dataset_cls'] is MyDataset
+
+    created_dataset = linear_flow()
+    assert isinstance(created_dataset, MyDataset)
+    assert created_dataset.to_data() == {}
+
+
+def test_linear_flow_accepts_dataset_class_child_multiple_positional_args(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @LinearFlowTemplate(Dataset[Model[int]])
+    def linear_flow_tmpl(first_pair: tuple[str, float],
+                         second_pair: tuple[str, float]) -> Dataset[Model[int]]:
+        ...
+
+    created_dataset = linear_flow_tmpl.apply()(('a', 1.23), ('b', 3.6))
+    assert created_dataset.to_data() == {'a': 1, 'b': 3}
+
+
+def test_linear_flow_accepts_model_class_child_single_positional_arg(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    class MyModel(Model[int]):
+        ...
+
+    @LinearFlowTemplate(MyModel)
+    def linear_flow_tmpl(number: float) -> MyModel:
+        ...
+
+    created_model = linear_flow_tmpl.apply()(3.6)
+    assert isinstance(created_model, MyModel)
+    assert created_model.to_data() == 3
+
+
+def test_dag_flow_accepts_dataset_class_child_with_dynamic_kwargs_name(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    class MyDataset(Dataset[Model[int]]):
+        ...
+
+    @TaskTemplate()
+    def extract_number(create_my_dataset_from_kwargs: MyDataset) -> int:
+        return cast(int, create_my_dataset_from_kwargs['number'].to_data())
+
+    @DagFlowTemplate(MyDataset, extract_number)
+    def dag_flow_tmpl(number: int) -> int:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    first_child_template = dag_flow.child_job_templates[0]
+    assert is_func_arg_template_child(first_child_template)
+    assert first_child_template.name == 'create_my_dataset_from_kwargs'
+
+    assert dag_flow(number=4) == 4
+
+
+def test_dag_flow_accepts_model_class_child_with_dynamic_kwargs_name(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    class MyModel(Model[dict[str, int]]):
+        ...
+
+    @TaskTemplate()
+    def extract_number(create_my_model_from_kwargs: MyModel) -> int:
+        return cast(dict[str, int], create_my_model_from_kwargs.to_data())['number']
+
+    @DagFlowTemplate(MyModel, extract_number)
+    def dag_flow_tmpl(number: int) -> int:
+        ...
+
+    assert dag_flow_tmpl.apply()(number=4) == 4
 
 
 def test_linear_flow_forwards_kwargs_to_later_child_jobs(

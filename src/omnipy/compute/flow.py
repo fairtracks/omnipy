@@ -13,9 +13,10 @@ Attributes:
         coordinating flows.
 """
 
+import inspect
 import os
 from textwrap import dedent
-from typing import Callable, cast, Concatenate, Generic, ParamSpec
+from typing import Callable, cast, ClassVar, Concatenate, Generic, ParamSpec
 
 from typing_extensions import TypeVar
 
@@ -61,6 +62,13 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
     os.environ['OMNIPY_MACRO_FLOW_CAST_INIT_PROTOCOL_SUMMARY'] = dedent("""\
         Cast a template initializer to the shared init protocol.""")
+
+
+def _is_data_class_decorator_arg(arg: object) -> bool:
+    """Identify dataset/model class arguments passed as flow child components."""
+    has_dataset_interface = all(
+        hasattr(arg, dataset_attr) for dataset_attr in ('get_type', 'to_data', 'from_data'))
+    return inspect.isclass(arg) and (has_dataset_interface or hasattr(arg, 'full_type'))
 
 
 class FlowBase:
@@ -131,7 +139,8 @@ def linear_flow_template_as_callable_decorator(
         cast(
             Callable[Concatenate[Callable[_CallP, _RetT], _InitP],
                      IsLinearFlowTemplate[_CallP, _RetT]],
-            decorated_cls))
+            decorated_cls),
+        single_callable_arg_is_decorator_arg=_is_data_class_decorator_arg)
 
 
 def to_linear_flow_template_init_protocol(
@@ -223,6 +232,8 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
                                            _RetT],
                           FlowBase,
                           Generic[_CallP, _RetT]):
+    _coerce_data_class_children_from_kwargs: ClassVar[bool] = True
+
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsDagFlow[_CallP, _RetT]]:
         """Return the executable DAG flow type produced by this template.
@@ -262,7 +273,8 @@ def dag_flow_template_as_callable_decorator(
         cast(
             Callable[Concatenate[Callable[_CallP, _RetT], _InitP], IsDagFlowTemplate[_CallP,
                                                                                      _RetT]],
-            decorated_cls))
+            decorated_cls),
+        single_callable_arg_is_decorator_arg=_is_data_class_decorator_arg)
 
 
 def to_dag_flow_template_init_protocol(

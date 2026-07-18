@@ -14,7 +14,8 @@ from logging import INFO
 from types import MappingProxyType
 from typing import Any, Callable, cast, Generator
 
-from omnipy.shared.protocols.compute.job import (IsAnyFlow,
+from omnipy.shared.protocols.compute.job import (ChildJobTemplateLike,
+                                                 IsAnyFlow,
                                                  IsChildJobListArgJob,
                                                  IsFuncArgJob,
                                                  IsFuncArgJobTemplate,
@@ -24,8 +25,10 @@ from omnipy.util.helpers import resolve
 
 
 def _has_any_async_coroutine_jobs(flow_run_spec: 'ChildJobListArgFlowRunSpec') -> bool:
-    return any(job.callable_type is CallableType.ASYNC_COROUTINE
-               for job in flow_run_spec.child_job_templates)
+    return any(
+        child.callable_type is CallableType.ASYNC_COROUTINE
+        for child in flow_run_spec.child_job_templates
+        if not inspect.isclass(child))
 
 
 def _keyword_param_keys_for_job(job: IsFuncArgJobTemplate,
@@ -269,7 +272,7 @@ class FlowRunSpec(JobRunSpec, ABC):
 class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
     """Base run spec for flows defined by ordered child-job templates."""
     @property
-    def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
+    def child_job_templates(self) -> tuple[ChildJobTemplateLike, ...]:
         """Proxies the wrapped flow's ordered child templates.
 
         See [`IsChildJobListArgJobBase.child_job_templates`]
@@ -289,6 +292,7 @@ class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
             flow_kwargs = self.get_bound_args(*args, **kwargs).arguments
             result = None
             for i, job in enumerate(self.child_job_templates):
+                assert not inspect.isclass(job)
                 call_args = args if i == 0 else (result,)
                 task_kwargs = _collect_matching_kwargs_for_job(job, flow_kwargs, len(call_args))
                 result = job(*call_args, **task_kwargs)
@@ -320,10 +324,12 @@ class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
             *args: object,
             **kwargs: object,
         ) -> Generator[object, object, object]:
-            results = {}
+            results: dict[str, object] = {}
             result = None
 
             for i, job in enumerate(self.child_job_templates):
+                assert not inspect.isclass(job)
+
                 if i == 0:
                     results = self.get_bound_args(*args, **kwargs).arguments
 
