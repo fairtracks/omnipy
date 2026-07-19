@@ -193,11 +193,8 @@ class TaskTemplateCore(
     Examples:
         >>> # With dataset-wise iteration
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
@@ -377,11 +374,8 @@ def TaskTemplate(
     Examples:
         >>> # With dataset-wise iteration
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(

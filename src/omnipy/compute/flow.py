@@ -70,11 +70,8 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
             Examples:
                 >>> import omnipy as om
-                >>> class TextModel(om.Model[str]):
-                ...     ...
-
-                >>> class TextDataset(om.Dataset[TextModel]):
-                ...     ...
+                >>> class TextModel(om.Model[str]): ...
+                >>> class TextDataset(om.Dataset[TextModel]): ...
 
                 >>> @om.FuncFlowTemplate()
                 ... def append_suffix_to_all(
@@ -109,11 +106,8 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
             Examples:
                 >>> import omnipy as om
-                >>> class TextModel(om.Model[str]):
-                ...     ...
-
-                >>> class TextDataset(om.Dataset[TextModel]):
-                ...     ...
+                >>> class TextModel(om.Model[str]): ...
+                >>> class TextDataset(om.Dataset[TextModel]): ...
 
                 >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
                 ... def normalize_text(data_file: TextModel) -> TextModel:
@@ -152,11 +146,8 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
             Examples:
                 >>> import omnipy as om
-                >>> class TextModel(om.Model[str]):
-                ...     ...
-
-                >>> class TextDataset(om.Dataset[TextModel]):
-                ...     ...
+                >>> class TextModel(om.Model[str]): ...
+                >>> class TextDataset(om.Dataset[TextModel]): ...
 
                 >>> @om.TaskTemplate(iterate_over_data_files=True)
                 ... def uppercase(data_file: TextModel) -> TextModel:
@@ -258,11 +249,8 @@ class LinearFlowTemplateCore(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def normalize_text(data_file: TextModel) -> TextModel:
@@ -293,11 +281,8 @@ class LinearFlowTemplateCore(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.LinearFlowTemplate(TextModel)
         ... def wrap_text(raw_text: str) -> TextModel:
@@ -397,11 +382,8 @@ class LinearFlowTemplateCore(
     Examples:
         >>> # With dataset-wise iteration
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
@@ -431,11 +413,8 @@ class LinearFlowTemplateCore(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True)
         ... def strip_text(data_file: TextModel) -> TextModel:
@@ -568,11 +547,8 @@ def LinearFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def normalize_text(data_file: TextModel) -> TextModel:
@@ -603,11 +579,8 @@ def LinearFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.LinearFlowTemplate(TextModel)
         ... def wrap_text(raw_text: str) -> TextModel:
@@ -707,11 +680,8 @@ def LinearFlowTemplate(
     Examples:
         >>> # With dataset-wise iteration
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
@@ -741,11 +711,8 @@ def LinearFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True)
         ... def strip_text(data_file: TextModel) -> TextModel:
@@ -953,11 +920,8 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True)
         ... def uppercase(data_file: TextModel) -> TextModel:
@@ -1001,11 +965,8 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.LinearFlowTemplate(TextModel)
         ... def wrap_text(raw_text: str) -> TextModel:
@@ -1105,11 +1066,8 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     Examples:
         >>> # With dataset-wise iteration
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
@@ -1143,11 +1101,8 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate()
         ... def uppercase(data_file: TextModel) -> TextModel:
@@ -1310,11 +1265,8 @@ def DagFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True)
         ... def uppercase(data_file: TextModel) -> TextModel:
@@ -1358,11 +1310,8 @@ def DagFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.LinearFlowTemplate(TextModel)
         ... def wrap_text(raw_text: str) -> TextModel:
@@ -1462,11 +1411,8 @@ def DagFlowTemplate(
     Examples:
         >>> # With dataset-wise iteration
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
@@ -1500,11 +1446,8 @@ def DagFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate()
         ... def uppercase(data_file: TextModel) -> TextModel:
@@ -1749,11 +1692,8 @@ class FuncFlowTemplateCore(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.FuncFlowTemplate()
         ... def append_suffix_to_all(
@@ -1814,11 +1754,8 @@ class FuncFlowTemplateCore(
     Examples:
         >>> # With dataset-wise iteration
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(
@@ -1936,11 +1873,8 @@ def FuncFlowTemplate(
 
     Examples:
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.FuncFlowTemplate()
         ... def append_suffix_to_all(
@@ -2001,11 +1935,8 @@ def FuncFlowTemplate(
     Examples:
         >>> # With dataset-wise iteration
         >>> import omnipy as om
-        >>> class TextModel(om.Model[str]):
-        ...     ...
-
-        >>> class TextDataset(om.Dataset[TextModel]):
-        ...     ...
+        >>> class TextModel(om.Model[str]): ...
+        >>> class TextDataset(om.Dataset[TextModel]): ...
 
         >>> @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TextDataset)
         ... def add_suffix(

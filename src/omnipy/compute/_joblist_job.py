@@ -61,11 +61,8 @@ if is_package_editable('omnipy'):
 
         Examples:
             >>> import omnipy as om
-            >>> class TextModel(om.Model[str]):
-            ...     ...
-
-            >>> class TextDataset(om.Dataset[TextModel]):
-            ...     ...
+            >>> class TextModel(om.Model[str]): ...
+            >>> class TextDataset(om.Dataset[TextModel]): ...
 
             >>> @om.LinearFlowTemplate(TextModel)
             ... def wrap_text(raw_text: str) -> TextModel:
@@ -140,11 +137,8 @@ if is_package_editable('omnipy'):
 
         Examples:
             >>> import omnipy as om
-            >>> class TextModel(om.Model[str]):
-            ...     ...
-
-            >>> class TextDataset(om.Dataset[TextModel]):
-            ...     ...
+            >>> class TextModel(om.Model[str]): ...
+            >>> class TextDataset(om.Dataset[TextModel]): ...
 
             >>> @om.TaskTemplate(iterate_over_data_files=True)
             ... def strip_text(data_file: TextModel) -> TextModel:
@@ -191,11 +185,8 @@ if is_package_editable('omnipy'):
 
         Examples:
             >>> import omnipy as om
-            >>> class TextModel(om.Model[str]):
-            ...     ...
-
-            >>> class TextDataset(om.Dataset[TextModel]):
-            ...     ...
+            >>> class TextModel(om.Model[str]): ...
+            >>> class TextDataset(om.Dataset[TextModel]): ...
 
             >>> @om.TaskTemplate()
             ... def uppercase(data_file: TextModel) -> TextModel:
