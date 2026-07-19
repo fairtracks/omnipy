@@ -191,7 +191,13 @@ def create_dag_flow_with_two_func_tasks(
 ) -> IsDagFlow:
     """Provide create dag flow with two func tasks for test reuse."""
     task_template = task_template_cls(name=name)(func)
-    dag_flow_template = dag_flow_template_cls(task_template, task_template, name=name)(func)
+    dag_flow_template = dag_flow_template_cls(
+        task_template,
+        task_template,
+        name=name,
+        consume_kwargs_from_results=False,
+    )(
+        func)
 
     cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
     if registry:

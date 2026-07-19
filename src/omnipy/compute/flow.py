@@ -23,6 +23,7 @@ from typing_extensions import TypeVar
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
 from omnipy.compute._joblist_job import ChildJobListArgJobBase
+from omnipy.compute._mixins.dag_kwargs_consumption import DagKwargsConsumptionJobMixin
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
 from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.shared.protocols.compute.job import (ChildJobTemplateLike,
@@ -184,6 +185,11 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
     ))
+
+    os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_KWARG_DOCS'] = dedent("""\
+            consume_kwargs_from_results: Whether keyword arguments matched by a
+                child job should be removed from the accumulated DAG results
+                before later child jobs are matched.""")
 
 
 def _is_data_class_decorator_arg(arg: object) -> bool:
@@ -1223,6 +1229,7 @@ _DagFlowTemplateFactory = callable_decorator_cls(
 
 def DagFlowTemplate(
     *child_job_templates: ChildJobTemplateLike,
+    consume_kwargs_from_results: bool = True,
     name: str | None = None,
     iterate_over_data_files: bool = False,
     output_dataset_param: str | None = None,
@@ -1242,6 +1249,7 @@ def DagFlowTemplate(
     #
     # Args:
     #     {{JOB_TEMPLATE_CHILD_JOB_TEMPLATES_ARGS}}
+    #     {{DAG_FLOW_TEMPLATE_KWARG_DOCS}}
     #     {{JOB_TEMPLATE_SHARED_KWARG_DOCS}}
     # Returns:
     #     DagFlowTemplate: New DagFlowTemplate instance wrapping ``job_func``.
@@ -1550,6 +1558,9 @@ def DagFlowTemplate(
             create_X_from_args (if linear flow) or create_X_from_kwargs
             (if DAG flow) job templates, respectively, when apply() is
             called on the parent job template.
+        consume_kwargs_from_results: Whether keyword arguments matched by a
+            child job should be removed from the accumulated DAG results
+            before later child jobs are matched.
         name: Name of the job template. If not provided, the name of the
             wrapped callable is used.
         iterate_over_data_files: Whether dataset inputs should be
@@ -1578,6 +1589,7 @@ def DagFlowTemplate(
         DagFlowTemplate: New DagFlowTemplate instance wrapping ``job_func``."""
     ret = _DagFlowTemplateFactory(
         *child_job_templates,
+        consume_kwargs_from_results=consume_kwargs_from_results,
         name=name,
         iterate_over_data_files=iterate_over_data_files,
         output_dataset_param=output_dataset_param,
@@ -2093,6 +2105,8 @@ class FuncFlow(
 
 
 LinearFlow.accept_mixin(FlowContextJobMixin)
+DagFlowTemplateCore.accept_mixin(DagKwargsConsumptionJobMixin)
+DagFlow.accept_mixin(DagKwargsConsumptionJobMixin)
 DagFlow.accept_mixin(FlowContextJobMixin)
 FuncFlow.accept_mixin(FlowContextJobMixin)
 

@@ -143,19 +143,30 @@ class MockDagFlow(MockTask):
                  func: Callable,
                  *child_job_templates: IsFuncArgJobTemplate,
                  name: str | None = None,
+                 consume_kwargs_from_results: bool = True,
                  **kwargs: object) -> None:
         self._child_job_templates = child_job_templates
+        self._consume_kwargs_from_results = consume_kwargs_from_results
         super().__init__(func, name=name, **kwargs)
 
     @property
     def child_job_templates(self) -> tuple[IsFuncArgJobTemplate, ...]:
         return self._child_job_templates
 
+    @property
+    def consume_kwargs_from_results(self) -> bool:
+        return self._consume_kwargs_from_results
+
 
 @callable_decorator_cls
 class MockDagFlowTemplate(MockDagFlow):
     def apply(self) -> MockDagFlow:
-        dag_flow = MockDagFlow(self._func, *self._child_job_templates, name=self.name)
+        dag_flow = MockDagFlow(
+            self._func,
+            *self._child_job_templates,
+            name=self.name,
+            consume_kwargs_from_results=self.consume_kwargs_from_results,
+        )
         engine = cast(IsJobRunnerEngine, self.job_creator.engine)
         engine.apply_job_decorator(
             JobType.DAG_FLOW,

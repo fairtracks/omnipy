@@ -326,6 +326,7 @@ class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
         ) -> Generator[object, object, object]:
             results: dict[str, object] = {}
             result = None
+            consume_kwargs_from_results = getattr(self._job, 'consume_kwargs_from_results', True)
 
             for i, job in enumerate(self.child_job_templates):
                 assert not inspect.isclass(job)
@@ -334,6 +335,9 @@ class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
                     results = self.get_bound_args(*args, **kwargs).arguments
 
                 params = _collect_matching_kwargs_for_job(job, results)
+                if consume_kwargs_from_results:
+                    for key in params:
+                        results.pop(key, None)
                 result = job(**params)
 
                 result = yield result

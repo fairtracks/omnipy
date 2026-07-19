@@ -172,6 +172,7 @@ def case_dag_flow_sync_function_terminal_child() -> ComposedFlowCase[[int], int]
                 'left_value': 'base_number',
                 'right_value': 'branch_bonus',
             }),
+            consume_kwargs_from_results=False,
         )
         def dag_flow_sync_function_terminal(number: int) -> int:
             ...
@@ -202,6 +203,7 @@ def case_dag_flow_sync_generator_terminal_child() -> ComposedFlowCase[[int], Gen
             add_one.refine(result_key='start'),
             add_two.refine(result_key='window_size'),
             generate_window,
+            consume_kwargs_from_results=False,
         )
         def dag_flow_sync_generator_terminal(number: int) -> Generator:
             yield from Void()  # For generator signature only; never run.
@@ -232,6 +234,7 @@ def case_dag_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[int], Aw
             add_two.refine(result_key='wait_milliseconds'),
             double_number.refine(result_key='multiplier'),
             multiply_milliseconds_after_wait,
+            consume_kwargs_from_results=False,
         )
         async def dag_flow_async_coroutine_terminal(number: int) -> int:
             ...
@@ -262,6 +265,7 @@ def case_dag_flow_async_generator_terminal_child() -> ComposedFlowCase[[int], As
             square_number.refine(result_key='start'),
             add_one.refine(result_key='step'),
             emit_stepped_series,
+            consume_kwargs_from_results=False,
         )
         async def dag_flow_async_generator_terminal(number: int) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
@@ -436,6 +440,7 @@ def case_linear_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
                 'left_value': 'base',
                 'right_value': 'bonus',
             }),
+            consume_kwargs_from_results=False,
         )
         def dag_child(number: int) -> int:
             ...
@@ -515,6 +520,7 @@ def case_dag_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
             add_one.refine(result_key='base_value'),
             double_number.refine(result_key='branch_value'),
             linear_child_from_dag_parent,
+            consume_kwargs_from_results=False,
         )
         def dag_parent_with_linear_child(number: int) -> int:
             ...
@@ -554,6 +560,7 @@ def case_dag_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
                 'left_value': 'child_total',
                 'right_value': 'child_gap',
             }),
+            consume_kwargs_from_results=False,
         )
         def dag_child_from_dag_parent(left_value: int, right_value: int) -> int:
             ...
@@ -563,6 +570,7 @@ def case_dag_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
             add_one.refine(result_key='left_value'),
             square_number.refine(result_key='right_value'),
             dag_child_from_dag_parent,
+            consume_kwargs_from_results=False,
         )
         def dag_parent_with_dag_child(number: int) -> int:
             ...
@@ -600,6 +608,7 @@ def case_dag_parent_with_func_child() -> ComposedFlowCase[[int], int]:
             add_two.refine(result_key='primary_value'),
             double_number.refine(result_key='secondary_value'),
             func_child_from_dag_parent,
+            consume_kwargs_from_results=False,
         )
         def dag_parent_with_func_child(number: int) -> int:
             ...
@@ -639,6 +648,7 @@ def case_dag_parent_child_routing() -> ComposedFlowCase[[int], int]:
                     'left_value': 'child_value',
                     'right_value': 'scaled_value',
                 },),
+            consume_kwargs_from_results=False,
         )
         def dag_child_with_routing(child_value: int, child_multiplier: int) -> int:
             ...
@@ -659,6 +669,7 @@ def case_dag_parent_child_routing() -> ComposedFlowCase[[int], int]:
                     'minuend': 'child_checksum',
                     'subtrahend': 'mapped_input',
                 },),
+            consume_kwargs_from_results=False,
         )
         def dag_parent_child_routing(seed: int) -> int:
             ...
@@ -704,6 +715,7 @@ def case_dag_parent_child_refine_revise() -> ComposedFlowCase[[int], int]:  # no
         double_number.refine(result_key='right_value'),
         initial_linear_child.refine(result_key='child_result'),
         add_two.refine(param_key_map={'number': 'child_result'}),
+        consume_kwargs_from_results=False,
     )
     def dag_parent_child_refine_revise(number: int) -> int:
         ...
@@ -1357,7 +1369,9 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_coroutin
         @DagFlowTemplate(
             emit_async_values.refine(result_key='values'),
             add_two.refine(result_key='offset'),
-            sum_async_values_with_offset)
+            sum_async_values_with_offset,
+            consume_kwargs_from_results=False,
+        )
         async def dag_flow_early_async_generator_independent_sync_terminal_async_coroutine(
                 number: int) -> int:
             ...
@@ -1443,7 +1457,9 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_generato
         @DagFlowTemplate(
             emit_async_values.refine(result_key='values'),
             add_two.refine(result_key='offset'),
-            emit_async_values_with_offset)
+            emit_async_values_with_offset,
+            consume_kwargs_from_results=False,
+        )
         async def dag_flow_early_async_generator_independent_sync_terminal_async_generator(
                 number: int) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
@@ -1650,6 +1666,7 @@ def case_dag_flow_early_async_terminal_sync_function(  # noqa: C901
                 'left_value': 'base',
                 'right_value': 'async_value',
             }),
+            consume_kwargs_from_results=False,
         )
         async def dag_flow_early_async_terminal_sync_function(number: int) -> int:
             ...

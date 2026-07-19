@@ -563,6 +563,43 @@ def test_dynamic_dag_flow_by_returned_dict(
     assert dag_flow() == 84
 
 
+def test_dag_flow_consumes_matching_kwargs_by_default(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def first_tmpl(number: int) -> int:
+        return number + 1
+
+    @TaskTemplate()
+    def second_tmpl(number: int) -> int:
+        return number * 2
+
+    @DagFlowTemplate(first_tmpl, second_tmpl)
+    def dag_flow_tmpl(number: int) -> int:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    with pytest.raises(TypeError, match='missing 1 required positional argument'):
+        dag_flow(number=4)
+
+
+def test_dag_flow_can_disable_consuming_matching_kwargs(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def first_tmpl(number: int) -> int:
+        return number + 1
+
+    @TaskTemplate()
+    def second_tmpl(number: int) -> int:
+        return number * 2
+
+    @DagFlowTemplate(first_tmpl, second_tmpl, consume_kwargs_from_results=False)
+    def dag_flow_tmpl(number: int) -> int:
+        ...
+
+    dag_flow = dag_flow_tmpl.apply()
+    assert dag_flow(number=4) == 8
+
+
 def test_dag_flow_forwards_later_kwargs_and_respects_mapped_fixed_params(
         mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
     @TaskTemplate()

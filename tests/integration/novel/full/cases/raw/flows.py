@@ -47,6 +47,7 @@ def pos_square_root_func_flow(
         iterate_over_data_files=True,
     ),
     apply_models_to_dataset.refine(param_key_map={'dataset': 'tables'}),
+    consume_kwargs_from_results=False,
     name='specialize_record_models',
 )
 def specialize_record_models_dag_flow(  # type: ignore
