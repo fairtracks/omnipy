@@ -289,6 +289,36 @@ class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
         flow = cast(IsChildJobListArgJob, self._job)
         return flow.child_job_templates
 
+    def _drive_child_job_run_generator(
+            self, run_all_child_jobs_callable: Callable[
+                ...,
+                Generator[object, object, object],
+            ]) -> Callable:
+
+        if _has_any_async_coroutine_jobs(self):
+
+            async def _async_inner_run_child_jobs_flow(*args: object, **kwargs: object):
+                async def _resolve_awaitable_job_result(result: object) -> object:
+                    result = await resolve(result)
+
+                    if isinstance(result, dict) and len(result) > 0:
+                        result = {key: await resolve(val) for key, val in result.items()}
+
+                    return result
+
+                return await _drain_async_results(
+                    run_all_child_jobs_callable(*args, **kwargs),
+                    _resolve_awaitable_job_result,
+                )
+
+            return _async_inner_run_child_jobs_flow
+        else:
+
+            def _sync_inner_run_dag_flow(*args: object, **kwargs: object):
+                return _drain_sync_results(run_all_child_jobs_callable(*args, **kwargs))
+
+            return _sync_inner_run_dag_flow
+
 
 class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
     """Run spec for linear flows that pipe each child result into the next."""
@@ -311,24 +341,13 @@ class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
 
             return result
 
-        if _has_any_async_coroutine_jobs(self):
-
-            async def _async_inner_run_linear_flow(*args: object, **kwargs: object):
-                return await _drain_async_results(_run_all_linear_tasks(*args, **kwargs))
-
-            return _async_inner_run_linear_flow
-        else:
-
-            def _sync_inner_run_linear_flow(*args: object, **kwargs: object):
-                return _drain_sync_results(_run_all_linear_tasks(*args, **kwargs))
-
-            return _sync_inner_run_linear_flow
+        return self._drive_child_job_run_generator(_run_all_linear_tasks)
 
 
 class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
     """Run spec for DAG flows that route named results into downstream inputs."""
     def _create_default_run_callable(self) -> Callable:  # noqa: C901
-        def _run_all_dag_tasks(
+        def _run_all_dag_child_jobs(
             *args: object,
             **kwargs: object,
         ) -> Generator[object, object, object]:
@@ -357,29 +376,7 @@ class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
 
             return result
 
-        if _has_any_async_coroutine_jobs(self):
-
-            async def _async_inner_run_dag_flow(*args: object, **kwargs: object):
-                async def _resolve_awaitable_dag_task_result(result: object) -> object:
-                    result = await resolve(result)
-
-                    if isinstance(result, dict) and len(result) > 0:
-                        result = {key: await resolve(val) for key, val in result.items()}
-
-                    return result
-
-                return await _drain_async_results(
-                    _run_all_dag_tasks(*args, **kwargs),
-                    _resolve_awaitable_dag_task_result,
-                )
-
-            return _async_inner_run_dag_flow
-        else:
-
-            def _sync_inner_run_dag_flow(*args: object, **kwargs: object):
-                return _drain_sync_results(_run_all_dag_tasks(*args, **kwargs))
-
-            return _sync_inner_run_dag_flow
+        return self._drive_child_job_run_generator(_run_all_dag_child_jobs)
 
 
 class FuncFlowRunSpec(FlowRunSpec):

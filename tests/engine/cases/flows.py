@@ -1823,10 +1823,50 @@ def case_dag_flow_early_async_generator_terminal_sync_generator(  # noqa: C901
 
 
 @pc.case(
-    id='func-flow-nested-async-support-gap',
-    tags=['semantic-floor', 'func-flow-nested-async-gap'],
+    id='linear-flow-param-key-map-result-key-async-terminal-child',
+    tags=['semantic-floor', 'linear-flow-param-key-map-result-key-async-terminal-child'],
 )
-def case_func_flow_nested_async_support_gap() -> ComposedFlowCase[[int], Awaitable[int]]:
+def case_linear_flow_param_key_map_result_key_async_terminal_child(
+) -> ComposedFlowCase[[int], Awaitable[int]]:
+    expected_callable_type = CallableType.ASYNC_COROUTINE
+
+    def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
+        # Linear Flow
+        @LinearFlowTemplate(
+            wait_and_double_milliseconds.refine(
+                param_key_map=dict(milliseconds='number'),
+                result_key='doubled',
+            ))
+        async def linear_flow_param_key_map_result_key_async_terminal_child(
+                milliseconds: int) -> int:
+            ...
+
+        return apply_job(linear_flow_param_key_map_result_key_async_terminal_child,
+                         engine,
+                         registry)
+
+    async def run_and_assert_results(job: IsFuncArgJob) -> None:
+        await assert_async_result(
+            job,
+            expected_callable_type,
+            {'doubled': 2},
+            1,
+        )
+
+    return ComposedFlowCase[[int], Awaitable[int]](
+        name='linear-flow-param-key-map-result-key-async-terminal-child',
+        build_job_func=build_job,
+        run_and_assert_results_func=run_and_assert_results,
+        expected_callable_type=expected_callable_type,
+    )
+
+
+@pc.case(
+    id='func-flow-async-func-flow-child-async-linear-flow-grandchild',
+    tags=['semantic-floor', 'func-flow-async-func-flow-child-async-linear-flow-grandchild'],
+)
+def case_func_flow_async_func_flow_child_async_linear_flow_grandchild(
+) -> ComposedFlowCase[[int], Awaitable[int]]:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1848,7 +1888,6 @@ def case_func_flow_nested_async_support_gap() -> ComposedFlowCase[[int], Awaitab
         return apply_job(func_parent_nested_async, engine, registry)
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
-        # Compatibility probe: expected to pass on both engines; remove if stable.
         await assert_async_result(job, expected_callable_type, 20, 4)
 
     return ComposedFlowCase[[int], Awaitable[int]](
