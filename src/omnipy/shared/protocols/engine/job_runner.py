@@ -2,11 +2,12 @@
 
 import os
 from textwrap import dedent
-from typing import Callable, Protocol, runtime_checkable
+from typing import Any, Callable, Protocol, runtime_checkable
 
 from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import IsFuncArgJob
 from omnipy.shared.protocols.engine.base import IsEngine
+from omnipy.shared.protocols.engine.run_spec import IsFlowRunSpec, IsTaskRunSpec
 from omnipy.util.helpers import is_package_editable
 
 if is_package_editable('omnipy'):
@@ -69,4 +70,16 @@ class IsJobRunnerEngine(IsEngine, Protocol):
             job_callback_accept_decorator: Consumer that accepts the engine-provided
                 decorator.
         """
+        ...
+
+    def _init_task(self, task: IsTaskRunSpec) -> object:
+        ...
+
+    def _run_task(self, state: Any, task: IsTaskRunSpec, *args, **kwargs) -> object:
+        ...
+
+    def _init_flow(self, flow: IsFlowRunSpec) -> object:
+        ...
+
+    def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> object:
         ...

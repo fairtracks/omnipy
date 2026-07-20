@@ -5,12 +5,12 @@ from typing import Any, Awaitable, Callable, Generic, ParamSpec, Type, TypeVar
 
 from typing_extensions import override
 
-from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.shared.enums.job import JobType, RunState
 from omnipy.shared.protocols.compute.job import IsFuncArgJob
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
+from omnipy.shared.protocols.engine.run_spec import IsFlowRunSpec, IsTaskRunSpec
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.util.callable_types import CallableType
 
@@ -41,7 +41,7 @@ class JobRunnerStateChecker(IsJobRunnerEngine):
         object.__init__(self)
         self._engine = engine
         self.supported_job_types = self._engine.supported_job_types
-        self._engine.__init__()
+        self._engine.__init__()  # type: ignore[misc]
 
     def set_config(self, config: IsJobRunnerConfig) -> None:
         self._engine.set_config(config)
@@ -70,22 +70,22 @@ class JobRunnerStateChecker(IsJobRunnerEngine):
                             job_callback_accept_decorator: Callable) -> None:
         return self._engine.apply_job_decorator(job_type, job, job_callback_accept_decorator)
 
-    def _init_task(self, task: TaskRunSpec) -> object:
+    def _init_task(self, task: IsTaskRunSpec) -> object:
         from .functions import assert_job_state
-        assert_job_state(task._job, [RunState.INITIALIZED])
+        assert_job_state(task._job, [RunState.INITIALIZED])  # type: ignore[attr-defined]
         return self._engine._init_task(task)  # noqa
 
-    def _run_task(self, state: Any, task: TaskRunSpec, *args, **kwargs) -> object:
+    def _run_task(self, state: Any, task: IsTaskRunSpec, *args, **kwargs) -> object:
         from .functions import assert_job_state
-        assert_job_state(task._job, [RunState.RUNNING])
+        assert_job_state(task._job, [RunState.RUNNING])  # type: ignore[attr-defined]
         return self._engine._run_task(state, task, *args, **kwargs)  # noqa
 
-    def _init_flow(self, flow: FlowRunSpec) -> object:
+    def _init_flow(self, flow: IsFlowRunSpec) -> object:
         from .functions import assert_job_state
-        assert_job_state(flow._job, [RunState.INITIALIZED])
+        assert_job_state(flow._job, [RunState.INITIALIZED])  # type: ignore[attr-defined]
         return self._engine._init_flow(flow)  # noqa
 
-    def _run_flow(self, state: Any, flow: FlowRunSpec, *args, **kwargs) -> object:
+    def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> object:
         from .functions import assert_job_state
-        assert_job_state(flow._job, [RunState.RUNNING])
+        assert_job_state(flow._job, [RunState.RUNNING])  # type: ignore[attr-defined]
         return self._engine._run_flow(state, flow, *args, **kwargs)  # noqa

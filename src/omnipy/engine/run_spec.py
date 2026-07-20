@@ -10,7 +10,7 @@ from collections.abc import Mapping
 from datetime import datetime
 import inspect
 from inspect import BoundArguments
-from logging import INFO
+from logging import INFO, Logger
 from types import MappingProxyType
 from typing import Any, Callable, cast, Generator
 
@@ -191,6 +191,14 @@ class JobRunSpec(ABC):
         [omnipy.shared.protocols.compute.job.IsFuncArgJobBase.callable_type].
         """
         return self._job.callable_type
+
+    @property
+    def logger(self) -> Logger:
+        """Proxies to the wrapped job's logger.
+
+        See [`CanLog.logger`][omnipy.shared.protocols.hub.log.CanLog.logger].
+        """
+        return self._job.logger
 
     def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None) -> None:
         """Proxies log messages to the wrapped job.

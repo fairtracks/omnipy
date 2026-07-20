@@ -7,9 +7,9 @@ from typing import Any, Callable, cast, Type, TypedDict
 
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import JobRunnerEngine
-from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.config import IsPrefectEngineConfig
+from omnipy.shared.protocols.engine.run_spec import IsFlowRunSpec, IsTaskRunSpec
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.callable_types import (callable_type_from_flags,
                                         CallableType,
@@ -95,7 +95,7 @@ class PrefectEngine(JobRunnerEngine):
 
     # Task run hooks
 
-    def _init_task(self, task: TaskRunSpec) -> 'PrefectTask':
+    def _init_task(self, task: IsTaskRunSpec) -> 'PrefectTask':
         from ..lazy_import import cache_policies, prefect_task
 
         assert isinstance(self._config, PrefectEngineConfig)
@@ -181,7 +181,7 @@ class PrefectEngine(JobRunnerEngine):
     def _run_task(
         self,
         state: 'PrefectTask',
-        task: TaskRunSpec,
+        task: IsTaskRunSpec,
         *args,
         **kwargs,
     ) -> object:
@@ -211,7 +211,7 @@ class PrefectEngine(JobRunnerEngine):
 
     # Flow run hooks
 
-    def _init_flow(self, flow: FlowRunSpec) -> Callable:
+    def _init_flow(self, flow: IsFlowRunSpec) -> Callable:
         from ..lazy_import import prefect_flow
 
         assert isinstance(self._config, PrefectEngineConfig)
@@ -231,6 +231,6 @@ class PrefectEngine(JobRunnerEngine):
         )
         return prefect_flow(**flow_kwargs)(wrapped_callable)
 
-    def _run_flow(self, state: Any, flow: FlowRunSpec, *args, **kwargs) -> Any:
+    def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> Any:
         _prefect_flow = state
         return _prefect_flow(*args, **kwargs)

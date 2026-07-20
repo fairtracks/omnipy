@@ -2,9 +2,9 @@ from typing import Any, cast, Type
 
 from omnipy.config.engine import LocalRunnerConfig
 from omnipy.engine.job_runner import JobRunnerEngine
-from omnipy.engine.run_spec import FlowRunSpec, TaskRunSpec
 from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.config import IsLocalRunnerConfig
+from omnipy.shared.protocols.engine.run_spec import IsFlowRunSpec, IsTaskRunSpec
 
 
 class LocalRunner(JobRunnerEngine):
@@ -40,14 +40,14 @@ class LocalRunner(JobRunnerEngine):
         """
         return cast(Type[IsLocalRunnerConfig], LocalRunnerConfig)
 
-    def _init_task(self, task: TaskRunSpec) -> object:
+    def _init_task(self, task: IsTaskRunSpec) -> object:
         ...
 
-    def _run_task(self, state: Any, task: TaskRunSpec, *args, **kwargs) -> object:
+    def _run_task(self, state: Any, task: IsTaskRunSpec, *args, **kwargs) -> object:
         return task.create_default_run_callable()(*args, **kwargs)
 
-    def _init_flow(self, flow: FlowRunSpec) -> object:
+    def _init_flow(self, flow: IsFlowRunSpec) -> object:
         ...
 
-    def _run_flow(self, state: Any, flow: FlowRunSpec, *args, **kwargs) -> object:
+    def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> object:
         return flow.create_default_run_callable()(*args, **kwargs)

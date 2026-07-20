@@ -2,14 +2,12 @@ from abc import ABC
 from typing import Any, Callable, ClassVar, Literal, NamedTuple
 
 from omnipy.engine._base import Engine
-from omnipy.engine.run_spec import (DagFlowRunSpec,
-                                    FlowRunSpec,
-                                    FuncFlowRunSpec,
-                                    JobRunSpec,
-                                    LinearFlowRunSpec,
-                                    TaskRunSpec)
+from omnipy.engine.run_spec import DagFlowRunSpec, FuncFlowRunSpec, LinearFlowRunSpec, TaskRunSpec
 from omnipy.shared.enums.job import JobType, RunState
 from omnipy.shared.protocols.compute.job import IsFuncArgJob
+from omnipy.shared.protocols.engine.run_spec import (IsFlowRunSpec,
+                                                     IsJobRunSpecFactory,
+                                                     IsTaskRunSpec)
 from omnipy.util.callable_types import decorate_result_by_type
 
 InitRunHookName = Literal['_init_task', '_init_flow']
@@ -20,7 +18,7 @@ JobRunHookNames = tuple[InitRunHookName, ExecRunHookName]
 class JobRunDef(NamedTuple):
     """Describe the run-spec class and hook names used for one job type."""
 
-    run_spec: type[JobRunSpec]
+    run_spec: IsJobRunSpecFactory
     init_hook_name: InitRunHookName
     run_hook_name: ExecRunHookName
 
@@ -115,7 +113,7 @@ class JobRunnerEngine(Engine, ABC):
         )
 
     def _job_type_to_run_spec_and_funcs(
-            self, job_type: JobType.Literals) -> tuple[type[JobRunSpec], Callable, Callable]:
+            self, job_type: JobType.Literals) -> tuple[IsJobRunSpecFactory, Callable, Callable]:
         if job_type not in JOB_TYPE_TO_RUN_DEF:
             raise ValueError(f'Unknown job type: {job_type}')
 
@@ -131,7 +129,7 @@ class JobRunnerEngine(Engine, ABC):
         self,
         job: IsFuncArgJob,
         job_callback_accept_decorator: Callable,
-        job_run_spec_cls: type[JobRunSpec],
+        job_run_spec_cls: IsJobRunSpecFactory,
         init_state: Callable,
         run_job: Callable,
     ) -> None:
@@ -156,14 +154,14 @@ class JobRunnerEngine(Engine, ABC):
 
         return decorate_result_by_type(on_finished=_register_job_finished)(lambda: job_result)()
 
-    def _init_task(self, task: TaskRunSpec) -> object:
+    def _init_task(self, task: IsTaskRunSpec) -> object:
         raise NotImplementedError
 
-    def _run_task(self, state: Any, task: TaskRunSpec, *args, **kwargs) -> object:
+    def _run_task(self, state: Any, task: IsTaskRunSpec, *args, **kwargs) -> object:
         raise NotImplementedError
 
-    def _init_flow(self, flow: FlowRunSpec) -> object:
+    def _init_flow(self, flow: IsFlowRunSpec) -> object:
         raise NotImplementedError
 
-    def _run_flow(self, state: Any, flow: FlowRunSpec, *args, **kwargs) -> object:
+    def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> object:
         raise NotImplementedError
