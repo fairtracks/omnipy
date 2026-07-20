@@ -170,7 +170,7 @@ def create_linear_flow_with_two_func_tasks(
 
     linear_flow_template = linear_flow_template_cls(
         task_template_func,
-        passthrough_task,
+        passthrough_task,  # pyright: ignore[reportArgumentType]
         name=name,
     )(func,)
 

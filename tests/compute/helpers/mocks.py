@@ -1,11 +1,10 @@
 """Provide reusable compute test mocks and protocols."""
-
+from collections.abc import Iterable
 from datetime import datetime
 from types import MappingProxyType
 from typing import (Any,
                     Callable,
                     cast,
-                    Concatenate,
                     Generic,
                     Mapping,
                     ParamSpec,
@@ -21,9 +20,8 @@ from omnipy.compute._job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
 from omnipy.config import ConfigBase
 from omnipy.engine.run_spec import DagFlowRunSpec, FuncFlowRunSpec, LinearFlowRunSpec
-from omnipy.shared.enums.job import JobType
-from omnipy.shared.protocols.compute.job import (HasFuncArgJobTemplateInit,
-                                                 IsDagFlow,
+from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
+from omnipy.shared.protocols.compute.job import (IsDagFlow,
                                                  IsFlow,
                                                  IsFlowTemplate,
                                                  IsFuncArgJob,
@@ -34,6 +32,7 @@ from omnipy.shared.protocols.compute.job import (HasFuncArgJobTemplateInit,
                                                  IsLinearFlow,
                                                  IsTask)
 from omnipy.shared.protocols.config import IsJobRunnerConfig
+from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
@@ -268,30 +267,30 @@ class CommandMockJobTemplateCore(
         return cast(type[IsCommandMockJob[CallP, RetT]], CommandMockJob[CallP, RetT])
 
 
-# Needed for pyright and PyCharm
-def command_mock_job_template_as_callable_decorator(
-    decorated_cls: Callable[Concatenate[CallableT, InitP], IsCommandMockJobTemplate]) -> \
-        Callable[InitP, Callable[[Callable[CallP, RetT]], IsCommandMockJobTemplate[CallP, RetT]]]:
-    """Wrap the command mock template core as a callable decorator."""
-    return callable_decorator_cls(
-        cast(
-            Callable[Concatenate[Callable[CallP, RetT], InitP],
-                     IsCommandMockJobTemplate[CallP, RetT]],
-            decorated_cls))
-
-
-def to_command_mock_task_template_init_protocol(
-    decorated_cls: Callable[Concatenate[Callable[CallP, RetT], InitP], CommandMockJobTemplateCore]
-) -> HasCommandMockJobTemplateInit[IsCommandMockJobTemplate[CallP, RetT], CallP, RetT]:
-    """Cast the command mock template core to its init protocol."""
-    return cast(HasCommandMockJobTemplateInit[IsCommandMockJobTemplate[CallP, RetT], CallP, RetT],
-                decorated_cls)
-
-
 CommandMockJobTemplateCore.accept_mixin(CommandMockParamMixin)
 
-CommandMockJobTemplate = command_mock_job_template_as_callable_decorator(
-    to_command_mock_task_template_init_protocol(CommandMockJobTemplateCore))
+_CommandMockJobTemplateFactory = callable_decorator_cls(CommandMockJobTemplateCore)
+
+
+def CommandMockJobTemplate(
+    command: str,
+    *,
+    name: str | None = None,
+    id: str = '',
+    uppercase: bool = False,
+    params: ParamsType = None,
+    **kwargs,
+) -> Callable[[Callable[CallP, RetT]], IsCommandMockJobTemplate[CallP, RetT]]:
+
+    ret = _CommandMockJobTemplateFactory(
+        command=command,
+        name=name,
+        id=id,
+        uppercase=uppercase,
+        params=params,
+        **kwargs,
+    )
+    return cast(Callable[[Callable[CallP, RetT]], IsCommandMockJobTemplate[CallP, RetT]], ret)
 
 
 class CommandMockJob(
@@ -579,51 +578,46 @@ class MockTaskTemplateAssertSameTimeOfCurFlowRunCore(
                     MockTaskAssertSameTimeOfCurFlowRun[CallP, RetT])
 
 
-# Needed for pyright and PyCharm
-def mock_task_template_as_callable_decorator(
-    decorated_cls: Callable[
-        Concatenate[CallableT, InitP],
-        IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
-    ]
-) -> Callable[
-        InitP,
+MockTaskTemplateAssertSameTimeOfCurFlowRunCore.accept_mixin(AssertSameTimeOfCurFlowRunJobBaseMixin)
+
+_MockTaskTemplateAssertSameTimeOfCurFlowRunFactory = callable_decorator_cls(
+    MockTaskTemplateAssertSameTimeOfCurFlowRunCore)
+
+
+def MockTaskTemplateAssertSameTimeOfCurFlowRun(
+    *,
+    name: str | None = None,
+    iterate_over_data_files: bool = False,
+    output_dataset_param: str | None = None,
+    output_dataset_cls: type[IsDataset] | None = None,
+    auto_async: bool = True,
+    result_key: str | None = None,
+    fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+    param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+    persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+    restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
+    **kwargs: object,
+) -> Callable[[Callable[CallP, RetT]], IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT]]:
+    ret = _MockTaskTemplateAssertSameTimeOfCurFlowRunFactory(
+        name=name,
+        iterate_over_data_files=iterate_over_data_files,
+        output_dataset_param=output_dataset_param,
+        output_dataset_cls=output_dataset_cls,
+        auto_async=auto_async,
+        result_key=result_key,
+        fixed_params=fixed_params,
+        param_key_map=param_key_map,
+        persist_outputs=persist_outputs,
+        restore_outputs=restore_outputs,
+        **kwargs,
+    )
+    return cast(
         Callable[
             [Callable[CallP, RetT]],
             IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
         ],
-]:
-    return callable_decorator_cls(
-        cast(
-            Callable[
-                Concatenate[Callable[CallP, RetT], InitP],
-                IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
-            ],
-            decorated_cls))
-
-
-def to_mock_task_template_init_protocol(
-    decorated_cls: Callable[
-        Concatenate[Callable[CallP, RetT], InitP],
-        MockTaskTemplateAssertSameTimeOfCurFlowRunCore[CallP, RetT],
-    ]
-) -> HasFuncArgJobTemplateInit[
-        IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
-        CallP,
-        RetT,
-]:
-    return cast(
-        HasFuncArgJobTemplateInit[
-            IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
-            CallP,
-            RetT,
-        ],
-        decorated_cls)
-
-
-MockTaskTemplateAssertSameTimeOfCurFlowRunCore.accept_mixin(AssertSameTimeOfCurFlowRunJobBaseMixin)
-
-MockTaskTemplateAssertSameTimeOfCurFlowRun = mock_task_template_as_callable_decorator(
-    to_mock_task_template_init_protocol(MockTaskTemplateAssertSameTimeOfCurFlowRunCore))
+        ret,
+    )
 
 
 class MockTaskAssertSameTimeOfCurFlowRun(

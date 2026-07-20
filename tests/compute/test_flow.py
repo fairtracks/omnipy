@@ -29,8 +29,7 @@ from .helpers.mocks import (IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
                             MockFlowTemplateSubclass,
                             MockJobTemplateSubclass,
                             MockLocalRunner,
-                            MockTaskTemplateAssertSameTimeOfCurFlowRun,
-                            MockTaskTemplateAssertSameTimeOfCurFlowRunCore)
+                            MockTaskTemplateAssertSameTimeOfCurFlowRun)
 
 MockJobClasses = tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
 
@@ -1066,13 +1065,6 @@ def test_dag_flow_revise_rechecks_callable_type_against_child_list(
 
     with pytest.raises(TypeError, match='linear/dag flow callable type'):
         dag_flow.revise().refine(*revised_children, update=False)
-
-
-def mypy_fix_mock_task_template_assert_same_time(
-        mock_task_template_assert_same_time: object
-) -> MockTaskTemplateAssertSameTimeOfCurFlowRunCore:
-    """Cast the mock task template helper for type checkers."""
-    return cast(MockTaskTemplateAssertSameTimeOfCurFlowRunCore, mock_task_template_assert_same_time)
 
 
 def test_time_of_multi_level_flow_run_flow_cls_tuple(
