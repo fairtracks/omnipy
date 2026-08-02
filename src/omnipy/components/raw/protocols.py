@@ -2,6 +2,10 @@
 
 from typing import Protocol
 
+from typing_extensions import runtime_checkable, Self, TypeVar
+
+_T_contra = TypeVar('_T_contra', contravariant=True)
+
 
 class IsModifyContentCallable(Protocol):
     """Protocol for callbacks that rewrite an entire raw content item."""
@@ -18,4 +22,16 @@ class IsModifyEachLineCallable(Protocol):
 class IsModifyAllLinesCallable(Protocol):
     """Protocol for callbacks that rewrite a list of lines in bulk."""
     def __call__(self, all_lines: list[str], **kwargs: object) -> list[str]:
+        ...
+
+
+@runtime_checkable
+class SupportsIAdd(Protocol[_T_contra]):
+    def __iadd__(self, x: _T_contra, /) -> Self:
+        ...
+
+
+@runtime_checkable
+class SupportsIOr(Protocol[_T_contra]):
+    def __ior__(self, x: _T_contra, /) -> Self:
         ...

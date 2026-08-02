@@ -1,13 +1,14 @@
 """Tasks for decoding, editing, concatenating, and unioning raw datasets."""
 
-from collections import deque
+from collections.abc import Callable
 from copy import deepcopy
 from functools import reduce
 from io import StringIO
 from itertools import chain
-from operator import add, ior
+from operator import iadd, ior
 import os
-from typing import Iterable, Iterator
+from textwrap import dedent
+from typing import Any, cast, Iterable, Iterator
 
 from chardet import UniversalDetector
 from typing_extensions import TypeVar
@@ -15,10 +16,30 @@ from typing_extensions import TypeVar
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.util.setdeque import SetDeque
 
+from ...util.helpers import is_package_editable
 from .datasets import StrDataset
-from .protocols import IsModifyAllLinesCallable, IsModifyContentCallable, IsModifyEachLineCallable
+from .protocols import (IsModifyAllLinesCallable,
+                        IsModifyContentCallable,
+                        IsModifyEachLineCallable,
+                        SupportsIAdd,
+                        SupportsIOr)
+
+if is_package_editable('omnipy'):
+    os.environ['OMNIPY_MACRO_CONCAT_DESCRIPTION'] = dedent("""\
+        Concatenation is based on a deep copy of the first value, with
+        consecutive concatenations through the `+=` operator.""")
+    UNION_DESC_COMMON = dedent("""\
+        Union is based on a deep copy of the first {obj}, with consecutive
+        unions through the `|=` operator.""")
+    os.environ['OMNIPY_MACRO_UNION_DESCRIPTION_VALUE'] = UNION_DESC_COMMON.format(obj='value')
+    os.environ['OMNIPY_MACRO_UNION_DESCRIPTION_DATASET'] = UNION_DESC_COMMON.format(obj='dataset')
+
+_T = TypeVar('_T')
+_DatasetT = TypeVar('_DatasetT', bound=Dataset)
+_ModelT = TypeVar('_ModelT', bound=Model)
+_SupportsIAddT = TypeVar('_SupportsIAddT', bound=SupportsIAdd)
+_SupportsIOrT = TypeVar('_SupportsIOrT', bound=SupportsIOr)
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=StrDataset)
@@ -91,53 +112,159 @@ def modify_all_lines(
     return os.linesep.join(modified_lines)
 
 
-_SequenceModelT = TypeVar(
-    '_SequenceModelT', bound=Model, default=Model[str | bytes | list | tuple | deque])
+def _extract_first_and_other_datasets(
+        datasets: dict[str, _DatasetT]) -> tuple[_DatasetT, tuple[_DatasetT, ...]]:
+    first_dataset, *other_datasets = datasets.values()
+    return first_dataset, tuple(other_datasets)
 
 
-def _iter_dataset_values(datasets: Iterable[Dataset[_SequenceModelT]]) -> Iterator[_SequenceModelT]:
+def _iter_dataset_values(datasets: Iterable[Dataset[_ModelT]]) -> Iterator[_ModelT]:
     for dataset in datasets:
         yield from dataset.values()
 
 
-def _concat_dataset_values(datasets: Iterable[Dataset[_SequenceModelT]]) -> _SequenceModelT:
-    return reduce(add, _iter_dataset_values(datasets))  # pyright: ignore[reportArgumentType]
+def _common_reduce(
+    operator: Callable,
+    first_vals: tuple[_T, ...],
+    other_vals: Iterable[object],
+) -> _T:
+    assert len(first_vals) > 0
+    first_val = deepcopy(first_vals[0])
+    return cast(_T, reduce(operator, chain((first_val,), first_vals[1:], other_vals)))
+
+
+def _concat_dataset_values(
+    first_dataset: Dataset[Model[_SupportsIAddT]],
+    *other_datasets: Dataset[Model[Any]],
+) -> Model[_SupportsIAddT]:
+    return _common_reduce(
+        iadd,
+        tuple(_iter_dataset_values((first_dataset,))),
+        _iter_dataset_values(other_datasets),
+    )
+
+
+def _union_dataset_values(
+    first_dataset: Dataset[Model[_SupportsIOrT]],
+    *other_datasets: Dataset[Model[Any]],
+) -> Model[_SupportsIOrT]:
+    return _common_reduce(
+        ior,
+        tuple(_iter_dataset_values((first_dataset,))),
+        _iter_dataset_values(other_datasets),
+    )
+
+
+def _union_datasets(
+    first_dataset: _DatasetT,
+    *other_datasets: Dataset[Model[Any]],
+) -> _DatasetT:
+    return _common_reduce(ior, (first_dataset,), other_datasets)
 
 
 @TaskTemplate()
-def concat_all_args(*datasets: Dataset[_SequenceModelT]) -> _SequenceModelT:
-    """Concatenate all dataset values using their native addition semantics."""
+def concat_all_vals_in_datasets_as_args(
+    first_dataset: Dataset[Model[_SupportsIAddT]],
+    *other_datasets: Dataset[Model[Any]],
+) -> Model[_SupportsIAddT]:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Concatenate all value from positional datasets.
+    #
+    # {{CONCAT_DESCRIPTION}}
+    #
+    """Concatenate all value from positional datasets.
 
-    return _concat_dataset_values(datasets)
+    Concatenation is based on a deep copy of the first value, with
+    consecutive concatenations through the `+=` operator.
+    """
 
-
-@TaskTemplate()
-def concat_all_kwargs(**datasets: Dataset[_SequenceModelT]) -> _SequenceModelT:
-    """Concatenate all dataset values from named datasets using native addition semantics."""
-
-    return _concat_dataset_values(datasets.values())
-
-
-_UniqueModelT = TypeVar('_UniqueModelT', bound=Model, default=Model[dict | set | SetDeque])
-
-
-def _union_dataset_values(datasets: Iterable[Dataset[_UniqueModelT]]) -> _UniqueModelT:
-    all_vals = tuple(_iter_dataset_values(datasets))
-    assert len(all_vals) > 0
-    first_val = deepcopy(all_vals[0])
-
-    return reduce(ior, chain((first_val,), all_vals[1:]))
+    return _concat_dataset_values(first_dataset, *other_datasets)
 
 
 @TaskTemplate()
-def union_all_kwargs(**datasets: Dataset[_UniqueModelT]) -> _UniqueModelT:
-    """Union all dataset values using their native set-like merge semantics."""
+def concat_all_vals_in_datasets_as_kwargs(**datasets: Dataset[Model[_SupportsIAddT]],
+                                          ) -> Model[_SupportsIAddT]:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Concatenate all values from keyword datasets.
+    #
+    # {{CONCAT_DESCRIPTION}}
+    #
+    """Concatenate all values from keyword datasets.
 
-    return _union_dataset_values(datasets.values())
+    Concatenation is based on a deep copy of the first value, with
+    consecutive concatenations through the `+=` operator.
+    """
+
+    first_dataset, other_datasets = _extract_first_and_other_datasets(datasets)
+    return _concat_dataset_values(first_dataset, *other_datasets)
 
 
 @TaskTemplate()
-def union_all_args(*datasets: Dataset[_UniqueModelT]) -> _UniqueModelT:
-    """Union all dataset values from positional datasets using native set-like semantics."""
+def union_all_vals_in_datasets_as_args(
+    first_dataset: Dataset[Model[_SupportsIOrT]],
+    *other_datasets: Dataset[Model[Any]],
+) -> Model[_SupportsIOrT]:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Union all dataset values from positional datasets.
+    #
+    # {{UNION_DESCRIPTION_VALUE}}
+    #
+    """Union all dataset values from positional datasets.
 
-    return _union_dataset_values(datasets)
+    Union is based on a deep copy of the first value, with consecutive
+    unions through the `|=` operator.
+    """
+
+    return _union_dataset_values(first_dataset, *other_datasets)
+
+
+@TaskTemplate()
+def union_all_vals_in_datasets_as_kwargs(**datasets: Dataset[Model[_SupportsIOrT]],
+                                         ) -> Model[_SupportsIOrT]:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Union all dataset values from keyword datasets.
+    #
+    # {{UNION_DESCRIPTION_VALUE}}
+    #
+    """Union all dataset values from keyword datasets.
+
+    Union is based on a deep copy of the first value, with consecutive
+    unions through the `|=` operator.
+    """
+
+    first_dataset, other_datasets = _extract_first_and_other_datasets(datasets)
+    return _union_dataset_values(first_dataset, *other_datasets)
+
+
+@TaskTemplate()
+def union_all_datasets_as_args(
+    first_dataset: _DatasetT,
+    *other_datasets: Dataset[Model[Any]],
+) -> _DatasetT:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Union all positional datasets.
+    #
+    # {{UNION_DESCRIPTION_DATASET}}
+    #
+    """Union all positional datasets.
+
+    Union is based on a deep copy of the first dataset, with consecutive
+    unions through the `|=` operator.
+    """
+
+    return _union_datasets(first_dataset, *other_datasets)
+
+
+@TaskTemplate()
+def union_all_datasets_as_kwargs(**datasets: _DatasetT) -> _DatasetT:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Union all keyword datasets.
+    #
+    # {{UNION_DESCRIPTION_DATASET}}
+    """Union all keyword datasets.
+
+    Union is based on a deep copy of the first dataset, with consecutive
+    unions through the `|=` operator."""
+
+    first_dataset, other_datasets = _extract_first_and_other_datasets(datasets)
+    return _union_datasets(first_dataset, *other_datasets)
