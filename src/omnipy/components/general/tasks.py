@@ -81,29 +81,54 @@ def import_directory(
 
 
 @TaskTemplate()
-def create_dataset_args(*args: object, dataset_cls: type[_DatasetT]) -> _DatasetT:
+def create_dataset_from_args(*args: object,
+                             dataset_cls: type[_DatasetT],
+                             key: str | None = None,
+                             keys: tuple[str, ...] | None = None) -> _DatasetT:
     """Create a dataset from one or more positional payload objects.
 
-    With no positional inputs, an empty dataset is created. A single positional input is
-    forwarded unchanged. Multiple positional inputs are forwarded as the iterable of
-    ``(key, value)`` pairs accepted by :class:`~omnipy.data.dataset.Dataset`.
+    With no positional inputs, an empty dataset is created. A single
+    positional input is forwarded as a single argument. Multiple
+    positional inputs are packed into the tuple normally represented by
+    ``*args`` before Dataset construction, allowing for key-value pairs to
+    be passed as positional arguments. Alternatively, the ``key`` or
+    ``keys`` keyword parameters can be used to specify the keys for the
+    datasets.
 
     Args:
         *args: Positional payload passed to the dataset constructor.
         dataset_cls: Dataset class to instantiate.
+        key: Optional single key (as string) for a single dataset entry.
+        keys: Optional keys (as tuple of strings) to use for the dataset
+            entries. Must be of the same length as ``args``. Only one of
+            ``key`` or ``keys`` can be provided at a time.
 
     Returns:
         A dataset instance of type ``dataset_cls``.
     """
+    assert (key is None or keys is None), \
+        'Only one of `key` or `keys` can be provided at a time.'
+    if key is not None:
+        keys = (key,)
+
     if len(args) == 0:
+        assert keys is None, ('No positional arguments were provided, but '
+                              f'keys were provided: {keys}')
         return dataset_cls()
-    if len(args) == 1:
-        return dataset_cls(args[0])  # type: ignore[arg-type]
-    return dataset_cls(args)  # type: ignore[arg-type]
+
+    if keys is not None:
+        assert len(keys) == len(args), ('Number of keys must match number '
+                                        'of positional arguments: '
+                                        f'{len(keys)} != {len(args)}')
+        return dataset_cls(dict(zip(keys, args)))
+    else:
+        if len(args) == 1:
+            return dataset_cls(args[0])  # type: ignore[arg-type]
+        return dataset_cls(args)  # type: ignore[arg-type]
 
 
 @TaskTemplate()
-def create_dataset_kwargs(*, dataset_cls: type[_DatasetT], **data: object) -> _DatasetT:
+def create_dataset_from_kwargs(*, dataset_cls: type[_DatasetT], **data: object) -> _DatasetT:
     """Create a dataset from named model or sub-dataset inputs.
 
     Args:
@@ -117,7 +142,7 @@ def create_dataset_kwargs(*, dataset_cls: type[_DatasetT], **data: object) -> _D
 
 
 @TaskTemplate()
-def create_model_args(*args: object, model_cls: type[_ModelT]) -> _ModelT:
+def create_model_from_args(*args: object, model_cls: type[_ModelT]) -> _ModelT:
     """Create a model from positional inputs.
 
     A single positional input is forwarded unchanged. Multiple positional inputs are packed into the
@@ -138,7 +163,7 @@ def create_model_args(*args: object, model_cls: type[_ModelT]) -> _ModelT:
 
 
 @TaskTemplate()
-def create_model_kwargs(*, model_cls: type[_ModelT], **data: object) -> _ModelT:
+def create_model_from_kwargs(*, model_cls: type[_ModelT], **data: object) -> _ModelT:
     """Create a model from named keyword inputs.
 
     Args:

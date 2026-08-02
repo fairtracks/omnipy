@@ -22,10 +22,10 @@ from typing import (Any,
 
 from typing_extensions import TypeVar
 
-from omnipy.components.general.tasks import (create_dataset_args,
-                                             create_dataset_kwargs,
-                                             create_model_args,
-                                             create_model_kwargs)
+from omnipy.components.general.tasks import (create_dataset_from_args,
+                                             create_dataset_from_kwargs,
+                                             create_model_from_args,
+                                             create_model_from_kwargs)
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute.helpers import create_data_class_task_name, is_func_arg_template_child
 from omnipy.shared._typedefs import _JobT, _JobTemplateT
@@ -256,10 +256,10 @@ class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT]
         DataClassAndJobParentInfo,
         IsFuncArgJobTemplate,
     ]] = {
-        DataClassAndJobParentInfo('dataset', False): create_dataset_args,
-        DataClassAndJobParentInfo('dataset', True): create_dataset_kwargs,
-        DataClassAndJobParentInfo('model', False): create_model_args,
-        DataClassAndJobParentInfo('model', True): create_model_kwargs,
+        DataClassAndJobParentInfo('dataset', False): create_dataset_from_args,
+        DataClassAndJobParentInfo('dataset', True): create_dataset_from_kwargs,
+        DataClassAndJobParentInfo('model', False): create_model_from_args,
+        DataClassAndJobParentInfo('model', True): create_model_from_kwargs,
     }
 
     def __init__(self,
