@@ -9,12 +9,19 @@ Attributes:
         as a reusable Omnipy task.
 """
 
+from collections.abc import Iterable, Mapping
 import os
 from textwrap import dedent
-from typing import Callable, cast, Generic, Iterable, Mapping, ParamSpec, TypeVar
+from typing import Any, cast, Generic, Literal, overload, ParamSpec
+
+from typing_extensions import TypeVar, Unpack
 
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
+from omnipy.compute._typedefs import (JobCommonKwargs,
+                                      TaskTemplateIterDecorator,
+                                      TaskTemplateIterWithDatasetClsDecorator,
+                                      TaskTemplatePlainDecorator)
 from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.shared.protocols.compute.job import IsTask, IsTaskTemplate
 from omnipy.shared.protocols.data import IsDataset
@@ -32,6 +39,7 @@ __all__ = [
 
 _CallP = ParamSpec('_CallP')
 _RetT = TypeVar('_RetT')
+_RetDatasetClsT = TypeVar('_RetDatasetClsT', bound=IsDataset)
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_TASK_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
@@ -267,6 +275,36 @@ class TaskTemplateCore(
 _TaskTemplateFactory = callable_decorator_cls(TaskTemplateCore)
 
 
+@overload
+def TaskTemplate(
+    *,
+    iterate_over_data_files: Literal[True],
+    output_dataset_cls: type[_RetDatasetClsT],
+    **kwargs: Unpack[JobCommonKwargs],
+) -> TaskTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]:
+    ...
+
+
+@overload
+def TaskTemplate(
+    *,
+    iterate_over_data_files: Literal[True],
+    output_dataset_cls: None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> TaskTemplateIterDecorator:
+    ...
+
+
+@overload
+def TaskTemplate(
+    *,
+    iterate_over_data_files: Literal[False] = False,
+    output_dataset_cls: type[IsDataset] | None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> TaskTemplatePlainDecorator:
+    ...
+
+
 def TaskTemplate(
     *,
     name: str | None = None,
@@ -280,7 +318,7 @@ def TaskTemplate(
     persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
     restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
     **kwargs: object,
-) -> Callable[[Callable[_CallP, _RetT]], IsTaskTemplate[_CallP, _RetT]]:
+) -> Any:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Decorator-style factory for defining reusable callable-backed tasks.
     #
@@ -468,7 +506,7 @@ def TaskTemplate(
         restore_outputs=restore_outputs,
         **kwargs,
     )
-    return cast(Callable[[Callable[_CallP, _RetT]], IsTaskTemplate[_CallP, _RetT]], ret)
+    return ret
 
 
 class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP, _RetT],

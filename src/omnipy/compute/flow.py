@@ -13,18 +13,29 @@ Attributes:
         coordinating flows.
 """
 
+from collections.abc import Iterable, Mapping
 import inspect
 import os
 from textwrap import dedent
-from typing import Callable, cast, ClassVar, Generic, Iterable, Mapping, ParamSpec
+from typing import Any, cast, ClassVar, Generic, Literal, overload, ParamSpec
 
-from typing_extensions import TypeVar
+from typing_extensions import TypeVar, Unpack
 
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
 from omnipy.compute._joblist_job import ChildJobListArgJobBase
 from omnipy.compute._mixins.dag_kwargs_consumption import DagKwargsConsumptionJobMixin
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
+from omnipy.compute._typedefs import (DagFlowTemplateIterDecorator,
+                                      DagFlowTemplateIterWithDatasetClsDecorator,
+                                      DagFlowTemplatePlainDecorator,
+                                      FuncFlowTemplateIterDecorator,
+                                      FuncFlowTemplateIterWithDatasetClsDecorator,
+                                      FuncFlowTemplatePlainDecorator,
+                                      JobCommonKwargs,
+                                      LinearFlowTemplateIterDecorator,
+                                      LinearFlowTemplateIterWithDatasetClsDecorator,
+                                      LinearFlowTemplatePlainDecorator)
 from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.shared.protocols.compute.job import (ChildJobTemplateLike,
                                                  IsDagFlow,
@@ -54,6 +65,7 @@ __all__ = [
 
 _CallP = ParamSpec('_CallP')
 _RetT = TypeVar('_RetT')
+_RetDatasetClsT = TypeVar('_RetDatasetClsT', bound=IsDataset)
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_FUNC_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
@@ -509,6 +521,36 @@ _LinearFlowTemplateFactory = callable_decorator_cls(
 )
 
 
+@overload
+def LinearFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    iterate_over_data_files: Literal[True],
+    output_dataset_cls: type[_RetDatasetClsT],
+    **kwargs: Unpack[JobCommonKwargs],
+) -> LinearFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]:
+    ...
+
+
+@overload
+def LinearFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    iterate_over_data_files: Literal[True],
+    output_dataset_cls: None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> LinearFlowTemplateIterDecorator:
+    ...
+
+
+@overload
+def LinearFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    iterate_over_data_files: Literal[False] = False,
+    output_dataset_cls: type[IsDataset] | None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> LinearFlowTemplatePlainDecorator:
+    ...
+
+
 def LinearFlowTemplate(
     *child_job_templates: ChildJobTemplateLike,
     name: str | None = None,
@@ -522,7 +564,7 @@ def LinearFlowTemplate(
     persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
     restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
     **kwargs: object,
-) -> Callable[[Callable[_CallP, _RetT]], IsLinearFlowTemplate[_CallP, _RetT]]:
+) -> Any:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Decorator-style factory for defining sequential flows.
     #
@@ -830,7 +872,7 @@ def LinearFlowTemplate(
         restore_outputs=restore_outputs,
         **kwargs,
     )
-    return cast(Callable[[Callable[_CallP, _RetT]], IsLinearFlowTemplate[_CallP, _RetT]], ret)
+    return ret
 
 
 class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
@@ -1227,6 +1269,39 @@ _DagFlowTemplateFactory = callable_decorator_cls(
 )
 
 
+@overload
+def DagFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    consume_kwargs_from_results: bool = True,
+    iterate_over_data_files: Literal[True],
+    output_dataset_cls: type[_RetDatasetClsT],
+    **kwargs: Unpack[JobCommonKwargs],
+) -> DagFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]:
+    ...
+
+
+@overload
+def DagFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    consume_kwargs_from_results: bool = True,
+    iterate_over_data_files: Literal[True],
+    output_dataset_cls: None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> DagFlowTemplateIterDecorator:
+    ...
+
+
+@overload
+def DagFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    consume_kwargs_from_results: bool = True,
+    iterate_over_data_files: Literal[False] = False,
+    output_dataset_cls: type[IsDataset] | None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> DagFlowTemplatePlainDecorator:
+    ...
+
+
 def DagFlowTemplate(
     *child_job_templates: ChildJobTemplateLike,
     consume_kwargs_from_results: bool = True,
@@ -1241,7 +1316,7 @@ def DagFlowTemplate(
     persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
     restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
     **kwargs: object,
-) -> Callable[[Callable[_CallP, _RetT]], IsDagFlowTemplate[_CallP, _RetT]]:
+) -> Any:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Decorator-style factory for defining directed acyclic graph flows.
     #
@@ -1602,7 +1677,7 @@ def DagFlowTemplate(
         restore_outputs=restore_outputs,
         **kwargs,
     )
-    return cast(Callable[[Callable[_CallP, _RetT]], IsDagFlowTemplate[_CallP, _RetT]], ret)
+    return ret
 
 
 class DagFlow(
@@ -1841,6 +1916,36 @@ class FuncFlowTemplateCore(
 _FuncFlowTemplateFactory = callable_decorator_cls(FuncFlowTemplateCore)
 
 
+@overload
+def FuncFlowTemplate(
+    *,
+    iterate_over_data_files: Literal[True],
+    output_dataset_cls: type[_RetDatasetClsT],
+    **kwargs: Unpack[JobCommonKwargs],
+) -> FuncFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]:
+    ...
+
+
+@overload
+def FuncFlowTemplate(
+    *,
+    iterate_over_data_files: Literal[True],
+    output_dataset_cls: None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> FuncFlowTemplateIterDecorator:
+    ...
+
+
+@overload
+def FuncFlowTemplate(
+    *,
+    iterate_over_data_files: Literal[False] = False,
+    output_dataset_cls: type[IsDataset] | None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> FuncFlowTemplatePlainDecorator:
+    ...
+
+
 def FuncFlowTemplate(
     *,
     name: str | None = None,
@@ -1854,7 +1959,7 @@ def FuncFlowTemplate(
     persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
     restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
     **kwargs: object,
-) -> Callable[[Callable[_CallP, _RetT]], IsFuncFlowTemplate[_CallP, _RetT]]:
+) -> Any:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Decorator-style factory for defining callable-backed coordinating flows.
     #
@@ -2041,7 +2146,7 @@ def FuncFlowTemplate(
         restore_outputs=restore_outputs,
         **kwargs,
     )
-    return cast(Callable[[Callable[_CallP, _RetT]], IsFuncFlowTemplate[_CallP, _RetT]], ret)
+    return ret
 
 
 class FuncFlow(
