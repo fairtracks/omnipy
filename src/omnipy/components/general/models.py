@@ -59,7 +59,7 @@ class NotIterableExceptStrOrBytesModel(Model[object | None]):
         >>> NotIterableExceptStrOrBytesModel(1234)
         NotIterableExceptStrOrBytesModel(1234)
         >>> NotIterableExceptStrOrBytesModel('1234')
-        NotIterableExceptStrOrBytesModel(1234)
+        NotIterableExceptStrOrBytesModel('1234')
         >>> with print_exception:
         ...     NotIterableExceptStrOrBytesModel((1, 2, 3, 4))
         ValidationError: 1 validation error for NotIterableExceptStrOrBytesModel
@@ -644,7 +644,7 @@ class GroupByTypeModel(Chain2[Model[list], Model[dict[type | GenericAlias, list]
 
     Examples:
         >>> GroupByTypeModel([1, 'a', 2, [3], ['b']]).to_data()
-        {int: [1, 2], str: ['a'], list[int]: [[3]], list[str]: [['b']]}
+        {<class 'int'>: [1, 2], <class 'str'>: ['a'], list[int]: [[3]], list[str]: [['b']]}
     """
     @classmethod
     def _parse_data(cls, data: Model[list]) -> Model[dict[type | GenericAlias, list]]:
