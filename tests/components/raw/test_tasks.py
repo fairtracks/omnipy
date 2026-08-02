@@ -4,15 +4,9 @@ from typing import Annotated, NamedTuple
 
 import pytest
 
-from omnipy.components.raw.tasks import (concat_all_vals_in_datasets_as_args,
-                                         concat_all_vals_in_datasets_as_kwargs,
-                                         decode_bytes,
-                                         union_all_datasets_as_args,
-                                         union_all_datasets_as_kwargs,
-                                         union_all_vals_in_datasets_as_args,
-                                         union_all_vals_in_datasets_as_kwargs)
+from omnipy.components.raw.tasks import decode_bytes
 from omnipy.data.dataset import Dataset
-from omnipy.data.model import is_model_instance, Model
+from omnipy.data.model import Model
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 
@@ -20,7 +14,7 @@ def test_decode_bytes(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     class DecodeCaseInfo(NamedTuple):
         bytes_data: bytes
         target_str: str
-        encoding: str | None
+        encoding: str
 
     test_cases = [
         DecodeCaseInfo(b'', '', 'ascii'),
@@ -45,111 +39,3 @@ def test_decode_bytes(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
     assert decode_bytes.run(
         Dataset[Model[bytes]](dict([(case.encoding, case.bytes_data) for case in test_cases])),
         encoding=None).to_data() == dict([(case.encoding, case.target_str) for case in test_cases])
-
-
-def test_concat_all_vals_in_datasets_as_args_accepts_positional_datasets(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    left_dataset = Dataset[Model[list[int]]](a=[1], b=[2])
-    middle_dataset = Dataset[Model[tuple[str, ...]]](c=['3'])
-    right_dataset = Dataset[Model[tuple[int]]](d=(4,))
-
-    output = concat_all_vals_in_datasets_as_args.run(left_dataset, middle_dataset, right_dataset)
-    assert is_model_instance(output)
-    assert output.full_type() == list[int]
-    assert output.to_data() == [1, 2, 3, 4]
-
-
-def test_concat_all_vals_in_datasets_as_kwargs_accepts_keyword_datasets(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    left_dataset = Dataset[Model[list[int]]](a=[1], b=[2])
-    middle_dataset = Dataset[Model[list[int]]](c=[3])
-    right_dataset = Dataset[Model[list[int]]](d=[4])
-
-    output = concat_all_vals_in_datasets_as_kwargs.run(
-        left=left_dataset,
-        middle=middle_dataset,
-        right=right_dataset,
-    )
-    assert is_model_instance(output)
-    assert output.full_type() == list[int]
-    assert output.to_data() == [1, 2, 3, 4]
-
-
-def test_union_all_vals_in_datasets_as_kwargs_accepts_keyword_datasets(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    left_dataset = Dataset[Model[dict[str, int]]](a={'a': 1})
-    middle_dataset = Dataset[Model[dict[str, int]]](b={'b': 2})
-    right_dataset = Dataset[Model[dict[str, int]]](c={'c': 3})
-
-    output = union_all_vals_in_datasets_as_kwargs.run(
-        left=left_dataset,
-        middle=middle_dataset,
-        right=right_dataset,
-    )
-    assert is_model_instance(output)
-    assert output.full_type() == dict[str, int]
-    assert output.to_data() == {'a': 1, 'b': 2, 'c': 3}
-
-
-def test_union_all_vals_in_datasets_as_args_accepts_positional_datasets(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    left_dataset = Dataset[Model[dict[str, int]]](a={'a': 1})
-    middle_dataset = Dataset[Model[dict[str, str]]](b={'b': '2'})
-    right_dataset = Dataset[Model[dict[str, int]]](c={'c': 3})
-
-    output = union_all_vals_in_datasets_as_args.run(
-        left_dataset,
-        middle_dataset,
-        right_dataset,
-    )
-    assert is_model_instance(output)
-    assert output.full_type() == dict[str, int]
-    assert output.to_data() == {'a': 1, 'b': 2, 'c': 3}
-
-
-def test_union_all_datasets_as_args_accepts_positional_datasets(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    left_dataset = Dataset[Model[dict[str, int]]](left={'a': 1})
-    middle_dataset = Dataset[Model[dict[str, int]]](middle={'b': 2})
-    right_dataset = Dataset[Model[dict[str, int]]](right={'c': 3})
-
-    output = union_all_datasets_as_args.run(left_dataset, middle_dataset, right_dataset)
-    assert isinstance(output, Dataset)
-    assert output.get_type() is Model[dict[str, int]]
-    assert output.to_data() == {
-        'left': {
-            'a': 1
-        },
-        'middle': {
-            'b': 2
-        },
-        'right': {
-            'c': 3
-        },
-    }
-
-
-def test_union_all_datasets_as_kwargs_accepts_keyword_datasets(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    left_dataset = Dataset[Model[dict[str, int]]](left={'a': 1})
-    middle_dataset = Dataset[Model[dict[str, int]]](middle={'b': 2})
-    right_dataset = Dataset[Model[dict[str, int]]](right={'c': 3})
-
-    output = union_all_datasets_as_kwargs.run(
-        left=left_dataset,
-        middle=middle_dataset,
-        right=right_dataset,
-    )
-    assert isinstance(output, Dataset)
-    assert output.get_type() is Model[dict[str, int]]
-    assert output.to_data() == {
-        'left': {
-            'a': 1
-        },
-        'middle': {
-            'b': 2
-        },
-        'right': {
-            'c': 3
-        },
-    }

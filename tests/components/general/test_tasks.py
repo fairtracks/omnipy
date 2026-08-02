@@ -1,20 +1,27 @@
 """Tests for general-purpose dataset and model creation tasks."""
 
-from typing import Generic
+from typing import Annotated, Generic
 
 import pytest
 from typing_extensions import TypeVar
 
-from omnipy.components.general.tasks import (create_dataset_from_args,
+from omnipy.components.general.tasks import (concat_all_vals_in_datasets_as_args,
+                                             concat_all_vals_in_datasets_as_kwargs,
+                                             create_dataset_from_args,
                                              create_dataset_from_kwargs,
                                              create_model_from_args,
-                                             create_model_from_kwargs)
+                                             create_model_from_kwargs,
+                                             union_all_datasets_as_args,
+                                             union_all_datasets_as_kwargs,
+                                             union_all_vals_in_datasets_as_args,
+                                             union_all_vals_in_datasets_as_kwargs)
 from omnipy.data.dataset import Dataset
-from omnipy.data.model import Model
+from omnipy.data.model import is_model_instance, Model
 from omnipy.data.param import (bind_adjust_dataset_func,
                                bind_adjust_model_func,
                                params_dataclass,
                                ParamsBase)
+from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 
 class FloatModel(Model[float]):
@@ -193,3 +200,111 @@ def test_create_model_from_kwargs() -> None:
     dict_model = create_model_from_kwargs.run(model_cls=Model[dict[str, int]], a=1.23, b='3')
 
     assert dict_model.to_data() == dict(a=1, b=3)
+
+
+def test_concat_all_vals_in_datasets_as_args_accepts_positional_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[list[int]]](a=[1], b=[2])
+    middle_dataset = Dataset[Model[tuple[str, ...]]](c=['3'])
+    right_dataset = Dataset[Model[tuple[int]]](d=(4,))
+
+    output = concat_all_vals_in_datasets_as_args.run(left_dataset, middle_dataset, right_dataset)
+    assert is_model_instance(output)
+    assert output.full_type() == list[int]
+    assert output.to_data() == [1, 2, 3, 4]
+
+
+def test_concat_all_vals_in_datasets_as_kwargs_accepts_keyword_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[list[int]]](a=[1], b=[2])
+    middle_dataset = Dataset[Model[list[int]]](c=[3])
+    right_dataset = Dataset[Model[list[int]]](d=[4])
+
+    output = concat_all_vals_in_datasets_as_kwargs.run(
+        left=left_dataset,
+        middle=middle_dataset,
+        right=right_dataset,
+    )
+    assert is_model_instance(output)
+    assert output.full_type() == list[int]
+    assert output.to_data() == [1, 2, 3, 4]
+
+
+def test_union_all_vals_in_datasets_as_kwargs_accepts_keyword_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[dict[str, int]]](a={'a': 1})
+    middle_dataset = Dataset[Model[dict[str, int]]](b={'b': 2})
+    right_dataset = Dataset[Model[dict[str, int]]](c={'c': 3})
+
+    output = union_all_vals_in_datasets_as_kwargs.run(
+        left=left_dataset,
+        middle=middle_dataset,
+        right=right_dataset,
+    )
+    assert is_model_instance(output)
+    assert output.full_type() == dict[str, int]
+    assert output.to_data() == {'a': 1, 'b': 2, 'c': 3}
+
+
+def test_union_all_vals_in_datasets_as_args_accepts_positional_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[dict[str, int]]](a={'a': 1})
+    middle_dataset = Dataset[Model[dict[str, str]]](b={'b': '2'})
+    right_dataset = Dataset[Model[dict[str, int]]](c={'c': 3})
+
+    output = union_all_vals_in_datasets_as_args.run(
+        left_dataset,
+        middle_dataset,
+        right_dataset,
+    )
+    assert is_model_instance(output)
+    assert output.full_type() == dict[str, int]
+    assert output.to_data() == {'a': 1, 'b': 2, 'c': 3}
+
+
+def test_union_all_datasets_as_args_accepts_positional_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[dict[str, int]]](left={'a': 1})
+    middle_dataset = Dataset[Model[dict[str, int]]](middle={'b': 2})
+    right_dataset = Dataset[Model[dict[str, int]]](right={'c': 3})
+
+    output = union_all_datasets_as_args.run(left_dataset, middle_dataset, right_dataset)
+    assert isinstance(output, Dataset)
+    assert output.get_type() is Model[dict[str, int]]
+    assert output.to_data() == {
+        'left': {
+            'a': 1
+        },
+        'middle': {
+            'b': 2
+        },
+        'right': {
+            'c': 3
+        },
+    }
+
+
+def test_union_all_datasets_as_kwargs_accepts_keyword_datasets(
+        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    left_dataset = Dataset[Model[dict[str, int]]](left={'a': 1})
+    middle_dataset = Dataset[Model[dict[str, int]]](middle={'b': 2})
+    right_dataset = Dataset[Model[dict[str, int]]](right={'c': 3})
+
+    output = union_all_datasets_as_kwargs.run(
+        left=left_dataset,
+        middle=middle_dataset,
+        right=right_dataset,
+    )
+    assert isinstance(output, Dataset)
+    assert output.get_type() is Model[dict[str, int]]
+    assert output.to_data() == {
+        'left': {
+            'a': 1
+        },
+        'middle': {
+            'b': 2
+        },
+        'right': {
+            'c': 3
+        },
+    }

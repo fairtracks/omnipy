@@ -1,9 +1,13 @@
 """General tasks for splitting, importing, and creating datasets and models."""
-
+from _operator import iadd, ior
+from collections.abc import Callable, Iterable, Iterator
+from copy import deepcopy
+from functools import reduce
 from io import IOBase
+from itertools import chain
 import os
 from pathlib import Path
-from typing import Callable
+from typing import Any, cast
 
 from typing_extensions import TypeVar
 
@@ -12,8 +16,14 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsDataset
 
+from .protocols import SupportsIAdd, SupportsIOr
+
+_T = TypeVar('_T')
 _DatasetT = TypeVar('_DatasetT', bound=IsDataset)
 _ModelT = TypeVar('_ModelT', bound=Model)
+_SupportsIAddT = TypeVar('_SupportsIAddT', bound=SupportsIAdd)
+_SupportsIOrT = TypeVar('_SupportsIOrT', bound=SupportsIOr)
+
 # @TaskTemplate()
 # def cast_dataset(dataset: Dataset, cast_model: Callable[[], _ModelT]) -> _ModelT:
 #     out_dataset: Dataset[_ModelT] = Dataset[cast_model]()
@@ -174,3 +184,161 @@ def create_model_from_kwargs(*, model_cls: type[_ModelT], **data: object) -> _Mo
         A model instance of type ``model_cls``.
     """
     return model_cls(**data)  # type: ignore[arg-type]
+
+
+def _extract_first_and_other_datasets(
+        datasets: dict[str, _DatasetT]) -> tuple[_DatasetT, tuple[_DatasetT, ...]]:
+    first_dataset, *other_datasets = datasets.values()
+    return first_dataset, tuple(other_datasets)
+
+
+def _iter_dataset_values(datasets: Iterable[Dataset[_ModelT]]) -> Iterator[_ModelT]:
+    for dataset in datasets:
+        yield from dataset.values()
+
+
+def _common_reduce(
+    operator: Callable,
+    first_vals: tuple[_T, ...],
+    other_vals: Iterable[object],
+) -> _T:
+    assert len(first_vals) > 0
+    first_val = deepcopy(first_vals[0])
+    return cast(_T, reduce(operator, chain((first_val,), first_vals[1:], other_vals)))
+
+
+def _concat_dataset_values(
+    first_dataset: Dataset[Model[_SupportsIAddT]],
+    *other_datasets: Dataset[Model[Any]],
+) -> Model[_SupportsIAddT]:
+    return _common_reduce(
+        iadd,
+        tuple(_iter_dataset_values((first_dataset,))),
+        _iter_dataset_values(other_datasets),
+    )
+
+
+def _union_dataset_values(
+    first_dataset: Dataset[Model[_SupportsIOrT]],
+    *other_datasets: Dataset[Model[Any]],
+) -> Model[_SupportsIOrT]:
+    return _common_reduce(
+        ior,
+        tuple(_iter_dataset_values((first_dataset,))),
+        _iter_dataset_values(other_datasets),
+    )
+
+
+def _union_datasets(
+    first_dataset: _DatasetT,
+    *other_datasets: _DatasetT | Dataset[Model[Any]],
+) -> _DatasetT:
+    return _common_reduce(ior, (first_dataset,), other_datasets)
+
+
+@TaskTemplate()
+def concat_all_vals_in_datasets_as_args(
+    first_dataset: Dataset[Model[_SupportsIAddT]],
+    *other_datasets: Dataset[Model[Any]],
+) -> Model[_SupportsIAddT]:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Concatenate all value from positional datasets.
+    #
+    # {{CONCAT_DESCRIPTION}}
+    #
+    """Concatenate all value from positional datasets.
+
+    Concatenation is based on a deep copy of the first value, with
+    consecutive concatenations through the `+=` operator.
+    """
+
+    return _concat_dataset_values(first_dataset, *other_datasets)
+
+
+@TaskTemplate()
+def concat_all_vals_in_datasets_as_kwargs(**datasets: Dataset[Model[_SupportsIAddT]],
+                                          ) -> Model[_SupportsIAddT]:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Concatenate all values from keyword datasets.
+    #
+    # {{CONCAT_DESCRIPTION}}
+    #
+    """Concatenate all values from keyword datasets.
+
+    Concatenation is based on a deep copy of the first value, with
+    consecutive concatenations through the `+=` operator.
+    """
+
+    first_dataset, other_datasets = _extract_first_and_other_datasets(datasets)
+    return _concat_dataset_values(first_dataset, *other_datasets)
+
+
+@TaskTemplate()
+def union_all_vals_in_datasets_as_args(
+    first_dataset: Dataset[Model[_SupportsIOrT]],
+    *other_datasets: Dataset[Model[Any]],
+) -> Model[_SupportsIOrT]:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Union all dataset values from positional datasets.
+    #
+    # {{UNION_DESCRIPTION_VALUE}}
+    #
+    """Union all dataset values from positional datasets.
+
+    Union is based on a deep copy of the first value, with consecutive
+    unions through the `|=` operator.
+    """
+
+    return _union_dataset_values(first_dataset, *other_datasets)
+
+
+@TaskTemplate()
+def union_all_vals_in_datasets_as_kwargs(**datasets: Dataset[Model[_SupportsIOrT]],
+                                         ) -> Model[_SupportsIOrT]:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Union all dataset values from keyword datasets.
+    #
+    # {{UNION_DESCRIPTION_VALUE}}
+    #
+    """Union all dataset values from keyword datasets.
+
+    Union is based on a deep copy of the first value, with consecutive
+    unions through the `|=` operator.
+    """
+
+    first_dataset, other_datasets = _extract_first_and_other_datasets(datasets)
+    return _union_dataset_values(first_dataset, *other_datasets)
+
+
+@TaskTemplate()
+def union_all_datasets_as_args(
+    first_dataset: _DatasetT,
+    *other_datasets: Dataset[Model[Any]],
+) -> _DatasetT:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Union all positional datasets.
+    #
+    # {{UNION_DESCRIPTION_DATASET}}
+    #
+    """Union all positional datasets.
+
+    Union is based on a deep copy of the first dataset, with consecutive
+    unions through the `|=` operator.
+    """
+
+    return _union_datasets(first_dataset, *other_datasets)
+
+
+@TaskTemplate()
+def union_all_datasets_as_kwargs(**datasets: _DatasetT) -> _DatasetT:
+    # %% Original docstring (managed by expand_docstr_macros.py) %%
+    # Union all keyword datasets.
+    #
+    # {{UNION_DESCRIPTION_DATASET}}
+    """Union all keyword datasets.
+
+    Union is based on a deep copy of the first dataset, with consecutive
+    unions through the `|=` operator."""
+
+    first_dataset, other_datasets = _extract_first_and_other_datasets(datasets)
+    return _union_datasets(first_dataset, *other_datasets)
