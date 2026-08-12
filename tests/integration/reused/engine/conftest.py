@@ -6,8 +6,8 @@ import pytest
 from pytest_cases import filters
 import pytest_cases as pc
 
-from omnipy.compute.flow import DagFlowTemplate, LinearFlowTemplate
-from omnipy.compute.task import TaskTemplate
+from omnipy.compute.flow import DagFlowTemplateCore, LinearFlowTemplateCore
+from omnipy.compute.task import TaskTemplateCore
 from omnipy.hub._registry import RunStateRegistry
 from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
@@ -42,9 +42,9 @@ from ....engine.helpers.functions import update_job_case_with_job
 @pc.parametrize(
     'job_type', [JobType.TASK, JobType.LINEAR_FLOW, JobType.DAG_FLOW],
     ids=['task', 'linear_flow', 'dag_flow'])
-@pc.parametrize('task_template_cls', [TaskTemplate], ids=[''])
-@pc.parametrize('linear_flow_template_cls', [LinearFlowTemplate], ids=[''])
-@pc.parametrize('dag_flow_template_cls', [DagFlowTemplate], ids=[''])
+@pc.parametrize('task_template_cls', [TaskTemplateCore], ids=[''])
+@pc.parametrize('linear_flow_template_cls', [LinearFlowTemplateCore], ids=[''])
+@pc.parametrize('dag_flow_template_cls', [DagFlowTemplateCore], ids=[''])
 def all_job_classes(
     job_type: JobType.Literals,
     task_template_cls: Type[IsTaskTemplate],
@@ -133,7 +133,7 @@ all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg = \
 @pc.parametrize(
     'job_classes',
     [
-        (JobType.TASK, TaskTemplate, LinearFlowTemplate, DagFlowTemplate),
+        (JobType.TASK, TaskTemplateCore, LinearFlowTemplateCore, DagFlowTemplateCore),
     ],
     ids=['task-only'],
 )

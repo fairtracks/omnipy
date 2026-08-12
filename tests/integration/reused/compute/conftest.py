@@ -2,7 +2,7 @@
 
 import pytest
 
-from omnipy.compute.task import TaskTemplate
+from omnipy.compute.task import TaskTemplateCore
 
 from ....compute.conftest import child_job_list_arg_flow_cls_tuple  # noqa
 from ....compute.conftest import \
@@ -19,4 +19,4 @@ from ....compute.conftest import linear_flow_cls_tuple  # noqa
 @pytest.fixture
 def mock_local_runner(runtime_all_engines):
     """Provide mock local runner."""
-    return TaskTemplate.engine
+    return TaskTemplateCore.engine

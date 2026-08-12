@@ -283,7 +283,7 @@ def CommandMockJobTemplate(
 ) -> Callable[[Callable[CallP, RetT]], IsCommandMockJobTemplate[CallP, RetT]]:
 
     ret = _CommandMockJobTemplateFactory(
-        command=command,
+        command,
         name=name,
         id=id,
         uppercase=uppercase,
@@ -308,7 +308,7 @@ class CommandMockJob(
 
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsCommandMockJobTemplate[CallP, RetT]]:
-        return cast(type[IsCommandMockJobTemplate[CallP, RetT]], CommandMockJobTemplate)
+        return cast(type[IsCommandMockJobTemplate[CallP, RetT]], CommandMockJobTemplateCore)
 
     def _call_job(self, *args: object, **kwargs: object) -> object:
         param_self = cast(CommandMockParamMixin, self)
