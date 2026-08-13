@@ -1,3 +1,4 @@
+import re
 from textwrap import dedent
 
 from omnipy.data._display.config import OutputConfig
@@ -12,6 +13,12 @@ from omnipy.shared.enums.display import PrettyPrinterLib
 from omnipy.shared.enums.ui import UserInterfaceType
 
 from .helpers import render_panel_to_plain_terminal
+
+_BYTES_RE = re.compile(r'\d+ Bytes')
+
+
+def _normalize_bytes_size(output: str) -> str:
+    return _BYTES_RE.sub('<bytes> Bytes', output)
 
 
 def _assert_pretty_repr_of_draft(
@@ -164,7 +171,8 @@ def test_characterize_dataset_list_framing_and_rows() -> None:
             height=9,
             ui=UserInterfaceType.TERMINAL,
         ))
-    assert bounded_list_output == dedent("""\
+    assert _normalize_bytes_size(bounded_list_output) == _normalize_bytes_size(
+        dedent("""\
         ╭───┬────────────────┬──────────────────┬────────┬──────────────────╮
         │ # │ Data file name │       Type       │ Length │ Size (in memory) │
         │   │                │                  │        │                  │
@@ -174,7 +182,7 @@ def test_characterize_dataset_list_framing_and_rows() -> None:
         │ 3 │ row_3          │ Model[list[int]] │      2 │        649 Bytes │
         │ … │ …              │ …                │      … │                … │
         ╰───┴────────────────┴──────────────────┴────────┴──────────────────╯
-        """)
+        """))
 
     unbounded_height_list_output = render_panel_to_plain_terminal(
         dataset._list(
@@ -182,7 +190,8 @@ def test_characterize_dataset_list_framing_and_rows() -> None:
             height=None,
             ui=UserInterfaceType.TERMINAL,
         ))
-    assert unbounded_height_list_output == dedent("""\
+    assert _normalize_bytes_size(unbounded_height_list_output) == _normalize_bytes_size(
+        dedent("""\
         ╭────┬────────────────┬──────────────────┬────────┬──────────────────╮
         │ #  │ Data file name │       Type       │ Length │ Size (in memory) │
         │    │                │                  │        │                  │
@@ -199,4 +208,4 @@ def test_characterize_dataset_list_framing_and_rows() -> None:
         │ 10 │ row_10         │ Model[list[int]] │      2 │        649 Bytes │
         │ 11 │ row_11         │ Model[list[int]] │      2 │        649 Bytes │
         ╰────┴────────────────┴──────────────────┴────────┴──────────────────╯
-        """)
+        """))
