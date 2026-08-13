@@ -47,7 +47,7 @@ async def harmonized_batches(
         river_urls=river_urls, wastewater_urls=wastewater_urls)
 
 
-async def test_harmonize_environmental_monitoring_data(
+async def test_harmonize_water_samples(
     runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     harmonized_batches: Annotated[NormalizedBatchesDataset, pytest.fixture],
 ) -> None:
@@ -102,7 +102,7 @@ async def test_harmonize_environmental_monitoring_data(
     }
 
 
-async def test_flatten_and_wrangle_environmental_monitoring_data_as_dataframe(
+async def test_flatten_and_wrangle_water_samples_as_dataframe(
     runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     harmonized_batches: Annotated['NormalizedBatchesDataset', pytest.fixture],
 ) -> None:
