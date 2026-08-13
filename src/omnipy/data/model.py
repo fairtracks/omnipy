@@ -786,7 +786,7 @@ class Model(  # type: ignore[misc]
             if not isinstance(data, all_types):
                 try:
                     dataset_or_model_as_input, data = \
-                        prepare_value_for_validation_if_dataset_or_model(data)
+                        convert_value_to_raw_data_if_model_or_dataset(data)
                 except Exception as exc:
                     vexc = ValueError(f'Failed to prepare value for validation: {exc}')
                     raise ValidationError(
@@ -1260,7 +1260,7 @@ class Model(  # type: ignore[misc]
         self,
         value: object,
     ) -> _RootT:
-        _, value = prepare_value_for_validation_if_dataset_or_model(value)
+        _, value = convert_value_to_raw_data_if_model_or_dataset(value)
 
         values, _, validation_error = pyd.validate_model(self.__class__, {ROOT_KEY: value})
         if validation_error:
@@ -1924,7 +1924,7 @@ class Model(  # type: ignore[misc]
 
             if name in ['__setitem__', '__setattr__']:
                 key, value = args
-                _, value = prepare_value_for_validation_if_dataset_or_model(value)
+                _, value = convert_value_to_raw_data_if_model_or_dataset(value)
                 args = (key, value)
 
                 self_convert_args_if_failure = False
@@ -2362,7 +2362,7 @@ class Model(  # type: ignore[misc]
         return [(None, self.content)]
 
 
-def prepare_value_for_validation_if_dataset_or_model(value: object) -> tuple[bool, object]:
+def convert_value_to_raw_data_if_model_or_dataset(value: object) -> tuple[bool, object]:
     """Convert model-like inputs to plain data before validation.
 
     Args:

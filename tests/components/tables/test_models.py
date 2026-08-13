@@ -393,6 +393,89 @@ def test_iterating_pydantic_record_model_row_wise_uses_declared_output_type() ->
     }
 
 
+def test_iterating_pydantic_record_model_converts_models_to_raw_data_before_assignment() -> None:
+    class DependentProfileModel(pyd.BaseModel):
+        id: int = pyd.Field(alias='@id')
+        first_name: str
+        age: int
+        relationship: str
+
+    class AliasRecordWithDerivedChild(pyd.BaseModel):
+        name: str
+        child: DependentProfileModel | None = None
+        _next_id = 0
+
+        @pyd.validator('child', pre=True, always=True, allow_reuse=True)
+        def _set_child_from_name(cls, value: object, values: dict[str, object]) -> object:
+            if value is not None:
+                child_id = cls._next_id
+                cls._next_id += 1
+                if isinstance(value, dict):
+                    return {
+                        **value,
+                        '@id': child_id,
+                    }
+                return value
+
+            return values.get('child')
+
+    class IteratingAliasRecordModel(IteratingPydanticRecordsModel[
+            AliasRecordWithDerivedChild,
+            JsonMaxLevel1ColumnWiseTableWithColNamesModel,
+            JsonMaxLevel1ColumnModel,
+            JsonScalar | JsonDictOfScalars | JsonListOfScalars,
+    ]):
+        pass
+
+    # The child rows start out as plain dictionaries, but validation turns
+    # them into nested Pydantic models and also adds the alias field @id.
+    # Since validation changes the content, the validated content must be
+    # written into the table instead of the input_data. Before the
+    # validated values are written back into the table,
+    # _validate_over_all_rows must therefore convert those nested models
+    # back to raw alias-keyed data, which in turn allows validation
+    # against JsonMaxLevel1ColumnModel.
+
+    input_data = {
+        'name': ['Ada', 'Linus', 'Grace'],
+        'child': [{
+            'first_name': 'Eva',
+            'age': 12,
+            'relationship': 'daughter',
+        }, {
+            'first_name': 'Noah',
+            'age': 9,
+            'relationship': 'son',
+        }, {
+            'first_name': 'Maya',
+            'age': 14,
+            'relationship': 'daughter',
+        }],
+    }
+
+    records = IteratingAliasRecordModel(input_data)
+    assert all('@id' in child and 'id' not in child for child in records.to_data()['child'])
+    assert records.to_data() == {
+        'name': ['Ada', 'Linus', 'Grace'],
+        'child': [{
+            '@id': 0,
+            'first_name': 'Eva',
+            'age': 12,
+            'relationship': 'daughter',
+        }, {
+            '@id': 1,
+            'first_name': 'Noah',
+            'age': 9,
+            'relationship': 'son',
+        }, {
+            '@id': 2,
+            'first_name': 'Maya',
+            'age': 14,
+            'relationship': 'daughter',
+        }],
+    }
+
+
 def test_iterating_pydantic_record_model_row_wise_data(
         # runtime: Annotated[IsRuntime, pytest.fixture],
 ) -> None:

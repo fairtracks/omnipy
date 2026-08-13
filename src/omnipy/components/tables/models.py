@@ -10,11 +10,11 @@ from typing import Callable, cast, Generic, get_args, overload, Protocol, Sized,
 from typing_extensions import NamedTuple, override, Self, TypeVar
 
 from omnipy.data.helpers import MethodInfo, TypeVarStore
-from omnipy.data.model import (is_model_instance,
+from omnipy.data.model import (convert_value_to_raw_data_if_model_or_dataset,
+                               is_model_instance,
                                is_pure_pydantic_model,
                                Model,
-                               ModelMetaclass,
-                               prepare_value_for_validation_if_dataset_or_model)
+                               ModelMetaclass)
 from omnipy.shared.exceptions import AssumedToBeImplementedException
 from omnipy.shared.protocols.content import (IsConcatenableItemSequenceLikeColumnContent,
                                              IsConcatenableItemSequenceLikeContent,
@@ -945,19 +945,15 @@ else:
                 if key in new_cols:
                     return
 
-                col_len: int = len(input_model)
-                # if key not in content:
-                content[key] = [pyd_model.__fields__[key].get_default()] * col_len
-                # else:
-                #     assert len(content[key]) == col_len, \
-                #         (f'Incorrect number of rows in {key} column: '
-                #          f'{len(content[key])} != {col_len}')
-                #     content[key] = [_ for _ in content[key]]
+                # TODO: rewrite IteratingPydanticRecordsModel._init_col() to
+                #       make use of ColumnModel's default_value() and
+                #       filled() methods.
 
+                col_len: int = len(input_model)
+                content[key] = [pyd_model.__fields__[key].get_default()] * col_len
                 new_cols.add(key)
 
             content = output_model.content
-            # content = output_model
             for key, field in pyd_model.__fields__.items():
                 if field.required and key not in content:
                     _init_col(content, pyd_model, key)
@@ -976,11 +972,15 @@ else:
                         is_changed_val = True
                     else:
                         is_changed_val = row_dict[key] != validated_val
-                        # else:
-                        #     is_changed_val = True
 
                     if is_changed_val:
-                        _, prepared_val = prepare_value_for_validation_if_dataset_or_model(
+                        # Reusing dataset/model validation preparation
+                        # method from Model, which converts to raw data, as
+                        # Pydantic models are stricter.
+                        # TODO: Consider removing convert_value_to_raw_data_if_model_or_dataset
+                        #       from IteratingPydanticRecordsModel if pyd_model is later wrapped
+                        #       as Omnipy Model.
+                        _, prepared_val = convert_value_to_raw_data_if_model_or_dataset(
                             validated_val)
                         try:
                             content[key][i] = prepared_val
