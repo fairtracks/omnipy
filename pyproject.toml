@@ -201,6 +201,7 @@ typeCheckingMode = "standard"
 reportInvalidCast = "none"
 reportFunctionMemberAccess = "warning"
 reportUnusedExpression = "none"
+reportUnreachable = "none"
 #reportUnnecessaryTypeIgnoreComment = "error"
 defineConstant = { TYPE_CHECKER = "basedpyright" }
 
