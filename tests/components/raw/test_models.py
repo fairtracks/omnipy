@@ -1,5 +1,5 @@
 """Tests for raw models and nested split-join behavior."""
-
+import datetime
 from enum import Enum
 import os
 from textwrap import dedent
@@ -9,6 +9,8 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.components.raw.models import (BytesModel,
+                                          DateModel,
+                                          DateTimeModel,
                                           JoinColumnsByCommaToLinesModel,
                                           JoinColumnsToLinesModel,
                                           JoinItemsModel,
@@ -23,7 +25,9 @@ from omnipy.components.raw.models import (BytesModel,
                                           SplitToLinesModel,
                                           StrictBytesModel,
                                           StrictStrModel,
-                                          StrModel)
+                                          StrModel,
+                                          TimeDeltaModel,
+                                          TimeModel)
 from omnipy.data.model import Model
 from omnipy.util.pydantic import ValidationError
 
@@ -87,6 +91,78 @@ def test_strict_str_model():
 
     with pytest.raises(ValidationError):
         StrictStrModel(b'\xc3\xa6\xc3\xb8\xc3\xa5')
+
+
+def test_date_model() -> None:
+    date_model_from_date = DateModel(datetime.date(2020, 5, 17))
+    assert date_model_from_date.content == datetime.date(2020, 5, 17)
+    assert date_model_from_date.to_data() == '2020-05-17'
+
+    date_model_from_iso = DateModel('2022-01-01')
+    assert date_model_from_iso.content == datetime.date(2022, 1, 1)
+    assert date_model_from_iso.to_data() == '2022-01-01'
+
+
+def test_datetime_model() -> None:
+    datetime_model_from_datetime = DateTimeModel(datetime.datetime(2020, 5, 17, 12, 15, 00))
+    assert datetime_model_from_datetime.content == datetime.datetime(2020, 5, 17, 12, 15, 00)
+    assert datetime_model_from_datetime.to_data() == '2020-05-17T12:15:00'
+
+    datetime_model_from_iso = DateTimeModel('2022-01-01T12:15:00Z')
+    assert datetime_model_from_iso.content == datetime.datetime(
+        2022, 1, 1, 12, 15, 00, tzinfo=datetime.timezone.utc)
+    assert datetime_model_from_iso.to_data() == '2022-01-01T12:15:00+00:00'
+
+    datetime_model_from_unix_secs = DateTimeModel(1786640576)
+    assert datetime_model_from_unix_secs.content == datetime.datetime(
+        2026, 8, 13, 17, 2, 56, tzinfo=datetime.timezone.utc)
+    assert datetime_model_from_unix_secs.to_data() == '2026-08-13T17:02:56+00:00'
+
+
+def test_time_model() -> None:
+    time_model_from_time = TimeModel(datetime.time(12, 15, 00))
+    assert time_model_from_time.content == datetime.time(12, 15, 00)
+    assert time_model_from_time.to_data() == '12:15:00'
+
+    time_model_from_iso = TimeModel('12:15Z')
+    assert time_model_from_iso.content == datetime.time(12, 15, tzinfo=datetime.timezone.utc)
+    assert time_model_from_iso.to_data() == '12:15:00+00:00'
+
+
+def test_timedelta_model() -> None:
+    timedelta_model_from_timedelta = TimeDeltaModel(datetime.timedelta(days=1, hours=12))
+    assert timedelta_model_from_timedelta.content == datetime.timedelta(days=1, hours=12)
+    assert timedelta_model_from_timedelta.to_data() == '1 day, 12:00:00'
+
+    timedelta_model_from_seconds = TimeDeltaModel(3601)
+    assert timedelta_model_from_seconds.content == datetime.timedelta(hours=1, seconds=1)
+    assert timedelta_model_from_seconds.to_data() == '1:00:01'
+
+    timedelta_model_from_str = TimeDeltaModel('12:34:56.789')
+    assert timedelta_model_from_str.content == datetime.timedelta(
+        hours=12, minutes=34, seconds=56, microseconds=789000)
+    assert timedelta_model_from_str.to_data() == '12:34:56.789000'
+
+    timedelta_model_from_iso = TimeDeltaModel('P182DT12H30M5S')
+    assert timedelta_model_from_iso.content == datetime.timedelta(
+        days=182, hours=12, minutes=30, seconds=5)
+    assert timedelta_model_from_iso.to_data() == '182 days, 12:30:05'
+
+
+def test_date_and_time_model_operations() -> None:
+    date_model_1 = DateModel('2020-05-17')
+    date_model_2 = DateModel('2021-06-19')
+    timedelta_1_2 = date_model_2 - date_model_1
+    assert timedelta_1_2 == TimeDeltaModel(datetime.timedelta(days=398))
+    assert date_model_1 + timedelta_1_2 == date_model_2
+
+    datetime_model_1 = DateTimeModel('2020-05-17T12:15:00')
+    datetime_model_2 = DateTimeModel('2020-05-18T13:16:01')
+
+    timedelta_1_2 = datetime_model_2 - datetime_model_1
+    assert timedelta_1_2 == TimeDeltaModel(
+        datetime.timedelta(days=1, hours=1, minutes=1, seconds=1))
+    assert datetime_model_1 + timedelta_1_2 == datetime_model_2
 
 
 @pc.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])

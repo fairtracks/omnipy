@@ -1,8 +1,9 @@
 """Raw text and binary models for encoding, splitting, joining, and filtering content."""
 
+import datetime
 import os
 from textwrap import dedent
-from typing import Callable, cast, Generic, Protocol, TypeAlias
+from typing import Callable, cast, Generic, overload, Protocol, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -147,6 +148,164 @@ else:
         """
 
         ...
+
+
+class IsoFormatToDataMixin:
+    def to_data(self) -> str:
+        self_as_isodate_model = cast(Model[datetime.time | datetime.date | datetime.datetime], self)
+        return self_as_isodate_model.content.isoformat()
+
+
+class TimeModel(IsoFormatToDataMixin, Model[datetime.time]):
+    """Model representing a time value with isoformat serialization.
+
+    Supports the same input types as Pydantic's ``time`` type:
+    - ``time`` object
+    - ``str``, in the format ``HH:MM[:SS[.ffffff]][Z or [±]HH[:]MM]``
+
+    Examples:
+        >>> lunch = TimeModel(datetime.time(12, 15, 0))
+        >>> lunch.content
+        datetime.time(12, 15)
+        >>> lunch.to_data()
+        '12:15:00'
+        >>> utc_time = TimeModel('12:15Z')
+        >>> utc_time.content
+        datetime.time(12, 15, tzinfo=datetime.timezone.utc)
+        >>> utc_time.to_data()
+        '12:15:00+00:00'
+    """
+
+    ...
+
+
+class TimeDeltaModel(Model[datetime.timedelta]):
+    """Model representing a time duration with string serialization.
+
+    Supports the same input types as Pydantic's ``timedelta`` type:
+    - ``timedelta`` object
+    - ``int`` or ``float``, interpreted as seconds
+    - ``str``, in the format ``HH:MM:SS[.ffffff]``
+    - ``str``, in ISO 8601 duration format ``[±]P[DD]DT[HH]H[MM]M[SS]S``
+
+    Examples:
+        >>> delta = TimeDeltaModel(datetime.timedelta(days=1, hours=12))
+        >>> delta.content
+        datetime.timedelta(days=1, seconds=43200)
+        >>> delta.to_data()
+        '1 day, 12:00:00'
+        >>> TimeDeltaModel(3601).to_data()
+        '1:00:01'
+        >>> TimeDeltaModel('12:34:56.789').to_data()
+        '12:34:56.789000'
+        >>> TimeDeltaModel('P182DT12H30M5S').to_data()
+        '182 days, 12:30:05'
+    """
+    def to_data(self) -> str:
+        return str(self.content)
+
+
+# noinspection PyTypeChecker,PyUnresolvedReferences
+class DateModel(IsoFormatToDataMixin, Model[datetime.date]):
+    """Model representing a calendar date with isoformat serialization.
+
+    Supports the same input types as Pydantic's ``date`` type:
+    - ``date`` object
+    - ``int` or ``float`` directly or as a string, see ``datetime``
+    - ``str``, in the format ``YYYY-MM-DD``
+
+    Examples:
+        >>> start = DateModel(datetime.date(2020, 5, 17))
+        >>> start.content
+        datetime.date(2020, 5, 17)
+        >>> start.to_data()
+        '2020-05-17'
+        >>> end = DateModel('2021-06-19')
+        >>> end - start
+        TimeDeltaModel(datetime.timedelta(days=398))
+        >>> start + TimeDeltaModel(datetime.timedelta(days=1))
+        DateModel(datetime.date(2020, 5, 18))
+    """
+    @overload
+    def __sub__(self, other: 'datetime.date | DateModel') -> TimeDeltaModel:
+        ...
+
+    @overload
+    def __sub__(self, other: datetime.timedelta | TimeDeltaModel) -> 'DateModel':
+        ...
+
+    def __sub__(
+        self, other: 'datetime.date | DateModel | datetime.timedelta | TimeDeltaModel'
+    ) -> 'DateModel | TimeDeltaModel':
+        if isinstance(other, (DateModel, TimeDeltaModel)):
+            other = other.content
+        result = self.content - other
+        match (result):
+            case datetime.timedelta():
+                return TimeDeltaModel(result)
+            case _:
+                return DateModel(result)
+
+    def __add__(self, other: datetime.timedelta | TimeDeltaModel) -> 'DateModel':
+        if isinstance(other, TimeDeltaModel):
+            other = other.content
+        return DateModel(self.content + other)
+
+
+class DateTimeModel(IsoFormatToDataMixin, Model[datetime.datetime]):
+    """Model representing a date and time value with isoformat serialization.
+
+    Supports the same input types as Pydantic's ``datetime`` type:
+    - ``datetime`` object
+    - ``int`` or ``float`` directly or as a string, assumed as Unix time,
+        i.e. seconds (if ``>= -2e10`` or ``<= 2e10``) or milliseconds
+        (if ``< -2e10`` or ``> 2e10``) since 1 January 1970
+    - ``str``, in the format ``YYYY-MM-DD[T]HH:MM[:SS[.ffffff]][Z or [±]HH[:]MM]``
+
+
+    Examples:
+        >>> created = DateTimeModel(datetime.datetime(2020, 5, 17, 12, 15, 0))
+        >>> created.content
+        datetime.datetime(2020, 5, 17, 12, 15)
+        >>> created.to_data()
+        '2020-05-17T12:15:00'
+        >>> utc_start = DateTimeModel('2026-08-13T17:02Z')
+        >>> utc_start.content
+        datetime.datetime(2026, 8, 13, 17, 2, tzinfo=datetime.timezone.utc)
+        >>> utc_start.to_data()
+        '2026-08-13T17:02:00+00:00'
+        >>> utc_end = DateTimeModel(1786640576)
+        >>> utc_end.to_data()
+        '2026-08-13T17:02:56+00:00'
+        >>> utc_end - utc_start
+        TimeDeltaModel(datetime.timedelta(seconds=56))
+        >>> utc_start + TimeDeltaModel(datetime.timedelta(days=1))
+        DateTimeModel(datetime.datetime(2026, 8, 14, 17, 2, tzinfo=datetime.timezone.utc))
+    """
+    @overload
+    def __sub__(self, other: 'datetime.datetime | DateTimeModel') -> TimeDeltaModel:
+        ...
+
+    @overload
+    def __sub__(self, other: datetime.timedelta | TimeDeltaModel) -> 'DateTimeModel':
+        ...
+
+    def __sub__(
+        self, other: 'datetime.datetime | DateTimeModel | datetime.timedelta | TimeDeltaModel'
+    ) -> 'DateTimeModel | TimeDeltaModel':
+        if isinstance(other, (DateTimeModel, TimeDeltaModel)):
+            other = other.content
+        result = self.content - other
+        match result:
+            case datetime.timedelta():
+                return TimeDeltaModel(result)
+            case _:
+                return DateTimeModel(result)
+
+    def __add__(self, other: datetime.timedelta | TimeDeltaModel) -> 'DateTimeModel':
+        if isinstance(other, TimeDeltaModel):
+            other = other.content
+        return DateTimeModel(self.content + other)
 
 
 # Protocols for split mixins
