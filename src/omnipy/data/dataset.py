@@ -1867,7 +1867,7 @@ class Dataset(
         return [(k, v.content) if is_model_instance(v) else (k, v) for k, v in self.data.items()]
 
 
-def is_dataset_instance(__obj: object) -> 'TypeIs[Dataset]':
+def is_dataset_instance(__obj: object | _DatasetT) -> 'TypeIs[_DatasetT]':
     """Return whether an object is a dataset instance.
 
     Args:

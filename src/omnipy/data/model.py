@@ -2381,7 +2381,7 @@ def convert_value_to_raw_data_if_model_or_dataset(value: object) -> tuple[bool, 
     return False, value
 
 
-def is_model_instance(__obj: object) -> 'TypeIs[Model]':
+def is_model_instance(__obj: object | _ModelT) -> 'TypeIs[_ModelT]':
     """Check whether an object is an Omnipy model instance.
 
     Args:
