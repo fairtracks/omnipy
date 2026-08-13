@@ -3,7 +3,7 @@ import json
 import subprocess
 import sys
 
-from omnipy.data.model import Model
+from omnipy.data.model import is_model_instance
 from omnipy.shared.typedefs import TypeForm
 from omnipy.util.helpers import all_type_variants, ensure_plain_type
 
@@ -13,7 +13,7 @@ if sys.version_info >= (3, 14):
 
 def assert_model(model: object, target_type: TypeForm, content: object):
     """Assert that a value is a model with expected type and content."""
-    assert isinstance(model, Model)
+    assert is_model_instance(model)
     assert model.outer_type(with_args=True) == target_type, \
         f'{model.outer_type(with_args=True)} != {target_type}'
     assert model.content == content, f'{model.content} != {content}'
@@ -21,7 +21,7 @@ def assert_model(model: object, target_type: TypeForm, content: object):
 
 def assert_val(value: object, target_type: TypeForm, content: object):
     """Assert that a plain value matches the expected type and content."""
-    assert not isinstance(value, Model)
+    assert not is_model_instance(value)
     assert any(
         isinstance(value, ensure_plain_type(_type)) for _type in all_type_variants(target_type))
     assert value == content, f'{value} != {content}'
@@ -29,7 +29,7 @@ def assert_val(value: object, target_type: TypeForm, content: object):
 
 def assert_model_or_val(model_or_val: object, target_type: TypeForm, content: object) -> None:
     """Assert either a model or plain value against expectations."""
-    if isinstance(model_or_val, Model):
+    if is_model_instance(model_or_val):
         assert_model(model_or_val, target_type, content)
     else:
         assert_val(model_or_val, target_type, content)

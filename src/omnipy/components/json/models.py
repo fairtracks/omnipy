@@ -253,29 +253,6 @@ class JsonModel(ParseStrAsJsonMixin[_JsonAnyUnion], Model[_JsonAnyUnion]):
         def __new__(cls, value: _JsonAnyUnionContent | object) -> AnyJsonModel:
             ...
 
-    def to_json_str(self, pretty: bool = True) -> str:
-        """Serialize validated JSON content to a JSON string.
-
-        Args:
-            pretty: Whether to return indented human-readable JSON.
-
-        Returns:
-            JSON string representation of this model's content.
-        """
-        return self.to_json(pretty=pretty)
-
-    @classmethod
-    def from_json_str(cls, json_content: str) -> 'JsonModel':
-        """Parse a JSON string into a validated ``JsonModel`` instance.
-
-        Args:
-            json_content: Serialized JSON document to parse and validate.
-
-        Returns:
-            JsonModel: New model instance containing the parsed JSON content.
-        """
-        return cast(JsonModel, cls.parse_raw(json_content, proto=pyd.Protocol.json))
-
 
 class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_JsonListOfDictUnion]):
     """JsonListOrDictModel is a general JSON model supporting any JSON
