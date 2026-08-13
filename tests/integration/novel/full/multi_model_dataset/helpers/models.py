@@ -1,5 +1,3 @@
-"""Helper models for integration novel full tests."""
-
 from typing import Generic, Mapping, Type, TypeVar
 
 from omnipy.data.model import Model

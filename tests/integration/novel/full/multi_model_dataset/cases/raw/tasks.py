@@ -1,26 +1,8 @@
-"""Task definitions for integration novel full tests."""
-
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.multi import MultiModelDataset
 
 from ...helpers.models import GeneralTable, record_schema_factory, RecordSchemaDef, TableTemplate
-
-
-@TaskTemplate()
-def uppercase(text: str) -> str:
-    return text.upper()
-
-
-@TaskTemplate()
-def square_root(number: int) -> dict[str, float]:
-    return {'neg_root': -number**0.5, 'pos_root': number**0.5}
-
-
-@TaskTemplate()
-def merge_key_value_into_str(key: object, val: object) -> str:
-    return '{}: {}'.format(key, val)
-
 
 # TODO: Implement explicit serializer support (if needed)
 

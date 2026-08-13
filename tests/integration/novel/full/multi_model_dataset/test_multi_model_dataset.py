@@ -1,5 +1,3 @@
-"""Tests for multi model dataset."""
-
 import inspect
 from inspect import Parameter
 import os
@@ -13,7 +11,7 @@ from omnipy.data.multi import MultiModelDataset
 from omnipy.shared.enums.job import RunState
 from omnipy.util.pydantic import ValidationError
 
-from ....engine.helpers.functions import assert_job_state
+from .....engine.helpers.functions import assert_job_state
 from .cases.flows import FlowCase
 from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, TableTemplate
 

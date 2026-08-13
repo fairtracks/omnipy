@@ -1,5 +1,3 @@
-"""Tests for three task flow."""
-
 from inspect import Parameter
 from typing import Annotated
 
@@ -8,8 +6,8 @@ import pytest_cases as pc
 
 from omnipy.shared.enums.job import RunState
 
-from ....engine.helpers.functions import assert_job_state
-from .cases.flows import FlowCase
+from .....engine.helpers.functions import assert_job_state
+from ..helpers.classes import FlowCase
 
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')
