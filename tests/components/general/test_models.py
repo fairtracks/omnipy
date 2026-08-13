@@ -252,12 +252,20 @@ def test_converter_model_parses_plain_types():
 def test_converter_model_parses_model_to_model():
     """Parse one structured temperature model into another structured temperature model."""
 
-    # PlainModel to avoid Model[float] subclasses to be typed as Model_float
-    class FahrenheitModel(PlainModel[float]):
-        ...
+    if TYPE_CHECKING:
+        # PlainModel to avoid Model[float] subclasses to be typed as Model_float
+        class FahrenheitModel(PlainModel[float]):
+            ...
 
-    class CelsiusModel(PlainModel[float]):
-        ...
+        class CelsiusModel(PlainModel[float]):
+            ...
+    else:
+
+        class FahrenheitModel(Model[float]):
+            ...
+
+        class CelsiusModel(Model[float]):
+            ...
 
     class FahrenheitToCelsiusModel(ConverterModel[FahrenheitModel, CelsiusModel]):
         @classmethod
@@ -300,15 +308,26 @@ def test_converter_model_parses_model_to_model():
 def test_converter_model_parses_two_models_to_one_model():
     """Parse either Fahrenheit or Celsius models into one Kelvin model."""
 
-    # PlainModel to avoid Model[float] subclasses to be typed as Model_float
-    class CelsiusModel(PlainModel[float]):
-        ...
+    if TYPE_CHECKING:
+        # PlainModel to avoid Model[float] subclasses to be typed as Model_float
+        class CelsiusModel(PlainModel[float]):
+            ...
 
-    class FahrenheitModel(PlainModel[float]):
-        ...
+        class FahrenheitModel(PlainModel[float]):
+            ...
 
-    class KelvinModel(PlainModel[float]):
-        ...
+        class KelvinModel(PlainModel[float]):
+            ...
+    else:
+
+        class CelsiusModel(Model[float]):
+            ...
+
+        class FahrenheitModel(Model[float]):
+            ...
+
+        class KelvinModel(Model[float]):
+            ...
 
     class TemperatureNormalizer(ConverterModel[
             CelsiusModel | FahrenheitModel,
