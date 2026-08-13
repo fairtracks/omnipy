@@ -1,0 +1,107 @@
+from collections.abc import AsyncGenerator
+from typing import Literal
+
+from aiohttp import web
+from aiohttp.test_utils import TestServer
+import pytest
+
+MonitoringSource = Literal['river', 'wastewater']
+
+_MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = {
+    'river': {
+        0: [
+            {
+                'river_batch_id':
+                    'river-batch-1',
+                'catchment':
+                    'glomma-upper',
+                'sampled_at':
+                    '2026-05-03',
+                'station':
+                    'River Mouth',
+                'sample_alias':
+                    'River-R1',
+                'measurements': [
+                    {
+                        'name': 'Nitrate', 'value_mg_l': 1.2
+                    },
+                    {
+                        'name': 'Phosphorus', 'value_ug_l': 120.0
+                    },
+                ],
+            },
+            {
+                'river_batch_id': 'river-batch-2',
+                'catchment': 'glomma-upper',
+                'sampled_at': '2026-05-10',
+                'station': 'River Mouth',
+                'sample_alias': 'River-R2',
+                'measurements': [{
+                    'name': 'nitrate', 'value_mg_l': 1.4
+                },],
+            },
+        ],
+        1: [{
+            'river_batch_id': 'river-batch-3',
+            'catchment': 'glomma-upper',
+            'sampled_at': '2026-05-17',
+            'station': 'Upstream Bend',
+            'sample_alias': 'River-R3',
+            'measurements': [{
+                'name': 'Temperature', 'value_celsius': 9.8
+            },],
+        },],
+    },
+    'wastewater': {
+        0: [{
+            'wastewater_batch_id':
+                'wastewater-batch-1',
+            'catchment_code':
+                'glomma-upper',
+            'monitoring_date':
+                '2026-05-03',
+            'treatment_plant':
+                'North Works',
+            'sample_alias':
+                'WW-9A',
+            'measurements': [
+                {
+                    'metric': 'ammon', 'value': '0.8', 'unit': 'mg/L'
+                },
+                {
+                    'metric': 'phosph', 'value': '0.15', 'unit': 'mg/L'
+                },
+            ],
+        },],
+        1: [{
+            'wastewater_batch_id': 'wastewater-batch-2',
+            'catchment_code': 'glomma-upper',
+            'monitoring_date': '2026-05-10',
+            'treatment_plant': 'North Works',
+            'sample_alias': 'WW-9B',
+            'measurements': [{
+                'metric': 'ammon', 'value': '0.75', 'unit': 'mg/L'
+            },],
+        },],
+    },
+}
+
+
+def _create_monitoring_service_app(source: MonitoringSource, endpoint: str) -> web.Application:
+    async def _monitoring_endpoint(request: web.Request) -> web.Response:
+        page = int(request.query.get('page', '1'))
+        return web.json_response(_MONITORING_PAGES[source][page])
+
+    app = web.Application()
+    app.router.add_route('GET', f'/{endpoint}', _monitoring_endpoint)
+    return app
+
+
+@pytest.fixture(scope='function')
+async def river_service(aiohttp_server) -> AsyncGenerator[TestServer, None]:
+    yield await aiohttp_server(_create_monitoring_service_app('river', 'samples'))
+
+
+@pytest.fixture(scope='function')
+async def wastewater_service(aiohttp_server) -> AsyncGenerator[TestServer, None]:
+    yield await aiohttp_server(_create_monitoring_service_app('wastewater', 'retrieve_samples'))
