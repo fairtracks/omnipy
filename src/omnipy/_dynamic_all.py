@@ -2,6 +2,7 @@
 
 import os
 from types import ModuleType
+from typing import TYPE_CHECKING
 
 import omnipy
 from omnipy.util.literal_enum import LiteralEnum
@@ -64,12 +65,21 @@ _exclude_attrs: set[str] = {
     'RunStateLogMessages',
     'OutputMode',
     'SyntaxLanguage',
+    'PlainCallableType',
+    'GeneratorCallableType',
+    'SyncCallableType',
+    'CallableType',
+    'AsyncCallableType',
+    'TaskJobType',
+    'FlowJobType',
+    'JobType',
 }
 
 _all_modules: dict[str, ModuleType] = {}
 
 if not __all__:
     from omnipy import setup_jupyter_ui
+    from omnipy.components.raw.utils import RegexMatch
     from omnipy.components.tables.models import PydanticRecordModel
     from omnipy.compute._job import JobTemplateMixin
     from omnipy.compute.flow import (DagFlow,
@@ -106,6 +116,9 @@ if not __all__:
     from omnipy.util.helpers import recursive_module_import_new
     from omnipy.util.literal_enum_generator import generate_literal_enum_code
 
+    if TYPE_CHECKING:
+        from omnipy.data._typing.mimic_models import PlainModel
+
     __all__ = [
         'DagFlow',
         'DagFlowTemplate',
@@ -119,6 +132,7 @@ if not __all__:
         'Dataset',
         'MultiModelDataset',
         'Model',
+        'PlainModel',
         'bind_adjust_model_func',
         'bind_adjust_dataset_func',
         'params_dataclass',
@@ -135,6 +149,7 @@ if not __all__:
         'RunState',
         'EngineChoice',
         'generate_literal_enum_code',
+        'RegexMatch',
         'PydanticRecordModel',
         'setup_jupyter_ui',
         'is_non_omnipy_pydantic_model',
