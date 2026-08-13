@@ -124,6 +124,20 @@ def test_init_converting_model_as_input() -> None:
     assert MyFloatObjModel(Model[float](4.5)).to_data() == 4.5
 
 
+def test_init_converting_model_as_input_after_model_matching() -> None:
+    class CelsiusModel(Model[float]):
+        ...
+
+    class FahrenheitModel(Model[float]):
+        ...
+
+    class TemperatureModel(Model[CelsiusModel | FahrenheitModel]):
+        ...
+
+    assert TemperatureModel(CelsiusModel(20.0)).content == CelsiusModel(20.0)
+    assert TemperatureModel(FahrenheitModel(68.0)).content == FahrenheitModel(68.0)
+
+
 def test_init_converting_dataset_as_input() -> None:
     from omnipy.data.dataset import Dataset
     dataset_of_float_objs = Dataset[Model[MyFloatObjModel]](

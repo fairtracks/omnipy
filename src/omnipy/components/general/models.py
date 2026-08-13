@@ -1,16 +1,24 @@
+from abc import ABC, abstractmethod
 from collections import defaultdict
-from collections.abc import Iterable, Mapping
-from types import GenericAlias
-from typing import Any, Generic, get_args, Protocol, Union
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from types import GenericAlias, UnionType
+from typing import Any, cast, Generic, get_args, Protocol, Union
 
-from typing_extensions import TypeVar
+from typing_extensions import override, TypeVar
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, TypeVarStore4
 from omnipy.data.model import Model
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
-from omnipy.util.helpers import is_iterable, is_non_str_byte_iterable, is_package_editable
+from omnipy.util.helpers import (all_type_variants,
+                                 is_iterable,
+                                 is_non_str_byte_iterable,
+                                 is_package_editable,
+                                 is_union)
+
+if TYPE_CHECKING:
+    from omnipy.data._typing.mimic_models import PlainModel
 
 if is_package_editable('omnipy'):
     import os
@@ -91,6 +99,10 @@ _W = TypeVar('_W', bound=Model | Dataset, default=Model[object])
 _X = TypeVar('_X', bound=Model | Dataset, default=Model[object])
 _Y = TypeVar('_Y', bound=Model | Dataset, default=Model[object])
 _Z = TypeVar('_Z', bound=Model | Dataset, default=Model[object])
+
+_FromT = TypeVar('_FromT', bound=object | UnionType)
+_ToT = TypeVar('_ToT')
+_KeyT = TypeVar('_KeyT')
 
 
 class HasOuterType(Protocol):
@@ -672,3 +684,98 @@ class GroupByTypeModel(Chain2[Model[list], Model[dict[type | GenericAlias, list]
             full_type = _deduce_full_type(item)
             grouped[full_type].append(item)  # pyright: ignore [reportArgumentType]
         return Model[dict[type | GenericAlias, list]](grouped)
+
+
+if TYPE_CHECKING:  # noqa: C901
+
+    class ConverterModel(PlainModel[_ToT], Generic[_FromT, _ToT]):
+        @property
+        @override
+        def content(self) -> _ToT:
+            ...
+
+        @content.setter
+        @override
+        def content(self, value: _FromT | _ToT) -> None:
+            ...
+
+        @classmethod
+        def convert(cls, data: _FromT) -> _ToT:
+            ...
+
+        @classmethod
+        def convert_all(cls, sequence_data: Sequence[_FromT]) -> Iterator[_ToT]:
+            ...
+
+        @classmethod
+        def convert_all_items(
+            cls,
+            mapping_data: Mapping[_KeyT, _FromT],
+        ) -> Iterator[tuple[_KeyT, _ToT]]:
+            ...
+else:
+
+    class ConverterModel(Model[_FromT | _ToT], ABC, Generic[_FromT, _ToT]):
+        @override
+        def __class_getitem__(  # pyright: ignore[reportIncompatibleMethodOverride]
+            cls,
+            params: tuple[type[_ToT], type[_FromT]],
+        ) -> type[Model[_FromT | _ToT]]:
+            from_t, to_t = params
+            for from_t_variant in all_type_variants(from_t):
+                if isinstance(from_t_variant, GenericAlias):
+                    # Reject things like list[int], dict[str, int]
+                    raise TypeError(
+                        'Parameterized generics not allowed for FromT: '
+                        f'{from_t_variant}. If you want to use a generic '
+                        'type, wrap it in a Model subclass instead, e.g.:'
+                        f'Model[{from_t_variant}].',)
+                if from_t_variant == to_t:
+                    raise TypeError('FromT and ToT cannot be the same '
+                                    f'type: {from_t_variant}.')
+            return super().__class_getitem__(params)  # type: ignore[arg-type]
+
+        @property
+        @override
+        def content(self) -> _ToT:
+            return cast(_ToT, super().content)
+
+        @content.setter
+        @override
+        def content(self, value: _FromT | _ToT) -> None:
+            super_cls = super(ConverterModel, ConverterModel)
+            super_cls.content.fset(self, value)  # type: ignore[attr-defined]
+
+        @classmethod
+        @abstractmethod
+        def _convert(cls, data: _FromT) -> _ToT:
+            ...
+
+        @classmethod
+        def _parse_data(cls, data: _FromT | _ToT) -> _ToT:
+            # Sanity check
+            assert is_union(cls.outer_type()) and len(get_args(cls.full_type())) > 1
+            from_classes = get_args(cls.full_type())[:-1]
+
+            if isinstance(data, from_classes):
+                converted_data = cls._convert(cast(_FromT, data))
+                return converted_data
+            else:
+                return cast(_ToT, data)
+
+        @classmethod
+        def convert(cls, data: _FromT) -> _ToT:
+            return cls(data).content
+
+        @classmethod
+        def convert_all(cls, sequence_data: Sequence[_FromT]) -> Iterator[_ToT]:
+            for el in sequence_data:
+                yield cls(el).content
+
+        @classmethod
+        def convert_all_items(
+            cls,
+            mapping_data: Mapping[_KeyT, _FromT],
+        ) -> Iterator[tuple[_KeyT, _ToT]]:
+            for key, val in mapping_data.items():
+                yield key, cls(val).content

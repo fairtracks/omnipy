@@ -778,17 +778,22 @@ class Model(  # type: ignore[misc]
 
         dataset_or_model_as_input = False
         if ROOT_KEY in super_kwargs:
-            try:
-                dataset_or_model_as_input, value = \
-                    prepare_value_for_validation_if_dataset_or_model(super_kwargs[ROOT_KEY])
-            except Exception as exc:
-                val_exc = ValueError(f'Failed to prepare value for validation: {exc}')
-                raise ValidationError(
-                    [pyd.ErrorWrapper(exc, loc=ROOT_KEY), pyd.ErrorWrapper(val_exc, loc=ROOT_KEY)],
-                    self.__class__)
-            if dataset_or_model_as_input:
-                super_kwargs[ROOT_KEY] = cast(_RootT, value)
-
+            data = super_kwargs[ROOT_KEY]
+            # Do not convert Model/Dataset data that directly match a
+            # top-level union variant of the Model's full type.
+            all_types = tuple(
+                typ for typ in all_type_variants(self.full_type()) if isinstance(typ, type))
+            if not isinstance(data, all_types):
+                try:
+                    dataset_or_model_as_input, data = \
+                        prepare_value_for_validation_if_dataset_or_model(data)
+                except Exception as exc:
+                    vexc = ValueError(f'Failed to prepare value for validation: {exc}')
+                    raise ValidationError(
+                        [pyd.ErrorWrapper(exc, loc=ROOT_KEY), pyd.ErrorWrapper(vexc, loc=ROOT_KEY)],
+                        self.__class__)
+                if dataset_or_model_as_input:
+                    super_kwargs[ROOT_KEY] = cast(_RootT, data)
         self._init(super_kwargs, **kwargs)
 
         try:
