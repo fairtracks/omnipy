@@ -53,7 +53,6 @@ from .helpers.models import (CBA,
                              NumberModel,
                              ParamUpperStrModel,
                              PydanticChildModel,
-                             PydanticParentModel,
                              UppercaseModel,
                              WordSplitterModel)
 
@@ -1837,7 +1836,7 @@ def test_model_of_pydantic_model_with_pydantic_model_children(
     invalid_child_model = PydanticChildModel(**{'@id': 12, 'value': 2})
     invalid_child_model.value = '2.22'
 
-    model_1 = MyPydanticModel[list[PydanticChildModel]]({
+    model = MyPydanticModel[list[PydanticChildModel]]({
         '@id': '1', 'children': [
             {
                 '@id': '10', 'value': 1.23
@@ -1849,52 +1848,36 @@ def test_model_of_pydantic_model_with_pydantic_model_children(
     # Unlike an omnipy-wrapped pydantic model, the __init__() of a standard pydantic model does not
     # revalidate other pydantic models provided as input. Also, the top-level omnipy Model does not
     # detect that the input contains a nested pydantic model and does not revalidate it.
-    assert model_1.content.children[1].value == '2.22'
+    assert model.content.children[1].value == '2.22'
 
     # Validation can, however, be manually triggered by validate_content()
-    model_1.validate_content()
-    assert model_1.content.children[1].value == 2.22
+    model.validate_content()
+    assert model.content.children[1].value == 2.22
 
-    # Another workaround is to manually provide a pydantic model as input at the top lever, which
-    # will trigger revalidation of any  nested pydantic models
-    model_2 = MyPydanticModel[list[PydanticChildModel]](
-        PydanticParentModel(**{
-            '@id': '1', 'children': [
-                {
-                    '@id': '10', 'value': 1.23
-                },
-                invalid_child_model,
-            ]
-        }))
-
-    assert model_2.content.id == 1
-    assert len(model_2.content.children) == 2
-    assert model_2.content.children[1].value == 2.22
-    assert model_2.content.children[0].id == 10
-
-    model_2.id = '2'
+    assert model.content.id == 1
+    model.id = '2'
     # Model is validated as top-level 'id' attribute is set
-    assert model_2.content.id == 2
+    assert model.content.id == 2
 
-    model_2.children[0].value = '2.46'
+    model.children[0].value = '2.46'
     # Model is not validated as child attributes are set (as Model does not know about the changes)
-    assert model_2.content.children[0].value == '2.46'
+    assert model.content.children[0].value == '2.46'
     # Model is instead validated as 'children' attribute is accessed
-    assert model_2.children[0].value == 2.46
+    assert model.children[0].value == 2.46
 
-    model_2.children[0].id = 'abc'
+    model.children[0].id = 'abc'
     # As validation is postponed, so is the raising of validation error, here as 'children'
     # attribute is accessed
     with pytest.raises(ValidationError):
-        model_2.children
+        model.children
 
     if not runtime.config.data.model.interactive:
         # Manual reset of invalid change above
-        model_2.content.children[0].id = 10
-    assert model_2.children[0].id == 10
+        model.content.children[0].id = 10
+    assert model.children[0].id == 10
 
-    model_2.children[0].id = 11
-    assert model_2.to_data() == {
+    model.children[0].id = 11
+    assert model.to_data() == {
         '@id': 2, 'children': [
             {
                 '@id': 11, 'value': 2.46

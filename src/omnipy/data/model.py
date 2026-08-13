@@ -847,6 +847,7 @@ class Model(  # type: ignore[misc]
         super().__init__()
         self.from_data(super_kwargs[ROOT_KEY])
 
+    # TODO: Model._init() and Dataset._init() are unused. Consider removing?
     def _init(self, super_kwargs: dict_t[str, Any], **kwargs: Any) -> None:
         ...
 
@@ -1446,7 +1447,7 @@ class Model(  # type: ignore[misc]
     #       class MyModel(Model[list[Model[int]]], ModelData[list[int]]):
     #          ...
     #       ```
-    def to_data(self) -> object:
+    def to_data(self) -> Any:
         """Serialize the model into raw Python data.
 
         Returns:
@@ -1963,7 +1964,7 @@ class Model(  # type: ignore[misc]
             *args: Single positional operand.
             model_converted_other_method: Optional callable that performs the
                 operation after converting the operand to this model type.
-            **kwargs: Keyword arguments, which are not supported.
+            **kwargs: Keyword arguments, which are validated as empty
 
         Returns:
             object: Result of the operation or ``NotImplemented`` if Python
@@ -2361,7 +2362,7 @@ class Model(  # type: ignore[misc]
         return [(None, self.content)]
 
 
-def prepare_value_for_validation_if_dataset_or_model(value: object,) -> tuple[bool, object]:
+def prepare_value_for_validation_if_dataset_or_model(value: object) -> tuple[bool, object]:
     """Convert model-like inputs to plain data before validation.
 
     Args:
