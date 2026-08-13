@@ -58,6 +58,7 @@ from omnipy.util.helpers import (all_equals,
                                  evaluate_any_forward_refs_if_possible,
                                  get_calling_module_name,
                                  get_default_if_typevar,
+                                 is_instance_of_any_type_variant,
                                  is_literal_type,
                                  is_non_str_byte_iterable,
                                  is_optional,
@@ -781,9 +782,7 @@ class Model(  # type: ignore[misc]
             data = super_kwargs[ROOT_KEY]
             # Do not convert Model/Dataset data that directly match a
             # top-level union variant of the Model's full type.
-            all_types = tuple(
-                typ for typ in all_type_variants(self.full_type()) if isinstance(typ, type))
-            if not isinstance(data, all_types):
+            if not is_instance_of_any_type_variant(data, self.full_type()):
                 try:
                     dataset_or_model_as_input, data = \
                         convert_value_to_raw_data_if_model_or_dataset(data)

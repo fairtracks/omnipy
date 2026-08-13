@@ -311,7 +311,7 @@ def ensure_plain_type(in_type: _LiteralGenericAlias | _UnionGenericAlias | _Anno
     ...
 
 
-def ensure_plain_type(in_type: TypeForm) -> ForwardRef | TypeVar | type | _SpecialForm | NoneType:
+def ensure_plain_type(in_type: TypeForm) -> ForwardRef | TypeVar | type | _SpecialForm | None:
     """Normalize a type form to its plain runtime representative when possible.
 
     Args:
@@ -419,6 +419,28 @@ def all_type_variants(
         return get_args(in_type)
     else:
         return (cast(type | GenericAlias, in_type),)
+
+
+def is_instance_of_any_type_variant(
+        obj: object, in_type: type | GenericAlias | UnionType | _UnionGenericAlias) -> bool:
+    """Return whether ``obj`` is an instance of any variant in a union-like type
+
+    Note: Generics and other types not supported by ``isinstance()`` are ignored.
+
+    Args:
+        obj: object to check
+        in_type: Type or union expression.
+
+    Returns:
+        ``True`` when ``obj`` is an instance of any variant in ``in_type``.
+    """
+    for type_variant in all_type_variants(in_type):
+        try:
+            if isinstance(obj, type_variant):  # type: ignore[arg-type]
+                return True
+        except TypeError:
+            continue
+    return False
 
 
 def is_iterable(obj: Iterable[_ObjT] | _ObjT) -> TypeGuard[Iterable[_ObjT]]:
