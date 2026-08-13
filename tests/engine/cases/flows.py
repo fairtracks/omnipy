@@ -3,8 +3,8 @@ from typing import AsyncGenerator, Awaitable, cast, Generator
 
 import pytest_cases as pc
 
-from omnipy import Void
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
+from omnipy.compute.helpers import Void
 from omnipy.shared.protocols.compute.job import IsDagFlow, IsFuncArgJob
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry

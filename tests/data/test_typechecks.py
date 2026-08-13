@@ -5,11 +5,12 @@ from typing import Generic, Literal
 import pytest
 from typing_extensions import TypeVar
 
-from omnipy import Dataset, Model
+from omnipy.data.dataset import Dataset
 from omnipy.data.model import (is_model_instance,
                                is_model_subclass,
                                is_non_omnipy_pydantic_model,
                                is_pure_pydantic_model,
+                               Model,
                                obj_or_model_content_isinstance)
 import omnipy.util.pydantic as pyd
 

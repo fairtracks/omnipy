@@ -3224,7 +3224,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         return repr_str
 
     def update_reactive_views(self):
-        from omnipy import runtime
+        from omnipy.hub.runtime import runtime
         assert runtime.objects.reactive is not None
         obj_id_update_flags = runtime.objects.reactive.obj_id_update_flags.value.copy()
         flag = obj_id_update_flags.get(id(self), False)

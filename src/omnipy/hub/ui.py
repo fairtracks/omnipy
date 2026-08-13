@@ -441,8 +441,8 @@ def setup_jupyter_ui():
 
     from IPython.display import display
 
-    from omnipy import runtime
     import omnipy.data._display.integrations.jupyter.components as jupy_comp
+    from omnipy.hub.runtime import runtime
 
     detected_ui_type = runtime.config.data.ui.detected_type
 

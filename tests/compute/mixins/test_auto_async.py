@@ -7,7 +7,7 @@ from typing import Any, Callable, Coroutine, TypeAlias
 import pytest
 import pytest_cases as pc
 
-from omnipy import TaskTemplate
+from omnipy.compute.task import TaskTemplate
 
 from ..cases.raw.functions import async_sleep_random_time_func, sync_sleep_random_time_func
 

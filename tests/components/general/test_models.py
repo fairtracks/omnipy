@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from helpers.functions import assert_model
 from omnipy.components.general.models import (Chain2,
                                               Chain3,
                                               Chain4,
@@ -16,6 +15,7 @@ from omnipy.components.general.models import (Chain2,
 from omnipy.data.model import Model
 from omnipy.util.pydantic import ValidationError
 
+from ...helpers.functions import assert_model
 from .helpers.models import MyList, MyListModel, RotateOneCharModel, SplitCharsModel
 
 if TYPE_CHECKING:

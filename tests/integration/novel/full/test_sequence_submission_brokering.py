@@ -4,7 +4,8 @@ from typing import Annotated, cast
 
 import pytest
 
-from omnipy import FuncFlowTemplate, TaskTemplate
+from omnipy.compute.flow import FuncFlowTemplate
+from omnipy.compute.task import TaskTemplate
 from omnipy.shared.enums.job import RunState
 
 from ....engine.helpers.functions import assert_job_state

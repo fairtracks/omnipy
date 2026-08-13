@@ -7,7 +7,7 @@ import weakref
 import pytest
 from typing_extensions import TypeAlias
 
-from omnipy import Model
+from omnipy.data.model import Model
 from omnipy.util.memo import RefCountMemoDict
 import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque

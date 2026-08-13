@@ -5,15 +5,10 @@ from typing import Annotated
 import pytest
 import pytest_cases as pc
 
-from omnipy import (BytesDataset,
-                    Dataset,
-                    JsonDataset,
-                    JsonDictModel,
-                    JsonModel,
-                    Model,
-                    StrDataset,
-                    StrictBytesModel,
-                    StrictStrModel)
+from omnipy.components.json.datasets import JsonDataset
+from omnipy.components.json.models import JsonDictModel, JsonModel
+from omnipy.components.raw.datasets import BytesDataset, StrDataset
+from omnipy.components.raw.models import StrictBytesModel, StrictStrModel
 from omnipy.components.remote.datasets import AutoResponseContentDataset
 from omnipy.components.remote.tasks import (async_load_urls_into_new_dataset,
                                             get_auto_from_api_endpoint,
@@ -21,6 +16,8 @@ from omnipy.components.remote.tasks import (async_load_urls_into_new_dataset,
                                             get_json_from_api_endpoint,
                                             get_str_from_api_endpoint,
                                             load_urls_into_new_dataset)
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 
 from ..helpers.classes import EndpointCase, RequestTypeCase
 

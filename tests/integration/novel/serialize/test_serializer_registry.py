@@ -4,10 +4,14 @@ from typing import Annotated
 
 import pytest
 
-from omnipy import Dataset, JsonDataset, Model, PandasDataset, StrDataset
+from omnipy.components.json.datasets import JsonDataset
 from omnipy.components.json.serializers import JsonDatasetToTarFileSerializer
+from omnipy.components.pandas.datasets import PandasDataset
 from omnipy.components.pandas.serializers import PandasDatasetToTarFileSerializer
+from omnipy.components.raw.datasets import StrDataset
 from omnipy.components.raw.serializers import RawStrDatasetToTarFileSerializer
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.shared.protocols.data import IsSerializerRegistry
 from omnipy.shared.protocols.hub.runtime import IsRuntime

@@ -9,18 +9,19 @@ from aiohttp import web
 import pytest
 import pytest_cases as pc
 
-import omnipy
-from omnipy import (AutoResponseContentDataset,
-                    Dataset,
-                    JsonDictOfListsDataset,
-                    Model,
-                    StrictBytesDataset,
-                    StrictStrDataset)
+from omnipy.components.json.datasets import JsonDictOfListsDataset
+from omnipy.components.json.models import JsonDictModel, JsonModel
+from omnipy.components.raw.datasets import StrictBytesDataset, StrictStrDataset
+from omnipy.components.raw.models import BytesModel, StrictBytesModel, StrictStrModel, StrModel
+from omnipy.components.remote.datasets import AutoResponseContentDataset, HttpUrlDataset
+from omnipy.components.remote.models import HttpUrlModel
 from omnipy.components.remote.tasks import (get_auto_from_api_endpoint,
                                             get_bytes_from_api_endpoint,
                                             get_json_from_api_endpoint,
                                             get_retry_client,
                                             get_str_from_api_endpoint)
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 from omnipy.shared.exceptions import FailedDataError
 from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running
 
@@ -60,7 +61,7 @@ async def fails_once_then_succeeds_server_url(aiohttp_server):
 
 
 async def _run_get_json_with_retry_attempts(url: str, retry_attempts: int):
-    query_urls = omnipy.HttpUrlDataset({'flaky': omnipy.HttpUrlModel(url)})
+    query_urls = HttpUrlDataset({'flaky': HttpUrlModel(url)})
 
     async with aiohttp.ClientSession() as client_session:
         async with get_retry_client(
@@ -106,7 +107,7 @@ async def test_get_from_api_endpoint_run_raises_for_non_200_response(
     always_failing_server_url: str,
     task: Any,
 ) -> None:
-    query_urls = omnipy.HttpUrlDataset({'failing': omnipy.HttpUrlModel(always_failing_server_url)})
+    query_urls = HttpUrlDataset({'failing': HttpUrlModel(always_failing_server_url)})
 
     async with aiohttp.ClientSession() as client_session:
         async with get_retry_client(
@@ -130,15 +131,14 @@ def _assert_query_results(assert_model_if_dyn_conv_else_val,
     assert isinstance(data, case.dataset_cls)
     _type = case.dataset_cls.get_type(
     ) if case.dataset_cls != AutoResponseContentDataset else auto_model_type
-    match _type:
-        case omnipy.BytesModel | omnipy.StrictBytesModel:
-            _assert_bytes_query_results(cast(StrictBytesDataset, data))
-        case omnipy.StrModel | omnipy.StrictStrModel:
-            _assert_str_query_results(cast(StrictStrDataset, data))
-        case omnipy.JsonModel | omnipy.JsonDictModel:
-            _assert_json_query_results(cast(JsonDictOfListsDataset, data))
-        case _:
-            raise RuntimeError(f'Unknown model: "{_type.__name__}"')
+    if _type in (BytesModel, StrictBytesModel):
+        _assert_bytes_query_results(cast(StrictBytesDataset, data))
+    elif _type in (StrModel, StrictStrModel):
+        _assert_str_query_results(cast(StrictStrDataset, data))
+    elif _type in (JsonModel, JsonDictModel):
+        _assert_json_query_results(cast(JsonDictOfListsDataset, data))
+    else:
+        raise RuntimeError(f'Unknown model: "{_type.__name__}"')
 
 
 def _assert_bytes_query_results(data: StrictBytesDataset):

@@ -3,8 +3,9 @@ from typing import Generic, Iterator, overload, SupportsIndex
 
 from typing_extensions import Self, TypeVar
 
-from omnipy import ColumnModel, ColumnWiseTableWithColNamesModel
-from omnipy.components.tables.models import ConcatByAddArrayAdapterModel
+from omnipy.components.tables.models import (ColumnModel,
+                                             ColumnWiseTableWithColNamesModel,
+                                             ConcatByAddArrayAdapterModel)
 
 T = TypeVar('T')
 

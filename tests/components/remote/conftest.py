@@ -10,7 +10,11 @@ from aiohttp import web
 from aiohttp.test_utils import TestServer
 import pytest_cases as pc
 
-from omnipy import HttpUrlDataset, HttpUrlModel, JsonModel, Model, StrictBytesModel, StrictStrModel
+from omnipy.components.json.models import JsonModel
+from omnipy.components.raw.models import StrictBytesModel, StrictStrModel
+from omnipy.components.remote.datasets import HttpUrlDataset
+from omnipy.components.remote.models import HttpUrlModel
+from omnipy.data.model import Model
 
 from .helpers.classes import EndpointCase
 

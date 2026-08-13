@@ -2,9 +2,12 @@ from typing import Any
 
 import pytest
 
-from omnipy import Dataset, Model, PrettyPrinterLib, UserInterfaceType
 from omnipy.components.json.models import is_json_model_instance_hack
 from omnipy.data._display.text import pretty as pretty_module
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
+from omnipy.shared.enums.display import PrettyPrinterLib
+from omnipy.shared.enums.ui import UserInterfaceType
 
 from .helpers import render_panel_to_plain_terminal
 

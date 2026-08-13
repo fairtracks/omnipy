@@ -5,13 +5,14 @@ from typing import Annotated
 
 import pytest
 
-from omnipy import JsonListOrDictModel, Model
+from omnipy.components.json.models import JsonListOrDictModel
 from omnipy.components.raw.models import StrictBytesModel, StrictStrModel
 from omnipy.components.remote.models import (AutoResponseContentModel,
                                              HttpUrlModel,
                                              QueryParamsModel,
                                              ResponseContentPydModel,
                                              UrlPathModel)
+from omnipy.data.model import Model
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.pydantic import ValidationError
 

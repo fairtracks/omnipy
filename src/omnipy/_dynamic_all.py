@@ -78,7 +78,6 @@ _exclude_attrs: set[str] = {
 _all_modules: dict[str, ModuleType] = {}
 
 if not __all__:
-    from omnipy import setup_jupyter_ui
     from omnipy.components.raw.utils import RegexMatch
     from omnipy.components.tables.models import PydanticRecordModel
     from omnipy.compute._job import JobTemplateMixin
@@ -102,6 +101,7 @@ if not __all__:
                                    params_dataclass,
                                    ParamsBase)
     from omnipy.hub.runtime import runtime
+    from omnipy.hub.ui import setup_jupyter_ui
     from omnipy.shared.enums.data import BackoffStrategy
     from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
                                          ConfigPersistOutputsOptions,

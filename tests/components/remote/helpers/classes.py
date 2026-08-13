@@ -2,7 +2,10 @@
 
 from dataclasses import dataclass
 
-from omnipy import Dataset, HttpUrlDataset, Model, TaskTemplate
+from omnipy.components.remote.datasets import HttpUrlDataset
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
+from omnipy.shared.protocols.compute.job import IsTaskTemplate
 
 
 @dataclass
@@ -16,7 +19,7 @@ class EndpointCase:
 class RequestTypeCase:
     """Define RequestTypeCase."""
     is_async: bool
-    job: TaskTemplate
+    job: IsTaskTemplate
     kwargs: dict[str, object]
     dataset_cls: type[Dataset]
     expected_exceptions: tuple[type[Exception], ...] | None = None
