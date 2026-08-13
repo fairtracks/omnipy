@@ -1078,6 +1078,9 @@ class Model(  # type: ignore[misc]
         cls.__name__ = remove_forward_ref_notation(cls.__name__)
         cls.__qualname__ = remove_forward_ref_notation(cls.__qualname__)
 
+    def _as_model(self, value: Self | object) -> Self:
+        return value if isinstance(value, self.__class__) else self.__class__(value)
+
     def validate_content(self) -> None:
         """Re-validate the current :attr:`content` value in place.
 
@@ -1863,7 +1866,7 @@ class Model(  # type: ignore[misc]
                     return content.__add__(other)  # type: ignore[operator]
 
             def _radd_model_converted_other(other) -> object:
-                other_content = self.__class__(other).content
+                other_content = self._as_model(other).content
                 if has_radd_method:
                     ret = content.__radd__(other_content)  # type: ignore[attr-defined]
                     if ret is NotImplemented and has_add_method:
@@ -1982,7 +1985,7 @@ class Model(  # type: ignore[misc]
                 if model_converted_other_method:
                     return model_converted_other_method(arg)
                 else:
-                    return method(self.__class__(arg).content, **kwargs)
+                    return method(self._as_model(arg).content)
             except (ValidationError, TypeError):
                 # TODO: Add debug logging for hidden validation and other exceptions e.g. when
                 #       concatenating `Model[int](123) + '234.'` (gives TypeError:

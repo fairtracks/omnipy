@@ -113,8 +113,8 @@ else:
             return cls(cls._as_item_list(left) + cls._as_item_list(right)).content
 
         def __add__(self, other: object):
-            other_content = self.__class__(other).content
-            return self.__class__(self._concat_column_values(self.content, other_content))
+            other_content = self._as_model(other).content
+            return self._as_model(self._concat_column_values(self.content, other_content))
 
         @classmethod
         @functools.cache

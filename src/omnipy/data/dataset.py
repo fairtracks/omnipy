@@ -1182,7 +1182,11 @@ class Dataset(
             TypeError: If the candidate type cannot be constructed from ``value``.
             ValueError: If the candidate type rejects ``value`` semantically.
         """
-        return cast(_ModelOrDatasetT, type_variant(value))  # type: ignore[arg-type]
+        return cast(
+            _ModelOrDatasetT,
+            type_variant(value)  # type: ignore[arg-type]
+            if not isinstance(value, type_variant) else value,
+        )
 
     @classmethod
     def _validate_value_for_data_file(
