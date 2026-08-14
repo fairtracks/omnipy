@@ -185,9 +185,11 @@ class FuncArgJobBase(PlainFuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT],
     ...
 
 
-FuncArgJobBase.accept_mixin(SignatureFuncJobBaseMixin)
-FuncArgJobBase.accept_mixin(IterateFuncJobBaseMixin)
-FuncArgJobBase.accept_mixin(AutoAsyncJobBaseMixin)
-FuncArgJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)
-FuncArgJobBase.accept_mixin(ParamsFuncJobBaseMixin)
-FuncArgJobBase.accept_mixin(SerializerFuncJobBaseMixin)
+# Note: listed order dependencies might have incorrect info - not fully tested!
+
+FuncArgJobBase.accept_mixin(SignatureFuncJobBaseMixin)  # Must be before IterateFuncJobBaseMixin
+FuncArgJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)  # Must be before SerializerFuncJobBaseMixin
+FuncArgJobBase.accept_mixin(SerializerFuncJobBaseMixin)  # Must be before AutoAsyncJobBaseMixin
+FuncArgJobBase.accept_mixin(AutoAsyncJobBaseMixin)  # Must be after ResultKeyFuncJobBaseMixin
+FuncArgJobBase.accept_mixin(IterateFuncJobBaseMixin)  # Must be after AutoAsyncJobBaseMixin
+FuncArgJobBase.accept_mixin(ParamsFuncJobBaseMixin)  # Must be after IterateFuncJobBaseMixin
