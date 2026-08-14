@@ -50,8 +50,12 @@ def teardown_remove_root_log_handlers() -> Iterator[None]:
 @pytest.fixture(scope='function')
 def tmp_dir_path() -> Iterator[Path]:
     """Provide a temporary directory path for test artifacts."""
-    with tempfile.TemporaryDirectory() as _tmp_dir_path:
-        yield Path(_tmp_dir_path)
+    persist_test_outputs = os.getenv('OMNIPY_PERSIST_TEST_OUTPUTS') == '1'
+    if persist_test_outputs:
+        yield Path('.')
+    else:
+        with tempfile.TemporaryDirectory() as _tmp_dir_path:
+            yield Path(_tmp_dir_path)
 
 
 @pytest.fixture(scope='function')
