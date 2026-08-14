@@ -13,12 +13,13 @@ Attributes:
     ProtocolOpts: Enum that selects the storage and serialization protocol used
         for persisted outputs.
 """
-
+import asyncio
 from datetime import datetime
+import inspect
 import os
 from pathlib import Path
 from textwrap import dedent
-from typing import cast, Generator, Type
+from typing import Awaitable, cast, Generator, Type
 
 from omnipy.components import get_serializer_registry
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
@@ -33,6 +34,7 @@ from omnipy.shared.protocols.config import IsJobConfig
 from omnipy.shared.protocols.data import IsDataset, IsSerializerRegistry
 from omnipy.util.helpers import get_job_name_slug, is_package_editable
 from omnipy.util.mixin import strip_mixins_suffix
+from omnipy.util.pydantic import lenient_issubclass
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SERIALIZE_ARG_DOC'] = dedent("""\
@@ -191,7 +193,7 @@ class SerializerFuncJobBaseMixin:
         else:
             return self._output_storage_protocol
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
+    def _call_job(self, *args: object, **kwargs: object) -> object:  # noqa: C901
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
 
         if self._serializer_registry is None:
@@ -210,8 +212,23 @@ class SerializerFuncJobBaseMixin:
         results = super_as_job_base._call_job(*args, **kwargs)
 
         if self.will_persist_outputs is PersistOpts.ENABLED:
-            if isinstance(results, Dataset):
-                self._serialize_and_persist_outputs(results)
+            if lenient_issubclass(self._return_type, Dataset):
+                if isinstance(results, asyncio.Task):
+
+                    def _persist_task_outputs(task: asyncio.Task) -> None:
+                        self._serialize_and_persist_outputs(task.result())
+
+                    results.add_done_callback(_persist_task_outputs)
+                elif inspect.isawaitable(results):
+
+                    async def _async_persist_outputs(results: Awaitable) -> object:
+                        awaited_results = await results
+                        self._serialize_and_persist_outputs(awaited_results)
+                        return awaited_results
+
+                    return _async_persist_outputs(results)
+                else:
+                    self._serialize_and_persist_outputs(results)
             else:
                 self._log(
                     f'Results of {self_as_name_job_base_mixin.unique_name} is not a Dataset and '
