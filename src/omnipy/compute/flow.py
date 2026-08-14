@@ -551,6 +551,17 @@ def LinearFlowTemplate(
     ...
 
 
+@overload
+def LinearFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    iterate_over_data_files: bool,
+    output_dataset_cls: type[_RetDatasetClsT] | None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> (LinearFlowTemplatePlainDecorator | LinearFlowTemplateIterDecorator
+      | LinearFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]):
+    ...
+
+
 def LinearFlowTemplate(
     *child_job_templates: ChildJobTemplateLike,
     name: str | None = None,
@@ -1302,6 +1313,18 @@ def DagFlowTemplate(
     ...
 
 
+@overload
+def DagFlowTemplate(
+    *child_job_templates: ChildJobTemplateLike,
+    consume_kwargs_from_results: bool = True,
+    iterate_over_data_files: bool,
+    output_dataset_cls: type[_RetDatasetClsT] | None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> (DagFlowTemplatePlainDecorator | DagFlowTemplateIterDecorator
+      | DagFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]):
+    ...
+
+
 def DagFlowTemplate(
     *child_job_templates: ChildJobTemplateLike,
     consume_kwargs_from_results: bool = True,
@@ -1943,6 +1966,17 @@ def FuncFlowTemplate(
     output_dataset_cls: type[IsDataset] | None = None,
     **kwargs: Unpack[JobCommonKwargs],
 ) -> FuncFlowTemplatePlainDecorator:
+    ...
+
+
+@overload
+def FuncFlowTemplate(
+    *,
+    iterate_over_data_files: bool,
+    output_dataset_cls: type[_RetDatasetClsT] | None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> (FuncFlowTemplatePlainDecorator | FuncFlowTemplateIterDecorator
+      | FuncFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]):
     ...
 
 

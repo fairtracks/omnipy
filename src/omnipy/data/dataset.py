@@ -806,10 +806,12 @@ class Dataset(
             """
             ...
 
+    # Intentional Any: _check_value returns Any, and narrower unions
+    # trigger basedpyright false positives.
     def __getitem__(
         self,
         selector: str | int | slice | Iterable[str | int],
-    ) -> '_DatasetT | _ModelOrDatasetT | Model | Self':
+    ) -> Any:
         """Return one item or a selected subset of the dataset.
 
         Args:

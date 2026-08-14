@@ -18,7 +18,8 @@ from ..cases.raw.functions import data_import_func
 
 def test_fail_property_iterate_over_data_files_no_arg_task() -> None:
     with pytest.raises(ValueError):
-        TaskTemplate(iterate_over_data_files=True)(data_import_func)
+        TaskTemplate(iterate_over_data_files=True)(
+            data_import_func)  # type: ignore[type-var, arg-type]
 
 
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks')
@@ -26,7 +27,7 @@ async def test_properties_default_values_task(case: IterateDataFilesCase) -> Non
     case = await unwrap(case)
 
     with pytest.raises(ValueError):
-        TaskTemplate(iterate_over_data_files=None)(case.task_func)  # type: ignore[arg-type]
+        TaskTemplate(iterate_over_data_files=None)(case.task_func)  # type: ignore[call-overload]
 
     no_iter_default_template = TaskTemplate()(case.task_func)
 
@@ -51,7 +52,7 @@ async def test_property_iterate_over_data_files_task(case: IterateDataFilesCase)
 async def test_property_output_dataset_param_task(case: IterateDataFilesCase) -> None:
     case = await unwrap(case)
 
-    iter_dataset_param_task_template_decorator = TaskTemplate(
+    iter_dataset_param_task_template_decorator = TaskTemplate(  # type: ignore[var-annotated]
         iterate_over_data_files=case.iterate_over_data_files,
         output_dataset_param='output_dataset',
     )

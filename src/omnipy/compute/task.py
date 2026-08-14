@@ -305,6 +305,18 @@ def TaskTemplate(
     ...
 
 
+@overload
+def TaskTemplate(
+    *,
+    iterate_over_data_files: bool,
+    output_dataset_cls: type[_RetDatasetClsT] | None = None,
+    **kwargs: Unpack[JobCommonKwargs],
+) -> (TaskTemplatePlainDecorator
+      | TaskTemplateIterDecorator
+      | TaskTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]):
+    ...
+
+
 def TaskTemplate(
     *,
     name: str | None = None,
