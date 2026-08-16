@@ -136,6 +136,9 @@ subsystems.
 
 The planned spec should drive a subset with the following intent.
 
+Planned execution approach for the approved plan: **sub-agent-driven** task execution, with review
+between implementation slices.
+
 #### A. Async task + serialize + result_key + auto_async
 
 Add one async dataset-returning task integration case that combines `persist_outputs`,
@@ -158,6 +161,8 @@ Recommended shape:
   - from synchronous top-level code with no pre-existing loop
   - from inside an already-running event loop
 - the assertions should confirm both outward return behavior and persisted serialized output
+- persisted-artifact checks should use deterministic discovery of the newly written tarball rather
+  than brittle timestamp/path literals
 
 #### B. Async function flow + serialize + result_key in flow context
 
@@ -272,7 +277,7 @@ The first implementation pass must:
 - run the relevant test subset
 - report all failing tests in chat
 - include suggested fixes in chat
-- stop for user review before changing production code
+- stop for **User Check-in A** before changing production code
 
 ### Forbidden in the first pass
 
@@ -305,7 +310,7 @@ all of the following properties:
   found
 - first-pass execution reports failures and suggested fixes in chat before any production fix work
 
-## User Check-in
+## User Check-in A
 
 Pause after the first-pass tests are added and run.
 
@@ -316,3 +321,5 @@ At that point, present:
 - a brief suggested-fix list
 
 Then wait for explicit user approval before implementing any production fixes.
+
+✅ Approved by  2026-08-16
