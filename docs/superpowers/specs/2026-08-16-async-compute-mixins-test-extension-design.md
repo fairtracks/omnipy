@@ -9,7 +9,9 @@ The new coverage should target the two recently untested risk areas called out b
 - commit `a2d700631f24bdd2d99e4bdf3f34594d7a6b828a` (mixin reorder in `FuncArgJobBase`)
 
 The extension should reuse existing test infrastructure and add only a carefully chosen subset of
-async task/flow cases that are most likely to fail if async mixin composition regresses again.
+task/flow cases that are most likely to fail if mixin composition regresses again, with primary
+focus on async behavior, generator brittleness, and supported `serialize` + `result_key`
+composition.
 
 ## Goals
 
@@ -18,6 +20,14 @@ async task/flow cases that are most likely to fail if async mixin composition re
   `LinearFlow`, and `DagFlow`.
 - Put slightly more weight on `serialize` and `auto_async`, while still spreading coverage across
   other order-sensitive mixins.
+- Verify the supported `serialize` + `result_key` composition where serialization sees dataset
+  results before `result_key` wraps the outward return value.
+- Verify `auto_async` behavior both with and without an already-running event loop, preferably by
+  reusing the same assertions for both contexts.
+- Add explicit sync-generator and async-generator coverage for mixin combinations where outward
+  return or yield behavior is brittle.
+- Audit nearby sync coverage and add a minimal sync backfill when an important mixin interaction is
+  still underrepresented.
 - Exercise the mixin interactions most exposed by the current order in
   `src/omnipy/compute/_func_job.py`:
   - `SerializerFuncJobBaseMixin`
@@ -37,7 +47,7 @@ async task/flow cases that are most likely to fail if async mixin composition re
 - No new flow-context integration slice beyond what is already exercised naturally by the selected
   flow cases.
 - No broad engine-harness expansion in this slice.
-- No attempt to turn this into a comprehensive async-generator test program.
+- No attempt to exhaust every generator combination across every mixin and job shape.
 
 ## Current context
 
@@ -49,19 +59,26 @@ async task/flow cases that are most likely to fail if async mixin composition re
   - plain synchronous dataset results
   - `asyncio.Task` results
   - generic awaitable results
+- `src/omnipy/compute/_mixins/result_key.py` wraps the value returned by deeper mixins, so under
+  the current mixin order a supported `serialize` + `result_key` stack should allow serialization to
+  operate on dataset results before the outward result is wrapped under the configured key.
 - `src/omnipy/compute/_mixins/auto_async.py` only auto-runs coroutine functions, and it suppresses
   top-level auto-execution while the job is inside flow context.
 
 ### Current coverage gaps
 
 - `tests/compute/mixins/test_auto_async.py` verifies only basic sync-vs-async task behavior and
-  does not combine `auto_async` with `serialize`, `iterate`, `params`, or `result_key`.
+  does not combine `auto_async` with `serialize`, `iterate`, `params`, or `result_key`, and it does
+  not prove the same scenario both with and without a running event loop.
 - `tests/compute/mixins/test_mixin_integration.py` currently covers only sync-oriented mixin
   interactions.
 - `tests/integration/novel/serialize/test_serialize.py` exercises serialize behavior for existing
   task/flow fixtures, but not for async jobs.
 - Reusable async flow cases already exist elsewhere in the repo, but they do not currently serve as
   direct regression coverage for the compute-mixin order and async serialization paths above.
+- The current compute-mixin slice appears light on generator-focused interaction tests, especially
+  for sync generators and async generators whose outward yielded values are more fragile than plain
+  coroutine returns.
 
 ## Design
 
@@ -102,14 +119,28 @@ subsystems.
 5. **Prefer one dense compatible-mixin case over many thin near-duplicates.**
    At least one selected test should intentionally stack as many compatible mixins as possible.
 
+6. **Treat generators as a first-class risk area.**
+   Sync generators and async generators should be represented wherever mixin behavior depends on
+   the outward yielded/returned shape rather than only on plain coroutine completion.
+
+7. **Reuse identical assertions across loop contexts when possible.**
+   For top-level `auto_async` scenarios, prefer one parameterized test shape that runs both outside
+   an event loop and inside an already-running event loop.
+
+8. **Backfill sync only when it closes a real nearby gap.**
+   The slice remains async-led, but if the same representative mixin interaction is missing in sync
+   form and current coverage would not catch a regression there, add the smallest sync sentinel
+   needed.
+
 ### Selected representative subset
 
 The planned spec should drive a subset with the following intent.
 
-#### A. Async task + serialize + auto_async
+#### A. Async task + serialize + result_key + auto_async
 
-Add one async dataset-returning task integration case that persists outputs under a running event
-loop.
+Add one async dataset-returning task integration case that combines `persist_outputs`,
+`result_key`, and `auto_async`, and run that same behavioral test both with and without a running
+event loop.
 
 Why this matters:
 
@@ -118,20 +149,33 @@ Why this matters:
 - this directly guards the behavior fixed by commit `48906e4a...`
 - it also verifies that `AutoAsyncJobBaseMixin` and `SerializerFuncJobBaseMixin` cooperate in the
   intended order
+- it verifies the supported nesting where `serialize` operates on the dataset result before
+  `result_key` wraps the outward value
 
-#### B. Async function flow + serialize in flow context
+Recommended shape:
 
-Add one async dataset-returning `FuncFlow` serialize case.
+- one parameter controls whether the exact same scenario runs:
+  - from synchronous top-level code with no pre-existing loop
+  - from inside an already-running event loop
+- the assertions should confirm both outward return behavior and persisted serialized output
+
+#### B. Async function flow + serialize + result_key in flow context
+
+Add one async dataset-returning `FuncFlow` case that combines `serialize` and `result_key` while
+executing in flow context.
 
 Why this matters:
 
 - inside flow context, auto-async should not eagerly consume the coroutine at the outer boundary
 - this should exercise the non-`Task` awaitable path in `SerializerFuncJobBaseMixin`
 - it confirms that serialize support works both outside and inside flow context
+- it proves the supported `serialize` + `result_key` composition in a flow, not only in a task
 
-#### C. Async linear flow + iterate + auto_async
+#### C. Linear flow + iterate + auto_async + generator-sensitive terminals
 
-Add one async `LinearFlow` case whose terminal child uses dataset iteration semantics.
+Add at least one async `LinearFlow` case whose terminal child uses dataset iteration semantics, and
+include generator-sensitive coverage where the terminal callable is a sync generator and/or async
+generator when the outward return shape is the risk being exercised.
 
 Why this matters:
 
@@ -140,17 +184,20 @@ Why this matters:
 - it spreads coverage away from serialize-only assertions
 - it gives the slice one concrete async dataset transformation flow rather than only persistence
   checks
+- linear-flow terminal behavior is a natural place for generator brittleness to surface
 
-#### D. Async DAG flow + params/result_key (non-dataset)
+#### D. Dag flow + params/result_key + generator-sensitive returns
 
 Add one async `DagFlow` case that emphasizes `fixed_params` and/or `param_key_map` together with
-  `result_key` on a non-dataset result.
+`result_key` on a non-dataset result, and use DAG coverage to include generator-sensitive return
+shapes where they are more fragile than plain scalar returns.
 
 Why this matters:
 
 - it covers DAG flow in the new async slice
 - it adds the requested non-dataset case
 - it exercises the `params`/`result_key` ordering relationship without involving serialize
+- DAG result routing is another place where generator return semantics can break subtly
 
 #### E. One maximal compatible-mixin case
 
@@ -163,14 +210,36 @@ Recommended shape:
 - `auto_async=True`
 - `fixed_params`
 - `param_key_map`
+- `result_key`
 - output-dataset option (`output_dataset_param` or `output_dataset_cls`)
 - serialize enabled if the return contract remains dataset-shaped
 
 Important constraint:
 
-`serialize` and `result_key` should not be forced into the same test if doing so changes the return
-contract away from a dataset and makes the test artificial. In that case, the dense mixin case may
-exclude `result_key`, while the non-dataset DAG case above covers `result_key` separately.
+The dense case should prefer the real supported `serialize` + `result_key` combination rather than
+avoiding it. Only split the mixins apart when a specific generator or non-dataset scenario would no
+longer exercise the intended contract honestly.
+
+#### F. Generator-focused stress cases
+
+Add explicit sync-generator and async-generator representatives for each mixin family where the
+outward yielded/returned shape is part of the risk:
+
+- `result_key`
+- `iterate`
+- flow terminal-child return behavior
+- `serialize`, but only when the result contract remains meaningfully serializable rather than being
+  forced into an artificial case
+
+The planner should minimize duplication by parameterizing generator type where the same assertions
+fit both sync-generator and async-generator forms.
+
+#### G. Sync-gap audit and minimal backfill
+
+Before finalizing the plan, inspect whether the chosen representative interactions are already well
+protected in sync form. If an important adjacent sync case is still underrepresented — especially
+for `serialize` + `result_key` or generator-sensitive behavior — add the smallest sync sentinel test
+needed to close that gap.
 
 ### Callable-type × job-type matrix for this slice
 
@@ -178,20 +247,20 @@ This table is for the **new async extension work**, not for overall historical r
 
 | Callable type \ Job type | Task | Func flow | Linear flow | Dag flow |
 | --- | --- | --- | --- | --- |
-| Sync function | Omitted — already well covered by existing compute/serialize tests and not the async regression target | Omitted — same rationale | Omitted — same rationale | Omitted — same rationale |
-| Sync generator | Omitted — lower value than async-coroutine cases for the two named commits | Omitted — lower value than async-coroutine cases | Omitted — lower value than async-coroutine cases | Omitted — lower value than async-coroutine cases |
-| Async coroutine | **Covered** — serialize + auto_async dataset task | **Covered** — serialize + flow-context awaitable path | **Covered** — iterate + auto_async representative flow | **Covered** — params/result_key non-dataset representative flow |
-| Async generator | Omitted — `auto_async` does not target async-generator callables, and serialize coverage is better spent on dataset-returning coroutine jobs | Omitted — same rationale | Omitted — same rationale | Omitted — same rationale |
+| Sync function | Audit existing coverage; add only if a critical nearby mixin gap remains | Audit existing coverage; add only if a critical nearby mixin gap remains | Audit existing coverage; add only if a critical nearby mixin gap remains | Audit existing coverage; add only if a critical nearby mixin gap remains |
+| Sync generator | **Covered** — return-sensitive generator mixin case | **Covered** — generator-sensitive flow-body case | **Covered** — generator-sensitive terminal-child case | **Covered** — generator-sensitive routing/result case |
+| Async coroutine | **Covered** — serialize + result_key + auto_async dataset task, loop/no-loop contexts | **Covered** — serialize + result_key + flow-context awaitable path | **Covered** — iterate + auto_async representative flow | **Covered** — params/result_key non-dataset representative flow |
+| Async generator | **Covered** — return-sensitive generator mixin case | **Covered** — generator-sensitive flow-body case | **Covered** — generator-sensitive terminal-child case | **Covered** — generator-sensitive routing/result case |
 
-### Why the omitted cells are acceptable
+### Why the sync-function cells are audit-only
 
 - The user requested a representative subset rather than exhaustive coverage.
-- The two named risky commits are both more directly exercised by async-coroutine cases than by
-  sync or async-generator cases.
-- Async-generator behavior is not ignored globally in the repo, but it is intentionally not the
-  best value-per-test target for this specific compute-mixin extension.
-- Existing sync coverage already protects many non-async invariants, so the new slice should spend
-  its budget on the async gaps instead.
+- The two named risky commits are still most directly exercised by async-coroutine cases, so sync
+  functions stay secondary unless the audit shows a real nearby hole.
+- Generator rows are no longer treated as low priority because their outward behavior is brittle and
+  more likely to expose mixin-order mistakes.
+- Existing sync coverage may already protect some sync-function invariants; the audit step keeps the
+  slice from duplicating them blindly while still allowing focused backfills.
 
 ## First-pass execution policy
 
@@ -220,11 +289,20 @@ all of the following properties:
 - serialize coverage includes both:
   - one top-level async task path
   - one async flow-context path
+- supported `serialize` + `result_key` composition is explicitly tested rather than treated as an
+  excluded combination
+- at least one top-level `auto_async` scenario is verified in both contexts:
+  - no already-running event loop
+  - inside an already-running event loop
 - the non-serialize spread includes:
   - one `iterate`-sensitive async case
   - one `params`/`result_key`-sensitive async case
+- sync-generator and async-generator coverage exists for the return-sensitive mixin interactions in
+  this slice
 - at least one test intentionally stacks multiple compatible mixins in the same async scenario
 - the callable-type × job-type table is preserved in the spec/plan so omitted cells remain explicit
+- sync-function coverage has been audited and a minimal backfill added if a critical nearby gap was
+  found
 - first-pass execution reports failures and suggested fixes in chat before any production fix work
 
 ## User Check-in
