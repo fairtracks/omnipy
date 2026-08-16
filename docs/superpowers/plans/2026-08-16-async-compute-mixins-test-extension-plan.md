@@ -10,6 +10,8 @@
 
 **Spec:** `docs/superpowers/specs/2026-08-16-async-compute-mixins-test-extension-design.md`
 
+**Execution approach:** Subagent-Driven (approved; use `superpowers:subagent-driven-development` during implementation)
+
 ## Global Constraints
 
 - First pass is **test-only**: add tests, run them, report failures and suggested fixes in chat, and stop before touching `src/`.
@@ -170,6 +172,8 @@ uv run pytest tests/compute/mixins/test_auto_async.py tests/compute/mixins/test_
 - Assertions that the outward return value is result-key wrapped while the persisted tarball still represents the underlying dataset result.
 - A small helper for discovering the newly persisted tarball from `runtime.config.job.output_storage.local.persist_data_dir_path` without depending on an exact timestamp string.
 
+**Implementation notes for likely fix phase:** Keep persisted-artifact discovery deterministic, preserve the distinction between the top-level loop/`create_task` path and the flow-context generic-awaitable path, and prefer an explicit persisted-output failure such as `NoPersistedOutputError` over silent missing-artifact assumptions if production fixes become necessary later.
+
 - [ ] **Step 1: Write the async serialize tests first**
 
 Start in `tests/integration/novel/serialize/test_serialize.py` with the two high-value scenarios from the spec: top-level async task in both loop contexts, and async function-flow in flow context.
@@ -249,7 +253,7 @@ If failures now point to the `asyncio.Task` callback path or generic awaitable p
 **Produces:**
 - A pass/fail report grouped by representative scenario.
 - A concise suggested-fix list keyed to likely production files.
-- An explicit user check-in before any production change.
+- An explicit **User Check-in A** before any production change.
 
 - [ ] **Step 1: Run the full first-pass test slice**
 
@@ -281,12 +285,12 @@ Prepare a short report with one line each for:
 
 For each failing scenario, suggest the smallest likely production change and the most likely file, for example:
 
-- `src/omnipy/compute/_mixins/serialize.py` for `asyncio.Task` callback vs generic awaitable persistence behavior
-- `src/omnipy/compute/_func_job.py` for mixin-order regressions
+- `src/omnipy/compute/_mixins/serialize.py` for deterministic persisted-output lookup, `asyncio.Task` callback vs generic awaitable persistence behavior, loop/`create_task` guard handling, or explicit `NoPersistedOutputError` signaling
+- `src/omnipy/compute/_func_job.py` for mixin-order regressions, especially sync-generator vs async-generator outward-order handling
 - `src/omnipy/compute/_mixins/auto_async.py` for top-level vs flow-context auto-execution behavior
 - `src/omnipy/compute/_mixins/result_key.py` / `params.py` for outward wrapping or remapping order
 
-- [ ] **Step 4: Stop for the required User Check-in**
+- [ ] **Step 4: Stop for User Check-in A**
 
 Do not touch `src/` after the first-pass run. Present the pass/fail report and suggested fixes in chat, then wait for explicit approval before starting any production fix work.
 
@@ -319,6 +323,8 @@ Use the narrowest failing-node command first so the red state stays proven.
 
 Keep changes surgical. Do not widen the matrix beyond the approved representative subset.
 
+If the approved fix phase reaches `src/omnipy/compute/_mixins/serialize.py`, prefer the narrowest change that preserves deterministic persisted-output discovery and keeps the top-level loop/`create_task` guard distinct from the flow-context generic-awaitable path. If it reaches `src/omnipy/compute/_func_job.py`, preserve sync-generator and async-generator outward-order behavior as the public contract.
+
 - [ ] **Step 3: Re-run the failing test, then the focused slice, then the adjacent regression slice**
 
 Run:
@@ -348,7 +354,7 @@ uv run pre-commit run --hook-stage manual --all-files
 ## User Check-in markers
 
 - **User Check-in A:** After Task 3's first-pass test run and failure inventory, before any production code change.
-- **User Check-in B:** During Task 4, if the smallest plausible fix would require broadening the selected matrix, changing supported public behavior, or altering callable-type rules outside the approved slice.
+- Additional approval pause (not a spec-named check-in): During Task 4, if the smallest plausible fix would require broadening the selected matrix, changing supported public behavior, or altering callable-type rules outside the approved slice.
 
 ## Spec-to-plan self-check
 
@@ -360,11 +366,8 @@ uv run pre-commit run --hook-stage manual --all-files
 - The plan keeps sync-function coverage audit-only unless a real adjacent gap is found.
 - The plan keeps helper changes small and reuses existing test surfaces instead of creating a new harness.
 - The plan names the likely production files for later fixes without steering the implementer to patch them before the required red-state review.
+- The plan records the approved execution approach as sub-agent-driven and aligns the explicit **User Check-in A** pause with the spec.
 
-Plan complete and saved to `docs/superpowers/plans/2026-08-16-async-compute-mixins-test-extension-plan.md`. Two execution options:
+Approved execution approach: **Subagent-Driven**.
 
-1. Subagent-Driven (recommended) - I dispatch a fresh subagent per task, review between tasks, fast iteration
-
-2. Inline Execution - Execute tasks in this session using executing-plans, batch execution with checkpoints
-
-Which approach?
+✅ Approved by  2026-08-16
