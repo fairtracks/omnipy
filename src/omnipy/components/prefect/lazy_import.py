@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import sys
+import prefect.testing.utilities
 
 
 def set_prefect_config_path():
@@ -23,8 +24,21 @@ def use_ephemeral_mode_for_tests():
         os.environ['PREFECT_API_URL'] = ''
 
 
+def insert_mock_test_harness_port_finder():
+    def _find_available_port_with_env_override() -> int:
+        prefect_test_port = os.getenv('PREFECT_TEST_PORT')
+        if prefect_test_port:
+            return int(prefect_test_port)
+        else:
+            return prefect.testing.utilities._find_available_port()
+
+    prefect.testing.utilities._find_available_port = _find_available_port_with_env_override
+
+
 set_prefect_config_path()
 use_ephemeral_mode_for_tests()
+insert_mock_test_harness_port_finder()
+
 
 from prefect import cache_policies  # noqa
 from prefect import State  # noqa
