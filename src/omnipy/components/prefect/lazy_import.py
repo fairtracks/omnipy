@@ -26,14 +26,17 @@ def use_ephemeral_mode_for_tests():
 
 
 def insert_mock_test_harness_port_finder():
+    from prefect.testing.utilities import _find_available_port  # pyright: ignore
+
     def _find_available_port_with_env_override() -> int:
         prefect_test_port = os.getenv('PREFECT_TEST_PORT')
         if prefect_test_port:
             return int(prefect_test_port)
         else:
-            return prefect.testing.utilities._find_available_port()
+            return _find_available_port()
 
-    prefect.testing.utilities._find_available_port = _find_available_port_with_env_override
+    prefect.testing.utilities._find_available_port = (  # pyright: ignore
+        _find_available_port_with_env_override)
 
 
 set_prefect_config_path()
@@ -48,6 +51,7 @@ from prefect import Task as PrefectTask  # noqa
 from prefect import task as prefect_task  # noqa
 from prefect.cache_policies import CachePolicy, Inputs, RUN_ID, TASK_SOURCE  # noqa
 from prefect.context import TaskRunContext  # noqa
+from prefect.server.api.server import replace_placeholder_string_in_files  # noqa
 from prefect.tasks import task_input_hash  # noqa
 from prefect.testing.utilities import prefect_test_harness  # noqa
 from prefect.utilities.annotations import NotSet  # noqa
