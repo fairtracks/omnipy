@@ -1,10 +1,18 @@
 """Tests for serialization."""
 
+import asyncio
+from inspect import isawaitable
+from pathlib import Path
+from types import SimpleNamespace
 from typing import Annotated
 
 import pytest
 import pytest_cases as pc
 
+from omnipy.components import get_serializer_registry
+from omnipy.components.json.datasets import JsonDataset
+from omnipy.compute.flow import FuncFlowTemplate
+from omnipy.compute.task import TaskTemplate
 from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
                                      ConfigPersistOutputsOptions,
                                      ConfigRestoreOutputsOptions,
@@ -243,3 +251,125 @@ def test_persist_and_restore(
     dataset_restore = case_restore_tmpl.run()
 
     assert dataset_restore.to_data() == dataset_persist.to_data()
+
+
+def _persisted_tar_files(runtime: IsRuntime) -> set[Path]:
+    persist_dir_path = Path(runtime.config.job.output_storage.local.persist_data_dir_path)
+    if not persist_dir_path.exists():
+        return set()
+
+    return set(persist_dir_path.rglob('*.tar.gz'))
+
+
+def _new_persisted_tar_files(runtime: IsRuntime, before_files: set[Path]) -> list[Path]:
+    return sorted(_persisted_tar_files(runtime) - before_files)
+
+
+def _restore_json_dataset_from_tar_file(tar_file_path: Path) -> JsonDataset:
+    restored_dataset = get_serializer_registry().load_from_tar_file_path_based_on_file_suffix(
+        log_obj=SimpleNamespace(log=lambda _msg: None),
+        tar_file_path=str(tar_file_path),
+        to_dataset=JsonDataset(),
+    )
+
+    assert isinstance(restored_dataset, JsonDataset)
+    return restored_dataset
+
+
+def test_async_task_serialize_then_result_key_without_running_loop(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    json_dataset: Annotated[JsonDataset, pytest.fixture],
+) -> None:
+    @TaskTemplate(
+        auto_async=True,
+        persist_outputs='enabled',
+        result_key='wrapped',
+    )
+    async def async_json_task() -> JsonDataset:
+        await asyncio.sleep(0)
+        return json_dataset
+
+    persisted_files_before = _persisted_tar_files(runtime)
+
+    wrapped_result = async_json_task.run()
+    assert wrapped_result == {'wrapped': json_dataset}
+
+    new_tar_files = _new_persisted_tar_files(runtime, persisted_files_before)
+    assert len(new_tar_files) == 1
+
+    restored_dataset = _restore_json_dataset_from_tar_file(new_tar_files[0])
+    assert restored_dataset.to_data() == json_dataset.to_data()
+
+
+@pytest.mark.anyio
+async def test_async_task_serialize_then_result_key_inside_running_loop(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    json_dataset: Annotated[JsonDataset, pytest.fixture],
+) -> None:
+    @TaskTemplate(
+        auto_async=True,
+        persist_outputs='enabled',
+        result_key='wrapped',
+    )
+    async def async_json_task() -> JsonDataset:
+        await asyncio.sleep(0)
+        return json_dataset
+
+    persisted_files_before = _persisted_tar_files(runtime)
+
+    wrapped_result = async_json_task.run()
+    wrapped_task = wrapped_result['wrapped']
+    assert isinstance(wrapped_task, asyncio.Task)
+
+    wrapped_dataset = await wrapped_task
+    assert wrapped_dataset.to_data() == json_dataset.to_data()
+
+    await asyncio.sleep(0)
+
+    new_tar_files = _new_persisted_tar_files(runtime, persisted_files_before)
+    assert len(new_tar_files) == 1
+
+    restored_dataset = _restore_json_dataset_from_tar_file(new_tar_files[0])
+    assert restored_dataset.to_data() == json_dataset.to_data()
+
+
+@pytest.mark.anyio
+async def test_async_func_flow_serialize_then_result_key_in_flow_context(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    json_dataset: Annotated[JsonDataset, pytest.fixture],
+) -> None:
+    @FuncFlowTemplate(
+        auto_async=True,
+        persist_outputs='enabled',
+        result_key='flow_wrapped',
+    )
+    async def async_inner_flow() -> JsonDataset:
+        await asyncio.sleep(0)
+        return json_dataset
+
+    @FuncFlowTemplate(
+        auto_async=False,
+        persist_outputs='disabled',
+    )
+    async def outer_flow() -> JsonDataset:
+        wrapped_result = async_inner_flow.run()
+        wrapped_value = wrapped_result['flow_wrapped']
+
+        assert isawaitable(wrapped_value)
+        assert not isinstance(wrapped_value, asyncio.Task)
+
+        return await wrapped_value
+
+    persisted_files_before = _persisted_tar_files(runtime)
+
+    outer_result = outer_flow.run()
+    assert isawaitable(outer_result)
+
+    resolved_outer_result = await outer_result
+    assert resolved_outer_result.to_data() == json_dataset.to_data()
+
+    new_tar_files = _new_persisted_tar_files(runtime, persisted_files_before)
+    assert len(new_tar_files) == 1
+
+    restored_dataset = _restore_json_dataset_from_tar_file(new_tar_files[0])
+    assert restored_dataset.to_data() == json_dataset.to_data()
