@@ -25,7 +25,6 @@ def use_ephemeral_mode_for_tests():
 
 set_prefect_config_path()
 use_ephemeral_mode_for_tests()
-
 from prefect import cache_policies  # noqa
 from prefect import State  # noqa
 from prefect import Flow as PrefectFlow  # noqa
