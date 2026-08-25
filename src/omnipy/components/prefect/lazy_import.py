@@ -1,7 +1,9 @@
 import os
 from pathlib import Path
+import socket
 import sys
 
+import prefect.server.api.server
 import prefect.testing.utilities
 
 
@@ -25,23 +27,41 @@ def use_ephemeral_mode_for_tests():
         os.environ['PREFECT_API_URL'] = ''
 
 
-def insert_mock_test_harness_port_finder():
-    from prefect.testing.utilities import _find_available_port  # pyright: ignore
+def insert_mock_test_harness_port_finder_for_tests():
+    if 'pytest' in sys.modules:
+        from prefect.server.api.server import SubprocessASGIServer  # pyright: ignore
+        from prefect.testing.utilities import _find_available_port  # pyright: ignore
 
-    def _find_available_port_with_env_override() -> int:
-        prefect_test_port = os.getenv('PREFECT_TEST_PORT')
-        if prefect_test_port:
-            return int(prefect_test_port)
-        else:
-            return _find_available_port()
+        def _find_available_port_with_env_override() -> int:
+            prefect_test_port = os.getenv('PREFECT_TEST_PORT')
+            if prefect_test_port:
+                return int(prefect_test_port)
+            else:
+                return _find_available_port()
 
-    prefect.testing.utilities._find_available_port = (  # pyright: ignore
-        _find_available_port_with_env_override)
+        class MockSubprocessASGIServer(SubprocessASGIServer):
+            @property
+            def address(self) -> str:
+                return f'http://0.0.0.0:{self.port}'
+
+            @property
+            def api_url(self) -> str:
+                hostname = socket.gethostname()
+                ip_address = socket.gethostbyname(hostname)
+                return f'http://{ip_address}/api'
+
+        prefect.testing.utilities._find_available_port = (  # pyright: ignore
+            _find_available_port_with_env_override)
+
+        use_nono_workaround = os.getenv('PREFECT_TEST_NONO_WORKAROUND')
+        if use_nono_workaround:
+            prefect.server.api.server.SubprocessASGIServer = (  # pyright: ignore
+                MockSubprocessASGIServer)
 
 
 set_prefect_config_path()
 use_ephemeral_mode_for_tests()
-insert_mock_test_harness_port_finder()
+insert_mock_test_harness_port_finder_for_tests()
 
 from prefect import cache_policies  # noqa
 from prefect import State  # noqa
