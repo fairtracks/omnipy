@@ -3,7 +3,6 @@ from pathlib import Path
 import socket
 import sys
 
-import prefect.server.api.server
 import prefect.testing.utilities
 
 
@@ -55,7 +54,7 @@ def insert_mock_test_harness_port_finder_for_tests():
 
         use_nono_workaround = os.getenv('PREFECT_TEST_NONO_WORKAROUND')
         if use_nono_workaround:
-            prefect.server.api.server.SubprocessASGIServer = (  # pyright: ignore
+            prefect.testing.utilities.SubprocessASGIServer = (  # pyright: ignore
                 MockSubprocessASGIServer)
 
 
