@@ -52,6 +52,7 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
 
     _HTML_TAG_TEMPLATE: ClassVar[str] = ('<pre>'
                                          '<code style="'
+                                         'display: inline-block; '
                                          '{font_style}'
                                          '{color_style}">'
                                          '{code}'
