@@ -8,18 +8,20 @@
 
 ## Verification
 
-- Full test command: `uv run pytest -v --mypy-pyproject-toml-file=pyproject.toml
-- Focused pytest runs still need the same mypy-plugin flags, for example: `uv run pytest tests/components/json/test_json_types.yml --mypy-pyproject-toml-file=pyproject.toml
+- Full test command: `uv run pytest -v --mypy-pyproject-toml-file=pyproject.toml`
+- Focused pytest runs still need the same mypy-plugin flags, for example: `uv run pytest tests/components/json/test_json_types.yml --mypy-pyproject-toml-file=pyproject.toml`
 - Check-only formatting/import-order validation matches CI with `uv run pre-commit run --hook-stage manual --all-files`.
 
 ## Formatting And Hooks
 
 - Python formatting is `yapf` + `isort`; linting is `flake8`; Python line length is 100 with single quotes.
 - Commit-stage pre-commit mutates Python files via `.pre-commit-hooks/expand_docstr_macros.py`. If you edit macro-managed docstrings or `omnipy.util.docstr_macros`, run that hook or expect rewrites.
+- `pre-commit` stage hooks are mutating (`yapf`, `isort`, and docstring macro expansion); `manual` stage hooks are check-only (`yapf (check)`, `isort (check)`).
 
 ## Typing
 
 - Do not use `cast(object, ...)` / `cast(object, self)` merely to suppress type-checker warnings about suspicious casts. Treat that pattern as a typing escape hatch to avoid in Omnipy code unless explicitly requested.
+- The primary static type-checker config is `basedpyright` (`[tool.basedpyright]` in `pyproject.toml`); run it with `uv run basedpyright` when type-checking changes.
 
 ## Architecture
 
