@@ -20,6 +20,7 @@ from omnipy.compute._job_creator import JobBaseMeta, JobCreator
 from omnipy.config.data import ModelConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.data._data_class_creator import DataClassBaseMeta, DataClassCreator
+from omnipy.shared.enums.job import ConfigPersistOutputsOptions
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.shared.typedefs import TypeForm
 
@@ -86,11 +87,11 @@ def runtime_cls(
 
 
 @pytest.fixture(scope='function')
-def runtime(
+def runtime_default_config_with_tmp_dir(
     runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
     tmp_dir_path: Annotated[Path, pytest.fixture],
-) -> Iterator[IsRuntime]:
-    """Provide an isolated runtime instance for a test."""
+) -> IsRuntime:
+    """Provide an isolated runtime instance (no config changes except tmp dir path)."""
     runtime = runtime_cls()
 
     runtime.config.reset_to_defaults()
@@ -98,7 +99,19 @@ def runtime(
     runtime.config.job.output_storage.local.persist_data_dir_path = str(tmp_dir_path / 'outputs')
     runtime.config.root_log.file_log_path = str(tmp_dir_path / 'logs' / 'omnipy.log')
 
-    yield runtime
+    return runtime
+
+
+@pytest.fixture(scope='function')
+def runtime(runtime_default_config_with_tmp_dir: Annotated[IsRuntime, pytest.fixture]) -> IsRuntime:
+    """Provide an isolated runtime instance for a test."""
+    runtime = runtime_default_config_with_tmp_dir
+
+    persist_test_outputs = os.getenv('OMNIPY_PERSIST_TEST_OUTPUTS') == '1'
+    if not persist_test_outputs:
+        runtime.config.job.output_storage.persist_outputs = ConfigPersistOutputsOptions.DISABLED
+
+    return runtime
 
 
 @pytest.fixture(scope='function')
