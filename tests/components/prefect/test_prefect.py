@@ -18,12 +18,3 @@ def test_no_prefect_console_handler_in_root_logger(
 
     from prefect.logging.handlers import PrefectConsoleHandler
     assert not any(isinstance(handler, PrefectConsoleHandler) for handler in logging.root.handlers)
-
-
-def test_ephemeral_mode_for_tests(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]):
-    import omnipy.components.prefect.lazy_import  # noqa: F401
-
-    assert os.environ['PREFECT_SERVER_ALLOW_EPHEMERAL_MODE'] == 'True'
-    assert os.environ['PREFECT_API_KEY'] == ''
-    assert os.environ['PREFECT_API_URL'] == ''

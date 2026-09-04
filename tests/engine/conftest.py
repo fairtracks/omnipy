@@ -1,13 +1,9 @@
 """Shared fixtures for engine tests."""
+from typing import Annotated, Callable, Type
 
-from typing import Callable, Type
-
-from prefect.settings import PREFECT_FLOWS_HEARTBEAT_FREQUENCY, temporary_settings
-import pytest
 import pytest_cases as pc
 
 from omnipy.components.prefect.engine.prefect import PrefectEngine
-from omnipy.components.prefect.lazy_import import prefect_test_harness
 from omnipy.engine.local import LocalRunner
 from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import IsFlowTemplate, IsTaskTemplate
@@ -27,11 +23,9 @@ from .helpers.mocks import (MockDagFlowTemplate,
 # Prefect
 
 
-@pytest.fixture(autouse=True, scope='package')
-def prefect_test_fixture():
-    with temporary_settings({PREFECT_FLOWS_HEARTBEAT_FREQUENCY: None}):
-        with prefect_test_harness():
-            yield
+@pc.fixture(autouse=True, scope='session')
+def auto_prefect_test_fixture(prefect_test_fixture: Annotated[None, pc.fixture]) -> None:
+    ...
 
 
 # Mock job templates
