@@ -89,7 +89,7 @@ async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:
     async def timeout_lyrics_endpoint(request: web.Request) -> web.Response:
         url = str(request.url)
         _request_counts_per_url[url] += 1
-        if _request_counts_per_url[url] % 3 == 0:
+        if _request_counts_per_url[url] % 2 == 0:
             data = await _get_lyrics(url)
             return web.json_response(data)
         else:
