@@ -36,9 +36,11 @@ def test_all_properties_pytest_default_config(case_tmpl) -> None:
 
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', prefix='case_config_')
 def test_all_properties_runtime_default_config(
-    runtime: Annotated[IsRuntime, pytest.fixture],
+    runtime_default_config_with_tmp_dir: Annotated[IsRuntime, pytest.fixture],
     case_tmpl,
 ) -> None:
+    runtime = runtime_default_config_with_tmp_dir
+
     assert runtime.config.job.output_storage.persist_outputs == \
            ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
     assert runtime.config.job.output_storage.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
@@ -94,8 +96,8 @@ def test_properties_persist_outputs_override_config(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case_tmpl,
 ) -> None:
-    assert runtime.config.job.output_storage.persist_outputs == \
-           ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    runtime.config.job.output_storage.persist_outputs = \
+        ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
 
     case_tmpl_2 = case_tmpl.refine(persist_outputs='disabled')
 

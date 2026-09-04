@@ -254,9 +254,13 @@ def test_objects_default(
 
 @pytest.mark.parametrize(
     'ui_type', [PlainTerminalUserInterfaceType.UNKNOWN, JupyterInBrowserUserInterfaceType.JUPYTER])
-def test_default_runtime(ui_type: SpecifiedUserInterfaceType.Literals,
-                         runtime: Annotated[IsRuntime, pytest.fixture],
-                         tmp_dir_path: Annotated[Path, pytest.fixture]) -> None:
+def test_default_runtime(
+    ui_type: SpecifiedUserInterfaceType.Literals,
+    runtime_default_config_with_tmp_dir: Annotated[IsRuntime, pytest.fixture],
+    tmp_dir_path: Annotated[Path, pytest.fixture],
+) -> None:
+    runtime = runtime_default_config_with_tmp_dir
+
     runtime.config.data.ui.detected_type = ui_type
 
     assert isinstance(runtime.config, RuntimeConfig)
