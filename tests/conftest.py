@@ -1,5 +1,6 @@
 """Shared fixtures and pytest hooks for Omnipy tests."""
 
+from collections.abc import Iterator
 from datetime import datetime
 import gc
 import itertools
@@ -8,7 +9,7 @@ import os
 from pathlib import Path
 import shutil
 import tempfile
-from typing import Annotated, Callable, Iterator, Type
+from typing import Annotated, Callable, Type
 from unittest import mock
 
 import pytest

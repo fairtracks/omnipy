@@ -129,7 +129,7 @@ def running_in_pycharm_console() -> bool:
     Notes:
         Depends on the active process environment variables.
     """
-    return os.getenv('PYCHARM_HOSTED') is not None
+    return os.getenv('PYCHARM_HOSTED') == '1'
 
 
 def running_in_atty_terminal() -> bool:

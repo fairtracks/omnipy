@@ -183,12 +183,8 @@ def test_refine_task_template_with_other_properties_task() -> None:
 
     my_power_2 = my_power_template_2.apply()
     assert my_power_2 != my_power
-    assert my_power_2(
-        numb=3,  # type: ignore[call-arg]
-        min=False,
-    ) == {
-        'by_the_power_of_grayskull': 27
-    }
+    exp_result = {'by_the_power_of_grayskull': 27}
+    assert my_power_2(numb=3, min=False) == exp_result  # type: ignore[call-arg]
 
     # Refine task template with single property (update=False)
     my_power_template_3 = my_power_template_2.refine(
@@ -293,8 +289,8 @@ def test_dense_async_task_mixin_stack_with_iterate_auto_async_and_result_key() -
 
     wrapped_result = async_dense_transform.run(
         dataset,
-        step=1,
-        output_dataset=output_dataset,
+        step=1,  # type: ignore[call-arg]
+        output_dataset=output_dataset,  # type: ignore[call-arg]
     )
 
     assert isinstance(wrapped_result, dict)
@@ -309,22 +305,22 @@ async def test_result_key_preserves_sync_and_async_generator_shapes(generator_ki
     if generator_kind == 'sync':
 
         @TaskTemplate(result_key='values')
-        def emit_values(start: int) -> Generator[int, None, None]:
+        def sync_emit_values(start: int) -> Generator[int, None, None]:
             for value in range(start, start + 3):
                 yield value
 
-        wrapped_result = cast(dict[str, object], emit_values.run(start=2))
+        wrapped_result = cast(dict[str, object], sync_emit_values.run(start=2))
         values = cast(Generator[int, None, None], wrapped_result['values'])
         assert list(values) == [2, 3, 4]
 
     else:
 
         @TaskTemplate(result_key='values')
-        async def emit_values(start: int) -> AsyncGenerator[int, None]:
+        async def async_emit_values(start: int) -> AsyncGenerator[int, None]:
             for value in range(start, start + 3):
                 await asyncio.sleep(0)
                 yield value
 
-        wrapped_result = cast(dict[str, object], emit_values.run(start=2))
+        wrapped_result = cast(dict[str, object], async_emit_values.run(start=2))
         values = cast(AsyncGenerator[int, None], wrapped_result['values'])
         assert [value async for value in values] == [2, 3, 4]
