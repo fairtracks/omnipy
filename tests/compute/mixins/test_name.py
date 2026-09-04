@@ -9,7 +9,6 @@ from omnipy.compute.task import TaskTemplate
 
 from ..cases.raw.functions import power_m1_func
 from ..conftest import MockJobClasses
-from ..helpers.mocks import MockLocalRunner
 
 
 def test_property_name_default_mock(
@@ -33,8 +32,7 @@ def test_property_name_default_task() -> None:
         assert power_m1_obj.name == 'power_m1_func'
 
 
-def test_property_name_default_linear_flow(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+def test_property_name_default_linear_flow() -> None:
     """Test linear flows default their name from the callable."""
 
     power_m1_tmpl = LinearFlowTemplate()(power_m1_func)
@@ -43,8 +41,7 @@ def test_property_name_default_linear_flow(
         assert power_m1_obj.name == 'power_m1_func'
 
 
-def test_property_name_default_dag_flow(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+def test_property_name_default_dag_flow() -> None:
     """Test DAG flows default their name from the callable."""
 
     power_m1_tmpl = DagFlowTemplate()(power_m1_func)
@@ -53,8 +50,7 @@ def test_property_name_default_dag_flow(
         assert power_m1_obj.name == 'power_m1_func'
 
 
-def test_property_name_default_func_flow(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+def test_property_name_default_func_flow() -> None:
     """Test function flows default their name from the callable."""
 
     power_m1_tmpl = FuncFlowTemplate()(power_m1_func)
