@@ -14,6 +14,8 @@ from unittest import mock
 import pytest
 import pytest_cases as pc
 
+from omnipy.components.prefect.lazy_import import (prefect_test_config_context,
+                                                   prefect_test_harness_context)
 from omnipy.compute._job_creator import JobBaseMeta, JobCreator
 from omnipy.config.data import ModelConfig
 from omnipy.config.root_log import RootLogConfig
@@ -296,3 +298,15 @@ def mock_unix_mac_linesep() -> Iterator[None]:
 def mock_linesep_variants(linesep_variant: Annotated[Iterator[None], pc.fixture]) -> Iterator[None]:
     """Parametrize tests across supported line separator variants."""
     yield
+
+
+@pc.fixture(scope='session')
+def prefect_test_fixture() -> Iterator[None]:
+    with_harness = os.getenv('OMNIPY_NO_PREFECT_TEST_HARNESS') != '1'
+
+    with prefect_test_config_context(with_harness):
+        if with_harness:
+            with prefect_test_harness_context(port=None):
+                yield
+        else:
+            yield
