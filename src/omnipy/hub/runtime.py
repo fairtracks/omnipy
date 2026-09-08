@@ -41,8 +41,6 @@ from omnipy.shared.protocols.hub.runtime import (IsRootLogObjects,
                                                  IsRuntime,
                                                  IsRuntimeConfig,
                                                  IsRuntimeObjects)
-from omnipy.shared.typing import TYPE_CHECKING
-from omnipy.util.helpers import called_from_omnipy_tests
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
 import omnipy.util.pydantic as pyd
 
@@ -377,7 +375,4 @@ class Runtime(DataPublisher):
         self.objects.job_creator.set_engine(self._get_engine(self.config.engine.choice))
 
 
-if TYPE_CHECKING:
-    runtime: 'IsRuntime' = Runtime()
-else:
-    runtime: 'IsRuntime | None' = None if called_from_omnipy_tests() else Runtime()
+runtime: 'IsRuntime' = Runtime()

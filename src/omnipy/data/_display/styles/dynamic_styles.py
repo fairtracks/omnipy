@@ -39,6 +39,8 @@ def fetch_base16_theme(theme_url: str) -> Base16Theme:
 
     from omnipy.hub.runtime import runtime
     if not runtime:
+        # TODO: Revisit how runtime is distributed, e.g. fetch_base16_theme
+        #       should not include a hook just for pytest
         assert _runtime, 'Runtime is not initialized, probably due to pytest usage'
         runtime = _runtime
 

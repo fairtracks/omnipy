@@ -29,6 +29,11 @@ from .helpers.functions import assert_model, assert_val
 from .helpers.protocols import AssertModelOrValFunc
 
 
+def pytest_configure(config) -> None:  # noqa
+    import omnipy.hub.runtime
+    omnipy.hub.runtime.runtime = None
+
+
 @pytest.fixture(scope='function')
 def teardown_rm_default_root_log_dir() -> Iterator[None]:
     """Remove the default root log directory after a test."""

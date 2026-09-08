@@ -41,7 +41,7 @@
 ## Test Quirks
 
 - `tests/conftest.py` reorders collection to run ordinary tests first, then `pytest-mypy-plugins` cases, then integration tests.
-- During repo tests, `omnipy.hub.runtime.runtime` is intentionally `None`; `src/omnipy/util/helpers.py::called_from_omnipy_tests()` disables the import-time singleton for `tests/...` imports.
+- During repo tests, `omnipy.hub.runtime.runtime` is intentionally `None`; `tests/conftest.py:pytest_configure()` disables the import-time singleton for `tests/...` imports.
 - CI installs `de_DE.UTF-8` before running pytest. Reproduce that locale first if locale-sensitive tests fail locally.
 
 ## Docs
