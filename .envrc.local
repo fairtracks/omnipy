@@ -16,7 +16,7 @@ if [ ! -d "$DYN_WORKTREE_STATE_DIR/etc" ]; then
   mkdir -p "$DYN_WORKTREE_STATE_DIR/etc"
 fi
 
-if [ -z "$NONO_PROXY_TOKEN" ]; then
+if [ -z "$NONO_CAP_FILE" ]; then
   echo $(hostname -I | cut -d' ' -f1) > "$DYN_WORKTREE_STATE_DIR/etc/ipv4"
 else
   export PREFECT_API_URL="http://$(cat "$DYN_WORKTREE_STATE_DIR/etc/ipv4"):4200/api"
