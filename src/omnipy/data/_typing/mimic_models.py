@@ -34,7 +34,7 @@ if TYPE_CHECKING:
                                                  IsSameTypeTupleContent,
                                                  IsSetContent,
                                                  IsStrContent)
-    from omnipy.shared.protocols.data import IsDataset, IsModel
+    from omnipy.shared.protocols.data import IsDataset
 
     _RootT = TypeVar('_RootT')
 
@@ -151,17 +151,3 @@ if TYPE_CHECKING:
         """Typed stand-in for dataset-valued models."""
 
         ...
-
-    _CorrectModelT = TypeVar('_CorrectModelT', bound=IsModel)
-
-    class RevertModelMimicTypingHack(Generic[_CorrectModelT]):
-        """Restore normal subclass typing when mimic models are used as bases."""
-
-        # Need to override Model.__new__() hack for Pyright to correctly
-        # handle subclassing when one of the Mimic models is used as a base
-        # class.
-
-        if TYPE_CHECKER != 'mypy':
-
-            def __new__(cls, *args: Any, **kwargs: Any) -> _CorrectModelT:
-                ...

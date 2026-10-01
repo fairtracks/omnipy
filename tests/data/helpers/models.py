@@ -23,9 +23,11 @@ class MyFloatObjModel(Model[MyFloatObject]):
         self._validate_and_set_value(MyFloatObject(int_part=floor(data), float_part=data % 1))
 
 
-class StringToLength(Model[str]):
+class StringToLength(Model[int | str]):
     @classmethod
     def _parse_data(cls, data: str) -> int:
+        if isinstance(data, int):
+            return data
         return len(data)
 
 
@@ -101,10 +103,10 @@ class PydanticChildModel(pyd.BaseModel):
 
 class PydanticParentModel(pyd.GenericModel, Generic[ChildrenT]):
     id: int = pyd.Field(0, alias='@id')
-    children: ChildrenT = []
+    children: ChildrenT = pyd.Field(default_factory=list)
 
 
-class MyPydanticModel(Model[PydanticParentModel[ChildrenT]], Generic[ChildrenT]):
+class MyPydanticParentModel(Model[PydanticParentModel[ChildrenT]], Generic[ChildrenT]):
     ...
 
 

@@ -50,7 +50,7 @@ from .helpers.models import (CBA,
                              MyFloatObjModel,
                              MyFwdRefModel,
                              MyNestedFwdRefModel,
-                             MyPydanticModel,
+                             MyPydanticParentModel,
                              NumberModel,
                              ParamUpperStrModel,
                              PydanticChildModel,
@@ -1788,7 +1788,7 @@ def test_model_of_pydantic_model_with_model_of_pydantic_model_children(
 
     # The __init__() of the child model, Model[PydanticChildModel], detects that the input value is
     # another omnipy Model and revalidates it
-    model = MyPydanticModel[list[Model[PydanticChildModel]]]({
+    model = MyPydanticParentModel[list[Model[PydanticChildModel]]]({
         '@id': '1', 'children': [
             {
                 '@id': '10', 'value': 1.23
@@ -1837,7 +1837,7 @@ def test_model_of_pydantic_model_with_pydantic_model_children(
     invalid_child_model = PydanticChildModel(**{'@id': 12, 'value': 2})
     invalid_child_model.value = '2.22'
 
-    model = MyPydanticModel[list[PydanticChildModel]]({
+    model = MyPydanticParentModel[list[PydanticChildModel]]({
         '@id': '1', 'children': [
             {
                 '@id': '10', 'value': 1.23
@@ -2248,7 +2248,7 @@ def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_value_access(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
     class SimplePydanticModel(pyd.BaseModel):
-        value: Model[list[int]] = []
+        value: Model[list[int]] = pyd.Field(default_factory=list)
 
     @mimics(SimplePydanticModel)
     class ModelOfSimplePydanticModel(Model[SimplePydanticModel]):
@@ -2271,7 +2271,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_value_access(
         skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
     class SimplePydanticModel(pyd.BaseModel):
-        value: Model[list[int]] = []  # type: ignore[assignment]
+        value: Model[list[int]] = pyd.Field(default_factory=list)
 
     @mimics(SimplePydanticModel)
     class ModelOfSimplePydanticModel(Model[SimplePydanticModel]):
@@ -2280,23 +2280,27 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     model = ModelOfSimplePydanticModel(SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
 
-    # Trying to set the value of a field of a pydantic model also triggers a snapshot of the parent,
-    # which here is used to for value reset
+    # Trying to set the value of a field of a pydantic model also triggers
+    # a snapshot of the parent, which here triggers validation, raises a
+    # ValidationError, and reverts the value of the field to the previous
+    # valid state.
     with pytest.raises(ValidationError):
         model.value = ['abc']
+
     assert model.snapshot == model.content \
            == SimplePydanticModel(value=[123])  # type: ignore[arg-type]
 
-    # The value of the field of the pydantic model is not changed, so no snapshot is triggered for
-    # the child model.
+    # The value of the field of the pydantic model is not changed, so no
+    # snapshot is triggered for the child model.
     #
-    # NB: Using model.content.value instead of value consequently for asserts to not trigger a
-    # snapshot.
+    # NB: Using model.content.value instead of value consequently for
+    # asserts to not trigger a snapshot.
     assert model.content.value.content == [123]
     _assert_no_snapshot(model.content.value)
 
-    # Trying to change the state of the child model in the field of a pydantic model triggers a
-    # snapshot of the child (as well as of the parent due to the field access)
+    # Trying to change the state of the child model in the field of a
+    # pydantic model triggers a snapshot of the child (as well as of the
+    # parent due to the field access)
     with pytest.raises(ValidationError):
         model.value[0] = 'abc'
     assert model.snapshot == model.content \

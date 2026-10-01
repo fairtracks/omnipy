@@ -49,7 +49,7 @@ class IsaJsonModel(Model[IsaInvestigationSchema | IsaTopLevelModel]):
     Input can be either a raw :class:`IsaInvestigationSchema` object or a
     top-level wrapper containing the ``investigation`` field.
     """
-    class Config:
+    class Config:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Pydantic settings for ISA union parsing behavior.
 
         Attributes:
