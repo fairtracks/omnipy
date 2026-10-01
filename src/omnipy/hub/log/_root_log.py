@@ -112,8 +112,7 @@ class RootLogObjects(DataPublisher):
         if self._config.log_to_file:
             log_file_path = self._config.file_log_path
             log_dir_path = os.path.dirname(log_file_path)
-            if not os.path.exists(log_dir_path):
-                os.makedirs(log_dir_path)
+            os.makedirs(log_dir_path, exist_ok=True)
 
             self.file_handler = DailyRotatingFileHandler(log_file_path, backupCount=7)
             self.file_handler.setLevel(self._config.file_log_min_level)

@@ -1567,8 +1567,7 @@ class Dataset(
                 out_tar_gz_file.write(serializer.serialize(parsed_dataset))
 
             directory = os.path.abspath(out_tar_gz_path[:-7])
-            if not os.path.exists(directory):
-                os.makedirs(directory)
+            os.makedirs(directory, exist_ok=True)
 
             tar = tarfile.open(out_tar_gz_path)
             print(f'Extracting content to directory "{os.path.abspath(out_tar_gz_path[:-7])}"')

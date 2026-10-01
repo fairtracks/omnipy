@@ -45,8 +45,7 @@ def fetch_base16_theme(theme_url: str) -> Base16Theme:
         runtime = _runtime
 
     cache_dir_path = Path(runtime.config.data.ui.cache_dir_path) / 'styles'
-    if not os.path.exists(cache_dir_path):
-        os.makedirs(cache_dir_path)
+    os.makedirs(cache_dir_path, exist_ok=True)
 
     theme_cache_path = cache_dir_path / os.path.basename(urlparse(theme_url).path)
     if os.path.exists(theme_cache_path):

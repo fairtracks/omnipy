@@ -67,8 +67,7 @@ for input in inputs:
             input_name = (f'{os.path.splitext(os.path.basename(input.path))[0]}'
                           f'_{input.data_type.__name__.lower()}')
             dirname = f'{input_name}/{underscore(style.group)}/{transparency_label}'
-            if not os.path.exists(dirname):
-                os.makedirs(dirname)
+            os.makedirs(dirname, exist_ok=True)
 
             frame = Frame(Dimensions(165, None))
             config = OutputConfig(

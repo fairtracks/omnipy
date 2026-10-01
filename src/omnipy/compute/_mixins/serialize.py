@@ -245,8 +245,7 @@ class SerializerFuncJobBaseMixin:
         output_path = Path(
             self._job_config.output_storage.local.persist_data_dir_path).joinpath(datetime_str)
 
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
+        os.makedirs(output_path, exist_ok=True)
 
         num_cur_files = len(os.listdir(output_path))
         job_name = self._job_name()
