@@ -28,6 +28,7 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeForm, TypeVar
 
+from omnipy.data._typing.helpers import mimics
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsModel
@@ -2249,7 +2250,11 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
     class SimplePydanticModel(pyd.BaseModel):
         value: Model[list[int]] = []
 
-    model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
+    @mimics(SimplePydanticModel)
+    class ModelOfSimplePydanticModel(Model[SimplePydanticModel]):
+        ...
+
+    model = ModelOfSimplePydanticModel(SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
     _assert_no_snapshot(model.content.value)
 
@@ -2268,7 +2273,11 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     class SimplePydanticModel(pyd.BaseModel):
         value: Model[list[int]] = []  # type: ignore[assignment]
 
-    model = Model[SimplePydanticModel](SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
+    @mimics(SimplePydanticModel)
+    class ModelOfSimplePydanticModel(Model[SimplePydanticModel]):
+        ...
+
+    model = ModelOfSimplePydanticModel(SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
 
     # Trying to set the value of a field of a pydantic model also triggers a snapshot of the parent,
@@ -4153,49 +4162,67 @@ def test_mimic_operations_as_union_of_scalars() -> None:
 def test_mimic_operations_on_pydantic_models() -> None:
     T = TypeVar('T')
 
-    class ParentPydanticModel(pyd.BaseModel):
+    class ParentPydModel(pyd.BaseModel):
         a: int = 0
 
-    class ChildPydanticModel(ParentPydanticModel):
+    class ChildPydModel(ParentPydModel):
         b: str = ''
 
-    class GenericPydanticModel(pyd.GenericModel, Generic[T]):
+    class GenericParentPydModel(pyd.GenericModel, Generic[T]):
         a: T | None = None
 
-    class ChildGenericPydanticModel(GenericPydanticModel[int]):
+    class ChildOfGenericPydModel(GenericParentPydModel[int]):
         b: str = ''
 
-    parent_pydantic_model = Model[ParentPydanticModel]()
-    assert parent_pydantic_model.a == 0
-    parent_pydantic_model.a = 2
-    assert parent_pydantic_model.a == 2
-    parent_pydantic_model.a = '2'
-    assert parent_pydantic_model.a == 2
-    with pytest.raises(ValidationError):
-        parent_pydantic_model.a = 'abc'
+    @mimics(ParentPydModel)
+    class ParentModel(Model[ParentPydModel]):
+        ...
 
-    child_pydantic_model = Model[ChildPydanticModel]()
+    @mimics(ChildPydModel)
+    class ChildModel(Model[ChildPydModel]):
+        ...
+
+    # mimics() is not compatible with generic pydantic models, so we cannot
+    # use it here.
+    class GenericParentModel(Model[GenericParentPydModel[T]], Generic[T]):
+        ...
+
+    @mimics(ChildOfGenericPydModel)
+    class ChildOfGenericModel(ChildOfGenericPydModel):
+        ...
+
+    parent_model = ParentModel()
+    assert parent_model.a == 0
+    parent_model.a = 2
+    assert parent_model.a == 2
+    parent_model.a = '2'  # pyright: ignore[reportAttributeAccessIssue]
+    assert parent_model.a == 2
+    with pytest.raises(ValidationError):
+        parent_model.a = 'abc'  # pyright: ignore[reportAttributeAccessIssue]
+
+    child_pydantic_model = ChildModel()
     assert child_pydantic_model.a == 0
     assert child_pydantic_model.b == ''
     child_pydantic_model.b = 'someone else'
     assert child_pydantic_model.b == 'someone else'
-    child_pydantic_model.b = 123
+    child_pydantic_model.b = 123  # pyright: ignore[reportAttributeAccessIssue]
     assert child_pydantic_model.b == '123'
 
-    generic_pydantic_model = Model[GenericPydanticModel[int]]()
-    assert generic_pydantic_model.a is None
-    parent_pydantic_model.a = '2'
-    assert parent_pydantic_model.a == 2
+    generic_pydantic_model = GenericParentModel[int]()
+    generic_pydantic_model.a  # pyright: ignore[reportAttributeAccessIssue]
+    assert generic_pydantic_model.a is None  # pyright: ignore[reportAttributeAccessIssue]
+    generic_pydantic_model.a = 2
+    assert generic_pydantic_model.a == 2  # pyright: ignore[reportAttributeAccessIssue]
     with pytest.raises(ValidationError):
-        parent_pydantic_model.a = 'abc'
+        generic_pydantic_model.a = 'abc'
 
-    child_generic_pydantic_model = Model[ChildGenericPydanticModel]()
+    child_generic_pydantic_model = ChildOfGenericModel()
     assert child_generic_pydantic_model.a is None
-    child_generic_pydantic_model.a = '2'
+    child_generic_pydantic_model.a = 2
     assert child_generic_pydantic_model.a == 2
     assert child_generic_pydantic_model.b == ''
-    child_generic_pydantic_model.b = 123
-    assert child_generic_pydantic_model.b == '123'
+    child_generic_pydantic_model.b = 'test'
+    assert child_generic_pydantic_model.b == 'test'
 
 
 # TODO: Add support in Model for mimicking the setting and deletion of properties

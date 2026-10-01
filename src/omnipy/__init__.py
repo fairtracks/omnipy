@@ -206,6 +206,7 @@ from omnipy.compute.flow import (DagFlow,
 from omnipy.compute.helpers import Void
 from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data._display.panel.helpers import ForceAutodetect
+from omnipy.data._typing.helpers import mimics
 from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
 from omnipy.data.model import (is_model_instance,
                                is_model_subclass,
@@ -347,6 +348,7 @@ __all__ = [
     'is_dataset_subclass',
     'Model',
     'PlainModel',
+    'mimics',
     'is_model_instance',
     'is_model_subclass',
     'is_non_omnipy_pydantic_model',

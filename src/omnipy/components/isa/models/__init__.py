@@ -1,5 +1,6 @@
 from omnipy.components.tables.models import (JsonScalarColumnWiseTableWithColNamesModel,
                                              PrintableTable)
+from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
 
@@ -31,6 +32,7 @@ class IsaTopLevelSchema(pyd.BaseModel):
     investigation: IsaInvestigationModel | None = None
 
 
+@mimics(IsaTopLevelSchema)
 class IsaTopLevelModel(Model[IsaTopLevelSchema]):
     """Omnipy model wrapper for :class:`IsaTopLevelSchema`.
 

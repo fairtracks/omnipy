@@ -27,6 +27,7 @@ from omnipy.components.tables.models import (ColumnModel,
                                              RowWiseTableWithColNamesModel,
                                              TableOfPydanticRecordsModel,
                                              TsvTableModel)
+from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.pydantic import ValidationError
@@ -276,10 +277,12 @@ def test_pydantic_record_model_all_required() -> None:
         firstname: str
         lastname: str
 
+    @mimics(NameRecord)
     class NameRecordModel(PydanticRecordModel[NameRecord]):
         pass
 
     record = NameRecordModel(firstname='John', lastname='Doe')
+    assert record.firstname == 'John'
     assert record.content == NameRecord(firstname='John', lastname='Doe')
     assert record.to_data() == {'firstname': 'John', 'lastname': 'Doe'}
 
@@ -514,6 +517,7 @@ def test_pydantic_record_model_optional() -> None:
         firstname: str
         lastname: str | None = None
 
+    @mimics(NameRecordOptionalLastName)
     class NameRecordOptionalLastNameModel(PydanticRecordModel[NameRecordOptionalLastName]):
         pass
 
@@ -534,6 +538,7 @@ def test_pydantic_record_model_raises_type_error_for_unsupported_input_type() ->
     class AnyRecord(pyd.BaseModel):
         value: int
 
+    @mimics(AnyRecord)
     class AnyRecordModel(PydanticRecordModel[AnyRecord]):
         pass
 
@@ -589,6 +594,7 @@ def test_pydantic_record_model_extra_fields_config() -> None:
         class Config:
             extra = 'forbid'
 
+    @mimics(NameRecordNoExtraFields)
     class NameRecordNoExtraFieldsModel(PydanticRecordModel[NameRecordNoExtraFields]):
         pass
 
@@ -602,6 +608,7 @@ def test_pydantic_record_model_extra_fields_config() -> None:
         class Config:
             extra = 'allow'
 
+    @mimics(NameRecordExtraFields)
     class NameRecordExtraFieldsModel(PydanticRecordModel[NameRecordExtraFields]):
         pass
 

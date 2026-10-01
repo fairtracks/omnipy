@@ -22,6 +22,8 @@ __all__ = [
     'HttpUrlModel',
 ]
 
+from omnipy.data._typing.helpers import mimics
+
 QueryParamsSplitterModel = NestedSplitToItemsModel.adjust(
     'QueryParamsSplitterModel', delimiters=('&', '='))
 
@@ -279,6 +281,7 @@ class UrlDataclassModel(pyd.BaseModel):
         return str(pyd.Url.build(**kwargs))  # type: ignore[arg-type]
 
 
+@mimics(UrlDataclassModel)
 class HttpUrlModel(Model[UrlDataclassModel | str]):
     """Represent a validated HTTP or HTTPS URL as a structured model.
 

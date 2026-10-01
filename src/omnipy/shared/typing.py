@@ -59,7 +59,7 @@ if TYPE_CHECKER == 'unknown':
     # TYPE_CHECKER is not set in the pyright config. Set the type of
     # TYPE_CHECKER to allow pyright to correctly infer types in this
     # case.
-    TYPE_CHECKER: Literal['mypy', 'pyright', 'unknown']  # type: ignore[no-redef]
+    TYPE_CHECKER: Literal['mypy', 'pyright', 'basedpyright', 'unknown']  # type: ignore[no-redef]
 
 # We do not want to export TYPE_CHECKER_IS_MYPY
 del TYPE_CHECKER_IS_MYPY
