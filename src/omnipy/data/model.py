@@ -2394,7 +2394,7 @@ def create_pydantic_model_subclass_with_wrappers(model: type[pyd.BaseModel]) -> 
     for name, field in model.__fields__.items():
         outer_type = field.outer_type_
         is_wrappable_complex_type = (
-            get_origin(outer_type) is not None
+            (not is_literal_type(outer_type) and get_origin(outer_type) is not None)
             or (isinstance(outer_type, type) and is_non_omnipy_pydantic_model_class(outer_type)))
         if is_wrappable_complex_type:
             # Pydantic removes ``None`` from ``outer_type_`` for optional fields.
@@ -2430,6 +2430,11 @@ def create_pydantic_model_subclass_with_wrappers(model: type[pyd.BaseModel]) -> 
 
 def _wrap_nested_pydantic_models(type_: TypeForm) -> TypeForm:
     """Wrap non-Omnipy Pydantic model types occurring within a type expression."""
+    # Literal values are type arguments, rather than nested types. They must remain
+    # native literals for Pydantic to validate them correctly.
+    if is_literal_type(type_):
+        return type_
+
     # Transform union members separately to preserve their original alternatives.
     if is_union(type_):
         return Union[tuple(_wrap_nested_pydantic_models(type_arg) for type_arg in get_args(type_))]

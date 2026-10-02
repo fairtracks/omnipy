@@ -1745,6 +1745,9 @@ def test_create_pydantic_model_subclass_with_wrappers() -> None:
         title: str
         count: int = 0
 
+    class LiteralParent(pyd.BaseModel):
+        state: Literal['draft', 'published'] = 'draft'
+
     class Parent(pyd.BaseModel):
         child: Child
         children: list[Child] = pyd.Field(default_factory=list)
@@ -1755,6 +1758,8 @@ def test_create_pydantic_model_subclass_with_wrappers() -> None:
         child_or_number: Child | int
         optional_child: Child | None = None
         required_optional_child: Child | None = pyd.Field(...)
+        state: Literal['draft', 'published'] = 'draft'
+        state_history: list[Literal['draft', 'published']] = pyd.Field(default_factory=list)
         title: str = pyd.Field('untitled', alias='@title')
         count: int = 0
         enabled: bool = False
@@ -1788,6 +1793,7 @@ def test_create_pydantic_model_subclass_with_wrappers() -> None:
     wrapped_parent = create_pydantic_model_subclass_with_wrappers(Parent)
 
     assert create_pydantic_model_subclass_with_wrappers(ScalarParent) is ScalarParent
+    assert create_pydantic_model_subclass_with_wrappers(LiteralParent) is LiteralParent
 
     assert wrapped_parent is create_pydantic_model_subclass_with_wrappers(Parent)
     assert issubclass(wrapped_parent, Parent)
@@ -1804,6 +1810,8 @@ def test_create_pydantic_model_subclass_with_wrappers() -> None:
     assert fields['optional_child'].annotation == Model[Child] | None
     assert fields['required_optional_child'].outer_type_ is Model[Child]
     assert fields['required_optional_child'].annotation == Model[Child] | None
+    assert fields['state'].outer_type_ == Literal['draft', 'published']
+    assert fields['state_history'].outer_type_ is Model[list[Literal['draft', 'published']]]
 
     assert fields['child'].required
     assert fields['child_or_number'].required
@@ -1835,6 +1843,8 @@ def test_create_pydantic_model_subclass_with_wrappers() -> None:
             metadata={'items': '6'},
             child_or_number=7,
             required_optional_child=None,
+            state='published',
+            state_history=['draft', 'published'],
             count='7',
             enabled=True,
             **{'@title': ' parent '},
@@ -1862,6 +1872,8 @@ def test_create_pydantic_model_subclass_with_wrappers() -> None:
         'child_or_number': 7,
         'optional_child': None,
         'required_optional_child': None,
+        'state': 'published',
+        'state_history': ['draft', 'published'],
         '@title': 'PARENT',
         'count': 7,
         'enabled': True,
