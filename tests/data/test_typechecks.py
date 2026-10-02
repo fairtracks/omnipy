@@ -8,8 +8,8 @@ from typing_extensions import TypeVar
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import (is_model_instance,
                                is_model_subclass,
-                               is_non_omnipy_pydantic_model,
-                               is_pure_pydantic_model,
+                               is_non_omnipy_pydantic_model_instance,
+                               is_pure_pydantic_model_instance,
                                Model,
                                obj_or_model_content_isinstance)
 import omnipy.util.pydantic as pyd
@@ -141,28 +141,28 @@ def test_is_pydantic_model() -> None:
     class MultiInheritOmnipyAndGenericPydanticModel(Model[int], pyd.GenericModel, Generic[T]):
         ...
 
-    assert is_pure_pydantic_model(PydanticModel())
-    assert not is_pure_pydantic_model(pyd.BaseModel())
-    assert not is_pure_pydantic_model(GenericPydanticModel())
-    assert not is_pure_pydantic_model(MultiInheritModel())
-    assert not is_pure_pydantic_model(PydanticModelSubclass())
-    assert not is_pure_pydantic_model(OmnipyModel())
-    assert not is_pure_pydantic_model(OmnipyModelSubclass())
-    assert not is_pure_pydantic_model(MultiInheritOmnipyAndPydanticModel())
-    assert not is_pure_pydantic_model(MultiInheritOmnipyAndGenericPydanticModel())
-    assert not is_pure_pydantic_model(Model[PydanticModel]())
-    assert not is_pure_pydantic_model(Dataset[Model[PydanticModel]]())
-    assert not is_pure_pydantic_model('model')
+    assert is_pure_pydantic_model_instance(PydanticModel())
+    assert not is_pure_pydantic_model_instance(pyd.BaseModel())
+    assert not is_pure_pydantic_model_instance(GenericPydanticModel())
+    assert not is_pure_pydantic_model_instance(MultiInheritModel())
+    assert not is_pure_pydantic_model_instance(PydanticModelSubclass())
+    assert not is_pure_pydantic_model_instance(OmnipyModel())
+    assert not is_pure_pydantic_model_instance(OmnipyModelSubclass())
+    assert not is_pure_pydantic_model_instance(MultiInheritOmnipyAndPydanticModel())
+    assert not is_pure_pydantic_model_instance(MultiInheritOmnipyAndGenericPydanticModel())
+    assert not is_pure_pydantic_model_instance(Model[PydanticModel]())
+    assert not is_pure_pydantic_model_instance(Dataset[Model[PydanticModel]]())
+    assert not is_pure_pydantic_model_instance('model')
 
-    assert is_non_omnipy_pydantic_model(PydanticModel())
-    assert not is_non_omnipy_pydantic_model(pyd.BaseModel())
-    assert is_non_omnipy_pydantic_model(GenericPydanticModel())
-    assert is_non_omnipy_pydantic_model(MultiInheritModel())
-    assert is_non_omnipy_pydantic_model(PydanticModelSubclass())
-    assert not is_non_omnipy_pydantic_model(OmnipyModel())
-    assert not is_non_omnipy_pydantic_model(OmnipyModelSubclass())
-    assert not is_non_omnipy_pydantic_model(MultiInheritOmnipyAndPydanticModel())
-    assert not is_non_omnipy_pydantic_model(MultiInheritOmnipyAndGenericPydanticModel())
-    assert not is_non_omnipy_pydantic_model(Model[PydanticModel]())
-    assert not is_non_omnipy_pydantic_model(Dataset[Model[PydanticModel]]())
-    assert not is_non_omnipy_pydantic_model('model')
+    assert is_non_omnipy_pydantic_model_instance(PydanticModel())
+    assert not is_non_omnipy_pydantic_model_instance(pyd.BaseModel())
+    assert is_non_omnipy_pydantic_model_instance(GenericPydanticModel())
+    assert is_non_omnipy_pydantic_model_instance(MultiInheritModel())
+    assert is_non_omnipy_pydantic_model_instance(PydanticModelSubclass())
+    assert not is_non_omnipy_pydantic_model_instance(OmnipyModel())
+    assert not is_non_omnipy_pydantic_model_instance(OmnipyModelSubclass())
+    assert not is_non_omnipy_pydantic_model_instance(MultiInheritOmnipyAndPydanticModel())
+    assert not is_non_omnipy_pydantic_model_instance(MultiInheritOmnipyAndGenericPydanticModel())
+    assert not is_non_omnipy_pydantic_model_instance(Model[PydanticModel]())
+    assert not is_non_omnipy_pydantic_model_instance(Dataset[Model[PydanticModel]]())
+    assert not is_non_omnipy_pydantic_model_instance('model')

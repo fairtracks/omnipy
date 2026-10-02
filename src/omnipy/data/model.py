@@ -2304,7 +2304,7 @@ class Model(  # type: ignore[misc]
             return content_attr
 
     def _is_non_omnipy_pydantic_model(self) -> bool:
-        return is_non_omnipy_pydantic_model(self.content)
+        return is_non_omnipy_pydantic_model_instance(self.content)
 
     def _content_obj_hasattr(self, attr) -> object:
         return hasattr(self.content, attr)
@@ -2375,7 +2375,7 @@ def convert_value_to_raw_data_if_model_or_dataset(value: object) -> tuple[bool, 
         return True, value.to_data()
     if is_model_instance(value):
         return True, value.to_data()
-    elif is_non_omnipy_pydantic_model(value):
+    elif is_non_omnipy_pydantic_model_instance(value):
         return True, cast(pyd.BaseModel, value).dict(by_alias=True)
     return False, value
 
@@ -2424,7 +2424,7 @@ def obj_or_model_content_isinstance(
     return isinstance(__obj.content if is_model_instance(__obj) else __obj, __class_or_tuple)
 
 
-def is_pure_pydantic_model(obj: object):
+def is_pure_pydantic_model_instance(obj: object):
     """Check whether an object is a direct ``pydantic.BaseModel`` subclass instance.
 
     Args:
@@ -2437,8 +2437,26 @@ def is_pure_pydantic_model(obj: object):
     return type(obj).__bases__ == (pyd.BaseModel,)
 
 
-def is_non_omnipy_pydantic_model(obj: object):
-    """Check whether an object is a pydantic model outside Omnipy's wrappers.
+def is_non_omnipy_pydantic_model_class(cls: type) -> TypeIs[type[pyd.BaseModel]]:
+    """Check whether an type is a non-Omnipy pydantic model class.
+
+    Args:
+        cls: Class to test.
+
+    Returns:
+        ``True`` when ``cls`` is a pydantic or generic pydantic model class
+        that is neither an Omnipy :class:`Model` nor an Omnipy
+        :class:`~omnipy.data.dataset.Dataset`.
+    """
+    mro = cls.__mro__
+    return mro[0] != pyd.BaseModel \
+        and (pyd.BaseModel in mro or pyd.GenericModel in mro) \
+        and Model not in mro \
+        and Dataset not in mro
+
+
+def is_non_omnipy_pydantic_model_instance(obj: object) -> TypeIs[pyd.BaseModel]:
+    """Check whether an object is a non-Omnipy pydantic model instance.
 
     Args:
         obj: Object to test.
@@ -2448,11 +2466,7 @@ def is_non_omnipy_pydantic_model(obj: object):
         that is neither an Omnipy :class:`Model` nor an Omnipy
         :class:`~omnipy.data.dataset.Dataset`.
     """
-    mro = type(obj).__mro__
-    return mro[0] != pyd.BaseModel \
-        and (pyd.BaseModel in mro or pyd.GenericModel in mro) \
-        and Model not in mro \
-        and Dataset not in mro
+    return is_non_omnipy_pydantic_model_class(type(obj))
 
 
 # TODO: Remove parse_none_according_to_model after upgrade to pydantic v2

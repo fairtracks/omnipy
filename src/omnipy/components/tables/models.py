@@ -12,7 +12,7 @@ from typing_extensions import NamedTuple, override, Self, TypeVar
 from omnipy.data.helpers import MethodInfo, TypeVarStore
 from omnipy.data.model import (convert_value_to_raw_data_if_model_or_dataset,
                                is_model_instance,
-                               is_pure_pydantic_model,
+                               is_pure_pydantic_model_instance,
                                Model,
                                ModelMetaclass)
 from omnipy.shared.exceptions import AssumedToBeImplementedException
@@ -814,7 +814,7 @@ class PydanticRecordModelBase(
     ) -> pyd.BaseModel | _DataWithColNamesModelT:
         pyd_model, data_with_col_names_type, header_names, num_required_fields = cls.header_info
         content = data.content if is_model_instance(data) else data
-        if isinstance(content, dict) or is_pure_pydantic_model(content):
+        if isinstance(content, dict) or is_pure_pydantic_model_instance(content):
             # cls._validate_and_set_value(data)
             data_with_col_names = cast(_DataWithColNamesModelT, data)
             return cls._validate_record_model_with_col_names(

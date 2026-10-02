@@ -238,7 +238,7 @@ class Dataset(
         data: Mapping[str, object] | UndefinedType = Undefined,
         **kwargs: object,
     ) -> None:
-        from omnipy.data.model import is_model_instance, is_pure_pydantic_model
+        from omnipy.data.model import is_model_instance, is_pure_pydantic_model_instance
 
         # TODO: Error message when forgetting parenthesis when creating Dataset should be improved.
         #       Unclear where this can be done, if anywhere? E.g.:
@@ -311,7 +311,7 @@ class Dataset(
                 case Dataset():
                     model_or_dataset_as_input = True
                     super_kwargs[DATA_KEY] = cast(Dataset, input_data).to_data()
-                case _input_data if is_pure_pydantic_model(_input_data):
+                case _input_data if is_pure_pydantic_model_instance(_input_data):
                     super_kwargs[DATA_KEY], model_or_dataset_as_input = (
                         _validate_any_models_or_datasets(_input_data.dict().items()))
                 case Mapping():

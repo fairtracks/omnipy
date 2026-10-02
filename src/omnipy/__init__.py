@@ -210,8 +210,8 @@ from omnipy.data._typing.helpers import mimics
 from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
 from omnipy.data.model import (is_model_instance,
                                is_model_subclass,
-                               is_non_omnipy_pydantic_model,
-                               is_pure_pydantic_model,
+                               is_non_omnipy_pydantic_model_instance,
+                               is_pure_pydantic_model_instance,
                                Model)
 from omnipy.data.multi import MultiModelDataset
 from omnipy.data.param import (bind_adjust_dataset_func,
@@ -351,8 +351,8 @@ __all__ = [
     'mimics',
     'is_model_instance',
     'is_model_subclass',
-    'is_non_omnipy_pydantic_model',
-    'is_pure_pydantic_model',
+    'is_non_omnipy_pydantic_model_instance',
+    'is_pure_pydantic_model_instance',
     'FlattenedIsaJsonDataset',
     'FlattenedIsaJsonModel',
     'IsaJsonModel',
