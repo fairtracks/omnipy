@@ -4,7 +4,7 @@ from pathlib import PurePosixPath
 from typing import Any, cast, TypeGuard
 from urllib.parse import quote, unquote
 
-from omnipy.data.model import Model
+from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 import omnipy.util.pydantic as pyd
@@ -438,6 +438,9 @@ class ResponseContentPydModel(pyd.BaseModel):
         ValueError: If MIME parsing fails for a string input.
         """
         from .lazy_import import MimeType, parse_mimetype
+
+        if is_model_instance(content_type):
+            content_type = content_type.content
 
         if isinstance(content_type, ModelFriendlyMimeType):
             return content_type

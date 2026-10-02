@@ -5,6 +5,7 @@ from typing import Generic, Literal, Optional, TypeAlias
 
 from typing_extensions import TypeVar
 
+from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
 import omnipy.util.pydantic as pyd
@@ -96,9 +97,22 @@ class DefaultStrModel(_DefaultStrModel):
     )
 
 
+class SimplePydanticModel(pyd.BaseModel):
+    value: list[int] = pyd.Field(default_factory=list)
+
+
+class SimplePydanticModelWitWrappedField(pyd.BaseModel):
+    value: Model[list[int]] = pyd.Field(default_factory=Model[list[int]])
+
+
 class PydanticChildModel(pyd.BaseModel):
     id: int = pyd.Field(0, alias='@id')
-    value: float = 0
+    value: float
+
+
+@mimics(PydanticChildModel)
+class ModelOfPydanticChildModel(Model[PydanticChildModel]):
+    ...
 
 
 class PydanticParentModel(pyd.GenericModel, Generic[ChildrenT]):

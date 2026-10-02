@@ -64,6 +64,7 @@ dataclass = pyd.dataclasses.dataclass
 ErrorWrapper = pyd_error_wrappers.ErrorWrapper
 ConfigError = pyd_errors.ConfigError
 NoneIsNotAllowedError = pyd_errors.NoneIsNotAllowedError
+FieldInfo = pyd_fields.FieldInfo
 ModelField = pyd_fields.ModelField
 Undefined = pyd_fields.Undefined
 UndefinedType = pyd_fields.UndefinedType
@@ -138,6 +139,7 @@ __all__ = [
     'validator',
     'dataclass',
     'ErrorWrapper',
+    'FieldInfo',
     'ModelField',
     'Undefined',
     'UndefinedType',

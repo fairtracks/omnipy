@@ -112,9 +112,16 @@ class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
     #         self.allow_none = True
     #     return
     #
-    # This hinders models (including pure pydantic BaseModels) to be properly considered as
-    # subfields, e.g. in `list[MyModel]` as `get_origin(MyModel) is None`. Here, we want allow_none
-    # to be set to True so that Model is allowed to validate a None value.
+    # This hinders models (including pure pydantic BaseModels) to be
+    # properly considered as subfields, e.g. in `list[MyModel]` as
+    # `get_origin(MyModel) is None`. Here, we want allow_none to be set to
+    # True so that Model is allowed to validate a None value.
+    #
+    # An unfortunate side-effect of this is that non-Omnipy Pydantic models
+    # with fields of type Model will also allow None, e.g. a field with
+    # defined type `Model[int]` will be treated as `Model[int] | None`.
+    # Since Pydantic v2 is expected to fix this issue, we will keep this
+    # hack for now.
     #
     # TODO: Revisit the need for _ModelMetaclass hack in pydantic v2
     def __instancecheck__(self, instance: Any) -> bool:
@@ -1375,6 +1382,17 @@ class Model(  # type: ignore[misc]
                 return {ROOT_KEY: (_ for _ in value)}
         return root_obj
 
+    @classmethod
+    def _wrap_non_omnipy_pydantic_model(cls, value: Any) -> Any:
+        if is_non_omnipy_pydantic_model_instance(value):
+            pyd_model_cls_with_omnipy_wrappers = \
+                create_pydantic_model_subclass_with_wrappers(value.__class__)
+            dataset_or_model_as_input, value = \
+                convert_value_to_raw_data_if_model_or_dataset(value)
+            assert isinstance(value, dict)
+            return pyd_model_cls_with_omnipy_wrappers(**value)
+        return value
+
     @pyd.root_validator
     def _parse_root_object(cls, root_obj: dict_t[str, _RootT | None]) -> Any:
         assert ROOT_KEY in root_obj
@@ -1385,6 +1403,8 @@ class Model(  # type: ignore[misc]
         with hold_and_reset_prev_attrib_value(config.model,
                                               'dynamically_convert_elements_to_models'):
             config.model.dynamically_convert_elements_to_models = False
+
+            value = cls._wrap_non_omnipy_pydantic_model(value)
             return {ROOT_KEY: cls._parse_data(value)}
 
     # TODO: Rename Model.content to Model.content as it may be a single value, while "content"
@@ -2361,7 +2381,90 @@ class Model(  # type: ignore[misc]
         return [(None, self.content)]
 
 
-def convert_value_to_raw_data_if_model_or_dataset(value: object) -> tuple[bool, object]:
+@functools.cache
+def create_pydantic_model_subclass_with_wrappers(model: type[pyd.BaseModel]) -> type[pyd.BaseModel]:
+    """Create a pydantic subclass with Omnipy wrappers for complex fields.
+
+    The subclass retains the source model's configuration, validators, methods,
+    and inherited fields. Defaults are wrapped explicitly because pydantic does
+    not validate them unless the source model enables that behavior.
+    """
+    fields: dict[str, Any] = {}
+
+    for name, field in model.__fields__.items():
+        outer_type = field.outer_type_
+        is_wrappable_complex_type = (
+            get_origin(outer_type) is not None
+            or (isinstance(outer_type, type) and is_non_omnipy_pydantic_model_class(outer_type)))
+        if is_wrappable_complex_type:
+            # Pydantic removes ``None`` from ``outer_type_`` for optional fields.
+            # Retain the annotation in that case, while using the resolved outer
+            # type for generic models, whose annotation can be DeferredType.
+            wrapped_type = field.annotation if is_union(field.annotation) else outer_type
+            model_type = _wrap_nested_pydantic_models(wrapped_type)
+            if model_type == wrapped_type:
+                continue
+
+            field_info = deepcopy(field.field_info)
+
+            if field.default_factory is not None and is_model_subclass(model_type):
+                default_factory = field.default_factory
+
+                def wrapped_default_factory(
+                    default_factory: Callable[[], Any] = default_factory,
+                    model_type: type[Model] = model_type,
+                ) -> Model:
+                    return model_type(default_factory())
+
+                field_info.default_factory = wrapped_default_factory
+            elif not field.required and is_model_subclass(model_type):
+                field_info.default = model_type(field.get_default())
+
+            fields[name] = (model_type, field_info)
+
+    if not fields:
+        return model
+
+    return pyd.create_model(f'Omnified{model.__name__}', __base__=model, **fields)
+
+
+def _wrap_nested_pydantic_models(type_: TypeForm) -> TypeForm:
+    """Wrap non-Omnipy Pydantic model types occurring within a type expression."""
+    # Transform union members separately to preserve their original alternatives.
+    if is_union(type_):
+        return Union[tuple(_wrap_nested_pydantic_models(type_arg) for type_arg in get_args(type_))]
+
+    # Replace direct Pydantic model classes with their Omnipy Model wrappers.
+    if isinstance(type_, type) and is_non_omnipy_pydantic_model_class(type_):
+        return Model[type_]
+
+    # Plain types have no type arguments that could contain Pydantic models.
+    type_args = get_args(type_)
+    if not type_args:
+        return type_
+
+    # Transform each argument of the container before reconstructing its type.
+    wrapped_type_args = tuple(_wrap_nested_pydantic_models(type_arg) for type_arg in type_args)
+
+    # Typing aliases provide copy_with() to retain their original representation.
+    copy_with = getattr(type_, 'copy_with', None)
+    if copy_with is not None:
+        wrapped_container_type = copy_with(wrapped_type_args)
+    else:
+        # Built-in generic aliases are reconstructed by subscripting their origin.
+        origin = get_origin(type_)
+        assert origin is not None
+        if len(wrapped_type_args) == 1:
+            wrapped_container_type = origin[wrapped_type_args[0]]
+        else:
+            wrapped_container_type = origin[wrapped_type_args]
+
+    # Wrap the reconstructed container so its contents validate through Model.
+    return Model[wrapped_container_type]
+
+
+def convert_value_to_raw_data_if_model_or_dataset(
+        value: object) -> tuple[bool, object | dict_t[str, Any]]:
     """Convert model-like inputs to plain data before validation.
 
     Args:

@@ -28,9 +28,10 @@ import pytest
 import pytest_cases as pc
 from typing_extensions import TypeForm, TypeVar
 
+from omnipy import is_model_subclass
 from omnipy.data._typing.helpers import mimics
 from omnipy.data.helpers import TypeVarStore
-from omnipy.data.model import Model
+from omnipy.data.model import create_pydantic_model_subclass_with_wrappers, Model
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.shared.protocols.typing import IsMapping
@@ -47,6 +48,7 @@ from .helpers.models import (CBA,
                              LiteralFiveModel,
                              LiteralFiveOrTextModel,
                              LiteralTextModel,
+                             ModelOfPydanticChildModel,
                              MyFloatObjModel,
                              MyFwdRefModel,
                              MyNestedFwdRefModel,
@@ -54,6 +56,8 @@ from .helpers.models import (CBA,
                              NumberModel,
                              ParamUpperStrModel,
                              PydanticChildModel,
+                             SimplePydanticModel,
+                             SimplePydanticModelWitWrappedField,
                              UppercaseModel,
                              WordSplitterModel)
 
@@ -1733,6 +1737,165 @@ def test_model_of_pydantic_model():
     assert Model[MyPydanticModelNoDefaults](a='test', b='12').to_data() == {'a': 'test', 'b': 12}
 
 
+def test_create_pydantic_model_subclass_with_wrappers() -> None:
+    class Child(pyd.BaseModel):
+        value: int
+
+    class ScalarParent(pyd.BaseModel):
+        title: str
+        count: int = 0
+
+    class Parent(pyd.BaseModel):
+        child: Child
+        children: list[Child] = pyd.Field(default_factory=list)
+        children_by_name: dict[str, Child] = pyd.Field(default_factory=dict)
+        child_tuple: tuple[Child, ...] = ()
+        numbers: list[int] = pyd.Field(default_factory=list)
+        metadata: dict[str, int] = pyd.Field(default_factory=dict)
+        child_or_number: Child | int
+        optional_child: Child | None = None
+        required_optional_child: Child | None = pyd.Field(...)
+        title: str = pyd.Field('untitled', alias='@title')
+        count: int = 0
+        enabled: bool = False
+
+        class Config:
+            allow_population_by_field_name = True
+
+        @pyd.root_validator(pre=True, allow_reuse=True)
+        def set_and_normalize_title(cls, values):
+            values['@title'] = values.get('@title', values.get('title', '')).strip()
+            return values
+
+        @pyd.validator('children_by_name', pre=True, allow_reuse=True)
+        def normalize_child_names(cls, value):
+            return {name.lower(): child for name, child in value.items()}
+
+        @pyd.validator('count', pre=True, allow_reuse=True)
+        def parse_count(cls, value):
+            return int(value)
+
+        @pyd.validator('title', allow_reuse=True)
+        def capitalize_title(cls, value):
+            return value.upper()
+
+        @pyd.root_validator(allow_reuse=True)
+        def validate_count(cls, values):
+            if values['count'] < 0:
+                raise ValueError('count must be non-negative')
+            return values
+
+    wrapped_parent = create_pydantic_model_subclass_with_wrappers(Parent)
+
+    assert create_pydantic_model_subclass_with_wrappers(ScalarParent) is ScalarParent
+
+    assert wrapped_parent is create_pydantic_model_subclass_with_wrappers(Parent)
+    assert issubclass(wrapped_parent, Parent)
+    fields = wrapped_parent.__fields__
+
+    assert fields['child'].outer_type_ is Model[Child]
+    assert fields['children'].outer_type_ is Model[list[Model[Child]]]
+    assert fields['children_by_name'].outer_type_ is Model[dict[str, Model[Child]]]
+    assert fields['child_tuple'].outer_type_ is Model[tuple[Model[Child], ...]]
+    assert fields['numbers'].outer_type_ is Model[list[int]]
+    assert fields['metadata'].outer_type_ is Model[dict[str, int]]
+    assert fields['child_or_number'].outer_type_ == Model[Child] | int
+    assert fields['optional_child'].outer_type_ is Model[Child]
+    assert fields['optional_child'].annotation == Model[Child] | None
+    assert fields['required_optional_child'].outer_type_ is Model[Child]
+    assert fields['required_optional_child'].annotation == Model[Child] | None
+
+    assert fields['child'].required
+    assert fields['child_or_number'].required
+    assert not fields['children'].required
+    assert fields['children'].default_factory is not None
+    assert fields['children_by_name'].default_factory is not None
+    assert fields['numbers'].default_factory is not None
+    assert fields['metadata'].default_factory is not None
+    assert fields['child_tuple'].default == Model[tuple[Model[Child], ...]](())
+    assert not fields['optional_child'].required
+    assert fields['optional_child'].default is None
+    assert fields['required_optional_child'].required
+    assert fields['title'].alias == '@title'
+    assert fields['title'].default == 'untitled'
+    assert fields['count'].default == 0
+    assert fields['enabled'].default is False
+
+    model = Model[Parent](
+        wrapped_parent(
+            child={'value': '1'},
+            children=[Child.construct(value='4')],
+            children_by_name={'FIRST': {
+                'value': '2'
+            }},
+            child_tuple=({
+                'value': '3'
+            },),
+            numbers=['4', 5],
+            metadata={'items': '6'},
+            child_or_number=7,
+            required_optional_child=None,
+            count='7',
+            enabled=True,
+            **{'@title': ' parent '},
+        ))
+
+    assert model.to_data() == {
+        'child': {
+            'value': 1
+        },
+        'children': [{
+            'value': 4
+        }],
+        'children_by_name': {
+            'first': {
+                'value': 2
+            }
+        },
+        'child_tuple': ({
+            'value': 3
+        },),
+        'numbers': [4, 5],
+        'metadata': {
+            'items': 6
+        },
+        'child_or_number': 7,
+        'optional_child': None,
+        'required_optional_child': None,
+        '@title': 'PARENT',
+        'count': 7,
+        'enabled': True,
+    }
+
+
+def test_create_pydantic_model_subclass_with_wrappers_for_inherited_and_generic_models() -> None:
+    class Child(pyd.BaseModel):
+        value: int
+
+    class Parent(pyd.BaseModel):
+        children: list[Child] = pyd.Field(default_factory=list)
+
+    class ChildOfParent(Parent):
+        child: Child
+
+    class GenericParent(pyd.GenericModel, Generic[T]):
+        values: T = pyd.Field(default_factory=list)
+
+    wrapped_child_of_parent = create_pydantic_model_subclass_with_wrappers(ChildOfParent)
+    wrapped_generic_parent = create_pydantic_model_subclass_with_wrappers(GenericParent[list[int]])
+
+    assert issubclass(wrapped_child_of_parent, ChildOfParent)
+    assert Model[ChildOfParent](wrapped_child_of_parent(child={'value': 1})).to_data() == {
+        'children': [],
+        'child': {
+            'value': 1
+        },
+    }
+    assert Model[GenericParent[list[int]]](wrapped_generic_parent(values=['1', 2])).to_data() == {
+        'values': [1, 2]
+    }
+
+
 # This would probably cause more trouble than it's worth and is (possibly permanently) put on ice
 # def test_mimic_isinstance() -> None:
 #     assert isinstance(Model[int](), int)
@@ -1773,121 +1936,6 @@ def test_model_of_pydantic_model():
 #     assert not isinstance(Model[int | str](), str)
 #     assert isinstance(Model[int | str](1), str)
 #     assert not isinstance(Model[int | str]('1'), str)
-
-
-def test_model_of_pydantic_model_with_model_of_pydantic_model_children(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    invalid_child_model = Model[PydanticChildModel]({'@id': 12, 'value': 2})
-    invalid_child_model.value = '2.22'
-    # Model is validated as top-level 'value' attribute is set
-    assert invalid_child_model.content.value == 2.22
-
-    invalid_child_model.content.value = '2.22'
-    # So we set the value to a string directly in the content to set up the test
-    assert invalid_child_model.content.value == '2.22'
-
-    # The __init__() of the child model, Model[PydanticChildModel], detects that the input value is
-    # another omnipy Model and revalidates it
-    model = MyPydanticParentModel[list[Model[PydanticChildModel]]]({
-        '@id': '1', 'children': [
-            {
-                '@id': '10', 'value': 1.23
-            },
-            invalid_child_model,
-        ]
-    })
-
-    assert model.content.id == 1
-    assert len(model.content.children) == 2
-    assert model.content.children[0].id == 10
-    assert model.content.children[1].value == 2.22
-
-    model.id = '2'
-    # Model is validated as top-level 'id' attribute is set
-    assert model.content.id == 2
-
-    # When the child pydantic model is wrapped as an omnipy Model, it is also validated when value
-    # is set
-    model.children[0].value = '2.46'
-    assert model.content.children[0].value == 2.46
-
-    with pytest.raises(ValidationError):
-        model.children[0].id = 'abc'
-
-    if not runtime.config.data.model.interactive:
-        # Manual reset of invalid change above
-        model.content.children[0].id = 10
-    assert model.children[0].id == 10
-
-    model.children[0].id = 11
-    assert model.to_data() == {
-        '@id': 2, 'children': [
-            {
-                '@id': 11, 'value': 2.46
-            },
-            {
-                '@id': 12, 'value': 2.22
-            },
-        ]
-    }
-
-
-def test_model_of_pydantic_model_with_pydantic_model_children(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    invalid_child_model = PydanticChildModel(**{'@id': 12, 'value': 2})
-    invalid_child_model.value = '2.22'
-
-    model = MyPydanticParentModel[list[PydanticChildModel]]({
-        '@id': '1', 'children': [
-            {
-                '@id': '10', 'value': 1.23
-            },
-            invalid_child_model,
-        ]
-    })
-
-    # Unlike an omnipy-wrapped pydantic model, the __init__() of a standard pydantic model does not
-    # revalidate other pydantic models provided as input. Also, the top-level omnipy Model does not
-    # detect that the input contains a nested pydantic model and does not revalidate it.
-    assert model.content.children[1].value == '2.22'
-
-    # Validation can, however, be manually triggered by validate_content()
-    model.validate_content()
-    assert model.content.children[1].value == 2.22
-
-    assert model.content.id == 1
-    model.id = '2'
-    # Model is validated as top-level 'id' attribute is set
-    assert model.content.id == 2
-
-    model.children[0].value = '2.46'
-    # Model is not validated as child attributes are set (as Model does not know about the changes)
-    assert model.content.children[0].value == '2.46'
-    # Model is instead validated as 'children' attribute is accessed
-    assert model.children[0].value == 2.46
-
-    model.children[0].id = 'abc'
-    # As validation is postponed, so is the raising of validation error, here as 'children'
-    # attribute is accessed
-    with pytest.raises(ValidationError):
-        model.children
-
-    if not runtime.config.data.model.interactive:
-        # Manual reset of invalid change above
-        model.content.children[0].id = 10
-    assert model.children[0].id == 10
-
-    model.children[0].id = 11
-    assert model.to_data() == {
-        '@id': 2, 'children': [
-            {
-                '@id': 11, 'value': 2.46
-            },
-            {
-                '@id': 12, 'value': 2.22
-            },
-        ]
-    }
 
 
 def test_bordercase_models() -> None:
@@ -2245,16 +2293,23 @@ def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
     assert model.snapshot == model.content == [123, 234]
 
 
+@pytest.mark.parametrize(
+    'simple_pydantic_model_cls',
+    [SimplePydanticModel, SimplePydanticModelWitWrappedField],
+)
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_value_access(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-    class SimplePydanticModel(pyd.BaseModel):
-        value: Model[list[int]] = pyd.Field(default_factory=list)
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+    simple_pydantic_model_cls: Annotated[type[pyd.BaseModel], pc.fixture],
+) -> None:
+    # class SimplePydanticModel(pyd.BaseModel):
+    #     value: Model[list[int]] = pyd.Field(default_factory=list)
 
-    @mimics(SimplePydanticModel)
-    class ModelOfSimplePydanticModel(Model[SimplePydanticModel]):
+    @mimics(SimplePydanticModelWitWrappedField)
+    class ModelOfSimplePydanticModel(Model[simple_pydantic_model_cls]):
         ...
 
-    model = ModelOfSimplePydanticModel(SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
+    model = ModelOfSimplePydanticModel(
+        simple_pydantic_model_cls(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
     _assert_no_snapshot(model.content.value)
 
@@ -2262,22 +2317,26 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
     # of the parent
     res_model = model.value
     assert model.snapshot == model.content \
-           == SimplePydanticModel(value=[123])  # type: ignore[arg-type]
+           == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
 
     _assert_no_snapshot(res_model)
     assert res_model.content == [123]
 
 
+@pytest.mark.parametrize(
+    'simple_pydantic_model_cls',
+    [SimplePydanticModel, SimplePydanticModelWitWrappedField],
+)
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_value_access(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
-    class SimplePydanticModel(pyd.BaseModel):
-        value: Model[list[int]] = pyd.Field(default_factory=list)
-
-    @mimics(SimplePydanticModel)
-    class ModelOfSimplePydanticModel(Model[SimplePydanticModel]):
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+    simple_pydantic_model_cls: Annotated[type[pyd.BaseModel], pc.fixture],
+) -> None:
+    @mimics(SimplePydanticModelWitWrappedField)
+    class ModelOfSimplePydanticModel(Model[simple_pydantic_model_cls]):
         ...
 
-    model = ModelOfSimplePydanticModel(SimplePydanticModel(value=[123]))  # type: ignore[arg-type]
+    model = ModelOfSimplePydanticModel(
+        simple_pydantic_model_cls(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
 
     # Trying to set the value of a field of a pydantic model also triggers
@@ -2288,7 +2347,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
         model.value = ['abc']
 
     assert model.snapshot == model.content \
-           == SimplePydanticModel(value=[123])  # type: ignore[arg-type]
+           == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
 
     # The value of the field of the pydantic model is not changed, so no
     # snapshot is triggered for the child model.
@@ -2304,52 +2363,55 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     with pytest.raises(ValidationError):
         model.value[0] = 'abc'
     assert model.snapshot == model.content \
-           == SimplePydanticModel(value=[123])  # type: ignore[arg-type]
+           == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
     assert model.content.value.snapshot == model.content.value.content == [123]
 
-    # Here the value of the field of the pydantic model is set to a new non-model value, which
-    # triggers validation and the creation of a new model to replace the old. The new model does not
-    # have a snapshot by default
+    # Here the value of the field of the pydantic model is set to a new
+    # non-model value, which triggers validation and the creation of a new
+    # model to replace the old. The new model does not have a snapshot by
+    # default
     model.value = [234]
     assert model.snapshot == model.content \
-           == SimplePydanticModel(value=[234])  # type: ignore[arg-type]
+           == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
     assert model.content.value.content == [234]
     _assert_no_snapshot(model.content.value)
 
-    # Calling a method on the child model in the field of the pydantic model triggers a snapshot of
-    # the child (as well as of the parent due to the field access). The snapshot is used to revert
-    # from the incorrect state of the child model
+    # Calling a method on the child model in the field of the pydantic
+    # model triggers a snapshot of the child (as well as of the parent due
+    # to the field access). The snapshot is used to revert from the
+    # incorrect state of the child model
     with pytest.raises(ValidationError):
         model.value.append('abc')
     assert model.snapshot == model.content \
-           == SimplePydanticModel(value=[234])  # type: ignore[arg-type]
+           == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
     assert model.content.value.snapshot == model.content.value.content == [234]
 
-    # Calling a method on the child model in the field of the pydantic model triggers a snapshot of
-    # the child (as well as of the parent due to the field access). Since the child model is in a
-    # correct state, the value of the child model is updated, but validation creates a new list
-    # that replaces the old one as the child model content, and a snapshot has been taken since all
-    # method calls are considered potentially state-changing. Since the parent model refers to the
-    # child model and not it's content, the values accessible the parent module are also
-    # automatically updated. However, a snapshot is not taken (yet) for the parent model.
+    # Calling a method on the child model in the field of the pydantic
+    # model triggers a snapshot of the child (as well as of the parent due
+    # to the field access). Since the child model is in a correct state,
+    # the value of the child model is updated, but validation creates a
+    # new list that replaces the old one as the child model content, and a
+    # snapshot has been taken since all method calls are considered
+    # potentially state-changing. Since the parent model refers to the
+    # child model and not it's content, the values accessible the parent
+    # module are also automatically updated. However, a snapshot is not
+    # taken (yet) for the parent model.
 
     model.value.append(345)
-    assert model.content == SimplePydanticModel(value=[234, 345])  # type: ignore[arg-type]
-    assert model.snapshot == SimplePydanticModel(value=[234])  # type: ignore[arg-type]
+    assert model.content == simple_pydantic_model_cls(value=[234, 345])  # type: ignore[arg-type]
+    assert model.snapshot == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
 
     assert model.content.value.snapshot == model.content.value.content == [234, 345]
 
     # Validating the parent model triggers snapshots for the parent, but not the child model.
     model.validate_content()
     assert model.snapshot == model.content \
-           == SimplePydanticModel(value=[234, 345])  # type: ignore[arg-type]
+           == simple_pydantic_model_cls(value=[234, 345])  # type: ignore[arg-type]
     assert model.content.value.content == [234, 345]
     _assert_no_snapshot(model.content.value)
 
-    # Validating the parent model triggers snapshots for both the parent and the child model.
+    # Validating the child model triggers its snapshot.
     model.value.validate_content()
-    assert model.snapshot == model.content \
-           == SimplePydanticModel(value=[234, 345])  # type: ignore[arg-type]
     assert model.content.value.snapshot == model.content.value.content == [234, 345]
 
 
@@ -4402,6 +4464,78 @@ def test_validation_and_mimic_enum_model() -> None:
 
     with pytest.raises(ValidationError):
         ColorModel(123)
+
+
+@pytest.mark.parametrize(
+    'child_model_cls',
+    [PydanticChildModel, ModelOfPydanticChildModel],
+)
+def test_model_of_nested_pydantic_models(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    child_model_cls: Annotated[type[pyd.BaseModel] | type[Model], pytest.fixture],
+) -> None:
+    data = {'@id': 12, 'value': 2}
+    if is_model_subclass(child_model_cls):
+        invalid_child_model = child_model_cls(data)
+        # We set the value to a str directly in the content to set up the test.
+        # Otherwise, assigning to the "value" attribute triggers validation
+        invalid_child_model.content.value = '2.22'  # type: ignore[assignment]
+    else:
+        invalid_child_model = child_model_cls(**data)
+        # Since the pydantic model is not configured to validate on assignment.
+        invalid_child_model.value = '2.22'
+
+    # The __init__() of the child model, detects that the input value is
+    # another omnipy Model, assumes it is already validated and does not
+    # revalidate it
+    model = MyPydanticParentModel[list[child_model_cls]]({
+        '@id': '1', 'children': [
+            {
+                '@id': '10', 'value': 1.23
+            },
+            invalid_child_model,
+        ]
+    })
+
+    assert model.content.id == 1
+    assert len(model.content.children) == 2
+
+    assert model.content.children[0].content.id == 10
+
+    # The wrapped children are revalidated when the parent is parsed
+    assert model.content.children[1].value == 2.22
+
+    model.id = '2'
+    # Model is validated as top-level 'id' attribute is set
+    assert model.content.id == 2
+
+    # When the child pydantic model is wrapped as an omnipy Model, it is
+    # also validated when value is set
+    model.children[0].value = '2.46'
+    assert model.content.children[0].value == 2.46
+
+    with pytest.raises(ValidationError):
+        model.children[0].id = 'abc'
+
+    if not runtime.config.data.model.interactive:
+        # Manual reset of invalid change above
+        model.content.children[0].id = 10
+    assert model.children[0].id == 10
+
+    model.children[0].id = 11
+    assert model.to_data() == {
+        '@id': 2, 'children': [
+            {
+                '@id': 11, 'value': 2.46
+            },
+            {
+                '@id': 12, 'value': 2.22
+            },
+        ]
+    }
+
+    with pytest.raises(ValidationError):
+        del model.children[0].value
 
 
 def test_model_of_pydantic_model_with_enum() -> None:
