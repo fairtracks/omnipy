@@ -162,6 +162,18 @@ def test_characterize_peek_json_full_viewport_output() -> None:
     assert '│ …                      │' not in full_output
 
 
+def test_browse_model_honors_width() -> None:
+    model = Model[list[list[int]]]([[i, i + 1, i + 2] for i in range(0, 18, 3)])
+
+    browse_panel = model._browse_model(width=32)
+
+    assert browse_panel.frame == Frame(
+        Dimensions(width=32, height=None),
+        fixed_width=False,
+        fixed_height=False,
+    )
+
+
 def test_characterize_dataset_list_framing_and_rows() -> None:
     dataset = Dataset[Model[list[int]]]({f'row_{i}': [i, i + 1] for i in range(12)})
 

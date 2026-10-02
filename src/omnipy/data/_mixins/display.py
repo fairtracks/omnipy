@@ -3039,8 +3039,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config: OutputConfig,
         model: 'Model',
         title: str = '',
-        frame: Frame | None = None,
         /,
+        frame: Frame | None = None,
         **config_kwargs,
     ) -> DraftPanel:
         from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
