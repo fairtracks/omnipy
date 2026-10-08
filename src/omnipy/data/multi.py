@@ -48,7 +48,7 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
             if data_file in self.data:
                 self._validate_data_file(data_file)
             else:
-                self.data[data_file] = model()
+                self.data[data_file] = model()  # type: ignore[assignment]
         except ValidationError:
             del self._custom_field_models[data_file]
             raise
@@ -91,7 +91,7 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
         if data_file in self._custom_field_models:
             model = self._custom_field_models[data_file]
             if not is_model_instance(model):
-                model = Model[model]
+                model = Model[model]  # type: ignore[valid-type]
             data_obj = self._to_data_if_model(self.data[data_file])
             parsed_data = self._to_data_if_model(model(data_obj))
             self.data[data_file] = parsed_data

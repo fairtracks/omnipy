@@ -13,8 +13,7 @@ from omnipy.util.helpers import is_package_editable
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_MIMIC_MODEL_TYPED_STANDIN_SUMMARY'] = dedent("""\
-        Typed stand-in for a concrete ``Model[...]`` subclass.
-    """)
+        Typed stand-in for a concrete ``Model[...]`` subclass.""")
 
 if TYPE_CHECKING:
     from typing import Any, Generic

@@ -24,7 +24,7 @@ def assert_val(value: object, target_type: TypeForm, content: object):
     assert not is_model_instance(value)
     assert any(
         isinstance(value, ensure_plain_type(_type)) for _type in all_type_variants(target_type))
-    assert value == content, f'{value} != {content}'
+    assert value == content, f'{repr(value)} != {repr(content)}'
 
 
 def assert_model_or_val(model_or_val: object, target_type: TypeForm, content: object) -> None:
