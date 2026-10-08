@@ -17,15 +17,17 @@ from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import is_package_editable
 import omnipy.util.pydantic as pyd
 
+from .enums import NewLine
+
 if TYPE_CHECKING:
     from omnipy.data._typing.mimic_models import PlainModel
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_SPLIT_PARAMS_VARIANT_SUMMARY'] = dedent("""\
-        Split-parameter variant.
-
+    os.environ['OMNIPY_MACRO_SPLIT_PARAMS_ATTRIBUTES'] = dedent("""\
         Attributes:
-            delimiter: Delimiter used when splitting item strings.
+            strip: Whether leading and trailing characters are stripped.
+            strip_chars: Optional character set passed to ``str.strip``.
+            delimiter: Delimiter used to split incoming text.
     """)
 
     os.environ['OMNIPY_MACRO_JOIN_PARAMS_VARIANT_SUMMARY'] = dedent("""\
@@ -156,7 +158,7 @@ class IsoFormatToDataMixin:
         return self_as_isodate_model.content.isoformat()
 
 
-class TimeModel(IsoFormatToDataMixin, Model[datetime.time]):
+class TimeModel(IsoFormatToDataMixin, Model[datetime.time]):  # type: ignore[override]
     """Model representing a time value with isoformat serialization.
 
     Supports the same input types as Pydantic's ``time`` type:
@@ -206,7 +208,7 @@ class TimeDeltaModel(Model[datetime.timedelta]):
 
 
 # noinspection PyTypeChecker,PyUnresolvedReferences
-class DateModel(IsoFormatToDataMixin, Model[datetime.date]):
+class DateModel(IsoFormatToDataMixin, Model[datetime.date]):  # type: ignore[override]
     """Model representing a calendar date with isoformat serialization.
 
     Supports the same input types as Pydantic's ``date`` type:
@@ -252,7 +254,7 @@ class DateModel(IsoFormatToDataMixin, Model[datetime.date]):
         return DateModel(self.content + other)
 
 
-class DateTimeModel(IsoFormatToDataMixin, Model[datetime.datetime]):
+class DateTimeModel(IsoFormatToDataMixin, Model[datetime.datetime]):  # type: ignore[override]
     """Model representing a date and time value with isoformat serialization.
 
     Supports the same input types as Pydantic's ``datetime`` type:
@@ -313,7 +315,11 @@ class DateTimeModel(IsoFormatToDataMixin, Model[datetime.datetime]):
 
 class _HasSplitParams(Protocol):
     class Params:
-        """Protocol for split-model parameter access.
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # Protocol for text-splitting model parameters.
+        #
+        # {{SPLIT_PARAMS_ATTRIBUTES}}
+        """Protocol for text-splitting model parameters.
 
         Attributes:
             strip: Whether leading and trailing characters are stripped.
@@ -323,7 +329,7 @@ class _HasSplitParams(Protocol):
 
         strip: bool
         strip_chars: str | None
-        delimiter: str
+        delimiter: str | NewLine.Literals
 
 
 # Function to split line
@@ -337,7 +343,16 @@ def _split_line(model_cls: type[_HasSplitParams], data: str) -> list[str]:
     if strip:
         data = data.strip(strip_chars)
 
-    items = data.split(delimiter)
+    match (delimiter):
+        case NewLine.LF | NewLine.CRLF | NewLine.CR:
+            items = [item + delimiter for item in data.split(delimiter)]
+            if items and not data.endswith(delimiter):
+                items[-1] = items[-1][:-len(delimiter)]
+        case NewLine.UNIVERSAL:
+            items = data.splitlines(keepends=True)
+        case _:
+            items = data.split(delimiter)
+
     return [item.strip(strip_chars) for item in items] if strip else items
 
 
@@ -350,46 +365,82 @@ class _SplitParamsBase(ParamsBase):
     strip_chars: str | None = None
 
 
+@params_dataclass
+class _SplitParamsBaseNoStrip(ParamsBase):
+    strip: bool = False
+    strip_chars: str | None = None
+
+
 class _SplitByCommaParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{SPLIT_PARAMS_VARIANT_SUMMARY}}
-        """Split-parameter variant.
+        # Parameters for text-splitting models.
+        #
+        # {{SPLIT_PARAMS_ATTRIBUTES}}
+        """Parameters for text-splitting models.
 
         Attributes:
-            delimiter: Delimiter used when splitting item strings.
+            strip: Whether leading and trailing characters are stripped.
+            strip_chars: Optional character set passed to ``str.strip``.
+            delimiter: Delimiter used to split incoming text.
         """
 
-        delimiter: str = ','
+        delimiter: str | NewLine.Literals = ','
 
 
 class _SplitByTabParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{SPLIT_PARAMS_VARIANT_SUMMARY}}
-        """Split-parameter variant.
+        # Parameters for text-splitting models.
+        #
+        # {{SPLIT_PARAMS_ATTRIBUTES}}
+        """Parameters for text-splitting models.
 
         Attributes:
-            delimiter: Delimiter used when splitting item strings.
+            strip: Whether leading and trailing characters are stripped.
+            strip_chars: Optional character set passed to ``str.strip``.
+            delimiter: Delimiter used to split incoming text.
         """
 
-        delimiter: str = '\t'
+        delimiter: str | NewLine.Literals = '\t'
 
 
-class _SplitByNewlineParamsMixin:
+class _SplitByUniversalNewlineParamsMixin:
     @params_dataclass
     class Params(_SplitParamsBase):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{SPLIT_PARAMS_VARIANT_SUMMARY}}
-        """Split-parameter variant.
+        # Parameters for text-splitting models.
+        #
+        # {{SPLIT_PARAMS_ATTRIBUTES}}
+        """Parameters for text-splitting models.
 
         Attributes:
-            delimiter: Delimiter used when splitting item strings.
+            strip: Whether leading and trailing characters are stripped.
+            strip_chars: Optional character set passed to ``str.strip``.
+            delimiter: Delimiter used to split incoming text.
         """
 
-        delimiter: str = '\n'
+        delimiter: str | NewLine.Literals = NewLine.UNIVERSAL
+
+
+class _SplitByUniversalNewlineNoStripParamsMixin:
+    @params_dataclass
+    class Params(_SplitParamsBaseNoStrip):
+        # %% Original docstring (managed by expand_docstr_macros.py) %%
+        # Parameters for text-splitting models.
+        #
+        # {{SPLIT_PARAMS_ATTRIBUTES}}
+        """Parameters for text-splitting models.
+
+        Attributes:
+            strip: Whether leading and trailing characters are stripped.
+            strip_chars: Optional character set passed to ``str.strip``.
+            delimiter: Delimiter used to split incoming text.
+        """
+
+        delimiter: str | NewLine.Literals = NewLine.UNIVERSAL
 
 
 # Split models
@@ -447,16 +498,31 @@ class SplitToItemsByTabModel(_SplitByTabParamsMixin, SplitToItemsModelBase):
     )
 
 
-class SplitToLinesModel(_SplitByNewlineParamsMixin, SplitToItemsModelBase):
-    """Split text into a list of lines.
+class SplitToLinesModel(_SplitByUniversalNewlineParamsMixin, SplitToItemsModelBase):
+    """Split text into a list of lines by universal newline delimiters.
 
-    This variant uses newline delimiters by default and can optionally strip
-    each line.
+    This variant splits the text by universal newline delimiters (i.e. LF,
+    CRLF or CR) by default and also strips whitespace at the beginning and
+    end of each line.
     """
 
     adjust = bind_adjust_model_func(
         SplitToItemsModelBase.clone_model_cls,
-        _SplitByNewlineParamsMixin.Params,
+        _SplitByUniversalNewlineParamsMixin.Params,
+    )
+
+
+class SplitToLinesNoStripModel(_SplitByUniversalNewlineNoStripParamsMixin, SplitToItemsModelBase):
+    """Split text into a list of lines by universal newlines, no stripping.
+
+    This variant splits the text by universal newline delimiters (i.e. LF,
+    CRLF or CR) by default but does not strip whitespace at the beginning
+    and end of each line.
+    """
+
+    adjust = bind_adjust_model_func(
+        SplitToItemsModelBase.clone_model_cls,
+        _SplitByUniversalNewlineNoStripParamsMixin.Params,
     )
 
 

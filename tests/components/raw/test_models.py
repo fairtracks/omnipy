@@ -8,6 +8,7 @@ from typing import Annotated, Callable, cast, Iterable, TypeAlias
 import pytest
 import pytest_cases as pc
 
+from omnipy.components.raw.enums import NewLine
 from omnipy.components.raw.models import (BytesModel,
                                           DateModel,
                                           DateTimeModel,
@@ -23,6 +24,7 @@ from omnipy.components.raw.models import (BytesModel,
                                           SplitToItemsByTabModel,
                                           SplitToItemsModel,
                                           SplitToLinesModel,
+                                          SplitToLinesNoStripModel,
                                           StrictBytesModel,
                                           StrictStrModel,
                                           StrModel,
@@ -32,6 +34,7 @@ from omnipy.data.model import Model
 from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
+from .helpers.protocols import AssertLineOfOsLinesepSplitCrlfTextFunc
 
 
 def test_bytes_model() -> None:
@@ -165,105 +168,205 @@ def test_date_and_time_model_operations() -> None:
     assert datetime_model_1 + timedelta_1_2 == datetime_model_2
 
 
-@pc.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
-def test_split_to_and_join_lines_model(
-    use_str_model: bool,
-    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
+def test_split_to_lines_model(
+    hamlet_text_crlf_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    """Test splitting raw models into lines and joining them again."""
-
-    raw_data = """\
-        \r
-        Alas, poor Yorick! I knew him, Horatio: a fellow\r
-        of infinite jest, of most excellent fancy: he hath\r
-        borne me on his back a thousand times; and now, how\r
-        abhorred in my imagination it is! my gorge rises at\r
-        it. Here hung those lips that I have kissed I know\r
-        not how oft. Where be your gibes now? your\r
-        gambols? your songs? your flashes of merriment,\r
-        that were wont to set the table on a roar? Not one\r
-        now, to mock your own grinning? quite chap-fallen.\r
-        """  # noqa: W293
-
-    data = Model[str](raw_data) if use_str_model else raw_data
-
-    lines_stripped = SplitToLinesModel(data)
+    lines_stripped = SplitToLinesModel(hamlet_text_crlf_as_model_or_plain)
     assert_model_if_dyn_conv_else_val(
         lines_stripped[0],
         str,
         'Alas, poor Yorick! I knew him, Horatio: a fellow',
     )
-
-    SplitToLinesNoStripModel = SplitToLinesModel.adjust('SplitToLinesNoStripModel', strip=False)
-
-    lines_unstripped = SplitToLinesNoStripModel(data)
-    assert_model_if_dyn_conv_else_val(lines_unstripped[0], str, '        \r')
     assert_model_if_dyn_conv_else_val(
-        lines_unstripped[1],
+        lines_stripped[-1],
         str,
-        '        Alas, poor Yorick! I knew him, Horatio: a fellow\r',
+        'now, to mock your own grinning? quite chap-fallen.',
     )
-    assert_model_if_dyn_conv_else_val(lines_unstripped[-1], str, '        ')
 
     last_lines = lines_stripped[3:]
     assert last_lines[0:2].content == [
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
     ]
-    assert_model_if_dyn_conv_else_val(last_lines[-1],
-                                      str,
-                                      'now, to mock your own grinning? quite chap-fallen.')
+    assert_model_if_dyn_conv_else_val(
+        last_lines[-1],
+        str,
+        'now, to mock your own grinning? quite chap-fallen.',
+    )
 
-    joined_lines = JoinLinesModel(last_lines[0:2])
+
+def test_split_to_lines_no_strip_model(
+    hamlet_text_crlf_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    lines_no_strip = SplitToLinesNoStripModel(hamlet_text_crlf_as_model_or_plain)
+
+    assert_model_if_dyn_conv_else_val(
+        lines_no_strip[1],
+        str,
+        '        Alas, poor Yorick! I knew him, Horatio: a fellow\r\n',
+    )
+
+    assert_model_if_dyn_conv_else_val(lines_no_strip[-1], str, '        ')
+
+
+def test_split_to_lines_by_os_linesep_model(
+    hamlet_text_crlf_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
+    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+    assert_line_of_os_linesep_split_crlf_text: Annotated[
+        AssertLineOfOsLinesepSplitCrlfTextFunc,
+        pytest.fixture,
+    ],
+) -> None:
+    SplitToLinesByOsLinesepModel = SplitToLinesModel.adjust(
+        'SplitToLinesByOsLinesepModel',
+        strip_chars=os.linesep,
+        delimiter=os.linesep,
+    )
+
+    lines_split_by_os_linesep = SplitToLinesByOsLinesepModel(hamlet_text_crlf_as_model_or_plain)
+
+    assert_line_of_os_linesep_split_crlf_text(
+        lines_split_by_os_linesep[1],
+        '        Alas, poor Yorick! I knew him, Horatio: a fellow',
+        with_newline=False,
+    )
+
+    last_line_exp = '        '
+    if os.linesep == NewLine.CR:
+        last_line_exp = NewLine.LF + last_line_exp
+    assert_model_if_dyn_conv_else_val(lines_split_by_os_linesep[-1], str, last_line_exp)
+
+
+def test_split_to_lines_by_os_linesep_no_strip_model(
+    hamlet_text_crlf_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
+    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+    assert_line_of_os_linesep_split_crlf_text: Annotated[
+        AssertLineOfOsLinesepSplitCrlfTextFunc,
+        pytest.fixture,
+    ],
+) -> None:
+    SplitToLinesByOsLinesepNoStripModel = SplitToLinesModel.adjust(
+        'SplitToLinesByOsLinesepNoStripModel',
+        strip=False,
+        delimiter=os.linesep,
+    )
+
+    data = hamlet_text_crlf_as_model_or_plain
+    lines_split_by_os_linesep_no_strip = SplitToLinesByOsLinesepNoStripModel(data)
+
+    assert_line_of_os_linesep_split_crlf_text(
+        lines_split_by_os_linesep_no_strip[1],
+        '        Alas, poor Yorick! I knew him, Horatio: a fellow',
+        with_newline=True,
+    )
+
+    last_line_exp = '        '
+    if os.linesep == NewLine.CR:
+        last_line_exp = NewLine.LF + last_line_exp
+    assert_model_if_dyn_conv_else_val(lines_split_by_os_linesep_no_strip[-1], str, last_line_exp)
+
+
+def test_join_lines_model(last_hamlet_lines_stripped: Annotated[list[str], pytest.fixture]) -> None:
+    joined_lines = JoinLinesModel(last_hamlet_lines_stripped[0:2])
+
     assert joined_lines.content == dedent("""\
         abhorred in my imagination it is! my gorge rises at
         it. Here hung those lips that I have kissed I know""")
     assert joined_lines[:joined_lines.index(' ')].content == 'abhorred'  # type: ignore
 
-    assert JoinLinesModel(SplitToLinesModel(data)).content == '\n'.join(
-        [line.strip() for line in data.strip().split('\n')])
 
-    assert JoinLinesModel(SplitToLinesNoStripModel(data)).content == raw_data
+def test_join_lines_by_os_linesep_model(
+    last_hamlet_lines_stripped: Annotated[list[str], pytest.fixture],
+    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
+) -> None:
 
     JoinLinesByOsLinesepModel = JoinLinesModel.adjust(
         'JoinLinesByOsLinesepModel', delimiter=os.linesep)
 
-    os_linesep_joined_lines = JoinLinesByOsLinesepModel(last_lines[0:2])
+    os_linesep_joined_lines = JoinLinesByOsLinesepModel(last_hamlet_lines_stripped[0:2])
+
     assert os_linesep_joined_lines.content == os.linesep.join([
         'abhorred in my imagination it is! my gorge rises at',
         'it. Here hung those lips that I have kissed I know'
     ])
 
 
-@pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
-def test_split_to_and_join_items_model(
-    use_str_model: bool,
+def test_join_lines_model_of_split_to_lines_model(
+    hamlet_text_crlf: Annotated[str, pytest.fixture],
+    hamlet_lines_stripped: Annotated[list[str], pytest.fixture],
+    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
+) -> None:
+    assert JoinLinesModel(
+        SplitToLinesModel(hamlet_text_crlf)).content == '\n'.join(hamlet_lines_stripped)
+
+    SplitToLinesByOsLinesepModel = SplitToLinesModel.adjust(
+        'SplitToLinesByOsLinesepModel',
+        strip_chars=os.linesep,
+        delimiter=os.linesep,
+    )
+
+    assert JoinLinesModel(SplitToLinesByOsLinesepModel(hamlet_text_crlf)).content == '\n'.join(
+        hamlet_text_crlf.split(os.linesep))
+
+
+def test_split_to_lines_models_support_universal_newlines(
+    text_with_mixed_newlines_as_model_or_plain: (Annotated[
+        Model[str] | str,
+        pytest.fixture,
+    ]),
+) -> None:
+    data = text_with_mixed_newlines_as_model_or_plain
+
+    assert SplitToLinesModel(data).content == [
+        'first',
+        'second',
+        'third',
+        'fourth',
+    ]
+    assert SplitToLinesNoStripModel(data).content == [
+        'first \n',
+        ' second  \r\n',
+        'third\r',
+        'fourth\n',
+    ]
+
+
+def test_split_to_items_model(
+    first_text_with_comma_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    """Test splitting raw models into items and joining them again."""
+    items_stripped_comma = SplitToItemsModel(first_text_with_comma_as_model_or_plain)
 
-    raw_data_comma = 'abc, def ,ghi,jkl'
-
-    data_comma = Model[str](raw_data_comma) if use_str_model else raw_data_comma
-
-    items_stripped_comma = SplitToItemsModel(data_comma)
     assert items_stripped_comma.content == ['abc', 'def', 'ghi', 'jkl']
     assert_model_if_dyn_conv_else_val(items_stripped_comma[1], str, 'def')  # type: ignore[index]
     assert items_stripped_comma[-2:].content == ['ghi', 'jkl']
 
+
+def test_split_to_items_no_strip_model(
+    first_text_with_comma_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
     SplitToItemsNoStripModel = SplitToItemsModel.adjust('SplitToItemsNoStripModel', strip=False)
 
-    items_unstripped_tab = SplitToItemsNoStripModel(data_comma)
+    items_unstripped_tab = SplitToItemsNoStripModel(first_text_with_comma_as_model_or_plain)
+
     assert items_unstripped_tab.content == ['abc', ' def ', 'ghi', 'jkl']
     assert_model_if_dyn_conv_else_val(items_unstripped_tab[1], str, ' def ')  # type: ignore[index]
     assert items_unstripped_tab[-2:].content == ['ghi', 'jkl']  # type: ignore[index]
 
-    raw_data_tab = 'abc\t def \tghi\tjkl'
 
-    data_tab = Model[str](raw_data_tab) if use_str_model else raw_data_tab
+def test_split_to_items_by_space_and_tab_model(
+    first_text_with_tabs_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    data_tab = first_text_with_tabs_as_model_or_plain
 
     SplitToItemsBySpaceModel = SplitToItemsModel.adjust('SplitToItemsBySpaceModel', delimiter=' ')
+
     items_stripped_space = SplitToItemsBySpaceModel(data_tab)
     assert items_stripped_space.content == ['abc', 'def', 'ghi\tjkl']
 
@@ -273,29 +376,29 @@ def test_split_to_and_join_items_model(
     assert_model_if_dyn_conv_else_val(items_stripped_tab[1], str, 'def')  # type: ignore[index]
     assert items_stripped_tab[-2:].content == ['ghi', 'jkl']  # type: ignore[index]
 
-    comma_joined_items = JoinItemsModel(items_stripped_comma[1:3])  # type: ignore[index]
-    assert comma_joined_items.content == 'def,ghi'
-    assert comma_joined_items[1:-1].content == 'ef,gh'  # type: ignore[index]
 
+def test_join_items_model(first_item_list: Annotated[list[str], pytest.fixture]) -> None:
+    comma_joined_items = JoinItemsModel(first_item_list)  # type: ignore[index]
+
+    assert comma_joined_items.content == 'abc,def,ghi,jkl'
+    assert comma_joined_items[1:-1].content == 'bc,def,ghi,jk'  # type: ignore[index]
+
+
+def test_join_items_by_comma_space_model(
+        first_item_list: Annotated[list[str], pytest.fixture]) -> None:
     JoinItemsByCommaSpaceModel = JoinItemsModel.adjust('JoinItemsByCommaSpaceModel', delimiter=', ')
 
-    comma_space_joined_items = JoinItemsByCommaSpaceModel(
-        items_stripped_tab[1:3])  # type: ignore[index]
-    assert comma_space_joined_items.content == 'def, ghi'
-    assert comma_space_joined_items[1:-1].content == 'ef, gh'  # type: ignore[index]
+    comma_space_joined_items = JoinItemsByCommaSpaceModel(first_item_list)  # type: ignore[index]
+    assert comma_space_joined_items.content == 'abc, def, ghi, jkl'
+    assert comma_space_joined_items[1:-1].content == 'bc, def, ghi, jk'  # type: ignore[index]
 
 
-@pytest.mark.parametrize('use_str_model', [False, True], ids=['str', 'Model[str]'])
-def test_split_lines_to_columns_and_join_columns_to_lines_model(
-    use_str_model: bool,
+def test_split_lines_to_columns_model(
+    forward_list_of_texts_with_tabs: Annotated[list[Model[str]] | list[str], pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    """Test splitting line models into columns and joining them back."""
+    cols_stripped_tab = SplitLinesToColumnsModel(forward_list_of_texts_with_tabs)
 
-    raw_data_tab = ['abc\t def \tghi\t jkl', 'mno\t pqr\tstu\t vwx', 'yz']
-    data_tab = [Model[str](line) for line in raw_data_tab] if use_str_model else raw_data_tab
-
-    cols_stripped_tab = SplitLinesToColumnsModel(data_tab)
     assert_model_if_dyn_conv_else_val(
         cols_stripped_tab[0],  # type: ignore[index]
         list[str],
@@ -308,10 +411,15 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
         ['mno', 'pqr', 'stu', 'vwx'], ['yz']
     ]
 
+
+def test_split_lines_to_columns_no_strip_model(
+    forward_list_of_texts_with_tabs: Annotated[list[Model[str]] | list[str], pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
     SplitLinesToColumnsNoStripModel = SplitLinesToColumnsModel.adjust(
         'SplitLinesToColumnsNoStripModel', strip=False)
 
-    cols_unstripped_tab = SplitLinesToColumnsNoStripModel(data_tab)
+    cols_unstripped_tab = SplitLinesToColumnsNoStripModel(forward_list_of_texts_with_tabs)
 
     assert_model_if_dyn_conv_else_val(
         cols_unstripped_tab[0],  # type: ignore[index]
@@ -328,10 +436,12 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
         ['mno', ' pqr', 'stu', ' vwx'], ['yz']
     ]
 
-    raw_data_comma = ['abc, def, ghi, jkl', 'mno, pqr, stu, vwx', 'yz']
-    data_comma = [Model[str](line) for line in raw_data_comma] if use_str_model else raw_data_comma
 
-    cols_stripped_comma = SplitLinesToColumnsByCommaModel(data_comma)
+def test_split_lines_to_columns_by_comma_model(
+    forward_list_of_texts_with_comma: Annotated[list[Model[str]] | list[str], pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    cols_stripped_comma = SplitLinesToColumnsByCommaModel(forward_list_of_texts_with_comma)
 
     assert_model_if_dyn_conv_else_val(
         cols_stripped_comma[0],  # type: ignore[index]
@@ -349,24 +459,32 @@ def test_split_lines_to_columns_and_join_columns_to_lines_model(
         ['mno', 'pqr', 'stu', 'vwx'], ['yz']
     ]
 
-    joined_cols = JoinColumnsToLinesModel(cols_stripped_tab[1:])  # type: ignore[index]
+
+def test_join_columns_to_lines_model(
+        forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture]) -> None:
+    joined_cols = JoinColumnsToLinesModel(forward_list_of_lists_of_items)  # type: ignore[index]
 
     assert joined_cols.content == ['mno\tpqr\tstu\tvwx', 'yz']
     assert joined_cols[1:].content == ['yz']  # type: ignore[index]
     assert joined_cols.to_data() == ['mno\tpqr\tstu\tvwx', 'yz']
 
-    joined_cols_by_comma = JoinColumnsByCommaToLinesModel(
-        cols_stripped_comma[1:])  # type: ignore[index]
+
+def test_join_columns_to_lines_by_comma_models(
+        forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture]) -> None:
+    joined_cols_by_comma = JoinColumnsByCommaToLinesModel(forward_list_of_lists_of_items)
 
     assert joined_cols_by_comma.content == ['mno,pqr,stu,vwx', 'yz']
     assert joined_cols_by_comma[1:].content == ['yz']  # type: ignore[index]
     assert joined_cols_by_comma.to_data() == ['mno,pqr,stu,vwx', 'yz']
 
+
+def test_join_columns_to_lines_by_comma_space_models(
+        forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture]) -> None:
     JoinColumnsByCommaSpaceToLinesModel = JoinColumnsToLinesModel.adjust(
         'JoinColumnsByCommaToLinesModel', delimiter=', ')
 
-    joined_cols_by_comma_space = \
-        JoinColumnsByCommaSpaceToLinesModel(cols_stripped_comma[1:])  # type: ignore
+    joined_cols_by_comma_space = JoinColumnsByCommaSpaceToLinesModel(forward_list_of_lists_of_items)
+
     assert joined_cols_by_comma_space.content == ['mno, pqr, stu, vwx', 'yz']
     assert joined_cols_by_comma_space[1:].content == ['yz']  # type: ignore[index]
     assert joined_cols_by_comma_space.to_data() == ['mno, pqr, stu, vwx', 'yz']

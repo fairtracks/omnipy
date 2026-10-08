@@ -18,6 +18,7 @@ from .models import (BytesModel,
                      SplitToItemsModel,
                      SplitToItemsModelBase,
                      SplitToLinesModel,
+                     SplitToLinesNoStripModel,
                      StrictBytesModel,
                      StrictStrModel,
                      StrModel)
@@ -87,12 +88,22 @@ class SplitToItemsDataset(_SplitToItemsDataset[SplitToItemsModel]):
 
 
 class SplitToLinesDataset(_SplitToItemsDataset[SplitToLinesModel]):
-    """Store named lists of text lines."""
+    """Store named lists of universal newline-split text lines."""
 
     adjust = bind_adjust_dataset_func(
         _SplitToItemsDataset[SplitToLinesModel].clone_dataset_cls,
         SplitToLinesModel,
         SplitToLinesModel.Params,
+    )
+
+
+class SplitToLinesNoStripDataset(_SplitToItemsDataset[SplitToLinesNoStripModel]):
+    """Store named lists of universal newline-split text lines, no stripping."""
+
+    adjust = bind_adjust_dataset_func(
+        _SplitToItemsDataset[SplitToLinesNoStripModel].clone_dataset_cls,
+        SplitToLinesNoStripModel,
+        SplitToLinesNoStripModel.Params,
     )
 
 
