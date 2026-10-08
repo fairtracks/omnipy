@@ -47,7 +47,10 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
 
     @classmethod
-    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> StrictStrDataset:
+    def deserialize(cls,
+                    serialized: bytes,
+                    any_file_suffix=False,
+                    ignore_dirs=False) -> StrictStrDataset:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Deserialize a gzipped tar archive back into a dataset."""
@@ -67,6 +70,7 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
             dictify_object_func=python_dictify_object,
             import_method='from_data',
             any_file_suffix=any_file_suffix,
+            ignore_dirs=ignore_dirs,
         )  # noqa
 
         return dataset
@@ -108,7 +112,10 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
 
     @classmethod
-    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> StrictBytesDataset:
+    def deserialize(cls,
+                    serialized: bytes,
+                    any_file_suffix=False,
+                    ignore_dirs=False) -> StrictBytesDataset:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Deserialize a gzipped tar archive back into a dataset."""
@@ -128,6 +135,6 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
             dictify_object_func=python_dictify_object,
             import_method='from_data',
             any_file_suffix=any_file_suffix,
-        )  # noqa
+            ignore_dirs=ignore_dirs)  # noqa
 
         return dataset

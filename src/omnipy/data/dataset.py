@@ -1589,6 +1589,7 @@ class Dataset(
         paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
         by_file_suffix: bool = False,
         as_mime_type: None | str = None,
+        ignore_dirs: bool = False,
         **kwargs: IsPathOrUrl,
     ) -> Self | asyncio.Task[Self]:
         """Create a dataset and load serialized contents into it.
@@ -1598,6 +1599,7 @@ class Dataset(
                 load from.
             by_file_suffix: Whether serializer lookup should prefer file-suffix detection.
             as_mime_type: Optional MIME type hint for HTTP loading.
+            ignore_dirs:  Whether to skip directory entries inside archives/directories.
             **kwargs: Alternate keyed path or URL arguments when ``paths_or_urls`` is omitted.
 
         Returns:
@@ -1605,13 +1607,19 @@ class Dataset(
         """
         dataset = cls()
         return dataset.load_into(
-            paths_or_urls, by_file_suffix=by_file_suffix, as_mime_type=as_mime_type, **kwargs)
+            paths_or_urls,
+            by_file_suffix=by_file_suffix,
+            as_mime_type=as_mime_type,
+            ignore_dirs=ignore_dirs,
+            **kwargs,
+        )
 
     def load_into(
         self,
         paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
         by_file_suffix: bool = False,
         as_mime_type: None | str = None,
+        ignore_dirs: bool = False,
         **kwargs: IsPathOrUrl,
     ) -> Self | asyncio.Task[Self]:
         """Load serialized contents into this dataset instance.
@@ -1621,6 +1629,7 @@ class Dataset(
                 load from.
             by_file_suffix: Whether serializer lookup should prefer file-suffix detection.
             as_mime_type: Optional MIME type hint for HTTP loading.
+            ignore_dirs:  Whether to skip directory entries inside archives/directories.
             **kwargs: Alternate keyed path or URL arguments when ``paths_or_urls`` is omitted.
 
         Returns:
@@ -1655,7 +1664,11 @@ class Dataset(
                 try:
                     http_url_dataset = HttpUrlDataset({paths_or_urls: paths_or_urls})
                 except ValidationError:
-                    return self._load_paths([paths_or_urls], by_file_suffix)
+                    return self._load_paths(
+                        [paths_or_urls],
+                        by_file_suffix,
+                        ignore_dirs=ignore_dirs,
+                    )
                 return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
 
             case Mapping():
@@ -1674,7 +1687,11 @@ class Dataset(
                     http_url_dataset = HttpUrlDataset(
                         zip(path_or_url_iterable, path_or_url_iterable))
                 except ValidationError:
-                    return self._load_paths(path_or_url_iterable, by_file_suffix)
+                    return self._load_paths(
+                        path_or_url_iterable,
+                        by_file_suffix,
+                        ignore_dirs=ignore_dirs,
+                    )
                 return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
             case _:
                 raise TypeError(f'"paths_or_urls" argument is of incorrect type. Type '
@@ -1763,7 +1780,12 @@ class Dataset(
         else:
             return asyncio.run(load_all(as_mime_type=as_mime_type))
 
-    def _load_paths(self, path_or_urls: Iterable[str], by_file_suffix: bool) -> Self:
+    def _load_paths(
+        self,
+        path_or_urls: Iterable[str],
+        by_file_suffix: bool,
+        ignore_dirs: bool = False,
+    ) -> Self:
         """Load dataset contents from local tar files or directories.
 
         Args:
@@ -1783,11 +1805,11 @@ class Dataset(
             if by_file_suffix:
                 loaded_dataset = \
                     serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                        self, tar_gz_file_path, self)
+                        self, tar_gz_file_path, self, ignore_dirs=ignore_dirs)
             else:
                 loaded_dataset = \
                     serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
-                        self, tar_gz_file_path, self, any_file_suffix=True)
+                        self, tar_gz_file_path, self, any_file_suffix=True, ignore_dirs=ignore_dirs)
             if loaded_dataset is not None:
                 self.absorb(loaded_dataset)
                 continue

@@ -45,7 +45,10 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=json_encode_func)
 
     @classmethod
-    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> JsonDataset:
+    def deserialize(cls,
+                    serialized: bytes,
+                    any_file_suffix=False,
+                    ignore_dirs=False) -> JsonDataset:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Deserialize a gzipped tar archive back into a dataset."""
@@ -65,6 +68,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
             dictify_object_func=json_dictify_object,
             import_method='from_json',
             any_file_suffix=any_file_suffix,
+            ignore_dirs=ignore_dirs,
         )
 
         return json_dataset

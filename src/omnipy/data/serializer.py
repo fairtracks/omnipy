@@ -64,7 +64,7 @@ class Serializer(ABC, Generic[_DatasetT]):
 
     @classmethod
     @abstractmethod
-    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> _DatasetT:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False, ignore_dirs=False) -> _DatasetT:
         """Deserialize ``serialized`` bytes into a dataset instance."""
 
         pass
@@ -97,13 +97,16 @@ class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
         return bytes_io.getbuffer().tobytes()
 
     @classmethod
-    def create_dataset_from_tarfile(cls,
-                                    dataset: _DatasetT,
-                                    tarfile_bytes: bytes,
-                                    data_decode_func: Callable[[IO[bytes]], Any],
-                                    dictify_object_func: Callable[[str, Any], dict | str],
-                                    import_method: str = 'from_data',
-                                    any_file_suffix: bool = False) -> None:
+    def create_dataset_from_tarfile(
+        cls,
+        dataset: _DatasetT,
+        tarfile_bytes: bytes,
+        data_decode_func: Callable[[IO[bytes]], Any],
+        dictify_object_func: Callable[[str, Any], dict | str],
+        import_method: str = 'from_data',
+        any_file_suffix: bool = False,
+        ignore_dirs: bool = False,
+    ) -> None:
         """Populate ``dataset`` from a gzipped tar archive.
 
         Args:
@@ -113,12 +116,16 @@ class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
             dictify_object_func: Function mapping filename and decoded payload to import data.
             import_method: Dataset import method to call for each decoded item.
             any_file_suffix: Whether to skip file-suffix validation inside the archive.
+            ignore_dirs: Whether to skip directory entries inside archives/directories.
         """
 
         with tarfile.open(fileobj=BytesIO(tarfile_bytes), mode='r:gz') as tarfile_stream:
             for filename in tarfile_stream.getnames():
+                if ignore_dirs and tarfile_stream.getmember(filename).isdir():
+                    continue
                 data_file = tarfile_stream.extractfile(filename)
-                assert data_file is not None
+                assert data_file is not None, (f'Failed to extract file "{filename}" from tar '
+                                               f'archive.')
                 if not any_file_suffix:
                     assert filename.endswith(f'.{cls.get_output_file_suffix()}')
                 data_file_name = os.path.basename('.'.join(filename.split('.')[:-1]))
@@ -255,6 +262,7 @@ class SerializerRegistry:
         log_obj: CanLog,
         tar_file_path: str,
         to_dataset: IsDataset,
+        ignore_dirs: bool = False,
     ) -> IsDataset | None:
         """Load a tar archive by detecting its serializer from member file suffixes.
 
@@ -262,6 +270,7 @@ class SerializerRegistry:
             log_obj: Logger-like object used for status and failure messages.
             tar_file_path: Path to the gzipped tar archive.
             to_dataset: Preferred destination dataset instance.
+            ignore_dirs: Whether to skip directory entries inside archives/directories.
 
         Returns:
             The populated destination dataset, an auto-created dataset if conversion fails, or
@@ -293,7 +302,8 @@ class SerializerRegistry:
 
                 serializer = serializers[0]
                 with open(tar_file_path, 'rb') as tarfile_binary:
-                    auto_dataset = serializer.deserialize(tarfile_binary.read())
+                    auto_dataset = serializer.deserialize(
+                        tarfile_binary.read(), ignore_dirs=ignore_dirs)
 
                 if to_dataset.get_type() is auto_dataset.get_type():
                     cast(HasData, to_dataset).data = cast(HasData, auto_dataset).data
@@ -314,6 +324,7 @@ class SerializerRegistry:
         tar_file_path: str,
         to_dataset: IsDataset,
         any_file_suffix: bool = False,
+        ignore_dirs: bool = False,
     ) -> IsDataset | None:
         """Load a tar archive by trying serializers compatible with ``to_dataset``.
 
@@ -322,6 +333,7 @@ class SerializerRegistry:
             tar_file_path: Path to the gzipped tar archive.
             to_dataset: Dataset instance whose type guides serializer selection.
             any_file_suffix: Whether deserializers may ignore file-suffix checks.
+            ignore_dirs:  Whether to skip directory entries inside archives/directories.
 
         Returns:
             The first dataset produced by a compatible serializer, or ``None`` if none match.
@@ -347,6 +359,7 @@ class SerializerRegistry:
                     out_dataset = serializer.deserialize(
                         tarfile_binary.read(),
                         any_file_suffix=any_file_suffix,
+                        ignore_dirs=ignore_dirs,
                     )
 
                 return out_dataset

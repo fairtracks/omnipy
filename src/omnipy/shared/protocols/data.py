@@ -223,6 +223,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
         by_file_suffix: bool = False,
         as_mime_type: None | str = None,
+        ignore_dirs: bool = False,
         **kwargs: IsPathOrUrl,
     ) -> Self | asyncio.Task[Self]:
         """Load dataset content from one or more paths or URLs.
@@ -231,6 +232,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
             paths_or_urls: Source path, URL, or collection of sources to load.
             by_file_suffix: Whether serializer lookup should prefer file suffixes.
             as_mime_type: Explicit MIME type override, if any.
+            ignore_dirs: Whether to skip directory entries inside archives/directories.
             kwargs: Additional named path or URL sources.
 
         Returns:
@@ -243,6 +245,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
         by_file_suffix: bool = False,
         as_mime_type: None | str = None,
+        ignore_dirs: bool = False,
         **kwargs: IsPathOrUrl,
     ) -> Self | asyncio.Task[Self]:
         """Load external content into the current dataset instance.
@@ -251,6 +254,7 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
             paths_or_urls: Source path, URL, or collection of sources to load.
             by_file_suffix: Whether serializer lookup should prefer file suffixes.
             as_mime_type: Explicit MIME type override, if any.
+            ignore_dirs:  Whether to skip directory entries inside archives/directories.å
             kwargs: Additional named path or URL sources.
 
         Returns:
@@ -420,12 +424,13 @@ class IsSerializer(Protocol[_DatasetT]):
         ...
 
     @classmethod
-    def deserialize(cls, serialized: bytes, any_file_suffix=False) -> _DatasetT:
+    def deserialize(cls, serialized: bytes, any_file_suffix=False, ignore_dirs=False) -> _DatasetT:
         """Deserialize a bytes payload into a dataset instance.
 
         Args:
             serialized: Serialized dataset payload.
             any_file_suffix: Whether suffix validation should be relaxed.
+            ignore_dirs: Whether to skip directory entries inside archives/directories.
 
         Returns:
             _DatasetT: Deserialized dataset instance.
@@ -453,13 +458,16 @@ class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
         ...
 
     @classmethod
-    def create_dataset_from_tarfile(cls,
-                                    dataset: _DatasetT,
-                                    tarfile_bytes: bytes,
-                                    data_decode_func: Callable[[IO[bytes]], Any],
-                                    dictify_object_func: Callable[[str, Any], dict | str],
-                                    import_method: str = 'from_data',
-                                    any_file_suffix: bool = False) -> None:
+    def create_dataset_from_tarfile(
+        cls,
+        dataset: _DatasetT,
+        tarfile_bytes: bytes,
+        data_decode_func: Callable[[IO[bytes]], Any],
+        dictify_object_func: Callable[[str, Any], dict | str],
+        import_method: str = 'from_data',
+        any_file_suffix: bool = False,
+        ignore_dirs: bool = False,
+    ) -> None:
         """Populate a dataset from a tar archive payload.
 
         Args:
@@ -469,6 +477,7 @@ class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
             dictify_object_func: Helper that converts decoded objects to importable values.
             import_method: Dataset import method to call for decoded entries.
             any_file_suffix: Whether suffix validation should be relaxed.
+            ignore_dirs: Whether to skip directory entries inside archives/directories.
         """
         ...
 
@@ -559,32 +568,42 @@ class IsSerializerRegistry(Protocol):
         """
         ...
 
-    def load_from_tar_file_path_based_on_file_suffix(self,
-                                                     log_obj: CanLog,
-                                                     tar_file_path: str,
-                                                     to_dataset: IsDataset) -> IsDataset | None:
+    def load_from_tar_file_path_based_on_file_suffix(
+        self,
+        log_obj: CanLog,
+        tar_file_path: str,
+        to_dataset: IsDataset,
+        ignore_dirs: bool = False,
+    ) -> IsDataset | None:
         """Load a tar archive into a dataset using suffix-based detection.
 
         Args:
             log_obj: Logger used for progress and error reporting.
             tar_file_path: Path to the tar archive on disk.
             to_dataset: Dataset instance to populate.
+            ignore_dirs: Whether to skip directory entries inside archives/directories.
 
         Returns:
             IsDataset | None: Populated dataset, or ``None`` when no serializer matches.
         """
         ...
 
-    def load_from_tar_file_path_based_on_dataset_cls(self,
-                                                     log_obj: CanLog,
-                                                     tar_file_path: str,
-                                                     to_dataset: IsDataset) -> IsDataset | None:
+    def load_from_tar_file_path_based_on_dataset_cls(
+        self,
+        log_obj: CanLog,
+        tar_file_path: str,
+        to_dataset: IsDataset,
+        any_file_suffix: bool = False,
+        ignore_dirs: bool = False,
+    ) -> IsDataset | None:
         """Load a tar archive into a dataset using dataset-class detection.
 
         Args:
             log_obj: Logger used for progress and error reporting.
             tar_file_path: Path to the tar archive on disk.
             to_dataset: Dataset instance to populate.
+            any_file_suffix: Whether deserializers may ignore file-suffix checks.
+            ignore_dirs:  Whether to skip directory entries inside archives/directories.
 
         Returns:
             IsDataset | None: Populated dataset, or ``None`` when no serializer matches.
