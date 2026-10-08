@@ -1676,7 +1676,7 @@ class Model(  # type: ignore[misc]
             JSON schema for the model with Omnipy's ``orig_model`` metadata
             removed.
         """
-        schema = cls.schema()
+        schema = cls.schema(by_alias=True)
         if 'orig_model' in schema:
             del schema['orig_model']
 

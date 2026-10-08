@@ -1517,7 +1517,7 @@ class Dataset(
         """
         result = {}
         clean_dataset = super(Dataset, Dataset).__class_getitem__(cls.get_type())
-        schema = clean_dataset.schema()
+        schema = clean_dataset.schema(by_alias=True)
         for key, val in schema['properties'][DATA_KEY].items():
             # Remove the first part of the type definition of 'data', added
             # as a hack to stop coercing of e.g. [{'a': 'b', 'c': 'd'}]
