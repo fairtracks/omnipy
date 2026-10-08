@@ -78,7 +78,7 @@ def get_pretty_printer_from_content(draft_panel: DraftPanel, default: bool) -> P
             DevtoolsPrettyPrinter(),
             PlainTextPrettyPrinter(),
     ]:
-        if pretty_printer.is_suitable_content(draft_panel, default=default):
+        if pretty_printer.is_suitable_content(draft_panel.content, default=default):
             return pretty_printer
 
     if default:

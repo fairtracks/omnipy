@@ -18,7 +18,7 @@ class PythonStatsTighteningPrettyPrinter(PrettyPrinter[object], ABC):
     @classmethod
     def is_suitable_content(
         cls,
-        draft_panel: DraftPanel[object, AnyFrame],
+        panel_content: object,
         default: bool = False,
     ) -> bool:
         # return True
@@ -47,10 +47,10 @@ class JsonStatsTighteningPrettyPrinterMixin(PrettyPrinter[object], ABC):
     @classmethod
     def is_suitable_content(
         cls,
-        draft_panel: DraftPanel[object, AnyFrame],
+        panel_content: object,
         default: bool = False,
     ) -> bool:
-        return is_json_model_instance_hack(draft_panel.content)
+        return is_json_model_instance_hack(panel_content)
 
     @override
     @classmethod

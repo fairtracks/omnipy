@@ -32,27 +32,25 @@ class PlainTextPrettyPrinter(PrettyPrinter[str]):
     @classmethod
     def is_suitable_content(
         cls,
-        draft_panel: DraftPanel[object, AnyFrame],
+        panel_content: object,
         default: bool = False,
     ) -> bool:
         """Return whether the panel content should use plain-text formatting.
 
         Args:
-            draft_panel: Draft panel whose content type is evaluated.
+            panel_content: Content to evaluate for formatting suitability.
             default: Whether selection runs as default fallback logic.
 
         Returns:
             ``True`` if this printer is the best match for the content.
         """
 
-        content = draft_panel.content
-
         if default:
-            if is_model_instance(content):
-                return content.outer_type() is str
+            if is_model_instance(panel_content):
+                return panel_content.outer_type() is str
         else:
-            if is_model_instance(content):
-                return isinstance(content, StrModel)
+            if is_model_instance(panel_content):
+                return isinstance(panel_content, StrModel)
 
         return False
 
@@ -120,13 +118,13 @@ class CodePrettyPrinter(PlainTextPrettyPrinter):
     @classmethod
     def is_suitable_content(
         cls,
-        draft_panel: DraftPanel[object, AnyFrame],
+        panel_content: object,
         default: bool = False,
     ) -> bool:
-        """Return whether the panel should be treated as code-like text.
+        """Return whether the panel content should be treated as code-like text.
 
         Args:
-            draft_panel: Draft panel whose content is evaluated.
+            panel_content: Content to evaluate for formatting suitability.
             default: Whether selection runs in fallback/default mode.
 
         Returns:
@@ -134,7 +132,7 @@ class CodePrettyPrinter(PlainTextPrettyPrinter):
         """
         # To allow plain str content, such as e.g. in Dataset.list() output,
         # to be automatically highlighted as Python code.
-        if default and isinstance(draft_panel.content, str):
+        if default and isinstance(panel_content, str):
             return True
 
         return False

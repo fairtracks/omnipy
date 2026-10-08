@@ -29,13 +29,13 @@ class PrettyPrinter(ABC, Generic[ContentT]):
     @abstractmethod
     def is_suitable_content(
         cls,
-        draft_panel: DraftPanel[object, AnyFrame],
+        panel_content: object,
         default: bool = False,
     ) -> bool:
         """Return whether this pretty printer can handle the draft panel.
 
         Args:
-            draft_panel: Draft panel whose content should be evaluated.
+            panel_content: Content to evaluate for formatting suitability.
             default: Whether suitability is checked as a fallback/default match.
 
         Returns:

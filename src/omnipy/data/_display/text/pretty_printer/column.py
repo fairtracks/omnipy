@@ -20,10 +20,10 @@ class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
     @classmethod
     def is_suitable_content(
         cls,
-        draft_panel: DraftPanel[object, AnyFrame],
+        panel_content: object,
         default: bool = False,
     ) -> bool:
-        return not default and isinstance(draft_panel.content, ColumnModel)
+        return not default and isinstance(panel_content, ColumnModel)
 
     @override
     @classmethod

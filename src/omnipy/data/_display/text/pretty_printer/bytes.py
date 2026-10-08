@@ -18,15 +18,13 @@ class HexdumpPrettyPrinter(PrettyPrinter[str]):
     @classmethod
     def is_suitable_content(
         cls,
-        draft_panel: DraftPanel[object, AnyFrame],
+        panel_content: object,
         default: bool = False,
     ) -> bool:
 
         if not default:
-            content = draft_panel.content
-
-            if is_model_instance(content):
-                return isinstance(content, BytesModel)
+            if is_model_instance(panel_content):
+                return isinstance(panel_content, BytesModel)
 
         return False
 
