@@ -3,7 +3,7 @@
 import datetime
 import os
 from textwrap import dedent
-from typing import Callable, cast, Generic, overload, Protocol, TypeAlias
+from typing import Any, Callable, cast, Generic, overload, Protocol, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -151,7 +151,7 @@ else:
 
 
 class IsoFormatToDataMixin:
-    def to_data(self) -> str:
+    def to_data(self, **kwargs: Any) -> str:
         self_as_isodate_model = cast(Model[datetime.time | datetime.date | datetime.datetime], self)
         return self_as_isodate_model.content.isoformat()
 
@@ -201,7 +201,7 @@ class TimeDeltaModel(Model[datetime.timedelta]):
         >>> TimeDeltaModel('P182DT12H30M5S').to_data()
         '182 days, 12:30:05'
     """
-    def to_data(self) -> str:
+    def to_data(self, **kwargs: Any) -> str:
         return str(self.content)
 
 

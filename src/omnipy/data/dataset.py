@@ -1328,13 +1328,20 @@ class Dataset(
             new_dataset[data_file] = placeholder(val)
         return new_dataset
 
-    def to_data(self) -> dict_t[str, Any]:
+    def to_data(self, **kwargs: Any) -> dict_t[str, Any]:
         """Return the dataset as plain Python contents.
+
+        Attributes:
+            kwargs: Additional keyword arguments passed to the Pydantic
+                ``BaseModel.dict()`` method for each entry.
 
         Returns:
             A mapping from data-file name to plain Python data extracted from each validated item.
         """
-        return {key: self._check_value(val) for key, val in self.dict(by_alias=True).items()}
+        if 'by_alias' not in kwargs:
+            kwargs['by_alias'] = True
+
+        return {key: self._check_value(val) for key, val in self.dict(**kwargs).items()}
 
     def dict(self, **kwargs) -> dict_t[str, Any]:
         """Return the dataset backing mapping as a plain dictionary.
@@ -1441,11 +1448,13 @@ class Dataset(
         """
         self.from_data(other.to_data(), update=False)
 
-    def to_json(self, pretty=True) -> dict_t[str, str]:
+    def to_json(self, pretty=True, **kwargs: Any) -> dict_t[str, str]:
         """Serialize each dataset item to JSON.
 
         Args:
             pretty: Whether to pretty-print the JSON for each item.
+            kwargs: Additional keyword arguments passed to the Pydantic
+                ``BaseModel.json()`` method for each entry.
 
         Returns:
             A mapping from data-file name to JSON string.
@@ -1453,7 +1462,7 @@ class Dataset(
         result = {}
 
         for key, val in self.data.items():
-            result[key] = val.to_json(pretty=pretty)
+            result[key] = val.to_json(pretty=pretty, **kwargs)
 
         return result
 

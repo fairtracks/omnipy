@@ -1,7 +1,7 @@
 """Helper models for components general tests."""
 
 from types import NotImplementedType
-from typing import Generic
+from typing import Any, Generic
 
 from typing_extensions import TypeVar
 
@@ -53,5 +53,5 @@ class MyListModel(Model[MyList[str] | list[str]]):
             return MyList(*data)
         return data
 
-    def to_data(self) -> list[str]:
-        return self.content.data
+    def to_data(self, **kwargs: Any) -> list[str]:
+        return self.content.data  # type: ignore[union-attr]

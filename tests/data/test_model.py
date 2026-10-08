@@ -2867,7 +2867,7 @@ def test_mimic_sequence_convert_for_concat(
         def _parse_data(cls, data: SetDeque[int] | list[int]) -> SetDeque[int]:
             return SetDeque(data)
 
-        def to_data(self) -> object:
+        def to_data(self, **kwargs: Any) -> object:
             return list(self.content)
 
     my_list = [1, 2, 3]
@@ -3045,8 +3045,8 @@ def test_mimic_concatenation_for_converted_models_with_incompatible_content_exce
             return data
 
         # A custom to_data() method is needed to allow for compatibility
-        def to_data(self) -> object:
-            return [el.to_data() for el in self.content.data]
+        def to_data(self, **kwargs: Any) -> object:
+            return [el.to_data() for el in self.content]
 
     MyListOfUppercaseModel(MyList(UppercaseModel('Can'), UppercaseModel('you')))
 
@@ -4962,7 +4962,7 @@ def test_non_builtin_model_with_parser() -> None:
                 return MyPath(data)
             return data
 
-        def to_data(self) -> str:
+        def to_data(self, **kwargs: Any) -> str:
             return str(self.content)
 
         def __str__(self):
@@ -4990,7 +4990,7 @@ def test_non_builtin_model_with_from_data() -> None:
             else:
                 self._validate_and_set_value(value)
 
-        def to_data(self) -> str:
+        def to_data(self, **kwargs: Any) -> str:
             return str(self.content)
 
         def __str__(self):

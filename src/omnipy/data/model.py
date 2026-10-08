@@ -1455,7 +1455,7 @@ class Model(  # type: ignore[misc]
         return placeholder(self)
 
     def dict(self, *args, **kwargs) -> dict_t[str, object]:
-        return {ROOT_KEY: self.to_data()}
+        return {ROOT_KEY: self.to_data(**kwargs)}
 
     # TODO: Improve typing of to_data/from_data. Should be limited to JSON types at least, but also
     #       `_RootT` for simple models (without submodels). Handling Submodels is tricky, and may
@@ -1466,14 +1466,21 @@ class Model(  # type: ignore[misc]
     #       class MyModel(Model[list[Model[int]]], ModelData[list[int]]):
     #          ...
     #       ```
-    def to_data(self) -> Any:
+    def to_data(self, **kwargs: Any) -> Any:
         """Serialize the model into raw Python data.
+
+        Attributes:
+            kwargs: Additional keyword arguments passed to the Pydantic
+                ``BaseModel.dict()`` method.
 
         Returns:
             The wrapped value converted to plain data, including recursive
             conversion of nested Omnipy models.
         """
-        return super().dict(by_alias=True)[ROOT_KEY]
+        if 'by_alias' not in kwargs:
+            kwargs['by_alias'] = True
+
+        return super().dict(**kwargs)[ROOT_KEY]
 
     def _empty_from_data(self, value: object) -> None:
         """Load data into an empty model using a temporary default reset hook.
@@ -1523,16 +1530,18 @@ class Model(  # type: ignore[misc]
         """
         self.from_data(other.to_data())
 
-    def to_json(self, pretty=True) -> str:
+    def to_json(self, pretty=True, **kwargs: Any) -> str:
         """Serialize the model to JSON.
 
         Args:
             pretty: When ``True``, return indented human-readable JSON.
+            kwargs: Additional keyword arguments passed to the Pydantic
+                ``BaseModel.json()`` method.
 
         Returns:
             JSON representation of the model content.
         """
-        json_content = pyd.BaseModel.json(self)
+        json_content = pyd.BaseModel.json(self, **kwargs)
         if pretty:
             return self._pretty_print_json(json.loads(json_content))
         else:

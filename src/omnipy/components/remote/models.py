@@ -97,8 +97,12 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
 
         return dict((unquote(key), unquote(val)) for key, val in params_list)
 
-    def to_data(self) -> str:
+    def to_data(self, **kwargs: Any) -> str:
         """Serialize query parameters back to a URL-encoded query string.
+
+        Attributes:
+            kwargs: Additional keyword arguments passed to the Pydantic
+                ``BaseModel.dict()`` method.
 
         Returns:
             str: URL-encoded query string without a leading ``?``.
@@ -170,8 +174,12 @@ class UrlPathModel(Model[PurePosixPath | str]):
         """
         return PurePosixPath(data) if isinstance(data, str) else data
 
-    def to_data(self) -> str:
+    def to_data(self, **kwargs: Any) -> str:
         """Return the normalized URL path as a string.
+
+        Attributes:
+            kwargs: Keyword arguments are ignored, included only for
+                compatibility with the base class signature.
 
         Returns:
             str: Path content rendered as a POSIX-style string.
@@ -353,8 +361,12 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
     def __add__(self, other: str) -> 'HttpUrlModel':
         return HttpUrlModel(str(self) + other)
 
-    def to_data(self) -> str:
+    def to_data(self, **kwargs: Any) -> str:
         """Return the normalized URL as a string.
+
+        Attributes:
+            kwargs: Keyword arguments are ignored, included only for
+                compatibility with the base class signature.
 
         Returns:
             str: Fully rendered HTTP(S) URL string.

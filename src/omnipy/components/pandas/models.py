@@ -97,8 +97,12 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
         from .lazy_import import pd
         return pd.DataFrame(data.content if is_model_instance(data) else data).convert_dtypes()
 
-    def to_data(self) -> Any:
+    def to_data(self, **kwargs: Any) -> Any:
         """Convert pandas content to plain Python data structures.
+
+        Attributes:
+            kwargs: Keyword arguments are ignored, included only for
+                compatibility with the base class signature.
 
         Returns:
             For DataFrames, a list of row dictionaries. For Series, a key-value
@@ -146,12 +150,14 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
 
         self._validate_and_set_value(pd.read_json(StringIO(json_content)).convert_dtypes())
 
-    def to_json(self, pretty=True) -> str:
+    def to_json(self, pretty=True, **kwargs: Any) -> str:
         """Serialize model content to JSON.
 
-        Args:
+        Attributes:
             pretty: Reserved compatibility argument. The current implementation
                 always returns compact pandas JSON output.
+            kwargs: Keyword arguments are ignored, included only for
+                compatibility with the base class signature.
 
         Returns:
             JSON string representation of the underlying pandas object.

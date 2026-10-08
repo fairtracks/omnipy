@@ -1,7 +1,7 @@
 """Recursive model types for immutable nested container structures."""
-
+from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Generic, TypeAlias
+from typing import Any, Generic, TypeAlias
 
 from typing_extensions import ForwardRef
 
@@ -58,9 +58,9 @@ class _FrozenTupleM(Model[tuple[DoubleTypeVarStore[_KeyT, _ValT]
 class _FrozenDictM(Model[FrozenDict[_KeyT, TypeVarStore[_ValT]
                                     | ForwardRef('_FrozenAnyUnion')]],
                    Generic[_KeyT, _ValT]):
-    def to_data(self) -> dict[_KeyT, _ValT]:
-        to_data = super().to_data()
-        return MappingProxyType({key: val.to_data() for key, val in to_data.items()})
+    def to_data(self, **kwargs: Any) -> Mapping[_KeyT, _ValT]:
+        to_data = super().to_data(**kwargs)
+        return MappingProxyType({key: val.to_data(**kwargs) for key, val in to_data.items()})
 
 
 class _FrozenNoDictsM(Model[tuple[TypeVarStore[_ValT]
@@ -78,9 +78,9 @@ class _FrozenNoTuplesM(Model[FrozenDict[_KeyT,
                                         DoubleTypeVarStore[_KeyT, _ValT]
                                         | ForwardRef('_FrozenNoTuplesUnion')]],
                        Generic[_KeyT, _ValT]):
-    def to_data(self) -> dict[_KeyT, _ValT]:
-        to_data = super().to_data()
-        return MappingProxyType({key: val.to_data() for key, val in to_data.items()})
+    def to_data(self, **kwargs: Any) -> Mapping[_KeyT, _ValT]:
+        to_data = super().to_data(**kwargs)
+        return MappingProxyType({key: val.to_data(**kwargs) for key, val in to_data.items()})
 
 
 # TypeAliases

@@ -1,7 +1,7 @@
 """Helper models for data tests."""
 
 from math import floor
-from typing import Generic, Literal, Optional, TypeAlias
+from typing import Any, Generic, Literal, Optional, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -17,7 +17,7 @@ ChildrenT = TypeVar('ChildrenT', bound=list)
 
 
 class MyFloatObjModel(Model[MyFloatObject]):
-    def to_data(self) -> float:
+    def to_data(self, **kwargs: Any) -> float:
         return self.content.int_part + self.content.float_part
 
     def from_data(self, data: float):

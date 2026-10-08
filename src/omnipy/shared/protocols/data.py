@@ -152,11 +152,13 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         """
         ...
 
-    def to_data(self) -> dict[str, Any]:
+    def to_data(self, **kwargs: Any) -> dict[str, Any]:
         """Convert the dataset to plain Python data.
 
         Returns:
             dict[str, Any]: Plain-data representation keyed by dataset entry name.
+            kwargs: Additional keyword arguments passed to the Pydantic
+                ``BaseModel.dict()`` method for each entry.
         """
         ...
 
@@ -171,11 +173,13 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         """
         ...
 
-    def to_json(self, pretty=True) -> dict[str, str]:
+    def to_json(self, pretty=True, **kwargs: Any) -> dict[str, str]:
         """Serialize the dataset to JSON strings.
 
         Args:
             pretty: Whether to format the JSON output for readability.
+            kwargs: Additional keyword arguments passed to the Pydantic
+                ``BaseModel.json()`` method for each entry.
 
         Returns:
             dict[str, str]: JSON representation for each dataset entry.
