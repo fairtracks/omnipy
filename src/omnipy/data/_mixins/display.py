@@ -3043,12 +3043,16 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         frame: Frame | None = None,
         **config_kwargs,
     ) -> DraftPanel:
+        from omnipy.components.general.models import AllChainTypes
         from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
                                                      JsonMaxLevel1ColumnWiseTableWithColNamesModel,
                                                      PrintableTable)
 
         config = self._update_config_with_overflow_modes(config, 'text', **config_kwargs)
         content = model
+
+        if isinstance(model, AllChainTypes):
+            model = model.content
 
         if isinstance(model, PrintableTable):
             try:

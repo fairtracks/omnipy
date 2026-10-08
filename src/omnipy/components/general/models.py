@@ -9,6 +9,7 @@ from typing_extensions import override, TypeVar
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, TypeVarStore4
 from omnipy.data.model import Model
+from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import (all_type_variants,
@@ -641,6 +642,9 @@ else:
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
         ...
+
+
+AllChainTypes: tuple[type[IsModel], ...] = (Chain2, Chain3, Chain4, Chain5, Chain6)
 
 
 class GroupByTypeModel(Chain2[Model[list], Model[dict[type | GenericAlias, list]]]):
