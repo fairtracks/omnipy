@@ -16,6 +16,7 @@ import os
 import tarfile
 from textwrap import dedent
 from typing import Any, Callable, cast, Generic, Iterator, overload
+from zipfile import ZipFile
 
 from typing_extensions import override, Self, TypeIs, TypeVar
 
@@ -1831,6 +1832,11 @@ class Dataset(
             AssertionError: If the provided path does not exist.
         """
         assert os.path.exists(path), f'No file or directory at {path}'
+
+        if path.endswith('.zip'):
+            with ZipFile(path, 'r') as zip_ref:
+                path = path[:-4]
+                zip_ref.extractall(path)
 
         if not path.endswith('.tar.gz'):
             tar_gz_file_path = path + '.tar.gz'
