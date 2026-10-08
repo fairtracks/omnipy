@@ -624,7 +624,8 @@ def test_pydantic_record_model_extra_fields_config() -> None:
 class TableCase:
     model: type[Model]
     data: Any
-    assert_func: Callable
+    assert_func: Callable[[Any, Any], None]
+    expected: Any
 
 
 @pc.fixture
@@ -646,6 +647,7 @@ def CsvRowWiseRecordsTableModel() -> type[CsvTableOfPydanticRecordsModel]:
     class NameRecord(pyd.BaseModel):
         firstname: str
         lastname: str
+        comment: str | None
 
     class CsvTableOfNameRecordsModel(CsvTableOfPydanticRecordsModel[NameRecord]):
         pass
@@ -668,7 +670,7 @@ def RowWiseRecordsTableOptionalLastModel() -> type[TableOfPydanticRecordsModel]:
 
 
 @pc.fixture
-def rowwise_data() -> Any:
+def rowwise_data() -> list[dict[str, str]]:
     return [
         {
             'firstname': 'John', 'lastname': 'Doe'
@@ -680,7 +682,19 @@ def rowwise_data() -> Any:
 
 
 @pc.fixture
-def rowwise_data_optional_last() -> Any:
+def rowwise_data_complex() -> list[dict[str, str]]:
+    return [
+        {
+            'firstname': 'John', 'lastname': 'Doe', 'comment': 'With\nnewlines\r\n'
+        },
+        {
+            'firstname': 'Jane', 'lastname': 'Doe', 'comment': 'With "quotes"'
+        },
+    ]
+
+
+@pc.fixture
+def rowwise_data_optional_last() -> list[dict[str, str | None | int]]:
     return [
         {
             'firstname': 'John', 'lastname': 'Doe', 'age': None
@@ -692,11 +706,9 @@ def rowwise_data_optional_last() -> Any:
 
 
 @pc.fixture
-def rowwise_records_assert(
-    rowwise_data: Annotated[Any,
-                            pc.fixture]) -> Callable[[RowWiseTableFirstRowAsColNamesModel], None]:
+def rowwise_records_assert_func() -> Callable[[RowWiseTableFirstRowAsColNamesModel, object], None]:
     """Return an assertion helper for plain row-wise record tables."""
-    def _assert_func(table: RowWiseTableFirstRowAsColNamesModel) -> None:
+    def _assert_func(table: RowWiseTableFirstRowAsColNamesModel, expected: object) -> None:
         assert len(table) == 2
 
         for row in table:
@@ -705,137 +717,239 @@ def rowwise_records_assert(
             else:
                 assert isinstance(row, dict)
 
-        assert table.to_data() == rowwise_data
+        assert table.to_data(exclude_none=True) == expected
 
     return _assert_func
 
 
 @pc.fixture
-def rowwise_pyd_records_assert(
-        rowwise_data: Annotated[Any, pc.fixture]) -> Callable[[TableOfPydanticRecordsModel], None]:
-    def _assert_func(table: TableOfPydanticRecordsModel) -> None:
+def rowwise_pyd_records_assert_func() -> Callable[[TableOfPydanticRecordsModel, object], None]:
+    def _assert_func(table: TableOfPydanticRecordsModel, expected: object) -> None:
         assert len(table) == 2
         assert isinstance(table[0], PydanticRecordModel)
         assert isinstance(table[1], PydanticRecordModel)
 
-        assert table.to_data() == rowwise_data
+        assert table.to_data(exclude_none=True) == expected
 
     return _assert_func
 
 
 @pc.fixture
-def rowwise_pyd_records_optional_last_assert(
-    rowwise_data_optional_last: Annotated[Any, pc.fixture]
-) -> Callable[[TableOfPydanticRecordsModel], None]:
+def rowwise_pyd_records_optional_last_assert_func(
+) -> Callable[[TableOfPydanticRecordsModel, object], None]:
     """Return an assertion helper for optional-age record tables."""
-    def _assert_func(table: TableOfPydanticRecordsModel) -> None:
+    def _assert_func(table: TableOfPydanticRecordsModel, expected: object) -> None:
         assert len(table) == 2
         assert isinstance(table[0], PydanticRecordModel)
         assert isinstance(table[1], PydanticRecordModel)
 
-        assert table.to_data() == rowwise_data_optional_last
+        assert table.to_data() == expected
 
     return _assert_func
 
 
 @pc.case(id='rowwise_from_tsv', tags=['tables'])
 def case_rowwise_from_tsv(
-    rowwise_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
-                                      pytest.fixture],
+    rowwise_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a TSV case for plain row-wise table parsing."""
     return TableCase(
         model=TsvTableModel,
         data='firstname\tlastname\nJohn\tDoe\nJane\tDoe\n',
-        assert_func=rowwise_records_assert,
+        assert_func=rowwise_records_assert_func,
+        expected=rowwise_data,
     )
 
 
 @pc.case(id='rowwise_from_csv', tags=['tables'])
 def case_rowwise_from_csv(
-    rowwise_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
-                                      pytest.fixture],
+    rowwise_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a CSV case for plain row-wise table parsing."""
     return TableCase(
         model=CsvTableModel,
         data='firstname,lastname\nJohn,Doe\nJane,Doe\n',
-        assert_func=rowwise_records_assert,
+        assert_func=rowwise_records_assert_func,
+        expected=rowwise_data,
+    )
+
+
+@pc.case(id='rowwise_from_csv_complex', tags=['tables'])
+def case_rowwise_from_csv_complex(
+    rowwise_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data_complex: Annotated[list[dict[str, str]], pytest.fixture],
+) -> TableCase:
+    """Return a CSV case with quotes for plain row-wise table parsing."""
+    return TableCase(
+        model=CsvTableModel,
+        data=('firstname,lastname,comment\nJohn,Doe,"With\nnewlines\r\n'
+              '"\nJane,Doe,"With \"\"quotes\"\""\n'),
+        assert_func=rowwise_records_assert_func,
+        expected=rowwise_data_complex,
+    )
+
+
+@pc.case(id='rowwise_from_csv_complex_crlf', tags=['tables'])
+def case_rowwise_from_csv_complex_crlf(
+    rowwise_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data_complex: Annotated[Any, pytest.fixture],
+) -> TableCase:
+    """Return a CSV case for plain row-wise table parsing."""
+    return TableCase(
+        model=CsvTableModel,
+        data=('firstname,lastname,comment\r\nJohn,Doe,"With\nnewlines\r\n'
+              '"\r\nJane,Doe,"With \"\"quotes\"\""'),
+        assert_func=rowwise_records_assert_func,
+        expected=rowwise_data_complex,
     )
 
 
 @pc.case(id='rowwise_pyd_from_records', tags=['tables'])
 def case_rowwise_pyd_from_records(
     RowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
+    rowwise_pyd_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
     rowwise_data: Annotated[Any, pytest.fixture],
-    rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
-                                          pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from row-wise dictionaries."""
     return TableCase(
         model=RowWiseRecordsTableModel,
         data=rowwise_data,
-        assert_func=rowwise_pyd_records_assert,
+        assert_func=rowwise_pyd_records_assert_func,
+        expected=rowwise_data,
     )
 
 
 @pc.case(id='rowwise_pyd_from_list_of_lists_table', tags=['tables'])
 def case_rowwise_pyd_from_list_of_lists_table(
     RowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
-                                          pytest.fixture],
+    rowwise_pyd_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from row-wise lists."""
     return TableCase(
         model=RowWiseRecordsTableModel,
         data=[['John', 'Doe'], ['Jane', 'Doe']],
-        assert_func=rowwise_pyd_records_assert)
+        assert_func=rowwise_pyd_records_assert_func,
+        expected=rowwise_data,
+    )
 
 
 @pc.case(id='rowwise_pyd_from_tsv', tags=['tables'])
 def case_rowwise_pyd_from_tsv(
     RowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
-                                          pytest.fixture],
+    rowwise_pyd_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from TSV text."""
     return TableCase(
         model=RowWiseRecordsTableModel,
         data='John\tDoe\nJane\tDoe\n',
-        assert_func=rowwise_pyd_records_assert)
+        assert_func=rowwise_pyd_records_assert_func,
+        expected=rowwise_data,
+    )
 
 
-@pc.case(id='csv_rowwise_pyd_from_tsv', tags=['tables'])
+@pc.case(id='rowwise_pyd_from_csv', tags=['tables'])
 def case_rowwise_pyd_from_csv(
     CsvRowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    rowwise_pyd_records_assert: Annotated[Callable[[TableOfPydanticRecordsModel], None],
-                                          pytest.fixture],
+    rowwise_pyd_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from CSV text."""
     return TableCase(
         model=CsvRowWiseRecordsTableModel,
         data='John,Doe\nJane,Doe\n',
-        assert_func=rowwise_pyd_records_assert)
+        assert_func=rowwise_pyd_records_assert_func,
+        expected=rowwise_data,
+    )
+
+
+@pc.case(id='rowwise_pyd_from_csv_complex', tags=['tables'])
+def case_rowwise_pyd_from_csv_complex(
+    CsvRowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
+    rowwise_pyd_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data_complex: Annotated[list[dict[str, str]], pytest.fixture],
+) -> TableCase:
+    """Return a pydantic-record case from CSV text."""
+    return TableCase(
+        model=CsvRowWiseRecordsTableModel,
+        data=('John,Doe,"With\nnewlines\r\n'
+              '"\nJane,Doe,"With \"\"quotes\"\""\n'),
+        assert_func=rowwise_pyd_records_assert_func,
+        expected=rowwise_data_complex,
+    )
+
+
+@pc.case(id='rowwise_pyd_from_csv_complex_crlf', tags=['tables'])
+def case_rowwise_pyd_from_csv_complex_crlf(
+    CsvRowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
+    rowwise_pyd_records_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data_complex: Annotated[list[dict[str, str]], pytest.fixture],
+) -> TableCase:
+    """Return a pydantic-record case from CSV text."""
+    return TableCase(
+        model=CsvRowWiseRecordsTableModel,
+        data=('John,Doe,"With\nnewlines\r\n'
+              '"\r\nJane,Doe,"With \"\"quotes\"\""'),
+        assert_func=rowwise_pyd_records_assert_func,
+        expected=rowwise_data_complex,
+    )
 
 
 @pc.case(id='rowwise_pyd_from_tsv_optional_field_last', tags=['tables'])
 def case_rowwise_pyd_from_tsv_optional_last(
     RowWiseRecordsTableOptionalLastModel: Annotated[type[TableOfPydanticRecordsModel],
                                                     pytest.fixture],
-    rowwise_pyd_records_optional_last_assert: Annotated[Callable[[TableOfPydanticRecordsModel],
-                                                                 None],
-                                                        pytest.fixture],
+    rowwise_pyd_records_optional_last_assert_func: Annotated[
+        Callable[[TableOfPydanticRecordsModel, object], None],
+        pytest.fixture,
+    ],
+    rowwise_data_optional_last: Annotated[list[dict[str, str | None | int]], pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case with an optional trailing field."""
     return TableCase(
         model=RowWiseRecordsTableOptionalLastModel,
         data='John\tDoe\nJane\tDoe\t37',
-        assert_func=rowwise_pyd_records_optional_last_assert)
+        assert_func=rowwise_pyd_records_optional_last_assert_func,
+        expected=rowwise_data_optional_last,
+    )
 
 
 @pc.parametrize_with_cases('case', cases='.', has_tag='tables')
 def test_table_of_tables_model(case: TableCase) -> None:
-    case.assert_func(case.model(case.data))
+    case.assert_func(case.model(case.data), case.expected)
 
 
 def test_fail_table_of_records_model_with_optional_field_not_last() -> None:

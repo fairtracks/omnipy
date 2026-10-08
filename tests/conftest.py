@@ -295,13 +295,6 @@ def pytest_collection_modifyitems(items):
 
 
 @pc.fixture(scope='function')
-def mock_windows_linesep() -> Iterator[None]:
-    """Patch os.linesep to Windows line endings."""
-    with mock.patch('os.linesep', new='\r\n'):
-        yield
-
-
-@pc.fixture(scope='function')
 def mock_unix_mac_linesep() -> Iterator[None]:
     """Patch os.linesep to Unix-style line endings."""
     with mock.patch('os.linesep', new='\n'):
@@ -309,10 +302,24 @@ def mock_unix_mac_linesep() -> Iterator[None]:
 
 
 @pc.fixture(scope='function')
+def mock_windows_linesep() -> Iterator[None]:
+    """Patch os.linesep to Windows line endings."""
+    with mock.patch('os.linesep', new='\r\n'):
+        yield
+
+
+@pc.fixture(scope='function')
+def mock_old_mac_linesep() -> Iterator[None]:
+    """Patch os.linesep to Windows line endings."""
+    with mock.patch('os.linesep', new='\r'):
+        yield
+
+
+@pc.fixture(scope='function')
 @pc.parametrize(
     'linesep_variant',
-    [mock_unix_mac_linesep, mock_windows_linesep],
-    ids=['unix_mac_linesep', 'windows_linesep'],
+    [mock_unix_mac_linesep, mock_windows_linesep, mock_old_mac_linesep],
+    ids=['unix_mac_linesep', 'windows_linesep', 'old_mac_linesep'],
 )
 def mock_linesep_variants(linesep_variant: Annotated[Iterator[None], pc.fixture]) -> Iterator[None]:
     """Parametrize tests across supported line separator variants."""

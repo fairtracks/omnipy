@@ -4,6 +4,7 @@ from abc import abstractmethod
 from collections import defaultdict
 from collections.abc import Generator, Iterator, Mapping
 from copy import copy
+import csv
 import functools
 from typing import Callable, cast, Generic, get_args, overload, Protocol, Sized, TypeAlias
 
@@ -34,9 +35,7 @@ import omnipy.util.pydantic as pyd
 
 from ..general.models import Chain3
 from ..json.typedefs import JsonDictOfScalars, JsonListOfScalars, JsonScalar
-from ..raw.models import (SplitLinesToColumnsByCommaModel,
-                          SplitLinesToColumnsModel,
-                          SplitToLinesModel)
+from ..raw.models import SplitLinesToColumnsModel, SplitToLinesModel, SplitToLinesNoStripModel
 
 if TYPE_CHECKING:
     from omnipy.data._typing.mimic_models import PlainModel
@@ -536,12 +535,12 @@ class _ColumnWiseTableWithColNamesModel(
         column_model_cls = cls._get_column_model_cls()
 
         if isinstance(data, RowWiseTableWithColNamesNoConvertModel):
-            row_wise_data = cast(list[dict[str, JsonScalar]], data)
+            row_wise_data = cast(list[dict[str, _ColModelItemT]], data)
             # Convert row-wise to column-wise
             column_wise_data: defaultdict[str, _ColModelT] = defaultdict(column_model_cls)
             column_wise_list_data: defaultdict[str, list[_ColModelItemT]] = defaultdict(list)
 
-            row: dict[str, JsonScalar]
+            row: dict[str, _ColModelItemT]
             for i, row in enumerate(row_wise_data):
                 for col_name, value in row.items():
                     if col_name not in column_wise_data:
@@ -1054,6 +1053,36 @@ else:
 
 if TYPE_CHECKING:
 
+    class CsvReaderFromLinesModel(
+            PlainModel[list[list[str]]],
+            IsListOfListsContent[list[str], str],
+    ):
+        """CSV Reader that takes lines of text and splits them into columns.
+
+        Lines must be split by universal newlines and not stripped of
+        whitespace.
+        """
+
+        ...
+
+else:
+
+    class CsvReaderFromLinesModel(Model[list[list[str]] | SplitToLinesNoStripModel]):
+        """CSV Reader that takes lines of text and splits them into columns.
+
+        Lines must be split by universal newlines and not stripped of
+        whitespace.
+        """
+        @classmethod
+        def _parse_data(cls, data: list[list[str]] | SplitToLinesNoStripModel) -> list[list[str]]:
+            if isinstance(data, list) and (len(data) == 0 or isinstance(data[0], list)):
+                return data
+
+            return [row for row in csv.reader(data)]
+
+
+if TYPE_CHECKING:
+
     class CsvTableOfPydanticRecordsModel(
             PlainModel[list[PydanticRecordModel[_PydRecordT]]],
             IsListContent[PydanticRecordModel[_PydRecordT]],
@@ -1069,8 +1098,8 @@ if TYPE_CHECKING:
 else:
 
     class CsvTableOfPydanticRecordsModel(
-            Chain3[SplitToLinesModel,
-                   SplitLinesToColumnsByCommaModel,
+            Chain3[SplitToLinesNoStripModel,
+                   CsvReaderFromLinesModel,
                    Model[list[PydanticRecordModel[_PydRecordT]]]],
             PrintableTable,
             Generic[_PydRecordT],
@@ -1133,8 +1162,8 @@ else:
 
     class CsvTableModel(
             Chain3[
-                SplitToLinesModel,
-                SplitLinesToColumnsByCommaModel,
+                SplitToLinesNoStripModel,
+                CsvReaderFromLinesModel,
                 RowWiseTableFirstRowAsColNamesModel,
             ],
             PrintableTable,

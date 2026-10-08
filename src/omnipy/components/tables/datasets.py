@@ -7,6 +7,7 @@ import omnipy.util.pydantic as pyd
 
 from .models import (ColumnWiseTableWithColNamesAndIndexModel,
                      CsvTableModel,
+                     CsvTableOfPydanticRecordsModel,
                      JsonScalarColumnWiseTableWithColNamesModel,
                      RowWiseTableFirstRowAsColNamesModel,
                      RowWiseTableModel,
@@ -75,6 +76,16 @@ class TableOfPydanticRecordsDataset(Dataset[TableOfPydanticRecordsModel[_Pydanti
 
     Each entry contains a :class:`TableOfPydanticRecordsModel` parameterized by the
     target Pydantic record schema.
+    """
+    ...
+
+
+class CsvTableOfPydanticRecordsDataset(Dataset[CsvTableOfPydanticRecordsModel[_PydanticModelT]],
+                                       Generic[_PydanticModelT]):
+    """Store tables parsed from CSV text into Pydantic-validated records.
+
+    The dataset applies CSV column splitting and validates each parsed row
+    in each entry against the configured Pydantic record schema.
     """
     ...
 
