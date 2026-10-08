@@ -141,7 +141,8 @@ def test_evaluate_any_forward_refs_if_possible() -> None:
     ) == Union[list[MyLocalClass], tuple[MyLocalClass]]
 
     assert evaluate_any_forward_refs_if_possible(
-        list[ForwardRef('MyLocalClass')] | tuple[ForwardRef('MyLocalClass')],  # type: ignore[misc]
+        (list[ForwardRef('MyLocalClass')]
+         | tuple[ForwardRef('MyLocalClass')]),  # type: ignore[misc]
         MyLocalClass=MyLocalClass,
     ) == list[MyLocalClass] | tuple[MyLocalClass]
 

@@ -493,7 +493,8 @@ class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel 
     @classmethod
     def _parse_data(  # type: ignore[override]
         cls,
-        data: ResponseContentPydModel | StrictBytesModel | StrictStrModel | AnyJsonListOrDictModel
+        data: (ResponseContentPydModel | StrictBytesModel | StrictStrModel
+               | AnyJsonListOrDictModel)
     ) -> StrictBytesModel | StrictStrModel | AnyJsonListOrDictModel:
         """Choose response model type from MIME type and payload.
 

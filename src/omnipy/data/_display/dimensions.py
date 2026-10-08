@@ -49,7 +49,8 @@ DimensionsWithHeight = Dimensions[pyd.NonNegativeInt | None, pyd.NonNegativeInt]
 DimensionsWithWidthAndHeight = Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]
 DimensionsWithWidthOrHeight = DimensionsWithWidth | DimensionsWithHeight
 AnyDimensions = (
-    GeneralDimensions | DimensionsWithWidth | DimensionsWithHeight | DimensionsWithWidthAndHeight)
+    GeneralDimensions | DimensionsWithWidth | DimensionsWithHeight
+    | DimensionsWithWidthAndHeight)
 
 
 def has_width(dims: AnyDimensions) -> TypeIs[DimensionsWithWidth | DimensionsWithWidthAndHeight]:

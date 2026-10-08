@@ -333,7 +333,8 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
     def __setitem__(
         self,
         selector: str | int | slice | Iterable[str | int],
-        data_obj: _ModelOrDatasetT | Mapping[str, _ModelOrDatasetT] | Iterable[_ModelOrDatasetT],
+        data_obj: (_ModelOrDatasetT | Mapping[str, _ModelOrDatasetT]
+                   | Iterable[_ModelOrDatasetT]),
     ) -> None:
         ...
 
