@@ -8,10 +8,10 @@ from typing import AsyncGenerator, cast
 from typing_extensions import TypeVar
 
 from omnipy.compute.task import TaskTemplate
-from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.enums.data import BackoffStrategy
 from omnipy.shared.exceptions import ShouldNotOccurException
+from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.typing import TYPE_CHECKING
 
 from ..json.datasets import JsonDataset, JsonListOfDictsDataset
@@ -25,7 +25,7 @@ from .models import AutoResponseContentModel, HttpUrlModel, ResponseContentPydMo
 if TYPE_CHECKING:
     from .lazy_import import ClientResponse, ClientSession, RetryClient
 
-_JsonDatasetT = TypeVar('_JsonDatasetT', bound=Dataset)
+_JsonDatasetT = TypeVar('_JsonDatasetT', bound=IsDataset)
 
 
 async def _call_get(url: HttpUrlModel,
@@ -293,7 +293,7 @@ def load_urls_into_new_dataset(
         >>> # isinstance(loaded, JsonDataset)
         >>> True
     """
-    return dataset_cls.load(urls, as_mime_type=as_mime_type)
+    return dataset_cls.load(urls, as_mime_type=as_mime_type)  # type: ignore[return-value]
 
 
 @TaskTemplate()
@@ -322,7 +322,7 @@ async def async_load_urls_into_new_dataset(
         >>> # isinstance(loaded, JsonDataset)
         >>> True
     """
-    return await dataset_cls.load(urls, as_mime_type=as_mime_type)
+    return await dataset_cls.load(urls, as_mime_type=as_mime_type)  # type: ignore[misc]
 
 
 @dataclass
