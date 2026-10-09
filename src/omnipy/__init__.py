@@ -5,6 +5,8 @@ __version__ = '0.23.1'
 import os
 from typing import TYPE_CHECKING
 
+from omnipy.components.files.datasets import GeneralFileDataset
+from omnipy.components.files.models import ZipFileModel
 from omnipy.components.general.models import (Chain2,
                                               Chain3,
                                               Chain4,
@@ -356,6 +358,8 @@ __all__ = [
     'is_model_subclass',
     'is_non_omnipy_pydantic_model_instance',
     'is_pure_pydantic_model_instance',
+    'GeneralFileDataset',
+    'ZipFileModel',
     'FlattenedIsaJsonDataset',
     'FlattenedIsaJsonModel',
     'IsaJsonModel',
