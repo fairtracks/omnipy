@@ -8,6 +8,7 @@ dataset instances and subclasses in a lenient way that works with the library's 
 import asyncio
 from collections import defaultdict, UserDict
 from collections.abc import Iterable, Mapping, MutableMapping
+from contextlib import suppress
 from copy import copy
 import functools
 import inspect
@@ -40,7 +41,8 @@ from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util._placeholder import F
 from omnipy.util.decorators import call_super_if_available
-from omnipy.util.helpers import (evaluate_any_forward_refs_if_possible,
+from omnipy.util.helpers import (contains_typevar,
+                                 evaluate_any_forward_refs_if_possible,
                                  get_calling_module_name,
                                  get_default_if_typevar,
                                  get_event_loop_and_check_if_loop_is_running,
@@ -208,11 +210,27 @@ class Dataset(
                     cls._raise_type_exception(f'Invalid model: {orig_params} ')
         else:
             if isinstance(orig_params, TypeVar):
-                _params = get_default_if_typevar(orig_params)
+                # A TypeVar without default is left as is (the dataset stays generic), e.g. for
+                # recursive references to the dataset class itself
+                with suppress(TypeError):
+                    _params = get_default_if_typevar(orig_params)
+
+        # String forward references must be resolvable in the module where they were written
+        # (and not in the module of Dataset), e.g. for recursive datasets
+        calling_module = None
+        if cls == Dataset and any(
+                isinstance(variant, str) for variant in split_to_union_variants(orig_params)):
+            calling_module = get_calling_module_name()
 
         created_dataset = super().__class_getitem__(_params)
+        if created_dataset is cls:
+            # Pydantic returns the class itself if the parameters are identical to its own
+            # type variables. Nothing to update in that case.
+            return cast(Self, cls)
         cls._recursively_set_allow_none(created_dataset._get_data_field())
         cleanup_name_qualname_and_module(cls, created_dataset, orig_params)
+        if calling_module is not None:
+            created_dataset.__module__ = calling_module
 
         return cast(Self, created_dataset)
 
@@ -277,7 +295,7 @@ class Dataset(
                 kwargs = {}
 
         _type = self.get_type()
-        if _type == _ModelOrDatasetT:  # type: ignore[misc]
+        if _type == _ModelOrDatasetT or contains_typevar(_type):  # type: ignore[misc]
             self._raise_type_exception()
 
         def _validate_any_models_or_datasets(

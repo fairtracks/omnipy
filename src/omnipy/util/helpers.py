@@ -42,7 +42,7 @@ from typing import (_SpecialForm,
                     Union)
 
 from cachebox import cached, LRUCache
-from typing_extensions import TypeVar
+from typing_extensions import NoDefault, TypeVar
 
 from omnipy.shared.protocols.util import IsDataclass
 from omnipy.shared.typedefs import LocaleType, TypeForm
@@ -393,14 +393,28 @@ def get_default_if_typevar(typ_: type[_ObjT] | TypeForm | TypeVar) -> type[_ObjT
         TypeError: If ``typ_`` is a ``TypeVar`` without a default.
     """
     if isinstance(typ_, TypeVar):
-        if hasattr(typ_, '__default__'):
-            return typ_.__default__
+        default = getattr(typ_, '__default__', NoDefault)
+        if default is not NoDefault:
+            return default
         else:
             raise TypeError(f'The TypeVar "{typ_.__name__}" needs to specify a default value. '
                             f'This requires Python 3.13, but is supported in earlier versions '
                             f'of Python by importing TypeVar from the library '
                             f'"typing-extensions".')
     return typ_
+
+
+def contains_typevar(typ_: object) -> bool:
+    """Return whether a type form is, or contains, a ``TypeVar``.
+
+    Args:
+        typ_: Concrete type or type form (e.g. a union or generic alias).
+
+    Returns:
+        ``True`` if ``typ_`` is a ``TypeVar`` or has a ``TypeVar`` among its (nested) type
+        arguments, otherwise ``False``.
+    """
+    return isinstance(typ_, TypeVar) or any(contains_typevar(arg) for arg in get_args(typ_))
 
 
 def all_type_variants(
