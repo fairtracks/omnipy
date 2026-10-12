@@ -39,6 +39,7 @@ else:
     import pydantic.typing as pyd_typing
     import pydantic.utils as pyd_utils
 
+AnyUrl = pyd.AnyUrl
 BaseConfig = pyd.BaseConfig
 BaseModel = pyd.BaseModel
 ConfigDict = pyd.ConfigDict
@@ -114,6 +115,7 @@ def pydantic_v1_hack():
 pydantic_v1_hack()
 
 __all__ = [
+    'AnyUrl',
     'BaseConfig',
     'BaseModel',
     'ConfigDict',
