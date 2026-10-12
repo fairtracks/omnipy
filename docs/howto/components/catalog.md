@@ -61,7 +61,7 @@ pipeline data structures.
 >>> import omnipy as om
 >>> NotIterableExceptStrOrBytesModel = om.NotIterableExceptStrOrBytesModel
 >>> JsonListOfDictsModel = om.JsonListOfDictsModel
->>> NestedDataset = om.NestedDataset
+>>> StructuredNestedDataset = om.StructuredNestedDataset
 >>> SplitToLinesModel = om.SplitToLinesModel
 >>> HttpUrlModel = om.HttpUrlModel
 >>> TsvTableModel = om.TsvTableModel
@@ -69,7 +69,7 @@ pipeline data structures.
 'abc'
 >>> JsonListOfDictsModel([{'id': 's1'}])
 [{'id': 's1'}]
->>> NestedDataset({'group': {'value': 1}}).json()
+>>> StructuredNestedDataset({'group': {'value': 1}}).json()
 {'group': {'value': 1}}
 >>> SplitToLinesModel('a\nb')
 ['a', 'b']

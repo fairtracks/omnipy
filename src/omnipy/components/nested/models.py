@@ -9,16 +9,21 @@ from omnipy.shared.typing import TYPE_CHECKING
 from ..general.models import Chain2
 
 if TYPE_CHECKING:
-    from .datasets import NestedDataset  # noqa: F401
+    from .datasets import StructuredNestedDataset  # noqa: F401
 
 DatasetT = TypeVar('DatasetT')
 
 
 class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
-    """Store an ordered list of index/value tuples with strict sequence checks.
+    """A Model for explicit list positions.
 
-    The model asserts that tuple indices are contiguous and start at zero,
-    preserving explicit positional semantics for nested list conversion.
+    Its data consists of ordered ``(index, value)`` pairs. The indices must
+    form the contiguous sequence ``0, 1, ...``; validation rejects gaps,
+    reordering, and a non-zero first index.
+
+    This Model marks list data whose positions have already been made explicit.
+    ``EnumeratedListModel`` uses it as the canonical form before list positions
+    become names for Dataset items.
     """
     @classmethod
     def _parse_data(cls, data: list[tuple[int, object]]) -> list[tuple[int, object]]:
@@ -31,10 +36,15 @@ class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
 
 class EnumeratedListModel(Model[EnumeratedListOfTuplesModel | list[object]
                                 | list[dict[str, object]]]):
-    """Convert plain lists into explicitly enumerated index/value tuples.
+    """A Model for list data before it becomes named Dataset items.
 
-    Incoming list-like structures are normalized to
-    :class:`EnumeratedListOfTuplesModel` using ``enumerate``.
+    Ordinary list input is given explicit zero-based positions in an
+    ``EnumeratedListOfTuplesModel``. Input that is already an
+    ``EnumeratedListOfTuplesModel`` is retained as such.
+
+    An explicit-position Model distinguishes an ordinary list whose values
+    happen to be tuples from list data that is already prepared for
+    interpretation as Dataset items.
     """
     @classmethod
     def _parse_data(
@@ -46,28 +56,39 @@ class EnumeratedListModel(Model[EnumeratedListOfTuplesModel | list[object]
             return data
 
 
-class _ListAsNestedDatasetModel(Chain2[EnumeratedListModel, 'NestedDataset']):
+class _ListAsStructuredNestedDatasetModel(Chain2[EnumeratedListModel, 'StructuredNestedDataset']):
     ...
 
 
 if TYPE_CHECKING:
     from ..json.models import JsonScalarModel  # noqa: F401
 
-    class ListAsNestedDatasetModel(Model[Dataset['NestedDataset | JsonScalarModel']]):
-        """Represent list-like input as a nested dataset structure.
+    class ListAsStructuredNestedDatasetModel(
+            Model[Dataset['StructuredNestedDataset | JsonScalarModel']]):
+        """A Model representing a list as a position-keyed StructuredNestedDataset.
 
-        The model acts as a typed bridge between list representations and recursive
-        nested dataset forms used throughout nested components.
+        List positions become the names of Dataset items: ``['a', {'b': 1}]`` is
+        represented as ``{'0': 'a', '1': {'b': 1}}``. The values of those items are
+        then interpreted recursively by ``StructuredNestedDataset`` according to
+        ``NestedUnion``.
+
+        This lets list values participate in the same bottom-up structuring of
+        hierarchical data as mappings, tables, records, and scalar values.
         """
 
         ...
 else:
 
-    class ListAsNestedDatasetModel(_ListAsNestedDatasetModel):
-        """Represent list-like input as a nested dataset structure.
+    class ListAsStructuredNestedDatasetModel(_ListAsStructuredNestedDatasetModel):
+        """A Model representing a list as a position-keyed StructuredNestedDataset.
 
-        The model acts as a typed bridge between list representations and recursive
-        nested dataset forms used throughout nested components.
+        List positions become the names of Dataset items: ``['a', {'b': 1}]`` is
+        represented as ``{'0': 'a', '1': {'b': 1}}``. The values of those items are
+        then interpreted recursively by ``StructuredNestedDataset`` according to
+        ``NestedUnion``.
+
+        This lets list values participate in the same bottom-up structuring of
+        hierarchical data as mappings, tables, records, and scalar values.
         """
 
         ...

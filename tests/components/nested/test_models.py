@@ -6,10 +6,10 @@ from typing import Annotated
 import pytest
 
 from omnipy.components.json.models import JsonScalarModel
-from omnipy.components.nested.datasets import NestedDataset
+from omnipy.components.nested.datasets import NestedDataset, StructuredNestedDataset
 from omnipy.components.nested.models import (EnumeratedListModel,
                                              EnumeratedListOfTuplesModel,
-                                             ListAsNestedDatasetModel)
+                                             ListAsStructuredNestedDatasetModel)
 from omnipy.data.dataset import Dataset
 from omnipy.util.pydantic import ValidationError
 
@@ -65,13 +65,23 @@ def test_enumerated_list_model() -> None:
     assert enumerated.to_data() == expected_empty
 
 
-# TODO: Type NestedDataset correctly (perhaps inspired by JsonModel?)
+def test_generic_nested_dataset_with_json_scalar_leaves() -> None:
+    """Specialize the recursive generic dataset with a concrete leaf model."""
+    json_nested_dataset_cls = NestedDataset[JsonScalarModel]
+    nested_dataset = json_nested_dataset_cls({'group': {'value': 1}})
+
+    assert nested_dataset.to_data() == {'group': {'value': 1}}
+    assert type(nested_dataset['group']) is json_nested_dataset_cls
+    assert nested_dataset['group']['value'] == JsonScalarModel(1)  # pyright: ignore
+
+
+# TODO: Type StructuredNestedDataset correctly (perhaps inspired by JsonModel?)
 
 
 def test_nested_dataset_only_dicts() -> None:
     """Treat nested dict structures as nested datasets."""
     nested_dict_data = {'id_0': {'name': 'Alice', 'age': 30}, 'id_1': {'name': 'Bob', 'age': 25}}
-    nested_dict_dataset = NestedDataset(nested_dict_data)
+    nested_dict_dataset = StructuredNestedDataset(nested_dict_data)
     assert nested_dict_dataset.to_data() == nested_dict_data
 
     assert len(nested_dict_dataset) == 2
@@ -102,7 +112,7 @@ def test_list_as_nested_dataset_model() -> None:
         }
     }
 
-    list_as_nested_dataset_model = ListAsNestedDatasetModel(list_data)
+    list_as_nested_dataset_model = ListAsStructuredNestedDatasetModel(list_data)
     assert list(list_as_nested_dataset_model['5'].keys()) == ['x', 'y']
     assert list_as_nested_dataset_model['5']['x'] == JsonScalarModel(1)
     assert list_as_nested_dataset_model.to_data() == list_data_expected_output
@@ -110,21 +120,22 @@ def test_list_as_nested_dataset_model() -> None:
     simple_nested_data = {'a': list_data}
     simple_nested_data_expected_output = {'a': list_data_expected_output}
 
-    simple_nested_dataset = NestedDataset(simple_nested_data)
+    simple_nested_dataset = StructuredNestedDataset(simple_nested_data)
     assert simple_nested_dataset.to_data() == simple_nested_data_expected_output
 
     empty_list_data: list[object] = []
 
-    empty_list_as_nested_dataset_model = ListAsNestedDatasetModel(empty_list_data)
+    empty_list_as_nested_dataset_model = ListAsStructuredNestedDatasetModel(empty_list_data)
     assert list(empty_list_as_nested_dataset_model.keys()) == []
     assert empty_list_as_nested_dataset_model.to_data() == {}
 
 
 def test_nested_dataset_forward_ref_updates_with_table_model_variants() -> None:
     NestedDataset.update_forward_refs()
+    StructuredNestedDataset.update_forward_refs()
 
 
-# Known issue: NestedDataset incompatibility with dynamic conversion of elements to models
+# Known issue: StructuredNestedDataset incompatibility with dynamic conversion of elements to models
 def test_nested_dataset_lists_and_dicts(
         skip_test_if_dynamically_convert_elements_to_models: Annotated[None,
                                                                        pytest.fixture]) -> None:
@@ -187,7 +198,7 @@ def test_nested_dataset_lists_and_dicts(
             }
         }
     }
-    nested_lists_and_dict_dataset = NestedDataset(nested_lists_and_dict_data)
+    nested_lists_and_dict_dataset = StructuredNestedDataset(nested_lists_and_dict_data)
     assert nested_lists_and_dict_dataset.to_data() == expected_lists_and_dict_output
 
     assert len(nested_lists_and_dict_dataset) == 2

@@ -107,7 +107,7 @@ from omnipy.components.json.models import (JsonCustomDictModel,
                                            JsonOnlyListsModel,
                                            JsonScalarModel)
 from omnipy.components.json.tasks import convert_dataset_string_to_json, transpose_dicts_2_lists
-from omnipy.components.nested.datasets import NestedDataset
+from omnipy.components.nested.datasets import NestedDataset, StructuredNestedDataset
 from omnipy.components.pandas.datasets import PandasDataset
 from omnipy.components.pandas.models import PandasModel
 from omnipy.components.pandas.tasks import (cartesian_product,
@@ -435,6 +435,7 @@ __all__ = [
     'JsonScalarModel',
     'PandasModel',
     'NestedDataset',
+    'StructuredNestedDataset',
     'PandasDataset',
     'BytesDataset',
     'SplitToLinesDataset',

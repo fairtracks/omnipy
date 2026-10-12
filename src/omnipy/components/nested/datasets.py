@@ -11,17 +11,17 @@ from ..json.models import JsonScalarModel
 from ..tables.models import (JsonScalarColumnModel,
                              JsonScalarColumnWiseTableWithColNamesModel,
                              RowWiseTableWithColNamesModel)
-from .models import ListAsNestedDatasetModel
+from .models import ListAsStructuredNestedDatasetModel
 
 NestedAnyUnionT = TypeVar('NestedAnyUnionT', bound='Dataset | Model')
 
 
-class GenericNestedDataset(Dataset['GenericNestedDataset[NestedAnyUnionT]| NestedAnyUnionT'],
-                           Generic[NestedAnyUnionT]):
-    """Represent recursively nested datasets with configurable leaf value type.
+class NestedDataset(Dataset['NestedDataset[NestedAnyUnionT]| NestedAnyUnionT'],
+                    Generic[NestedAnyUnionT]):
+    """A recursive Dataset with a caller-defined leaf Model or Dataset type.
 
-    Values may be nested datasets or scalar-like leaf models, depending on the
-    active generic parameter.
+    Each named data item is either another ``NestedDataset[T]`` or an instance
+    of ``T``. This preserves a uniform leaf type throughout a hierarchy.
     """
 
     # Inherited as True from the parametrized Dataset base. Must be False for pydantic to
@@ -29,22 +29,29 @@ class GenericNestedDataset(Dataset['GenericNestedDataset[NestedAnyUnionT]| Neste
     __concrete__: ClassVar[bool] = False
 
 
-GenericNestedDataset.update_forward_refs()
+NestedDataset.update_forward_refs()
 
 TableModels: TypeAlias = JsonScalarColumnWiseTableWithColNamesModel | RowWiseTableWithColNamesModel
 ColumnAndTableModels: TypeAlias = JsonScalarColumnModel | TableModels
-NestedUnion: TypeAlias = (
-    'ColumnAndTableModels | NestedDataset | JsonScalarModel | ListAsNestedDatasetModel')
+ScalarAndListModels: TypeAlias = JsonScalarModel | ListAsStructuredNestedDatasetModel
+NestedUnion: TypeAlias = 'ColumnAndTableModels | StructuredNestedDataset | ScalarAndListModels'
 
 
-class NestedDataset(Dataset[NestedUnion]):
-    """Store heterogeneously nested values across dataset, table, list, and scalar forms.
+class StructuredNestedDataset(Dataset[NestedUnion]):
+    """A Dataset that applies structure to hierarchical data.
 
-    This concrete nested dataset accepts recursive nested datasets, table models,
-    list-as-dataset models, and JSON scalar models as values.
+    Each named data item is interpreted recursively using the alternatives in
+    ``NestedUnion``, in their defined order. From the leaves upwards, values
+    are represented as tables or list-derived nested Datasets when their
+    structure permits; otherwise, JSON scalar Models provide the leaf values.
+
+    This preserves tables, records, and lists as structured data that can be
+    inspected and used for visualisation. Nested mappings become
+    ``StructuredNestedDataset`` items, allowing the same interpretation at
+    every level of the hierarchy.
     """
     ...
 
 
-NestedDataset.update_forward_refs()
-ListAsNestedDatasetModel.update_forward_refs()
+StructuredNestedDataset.update_forward_refs()
+ListAsStructuredNestedDatasetModel.update_forward_refs()
