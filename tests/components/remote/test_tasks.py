@@ -19,7 +19,8 @@ from omnipy.components.remote.tasks import (get_auto_from_api_endpoint,
                                             get_bytes_from_api_endpoint,
                                             get_json_from_api_endpoint,
                                             get_retry_client,
-                                            get_str_from_api_endpoint)
+                                            get_str_from_api_endpoint,
+                                            post_json_to_api_endpoint)
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.exceptions import FailedDataError
@@ -91,6 +92,25 @@ async def test_get_retry_client_with_second_attempt_recovers_after_initial_503(
         fails_once_then_succeeds_server_url, retry_attempts=2)
     output_any = cast(Any, output)
     assert_model_or_val(output_any['flaky']['author'], str, 'Recovered Artist')
+
+
+async def test_post_json_to_api_endpoint_sends_json_request_body_and_decodes_json_response(
+        aiohttp_server) -> None:
+    async def post_endpoint(request: web.Request) -> web.Response:
+        assert request.method == 'POST'
+        assert await request.json() == {'message': 'Hello, server!'}
+        return web.json_response({'message': 'Hello, client!'})
+
+    app = web.Application()
+    app.router.add_post('/echo', post_endpoint)
+    server = await aiohttp_server(app)
+
+    response = await cast(Any, post_json_to_api_endpoint).run(
+        HttpUrlDataset({'echo': str(server.make_url('/echo'))}),
+        cast(Any, JsonModel({'message': 'Hello, server!'})),
+    )
+
+    assert response['echo'].to_data() == {'message': 'Hello, client!'}
 
 
 @pytest.mark.parametrize(
