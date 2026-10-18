@@ -87,7 +87,7 @@ def test_url_path_model():
 
     with pytest.raises(TypeError):
         path = base_path.copy()
-        path /= 'jkl' / MyStrData('mno') / 'pqr'
+        path /= 'jkl' / MyStrData('mno') / 'pqr'  # pyright: ignore[reportOperatorIssue]
 
     path = base_path.copy()
     path += 'jkl'

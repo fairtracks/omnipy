@@ -361,6 +361,7 @@ if TYPE_CHECKING:
     class ColumnWiseTableWithColNamesAndIndexModel(
             PlainModel[dict[str, Mapping[str, JsonScalar]]],
             IsDictOfDictsContent[str, IsMapping[str, JsonScalar], str, JsonScalar],
+            PrintableTable,
     ):
         """Represent an indexed table keyed by external row identifiers.
 
