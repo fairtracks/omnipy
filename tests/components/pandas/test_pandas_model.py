@@ -6,6 +6,8 @@ import pytest
 
 from omnipy.components.json.typedefs import JsonDictOfListsOfScalars, JsonListOfDictsOfScalars
 from omnipy.components.pandas.models import PandasModel
+from omnipy.data.dataset import Dataset
+from omnipy.data.model import Model
 from omnipy.shared.typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -95,6 +97,13 @@ def test_pandas_model_init_dataframe_to_data(
         dataframe_of_list_of_dicts_data,
     )
     assert pandas_model.to_data() == dict_of_lists_data_with_nones
+
+
+def test_convert_pandas_model_to_dataset() -> None:
+    pandas_model = PandasModel(a=[1, 2, 3], b=[23, 45, 56])
+    dataset = pandas_model.to(Dataset[Model[list[int]]])
+
+    assert dataset.to_data() == pandas_model.to_data()
 
 
 def test_pandas_model_from_json_to_json():

@@ -4,7 +4,7 @@ from copy import copy, deepcopy
 import os
 from textwrap import dedent
 from types import MappingProxyType, NoneType
-from typing import Annotated, Any, Callable, Generic, List, Optional, Union
+from typing import Annotated, Any, Callable, Generic, ItemsView, List, Optional, Union
 
 import pytest
 import pytest_cases as pc
@@ -146,7 +146,7 @@ def test_init_iterables_as_input_errors_wrong_type() -> None:
         Dataset[Model[str]]([{'x': 'y', 'a': 'b'}])
 
 
-def test_init_dataset_as_input():
+def test_init_dataset_as_input() -> None:
     assert Dataset[Model[int]](Dataset[Model[float]](x=4.5, y=5.5)).to_data() == {'x': 4, 'y': 5}
 
     list_of_floats_dataset = Dataset[Model[list[float]]](x=[4.5, 2.3], y=[1.3, 4.2, 6.7])
@@ -154,12 +154,28 @@ def test_init_dataset_as_input():
     assert tuple_of_ints_dataset.to_data() == {'x': (4, 2), 'y': (1, 4, 6)}
 
 
-def test_init_models_as_input():
+def test_init_models_as_input() -> None:
     assert Dataset[Model[int]](a=Model[float](4.5), b=Model[str]('5')).to_data() == {'a': 4, 'b': 5}
 
     tuple_of_ints_dataset = Dataset[Model[tuple[int, ...]]](
         x=Model[list[float]]([4.5, 2.3]), y=Model[list[float]]([1.3, 4.2, 6.7]))
     assert tuple_of_ints_dataset.to_data() == {'x': (4, 2), 'y': (1, 4, 6)}
+
+
+def test_supports_items_as_input() -> None:
+    class IntPair:
+        def __init__(self, a: int, b: int):
+            self.a = a
+            self.b = b
+
+        def items(self) -> ItemsView[str, int]:
+            return ItemsView({
+                'a': self.a,
+                'b': self.b,
+            })
+
+    dataset = Dataset[Model[int]](IntPair(4, 5))
+    assert dataset.to_data() == {'a': 4, 'b': 5}
 
 
 def test_init_pure_pydantic_model_as_data_input() -> None:

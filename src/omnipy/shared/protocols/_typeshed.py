@@ -26,12 +26,13 @@ Type Aliases:
 
 from collections.abc import Iterable
 import sys
-from typing import Any, Protocol, SupportsFloat, SupportsIndex, SupportsInt
+from typing import Any, Protocol, SupportsFloat, SupportsIndex, SupportsInt, AbstractSet, \
+    runtime_checkable
 
 from typing_extensions import TypeAlias, TypeVar
 
 _KT = TypeVar('_KT')
-# _KT_co = TypeVar("_KT_co", covariant=True)
+_KT_co = TypeVar('_KT_co', covariant=True)
 _KT_contra = TypeVar('_KT_contra', contravariant=True)
 # _VT = TypeVar("_VT")
 _VT_co = TypeVar('_VT_co', covariant=True)
@@ -228,9 +229,10 @@ class SupportsTrunc(Protocol):
 # Mapping-like protocols
 
 # stable
-# class SupportsItems(Protocol[_KT_co, _VT_co]):
-#     def items(self) -> AbstractSet[tuple[_KT_co, _VT_co]]:
-#         ...
+@runtime_checkable
+class SupportsItems(Protocol[_KT_co, _VT_co]):
+    def items(self) -> AbstractSet[tuple[_KT_co, _VT_co]]:
+        ...
 
 
 # stable

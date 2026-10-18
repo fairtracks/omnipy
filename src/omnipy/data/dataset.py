@@ -33,6 +33,7 @@ from omnipy.data._selector import (create_updated_mapping,
 from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forward_refs,
                                  cleanup_name_qualname_and_module)
 from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
+from omnipy.shared.protocols._typeshed import SupportsItems
 from omnipy.shared.protocols.data import (IsHttpUrlDataset,
                                           IsMultiModelDataset,
                                           IsPathOrUrl,
@@ -252,9 +253,10 @@ class Dataset(
 
     def __init__(  # noqa: C901
         self,
-        value: Mapping[str, object] | Iterable[tuple[str, object]] | UndefinedType = Undefined,
+        value: SupportsItems[str, object] | Iterable[tuple[str, object]]
+        | UndefinedType = Undefined,
         *,
-        data: Mapping[str, object] | UndefinedType = Undefined,
+        data: SupportsItems[str, object] | UndefinedType = Undefined,
         **kwargs: object,
     ) -> None:
         from omnipy.data.model import is_model_instance, is_pure_pydantic_model_instance
@@ -333,17 +335,17 @@ class Dataset(
                 case _input_data if is_pure_pydantic_model_instance(_input_data):
                     super_kwargs[DATA_KEY], model_or_dataset_as_input = (
                         _validate_any_models_or_datasets(_input_data.dict().items()))
-                case Mapping():
+                case SupportsItems():
                     super_kwargs[DATA_KEY], model_or_dataset_as_input = (
-                        _validate_any_models_or_datasets(cast(Mapping, input_data).items()))
+                        _validate_any_models_or_datasets(cast(SupportsItems, input_data).items()))
                 case Iterable():
                     try:
                         super_kwargs[DATA_KEY], model_or_dataset_as_input = (
                             _validate_any_models_or_datasets(self._check_iterable(input_data)))
                     except (TypeError, ValueError) as e:
                         raise TypeError(
-                            'Data object must be a mapping or an iterable of '
-                            '(key, val) pairs',
+                            'Data object must support items() or be an '
+                            'iterable of (key, val) pairs',
                             self.__class__) from e
 
                 case _:
