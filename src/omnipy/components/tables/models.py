@@ -636,6 +636,7 @@ class ColumnWiseTableWithColNamesNoConvertModel(Model[dict[str, JsonScalarColumn
 
 
 RowWiseTableWithColNamesModel.update_forward_refs()
+ColumnWiseTableWithColNamesModel.update_forward_refs()
 
 
 class _RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]] | RowWiseTableModel]):

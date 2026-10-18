@@ -106,6 +106,13 @@ def test_columnwise_and_rowwise_table_models_with_col_names(
     assert converted_to_row_wise_model.col_names == ('a', 'b', 'c', 'd')
 
 
+def test_columnwise_table_with_col_names_model_uses_default_type_vars() -> None:
+    table = ColumnWiseTableWithColNamesModel(a=[2, 3, 4])
+
+    assert table.content == {'a': JsonScalarColumnModel([2, 3, 4])}
+    assert table.to_data() == {'a': [2, 3, 4]}
+
+
 def test_columnwise_and_rowwise_table_models_with_col_names_empty() -> None:
     row_wise_model = RowWiseTableWithColNamesModel([])
     assert row_wise_model.content == []

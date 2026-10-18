@@ -138,6 +138,29 @@ class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
             return True
         return super().__instancecheck__(instance)
 
+    def __new__(mcls, name: str, bases: tuple[type, ...], namespace: dict[str, Any], **kwargs: Any):
+        cls = super().__new__(mcls, name, bases, namespace, **kwargs)
+
+        type_params = getattr(cls, '__parameters__', ())
+        if type_params and not cls._is_root_model_class(bases):
+            # Pydantic only invokes __class_getitem__ when a generic model is
+            # explicitly parameterized. Trigger its generic setup for bare
+            # generic Model subclasses with their unresolved type parameters.
+            # Defaults and forward references must remain unresolved here;
+            # update_forward_refs() resolves them explicitly later.
+            cls[tuple(type_params)]
+
+        return cls
+
+    @classmethod
+    def _is_root_model_class(cls, bases: tuple[type, ...]) -> bool:
+        """Return whether ``bases`` identify the root :class:`Model` class.
+
+        ``Model`` is the only Omnipy model constructed without an Omnipy model in
+        its bases.
+        """
+        return not any(isinstance(base, ModelMetaclass) for base in bases)
+
 
 undefined_default_factory: Callable[[], Any] = lambda: Undefined
 
@@ -991,6 +1014,39 @@ class Model(  # type: ignore[misc]
         else:
             return super().validate(value)
 
+    # TODO: Check if Model._apply_typevar_defaults_to_root_field is still needed in Pydantic v2
+
+    @classmethod
+    def _apply_typevar_defaults_to_root_field(cls) -> None:
+        """Substitute declared TypeVar defaults into the root field.
+
+        Pydantic v1 does not apply TypeVar defaults when building a generic
+        model. This is deliberately called from ``update_forward_refs()`` so
+        default values that are forward references stay unresolved until the
+        caller provides the namespace needed to resolve them.
+        """
+        typevar_defaults = cls._get_typevar_defaults(cls.__parameters__)
+        if not typevar_defaults:
+            return
+
+        root_field = cls._get_root_field()
+        substituted_type = pyd.pyd_generics.replace_types(root_field.outer_type_, typevar_defaults)
+        root_field.type_ = substituted_type
+        root_field.outer_type_ = substituted_type
+        root_field.sub_fields = None
+        root_field.key_field = None
+        root_field.prepare()
+
+    @classmethod
+    def _get_typevar_defaults(cls, type_params: tuple[TypeVar, ...]) -> dict[TypeVar, TypeForm]:
+        defaults: dict[TypeVar, TypeForm] = {}
+        for type_param in type_params:
+            try:
+                defaults[type_param] = get_default_if_typevar(type_param)
+            except TypeError:
+                continue
+        return defaults
+
     @classmethod
     def update_forward_refs(
         cls,
@@ -1028,6 +1084,8 @@ class Model(  # type: ignore[misc]
             calling_module = get_calling_module_name()
         own_module_ns, globalns = \
             build_own_module_and_global_namespace_for_forward_refs(cls, calling_module, **localns)
+
+        cls._apply_typevar_defaults_to_root_field()
 
         prev_outer_type = cls._get_root_field().outer_type_
         prev_type = cls._get_root_field().type_

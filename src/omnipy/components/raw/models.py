@@ -7,6 +7,7 @@ from typing import Any, Callable, cast, Generic, overload, Protocol, TypeAlias
 
 from typing_extensions import TypeVar
 
+from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
 from omnipy.shared.protocols.content import (IsBytesContent,
@@ -158,6 +159,7 @@ class IsoFormatToDataMixin:
         return self_as_isodate_model.content.isoformat()
 
 
+@mimics(datetime.time)
 class TimeModel(IsoFormatToDataMixin, Model[datetime.time]):  # type: ignore[override]
     """Model representing a time value with isoformat serialization.
 
@@ -181,6 +183,7 @@ class TimeModel(IsoFormatToDataMixin, Model[datetime.time]):  # type: ignore[ove
     ...
 
 
+@mimics(datetime.timedelta)
 class TimeDeltaModel(Model[datetime.timedelta]):
     """Model representing a time duration with string serialization.
 
@@ -207,7 +210,7 @@ class TimeDeltaModel(Model[datetime.timedelta]):
         return str(self.content)
 
 
-# noinspection PyTypeChecker,PyUnresolvedReferences
+@mimics(datetime.date)
 class DateModel(IsoFormatToDataMixin, Model[datetime.date]):  # type: ignore[override]
     """Model representing a calendar date with isoformat serialization.
 
@@ -254,6 +257,7 @@ class DateModel(IsoFormatToDataMixin, Model[datetime.date]):  # type: ignore[ove
         return DateModel(self.content + other)
 
 
+@mimics(datetime.datetime)
 class DateTimeModel(IsoFormatToDataMixin, Model[datetime.datetime]):  # type: ignore[override]
     """Model representing a date and time value with isoformat serialization.
 
@@ -780,7 +784,7 @@ class JoinColumnsByCommaToLinesModel(_JoinByCommaParamsMixin, JoinSubitemsToItem
     )
 
 
-_NestedListsOfStrT = TypeVar('_NestedListsOfStrT', bound='NestedListsOfStr', default='str')
+_NestedListsOfStrT = TypeVar('_NestedListsOfStrT', bound='NestedListsOfStr')
 
 if TYPE_CHECKING:
 
@@ -829,9 +833,10 @@ ListOfNestedListsOfStrModel.update_forward_refs()
 ListOfNestedPlainListsOfStr: TypeAlias = list['NestedPlainListsOfStr']
 NestedPlainListsOfStr: TypeAlias = str | ListOfNestedPlainListsOfStr
 
-# Hack to support recursive types in Pydantic v1.10.x. Should not be needed in Pydantic v2.
-_NestedPlainListsOfStrT = TypeVar(
-    '_NestedPlainListsOfStrT', default=str | list[NestedPlainListsOfStr])
+# Binding to NestedPlainListsOfStr cause infinite recursion in Pydantic v1
+# TODO: Check if binding of TypeVars to recursive types is supported in Pydantic v2
+# _NestedPlainListsOfStrT = TypeVar('_NestedPlainListsOfStrT', bound=NestedPlainListsOfStr)
+_NestedPlainListsOfStrT = TypeVar('_NestedPlainListsOfStrT')
 
 
 class _NestedItemsParamsMixin:

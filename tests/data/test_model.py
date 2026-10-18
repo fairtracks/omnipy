@@ -109,6 +109,35 @@ def test_init_and_data() -> None:
     assert Model[dict]((('a', 2), ('b', True))).to_data() == {'a': 2, 'b': True}
 
 
+def test_generic_model_uses_default_type_vars() -> None:
+    IntT = TypeVar('IntT', default=int)
+
+    class GenericListModel(Model[list[IntT]], Generic[IntT]):
+        ...
+
+    assert GenericListModel.__parameters__ == (IntT,)
+
+    GenericListModel.update_forward_refs()
+
+    assert GenericListModel(['1']).content == [1]
+    assert GenericListModel[str]([1]).content == ['1']
+
+
+def test_generic_model_type_var_defaults_are_resolved_by_update_forward_refs() -> None:
+    TargetT = TypeVar('TargetT', default='TargetModel')
+
+    class GenericListModel(Model[list[TargetT]], Generic[TargetT]):
+        ...
+
+    class TargetModel(Model[int]):
+        ...
+
+    GenericListModel.update_forward_refs(TargetModel=TargetModel)
+
+    assert GenericListModel([1]).content == [TargetModel(1)]
+    assert GenericListModel[str]([1]).content == ['1']
+
+
 def test_init_model_as_input() -> None:
     assert Model[int](Model[float](4.5)).to_data() == 4
     assert Model[tuple[int, ...]](Model[list[float]]([4.5, 2.3])).to_data() == (4, 2)
