@@ -104,11 +104,18 @@ class MethodInfo(NamedTuple):
     returns_same_type: YesNoMaybe
 
 
-# Ordered after their order in the Python documentation
+# Mainly ordered after their order in the Python documentation
 # (https://docs.python.org/3.10/reference/datamodel.html)
 SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     # 3.3.1. Basic customization ############################################
     # '__bool__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    '__lt__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    '__le__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    # '__eq__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    # '__ne__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    '__gt__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    '__ge__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+
     # 3.3.7. Emulating container types ######################################
     '__len__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__length_hint__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
@@ -194,6 +201,8 @@ SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     # '__annotate__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     # - Hash and other standard methods -------------------------------------
     '__hash__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
+    # - Pattern matching ------------------------------------------------------
+    '__match_args__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     # - Coroutines ----------------------------------------------------------
     '__await__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     # - Asynchronous iterators ------------------------------------------------
