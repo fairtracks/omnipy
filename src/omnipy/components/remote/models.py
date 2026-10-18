@@ -1,8 +1,9 @@
 """Models for HTTP URLs, URL parts, query strings, and automatic response decoding."""
-
 from pathlib import PurePosixPath
 from typing import Any, cast, TypeGuard
 from urllib.parse import quote, unquote
+
+from typing_extensions import Self
 
 from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
@@ -290,7 +291,107 @@ class UrlDataclassModel(pyd.BaseModel):
 
 
 @mimics(UrlDataclassModel)
-class HttpUrlModel(Model[UrlDataclassModel | str]):
+class HostUrlModel(Model[UrlDataclassModel | str]):
+    """Represent a validated URL with a defined host as a structured model.
+
+    Args:
+        *args: Positional data forwarded to :class:`~omnipy.data.model.Model`.
+        **kwargs: Keyword arguments forwarded to
+            :class:`~omnipy.data.model.Model`.
+
+    Returns:
+        HostUrlModel: Model instance containing validated URL components.
+
+    Raises:
+        pyd.ValidationError: If URL parsing fails.
+
+    Examples:
+        >>> url = HostUrlModel('ftp://example.com/path?q=1')
+        >>> str(url)
+        'ftp://example.com/path?q=1'
+    """
+
+    if TYPE_CHECKING:
+
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'HostUrlModel_UrlDataclassModel':
+            ...
+
+    @classmethod
+    def _get_scheme_filter(cls) -> set[str] | None:
+        """Return the set of URL schemes allowed for this model.
+
+        Returns:
+            set[str]: Allowed URL schemes for this model.
+        """
+        return None
+
+    @classmethod
+    def _parse_data(cls, data: UrlDataclassModel | str) -> UrlDataclassModel:
+        """Parse and validate URL data into :class:`UrlDataclassModel`.
+
+        Args:
+            data: URL string or prebuilt URL dataclass model.
+
+        Returns:
+            UrlDataclassModel: Parsed URL parts with normalized decoded fields.
+
+    Raises:
+        AssertionError: If the URL scheme is unsupported.
+        pyd.ValidationError: If the URL cannot be parsed.
+        """
+        if data == '':
+            data = 'http://localhost/'
+        if data == 'https://':
+            data = 'https://localhost/'
+
+        # For validation only
+        url_obj = pyd.Url(str(data) if isinstance(data, UrlDataclassModel) else data)
+
+        parts: dict[str, str | int | None] = {}
+        for key in UrlDataclassModel.__fields__.keys():
+            match key:
+                case 'scheme':
+                    val = url_obj.scheme
+                    scheme_filter = cls._get_scheme_filter()
+                    if scheme_filter is not None:
+                        assert val in scheme_filter, f'Unsupported scheme: {val}'
+                    parts[key] = val
+                case 'host':
+                    parts[key] = url_obj.unicode_host()
+                case 'username' | 'password' | 'path' | 'fragment':
+                    val = getattr(url_obj, key)
+                    parts[key] = unquote(val) if val is not None else None
+                case _:
+                    parts[key] = getattr(url_obj, key)
+
+        return UrlDataclassModel(**{
+            key: val  # type: ignore[arg-type]
+            for key, val in parts.items()
+            if val is not None
+        })
+
+    def __add__(self, other: str) -> Self:
+        return self.__class__(str(self) + other)
+
+    def to_data(self, **kwargs: Any) -> str:
+        """Return the normalized URL as a string.
+
+        Attributes:
+            kwargs: Keyword arguments are ignored, included only for
+                compatibility with the base class signature.
+
+        Returns:
+            str: Fully rendered HTTP(S) URL string.
+        """
+
+        return str(self.content)
+
+    def __str__(self) -> str:
+        return str(self.content)
+
+
+@mimics(UrlDataclassModel)
+class HttpUrlModel(HostUrlModel):
     """Represent a validated HTTP or HTTPS URL as a structured model.
 
     Args:
@@ -317,71 +418,23 @@ class HttpUrlModel(Model[UrlDataclassModel | str]):
             ...
 
     @classmethod
-    def _parse_data(cls, data: UrlDataclassModel | str) -> UrlDataclassModel:
-        """Parse and validate URL data into :class:`UrlDataclassModel`.
-
-        Args:
-            data: URL string or prebuilt URL dataclass model.
-
-        Returns:
-            UrlDataclassModel: Parsed URL parts with normalized decoded fields.
-
-    Raises:
-        AssertionError: If the URL scheme is unsupported.
-        pyd.ValidationError: If the URL cannot be parsed.
-        """
-        if data == '':
-            data = 'http://localhost/'
-        if data == 'https://':
-            data = 'https://localhost/'
-        # For validation only
-        url_obj = pyd.Url(str(data) if isinstance(data, UrlDataclassModel) else data)
-
-        parts: dict[str, str | int | None] = {}
-        for key in UrlDataclassModel.__fields__.keys():
-            match key:
-                case 'scheme':
-                    val = url_obj.scheme
-                    assert val in {'http', 'https'}, f'Unsupported scheme: {val}'
-                    parts[key] = val
-                case 'host':
-                    parts[key] = url_obj.unicode_host()
-                case 'username' | 'password' | 'path' | 'fragment':
-                    val = getattr(url_obj, key)
-                    parts[key] = unquote(val) if val is not None else None
-                case _:
-                    parts[key] = getattr(url_obj, key)
-
-        return UrlDataclassModel(**{
-            key: val  # type: ignore[arg-type]
-            for key, val in parts.items()
-            if val is not None
-        })
-
-    def __add__(self, other: str) -> 'HttpUrlModel':
-        return HttpUrlModel(str(self) + other)
-
-    def to_data(self, **kwargs: Any) -> str:
-        """Return the normalized URL as a string.
-
-        Attributes:
-            kwargs: Keyword arguments are ignored, included only for
-                compatibility with the base class signature.
-
-        Returns:
-            str: Fully rendered HTTP(S) URL string.
-        """
-
-        return str(self.content)
-
-    def __str__(self) -> str:
-        return str(self.content)
+    def _get_scheme_filter(cls) -> set[str]:
+        return {'http', 'https'}
 
 
 if TYPE_CHECKING:
 
+    class HostUrlModel_UrlDataclassModel(HostUrlModel, UrlDataclassModel):  # type: ignore[misc]
+        """Type-checking helper combining Host URL model and URL-part attributes.
+
+        This helper exists only for static typing so parsed URL fields can be
+        accessed directly on ``HostUrlModel`` values.
+        """
+
+        ...
+
     class HttpUrlModel_UrlDataclassModel(HttpUrlModel, UrlDataclassModel):  # type: ignore[misc]
-        """Type-checking helper combining URL model and URL-part attributes.
+        """Type-checking helper combining Http URL model and URL-part attributes.
 
         This helper exists only for static typing so parsed URL fields can be
         accessed directly on ``HttpUrlModel`` values.
