@@ -1324,14 +1324,15 @@ class Dataset(
         return {DATA_KEY: data_dict}
 
     def to(self, model_or_dataset_cls: type[_OtherModelOrDatasetT]) -> '_OtherModelOrDatasetT':
-        """Convert this dataset to another model or dataset class.
+        """Convert this dataset to another Model or Dataset class.
 
         Args:
-            model_or_dataset_cls: Target model or dataset class that can be constructed from this
-                dataset.
+            model_or_dataset_cls: Target Model or Dataset class that can be
+                constructed from this dataset.
 
         Returns:
-            An instance of the requested target class.
+            A new instance of ``model_or_dataset_cls`` initialized from this
+                dataset.
         """
         return model_or_dataset_cls(self)
 

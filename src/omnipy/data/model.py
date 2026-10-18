@@ -81,6 +81,7 @@ _RootT = TypeVar('_RootT')
 _ModelT = TypeVar('_ModelT', bound='Model')
 _DatasetT = TypeVar('_DatasetT', bound='Dataset')
 _OtherModelT = TypeVar('_OtherModelT', bound='Model')
+_OtherModelOrDatasetT = TypeVar('_OtherModelOrDatasetT', bound='Model | Dataset')
 _ClassOrTupleT = TypeVar('_ClassOrTupleT')
 
 # TODO: Refactor Dataset and Model using mixins (including below functions)
@@ -1490,16 +1491,19 @@ class Model(  # type: ignore[misc]
         """
         super().__setattr__(ROOT_KEY, value)
 
-    def to(self, model_cls: type[_OtherModelT]) -> _OtherModelT:
-        """Convert this model into another model class by reparsing its data.
+    def to(self, model_or_dataset_cls: type[_OtherModelOrDatasetT]) -> '_OtherModelOrDatasetT':
+        """Convert this model into another Model or Dataset class.
+
 
         Args:
-            model_cls: Destination model class.
+            model_or_dataset_cls: Target Model or Dataset class that can be
+                constructed from this dataset.
 
         Returns:
-            A new instance of ``model_cls`` initialized from this model.
+            A new instance of ``model_or_dataset_cls`` initialized from this
+                model.
         """
-        return model_cls(self)
+        return model_or_dataset_cls(self)
 
     def do(self, placeholder: F) -> Any:
         """Apply a placeholder-style callable to this model.
