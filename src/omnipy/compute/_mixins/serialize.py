@@ -24,7 +24,8 @@ from typing import Awaitable, cast, Generator, Type
 from omnipy.components import get_serializer_registry
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute._mixins.name import NameJobBaseMixin
-from omnipy.data.dataset import Dataset
+from omnipy.data.dataset import Dataset, is_dataset_subclass
+from omnipy.data.model import is_model_instance, is_model_subclass, Model
 from omnipy.shared.enums.job import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.shared.enums.job import (OutputStorageProtocolOptions,
                                      PersistOutputsOptions,
@@ -34,7 +35,6 @@ from omnipy.shared.protocols.config import IsJobConfig
 from omnipy.shared.protocols.data import IsDataset, IsSerializerRegistry
 from omnipy.util.helpers import get_job_name_slug, is_package_editable
 from omnipy.util.mixin import strip_mixins_suffix
-from omnipy.util.pydantic import lenient_issubclass
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SERIALIZE_ARG_DOC'] = dedent("""\
@@ -212,7 +212,7 @@ class SerializerFuncJobBaseMixin:
         results = super_as_job_base._call_job(*args, **kwargs)
 
         if self.will_persist_outputs is PersistOpts.ENABLED:
-            if lenient_issubclass(self._return_type, Dataset):
+            if is_model_subclass(self._return_type) or is_dataset_subclass(self._return_type):
                 if isinstance(results, asyncio.Task):
 
                     def _persist_task_outputs(task: asyncio.Task) -> None:
@@ -230,13 +230,16 @@ class SerializerFuncJobBaseMixin:
                 else:
                     self._serialize_and_persist_outputs(results)
             else:
-                self._log(
-                    f'Results of {self_as_name_job_base_mixin.unique_name} is not a Dataset and '
-                    f'cannot be automatically serialized and persisted!')
+                self._log(f'Results of {self_as_name_job_base_mixin.unique_name} '
+                          f'is not a Model or Dataset and cannot be '
+                          f'automatically serialized and persisted!')
 
         return results
 
-    def _serialize_and_persist_outputs(self, results: Dataset):
+    def _serialize_and_persist_outputs(self, results: Model | Dataset):
+        if is_model_instance(results):
+            results = Dataset[results.__class__]({self._job_name(): results})
+
         assert self._serializer_registry is not None
 
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
