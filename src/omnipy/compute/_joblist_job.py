@@ -125,10 +125,12 @@ if is_package_editable('omnipy'):
 
         Linear flows run child jobs strictly in declaration order.
 
-        The first child receives the caller's positional and keyword inputs.
-        Each later child receives the previous child result as its leading
-        positional input, plus any matching keyword arguments from the outer
-        flow call.
+        The outer flow signature controls argument routing. Parameters before
+        ``*`` are passed positionally to the first child, even when the caller
+        supplied them by keyword; the calling syntax is not preserved for
+        child-job routing. Keyword-only parameters remain available as matching
+        keyword arguments for every child. Each later child receives the
+        previous child result as its leading positional input.
 
         ``fixed_params`` always override caller-supplied values for the child
         where they are configured. ``param_key_map`` lets later children expose
@@ -155,6 +157,7 @@ if is_package_editable('omnipy'):
             >>> @om.LinearFlowTemplate(strip_text, suffix_each)
             ... def linear_flow(
             ...     dataset: TextDataset,
+            ...     *,
             ...     ending: str,
             ... ) -> TextDataset:
             ...     return dataset

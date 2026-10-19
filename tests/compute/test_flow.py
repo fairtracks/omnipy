@@ -437,7 +437,7 @@ def test_linear_flow_forwards_kwargs_to_later_child_jobs(
         return number * factor
 
     @LinearFlowTemplate(add_one_tmpl, multiply_tmpl)
-    def linear_flow_tmpl(number: int, factor: int) -> int:
+    def linear_flow_tmpl(number: int, *, factor: int) -> int:
         ...
 
     linear_flow = linear_flow_tmpl.apply()
@@ -460,7 +460,7 @@ def test_linear_flow_param_key_map_and_fixed_params(
     )
 
     @LinearFlowTemplate(identity_tmpl, transformed_tmpl)
-    def linear_flow_tmpl(number: int, step: int, factor: int) -> int:
+    def linear_flow_tmpl(number: int, *, step: int, factor: int) -> int:
         ...
 
     linear_flow = linear_flow_tmpl.apply()
@@ -478,7 +478,7 @@ def test_linear_flow_forwards_all_kwargs_to_child_var_keyword_param(
         return dict(number=number, **all_kwargs)
 
     @LinearFlowTemplate(add_one_tmpl, collect_kwargs_tmpl)
-    def linear_flow_tmpl(number: int, factor: int, offset: int) -> dict[str, object]:
+    def linear_flow_tmpl(number: int, *, factor: int, offset: int) -> dict[str, object]:
         ...
 
     linear_flow = linear_flow_tmpl.apply()
@@ -502,7 +502,7 @@ def test_linear_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_p
     )
 
     @LinearFlowTemplate(add_one_tmpl, refined_collect_kwargs_tmpl)
-    def linear_flow_tmpl(number: int, step: int, factor: int, offset: int,
+    def linear_flow_tmpl(number: int, *, step: int, factor: int, offset: int,
                          note: str) -> dict[str, object]:
         ...
 
@@ -520,6 +520,40 @@ def test_linear_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_p
         'offset': 2,
         'note': 'kept',
     }
+
+
+def test_linear_flow_routes_named_positional_capable_args_to_first_child_positionally(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    @TaskTemplate()
+    def sum_positional_values_tmpl(*numbers: int) -> int:
+        return sum(numbers)
+
+    @LinearFlowTemplate(sum_positional_values_tmpl)
+    def linear_flow_tmpl(first: int, second: int) -> int:
+        ...
+
+    assert linear_flow_tmpl.apply()(4, 3) == 7
+    assert linear_flow_tmpl.apply()(first=4, second=3) == 7
+
+
+def test_dag_flow_routes_named_result_to_linear_model_child_positionally(
+        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    class MyModel(Model[int]):
+        ...
+
+    @TaskTemplate()
+    def add_one_tmpl(number: int) -> int:
+        return number + 1
+
+    @LinearFlowTemplate(MyModel)
+    def linear_child_tmpl(number: int) -> MyModel:
+        ...
+
+    @DagFlowTemplate(add_one_tmpl.refine(result_key='number'), linear_child_tmpl)
+    def dag_flow_tmpl(number: int) -> MyModel:
+        ...
+
+    assert dag_flow_tmpl.apply()(number=4).to_data() == 5
 
 
 def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(

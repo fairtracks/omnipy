@@ -18,6 +18,22 @@
 >>> plus_two.run(10)
 ```
 
+The signature of a linear flow also describes how it routes inputs to child jobs.
+Parameters before `*` are passed positionally to the first child, even when the
+flow is called with keywords. Make values intended for later children keyword-only.
+This lets a DAG flow supply named results to a linear-flow child while the linear
+flow still passes its initial values positionally.
+
+```python
+@om.TaskTemplate()
+def add_offset(number: int, offset: int) -> int:
+    return number + offset
+
+@om.LinearFlowTemplate(plus_one, add_offset)
+def plus_one_then_offset(number: int, *, offset: int) -> int:
+    ...
+```
+
 ## DAG flows
 
 ```pycon exec="1" source="console"

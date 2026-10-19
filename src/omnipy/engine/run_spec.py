@@ -321,23 +321,29 @@ class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
 
 
 class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
-    """Run spec for linear flows that pipe each child result into the next."""
+    """Run spec for linear flows that pipe each child result into the next.
+
+    Positional-capable parameters from the flow signature are passed to the
+    first child positionally, so the calling syntax is not preserved for
+    child-job routing. Keyword-only parameters remain available as matching
+    keyword arguments for every child.
+    """
     def _create_default_run_callable(self) -> Callable:
         def _run_all_linear_tasks(
             *args: object,
             **kwargs: object,
         ) -> Generator[object, object, object]:
-            flow_kwargs = self.get_bound_args(*args, **kwargs).arguments
+            bound_flow_args = self.get_bound_args(*args, **kwargs)
+            flow_args = bound_flow_args.args
+            flow_kwargs = bound_flow_args.kwargs
             result = None
             for i, job in enumerate(self.child_job_templates):
                 assert not inspect.isclass(job)
-                call_args = args if i == 0 else (result,)
+                call_args = flow_args if i == 0 else (result,)
                 task_kwargs = _collect_matching_kwargs_for_job(job, flow_kwargs, len(call_args))
                 result = job(*call_args, **task_kwargs)
 
                 result = yield result
-
-                args = (result,)
 
             return result
 
