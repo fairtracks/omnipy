@@ -94,6 +94,21 @@
   - Using `bash`:
     - `eval uv run pytest $PYTEST_ARGS tests/modules/json/test_json_types.yml::test_json_scalar`
 
+### Test environment variables
+
+- `OMNIPY_PERSIST_TEST_OUTPUTS=1` stores test cache, job output, and log files in the current
+  directory instead of a temporary directory. Use it to inspect files produced by a failing test.
+
+- `OMNIPY_NO_PREFECT_TEST_HARNESS=1` prevents the test suite from starting its own Prefect test
+  harness. Set this when connecting tests to an already running Prefect test server.
+
+- `PREFECT_API_URL` gives the URL of that external Prefect API. For example, start a reusable
+  local harness in one terminal:
+  - `uv run python scripts/start_prefect_test_harness.py`
+
+  Then run tests against it from another terminal:
+  - `OMNIPY_NO_PREFECT_TEST_HARNESS=1 PREFECT_API_URL=http://localhost:4200/api uv run pytest --mypy-pyproject-toml-file=pyproject.toml`
+
 ## Note on Python type checkers
 
 Omnipy aims to support both `mypy` and `pyright` type checkers. The reason is that `mypy`
