@@ -8,7 +8,7 @@
   local setup. We recommend using `conda`, `pyenv` or `asdf` to manage Python versions. If you are 
   using Conda, you can install a Python environment with:
 
-  - `conda create -n omnipy python=3.10`
+  - `conda create -n omnipy python=3.15`
   - `conda activate omnipy`
 
 - Install uv:
