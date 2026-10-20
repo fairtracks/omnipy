@@ -1,4 +1,9 @@
+from collections.abc import Iterator
+from itertools import count
+
 import pytest
+
+from .models import biosample_vault_sample_id_generator_context
 
 
 @pytest.fixture(scope='function')
@@ -174,3 +179,10 @@ def expected_sequence_depot_submission_payload() -> dict[str, object]:
             'transfer_status': 'completed'
         }
     }
+
+
+@pytest.fixture(scope='function')
+def reset_biosample_vault_sample_id_generator() -> Iterator[None]:
+    token = biosample_vault_sample_id_generator_context.set(count(start=80907461))
+    yield
+    biosample_vault_sample_id_generator_context.reset(token)

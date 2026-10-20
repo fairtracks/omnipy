@@ -1,5 +1,4 @@
 import asyncio
-from itertools import count
 from typing import Annotated
 
 import pytest
@@ -9,7 +8,8 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.shared.enums.job import RunState
 
 from .....engine.helpers.functions import assert_job_state
-from .models import (BioSampleVaultSampleSubmissionSchema,
+from .models import (biosample_vault_sample_id_generator_context,
+                     BioSampleVaultSampleSubmissionSchema,
                      FinalSubmissionModel,
                      FtpUrlModel,
                      S3UrlModel,
@@ -30,6 +30,7 @@ async def test_sequence_submission_brokering(
     samples: Annotated[dict[str, dict[str, str]], pytest.fixture],
     files: Annotated[dict[str, dict[str, str]], pytest.fixture],
     metadata: Annotated[dict[str, str], pytest.fixture],
+    reset_biosample_vault_sample_id_generator: Annotated[None, pytest.fixture],  # noqa
     expected_sequence_depot_submission_payload: Annotated[
         dict[str, object],
         pytest.fixture,
@@ -128,13 +129,11 @@ async def coordinate_external_file_transfer(submission: SubmissionModel) -> Subm
     ...
 
 
-biosample_vault_sample_id_generator: count[int] = count(start=80907461)
-
-
 async def register_sample_with_biosamplevault(
         request: BioSampleVaultSampleSubmissionSchema) -> BioSampleVaultSampleSubmissionSchema:
     await asyncio.sleep(0)
-    request.biosample_vault_sample_id = f'BSV:{next(biosample_vault_sample_id_generator)}'
+    request.biosample_vault_sample_id = \
+        f'BSV:{next(biosample_vault_sample_id_generator_context.get())}'
     return request
 
 

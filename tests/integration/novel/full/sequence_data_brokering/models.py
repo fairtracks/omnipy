@@ -1,4 +1,6 @@
 from collections import defaultdict
+from collections.abc import Iterator
+from contextvars import ContextVar
 from typing import Literal, TypeAlias, TypedDict
 
 from omnipy import ConverterModel
@@ -48,6 +50,9 @@ class FtpUrlModel(HostUrlModel):
 
 FileRole = Literal['read1', 'read2']
 Status = Literal['N/A', 'pending', 'failed', 'completed']
+
+biosample_vault_sample_id_generator_context = ContextVar[Iterator[int]](
+    'biosample_vault_sample_id_generator')
 
 
 class SubmissionSampleSchema(pyd.BaseModel):
