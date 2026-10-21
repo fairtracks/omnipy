@@ -8,7 +8,6 @@ with JSON-LD conventions.
 """
 
 from enum import Enum
-from typing import List, Optional, Union
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -47,17 +46,17 @@ class IsaOntologyReferenceSchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    annotationValue: Optional[Union[str, float]] = None
-    termSource: Optional[str] = pyd.Field(
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    annotationValue: str | float | None = None
+    termSource: str | None = pyd.Field(
         None,
         description='The abbreviated ontology name. It should correspond to one of the sources as '
         'specified in the ontologySourceReference section of the Investigation.',
     )
-    termAccession: Optional[str] = None
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+    termAccession: str | None = None
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
 
 class IsaOntologyReferenceModel(Model[IsaOntologyReferenceSchema]):

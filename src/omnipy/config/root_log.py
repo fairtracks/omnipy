@@ -1,11 +1,12 @@
 """Configuration for Omnipy root logger outputs and formatting."""
 
+from collections.abc import Generator
 from io import TextIOBase
 import locale as pkg_locale
 import logging
 from pathlib import Path
 import sys
-from typing import Any, Generator
+from typing import Any
 
 from omnipy.config import ConfigBase
 from omnipy.shared.typedefs import LocaleType

@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from math import ceil
-from typing import Any, Callable
+from typing import Any
 
 _DEFAULT_STRING_CHUNK_SIZE = 256
 _DEFAULT_WIDTH_STABILIZATION_WINDOW = 2

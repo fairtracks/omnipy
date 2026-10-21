@@ -1,6 +1,7 @@
 """Helper functions for integration novel serialization tests."""
 
-from typing import Annotated, Callable
+from collections.abc import Callable
+from typing import Annotated
 
 import pytest
 

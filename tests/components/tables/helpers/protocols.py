@@ -1,5 +1,5 @@
-from collections.abc import Iterable
-from typing import Mapping, Protocol
+from collections.abc import Iterable, Mapping
+from typing import Protocol
 
 from omnipy.shared.protocols.typing import IsMapping
 

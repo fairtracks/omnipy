@@ -1,5 +1,6 @@
 from abc import ABC
-from typing import Any, Callable, ClassVar, Literal, NamedTuple
+from collections.abc import Callable
+from typing import Any, ClassVar, Literal, NamedTuple
 
 from omnipy.engine._base import Engine
 from omnipy.engine.run_spec import DagFlowRunSpec, FuncFlowRunSpec, LinearFlowRunSpec, TaskRunSpec

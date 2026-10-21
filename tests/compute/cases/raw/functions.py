@@ -27,7 +27,7 @@ def data_import_func() -> str:
 
 def format_to_string_func(text: str, number: int) -> str:
     """Format to string func."""
-    return '{}: {}'.format(text, number)
+    return f'{text}: {number}'
 
 
 def power_m1_func(number: int | Model[int], exponent: int, minus_one: bool = True) -> int:

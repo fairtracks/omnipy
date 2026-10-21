@@ -151,6 +151,15 @@ ignore = [
   "UP042",  # (str, Enum) is used deliberately instead of StrEnum
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# These tests deliberately build typing.Union/Optional objects to check how omnipy handles them
+"tests/util/test_helpers.py" = ["UP007", "UP045"]
+# (also compare list[X] with typing.List[X], which are distinct model types)
+"tests/data/test_model.py" = ["UP006", "UP007", "UP035", "UP045"]
+"tests/data/test_dataset.py" = ["UP006", "UP007", "UP035", "UP045"]
+"tests/data/helpers/datasets.py" = ["UP007", "UP045"]
+"tests/data/helpers/models.py" = ["UP007", "UP045"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 

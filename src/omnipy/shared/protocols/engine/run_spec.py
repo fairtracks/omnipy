@@ -1,11 +1,12 @@
 """Protocols for engine-facing run-spec adapters."""
 
+from collections.abc import Callable
 from datetime import datetime
 import inspect
 from inspect import BoundArguments
 from logging import INFO
 from types import MappingProxyType
-from typing import Callable, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from omnipy.shared.protocols.compute.job import ChildJobTemplateLike, IsFuncArgJob
 from omnipy.shared.protocols.compute.mixins import IsNestedContext

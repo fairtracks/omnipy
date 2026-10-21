@@ -1,9 +1,10 @@
 """Provide reusable task test cases."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from inspect import Parameter
 import json
-from typing import Any, Callable, Generic, ParamSpec, TypeVar
+from typing import Any, Generic, ParamSpec, TypeVar
 
 import pytest_cases as pc
 

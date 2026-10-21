@@ -4,7 +4,8 @@ This module defines Omnipy's public JSON model variants, ranging from scalar-onl
 models to specialized list/dict containers and generic custom container models.
 """
 
-from typing import Any, cast, Generic, Mapping, overload, Sequence, Type, TypeAlias
+from collections.abc import Mapping, Sequence
+from typing import Any, cast, Generic, overload, TypeAlias
 
 from typing_extensions import TypeVar
 
@@ -933,7 +934,7 @@ _NOTE_ON_DICT_KEYS = """
             '{"a": null, "0.5": 12.3, "1": 123, "False": true}'
     """
 
-_dict_related_json_model_classes: list[Type[Model]] = [
+_dict_related_json_model_classes: list[type[Model]] = [
     JsonModel,
     JsonDictModel,
     JsonDictOfScalarsModel,
@@ -955,7 +956,7 @@ for _dict_related_json_model_cls in _dict_related_json_model_classes:
     if _dict_related_json_model_cls.__doc__:
         _dict_related_json_model_cls.__doc__ += _NOTE_ON_DICT_KEYS
 
-_rest_of_the_json_model_classes: list[Type[Model]] = [
+_rest_of_the_json_model_classes: list[type[Model]] = [
     JsonScalarModel,
     JsonListModel,
     JsonListOfScalarsModel,
@@ -966,7 +967,7 @@ _rest_of_the_json_model_classes: list[Type[Model]] = [
     JsonCustomListModel,
 ]
 
-_internal_model_classes: list[Type[Model]] = [
+_internal_model_classes: list[type[Model]] = [
     _JsonListM,
     _JsonDictM,
     _JsonAnyListM,
@@ -975,7 +976,7 @@ _internal_model_classes: list[Type[Model]] = [
     _JsonNestedDictsM,
 ]
 
-_all_json_model_classes: list[Type[Model]] = (
+_all_json_model_classes: list[type[Model]] = (
     _dict_related_json_model_classes + _rest_of_the_json_model_classes + _internal_model_classes
 )
 

@@ -8,7 +8,6 @@ JSON-LD schema models.
 """
 
 from enum import Enum
-from typing import List, Optional
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -48,19 +47,19 @@ class IsaPersonSchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    lastName: Optional[str] = None
-    firstName: Optional[str] = None
-    midInitials: Optional[str] = None
-    email: Optional[pyd.EmailStr] = None
-    phone: Optional[str] = None
-    fax: Optional[str] = None
-    address: Optional[str] = None
-    affiliation: Optional[str] = None
-    roles: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = None
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    lastName: str | None = None
+    firstName: str | None = None
+    midInitials: str | None = None
+    email: pyd.EmailStr | None = None
+    phone: str | None = None
+    fax: str | None = None
+    address: str | None = None
+    affiliation: str | None = None
+    roles: list[ontology_annotation_schema.IsaOntologyReferenceModel] | None = None
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
 
 class IsaPersonModel(Model[IsaPersonSchema]):

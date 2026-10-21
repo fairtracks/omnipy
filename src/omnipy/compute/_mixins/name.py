@@ -1,8 +1,9 @@
 """Mixins for assigning stable display names and unique names to jobs."""
 
+from collections.abc import Callable
 import os
 from textwrap import dedent
-from typing import Callable, cast
+from typing import cast
 
 from omnipy.util.helpers import generate_run_slug, get_full_job_slug, is_package_editable
 from omnipy.util.mixin import strip_mixins_suffix
@@ -34,7 +35,7 @@ class NameJobBaseMixin:
     @staticmethod
     def _check_not_empty_string(param_name: str, param: str) -> None:
         if len(param) == 0:
-            raise ValueError('Empty strings not allowed for parameter "{}"'.format(param_name))
+            raise ValueError(f'Empty strings not allowed for parameter "{param_name}"')
 
     @property
     def name(self) -> str | None:

@@ -10,7 +10,7 @@ equality results.
 
 import asyncio
 from collections import UserDict
-from collections.abc import Hashable, Iterable
+from collections.abc import Callable, Hashable, Iterable, Mapping
 from dataclasses import asdict
 import functools
 from importlib.abc import Loader
@@ -29,7 +29,6 @@ from typing import (
     _SpecialForm,
     _UnionGenericAlias,  # type: ignore[attr-defined]
     Any,
-    Callable,
     cast,
     Concatenate,
     ForwardRef,
@@ -37,7 +36,6 @@ from typing import (
     get_args,
     get_origin,
     Literal,
-    Mapping,
     overload,
     ParamSpec,
     TypeAlias,

@@ -1,9 +1,10 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import inspect
 from logging import WARNING
 from types import MappingProxyType
-from typing import Any, Callable, cast, Type, TypedDict
+from typing import Any, cast, TypedDict
 
 from omnipy.config.engine import PrefectEngineConfig
 from omnipy.engine.job_runner import JobRunnerEngine
@@ -56,7 +57,7 @@ class PrefectEngine(JobRunnerEngine):
     def _update_from_config(self) -> None: ...
 
     @classmethod
-    def get_config_cls(cls) -> Type[IsPrefectEngineConfig]:
+    def get_config_cls(cls) -> type[IsPrefectEngineConfig]:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
         #
@@ -70,7 +71,7 @@ class PrefectEngine(JobRunnerEngine):
             Type[IsJobRunnerConfig]: Configuration class used to instantiate engine settings.
         """
 
-        return cast(Type[IsPrefectEngineConfig], PrefectEngineConfig)
+        return cast(type[IsPrefectEngineConfig], PrefectEngineConfig)
 
     @staticmethod
     def _wrap_as_prefect_compatible_callable(

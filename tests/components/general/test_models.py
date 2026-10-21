@@ -44,7 +44,7 @@ def test_not_iterable_except_str_model():
         NotIterableExceptStrOrBytesModel({1, 2, 3, 4})
 
     assert NotIterableExceptStrOrBytesModel('1234').content == '1234'
-    assert NotIterableExceptStrOrBytesModel('æøå'.encode('utf8')).content == 'æøå'.encode('utf8')
+    assert NotIterableExceptStrOrBytesModel('æøå'.encode()).content == 'æøå'.encode()
 
 
 def test_chain2_model():

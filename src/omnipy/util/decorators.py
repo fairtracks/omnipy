@@ -7,8 +7,9 @@ delegating through ``super()``, and exposing one implementation as both a class
 method and an instance method.
 """
 
+from collections.abc import Callable
 from contextlib import AbstractContextManager
-from typing import Any, Callable, Concatenate, ContextManager, Generic, ParamSpec, TypeVar
+from typing import Any, Concatenate, Generic, ParamSpec, TypeVar
 
 _DecoratedP = ParamSpec('_DecoratedP')
 _DecoratedR = TypeVar('_DecoratedR')
@@ -63,7 +64,7 @@ def add_callback_if_exception(
 def add_callback_after_call(
     decorated_func: Callable[_DecoratedP, _DecoratedR],
     callback_func: Callable[Concatenate[_DecoratedR, _CallbackP], _DecoratedR],
-    with_context: ContextManager[None] | None,
+    with_context: AbstractContextManager[None] | None,
     *cb_args: _CallbackP.args,
     **cb_kwargs: _CallbackP.kwargs,
 ) -> Callable[_DecoratedP, _DecoratedR]:
@@ -265,7 +266,7 @@ def call_super_if_available(call_super_before_method: bool):
     return SuperCaller
 
 
-class class_or_instance_method(Generic[T, _DecoratedP, _DecoratedR], object):
+class class_or_instance_method(Generic[T, _DecoratedP, _DecoratedR]):
     """Descriptor decorator enabling both class and instance invocation styles.
 
     The wrapped implementation receives both ``instance`` and ``cls`` so it can

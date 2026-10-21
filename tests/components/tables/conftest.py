@@ -1,5 +1,5 @@
-from collections.abc import Iterable
-from typing import Annotated, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Annotated
 
 import pytest
 

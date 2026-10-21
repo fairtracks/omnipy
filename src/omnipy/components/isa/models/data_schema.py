@@ -8,7 +8,6 @@ JSON-LD form.
 """
 
 from enum import Enum
-from typing import List, Optional
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -72,12 +71,12 @@ class IsaDataSchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    name: Optional[str] = None
-    type: Optional[Type] = None
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    name: str | None = None
+    type: Type | None = None
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
 
 class IsaDataModel(Model[IsaDataSchema]):

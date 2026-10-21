@@ -1,8 +1,6 @@
 """Task-state dataset helpers used by Omnipy task-producing datasets."""
 
-from typing import Any, cast, get_args
-
-from typing_extensions import Self
+from typing import Any, cast, get_args, Self
 
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.shared.exceptions import FailedDataError, PendingDataError

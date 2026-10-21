@@ -1,8 +1,9 @@
 """Selection and key-rewriting helpers used by Omnipy dataset indexing operations."""
 
 from collections import defaultdict
+from collections.abc import Iterable, Mapping, MutableMapping
 from dataclasses import dataclass
-from typing import Iterable, Mapping, MutableMapping, TypeAlias
+from typing import TypeAlias
 
 from typing_extensions import TypeVar
 

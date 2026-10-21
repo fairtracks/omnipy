@@ -1,8 +1,9 @@
 """Protocols for engines that decorate runnable jobs."""
 
+from collections.abc import Callable
 import os
 from textwrap import dedent
-from typing import Any, Callable, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.compute.job import IsFuncArgJob

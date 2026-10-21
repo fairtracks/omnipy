@@ -1,4 +1,5 @@
-from typing import Generic, Mapping, Type, TypeVar
+from collections.abc import Mapping
+from typing import Generic, TypeVar
 
 from omnipy.data.model import Model
 from omnipy.shared.typing import TYPE_CHECKING
@@ -54,9 +55,9 @@ class RecordSchemaBase(pyd.BaseModel):
 # Due to this inconsistency and the use of a private type, `UnionType` was switched to `object`.
 # With the final variant, all of mypy, pydantic and omnipy work as they should:
 
-RecordT = TypeVar('RecordT', bound=Model[Mapping[str, Type | object] | RecordSchemaBase])
+RecordT = TypeVar('RecordT', bound=Model[Mapping[str, type | object] | RecordSchemaBase])
 
-RecordSchemaDefType = dict[str, Type[object]]
+RecordSchemaDefType = dict[str, type[object]]
 
 # Models
 
@@ -69,7 +70,7 @@ class RecordSchemaDef(Model[RecordSchemaDefType]):
 
 def record_schema_factory(
     data_file: str, record_schema_def: RecordSchemaDefType
-) -> Type[RecordSchemaBase]:
+) -> type[RecordSchemaBase]:
     """Create schema factory."""
 
     class Config(pyd.BaseConfig):

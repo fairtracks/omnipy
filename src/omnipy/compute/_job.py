@@ -10,11 +10,12 @@ mixins.
 """
 
 from abc import abstractmethod
+from collections.abc import Callable, Hashable
 from datetime import datetime
 from functools import update_wrapper
 import logging
 from types import MappingProxyType
-from typing import Any, Callable, cast, Generic, Hashable, ParamSpec, Type, TypeVar
+from typing import Any, cast, Generic, ParamSpec, TypeVar
 
 from omnipy.compute._job_creator import JobBaseMeta
 from omnipy.compute._mixins.name import NameJobBaseMixin, NameJobMixin
@@ -231,7 +232,7 @@ class JobBase(
 
     def _call_job(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetT: ...
 
-    def _check_engine(self, engine_protocol: Type):
+    def _check_engine(self, engine_protocol: type):
         if self.engine is None or not isinstance(self.engine, engine_protocol):
             raise RuntimeError(
                 f'Engine "{self.engine}" does not support '

@@ -1,7 +1,8 @@
 """Tests for utility helper functions."""
 
+from collections.abc import Iterator
 from types import MethodType, NoneType, UnionType
-from typing import Annotated, Any, ForwardRef, Generic, get_args, Iterator, Literal, Optional, Union
+from typing import Annotated, Any, ForwardRef, Generic, get_args, Literal, Optional, Union
 
 import pytest
 from typing_extensions import TypeVar

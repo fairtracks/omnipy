@@ -8,9 +8,10 @@ hook can disambiguate when a single callable argument should be treated as a
 decorator argument instead of as the decorated callable.
 """
 
+from collections.abc import Callable
 from functools import update_wrapper
 from types import MethodWrapperType
-from typing import Any, Callable, cast, Concatenate, ParamSpec, TypeVar
+from typing import Any, cast, Concatenate, ParamSpec, TypeVar
 
 from omnipy.shared.protocols._util import IsCallableParamAfterSelf
 
@@ -61,7 +62,7 @@ def callable_decorator_cls(  # noqa: C901
             return self._obj_call(*args, **kwargs)
         if hasattr(self, '_wrapped_call'):
             return self._wrapped_call(*args, **kwargs)
-        raise TypeError("'{}' object is not callable".format(self.__class__.__name__))
+        raise TypeError(f"'{self.__class__.__name__}' object is not callable")
 
     setattr(cls, '__call__', _forward_call_to_obj_if_callable)
 

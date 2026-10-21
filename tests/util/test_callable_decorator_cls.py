@@ -1,4 +1,5 @@
-from typing import Any, Callable, cast, Generic, ParamSpec
+from collections.abc import Callable
+from typing import Any, cast, Generic, ParamSpec
 
 import pytest
 from typing_extensions import TypeVar

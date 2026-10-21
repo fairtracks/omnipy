@@ -1,8 +1,9 @@
 """Helper functions for data tests."""
 
+from collections.abc import Callable
 from io import BytesIO
 import tarfile
-from typing import Any, Callable
+from typing import Any
 
 
 def assert_tar_file_content(

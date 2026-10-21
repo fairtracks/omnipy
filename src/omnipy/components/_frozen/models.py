@@ -2,9 +2,7 @@
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Any, Generic, TypeAlias
-
-from typing_extensions import ForwardRef
+from typing import Any, ForwardRef, Generic, TypeAlias
 
 from omnipy.components._frozen.typedefs import _KeyT, _ValT, FrozenDict
 from omnipy.components.general.models import NotIterableExceptStrOrBytesModel

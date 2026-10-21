@@ -1,8 +1,9 @@
 """Helper classes for data tests."""
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from types import NotImplementedType
-from typing import Generic, Iterator
+from typing import Generic
 
 from typing_extensions import TypeVar
 

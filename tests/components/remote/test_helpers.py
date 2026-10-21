@@ -1,8 +1,9 @@
 """Tests for remote helper utilities."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from datetime import datetime
-from typing import Annotated, AsyncGenerator
+from typing import Annotated
 
 from aiohttp import ClientSession, web
 import pytest

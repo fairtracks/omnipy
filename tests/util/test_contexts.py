@@ -1,9 +1,10 @@
 """Tests for utility contexts."""
 
+from collections.abc import Callable
 from contextlib import suppress
 import sys
 from textwrap import dedent
-from typing import Callable, TypeAlias
+from typing import TypeAlias
 
 import pytest
 

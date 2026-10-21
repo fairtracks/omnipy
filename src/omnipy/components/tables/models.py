@@ -2,13 +2,13 @@
 
 from abc import abstractmethod
 from collections import defaultdict
-from collections.abc import Generator, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterator, Mapping, Sized
 from copy import copy
 import csv
 import functools
-from typing import Callable, cast, Generic, get_args, overload, Protocol, Sized, TypeAlias
+from typing import cast, Generic, get_args, overload, Protocol, Self, TypeAlias
 
-from typing_extensions import NamedTuple, override, Self, TypeVar
+from typing_extensions import NamedTuple, override, TypeVar
 
 from omnipy.data.helpers import MethodInfo, TypeVarStore
 from omnipy.data.model import (

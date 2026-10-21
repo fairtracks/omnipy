@@ -15,6 +15,7 @@ dataset-specific panel construction.
 """
 
 from abc import ABCMeta, abstractmethod
+from collections.abc import Callable
 import dataclasses
 import functools
 from inspect import signature
@@ -23,11 +24,11 @@ import os
 from pathlib import Path
 import sys
 from textwrap import dedent
-from typing import Any, Callable, cast, Literal, overload, ParamSpec, Protocol
+from typing import Any, assert_never, cast, get_args, Literal, overload, ParamSpec, Protocol
 import webbrowser
 
 from pathvalidate import sanitize_filename
-from typing_extensions import assert_never, get_args, override, TypeVar
+from typing_extensions import override, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig

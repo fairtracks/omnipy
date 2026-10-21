@@ -141,7 +141,7 @@ def __getattr__(attr: str) -> type[pygments.style.Style]:
                 base16_url,
             )
 
-    except (IOError, ValueError) as e:
+    except (OSError, ValueError) as e:
         raise AttributeError(f'Failed to fetch base16 theme: {e}') from e
 
     raise AttributeError(f"Module '{__name__}' has no attribute '{attr}'")

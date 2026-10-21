@@ -1,8 +1,9 @@
 """Provide iterate-over-data-files task cases."""
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 import pytest_cases as pc
 

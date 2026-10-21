@@ -5,8 +5,9 @@ class attributes for each allowed value.
 """
 
 from collections import ChainMap
+from collections.abc import Iterator
 import random
-from typing import Any, cast, ClassVar, Generic, get_args, get_type_hints, Iterator, overload
+from typing import Any, cast, ClassVar, Generic, get_args, get_type_hints, overload
 
 from typing_extensions import TypeVar
 

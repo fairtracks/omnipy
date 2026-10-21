@@ -16,7 +16,7 @@ def get_from_filter():
         fields = response.json()['fields']
         fields = ','.join(fields)
 
-        with open(endpt_str + '_filter.json', 'r') as infile:
+        with open(endpt_str + '_filter.json') as infile:
             filters = json.load(infile)
             params = {  # 'fields': fields,
                 'filters': json.dumps(filters),

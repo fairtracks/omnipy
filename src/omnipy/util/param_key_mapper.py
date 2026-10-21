@@ -4,7 +4,8 @@ This module provides a small mapping helper that can translate matching keys in
 either direction, drop matched keys, or combine both operations.
 """
 
-from typing import Any, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any
 
 
 class ParamKeyMapper:

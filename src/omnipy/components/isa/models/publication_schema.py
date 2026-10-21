@@ -8,7 +8,6 @@ these generated model types.
 """
 
 from enum import Enum
-from typing import List, Optional
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -48,15 +47,15 @@ class IsaPublicationSchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    pubMedID: Optional[str] = None
-    doi: Optional[str] = None
-    authorList: Optional[str] = None
-    title: Optional[str] = None
-    status: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    pubMedID: str | None = None
+    doi: str | None = None
+    authorList: str | None = None
+    title: str | None = None
+    status: ontology_annotation_schema.IsaOntologyReferenceModel | None = None
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
 
 class IsaPublicationModel(Model[IsaPublicationSchema]):

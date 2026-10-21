@@ -1,7 +1,8 @@
 import asyncio
+from collections.abc import AsyncGenerator, Callable
 from contextlib import contextmanager
 import inspect
-from typing import Any, AsyncGenerator, Callable, NamedTuple, Protocol
+from typing import Any, NamedTuple, Protocol
 
 import pytest
 import pytest_cases as pc

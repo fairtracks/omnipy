@@ -1,13 +1,13 @@
 """Helper types and utilities shared across Omnipy's data layer internals."""
 
 from collections import defaultdict
-from contextlib import suppress
+from contextlib import AbstractContextManager, suppress
 from dataclasses import dataclass
 from enum import IntEnum
 import os
 import sys
 from textwrap import dedent
-from typing import Any, ContextManager, ForwardRef, Generic, get_args, get_origin, NamedTuple
+from typing import Any, ForwardRef, Generic, get_args, get_origin, NamedTuple
 
 from typing_extensions import TypeIs, TypeVar
 
@@ -236,7 +236,7 @@ class ResetSolutionTuple(NamedTuple):
         snapshot_taken: Whether a fresh snapshot was captured before the operation.
     """
 
-    reset_solution: ContextManager[None]
+    reset_solution: AbstractContextManager[None]
     snapshot_taken: bool
 
 

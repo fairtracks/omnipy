@@ -1,9 +1,10 @@
 """Raw text and binary models for encoding, splitting, joining, and filtering content."""
 
+from collections.abc import Callable
 import datetime
 import os
 from textwrap import dedent
-from typing import Any, Callable, cast, Generic, overload, Protocol, TypeAlias
+from typing import Any, cast, Generic, overload, Protocol, TypeAlias
 
 from typing_extensions import TypeVar
 

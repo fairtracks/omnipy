@@ -2,10 +2,11 @@
 
 import asyncio
 from collections import defaultdict
+from collections.abc import AsyncGenerator, Awaitable, Callable, Iterable, Iterator
 from contextlib import contextmanager
 import random
 from textwrap import dedent
-from typing import Annotated, Any, AsyncGenerator, Awaitable, Callable, Iterable, Iterator
+from typing import Annotated, Any
 
 from aiohttp import web
 import pygments.style

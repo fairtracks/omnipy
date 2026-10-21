@@ -16,9 +16,9 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
         Typed stand-in for a concrete ``Model[...]`` subclass.""")
 
 if TYPE_CHECKING:
-    from typing import Any, Generic
+    from typing import Any, Generic, Self
 
-    from typing_extensions import Self, TypeVar
+    from typing_extensions import TypeVar
 
     from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
     from omnipy.data.dataset import _ModelOrDatasetT, Dataset

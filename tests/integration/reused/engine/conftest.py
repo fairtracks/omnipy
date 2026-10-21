@@ -1,6 +1,7 @@
 """Shared fixtures for integration reused engine tests."""
 
-from typing import Annotated, Callable, Type
+from collections.abc import Callable
+from typing import Annotated
 
 import pytest
 import pytest_cases as pc
@@ -46,9 +47,9 @@ from ....engine.helpers.functions import update_job_case_with_job
 @pc.parametrize('dag_flow_template_cls', [DagFlowTemplateCore], ids=[''])
 def all_job_classes(
     job_type: JobType.Literals,
-    task_template_cls: Type[IsTaskTemplate],
-    linear_flow_template_cls: Type[IsLinearFlowTemplate],
-    dag_flow_template_cls: Type[IsDagFlowTemplate],
+    task_template_cls: type[IsTaskTemplate],
+    linear_flow_template_cls: type[IsLinearFlowTemplate],
+    dag_flow_template_cls: type[IsDagFlowTemplate],
 ):
     """Provide all job classes."""
     return (job_type, task_template_cls, linear_flow_template_cls, dag_flow_template_cls)
@@ -68,7 +69,7 @@ def no_engine_decorator(engine_decorator):
 )
 def run_state_registry(
     runtime: Annotated[None, pytest.fixture],
-    registry_cls: Type[IsRunStateRegistry],
+    registry_cls: type[IsRunStateRegistry],
 ):
     """Provide run state registry."""
     return registry_cls()
@@ -91,7 +92,7 @@ def run_state_registry(
 def all_func_types_real_jobs_all_engines_real_reg(
     job_case: JobCase,
     job_classes: tuple[
-        JobType.Literals, Type[IsTaskTemplate], Type[IsLinearFlowTemplate], Type[IsDagFlowTemplate]
+        JobType.Literals, type[IsTaskTemplate], type[IsLinearFlowTemplate], type[IsDagFlowTemplate]
     ],
     engine: IsJobRunnerEngine,
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
@@ -146,7 +147,7 @@ all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg = (
 def base_task_only_real_jobs_all_engines_real_reg(
     job_case: JobCase,
     job_classes: tuple[
-        JobType.Literals, Type[IsTaskTemplate], Type[IsLinearFlowTemplate], Type[IsDagFlowTemplate]
+        JobType.Literals, type[IsTaskTemplate], type[IsLinearFlowTemplate], type[IsDagFlowTemplate]
     ],
     engine: IsJobRunnerEngine,
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,

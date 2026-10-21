@@ -1,11 +1,11 @@
 """Helpers and literal enums for classifying and wrapping callable shapes."""
 
-from collections.abc import AsyncGenerator, Awaitable, Generator
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from contextlib import AbstractContextManager, nullcontext
 import functools
 import inspect
 from types import AsyncGeneratorType, GeneratorType, MappingProxyType
-from typing import Any, Callable, Literal, overload
+from typing import Any, Literal, overload
 
 from typing_extensions import ParamSpec, TypeVar
 

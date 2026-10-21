@@ -1,12 +1,13 @@
 """Output-variant implementations that crop and export stylized panels."""
 
 from abc import abstractmethod
+from collections.abc import Callable, Iterable
 from copy import copy
 from functools import cached_property
 import html
 import re
 from textwrap import dedent
-from typing import Callable, ClassVar, Generic, Iterable, Literal, NamedTuple
+from typing import ClassVar, Generic, Literal, NamedTuple
 
 import rich.console
 import rich.segment

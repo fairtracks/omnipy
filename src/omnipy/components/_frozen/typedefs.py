@@ -1,7 +1,8 @@
 """Frozen container helper types and concrete immutable mapping wrapper."""
 
+from collections.abc import Hashable, Sequence
 from types import MappingProxyType
-from typing import Generic, Hashable, Sequence
+from typing import Generic
 
 from typing_extensions import TypeVar
 

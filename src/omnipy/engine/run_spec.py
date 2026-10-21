@@ -6,13 +6,13 @@ full job implementation details.
 """
 
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from collections.abc import Callable, Generator, Mapping
 from datetime import datetime
 import inspect
 from inspect import BoundArguments
 from logging import INFO, Logger
 from types import MappingProxyType
-from typing import Any, Callable, cast, Generator
+from typing import Any, cast
 
 from omnipy.shared.protocols.compute.job import (
     ChildJobTemplateLike,

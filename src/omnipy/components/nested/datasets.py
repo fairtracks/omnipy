@@ -1,8 +1,8 @@
 """Datasets for recursively nested data structures that can contain tables or scalar values."""
 
-from typing import ClassVar, Generic
+from typing import ClassVar, Generic, TypeAlias
 
-from typing_extensions import TypeAlias, TypeVar
+from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model

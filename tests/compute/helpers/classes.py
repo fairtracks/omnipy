@@ -1,6 +1,7 @@
 """Provide reusable compute test helper classes."""
 
-from typing import Callable, Generic, ParamSpec, TypeAlias, TypeVar
+from collections.abc import Callable
+from typing import Generic, ParamSpec, TypeAlias, TypeVar
 
 from typing_extensions import NamedTuple
 

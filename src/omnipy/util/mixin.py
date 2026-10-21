@@ -8,9 +8,9 @@ subclasses that combine the original class with the requested mixin bases.
 from collections import defaultdict
 import inspect
 import types
-from typing import DefaultDict, Type
+from typing import Self
 
-from typing_extensions import get_original_bases, Self
+from typing_extensions import get_original_bases
 
 from omnipy.util.helpers import generic_aware_issubclass_ignore_args, transfer_generic_args_to_cls
 
@@ -42,10 +42,10 @@ class DynamicMixinAcceptor:
     """
 
     # Declarations needed by mypy
-    _orig_class: Type
+    _orig_class: type
     _orig_init_signature: inspect.Signature
-    _mixin_classes: list[Type]
-    _init_params_per_mixin_cls: DefaultDict[str, DefaultDict[str, inspect.Parameter]]
+    _mixin_classes: list[type]
+    _init_params_per_mixin_cls: defaultdict[str, defaultdict[str, inspect.Parameter]]
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -98,7 +98,7 @@ class DynamicMixinAcceptor:
         return self._get_mixin_init_kwarg_params_including_bases()
 
     @classmethod
-    def accept_mixin(cls, mixin_cls: Type) -> None:
+    def accept_mixin(cls, mixin_cls: type) -> None:
         """Register a mixin class for dynamic composition.
 
         Args:
@@ -108,7 +108,7 @@ class DynamicMixinAcceptor:
         cls._accept_mixin(mixin_cls, update=True)
 
     @classmethod
-    def _accept_mixin(cls, mixin_cls: Type, update: bool):
+    def _accept_mixin(cls, mixin_cls: type, update: bool):
         cls._mixin_classes.append(mixin_cls)
 
         if '__init__' in mixin_cls.__dict__:

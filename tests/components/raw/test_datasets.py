@@ -1,8 +1,9 @@
 """Tests for raw dataset models and split-join behavior."""
 
+from collections.abc import Iterable
 import os
 from textwrap import dedent
-from typing import Annotated, Iterable
+from typing import Annotated
 
 import pytest
 import pytest_cases as pc

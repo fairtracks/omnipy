@@ -309,8 +309,7 @@ async def test_result_key_preserves_sync_and_async_generator_shapes(generator_ki
 
         @TaskTemplate(result_key='values')
         def sync_emit_values(start: int) -> Generator[int, None, None]:
-            for value in range(start, start + 3):
-                yield value
+            yield from range(start, start + 3)
 
         wrapped_result = cast(dict[str, object], sync_emit_values.run(start=2))
         values = cast(Generator[int, None, None], wrapped_result['values'])

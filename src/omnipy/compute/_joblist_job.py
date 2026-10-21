@@ -6,13 +6,12 @@ task-template dependencies. Concrete flow template classes compose this base wit
 and the ordered task list across refine/apply/revise operations.
 """
 
-from collections.abc import AsyncGenerator, AsyncIterator, Generator, Iterator
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Generator, Iterator
 import inspect
 import os
 from textwrap import dedent
 from typing import (
     Any,
-    Callable,
     ClassVar,
     Generic,
     get_args,

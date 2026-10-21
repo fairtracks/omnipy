@@ -1,9 +1,7 @@
 """Color style enums for syntax highlighting and themed text rendering."""
 
 from textwrap import dedent
-from typing import Literal
-
-from typing_extensions import assert_never
+from typing import assert_never, Literal
 
 from omnipy.shared.enums.display import DisplayColorSystem
 from omnipy.util.literal_enum import LiteralEnum

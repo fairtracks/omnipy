@@ -1,6 +1,7 @@
 """Test compute decorators for tasks and flows."""
 
-from typing import Annotated, Callable
+from collections.abc import Callable
+from typing import Annotated
 
 import pytest
 import pytest_cases as pc

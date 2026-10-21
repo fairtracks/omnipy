@@ -1,8 +1,9 @@
 """Tests for table models and pydantic-backed records."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import math
-from typing import Annotated, Any, Callable, cast, Generic
+from typing import Annotated, Any, cast, Generic
 
 import pytest
 import pytest_cases as pc

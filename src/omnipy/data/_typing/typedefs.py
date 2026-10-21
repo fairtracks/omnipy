@@ -6,7 +6,7 @@ Type Aliases:
     _ValT2: Secondary value type parameter for tuple helpers.
 """
 
-from typing import Hashable
+from collections.abc import Hashable
 
 from typing_extensions import TypeVar
 

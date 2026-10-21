@@ -1,4 +1,4 @@
-from typing import Any, cast, Type
+from typing import Any, cast
 
 from omnipy.config.engine import LocalRunnerConfig
 from omnipy.engine.job_runner import JobRunnerEngine
@@ -28,7 +28,7 @@ class LocalRunner(JobRunnerEngine):
         ...
 
     @classmethod
-    def get_config_cls(cls) -> Type[IsLocalRunnerConfig]:
+    def get_config_cls(cls) -> type[IsLocalRunnerConfig]:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
         #
@@ -41,7 +41,7 @@ class LocalRunner(JobRunnerEngine):
         Returns:
             Type[IsJobRunnerConfig]: Configuration class used to instantiate engine settings.
         """
-        return cast(Type[IsLocalRunnerConfig], LocalRunnerConfig)
+        return cast(type[IsLocalRunnerConfig], LocalRunnerConfig)
 
     def _init_task(self, task: IsTaskRunSpec) -> object: ...
 

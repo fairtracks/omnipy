@@ -1,12 +1,13 @@
 """Mixin for iterating job functions across dataset items."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 import functools
 import inspect
 from inspect import Parameter, signature
 import os
 from textwrap import dedent
-from typing import Any, Callable, cast, Coroutine
+from typing import Any, cast
 
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute._mixins.typedefs import (

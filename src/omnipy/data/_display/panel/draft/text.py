@@ -1,8 +1,9 @@
 """Draft text panel that reflows formatted content before final styling."""
 
+from collections.abc import Iterator
 from functools import cached_property
 import re
-from typing import Generic, Iterator, overload
+from typing import Generic, overload
 
 from typing_extensions import override
 

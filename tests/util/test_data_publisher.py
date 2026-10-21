@@ -1,6 +1,7 @@
 """Tests for data publishers."""
 
-from typing import Annotated, Callable
+from collections.abc import Callable
+from typing import Annotated
 
 import pytest
 

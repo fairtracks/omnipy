@@ -27,7 +27,7 @@ class DailyRotatingFileHandler(RotatingFileHandler):
 
     def _read_log_date(self) -> date | None:
         try:
-            with open(self._last_log_date_file_path, 'r') as cur_date_file:
+            with open(self._last_log_date_file_path) as cur_date_file:
                 return date.fromisoformat(cur_date_file.read())
         except FileNotFoundError:
             return None

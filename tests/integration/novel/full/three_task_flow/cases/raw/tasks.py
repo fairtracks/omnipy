@@ -13,4 +13,4 @@ def square_root(number: int) -> dict[str, float]:
 
 @TaskTemplate()
 def merge_key_value_into_str(key: object, val: object) -> str:
-    return '{}: {}'.format(key, val)
+    return f'{key}: {val}'

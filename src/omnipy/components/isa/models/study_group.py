@@ -8,7 +8,6 @@ classes validate.
 """
 
 from enum import Enum
-from typing import List, Optional
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -47,14 +46,14 @@ class IsaStudyGroupSchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    name: Optional[str] = None
-    factor_levels: Optional[List[factor_value_schema.IsaFactorValueModel]] = None
-    study_group_size: Optional[int] = None
-    members: Optional[List[sample_schema.IsaSampleModel]] = None
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    name: str | None = None
+    factor_levels: list[factor_value_schema.IsaFactorValueModel] | None = None
+    study_group_size: int | None = None
+    members: list[sample_schema.IsaSampleModel] | None = None
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
 
 class IsaStudyGroupModel(Model[IsaStudyGroupSchema]):

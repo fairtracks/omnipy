@@ -2,7 +2,7 @@
 
 import os
 from textwrap import dedent
-from typing import Protocol, runtime_checkable, Type
+from typing import Protocol, runtime_checkable
 
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
@@ -61,7 +61,7 @@ class IsEngine(Protocol):
     def __init__(self) -> None: ...
 
     @classmethod
-    def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
+    def get_config_cls(cls) -> type[IsJobRunnerConfig]:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
         #

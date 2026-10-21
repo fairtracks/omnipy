@@ -1,7 +1,8 @@
 """Provide shared compute test fixtures."""
 
+from collections.abc import Generator
 from datetime import datetime
-from typing import Annotated, cast, Generator
+from typing import Annotated, cast
 
 import pytest
 import pytest_cases as pc

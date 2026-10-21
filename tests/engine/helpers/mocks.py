@@ -1,10 +1,11 @@
+from collections.abc import Callable
 from contextlib import AbstractContextManager
 from datetime import datetime
 from functools import update_wrapper
 import inspect
 from inspect import BoundArguments
 from types import MappingProxyType
-from typing import Any, Callable, cast, Type
+from typing import Any, cast
 
 from omnipy.config import ConfigBase
 from omnipy.engine.job_runner import JobRunnerEngine
@@ -91,7 +92,7 @@ class MockTaskTemplate(MockTask):
     def _call_func(self, *args: object, **kwargs: object) -> Any:
         if self.in_flow_context:
             return self.run(*args, **kwargs)
-        raise TypeError("'{}' object is not callable".format(self.__class__.__name__))
+        raise TypeError(f"'{self.__class__.__name__}' object is not callable")
 
     def run(self, *args: object, **kwargs: object) -> object:
         return self.apply()(*args, **kwargs)
@@ -210,10 +211,10 @@ class MockBackendTask:
 
     def run(self, task: TaskRunSpec, call_func: Callable, *args: object, **kwargs: object):
         if self.backend_verbose:
-            print('Running task "{}": ...'.format(task.name))
+            print(f'Running task "{task.name}": ...')
         result = call_func(*args, **kwargs)
         if self.backend_verbose:
-            print('Result of task "{}": {}'.format(task.name, result))
+            print(f'Result of task "{task.name}": {result}')
         return result
 
 
@@ -223,10 +224,10 @@ class MockBackendFlow:
 
     def run(self, flow: FlowRunSpec, call_func: Callable, *args: object, **kwargs: object):
         if self.backend_verbose:
-            print('Running flow "{}": ...'.format(flow.name))
+            print(f'Running flow "{flow.name}": ...')
         result = call_func(*args, **kwargs)
         if self.backend_verbose:
-            print('Result of flow "{}": {}'.format(flow.name, result))
+            print(f'Result of flow "{flow.name}": {result}')
         return result
 
 
@@ -250,7 +251,7 @@ class MockJobRunnerSubclass(JobRunnerEngine):
         self.backend_verbose: bool = self._config.backend_verbose
 
     @classmethod
-    def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
+    def get_config_cls(cls) -> type[IsJobRunnerConfig]:
         return MockEngineConfig
 
     # Task run hooks

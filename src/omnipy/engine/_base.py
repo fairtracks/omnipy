@@ -1,7 +1,6 @@
 """Base engine contracts for runtime execution backends."""
 
 from abc import ABC, abstractmethod
-from typing import Type
 
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
@@ -28,7 +27,7 @@ class Engine(ABC):
 
     @classmethod
     @abstractmethod
-    def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
+    def get_config_cls(cls) -> type[IsJobRunnerConfig]:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{ISENGINE_GET_CONFIG_CLS_SUMMARY}}
         #

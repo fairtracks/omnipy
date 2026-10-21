@@ -1,10 +1,11 @@
 """Tests for raw models and nested split-join behavior."""
 
+from collections.abc import Callable, Iterable
 import datetime
 from enum import Enum
 import os
 from textwrap import dedent
-from typing import Annotated, Callable, cast, Iterable, TypeAlias
+from typing import Annotated, cast, TypeAlias
 
 import pytest
 import pytest_cases as pc
@@ -116,13 +117,13 @@ def test_datetime_model() -> None:
 
     datetime_model_from_iso = DateTimeModel('2022-01-01T12:15:00Z')
     assert datetime_model_from_iso.content == datetime.datetime(
-        2022, 1, 1, 12, 15, 00, tzinfo=datetime.timezone.utc
+        2022, 1, 1, 12, 15, 00, tzinfo=datetime.UTC
     )
     assert datetime_model_from_iso.to_data() == '2022-01-01T12:15:00+00:00'
 
     datetime_model_from_unix_secs = DateTimeModel(1786640576)
     assert datetime_model_from_unix_secs.content == datetime.datetime(
-        2026, 8, 13, 17, 2, 56, tzinfo=datetime.timezone.utc
+        2026, 8, 13, 17, 2, 56, tzinfo=datetime.UTC
     )
     assert datetime_model_from_unix_secs.to_data() == '2026-08-13T17:02:56+00:00'
 
@@ -133,7 +134,7 @@ def test_time_model() -> None:
     assert time_model_from_time.to_data() == '12:15:00'
 
     time_model_from_iso = TimeModel('12:15Z')
-    assert time_model_from_iso.content == datetime.time(12, 15, tzinfo=datetime.timezone.utc)
+    assert time_model_from_iso.content == datetime.time(12, 15, tzinfo=datetime.UTC)
     assert time_model_from_iso.to_data() == '12:15:00+00:00'
 
 

@@ -1,7 +1,8 @@
+from collections.abc import Iterator
 from math import nan
-from typing import Generic, Iterator, overload, SupportsIndex
+from typing import Generic, overload, Self, SupportsIndex
 
-from typing_extensions import Self, TypeVar
+from typing_extensions import TypeVar
 
 from omnipy.components.tables.models import (
     ColumnModel,

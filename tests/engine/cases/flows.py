@@ -1,5 +1,6 @@
 import asyncio
-from typing import AsyncGenerator, Awaitable, cast, Generator
+from collections.abc import AsyncGenerator, Awaitable, Generator
+from typing import cast
 
 import pytest_cases as pc
 

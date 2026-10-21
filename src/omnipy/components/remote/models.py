@@ -1,10 +1,8 @@
 """Models for HTTP URLs, URL parts, query strings, and automatic response decoding."""
 
 from pathlib import PurePosixPath
-from typing import Any, cast, TypeGuard
+from typing import Any, cast, Self, TypeGuard
 from urllib.parse import quote, unquote
-
-from typing_extensions import Self
 
 from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING

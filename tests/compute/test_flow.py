@@ -1,8 +1,8 @@
 """Test compute flow templates and runtime behavior."""
 
-from collections.abc import AsyncGenerator, AsyncIterator, Generator, Iterable, Iterator
+from collections.abc import AsyncGenerator, AsyncIterator, Callable, Generator, Iterable, Iterator
 from datetime import datetime
-from typing import Annotated, Callable, cast, Type
+from typing import Annotated, cast
 
 import pytest
 import pytest_cases as pc
@@ -35,7 +35,7 @@ from .helpers.mocks import (
     MockTaskTemplateAssertSameTimeOfCurFlowRun,
 )
 
-MockJobClasses = tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
+MockJobClasses = tuple[type[JobBase], type[JobTemplateMixin], type[JobMixin]]
 
 
 def test_flow_context_mock() -> None:
@@ -1005,8 +1005,7 @@ def test_linear_flow_uses_terminal_return_annotation_to_detect_sync_generator_pa
 ) -> None:
     @TaskTemplate()
     def values(number: int) -> Generator:
-        for value in range(number, number + 3):
-            yield value
+        yield from range(number, number + 3)
 
     @TaskTemplate()
     def pass_values_through(values: Generator) -> Iterator[int]:

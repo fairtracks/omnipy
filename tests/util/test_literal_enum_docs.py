@@ -1,9 +1,9 @@
 """Tests for literal enum docs."""
 
-from typing import get_args, Literal
+from typing import assert_never, get_args, Literal
 
 import pytest
-from typing_extensions import assert_never, TypeIs
+from typing_extensions import TypeIs
 
 from omnipy.util.literal_enum import LiteralEnum
 import omnipy.util.pydantic as pyd

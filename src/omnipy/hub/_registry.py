@@ -9,7 +9,6 @@ regenerate its unique name before registering it as a distinct job.
 
 from collections import defaultdict
 from datetime import datetime
-from typing import DefaultDict
 
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared.enums.job import RunState, RunStateLogMessages
@@ -23,7 +22,7 @@ class RunStateRegistry(LogMixin):
 
         self._jobs: dict[str, IsUniquelyNamedJob] = {}
         self._job_states: dict[str, RunState.Literals] = {}
-        self._state_jobs: DefaultDict[RunState.Literals, list[str]] = defaultdict(list)
+        self._state_jobs: defaultdict[RunState.Literals, list[str]] = defaultdict(list)
         self._job_state_datetime: dict[tuple[str, RunState.Literals], datetime] = {}
 
         super().__init__()

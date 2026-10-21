@@ -9,7 +9,6 @@ investigation records into Omnipy models.
 
 from datetime import date, datetime
 from enum import Enum
-from typing import List, Optional, Union
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -56,22 +55,22 @@ class IsaInvestigationSchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    filename: Optional[str] = None
-    identifier: Optional[str] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    submissionDate: Optional[Union[datetime, date, pyd.constr(max_length=0)]] = None
-    publicReleaseDate: Optional[Union[datetime, date, pyd.constr(max_length=0)]] = None
-    ontologySourceReferences: Optional[
-        List[ontology_source_reference_schema.IsaOntologySourceReferenceModel]
-    ] = None
-    publications: Optional[List[publication_schema.IsaPublicationModel]] = None
-    people: Optional[List[person_schema.IsaPersonModel]] = None
-    studies: Optional[List[study_schema.IsaStudyModel]] = None
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    filename: str | None = None
+    identifier: str | None = None
+    title: str | None = None
+    description: str | None = None
+    submissionDate: datetime | date | pyd.constr(max_length=0) | None = None
+    publicReleaseDate: datetime | date | pyd.constr(max_length=0) | None = None
+    ontologySourceReferences: (
+        list[ontology_source_reference_schema.IsaOntologySourceReferenceModel] | None
+    ) = None
+    publications: list[publication_schema.IsaPublicationModel] | None = None
+    people: list[person_schema.IsaPersonModel] | None = None
+    studies: list[study_schema.IsaStudyModel] | None = None
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
     _date_to_iso_format = pyd.validator('submissionDate', 'publicReleaseDate', allow_reuse=True)(
         date_to_iso_format

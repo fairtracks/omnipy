@@ -1,8 +1,6 @@
+from collections.abc import Callable, Iterable, Mapping
 from typing import (
-    Callable,
     Concatenate,
-    Iterable,
-    Mapping,
     overload,
     ParamSpec,
     Protocol,

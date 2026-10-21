@@ -1,8 +1,9 @@
 """Case setup helpers for data display panel tests."""
 
+from collections.abc import Callable
 import dataclasses
 from dataclasses import dataclass, field
-from typing import Annotated, Any, Callable, cast, Generic, TypeAlias
+from typing import Annotated, Any, cast, Generic, TypeAlias
 
 import pytest
 import pytest_cases as pc

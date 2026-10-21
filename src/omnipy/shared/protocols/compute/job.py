@@ -1,11 +1,12 @@
 """Top-level task and flow protocol definitions."""
 
+from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 import inspect
 import os
 from textwrap import dedent
 from types import MappingProxyType
-from typing import Any, Callable, Iterable, Mapping, ParamSpec, Protocol, runtime_checkable, TypeVar
+from typing import Any, ParamSpec, Protocol, runtime_checkable, TypeVar
 
 from omnipy.shared._typedefs import _JobT, _JobTemplateT
 from omnipy.shared.enums.job import (

@@ -1,6 +1,6 @@
 """Tar-file serializers for raw string and bytes datasets."""
 
-from typing import Any, cast, IO, Type
+from typing import Any, cast, IO
 
 from omnipy.data._typing.helpers import all_dataset_type_variants
 from omnipy.data.dataset import Dataset
@@ -22,7 +22,7 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
         return len(type_variants) > 0 and type_variants[0] is str
 
     @classmethod
-    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+    def get_dataset_cls_for_new(cls) -> type[IsDataset]:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}
         """Return the dataset class created during deserialization."""
@@ -88,7 +88,7 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
         return len(type_variants) > 0 and type_variants[0] is bytes
 
     @classmethod
-    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+    def get_dataset_cls_for_new(cls) -> type[IsDataset]:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}
         """Return the dataset class created during deserialization."""

@@ -1,8 +1,9 @@
 """Provide reusable flow test cases."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import update_wrapper
-from typing import Any, Callable, Generic, ParamSpec, TypeVar
+from typing import Any, Generic, ParamSpec, TypeVar
 
 import pytest_cases as pc
 

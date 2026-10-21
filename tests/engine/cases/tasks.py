@@ -1,9 +1,9 @@
 """Task and flow cases for engine tests."""
 
 import asyncio
+from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine, Generator
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 import threading
-from typing import AsyncGenerator, Awaitable, Callable, Coroutine, Generator
 
 from aiostream.stream import enumerate as aenumerate
 import pytest

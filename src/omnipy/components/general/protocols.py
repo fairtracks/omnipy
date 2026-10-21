@@ -1,6 +1,6 @@
-from typing import Protocol
+from typing import Protocol, Self
 
-from typing_extensions import runtime_checkable, Self, TypeVar
+from typing_extensions import runtime_checkable, TypeVar
 
 _T_contra = TypeVar('_T_contra', contravariant=True)
 

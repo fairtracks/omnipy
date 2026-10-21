@@ -1,27 +1,24 @@
 """Protocols for Omnipy data models, datasets, serializers, and reactive state."""
 
 import asyncio
+from collections.abc import Callable, Iterable, Iterator, Mapping
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 import functools
 import os
 from textwrap import dedent
 from typing import (
     Any,
-    Callable,
-    ContextManager,
     IO,
-    Iterable,
-    Iterator,
-    Mapping,
     overload,
     Protocol,
     runtime_checkable,
-    Type,
+    Self,
     TypeAlias,
     TypedDict,
 )
 
-from typing_extensions import override, Self, TypeVar
+from typing_extensions import override, TypeVar
 
 from omnipy.shared.protocols._util import IsWeakKeyRefContainer
 from omnipy.shared.protocols.config import (
@@ -400,7 +397,7 @@ class IsSerializer(Protocol[_DatasetT]):
         ...
 
     @classmethod
-    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+    def get_dataset_cls_for_new(cls) -> type[IsDataset]:
         """Return the dataset class this serializer creates when deserializing.
 
         Returns:
@@ -495,7 +492,7 @@ class IsSerializerRegistry(Protocol):
 
     def __init__(self) -> None: ...
 
-    def register(self, serializer_cls: Type[IsSerializer]) -> None:
+    def register(self, serializer_cls: type[IsSerializer]) -> None:
         """Register a serializer class with the registry.
 
         Args:
@@ -504,7 +501,7 @@ class IsSerializerRegistry(Protocol):
         ...
 
     @property
-    def serializers(self) -> tuple[Type[IsSerializer], ...]:
+    def serializers(self) -> tuple[type[IsSerializer], ...]:
         """Return all registered serializer classes.
 
         Returns:
@@ -513,7 +510,7 @@ class IsSerializerRegistry(Protocol):
         ...
 
     @property
-    def tar_file_serializers(self) -> tuple[Type[IsTarFileSerializer], ...]:
+    def tar_file_serializers(self) -> tuple[type[IsTarFileSerializer], ...]:
         """Return the registered tar-file serializer classes.
 
         Returns:
@@ -554,7 +551,7 @@ class IsSerializerRegistry(Protocol):
 
     def detect_tar_file_serializers_from_dataset_cls(
         self, dataset: IsDataset
-    ) -> tuple[Type[IsTarFileSerializer], ...]:
+    ) -> tuple[type[IsTarFileSerializer], ...]:
         """Return tar-file serializers compatible with the dataset class.
 
         Args:
@@ -567,7 +564,7 @@ class IsSerializerRegistry(Protocol):
 
     def detect_tar_file_serializers_from_file_suffix(
         self, file_suffix: str
-    ) -> tuple[Type[IsTarFileSerializer], ...]:
+    ) -> tuple[type[IsTarFileSerializer], ...]:
         """Return tar-file serializers matching a file suffix.
 
         Args:
@@ -819,7 +816,7 @@ class IsDataClassCreator(Protocol[HasContentT, ContentT]):
         self,
         top_level_entry_func: Callable[[], None],
         top_level_exit_func: Callable[[], None],
-    ) -> ContextManager[int]:
+    ) -> AbstractContextManager[int]:
         """Return a context manager for coordinated deepcopy bookkeeping.
 
         Args:
@@ -827,6 +824,6 @@ class IsDataClassCreator(Protocol[HasContentT, ContentT]):
             top_level_exit_func: Callback invoked when leaving the outermost deepcopy.
 
         Returns:
-            ContextManager[int]: Context manager tracking nested deepcopy depth.
+            AbstractContextManager[int]: Context manager tracking nested deepcopy depth.
         """
         ...

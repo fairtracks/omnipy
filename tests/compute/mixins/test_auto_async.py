@@ -1,8 +1,9 @@
 """Test auto_async task mixin behavior."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from inspect import isawaitable, iscoroutine
-from typing import Any, Callable, Coroutine, TypeAlias
+from typing import Any, TypeAlias
 
 import pytest
 import pytest_cases as pc

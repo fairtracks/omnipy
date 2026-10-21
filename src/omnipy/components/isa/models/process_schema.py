@@ -4,7 +4,7 @@
 
 import datetime
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Optional
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -55,38 +55,36 @@ class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    name: Optional[str] = None
-    executesProtocol: Optional[protocol_schema.IsaProtocolModel] = None
-    parameterValues: Optional[
-        List[process_parameter_value_schema.IsaProcessParameterValueModel]
-    ] = None
-    performer: Optional[str] = None
-    date: Optional[Union[datetime.datetime, datetime.date, pyd.constr(max_length=0)]] = None
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    name: str | None = None
+    executesProtocol: protocol_schema.IsaProtocolModel | None = None
+    parameterValues: list[process_parameter_value_schema.IsaProcessParameterValueModel] | None = (
+        None
+    )
+    performer: str | None = None
+    date: datetime.datetime | datetime.date | pyd.constr(max_length=0) | None = None
     previousProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
     nextProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
-    inputs: Optional[
-        List[
-            Union[
-                source_schema.IsaSourceModel,
-                sample_schema.IsaSampleModel,
-                data_schema.IsaDataModel,
-                material_schema.IsaMaterialModel,
-            ]
+    inputs: (
+        list[
+            source_schema.IsaSourceModel
+            | sample_schema.IsaSampleModel
+            | data_schema.IsaDataModel
+            | material_schema.IsaMaterialModel
         ]
-    ] = None
-    outputs: Optional[
-        List[
-            Union[
-                sample_schema.IsaSampleModel,
-                data_schema.IsaDataModel,
-                material_schema.IsaMaterialModel,
-            ]
+        | None
+    ) = None
+    outputs: (
+        list[
+            sample_schema.IsaSampleModel
+            | data_schema.IsaDataModel
+            | material_schema.IsaMaterialModel
         ]
-    ] = None
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+        | None
+    ) = None
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
     _date_to_iso_format = pyd.validator('date', allow_reuse=True)(date_to_iso_format)
 

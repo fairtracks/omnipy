@@ -1,11 +1,10 @@
 """Tests for memoization helpers."""
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, TypeAlias
 import weakref
 
 import pytest
-from typing_extensions import TypeAlias
 
 from omnipy.data.model import Model
 from omnipy.util.memo import RefCountMemoDict

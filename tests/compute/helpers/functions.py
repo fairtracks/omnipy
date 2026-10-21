@@ -1,4 +1,4 @@
-from typing import Callable
+from collections.abc import Callable
 
 from omnipy.shared.protocols.compute.job import IsJob, IsJobTemplate
 

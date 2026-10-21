@@ -1,7 +1,8 @@
 """Core layout objects that compose panels into a single-row arrangement."""
 
+from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass
-from typing import Callable, cast, Generic, Iterable, Iterator, Mapping
+from typing import cast, Generic
 
 from typing_extensions import TypeIs, TypeVar
 

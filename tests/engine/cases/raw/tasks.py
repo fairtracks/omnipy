@@ -1,5 +1,5 @@
 import asyncio
-from typing import AsyncGenerator, AsyncIterator, Generator
+from collections.abc import AsyncGenerator, AsyncIterator, Generator
 
 from omnipy.compute.task import TaskTemplate
 
@@ -70,8 +70,7 @@ def compute_base(number: int) -> dict[str, int]:
 
 @TaskTemplate()
 def emit_three_values(number: int) -> Generator:
-    for value in range(number, number + 3):
-        yield value
+    yield from range(number, number + 3)
 
 
 @TaskTemplate()
@@ -93,8 +92,7 @@ def generate_square_sequence(count: int) -> Generator:
 
 @TaskTemplate()
 def generate_window(start: int, window_size: int) -> Generator:
-    for value in range(start, start + window_size):
-        yield value
+    yield from range(start, start + window_size)
 
 
 # Async scalar tasks: unary int -> int

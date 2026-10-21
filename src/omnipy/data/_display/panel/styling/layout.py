@@ -1,8 +1,9 @@
 """Layout-panel styling that turns resized panel collections into tables."""
 
+from collections.abc import Iterator
 from dataclasses import dataclass
 from functools import cached_property, lru_cache
-from typing import Any, cast, Generic, Iterator
+from typing import Any, cast, Generic
 
 import rich.align
 import rich.box

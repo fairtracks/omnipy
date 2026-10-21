@@ -1,7 +1,7 @@
 """Case data for model special-method tests."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from omnipy.data.model import Model
 

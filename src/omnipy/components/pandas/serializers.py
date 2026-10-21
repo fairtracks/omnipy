@@ -1,7 +1,7 @@
 """Tar-file serializer for pandas-backed Omnipy datasets."""
 
 from io import BytesIO
-from typing import Any, IO, Type
+from typing import Any, IO
 
 from omnipy.data.serializer import TarFileSerializer
 from omnipy.shared.protocols.data import IsDataset
@@ -23,7 +23,7 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
         return isinstance(dataset, PandasDataset)
 
     @classmethod
-    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+    def get_dataset_cls_for_new(cls) -> type[IsDataset]:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}
         """Return the dataset class created during deserialization."""

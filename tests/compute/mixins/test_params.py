@@ -1,6 +1,6 @@
 """Test fixed-parameter and parameter-mapping task mixins."""
 
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
 import pytest
 

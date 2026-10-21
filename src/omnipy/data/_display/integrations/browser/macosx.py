@@ -1,8 +1,8 @@
 """macOS browser integration helpers for opening rendered HTML output."""
 
+from collections.abc import Iterable
 import os
 from textwrap import dedent
-from typing import Iterable
 import webbrowser
 
 # Adapted from https://github.com/python/cpython/pull/130535, dual licensed under the PSF

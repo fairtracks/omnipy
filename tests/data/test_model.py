@@ -21,7 +21,6 @@ from typing import (
     List,
     Literal,
     Optional,
-    Type,
     TypeAlias,
     Union,
 )
@@ -378,7 +377,7 @@ def test_get_inner_outer_type() -> None:
     assert outer_optional_model.inner_type(with_args=True) == dict[str, list[int]] | None
     assert outer_optional_model.is_nested_type() is False
 
-    inner_optional_model = Model[dict[str, Optional[list[int]]]]()
+    inner_optional_model = Model[dict[str, list[int] | None]]()
     assert inner_optional_model.outer_type() is dict
     assert inner_optional_model.outer_type(with_args=True) == dict[str, list[int] | None]
     assert inner_optional_model.inner_type() == UnionType
@@ -626,7 +625,7 @@ def test_repr_pretty() -> None:
     assert pretty([model]) == '[Model[list[int]]([123])]'
 
 
-def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model]) -> bool:
+def _issubclass_and_isinstance(model_cls_a: type[Model], model_cls_b: type[Model]) -> bool:
     """Provide issubclass and isinstance for test reuse."""
     is_subclass = issubclass(model_cls_a, model_cls_b)
 
@@ -985,7 +984,7 @@ def test_union_default_value_from_first_callable_type() -> None:
 
     assert FirstTypeNotInstantiatableUnionModel().to_data() == ''
 
-    class NoTypeInstantiatableUnionModel(Model[Any | Type]): ...
+    class NoTypeInstantiatableUnionModel(Model[Any | type]): ...
 
     with pytest.raises(TypeError):
         NoTypeInstantiatableUnionModel()
@@ -1065,7 +1064,7 @@ def test_nested_union_default_value() -> None:
 
     assert NestedUnion().to_data() == ''
 
-    class NestedUnionWithOptional(Model[Union[Union[Optional[str], int], float]]): ...
+    class NestedUnionWithOptional(Model[Union[Union[str | None, int], float]]): ...
 
     assert NestedUnionWithOptional().to_data() is None
 

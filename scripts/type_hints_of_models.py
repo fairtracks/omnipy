@@ -1,6 +1,5 @@
 from types import MappingProxyType, NoneType
-
-from typing_extensions import reveal_type
+from typing import reveal_type
 
 from omnipy import (
     Dataset,

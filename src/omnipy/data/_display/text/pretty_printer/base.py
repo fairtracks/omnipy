@@ -1,9 +1,10 @@
 """Base classes for display pretty printers and iterative tightening logic."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 import dataclasses
 import operator
-from typing import Callable, ClassVar, Generic
+from typing import ClassVar, Generic
 
 from typing_extensions import override
 

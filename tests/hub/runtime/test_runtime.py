@@ -5,7 +5,7 @@ import logging
 import os
 from pathlib import Path
 import sys
-from typing import Annotated, Type
+from typing import Annotated
 
 import pytest
 import pytest_cases as pc
@@ -321,7 +321,7 @@ def test_data_config_display_dimensions(runtime: Annotated[IsRuntime, pytest.fix
 
 
 def test_init_runtime_config_after_data_class_creator(
-    runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
+    runtime_cls: Annotated[type[IsRuntime], pytest.fixture],
 ) -> None:
     DataClassBase.data_class_creator.config.model.dynamically_convert_elements_to_models = True
     runtime = runtime_cls()
@@ -338,7 +338,7 @@ def test_init_runtime_config_after_data_class_creator(
 
 
 def test_init_runtime_config_after_job_creator(
-    runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
+    runtime_cls: Annotated[type[IsRuntime], pytest.fixture],
 ) -> None:
     JobBase.job_creator.config.output_storage.persist_outputs = ConfigPersistOutputsOptions.DISABLED
     runtime = runtime_cls()

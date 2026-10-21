@@ -4,10 +4,11 @@ This module defines the read-only parameter class pattern used by Omnipy models
 and datasets, plus helpers that clone classes with adjusted parameter defaults.
 """
 
+from collections.abc import Callable
 from copy import deepcopy
 from dataclasses import dataclass
 import functools
-from typing import Any, Callable, cast, Concatenate, ParamSpec
+from typing import Any, cast, Concatenate, ParamSpec
 
 from typing_extensions import dataclass_transform, TypeVar
 

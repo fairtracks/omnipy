@@ -1,7 +1,8 @@
 """Helper classes for engine tests."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Generic, ParamSpec, Type, TypeVar
+from typing import Any, Generic, ParamSpec, TypeVar
 
 from typing_extensions import override
 
@@ -58,7 +59,7 @@ class JobRunnerStateChecker(IsJobRunnerEngine):
         return self._engine.registry
 
     @override
-    def get_config_cls(self) -> Type[IsJobRunnerConfig]:  # type: ignore[override]
+    def get_config_cls(self) -> type[IsJobRunnerConfig]:  # type: ignore[override]
         return self._engine.get_config_cls()  # noqa
 
     def supports(self, job_type: JobType.Literals) -> bool:

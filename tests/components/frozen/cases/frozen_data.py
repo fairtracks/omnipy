@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 import os
 from textwrap import dedent
-from typing import Type, TypeAlias
+from typing import TypeAlias
 
 import pytest
 import pytest_cases as pc
@@ -61,7 +61,7 @@ def case_test_frozen_tuples() -> CaseInfo:
         err_ft_int: int = f_int
         err_ft_str: str = f_str
         err_ft_complex: complex = f_complex
-        err_ft_type: Type = ej_type
+        err_ft_type: type = ej_type
         ft_tuple: tuple[FSV, ...] = f_tuple  # Orig: err_l_tuple. Here obviously supported
         err_ft_tuple_iterable_scalar: tuple = ej_tuple_iterable_scalar
         ftnp_tuple_wrong_scalar: tuple = ej_tuple_wrong_scalar
@@ -123,7 +123,7 @@ def case_frozen_dicts() -> CaseInfo:
         err_fd_int: int = f_int
         err_fd_str: str = f_str
         err_fd_complex: complex = f_complex
-        err_fd_type: Type = ej_type
+        err_fd_type: type = ej_type
 
         err_fd_tuple: tuple[FSV, ...] = f_tuple
         fd_frozendict: FrozenDict[FSK, FSV] = field(
@@ -222,8 +222,8 @@ def case_frozen_dicts_or_tuples() -> CaseInfo:
         ftd_int: int = f_int
         ftd_str: str = f_str
         ftd_complex: complex = f_complex
-        ftdnp_type: Type = ej_type
-        err_ftdp_type: Type = ej_type
+        ftdnp_type: type = ej_type
+        err_ftdp_type: type = ej_type
 
         ftd_tuple: tuple[FSV, ...] = f_tuple
         ftd_frozendict: FrozenDict[FSK, FSV] = field(

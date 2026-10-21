@@ -1,6 +1,6 @@
 """Helper classes shared by component test cases."""
 
-from typing import NamedTuple, Type
+from typing import NamedTuple
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
@@ -13,8 +13,8 @@ class CaseInfo(NamedTuple):
     """Describe reusable model and dataset case data."""
 
     name: str
-    prefix2model_classes: dict[str, tuple[Type[Model], ...]]
-    prefix2dataset_classes: dict[str, tuple[Type[Dataset], ...]]
+    prefix2model_classes: dict[str, tuple[type[Model], ...]]
+    prefix2dataset_classes: dict[str, tuple[type[Dataset], ...]]
     data_points: IsDataclass
 
     @staticmethod
@@ -29,7 +29,7 @@ class CaseInfo(NamedTuple):
             name = name[len(ERROR_PREFIX) :]
         return name
 
-    def model_classes_for_data_point(self, name: str) -> tuple[Type[Model], ...]:
+    def model_classes_for_data_point(self, name: str) -> tuple[type[Model], ...]:
         """Return model classes registered for a data point name."""
         name = self._remove_error_prefix(name)
         for prefix, model_classes in self.prefix2model_classes.items():
@@ -37,7 +37,7 @@ class CaseInfo(NamedTuple):
                 return model_classes
         raise KeyError(f'{name} does not match any registered prefix for this test')
 
-    def dataset_classes_for_data_point(self, name: str) -> tuple[Type[Dataset], ...]:
+    def dataset_classes_for_data_point(self, name: str) -> tuple[type[Dataset], ...]:
         """Return dataset classes registered for a data point name."""
         name = self._remove_error_prefix(name)
         for prefix, dataset_classes in self.prefix2dataset_classes.items():

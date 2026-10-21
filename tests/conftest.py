@@ -1,6 +1,6 @@
 """Shared fixtures and pytest hooks for Omnipy tests."""
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import datetime
 import gc
 import itertools
@@ -9,7 +9,7 @@ import os
 from pathlib import Path
 import shutil
 import tempfile
-from typing import Annotated, Callable, Type
+from typing import Annotated
 from unittest import mock
 
 import pytest
@@ -90,7 +90,7 @@ def runtime_cls(
     teardown_remove_root_log_handlers: Annotated[None, pytest.fixture],
     teardown_reset_job_creator: Annotated[None, pytest.fixture],
     teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
-) -> Type[IsRuntime]:
+) -> type[IsRuntime]:
     from omnipy.hub.runtime import Runtime
 
     return Runtime
@@ -98,7 +98,7 @@ def runtime_cls(
 
 @pytest.fixture(scope='function')
 def runtime_default_config_with_tmp_dir(
-    runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
+    runtime_cls: Annotated[type[IsRuntime], pytest.fixture],
     tmp_dir_path: Annotated[Path, pytest.fixture],
 ) -> IsRuntime:
     """Provide an isolated runtime instance (no config changes except tmp dir path)."""

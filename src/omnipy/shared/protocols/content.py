@@ -1,9 +1,9 @@
 """Protocols for model content types with Omnipy-specific typing behavior."""
 
 from collections.abc import Generator, Iterable
-from typing import Any, Literal, overload, Protocol, SupportsIndex
+from typing import Any, Literal, overload, Protocol, Self, SupportsIndex
 
-from typing_extensions import override, Self, TypeVar
+from typing_extensions import override, TypeVar
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
 from omnipy.shared.protocols._typeshed import (

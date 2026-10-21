@@ -1,12 +1,13 @@
 """Serializer abstractions and registry helpers for Omnipy datasets."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from io import BytesIO
 import os
 import tarfile
 from tarfile import TarInfo
 from textwrap import dedent
-from typing import Any, Callable, cast, Generic, IO, Type
+from typing import Any, cast, Generic, IO
 
 from typing_extensions import TypeVar
 
@@ -141,21 +142,21 @@ class SerializerRegistry:
     """Registry and auto-detection helper for the serializers available to Omnipy."""
 
     def __init__(self) -> None:
-        self._serializer_classes: list[Type[IsSerializer]] = []
+        self._serializer_classes: list[type[IsSerializer]] = []
 
-    def register(self, serializer_cls: Type[IsSerializer]) -> None:
+    def register(self, serializer_cls: type[IsSerializer]) -> None:
         """Register a serializer class for later lookup and auto-detection."""
 
         self._serializer_classes.append(serializer_cls)
 
     @property
-    def serializers(self) -> tuple[Type[IsSerializer], ...]:
+    def serializers(self) -> tuple[type[IsSerializer], ...]:
         """Return all registered serializer classes in registration order."""
 
         return tuple(self._serializer_classes)
 
     @property
-    def tar_file_serializers(self) -> tuple[Type[IsTarFileSerializer], ...]:
+    def tar_file_serializers(self) -> tuple[type[IsTarFileSerializer], ...]:
         """Return registered serializers that operate on gzipped tar archives."""
 
         return tuple(cls for cls in self._serializer_classes if issubclass(cls, TarFileSerializer))
@@ -176,7 +177,7 @@ class SerializerRegistry:
     def _autodetect_serializer(
         cls,
         dataset: IsDataset,
-        serializers: tuple[Type[IsSerializer], ...],
+        serializers: tuple[type[IsSerializer], ...],
     ) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
 
         from omnipy.hub.runtime import runtime
@@ -201,7 +202,7 @@ class SerializerRegistry:
     def _test_all_serializer_combos(
         cls,
         dataset: IsDataset,
-        serializers: tuple[Type[IsSerializer], ...],
+        serializers: tuple[type[IsSerializer], ...],
     ) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
 
         # def _direct(dataset: Dataset, serializer: Serializer):
@@ -243,7 +244,7 @@ class SerializerRegistry:
 
     def detect_tar_file_serializers_from_dataset_cls(
         self, dataset: IsDataset
-    ) -> tuple[Type[IsTarFileSerializer], ...]:
+    ) -> tuple[type[IsTarFileSerializer], ...]:
         """Return tar-file serializers that can load data into ``dataset``.
 
         If no direct match exists, serializers using the generic ``bytes`` suffix are returned as a
@@ -265,7 +266,7 @@ class SerializerRegistry:
 
     def detect_tar_file_serializers_from_file_suffix(
         self, file_suffix: str
-    ) -> tuple[Type[IsTarFileSerializer], ...]:
+    ) -> tuple[type[IsTarFileSerializer], ...]:
         """Return tar-file serializers whose output suffix matches ``file_suffix``."""
 
         return tuple(

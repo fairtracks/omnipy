@@ -1,8 +1,8 @@
 """Context managers and context helper utilities used across Omnipy."""
 
+from collections.abc import Callable, Iterator
 from contextlib import AbstractContextManager, contextmanager
 from copy import deepcopy
-from typing import Callable, Iterator
 
 from typing_extensions import TypeVar
 

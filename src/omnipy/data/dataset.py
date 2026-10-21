@@ -7,7 +7,7 @@ dataset instances and subclasses in a lenient way that works with the library's 
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, MutableMapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping
 from contextlib import suppress
 from copy import copy
 import functools
@@ -16,10 +16,10 @@ import json
 import os
 import tarfile
 from textwrap import dedent
-from typing import Any, Callable, cast, Generic, Iterator, overload
+from typing import Any, cast, Generic, overload, Self
 from zipfile import ZipFile
 
-from typing_extensions import override, Self, TypeIs, TypeVar
+from typing_extensions import override, TypeIs, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin

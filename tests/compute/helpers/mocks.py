@@ -1,18 +1,15 @@
 """Provide reusable compute test mocks and protocols."""
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Mapping
 from datetime import datetime
 from types import MappingProxyType
 from typing import (
     Any,
-    Callable,
     cast,
     Generic,
-    Mapping,
     ParamSpec,
     Protocol,
     runtime_checkable,
-    Type,
     TypeAlias,
 )
 
@@ -405,7 +402,7 @@ class PublicPropertyErrorsMockJob(
     """Provide a job that surfaces public-property validation errors."""
 
     @classmethod
-    def _get_job_template_subcls_for_revise(cls) -> Type[IsJobTemplate]:
+    def _get_job_template_subcls_for_revise(cls) -> type[IsJobTemplate]:
         return cast(type[IsJobTemplate], PublicPropertyErrorsMockJobTemplate)
 
     def _apply_engine_decorator(self, engine: IsEngine) -> None: ...
@@ -435,7 +432,7 @@ class MockLocalRunner:
         return job_type in self.supported_job_types
 
     @classmethod
-    def get_config_cls(cls) -> Type[IsJobRunnerConfig]: ...
+    def get_config_cls(cls) -> type[IsJobRunnerConfig]: ...
 
     def set_config(self, config: IsJobRunnerConfig) -> None: ...
 

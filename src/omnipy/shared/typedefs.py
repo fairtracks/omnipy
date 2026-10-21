@@ -1,20 +1,21 @@
 """Shared type aliases and protocol-based callable definitions."""
 
+from collections.abc import Callable
 from types import GenericAlias, UnionType
 from typing import (
     _AnnotatedAlias,  # type: ignore[attr-defined]
     _LiteralGenericAlias,  # type: ignore[attr-defined]
     _SpecialForm,
     _UnionGenericAlias,  # type: ignore[attr-defined]
-    Callable,
     ForwardRef,
     Generic,
     ParamSpec,
     Protocol,
+    Self,
     TypeAlias,
 )
 
-from typing_extensions import Self, TypeVar
+from typing_extensions import TypeVar
 
 GeneralDecorator = Callable[[Callable], Callable]
 LocaleType: TypeAlias = str | tuple[str | None, str | None]

@@ -1,9 +1,10 @@
 """Helper functions for engine tests."""
 
 import asyncio
+from collections.abc import AsyncGenerator, AsyncIterator, Callable
 from datetime import datetime, timedelta
 from time import sleep
-from typing import AsyncGenerator, AsyncIterator, Callable, cast, Type
+from typing import cast
 
 from omnipy.shared.enums.job import JobType, RunState
 from omnipy.shared.protocols.compute.job import (
@@ -218,8 +219,8 @@ def create_dag_flow_with_two_func_tasks(
 def update_job_case_with_job(
     job_case: JobCase,
     job_type: JobType.Literals,
-    task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Type[IsFlowTemplate] | None,
+    task_template_cls: type[IsTaskTemplate],
+    flow_template_cls: type[IsFlowTemplate] | None,
     engine: IsJobRunnerEngine,
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,

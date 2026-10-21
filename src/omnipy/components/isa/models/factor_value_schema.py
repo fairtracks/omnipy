@@ -7,7 +7,6 @@ ISA means Investigation/Study/Assay, and these classes model ISA-JSON JSON-LD pa
 """
 
 from enum import Enum
-from typing import List, Optional, Union
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -46,13 +45,13 @@ class IsaFactorValueSchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    category: Optional[factor_schema.IsaFactorModel] = None
-    value: Optional[Union[ontology_annotation_schema.IsaOntologyReferenceModel, str, float]] = None
-    unit: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    category: factor_schema.IsaFactorModel | None = None
+    value: ontology_annotation_schema.IsaOntologyReferenceModel | str | float | None = None
+    unit: ontology_annotation_schema.IsaOntologyReferenceModel | None = None
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
 
 class IsaFactorValueModel(Model[IsaFactorValueSchema]):

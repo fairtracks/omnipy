@@ -1,9 +1,10 @@
 """Mixin for binding fixed parameters and parameter key remapping to jobs."""
 
+from collections.abc import Iterable, Mapping
 import os
 from textwrap import dedent
 from types import MappingProxyType
-from typing import cast, Iterable, Mapping
+from typing import cast
 
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute._mixins.name import NameJobBaseMixin
@@ -85,9 +86,8 @@ class ParamsFuncJobBaseMixin:
         try:
             if len(mapped_kwargs) < len(kwargs):
                 raise TypeError(
-                    'Keyword arguments {} matches parameter key map inversely.'.format(
-                        tuple(set(kwargs.keys()) - set(mapped_kwargs.keys()))
-                    )
+                    f'Keyword arguments {tuple(set(kwargs.keys()) - set(mapped_kwargs.keys()))} '
+                    'matches parameter key map inversely.'
                 )
 
             super_as_job_base = cast(IsJobBase, super())

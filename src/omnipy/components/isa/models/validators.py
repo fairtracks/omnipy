@@ -4,7 +4,6 @@ These helpers support ISA-JSON Investigation/Study/Assay metadata parsing in Omn
 """
 
 from datetime import date, datetime
-from typing import Union
 
 import omnipy.util.pydantic as pyd
 
@@ -12,7 +11,7 @@ import omnipy.util.pydantic as pyd
 #       (see https://github.com/pydantic/pydantic/issues/1409#issuecomment-1423995424).
 
 
-def date_to_iso_format(data: Union[datetime, date, pyd.constr(max_length=0)]):
+def date_to_iso_format(data: datetime | date | pyd.constr(max_length=0)):
     """Convert date-like values to their ISO-8601 string form.
 
     Args:

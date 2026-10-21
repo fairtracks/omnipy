@@ -1,7 +1,8 @@
 """Compact JSON pretty printer with iterative inline-width tightening."""
 
+from collections.abc import Callable
 import operator
-from typing import Callable, ClassVar
+from typing import ClassVar
 
 import compact_json.formatter
 from typing_extensions import override

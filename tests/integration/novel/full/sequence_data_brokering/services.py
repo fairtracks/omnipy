@@ -1,6 +1,6 @@
 import asyncio
+from collections.abc import Iterator
 from contextvars import ContextVar
-from typing import Iterator
 
 from .models import (
     BioSampleVaultSampleSubmissionSchema,

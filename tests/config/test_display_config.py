@@ -1,6 +1,8 @@
 """Test display-related config behavior."""
 
-from typing_extensions import ClassVar, override
+from typing import ClassVar
+
+from typing_extensions import override
 
 from omnipy.config.data import ColorConfig, DimsModeConfig
 from omnipy.shared.enums.colorstyles import DarkHighContrastColorStyles, RecommendedColorStyles

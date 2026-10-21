@@ -1,6 +1,6 @@
 """Tar-file serializer for Omnipy JSON datasets."""
 
-from typing import IO, Type
+from typing import IO
 
 from omnipy.data.serializer import TarFileSerializer
 from omnipy.shared.protocols.data import IsDataset
@@ -21,7 +21,7 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
         return isinstance(dataset, JsonBaseDataset) or isinstance(dataset, IsaJsonDataset)
 
     @classmethod
-    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+    def get_dataset_cls_for_new(cls) -> type[IsDataset]:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{SERIALIZER_GET_DATASET_CLS_FOR_NEW_SUMMARY}}
         """Return the dataset class created during deserialization."""

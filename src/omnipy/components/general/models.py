@@ -689,7 +689,7 @@ class GroupByTypeModel(Chain2[Model[list], Model[dict[type | GenericAlias, list]
         grouped: dict[type, list] = defaultdict(list)
 
         def _iter_union_type(seq: Iterable):
-            return Union[tuple(type(item) for item in seq)]
+            return Union[tuple(type(item) for item in seq)]  # noqa: UP007
 
         def _deduce_full_type(_item: object) -> type:
             try:

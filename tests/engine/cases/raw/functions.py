@@ -1,8 +1,8 @@
 """Helper functions for engine tests."""
 
 import asyncio
+from collections.abc import AsyncGenerator, Generator
 from time import sleep
-from typing import AsyncGenerator, Generator
 
 # Synchronous function: sync_power()
 
@@ -34,8 +34,7 @@ async def async_wait_a_bit(seconds: float) -> float:
 
 def sync_range(num: int) -> Generator:
     """Run sync range."""
-    for i in range(num):
-        yield i
+    yield from range(num)
 
 
 # Asynchronous generator: range()

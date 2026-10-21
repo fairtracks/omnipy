@@ -6,9 +6,8 @@ configuration state.
 """
 
 from collections import defaultdict
-from typing import Callable, DefaultDict
-
-from typing_extensions import Self
+from collections.abc import Callable
+from typing import Self
 
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 import omnipy.util.pydantic as pyd
@@ -38,7 +37,7 @@ class DataPublisher(pyd.BaseModel):
         validate_assignment = True
 
     _self_subscriptions: list[Callable[..., None]] = pyd.PrivateAttr(default_factory=list)
-    _attr_subscriptions: DefaultDict[str, list[Callable[..., None]]] = pyd.PrivateAttr(
+    _attr_subscriptions: defaultdict[str, list[Callable[..., None]]] = pyd.PrivateAttr(
         default_factory=_subscribers_factory
     )
 

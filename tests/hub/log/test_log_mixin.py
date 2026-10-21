@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from io import StringIO
 import logging
-from typing import Annotated, Type
+from typing import Annotated
 
 import pytest
 import pytest_cases as pc
@@ -16,7 +16,7 @@ from ..helpers.functions import assert_log_line_from_stream, format_datetime_obj
 
 
 @pc.case(id='my_class_as_regular_log_mixin_subclass')
-def case_my_class_as_regular_log_mixin_subclass() -> Type:
+def case_my_class_as_regular_log_mixin_subclass() -> type:
     class MyClass(LogMixin):
         """Define MyClass."""
 
@@ -29,7 +29,7 @@ def case_my_class_as_regular_log_mixin_subclass() -> Type:
 
 
 @pc.case(id='my_class_as_dynamic_log_mixin_subclass')
-def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
+def case_my_class_as_dynamic_log_mixin_subclass() -> type:
     class MyClass(DynamicMixinAcceptor):
         """Define MyClass."""
 
@@ -44,7 +44,7 @@ def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
 @pc.parametrize_with_cases('my_class_with_log_mixin', cases='.')
 def test_default_log(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    my_class_with_log_mixin: Annotated[Type, pytest.fixture],
+    my_class_with_log_mixin: Annotated[type, pytest.fixture],
 ):
     my_stdout = StringIO()
     runtime.config.root_log.stdout = my_stdout

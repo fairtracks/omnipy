@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from datetime import date
 from enum import Enum
-from typing import List, Optional
 
 import omnipy.util.pydantic as pyd
 
@@ -31,8 +30,8 @@ class PrizeStatus(Enum):
 
 
 class Wikipedia(pyd.BaseModel):
-    slug: Optional[str] = pyd.Field(None, description='Wikipedia url slug', example='slug')
-    english: Optional[str] = pyd.Field(
+    slug: str | None = pyd.Field(None, description='Wikipedia url slug', example='slug')
+    english: str | None = pyd.Field(
         None,
         description='URL to english wikipedia page',
         example='https://en.wikipedia.org/wiki/',
@@ -40,8 +39,8 @@ class Wikipedia(pyd.BaseModel):
 
 
 class Wikidata(pyd.BaseModel):
-    id: Optional[str] = pyd.Field(None, description='Wikidata id', example='id')
-    url: Optional[str] = pyd.Field(
+    id: str | None = pyd.Field(None, description='Wikidata id', example='id')
+    url: str | None = pyd.Field(
         None,
         description='URL to wikidata entry',
         example='https://www.wikidata.org/wiki/',
@@ -54,66 +53,66 @@ class Gender(Enum):
 
 
 class NobelPrizesMeta(pyd.BaseModel):
-    offset: Optional[int] = None
-    limit: Optional[pyd.conint(ge=1)] = None
-    nobelPrizeYear: Optional[int] = None
-    yearTo: Optional[int] = None
-    nobelPrizeCategory: Optional[str] = pyd.Field(None, example='eco')
-    count: Optional[int] = None
+    offset: int | None = None
+    limit: pyd.conint(ge=1) | None = None
+    nobelPrizeYear: int | None = None
+    yearTo: int | None = None
+    nobelPrizeCategory: str | None = pyd.Field(None, example='eco')
+    count: int | None = None
 
 
 class LaureatesMeta(pyd.BaseModel):
-    offset: Optional[int] = None
-    limit: Optional[int] = None
-    sort: Optional[str] = None
-    ID: Optional[int] = None
-    name: Optional[str] = None
-    gender: Optional[str] = None
-    motivation: Optional[str] = None
-    affiliation: Optional[str] = None
-    residence: Optional[str] = None
-    birthDate: Optional[str] = None
-    birthDateTo: Optional[str] = None
-    deathDate: Optional[str] = None
-    deathDateTo: Optional[str] = None
-    foundedDate: Optional[str] = None
-    birthCity: Optional[str] = None
-    birthCountry: Optional[str] = None
-    birthContinent: Optional[str] = None
-    deathCity: Optional[str] = None
-    deathCountry: Optional[str] = None
-    deathContinent: Optional[str] = None
-    foundedCity: Optional[str] = None
-    foundedCountry: Optional[str] = None
-    foundedContinent: Optional[str] = None
-    headquartersCity: Optional[str] = None
-    headquartersCountry: Optional[str] = None
-    headquartersContinent: Optional[str] = None
-    nobelPrizeYear: Optional[int] = None
-    yearTo: Optional[int] = None
-    nobelPrizeCategory: Optional[str] = None
-    count: Optional[int] = None
+    offset: int | None = None
+    limit: int | None = None
+    sort: str | None = None
+    ID: int | None = None
+    name: str | None = None
+    gender: str | None = None
+    motivation: str | None = None
+    affiliation: str | None = None
+    residence: str | None = None
+    birthDate: str | None = None
+    birthDateTo: str | None = None
+    deathDate: str | None = None
+    deathDateTo: str | None = None
+    foundedDate: str | None = None
+    birthCity: str | None = None
+    birthCountry: str | None = None
+    birthContinent: str | None = None
+    deathCity: str | None = None
+    deathCountry: str | None = None
+    deathContinent: str | None = None
+    foundedCity: str | None = None
+    foundedCountry: str | None = None
+    foundedContinent: str | None = None
+    headquartersCity: str | None = None
+    headquartersCountry: str | None = None
+    headquartersContinent: str | None = None
+    nobelPrizeYear: int | None = None
+    yearTo: int | None = None
+    nobelPrizeCategory: str | None = None
+    count: int | None = None
 
 
 class Links(pyd.BaseModel):
-    first: Optional[str] = None
-    prev: Optional[str] = None
-    self: Optional[str] = None
-    next: Optional[str] = None
-    last: Optional[str] = None
+    first: str | None = None
+    prev: str | None = None
+    self: str | None = None
+    next: str | None = None
+    last: str | None = None
 
 
 class ItemLinks(pyd.BaseModel):
-    rel: Optional[str] = None
-    href: Optional[str] = None
-    action: Optional[str] = None
-    types: Optional[str] = None
+    rel: str | None = None
+    href: str | None = None
+    action: str | None = None
+    types: str | None = None
 
 
 class Translation(pyd.BaseModel):
-    en: Optional[str] = pyd.Field(None, example='English')
-    se: Optional[str] = pyd.Field(None, example='Svenska')
-    no: Optional[str] = pyd.Field(None, example='Norsk')
+    en: str | None = pyd.Field(None, example='English')
+    se: str | None = pyd.Field(None, example='Svenska')
+    no: str | None = pyd.Field(None, example='Norsk')
 
 
 class Urls(pyd.BaseModel):
@@ -126,153 +125,153 @@ class Error(pyd.BaseModel):
 
 
 class LaureateBasic(pyd.BaseModel):
-    id: Optional[pyd.conint(ge=1)] = pyd.Field(None, example=34)
-    knownName: Optional[Translation] = None  # Replaced name with knownName and givenName
-    givenName: Optional[Translation] = None
-    portion: Optional[Portion] = '1'
-    sortOrder: Optional[SortOrder] = '1'
-    motivation: Optional[Translation] = None
-    links: Optional[List[ItemLinks]] = None
+    id: pyd.conint(ge=1) | None = pyd.Field(None, example=34)
+    knownName: Translation | None = None  # Replaced name with knownName and givenName
+    givenName: Translation | None = None
+    portion: Portion | None = '1'
+    sortOrder: SortOrder | None = '1'
+    motivation: Translation | None = None
+    links: list[ItemLinks] | None = None
 
 
 class TranslationWithSameas(pyd.BaseModel):
-    en: Optional[str] = pyd.Field(None, example='English')
-    se: Optional[str] = pyd.Field(None, example='Svenska')
-    no: Optional[str] = pyd.Field(None, example='Norsk')
-    sameAs: Optional[List[Urls]] = None
+    en: str | None = pyd.Field(None, example='English')
+    se: str | None = pyd.Field(None, example='Svenska')
+    no: str | None = pyd.Field(None, example='Norsk')
+    sameAs: list[Urls] | None = None
 
 
 class NobelPrize(pyd.BaseModel):
-    awardYear: Optional[int] = pyd.Field(None, example=1989)
-    category: Optional[Translation] = None
-    categoryFullName: Optional[Translation] = None
-    dateAwarded: Optional[date] = pyd.Field(None, example='2015-11-12')
-    prizeAmount: Optional[int] = pyd.Field(
+    awardYear: int | None = pyd.Field(None, example=1989)
+    category: Translation | None = None
+    categoryFullName: Translation | None = None
+    dateAwarded: date | None = pyd.Field(None, example='2015-11-12')
+    prizeAmount: int | None = pyd.Field(
         None, description='Prize amount given at the year of the award', example=1000000
     )
-    prizeAmountAdjusted: Optional[int] = pyd.Field(
+    prizeAmountAdjusted: int | None = pyd.Field(
         None,
         description='Prize amount adjusted according to Index number yearly average',
         example=1000000,
     )
-    topMotivation: Optional[Translation] = None
-    laureates: Optional[List[LaureateBasic]] = None
+    topMotivation: Translation | None = None
+    laureates: list[LaureateBasic] | None = None
 
 
 class Location(pyd.BaseModel):
-    city: Optional[Translation] = None
-    country: Optional[Translation] = None
-    cityNow: Optional[TranslationWithSameas] = None
-    countryNow: Optional[TranslationWithSameas] = None
-    continent: Optional[Translation] = None
-    locationString: Optional[Translation] = None
+    city: Translation | None = None
+    country: Translation | None = None
+    cityNow: TranslationWithSameas | None = None
+    countryNow: TranslationWithSameas | None = None
+    continent: Translation | None = None
+    locationString: Translation | None = None
 
 
 class Event(pyd.BaseModel):
-    date: Optional[date] = pyd.Field(None, example='1989-04-25')
-    place: Optional[Location] = None
+    date: date | None = pyd.Field(None, example='1989-04-25')
+    place: Location | None = None
 
 
 class Person(pyd.BaseModel):
-    knownName: Optional[Translation] = None
-    givenName: Optional[Translation] = None
-    familyName: Optional[Translation] = None
-    fullName: Optional[Translation] = None
-    filename: Optional[str] = pyd.Field(
+    knownName: Translation | None = None
+    givenName: Translation | None = None
+    familyName: Translation | None = None
+    fullName: Translation | None = None
+    filename: str | None = pyd.Field(
         None,
         description='Short slug version of familyname used in filenames',
         example='filename',
     )
-    penname: Optional[str] = pyd.Field(
+    penname: str | None = pyd.Field(
         None,
         description='Only for some Laureates in Literature category',
         example='Penname',
     )
-    gender: Optional[Gender] = pyd.Field(None, example='female')
-    birth: Optional[Event] = None
-    death: Optional[Event] = None
+    gender: Gender | None = pyd.Field(None, example='female')
+    birth: Event | None = None
+    death: Event | None = None
 
 
 class Organization(pyd.BaseModel):
-    orgName: Optional[Translation] = None
-    nativeName: Optional[str] = pyd.Field(None, example='Native name')
-    acronym: Optional[str] = pyd.Field(None, example='Acronym')
-    founded: Optional[Event] = None
-    dissolution: Optional[Event] = None
-    headquarters: Optional[Location] = None
+    orgName: Translation | None = None
+    nativeName: str | None = pyd.Field(None, example='Native name')
+    acronym: str | None = pyd.Field(None, example='Acronym')
+    founded: Event | None = None
+    dissolution: Event | None = None
+    headquarters: Location | None = None
 
 
 class Entity(pyd.BaseModel):
-    name: Optional[Translation] = None
-    nameNow: Optional[Translation] = None
-    nativeName: Optional[str] = pyd.Field(None, example='Le romenic universitet')
-    city: Optional[Translation] = None
-    country: Optional[Translation] = None
-    cityNow: Optional[TranslationWithSameas] = None
-    countryNow: Optional[TranslationWithSameas] = None
-    locationString: Optional[Translation] = None
+    name: Translation | None = None
+    nameNow: Translation | None = None
+    nativeName: str | None = pyd.Field(None, example='Le romenic universitet')
+    city: Translation | None = None
+    country: Translation | None = None
+    cityNow: TranslationWithSameas | None = None
+    countryNow: TranslationWithSameas | None = None
+    locationString: Translation | None = None
 
 
 class Residence(pyd.BaseModel):
-    city: Optional[Translation] = None
-    country: Optional[Translation] = None
-    cityNow: Optional[TranslationWithSameas] = None
-    countryNow: Optional[TranslationWithSameas] = None
-    locationString: Optional[Translation] = None
+    city: Translation | None = None
+    country: Translation | None = None
+    cityNow: TranslationWithSameas | None = None
+    countryNow: TranslationWithSameas | None = None
+    locationString: Translation | None = None
 
 
 class NobelPrizesResult(pyd.BaseModel):
-    nobelPrizes: Optional[List[NobelPrize]] = None
-    meta: Optional[NobelPrizesMeta] = None
-    links: Optional[Links] = None  # Removed List
+    nobelPrizes: list[NobelPrize] | None = None
+    meta: NobelPrizesMeta | None = None
+    links: Links | None = None  # Removed List
 
 
 class NobelPrizeResult(pyd.BaseModel):
-    nobelPrize: Optional[NobelPrize] = None
+    nobelPrize: NobelPrize | None = None
 
 
 class NobelPrizePerLaureate(pyd.BaseModel):
-    awardYear: Optional[int] = pyd.Field(None, example=1989)
-    category: Optional[Translation] = None
-    categoryFullName: Optional[Translation] = None
-    sortOrder: Optional[SortOrder] = '1'
-    portion: Optional[Portion] = '1'
-    dateAwarded: Optional[date] = pyd.Field(None, example='1989-04-25')
-    prizeStatus: Optional[PrizeStatus] = pyd.Field(None, example='received')
-    motivation: Optional[Translation] = None
-    prizeAmount: Optional[int] = pyd.Field(
+    awardYear: int | None = pyd.Field(None, example=1989)
+    category: Translation | None = None
+    categoryFullName: Translation | None = None
+    sortOrder: SortOrder | None = '1'
+    portion: Portion | None = '1'
+    dateAwarded: date | None = pyd.Field(None, example='1989-04-25')
+    prizeStatus: PrizeStatus | None = pyd.Field(None, example='received')
+    motivation: Translation | None = None
+    prizeAmount: int | None = pyd.Field(
         None, description='Prize amount given at the year of the award', example=1000000
     )
-    prizeAmountAdjusted: Optional[int] = pyd.Field(
+    prizeAmountAdjusted: int | None = pyd.Field(
         None,
         description='Prize amount adjusted according to Index number yearly average',
         example=1000000,
     )
-    affiliations: Optional[List[Entity]] = None
-    residences: Optional[List[Residence]] = None
-    links: Optional[List[ItemLinks]] = None
+    affiliations: list[Entity] | None = None
+    residences: list[Residence] | None = None
+    links: list[ItemLinks] | None = None
 
 
 class Laureate(pyd.BaseModel):
-    id: Optional[pyd.conint(ge=1)] = pyd.Field(None, example=456)
-    laureateIfPerson: Optional[Person] = None
-    laureateIfOrg: Optional[Organization] = None
-    wikipedia: Optional[Wikipedia] = None
-    wikidata: Optional[Wikidata] = None
-    sameAs: Optional[List[Urls]] = None
-    links: Optional[List[ItemLinks]] = None
-    nobelPrizes: Optional[List[NobelPrizePerLaureate]] = None
+    id: pyd.conint(ge=1) | None = pyd.Field(None, example=456)
+    laureateIfPerson: Person | None = None
+    laureateIfOrg: Organization | None = None
+    wikipedia: Wikipedia | None = None
+    wikidata: Wikidata | None = None
+    sameAs: list[Urls] | None = None
+    links: list[ItemLinks] | None = None
+    nobelPrizes: list[NobelPrizePerLaureate] | None = None
 
 
 class Laureates(pyd.BaseModel):
-    __root__: List[Laureate] = pyd.Field(..., description='Model containing a list of Laureates')
+    __root__: list[Laureate] = pyd.Field(..., description='Model containing a list of Laureates')
 
 
 class LaureatesResult(pyd.BaseModel):
-    laureates: Optional[Laureates] = None
-    meta: Optional[LaureatesMeta] = None
-    links: Optional[List[Links]] = None
+    laureates: Laureates | None = None
+    meta: LaureatesMeta | None = None
+    links: list[Links] | None = None
 
 
 class LaureateResult(pyd.BaseModel):
-    laureate: Optional[Laureate] = None
+    laureate: Laureate | None = None

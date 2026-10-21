@@ -1,8 +1,9 @@
 """Devtools-based pretty printer with width and constraint tightening."""
 
+from collections.abc import Callable
 import operator
 import re
-from typing import Callable, ClassVar
+from typing import ClassVar
 
 from typing_extensions import override
 

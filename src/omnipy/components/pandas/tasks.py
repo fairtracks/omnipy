@@ -1,7 +1,7 @@
 """Tasks for converting, combining, and reshaping pandas-backed datasets."""
 
+from collections.abc import Mapping, Sequence
 from io import StringIO
-from typing import Mapping, Sequence
 
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset

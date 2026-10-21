@@ -1,8 +1,7 @@
 """Utility protocols shared across Omnipy runtime and configuration code."""
 
-from typing import Any, Callable, ClassVar, Protocol
-
-from typing_extensions import Self
+from collections.abc import Callable
+from typing import Any, ClassVar, Protocol, Self
 
 
 class IsDataPublisher(Protocol):

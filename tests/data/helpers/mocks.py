@@ -1,7 +1,7 @@
 """Mock objects for data tests."""
 
 import sys
-from typing import Any, IO, Type
+from typing import Any, IO
 
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data.dataset import Dataset
@@ -25,7 +25,7 @@ class MockNumberSerializer(Serializer[NumberDataset]):
         return isinstance(dataset, NumberDataset)
 
     @classmethod
-    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+    def get_dataset_cls_for_new(cls) -> type[IsDataset]:
         return NumberDataset
 
     @classmethod
@@ -52,7 +52,7 @@ class MockNumberToTarFileSerializer(TarFileSerializer[NumberDataset]):
         return isinstance(dataset, NumberDataset)
 
     @classmethod
-    def get_dataset_cls_for_new(cls) -> Type[IsDataset]:
+    def get_dataset_cls_for_new(cls) -> type[IsDataset]:
         return NumberDataset
 
     @classmethod

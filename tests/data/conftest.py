@@ -1,6 +1,7 @@
 """Shared fixtures for data tests."""
 
-from typing import Annotated, Iterator
+from collections.abc import Iterator
+from typing import Annotated
 
 import pytest
 import pytest_cases as pc

@@ -1,8 +1,9 @@
 """Shared creator state and base classes for Omnipy's model and dataset types."""
 
 from abc import ABCMeta
-from contextlib import contextmanager
-from typing import Callable, cast, ContextManager, Generic, Iterator
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
+from typing import cast, Generic
 
 from omnipy.config.data import DataConfig
 from omnipy.data.snapshot import SnapshotHolder
@@ -81,7 +82,7 @@ class DataClassCreator:
         self,
         top_level_entry_func: Callable[[], None],
         top_level_exit_func: Callable[[], None],
-    ) -> ContextManager[int]:
+    ) -> AbstractContextManager[int]:
         """Track nested deepcopy operations and run hooks only at the outermost level.
 
         Args:
@@ -189,7 +190,7 @@ class DataClassBase(Generic[ContentT], metaclass=DataClassBaseMeta):
         self,
         top_level_entry_func: Callable[[], None],
         top_level_exit_func: Callable[[], None],
-    ) -> ContextManager[int]:
+    ) -> AbstractContextManager[int]:
         """Delegate nested deepcopy bookkeeping to the shared data-class creator.
 
         Args:

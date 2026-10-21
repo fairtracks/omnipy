@@ -4,12 +4,12 @@ Use ``generate_literal_enum_code()`` to scaffold a ``LiteralEnum`` class from a
 sequence of values or a mapping of names to values.
 """
 
-from collections.abc import KeysView
+from collections.abc import KeysView, Mapping, Sequence
 from enum import Enum
 import re
 from textwrap import TextWrapper
 from types import MappingProxyType
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 from omnipy.util.helpers import is_unreserved_identifier
 from omnipy.util.literal_enum import LiteralEnum, LiteralEnumInnerTypes

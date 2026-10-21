@@ -77,7 +77,7 @@ class SignatureFuncJobBaseMixin:
         for param_key in param_keys:
             if param_key not in self.param_signatures:
                 raise KeyError(
-                    'Parameter "{}" was not found in the '.format(param_key)
+                    f'Parameter "{param_key}" was not found in the '
                     + 'signature of the job function. Only parameters in the '
                     'signature of the job function are '
                     f'allowed as keys in the "{modifier_kwarg_key}" modifier: '

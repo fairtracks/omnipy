@@ -8,7 +8,6 @@ into Omnipy models.
 """
 
 from enum import Enum
-from typing import List, Optional
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -35,8 +34,8 @@ class FieldType(Enum):
 
 
 class _Materials(pyd.BaseModel):
-    samples: Optional[List[sample_schema.IsaSampleModel]] = None
-    otherMaterials: Optional[List[material_schema.IsaMaterialModel]] = None
+    samples: list[sample_schema.IsaSampleModel] | None = None
+    otherMaterials: list[material_schema.IsaMaterialModel] | None = None
 
 
 class _MaterialsModel(Model[_Materials]): ...
@@ -64,32 +63,30 @@ class IsaAssayJsonSchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    filename: Optional[str] = None
-    measurementType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None
-    technologyType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None
-    technologyPlatform: Optional[str] = None
-    dataFiles: Optional[List[data_schema.IsaDataModel]] = None
-    materials: Optional[_MaterialsModel] = None
-    characteristicCategories: Optional[
-        List[material_attribute_schema.IsaMaterialAttributeModel]
-    ] = pyd.Field(
-        None,
-        description='List of all the characteristics categories (or material attributes) '
-        'defined in the study, used to avoid duplication of their declaration '
-        'when each material_attribute_value is created. ',
-    )
-    unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = (
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    filename: str | None = None
+    measurementType: ontology_annotation_schema.IsaOntologyReferenceModel | None = None
+    technologyType: ontology_annotation_schema.IsaOntologyReferenceModel | None = None
+    technologyPlatform: str | None = None
+    dataFiles: list[data_schema.IsaDataModel] | None = None
+    materials: _MaterialsModel | None = None
+    characteristicCategories: list[material_attribute_schema.IsaMaterialAttributeModel] | None = (
         pyd.Field(
             None,
-            description='List of all the units defined in the study, used to avoid duplication '
-            'of their declaration when each value is created. ',
+            description='List of all the characteristics categories (or material attributes) '
+            'defined in the study, used to avoid duplication of their declaration '
+            'when each material_attribute_value is created. ',
         )
     )
-    processSequence: Optional[List[process_schema.IsaProcessOrProtocolApplicationModel]] = None
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+    unitCategories: list[ontology_annotation_schema.IsaOntologyReferenceModel] | None = pyd.Field(
+        None,
+        description='List of all the units defined in the study, used to avoid duplication '
+        'of their declaration when each value is created. ',
+    )
+    processSequence: list[process_schema.IsaProcessOrProtocolApplicationModel] | None = None
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
 
 class IsaAssayJsonModel(Model[IsaAssayJsonSchema]):

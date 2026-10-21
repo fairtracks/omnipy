@@ -7,11 +7,12 @@ checks must be fast and duplicates should be ignored instead of accumulated.
 """
 
 from collections import deque
+from collections.abc import Iterable
 from copy import copy
 import inspect
 import sys
 from types import NotImplementedType
-from typing import cast, Generic, get_args, Iterable, SupportsIndex, TypeVar
+from typing import cast, Generic, get_args, SupportsIndex, TypeVar
 
 _ObjT = TypeVar('_ObjT', bound=object)
 

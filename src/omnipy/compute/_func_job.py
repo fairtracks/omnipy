@@ -1,6 +1,7 @@
+from collections.abc import Callable
 import os
 from textwrap import dedent
-from typing import Callable, Generic, ParamSpec, TypeVar
+from typing import Generic, ParamSpec, TypeVar
 
 from omnipy.compute._job import JobBase
 from omnipy.compute._mixins.auto_async import AutoAsyncJobBaseMixin

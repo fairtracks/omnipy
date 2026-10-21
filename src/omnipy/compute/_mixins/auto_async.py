@@ -1,10 +1,11 @@
 """Mixin for automatically awaiting coroutine-based jobs outside flow contexts."""
 
 import asyncio
+from collections.abc import Callable, Coroutine
 from inspect import iscoroutinefunction
 import os
 from textwrap import dedent
-from typing import Callable, cast, Coroutine
+from typing import cast
 
 from omnipy.shared.protocols.compute.job import IsJobBase
 from omnipy.util.helpers import get_event_loop_and_check_if_loop_is_running, is_package_editable

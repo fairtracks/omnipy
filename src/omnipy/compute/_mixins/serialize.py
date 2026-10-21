@@ -15,12 +15,13 @@ Attributes:
 """
 
 import asyncio
+from collections.abc import Awaitable, Generator
 from datetime import datetime
 import inspect
 import os
 from pathlib import Path
 from textwrap import dedent
-from typing import Awaitable, cast, Generator, Type
+from typing import cast
 
 from omnipy.components import get_serializer_registry
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
@@ -89,7 +90,7 @@ class SerializerFuncJobBaseMixin:
         self_as_job_base.log(msg)
 
     @property
-    def _return_type(self) -> Type[object]:
+    def _return_type(self) -> type[object]:
         self_as_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
         return self_as_signature_func_job_base_mixin.return_type
 
@@ -334,7 +335,7 @@ class SerializerFuncJobBaseMixin:
             for tar_file_path in self._all_job_output_file_paths_in_reverse_order_for_last_run(
                 persist_data_dir_path, self._job_name()
             ):
-                to_dataset = cast(Type[Dataset], self._return_type)
+                to_dataset = cast(type[Dataset], self._return_type)
                 return self._serializer_registry.load_from_tar_file_path_based_on_file_suffix(
                     self_as_job_base, str(tar_file_path), to_dataset()
                 )

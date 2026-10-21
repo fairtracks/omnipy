@@ -9,7 +9,6 @@ payloads into typed Omnipy models.
 
 from datetime import date, datetime
 from enum import Enum
-from typing import List, Optional, Union
 
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -42,9 +41,9 @@ class FieldType(Enum):
 
 
 class _Materials(pyd.BaseModel):
-    sources: Optional[List[source_schema.IsaSourceModel]] = None
-    samples: Optional[List[sample_schema.IsaSampleModel]] = None
-    otherMaterials: Optional[List[material_schema.IsaMaterialModel]] = None
+    sources: list[source_schema.IsaSourceModel] | None = None
+    samples: list[sample_schema.IsaSampleModel] | None = None
+    otherMaterials: list[material_schema.IsaMaterialModel] | None = None
 
 
 class _MaterialsModel(Model[_Materials]): ...
@@ -73,41 +72,37 @@ class IsaStudySchema(pyd.BaseModel):
         extra = pyd.Extra.forbid
         use_enum_values = True
 
-    field_id: Optional[str] = pyd.Field(None, alias='@id')
-    field_context: Optional[str] = pyd.Field(None, alias='@context')
-    field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    filename: Optional[str] = None
-    identifier: Optional[str] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    submissionDate: Optional[Union[datetime, date, pyd.constr(max_length=0)]] = None
-    publicReleaseDate: Optional[Union[datetime, date, pyd.constr(max_length=0)]] = None
-    publications: Optional[List[publication_schema.IsaPublicationModel]] = None
-    people: Optional[List[person_schema.IsaPersonModel]] = None
-    studyDesignDescriptors: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = (
-        None
-    )
-    protocols: Optional[List[protocol_schema.IsaProtocolModel]] = None
-    materials: Optional[_Materials] = None
-    processSequence: Optional[List[process_schema.IsaProcessOrProtocolApplicationModel]] = None
-    assays: Optional[List[assay_schema.IsaAssayJsonModel]] = None
-    factors: Optional[List[factor_schema.IsaFactorModel]] = None
-    characteristicCategories: Optional[
-        List[material_attribute_schema.IsaMaterialAttributeModel]
-    ] = pyd.Field(
-        None,
-        description='List of all the characteristics categories (or material attributes) '
-        'defined in the study, used to avoid duplication of their declaration '
-        'when each material_attribute_value is created. ',
-    )
-    unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = (
+    field_id: str | None = pyd.Field(None, alias='@id')
+    field_context: str | None = pyd.Field(None, alias='@context')
+    field_type: FieldType | None = pyd.Field(None, alias='@type')
+    filename: str | None = None
+    identifier: str | None = None
+    title: str | None = None
+    description: str | None = None
+    submissionDate: datetime | date | pyd.constr(max_length=0) | None = None
+    publicReleaseDate: datetime | date | pyd.constr(max_length=0) | None = None
+    publications: list[publication_schema.IsaPublicationModel] | None = None
+    people: list[person_schema.IsaPersonModel] | None = None
+    studyDesignDescriptors: list[ontology_annotation_schema.IsaOntologyReferenceModel] | None = None
+    protocols: list[protocol_schema.IsaProtocolModel] | None = None
+    materials: _Materials | None = None
+    processSequence: list[process_schema.IsaProcessOrProtocolApplicationModel] | None = None
+    assays: list[assay_schema.IsaAssayJsonModel] | None = None
+    factors: list[factor_schema.IsaFactorModel] | None = None
+    characteristicCategories: list[material_attribute_schema.IsaMaterialAttributeModel] | None = (
         pyd.Field(
             None,
-            description='List of all the units defined in the study, used to avoid duplication '
-            'of their declaration when each value is created. ',
+            description='List of all the characteristics categories (or material attributes) '
+            'defined in the study, used to avoid duplication of their declaration '
+            'when each material_attribute_value is created. ',
         )
     )
-    comments: Optional[List[comment_schema.IsaCommentModel]] = None
+    unitCategories: list[ontology_annotation_schema.IsaOntologyReferenceModel] | None = pyd.Field(
+        None,
+        description='List of all the units defined in the study, used to avoid duplication '
+        'of their declaration when each value is created. ',
+    )
+    comments: list[comment_schema.IsaCommentModel] | None = None
 
     _date_to_iso_format = pyd.validator('submissionDate', 'publicReleaseDate', allow_reuse=True)(
         date_to_iso_format

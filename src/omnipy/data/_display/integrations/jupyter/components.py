@@ -1,7 +1,8 @@
 """Solara components that bridge rendered panels into Jupyter notebooks."""
 
+from collections.abc import Callable
 import re
-from typing import Any, Callable, ParamSpec
+from typing import Any, ParamSpec
 
 import solara
 

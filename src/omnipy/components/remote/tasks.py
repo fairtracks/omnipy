@@ -1,9 +1,10 @@
 """Tasks for fetching remote resources and building URL datasets."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import AsyncGenerator, cast
+from typing import cast
 
 from typing_extensions import TypeVar
 

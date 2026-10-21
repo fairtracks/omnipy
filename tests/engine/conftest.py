@@ -1,6 +1,7 @@
 """Shared fixtures for engine tests."""
 
-from typing import Annotated, Callable, Type
+from collections.abc import Callable
+from typing import Annotated
 
 import pytest_cases as pc
 
@@ -168,9 +169,9 @@ def no_registry(registry):
 @pc.parametrize('job_runner_cls', [pc.fixture_ref(mock_task_job_runner_cls)], ids=[''])
 def task_mock_classes(
     job_type: JobType.Literals,
-    task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Type[IsFlowTemplate] | None,
-    job_runner_cls: Type[IsJobRunnerEngine],
+    task_template_cls: type[IsTaskTemplate],
+    flow_template_cls: type[IsFlowTemplate] | None,
+    job_runner_cls: type[IsJobRunnerEngine],
 ):
     return job_type, task_template_cls, flow_template_cls, job_runner_cls
 
@@ -182,9 +183,9 @@ def task_mock_classes(
 @pc.parametrize('job_runner_cls', [pc.fixture_ref(mock_linear_flow_job_runner_cls)], ids=[''])
 def linear_flow_mock_classes(
     job_type: JobType.Literals,
-    task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Type[IsFlowTemplate] | None,
-    job_runner_cls: Type[IsJobRunnerEngine],
+    task_template_cls: type[IsTaskTemplate],
+    flow_template_cls: type[IsFlowTemplate] | None,
+    job_runner_cls: type[IsJobRunnerEngine],
 ):
     return job_type, task_template_cls, flow_template_cls, job_runner_cls
 
@@ -196,9 +197,9 @@ def linear_flow_mock_classes(
 @pc.parametrize('job_runner_cls', [pc.fixture_ref(mock_dag_flow_job_runner_cls)], ids=[''])
 def dag_flow_mock_classes(
     job_type: JobType.Literals,
-    task_template_cls: Type[IsTaskTemplate],
-    flow_template_cls: Type[IsFlowTemplate] | None,
-    job_runner_cls: Type[IsJobRunnerEngine],
+    task_template_cls: type[IsTaskTemplate],
+    flow_template_cls: type[IsFlowTemplate] | None,
+    job_runner_cls: type[IsJobRunnerEngine],
 ):
     return job_type, task_template_cls, flow_template_cls, job_runner_cls
 
@@ -223,9 +224,9 @@ def power_mock_jobs_mock_runner_cls_no_verbose_no_reg(
     job_case: JobCase,
     job_mock_classes: tuple[
         JobType.Literals,
-        Type[IsTaskTemplate],
-        Type[IsFlowTemplate],
-        Type[IsJobRunnerEngine],
+        type[IsTaskTemplate],
+        type[IsFlowTemplate],
+        type[IsJobRunnerEngine],
     ],
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
@@ -259,9 +260,9 @@ def all_func_types_mock_jobs_mock_runner_cls_assert_runstate_mock_reg(
     job_case: JobCase,
     job_mock_classes: tuple[
         JobType.Literals,
-        Type[IsTaskTemplate],
-        Type[IsFlowTemplate],
-        Type[IsJobRunnerEngine],
+        type[IsTaskTemplate],
+        type[IsFlowTemplate],
+        type[IsJobRunnerEngine],
     ],
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
@@ -299,9 +300,9 @@ def all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg(
     job_case: JobCase,
     job_classes: tuple[
         JobType.Literals,
-        Type[IsTaskTemplate],
-        Type[IsFlowTemplate],
-        Type[IsJobRunnerEngine],
+        type[IsTaskTemplate],
+        type[IsFlowTemplate],
+        type[IsJobRunnerEngine],
     ],
     engine: IsJobRunnerEngine,
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,

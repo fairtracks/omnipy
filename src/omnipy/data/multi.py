@@ -5,7 +5,8 @@ general dataset item type but can additionally assign more specific models to in
 keys.
 """
 
-from typing import Any, Generic, Iterable, Mapping
+from collections.abc import Iterable, Mapping
+from typing import Any, Generic
 
 from typing_extensions import TypeVar
 

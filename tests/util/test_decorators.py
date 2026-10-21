@@ -1,6 +1,6 @@
 """Tests for utility decorators."""
 
-from typing import Callable
+from collections.abc import Callable
 
 import pytest
 

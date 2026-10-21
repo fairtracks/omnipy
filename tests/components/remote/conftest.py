@@ -2,9 +2,10 @@
 
 import asyncio
 from collections import defaultdict
+from collections.abc import AsyncGenerator
 from json import dumps
 import random
-from typing import Annotated, AsyncGenerator
+from typing import Annotated
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer

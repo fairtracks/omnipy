@@ -2,7 +2,7 @@
 
 # from abc import ABCMeta
 from inspect import Parameter, signature
-from typing import Generic, get_args, Type, TypeVar
+from typing import Generic, get_args, TypeVar
 
 import pytest
 
@@ -10,7 +10,7 @@ from omnipy.util.mixin import DynamicMixinAcceptor
 
 
 @pytest.fixture(scope='function')
-def mock_plain_cls() -> Type:
+def mock_plain_cls() -> type:
     """Provide the mock plain class fixture."""
 
     class MockPlainCls(DynamicMixinAcceptor):
@@ -25,7 +25,7 @@ def mock_plain_cls() -> Type:
 
 
 @pytest.fixture(scope='function')
-def mock_other_plain_cls() -> Type:
+def mock_other_plain_cls() -> type:
     """Provide the mock other plain class fixture."""
 
     class MockOtherPlainCls(DynamicMixinAcceptor):
@@ -40,7 +40,7 @@ def mock_other_plain_cls() -> Type:
 
 
 @pytest.fixture(scope='function')
-def mock_predefined_init_kwargs_cls() -> Type:
+def mock_predefined_init_kwargs_cls() -> type:
     """Provide the mock predefined initialization keyword arguments class fixture."""
 
     class MockPredefinedInitKwargsCls(DynamicMixinAcceptor):
@@ -62,7 +62,7 @@ T = TypeVar('T')
 
 
 @pytest.fixture(scope='function')
-def mock_predefined_init_kwargs_generic_cls() -> Type:
+def mock_predefined_init_kwargs_generic_cls() -> type:
     """Provide the mock predefined initialization keyword arguments generic class fixture."""
 
     class MockPredefinedInitKwargsGenericCls(DynamicMixinAcceptor, Generic[T]):
@@ -172,7 +172,7 @@ def _assert_args_and_kwargs(
     mock_obj: object,
     args: tuple[object, ...],
     kwargs: dict[str, object],
-    mock_cls: Type | None = None,
+    mock_cls: type | None = None,
     mixin_init_kwarg_params: dict[str, Parameter] = {},
     mixin_init_kwarg_params_including_bases: dict[str, Parameter] = {},
     args_in_signature=True,

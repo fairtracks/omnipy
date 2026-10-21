@@ -5,8 +5,8 @@ validated root value, together with helper predicates for recognizing Omnipy
 models, plain pydantic models, and related class relationships.
 """
 
-from collections.abc import Callable, Iterable, Mapping, MutableSequence
-from contextlib import contextmanager
+from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, MutableSequence
+from contextlib import AbstractContextManager, contextmanager
 from copy import copy, deepcopy
 import functools
 import inspect
@@ -17,20 +17,18 @@ from typing import (
     Annotated,
     Any,
     cast,
-    ContextManager,
     ForwardRef,
-    Generator,
     Generic,
     get_args,
     get_origin,
-    Iterator,
     Literal,
     Optional,
     overload,
+    Self,
     Union,
 )
 
-from typing_extensions import get_original_bases, override, Self, TypeIs, TypeVar
+from typing_extensions import get_original_bases, override, TypeIs, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import ModelDisplayMixin
@@ -1184,7 +1182,7 @@ class Model(  # type: ignore[misc]
     def _validate_and_set_value(
         self,
         new_content: object,
-        reset_solution: ContextManager[None] | None = None,
+        reset_solution: AbstractContextManager[None] | None = None,
         lazy_snapshot_if_possible: bool = False,
     ) -> None:
         """Validate a candidate root value and store it on the model.
@@ -1251,11 +1249,11 @@ class Model(  # type: ignore[misc]
             snapshot_taken=snapshot_taken,
         )
 
-    def _get_reset_solution(self) -> ContextManager[None]:
+    def _get_reset_solution(self) -> AbstractContextManager[None]:
         """Return the active rollback strategy for state-changing operations.
 
         Returns:
-            ContextManager[None]: Snapshot-based rollback context in interactive
+            AbstractContextManager[None]: Snapshot-based rollback context in interactive
                 mode, otherwise a no-op context manager.
         """
         if self.config.model.interactive and self.has_snapshot():
@@ -1263,11 +1261,11 @@ class Model(  # type: ignore[misc]
         else:
             return nothing()
 
-    def _get_revert_to_snapshot_reset_solution(self) -> ContextManager[None]:
+    def _get_revert_to_snapshot_reset_solution(self) -> AbstractContextManager[None]:
         """Create a reset context that restores the current snapshot on failure.
 
         Returns:
-            ContextManager[None]: Context manager that restores snapshot state if
+            AbstractContextManager[None]: Context manager that restores snapshot state if
                 an exception escapes the protected block.
         """
         prev_deepcopy_content_ids = SetDeque[int]()
@@ -1305,7 +1303,7 @@ class Model(  # type: ignore[misc]
         self,
         /,
         new_content: object,
-        outer_reset_solution: ContextManager[None] | None = None,
+        outer_reset_solution: AbstractContextManager[None] | None = None,
         post_validation_func: Callable[[_RootT], None] | None = None,
         lazy_snapshot_if_possible: bool = False,
     ) -> None:
@@ -1324,7 +1322,7 @@ class Model(  # type: ignore[misc]
         """
         keep_alive_old_content = self.content  # To ensure old content ids are not reused
 
-        inner_reset_solution: ContextManager[None]
+        inner_reset_solution: AbstractContextManager[None]
         if outer_reset_solution:
             inner_reset_solution = nothing()
         else:
@@ -1745,9 +1743,9 @@ class Model(  # type: ignore[misc]
         if orig_model != Undefined:
             if not is_optional(root_type) and is_optional(orig_model):
                 if outer:
-                    root_type = Optional[root_type]
+                    root_type = Optional[root_type]  # noqa: UP045
                 else:
-                    root_type = Optional[root_field.outer_type_]
+                    root_type = Optional[root_field.outer_type_]  # noqa: UP045
 
         return root_type if with_args else ensure_plain_type(root_type)
 
@@ -2561,7 +2559,7 @@ def _wrap_nested_pydantic_models(type_: TypeForm) -> TypeForm:
 
     # Transform union members separately to preserve their original alternatives.
     if is_union(type_):
-        return Union[tuple(_wrap_nested_pydantic_models(type_arg) for type_arg in get_args(type_))]
+        return Union[tuple(_wrap_nested_pydantic_models(type_arg) for type_arg in get_args(type_))]  # noqa: UP007
 
     # Replace direct Pydantic model classes with their Omnipy Model wrappers.
     if isinstance(type_, type) and is_non_omnipy_pydantic_model_class(type_):

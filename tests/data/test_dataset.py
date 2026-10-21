@@ -1,10 +1,11 @@
 """Tests for datasets."""
 
+from collections.abc import Callable, ItemsView
 from copy import copy, deepcopy
 import os
 from textwrap import dedent
 from types import MappingProxyType, NoneType
-from typing import Annotated, Any, Callable, Generic, ItemsView, List, Optional, Union
+from typing import Annotated, Any, Generic, List, Optional, Union
 
 import pytest
 import pytest_cases as pc
