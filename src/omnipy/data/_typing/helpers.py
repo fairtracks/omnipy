@@ -7,12 +7,15 @@ from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util.helpers import all_type_variants
 
 
-def all_model_type_variants(model: type[IsModel] | IsModel,) -> tuple[type | GenericAlias, ...]:
+def all_model_type_variants(
+    model: type[IsModel] | IsModel,
+) -> tuple[type | GenericAlias, ...]:
     return tuple(all_type_variants(model.full_type()))
 
 
 def all_dataset_type_variants(
-        dataset: type[IsDataset] | IsDataset) -> tuple[type | GenericAlias, ...]:
+    dataset: type[IsDataset] | IsDataset,
+) -> tuple[type | GenericAlias, ...]:
     """Return concrete content-type variants represented by a dataset type."""
 
     from omnipy.data.dataset import is_dataset_subclass
@@ -82,5 +85,4 @@ def mimics(cls_or_protocol):
         return _decorate
 
     else:
-
         return lambda model_cls: model_cls

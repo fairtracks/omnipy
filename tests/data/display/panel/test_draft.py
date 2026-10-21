@@ -5,11 +5,13 @@ import pytest
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.frame import (AnyFrame,
-                                        empty_frame,
-                                        Frame,
-                                        FrameWithWidthAndHeight,
-                                        UndefinedFrame)
+from omnipy.data._display.frame import (
+    AnyFrame,
+    empty_frame,
+    Frame,
+    FrameWithWidthAndHeight,
+    UndefinedFrame,
+)
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
@@ -23,13 +25,17 @@ from .helpers.panel_assert import assert_draft_panel_subcls, assert_next_stage_p
 def test_draft_panel_init() -> None:
     assert_draft_panel_subcls(DraftPanel, 'Some text')
     assert_draft_panel_subcls(
-        DraftPanel, (1, 2, 3), title='UnboundPanel', frame=Frame(Dimensions(None, None)))
+        DraftPanel, (1, 2, 3), title='UnboundPanel', frame=Frame(Dimensions(None, None))
+    )
     assert_draft_panel_subcls(
-        DraftPanel, (1, 2, 3), title='WidthBoundPanel', frame=Frame(Dimensions(10, None)))
+        DraftPanel, (1, 2, 3), title='WidthBoundPanel', frame=Frame(Dimensions(10, None))
+    )
     assert_draft_panel_subcls(
-        DraftPanel, (1, 2, 3), title='HeightBoundPanel', frame=Frame(Dimensions(None, 20)))
+        DraftPanel, (1, 2, 3), title='HeightBoundPanel', frame=Frame(Dimensions(None, 20))
+    )
     assert_draft_panel_subcls(
-        DraftPanel, (1, 2, 3), title='BoundPanel', frame=Frame(Dimensions(10, 20)))
+        DraftPanel, (1, 2, 3), title='BoundPanel', frame=Frame(Dimensions(10, 20))
+    )
     assert_draft_panel_subcls(DraftPanel, None, title='NonePanel', config=OutputConfig(indent=4))
 
     content = ('a', 'b', (1, 2, 3))
@@ -60,8 +66,14 @@ def test_draft_panel_hashable() -> None:
     panel_6 = DraftPanel('', constraints=Constraints(max_inline_container_width_incl=10))
     panel_7 = DraftPanel('', config=OutputConfig(indent=4))
 
-    assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) \
-           != hash(panel_6) != hash(panel_7)
+    assert (
+        hash(panel_1)
+        != hash(panel_3)
+        != hash(panel_4)
+        != hash(panel_5)
+        != hash(panel_6)
+        != hash(panel_7)
+    )
 
     panel_8 = DraftPanel('Some text')
     panel_9 = DraftPanel('', title='My panel')
@@ -100,7 +112,8 @@ def test_fail_draft_panel_no_assignments() -> None:
 
     with pytest.raises(AttributeError):
         draft_panel.constraints = Constraints(  # type: ignore[misc]
-            max_inline_container_width_incl=10)
+            max_inline_container_width_incl=10
+        )
 
     with pytest.raises(AttributeError):
         draft_panel.config = OutputConfig(indent=4)  # type: ignore[misc]
@@ -111,7 +124,8 @@ def test_draft_panel_constraints_satisfaction() -> None:
     assert draft_panel.satisfies.max_inline_container_width_incl is None
 
     draft_panel = DraftPanel(
-        'Some text', constraints=Constraints(max_inline_container_width_incl=10))
+        'Some text', constraints=Constraints(max_inline_container_width_incl=10)
+    )
     assert draft_panel.satisfies.max_inline_container_width_incl is False
 
 

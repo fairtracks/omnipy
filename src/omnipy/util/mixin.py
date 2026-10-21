@@ -28,7 +28,7 @@ def strip_mixins_suffix(cls_name: str) -> str:
         ``cls_name`` unchanged.
     """
     if cls_name.endswith(WITH_MIXINS_CLS_SUFFIX):
-        return cls_name[:-len(WITH_MIXINS_CLS_SUFFIX)]
+        return cls_name[: -len(WITH_MIXINS_CLS_SUFFIX)]
 
     return cls_name
 
@@ -52,7 +52,8 @@ class DynamicMixinAcceptor:
 
         if DynamicMixinAcceptor in get_original_bases(cls) and cls.__init__ is object.__init__:
             raise TypeError(
-                'Dynamic mixin acceptor class is required to define a __init__() method.')
+                'Dynamic mixin acceptor class is required to define a __init__() method.'
+            )
 
         cls._orig_init_signature = inspect.signature(cls.__init__)
         cls._mixin_classes = []
@@ -61,7 +62,8 @@ class DynamicMixinAcceptor:
     @classmethod
     def _get_mixin_init_kwarg_params(cls) -> dict[str, inspect.Parameter]:
         return {
-            key: param for param_dict in cls._init_params_per_mixin_cls.values()
+            key: param
+            for param_dict in cls._init_params_per_mixin_cls.values()
             for key, param in param_dict.items()
         }
 
@@ -78,10 +80,11 @@ class DynamicMixinAcceptor:
 
         for base in base_list:
             if base.__name__.endswith(WITH_MIXINS_CLS_SUFFIX):
-                skip_bases.add(base.__name__[:-len(WITH_MIXINS_CLS_SUFFIX)])
+                skip_bases.add(base.__name__[: -len(WITH_MIXINS_CLS_SUFFIX)])
 
         cleaned_base_list = [
-            base for base in base_list
+            base
+            for base in base_list
             if issubclass(base, DynamicMixinAcceptor) and base.__name__ not in skip_bases
         ]
 
@@ -122,7 +125,8 @@ class DynamicMixinAcceptor:
                     raise AttributeError(
                         'All params in the signature of the __init__() method in a dynamic '
                         'mixin class must be keyword-only or var-keyword '
-                        f'(except for the "self" param). Failing param: {param.name}')
+                        f'(except for the "self" param). Failing param: {param.name}'
+                    )
                 if param.kind == param.KEYWORD_ONLY:
                     cls._init_params_per_mixin_cls[mixin_cls.__name__][key] = param
 
@@ -145,7 +149,8 @@ class DynamicMixinAcceptor:
             init_params = init_params[:-1]
 
         only_mixin_params = [
-            val for (key, val) in cls._get_mixin_init_kwarg_params_including_bases().items()
+            val
+            for (key, val) in cls._get_mixin_init_kwarg_params_including_bases().items()
             if key not in orig_init_param_dict
         ]
 
@@ -181,9 +186,11 @@ class DynamicMixinAcceptor:
             mixin_kwargs_defaults = {}
 
             for base in cls_with_mixins.__mro__:
-                if base == cls \
-                        or base.__name__.endswith(WITH_MIXINS_CLS_SUFFIX) \
-                        or base.__init__ is object.__init__:
+                if (
+                    base == cls
+                    or base.__name__.endswith(WITH_MIXINS_CLS_SUFFIX)
+                    or base.__init__ is object.__init__
+                ):
                     continue
 
                 mixin_kwargs = {}
@@ -198,9 +205,11 @@ class DynamicMixinAcceptor:
                                 mixin_kwargs[key] = mixin_kwargs_defaults[key]
                             else:
                                 mixin_kwargs_defaults[key] = param.default
-                        elif param.kind in (param.POSITIONAL_ONLY,
-                                            param.POSITIONAL_OR_KEYWORD,
-                                            param.VAR_POSITIONAL):
+                        elif param.kind in (
+                            param.POSITIONAL_ONLY,
+                            param.POSITIONAL_OR_KEYWORD,
+                            param.VAR_POSITIONAL,
+                        ):
                             contains_positional = True
 
                 if contains_positional:
@@ -217,7 +226,6 @@ class DynamicMixinAcceptor:
         cls_bases_with_mixins = []
 
         for cls_base in cls_bases:
-
             if cls._is_true_acceptor_subclass(cls_base):
                 cls_new_base = cls_base._create_subcls_inheriting_from_mixins_and_orig_cls()
                 cls_base = transfer_generic_args_to_cls(cls_new_base, cls_base)

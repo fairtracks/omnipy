@@ -10,7 +10,8 @@ from omnipy.util.helpers import is_package_editable
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISENGINE_GET_CONFIG_CLS_SUMMARY'] = (
-        'Return the config class associated with this engine type.')
+        'Return the config class associated with this engine type.'
+    )
     os.environ['OMNIPY_MACRO_ISENGINE_GET_CONFIG_CLS_DETAILS'] = dedent("""\
         Args:
             cls: Engine subclass whose configuration class is being requested.
@@ -20,28 +21,32 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISENGINE_SET_CONFIG_SUMMARY'] = (
-        'Replace the active config and refresh config-dependent state.')
+        'Replace the active config and refresh config-dependent state.'
+    )
     os.environ['OMNIPY_MACRO_ISENGINE_SET_CONFIG_DETAILS'] = dedent("""\
         Args:
             config: Runtime configuration object for the engine.
     """)
 
     os.environ['OMNIPY_MACRO_ISENGINE_SET_REGISTRY_SUMMARY'] = (
-        'Attach or clear the run-state registry used for job state reporting.')
+        'Attach or clear the run-state registry used for job state reporting.'
+    )
     os.environ['OMNIPY_MACRO_ISENGINE_SET_REGISTRY_DETAILS'] = dedent("""\
         Args:
             registry: Registry implementation, or ``None`` to disable state reporting.
     """)
 
     os.environ['OMNIPY_MACRO_ISENGINE_CONFIG_SUMMARY'] = (
-        'Return the currently active engine configuration.')
+        'Return the currently active engine configuration.'
+    )
     os.environ['OMNIPY_MACRO_ISENGINE_CONFIG_DETAILS'] = dedent("""\
         Returns:
             IsJobRunnerConfig: Active configuration object controlling engine behavior.
     """)
 
     os.environ['OMNIPY_MACRO_ISENGINE_REGISTRY_SUMMARY'] = (
-        'Return the registry currently used for run-state reporting.')
+        'Return the registry currently used for run-state reporting.'
+    )
     os.environ['OMNIPY_MACRO_ISENGINE_REGISTRY_DETAILS'] = dedent("""\
         Returns:
             IsRunStateRegistry | None: Registry receiving job-state updates, or ``None`` when
@@ -52,8 +57,8 @@ if is_package_editable('omnipy'):
 @runtime_checkable
 class IsEngine(Protocol):
     """Protocol for execution engines configured with registry state."""
-    def __init__(self) -> None:
-        ...
+
+    def __init__(self) -> None: ...
 
     @classmethod
     def get_config_cls(cls) -> Type[IsJobRunnerConfig]:

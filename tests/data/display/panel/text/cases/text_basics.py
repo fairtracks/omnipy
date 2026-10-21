@@ -19,17 +19,14 @@ from ...helpers.case_setup import FrameTestCase, FrameVariant, PanelFrameVariant
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=5, height=5))),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=0, height=1))),
-
         #
         # id='smaller_frame'
         #
@@ -73,17 +70,14 @@ def case_syntax_text_empty(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=5, height=5))),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=2, height=2))),
-
         #
         # id='smaller_frame'
         #
@@ -129,17 +123,14 @@ def case_syntax_text_whitespace(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=1, height=4))),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=0, height=3))),
-
         #
         # id='smaller_frame'
         #
@@ -183,17 +174,14 @@ def case_syntax_text_empty_lines(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=14, height=5))),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=13, height=4))),
-
         #
         # id='crop_height_flexible_width'
         #
@@ -207,7 +195,6 @@ def case_syntax_text_empty_lines(
             # of the width (and possible adjustment of other panels).
             exp_dims_all_stages=Dimensions(width=11, height=3),
         ),
-
         #
         # id='crop_height_fixed_width'
         #
@@ -226,7 +213,6 @@ def case_syntax_text_empty_lines(
             # stage is still applied
             exp_dims_all_stages_only_height=Dimensions(width=11, height=3),
         ),
-
         #
         # id='crop_height_and_width_flexible_width_ellipsis_bottom'
         #
@@ -248,7 +234,6 @@ def case_syntax_text_empty_lines(
             exp_plain_output_only_height='I scream,\nyou scream,\n…\n',
             exp_stylized_dims_only_height=Dimensions(width=11, height=3),
         ),
-
         #
         # id='crop_height_and_width_fixed_width_ellipsis_bottom'
         #
@@ -271,7 +256,6 @@ def case_syntax_text_empty_lines(
             # stage is still applied
             exp_dims_all_stages_only_height=Dimensions(width=11, height=3),
         ),
-
         #
         # id='crop_height_and_width_flexible_width_ellipsis_top'
         #
@@ -295,7 +279,6 @@ def case_syntax_text_empty_lines(
             exp_plain_output_only_height='…\nwe all scream\nfor ice cream\n',
             exp_stylized_dims_only_height=Dimensions(width=13, height=3),
         ),
-
         #
         # id='crop_height_and_width_flexible_width_crop_top'
         #
@@ -319,7 +302,6 @@ def case_syntax_text_empty_lines(
             exp_plain_output_only_height='you scream,\nwe all scream\nfor ice cream\n',
             exp_stylized_dims_only_height=Dimensions(width=13, height=3),
         ),
-
         #
         # id='crop_height_and_width_flexible_width_crop_bottom'
         #
@@ -343,7 +325,6 @@ def case_syntax_text_empty_lines(
             exp_plain_output_only_height='I scream,\nyou scream,\n',
             exp_stylized_dims_only_height=Dimensions(width=11, height=2),
         ),
-
         #
         # id='crop_height_and_width_flexible_width_wrap'
         #
@@ -367,13 +348,13 @@ def case_syntax_text_empty_lines(
             # In this case word wrap is carried out in the "stylize" stage
             # instead of horizontal cropping.
             exp_stylized_dims=Dimensions(width=9, height=3),
-            exp_plain_output_only_width=('I scream,\nyou \nscream,\nwe all \nscream\n'
-                                         'for ice \ncream\n'),
+            exp_plain_output_only_width=(
+                'I scream,\nyou \nscream,\nwe all \nscream\nfor ice \ncream\n'
+            ),
             exp_stylized_dims_only_width=Dimensions(width=9, height=7),
             exp_plain_output_only_height='I scream,\nyou scream,\nwe all scream\n',
             exp_stylized_dims_only_height=Dimensions(width=13, height=3),
         ),
-
         #
         # id='crop_height_single_line_flexible_width'
         #
@@ -386,7 +367,6 @@ def case_syntax_text_empty_lines(
             exp_plain_output='…\n',
             exp_dims_all_stages=Dimensions(width=1, height=1),
         ),
-
         #
         # id='crop_height_single_line_fixed_width'
         #
@@ -444,12 +424,10 @@ def case_syntax_text_simple_text(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=4, height=2), fixed_width=False)),
-
         #
         # id='smaller_odd_width_frame_ellipsis'
         #
@@ -458,7 +436,6 @@ def case_syntax_text_simple_text(
             exp_plain_output='北…\n北…\n',
             exp_dims_all_stages=Dimensions(width=3, height=2),
         ),
-
         #
         # id='smaller_odd_width_fixed_frame_ellipsis'
         #
@@ -471,7 +448,6 @@ def case_syntax_text_simple_text(
             # stage.
             exp_stylized_dims=Dimensions(width=3, height=2),
         ),
-
         #
         # id='smaller_odd_width_frame_crop'
         #
@@ -481,7 +457,6 @@ def case_syntax_text_simple_text(
             exp_plain_output='北\n北\n',
             exp_dims_all_stages=Dimensions(width=2, height=2),
         ),
-
         #
         # id='smaller_odd_width_fixed_frame_crop'
         #
@@ -495,7 +470,6 @@ def case_syntax_text_simple_text(
             # "styling" stage to ensure exact text width.
             exp_stylized_dims=Dimensions(width=3, height=2),
         ),
-
         #
         # id='smaller_even_width_frame_ellipsis'
         #
@@ -504,7 +478,6 @@ def case_syntax_text_simple_text(
             exp_plain_output='…\n…\n',
             exp_dims_all_stages=Dimensions(width=1, height=2),
         ),
-
         #
         # id='smaller_even_width_fixed_frame_ellipsis'
         #
@@ -517,7 +490,6 @@ def case_syntax_text_simple_text(
             # "styling" stage to ensure exact text width.
             exp_stylized_dims=Dimensions(width=2, height=2),
         ),
-
         #
         # id='smaller_even_width_frame_crop'
         #
@@ -527,7 +499,6 @@ def case_syntax_text_simple_text(
             exp_plain_output='北\n北\n',
             exp_dims_all_stages=Dimensions(width=2, height=2),
         ),
-
         #
         # id='smaller_even_width_fixed_frame_crop'
         #
@@ -541,7 +512,6 @@ def case_syntax_text_simple_text(
             # stage.
             exp_stylized_dims=Dimensions(width=2, height=2),
         ),
-
         #
         # id='single_width_frame_ellipsis'
         #
@@ -550,7 +520,6 @@ def case_syntax_text_simple_text(
             exp_plain_output='…\n…\n',
             exp_dims_all_stages=Dimensions(width=1, height=2),
         ),
-
         #
         # id='single_width_fixed_frame_ellipsis'
         #
@@ -563,7 +532,6 @@ def case_syntax_text_simple_text(
             # stage.
             exp_stylized_dims=Dimensions(width=1, height=2),
         ),
-
         #
         # id='single_width_frame_crop'
         #
@@ -573,7 +541,6 @@ def case_syntax_text_simple_text(
             exp_plain_output='\n\n',
             exp_dims_all_stages=Dimensions(width=0, height=2),
         ),
-
         #
         # id='single_width_fixed_frame_crop'
         #
@@ -587,7 +554,6 @@ def case_syntax_text_simple_text(
             # "styling" stage to ensure exact text width.
             exp_stylized_dims=Dimensions(width=1, height=2),
         ),
-
         #
         # id='no_width_frame_ellipsis'
         #
@@ -600,7 +566,6 @@ def case_syntax_text_simple_text(
             # width is not reduced until the "styling" stage.
             exp_stylized_dims=Dimensions(width=0, height=2),
         ),
-
         #
         # id='no_width_fixed_frame_ellipsis'
         #
@@ -658,12 +623,10 @@ def case_syntax_text_double_width_chars(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=5, height=1), fixed_width=False)),
-
         #
         # id='smaller_even_width_frame_ellipsis'
         #
@@ -672,7 +635,6 @@ def case_syntax_text_double_width_chars(
             exp_plain_output=' a…\n',
             exp_dims_all_stages=Dimensions(width=3, height=1),
         ),
-
         #
         # id='smaller_even_width_fixed_frame_ellipsis'
         #
@@ -685,7 +647,6 @@ def case_syntax_text_double_width_chars(
             # "styling" stage to ensure exact text width.
             exp_stylized_dims=Dimensions(width=4, height=1),
         ),
-
         #
         # id='smaller_even_width_frame_ellipsis_tab_size_3'
         #
@@ -698,7 +659,6 @@ def case_syntax_text_double_width_chars(
             exp_plain_output_only_height=' a b\n',
             exp_dims_all_stages_only_height=Dimensions(width=4, height=1),
         ),
-
         #
         # id='smaller_even_width_fixed_frame_ellipsis_tab_size_3'
         #
@@ -711,7 +671,6 @@ def case_syntax_text_double_width_chars(
             exp_plain_output_only_height=' a b\n',
             exp_dims_all_stages_only_height=Dimensions(width=4, height=1),
         ),
-
         #
         # id='smaller_even_width_frame_crop'
         #
@@ -721,7 +680,6 @@ def case_syntax_text_double_width_chars(
             exp_plain_output=' a\n',
             exp_dims_all_stages=Dimensions(width=2, height=1),
         ),
-
         #
         # id='smaller_even_width_fixed_frame_crop'
         #
@@ -735,7 +693,6 @@ def case_syntax_text_double_width_chars(
             # ensure exact text width.
             exp_stylized_dims=Dimensions(width=4, height=1),
         ),
-
         #
         # id='smaller_odd_width_frame_ellipsis'
         #
@@ -744,7 +701,6 @@ def case_syntax_text_double_width_chars(
             exp_plain_output=' a…\n',
             exp_dims_all_stages=Dimensions(width=3, height=1),
         ),
-
         #
         # id='smaller_odd_width_fixed_frame_ellipsis'
         #
@@ -756,7 +712,6 @@ def case_syntax_text_double_width_chars(
             # Hence, the width is not reduced until the "styling" stage.
             exp_stylized_dims=Dimensions(width=3, height=1),
         ),
-
         #
         # id='smaller_odd_width_frame_crop'
         #
@@ -766,7 +721,6 @@ def case_syntax_text_double_width_chars(
             exp_plain_output=' a\n',
             exp_dims_all_stages=Dimensions(width=2, height=1),
         ),
-
         #
         # id='smaller_odd_width_fixed_frame_crop'
         #
@@ -780,7 +734,6 @@ def case_syntax_text_double_width_chars(
             # ensure exact text width.
             exp_stylized_dims=Dimensions(width=3, height=1),
         ),
-
         #
         # id='width_two_frame_ellipsis'
         #
@@ -791,7 +744,6 @@ def case_syntax_text_double_width_chars(
             # is not removed.
             exp_dims_all_stages=Dimensions(width=2, height=1),
         ),
-
         #
         # id='width_two_fixed_frame_ellipsis'
         #
@@ -803,7 +755,6 @@ def case_syntax_text_double_width_chars(
             # Hence, the width is not reduced until the "styling" stage.
             exp_stylized_dims=Dimensions(width=2, height=1),
         ),
-
         #
         # id='width_two_frame_crop'
         #
@@ -813,7 +764,6 @@ def case_syntax_text_double_width_chars(
             exp_plain_output=' a\n',
             exp_dims_all_stages=Dimensions(width=2, height=1),
         ),
-
         #
         # id='width_two_fixed_frame_crop'
         #
@@ -826,7 +776,6 @@ def case_syntax_text_double_width_chars(
             # Hence, the width is not reduced until the "styling" stage.
             exp_stylized_dims=Dimensions(width=2, height=1),
         ),
-
         #
         # id='no_width_frame_ellipsis'
         #
@@ -839,7 +788,6 @@ def case_syntax_text_double_width_chars(
             # not reduced until the "styling" stage.
             exp_stylized_dims=Dimensions(width=0, height=1),
         ),
-
         #
         # id='no_width_fixed_frame_ellipsis'
         #

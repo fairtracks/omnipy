@@ -8,11 +8,13 @@ from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.exceptions import ShouldNotOccurException
 from omnipy.shared.typing import TYPE_CHECKING
 
-from ..tables.models import (ColumnWiseTableWithColNamesAndIndexModel,
-                             JsonScalarColumnWiseTableWithColNamesModel,
-                             PrintableTable,
-                             RowWiseTableModel,
-                             RowWiseTableWithColNamesModel)
+from ..tables.models import (
+    ColumnWiseTableWithColNamesAndIndexModel,
+    JsonScalarColumnWiseTableWithColNamesModel,
+    PrintableTable,
+    RowWiseTableModel,
+    RowWiseTableWithColNamesModel,
+)
 
 if TYPE_CHECKING:
     from .lazy_import import pd
@@ -20,8 +22,11 @@ if TYPE_CHECKING:
 __all__ = ['PandasModel']
 
 AnyJsonTableType = (
-    RowWiseTableModel | RowWiseTableWithColNamesModel
-    | ColumnWiseTableWithColNamesAndIndexModel | JsonScalarColumnWiseTableWithColNamesModel)
+    RowWiseTableModel
+    | RowWiseTableWithColNamesModel
+    | ColumnWiseTableWithColNamesAndIndexModel
+    | JsonScalarColumnWiseTableWithColNamesModel
+)
 
 
 class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], PrintableTable):
@@ -41,8 +46,7 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Any, **kwargs: Any) -> 'PandasModel_DataFrame':
-            ...
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'PandasModel_DataFrame': ...
 
     @classmethod
     def _parse_data(
@@ -51,15 +55,15 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
     ) -> 'pd.DataFrame | pd.Series':
         """Parse supported tabular input into pandas-native content.
 
-        Args:
-            data: Pandas object or table-like content accepted by
-                ``pandas.DataFrame``.
+            Args:
+                data: Pandas object or table-like content accepted by
+                    ``pandas.DataFrame``.
 
-        Returns:
-            Parsed pandas ``DataFrame`` or ``Series``.
+            Returns:
+                Parsed pandas ``DataFrame`` or ``Series``.
 
-    Raises:
-        Exception: Propagates conversion errors raised by pandas.
+        Raises:
+            Exception: Propagates conversion errors raised by pandas.
         """
 
         from .lazy_import import pd
@@ -83,18 +87,19 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
     def _from_iterable(cls, data: Iterable) -> 'pd.DataFrame':
         """Build a DataFrame from iterable tabular data.
 
-        Args:
-            data: Iterable rows or a model wrapping iterable row content.
+            Args:
+                data: Iterable rows or a model wrapping iterable row content.
 
-        Returns:
-            DataFrame with pandas nullable dtypes inferred.
+            Returns:
+                DataFrame with pandas nullable dtypes inferred.
 
-    Raises:
-        Exception: Propagates DataFrame construction errors raised by
-            pandas.
+        Raises:
+            Exception: Propagates DataFrame construction errors raised by
+                pandas.
         """
 
         from .lazy_import import pd
+
         return pd.DataFrame(data.content if is_model_instance(data) else data).convert_dtypes()
 
     def to_data(self, **kwargs: Any) -> Any:
@@ -153,18 +158,18 @@ class PandasModel(Model['pd.DataFrame | pd.Series | AnyJsonTableType'], Printabl
     def to_json(self, pretty=True, **kwargs: Any) -> str:
         """Serialize model content to JSON.
 
-        Attributes:
-            pretty: Reserved compatibility argument. The current implementation
-                always returns compact pandas JSON output.
-            kwargs: Keyword arguments are ignored, included only for
-                compatibility with the base class signature.
+            Attributes:
+                pretty: Reserved compatibility argument. The current implementation
+                    always returns compact pandas JSON output.
+                kwargs: Keyword arguments are ignored, included only for
+                    compatibility with the base class signature.
 
-        Returns:
-            JSON string representation of the underlying pandas object.
+            Returns:
+                JSON string representation of the underlying pandas object.
 
-    Raises:
-        ShouldNotOccurException: If model content is neither DataFrame nor
-            Series.
+        Raises:
+            ShouldNotOccurException: If model content is neither DataFrame nor
+                Series.
         """
 
         from .lazy_import import pd
@@ -187,5 +192,4 @@ _update_forward_refs()
 
 if TYPE_CHECKING:
 
-    class PandasModel_DataFrame(PandasModel, pd.DataFrame):
-        ...
+    class PandasModel_DataFrame(PandasModel, pd.DataFrame): ...

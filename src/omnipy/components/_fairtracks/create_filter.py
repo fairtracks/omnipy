@@ -75,7 +75,7 @@ def create_filter():  # noqa: C901
         print('size mismatch')
         sys.exit()
 
-    projects_list = (response.json()['data']['hits'])
+    projects_list = response.json()['data']['hits']
 
     ##########################################################################
     # Step3: filtered query on 'cases' (filter on project_id) to get cases ID for each TCGA project
@@ -103,7 +103,7 @@ def create_filter():  # noqa: C901
             'size': size,
         }
         response = requests.get(cases_endpt, params=params)
-        cases = (response.json()['data']['hits'])
+        cases = response.json()['data']['hits']
         proj['cases'] = cases
 
     ##############################################################################

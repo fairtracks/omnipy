@@ -10,27 +10,32 @@ from omnipy.data._display.integrations.jupyter.helpers import ReactiveConfigCopy
 
 class MyChildConfig(ConfigBase):
     """Define MyChildConfig."""
+
     param2: int = 0
 
 
 class MyConfig(ConfigBase):
     """Define MyConfig."""
+
     param1: str = 'default'
     child: MyChildConfig = MyChildConfig()
 
 
 class MyParentConfig(ConfigBase):
     """Define MyParentConfig."""
+
     config: MyConfig = MyConfig()
 
 
 @pytest.fixture
 def parent() -> MyParentConfig:
     """Provide parent."""
-    parent = MyParentConfig(config=MyConfig(
-        param1='test',
-        child=MyChildConfig(param2=10),
-    ))
+    parent = MyParentConfig(
+        config=MyConfig(
+            param1='test',
+            child=MyChildConfig(param2=10),
+        )
+    )
     return parent
 
 
@@ -63,7 +68,8 @@ def test_reactive_config_copy_set(parent: Annotated[MyParentConfig, pytest.fixtu
 
 
 def test_reactive_config_copy_subscribe_with_set(
-        parent: Annotated[MyParentConfig, pytest.fixture]) -> None:
+    parent: Annotated[MyParentConfig, pytest.fixture],
+) -> None:
     reactive_config_copy = ReactiveConfigCopy[MyConfig](parent.config)
 
     assert reactive_config_copy.value.param1 == 'test'

@@ -26,12 +26,14 @@ ContentT = TypeVar('ContentT', bound=str | Layout)
 
 class FrameVariant(NamedTuple):
     """Define FrameVariant."""
+
     use_frame_width: bool
     use_frame_height: bool
 
 
 class WithinFrameExp(NamedTuple):
     """Define WithinFrameExp."""
+
     width: bool | None
     height: bool | None
     both: bool | None
@@ -40,52 +42,75 @@ class WithinFrameExp(NamedTuple):
 @dataclass
 class FrameTestCase(Generic[ContentT, FrameT]):
     """Define FrameTestCase."""
+
     frame: FrameT | None
     content: ContentT | pyd.UndefinedType = field(default=pyd.Undefined)
     config: OutputConfig | None | pyd.UndefinedType = field(default=pyd.Undefined)
 
     exp_plain_output: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_resized_dims: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_stylized_dims: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
 
     exp_plain_output_only_width: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages_only_width: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_resized_dims_only_width: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_stylized_dims_only_width: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
 
     exp_plain_output_only_height: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages_only_height: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_resized_dims_only_height: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_stylized_dims_only_height: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
 
     def __post_init__(self):
-        assert not (self.exp_dims_all_stages is not pyd.Undefined
-                    and self.exp_resized_dims is not pyd.Undefined)
-        assert not (self.exp_dims_all_stages is not pyd.Undefined
-                    and self.exp_stylized_dims is not pyd.Undefined)
-        assert not (self.exp_dims_all_stages_only_width is not pyd.Undefined
-                    and self.exp_resized_dims_only_width is not pyd.Undefined)
-        assert not (self.exp_dims_all_stages_only_width is not pyd.Undefined
-                    and self.exp_stylized_dims_only_width is not pyd.Undefined)
-        assert not (self.exp_dims_all_stages_only_height is not pyd.Undefined
-                    and self.exp_resized_dims_only_height is not pyd.Undefined)
-        assert not (self.exp_dims_all_stages_only_height is not pyd.Undefined
-                    and self.exp_stylized_dims_only_height is not pyd.Undefined)
+        assert not (
+            self.exp_dims_all_stages is not pyd.Undefined
+            and self.exp_resized_dims is not pyd.Undefined
+        )
+        assert not (
+            self.exp_dims_all_stages is not pyd.Undefined
+            and self.exp_stylized_dims is not pyd.Undefined
+        )
+        assert not (
+            self.exp_dims_all_stages_only_width is not pyd.Undefined
+            and self.exp_resized_dims_only_width is not pyd.Undefined
+        )
+        assert not (
+            self.exp_dims_all_stages_only_width is not pyd.Undefined
+            and self.exp_stylized_dims_only_width is not pyd.Undefined
+        )
+        assert not (
+            self.exp_dims_all_stages_only_height is not pyd.Undefined
+            and self.exp_resized_dims_only_height is not pyd.Undefined
+        )
+        assert not (
+            self.exp_dims_all_stages_only_height is not pyd.Undefined
+            and self.exp_stylized_dims_only_height is not pyd.Undefined
+        )
 
 
 @dataclass
 class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
     """Define PanelFrameVariantTestCase."""
+
     content: ContentT
     exp_plain_output_no_frame: str | None
     exp_dims_all_stages_no_frame: DimensionsWithWidthAndHeight
@@ -96,27 +121,36 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
 
     exp_plain_output: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_resized_dims: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_stylized_dims: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
 
     exp_plain_output_only_width: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages_only_width: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_resized_dims_only_width: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_stylized_dims_only_width: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
 
     exp_plain_output_only_height: str | None | pyd.UndefinedType = field(default=pyd.Undefined)
     exp_dims_all_stages_only_height: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_resized_dims_only_height: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
     exp_stylized_dims_only_height: DimensionsWithWidthAndHeight | pyd.UndefinedType = field(
-        default=pyd.Undefined)
+        default=pyd.Undefined
+    )
 
     def __post_init__(self):
         def _resolve_to_first_defined(*values):
@@ -128,11 +162,13 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
 
         # General fields
         self.frame = self.frame_case.frame
-        self.content = cast(ContentT,
-                            _resolve_to_first_defined(
-                                self.frame_case.content,
-                                self.content,
-                            ))
+        self.content = cast(
+            ContentT,
+            _resolve_to_first_defined(
+                self.frame_case.content,
+                self.content,
+            ),
+        )
 
         self.exp_plain_output = _resolve_to_first_defined(
             self.frame_case.exp_plain_output,
@@ -233,6 +269,7 @@ class PanelFrameVariantTestCase(Generic[ContentT, FrameT]):
 
 class PanelOutputTestCase(NamedTuple, Generic[ContentT]):
     """Define PanelOutputTestCase."""
+
     content: ContentT
     frame: Frame | None
     config: OutputConfig | None
@@ -244,6 +281,7 @@ class PanelOutputTestCase(NamedTuple, Generic[ContentT]):
 
 class StylizedPanelTestCaseSetup(NamedTuple, Generic[ContentT]):
     """Define StylizedPanelTestCaseSetup."""
+
     case_id: str
     content: ContentT
     title: str = ''
@@ -253,6 +291,7 @@ class StylizedPanelTestCaseSetup(NamedTuple, Generic[ContentT]):
 
 class StylizedPanelOutputExpectations(NamedTuple):
     """Define StylizedPanelOutputExpectations."""
+
     get_output_property: OutputPropertyType
     exp_plain_output_for_case_id: Callable[[str], str]
 
@@ -296,8 +335,11 @@ def apply_frame_variant_to_test_case(
                     fixed_width=case.frame.fixed_width,
                 )
 
-                exp_dims_only_width = case.exp_stylized_dims_only_width if stylized_stage \
+                exp_dims_only_width = (
+                    case.exp_stylized_dims_only_width
+                    if stylized_stage
                     else case.exp_resized_dims_only_width
+                )
 
                 return PanelOutputTestCase(
                     content=case.content,
@@ -312,8 +354,11 @@ def apply_frame_variant_to_test_case(
                     fixed_height=case.frame.fixed_height,
                 )
 
-                exp_dims_only_height = case.exp_stylized_dims_only_height if stylized_stage \
+                exp_dims_only_height = (
+                    case.exp_stylized_dims_only_height
+                    if stylized_stage
                     else case.exp_resized_dims_only_height
+                )
 
                 return PanelOutputTestCase(
                     content=case.content,
@@ -343,8 +388,10 @@ def prepare_test_case_for_stylized_layout(
 ) -> PanelOutputTestCase[Layout]:
     """Prepare test case for stylized layout."""
     if isinstance(any_case, PanelFrameVariantTestCase):
-        if any_case.frame_variant != FrameVariant(True, True) \
-                and output_format_accessor != plain_terminal:
+        if (
+            any_case.frame_variant != FrameVariant(True, True)
+            and output_format_accessor != plain_terminal
+        ):
             pytest.skip('Skip test combination to increase test efficiency.')
 
         case = apply_frame_variant_to_test_case(any_case, stylized_stage=True)

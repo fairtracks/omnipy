@@ -10,10 +10,12 @@ from typing_extensions import TypeVar
 from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
-from omnipy.shared.protocols.content import (IsBytesContent,
-                                             IsListContent,
-                                             IsListOfListsContent,
-                                             IsStrContent)
+from omnipy.shared.protocols.content import (
+    IsBytesContent,
+    IsListContent,
+    IsListOfListsContent,
+    IsStrContent,
+)
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import is_package_editable
 import omnipy.util.pydantic as pyd
@@ -53,8 +55,7 @@ class _EncodingParamsMixin:
 
 if TYPE_CHECKING:
 
-    class _BytesModel(PlainModel[bytes], IsBytesContent, _EncodingParamsMixin):
-        ...
+    class _BytesModel(PlainModel[bytes], IsBytesContent, _EncodingParamsMixin): ...
 else:
 
     class _BytesModel(Model[bytes | str], _EncodingParamsMixin):
@@ -103,8 +104,7 @@ else:
 
 if TYPE_CHECKING:
 
-    class _StrModel(PlainModel[str], IsStrContent, _EncodingParamsMixin):
-        ...
+    class _StrModel(PlainModel[str], IsStrContent, _EncodingParamsMixin): ...
 else:
 
     class _StrModel(Model[str | bytes], _EncodingParamsMixin):
@@ -206,6 +206,7 @@ class TimeDeltaModel(Model[datetime.timedelta]):
         >>> TimeDeltaModel('P182DT12H30M5S').to_data()
         '182 days, 12:30:05'
     """
+
     def to_data(self, **kwargs: Any) -> str:
         return str(self.content)
 
@@ -231,13 +232,12 @@ class DateModel(IsoFormatToDataMixin, Model[datetime.date]):  # type: ignore[ove
         >>> start + TimeDeltaModel(datetime.timedelta(days=1))
         DateModel(datetime.date(2020, 5, 18))
     """
-    @overload
-    def __sub__(self, other: 'datetime.date | DateModel') -> TimeDeltaModel:
-        ...
 
     @overload
-    def __sub__(self, other: datetime.timedelta | TimeDeltaModel) -> 'DateModel':
-        ...
+    def __sub__(self, other: 'datetime.date | DateModel') -> TimeDeltaModel: ...
+
+    @overload
+    def __sub__(self, other: datetime.timedelta | TimeDeltaModel) -> 'DateModel': ...
 
     def __sub__(
         self, other: 'datetime.date | DateModel | datetime.timedelta | TimeDeltaModel'
@@ -245,7 +245,7 @@ class DateModel(IsoFormatToDataMixin, Model[datetime.date]):  # type: ignore[ove
         if isinstance(other, (DateModel, TimeDeltaModel)):
             other = other.content
         result = self.content - other
-        match (result):
+        match result:
             case datetime.timedelta():
                 return TimeDeltaModel(result)
             case _:
@@ -288,13 +288,12 @@ class DateTimeModel(IsoFormatToDataMixin, Model[datetime.datetime]):  # type: ig
         >>> utc_start + TimeDeltaModel(datetime.timedelta(days=1))
         DateTimeModel(datetime.datetime(2026, 8, 14, 17, 2, tzinfo=datetime.timezone.utc))
     """
-    @overload
-    def __sub__(self, other: 'datetime.datetime | DateTimeModel') -> TimeDeltaModel:
-        ...
 
     @overload
-    def __sub__(self, other: datetime.timedelta | TimeDeltaModel) -> 'DateTimeModel':
-        ...
+    def __sub__(self, other: 'datetime.datetime | DateTimeModel') -> TimeDeltaModel: ...
+
+    @overload
+    def __sub__(self, other: datetime.timedelta | TimeDeltaModel) -> 'DateTimeModel': ...
 
     def __sub__(
         self, other: 'datetime.datetime | DateTimeModel | datetime.timedelta | TimeDeltaModel'
@@ -347,11 +346,11 @@ def _split_line(model_cls: type[_HasSplitParams], data: str) -> list[str]:
     if strip:
         data = data.strip(strip_chars)
 
-    match (delimiter):
+    match delimiter:
         case NewLine.LF | NewLine.CRLF | NewLine.CR:
             items = [item + delimiter for item in data.split(delimiter)]
             if items and not data.endswith(delimiter):
-                items[-1] = items[-1][:-len(delimiter)]
+                items[-1] = items[-1][: -len(delimiter)]
         case NewLine.UNIVERSAL:
             items = data.splitlines(keepends=True)
         case _:
@@ -468,6 +467,7 @@ else:
         Input may already be a list of strings or a single delimited string,
         which is split according to the active split-parameter mixin.
         """
+
         @classmethod
         def _parse_data(cls: type[_HasSplitParams], data: list[str] | str) -> list[str]:
             if isinstance(data, list):
@@ -533,8 +533,8 @@ class SplitToLinesNoStripModel(_SplitByUniversalNewlineNoStripParamsMixin, Split
 if TYPE_CHECKING:
 
     class SplitItemsToSubitemsModelBase(
-            PlainModel[list[list[str]]],
-            IsListOfListsContent[list[str], str],
+        PlainModel[list[list[str]]],
+        IsListOfListsContent[list[str], str],
     ):
         """Normalize input into a two-dimensional list of string items.
 
@@ -552,9 +552,11 @@ else:
         Input may be provided as already nested lists or as a list of strings
         that should each be split into subitems.
         """
+
         @classmethod
-        def _parse_data(cls: type[_HasSplitParams],
-                        data: list[list[str]] | list[str] | list[StrModel]) -> list[list[str]]:
+        def _parse_data(
+            cls: type[_HasSplitParams], data: list[list[str]] | list[str] | list[StrModel]
+        ) -> list[list[str]]:
             if isinstance(data, list) and (len(data) == 0 or isinstance(data[0], list)):
                 return cast(list[list[str]], data)
 
@@ -687,6 +689,7 @@ else:
         Input may already be a string or a list of strings that should be
         joined according to the active join-parameter mixin.
         """
+
         @classmethod
         def _parse_data(cls: type[_HasJoinParams], data: str | list[str]) -> str:
             if isinstance(data, str):
@@ -739,6 +742,7 @@ else:
         Input may already be a flat list of strings or nested lists where each
         sublist should be joined into one string item.
         """
+
         @classmethod
         def _parse_data(cls: type[_HasJoinParams], data: list[str] | list[list[str]]) -> list[str]:
             if isinstance(data, list) and (len(data) == 0 or not isinstance(data[0], list)):
@@ -789,9 +793,9 @@ _NestedListsOfStrT = TypeVar('_NestedListsOfStrT', bound='NestedListsOfStr')
 if TYPE_CHECKING:
 
     class ListOfNestedListsOfStrModel(
-            PlainModel[list[_NestedListsOfStrT]],
-            IsListContent[_NestedListsOfStrT],
-            Generic[_NestedListsOfStrT],
+        PlainModel[list[_NestedListsOfStrT]],
+        IsListContent[_NestedListsOfStrT],
+        Generic[_NestedListsOfStrT],
     ):
         """Represent recursive list nesting for string-based structures.
 
@@ -803,8 +807,8 @@ if TYPE_CHECKING:
 else:
 
     class ListOfNestedListsOfStrModel(
-            Model[list[_NestedListsOfStrT]],
-            Generic[_NestedListsOfStrT],
+        Model[list[_NestedListsOfStrT]],
+        Generic[_NestedListsOfStrT],
     ):
         """Represent lists that recursively contain nested string lists.
 
@@ -875,11 +879,12 @@ class _NestedItemsParamsMixin:
         next_level = level + 1
 
         if num_delimiters == next_level:
-            assert len(split_data) > 1, \
-                (f'Data at bottom level (level {level}) must contain at '
-                 f'least one delimiter or equivalently be pre-split into '
-                 f'more than one item (bottom delimiter: '
-                 f'{cls.Params.delimiters[level]}): {split_data}')
+            assert len(split_data) > 1, (
+                f'Data at bottom level (level {level}) must contain at '
+                f'least one delimiter or equivalently be pre-split into '
+                f'more than one item (bottom delimiter: '
+                f'{cls.Params.delimiters[level]}): {split_data}'
+            )
         if num_delimiters > next_level:
             split_data_no_list_models = [
                 cls._split_data_according_to_delimiters(item, level=next_level)
@@ -888,12 +893,14 @@ class _NestedItemsParamsMixin:
             return cast(ListOfNestedPlainListsOfStr, split_data_no_list_models)
         else:
             if num_delimiters == 0:
-                assert isinstance(data, str), \
+                assert isinstance(data, str), (
                     'Data must be an string if no delimiters are provided.'
+                )
             else:  # 0 < num_delimiters <= next_level
-                assert all(isinstance(item, str) for item in raw_data), \
-                    (f'Data is nested higher than permitted by the number of delimiters in '
-                     f'Params (={num_delimiters}).')
+                assert all(isinstance(item, str) for item in raw_data), (
+                    f'Data is nested higher than permitted by the number of delimiters in '
+                    f'Params (={num_delimiters}).'
+                )
 
             return split_data
 
@@ -901,24 +908,23 @@ class _NestedItemsParamsMixin:
 if TYPE_CHECKING:
 
     class _NestedSplitToItemsModel(
-            PlainModel[list[_NestedPlainListsOfStrT]],
-            IsListContent[_NestedPlainListsOfStrT],
-            Generic[_NestedPlainListsOfStrT],
-            _NestedItemsParamsMixin,
-    ):
-        ...
+        PlainModel[list[_NestedPlainListsOfStrT]],
+        IsListContent[_NestedPlainListsOfStrT],
+        Generic[_NestedPlainListsOfStrT],
+        _NestedItemsParamsMixin,
+    ): ...
 
 else:
 
     class _NestedSplitToItemsModel(
-            Model[list[_NestedPlainListsOfStrT] | str],
-            Generic[_NestedPlainListsOfStrT],
-            _NestedItemsParamsMixin,
+        Model[list[_NestedPlainListsOfStrT] | str],
+        Generic[_NestedPlainListsOfStrT],
+        _NestedItemsParamsMixin,
     ):
         @classmethod
         def _parse_data(
-                cls,
-                data: list[_NestedPlainListsOfStrT] | str) -> list[_NestedPlainListsOfStrT] | str:
+            cls, data: list[_NestedPlainListsOfStrT] | str
+        ) -> list[_NestedPlainListsOfStrT] | str:
             str_parsed_data = NestedListsOfStrModel(data).content
             return cls._split_data_according_to_delimiters(
                 str_parsed_data,  # type: ignore[return-value]
@@ -933,8 +939,9 @@ class NestedSplitToItemsModel(_NestedSplitToItemsModel):
     """
 
     adjust = bind_adjust_model_func(
-        cast(Callable[..., type[_NestedSplitToItemsModel]],
-             _NestedSplitToItemsModel.clone_model_cls),
+        cast(
+            Callable[..., type[_NestedSplitToItemsModel]], _NestedSplitToItemsModel.clone_model_cls
+        ),
         _NestedSplitToItemsModel.Params,
     )
 
@@ -942,22 +949,23 @@ class NestedSplitToItemsModel(_NestedSplitToItemsModel):
 if TYPE_CHECKING:
 
     class _NestedJoinItemsModel(
-            PlainModel[str],
-            IsStrContent,
-            Generic[_NestedPlainListsOfStrT],
-            _NestedItemsParamsMixin,
-    ):
-        ...
+        PlainModel[str],
+        IsStrContent,
+        Generic[_NestedPlainListsOfStrT],
+        _NestedItemsParamsMixin,
+    ): ...
 
 else:
 
-    class _NestedJoinItemsModel(Model[str | list[_NestedPlainListsOfStrT]],
-                                Generic[_NestedPlainListsOfStrT],
-                                _NestedItemsParamsMixin):
+    class _NestedJoinItemsModel(
+        Model[str | list[_NestedPlainListsOfStrT]],
+        Generic[_NestedPlainListsOfStrT],
+        _NestedItemsParamsMixin,
+    ):
         @classmethod
-        def _join_data_according_to_delimiters(cls,
-                                               data: str | list[_NestedPlainListsOfStrT],
-                                               level: int = 0) -> str:
+        def _join_data_according_to_delimiters(
+            cls, data: str | list[_NestedPlainListsOfStrT], level: int = 0
+        ) -> str:
             if isinstance(data, str):
                 return data
 
@@ -967,7 +975,8 @@ else:
             if num_delimiters > next_level:
                 raw_data = [
                     cls._join_data_according_to_delimiters(
-                        cast(str | list[_NestedPlainListsOfStrT], item), level=next_level)
+                        cast(str | list[_NestedPlainListsOfStrT], item), level=next_level
+                    )
                     for item in data
                 ]
             else:
@@ -1021,16 +1030,15 @@ class _MatchItemsParamsMixin:
 if TYPE_CHECKING:
 
     class _MatchItemsModel(
-            PlainModel[list[str]],
-            IsListContent[str],
-            _MatchItemsParamsMixin,
-    ):
-        ...
+        PlainModel[list[str]],
+        IsListContent[str],
+        _MatchItemsParamsMixin,
+    ): ...
 else:
 
     class _MatchItemsModel(
-            Model[list[str]],
-            _MatchItemsParamsMixin,
+        Model[list[str]],
+        _MatchItemsParamsMixin,
     ):
         @classmethod
         def _parse_data(cls, data: list[str]) -> list[str]:
@@ -1043,7 +1051,8 @@ else:
             logic_operator = all if cls.Params.match_all else any
 
             return [
-                item for item in data
+                item
+                for item in data
                 if (logic_operator(match_func(item) for match_func in match_functions) is True)
                 ^ invert_matches
             ]

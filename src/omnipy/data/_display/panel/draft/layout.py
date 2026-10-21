@@ -18,10 +18,11 @@ import omnipy.util.pydantic as pyd
 
 
 @pyd.dataclass(
-    init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
+    init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True)
+)
 class ResizedLayoutDraftPanel(
-        MonospacedDraftPanel[DimensionsAwareDraftPanelLayout, FrameT],
-        Generic[FrameT],
+    MonospacedDraftPanel[DimensionsAwareDraftPanelLayout, FrameT],
+    Generic[FrameT],
 ):
     """
     A draft panel containing a layout that has been resized to fit its
@@ -35,6 +36,7 @@ class ResizedLayoutDraftPanel(
     various optimization steps to ensure panels display their content
     effectively.
     """
+
     def __init__(
         self,
         content: Layout,
@@ -48,7 +50,8 @@ class ResizedLayoutDraftPanel(
             title=title,
             frame=frame,
             constraints=constraints,
-            config=config)
+            config=config,
+        )
 
     @classmethod
     def create_from_draft_panel(
@@ -67,8 +70,8 @@ class ResizedLayoutDraftPanel(
 
     @pyd.validator('content', pre=True)
     def render_content_until_dimensions_aware(  # noqa: C901
-            cls,
-            content: Layout[DraftPanel],
+        cls,
+        content: Layout[DraftPanel],
     ) -> DimensionsAwareDraftPanelLayout:
         return DimensionsAwareDraftPanelLayout(**content.render_until_dimensions_aware())
 
@@ -84,4 +87,5 @@ class ResizedLayoutDraftPanel(
     @override
     def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
         from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
+
         return StylizedLayoutPanel(self)

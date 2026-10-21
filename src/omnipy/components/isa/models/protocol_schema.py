@@ -26,7 +26,7 @@ class Component(pyd.BaseModel):
     """
 
     componentName: Optional[str] = None
-    componentType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
+    componentType: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 
 
@@ -50,6 +50,7 @@ class IsaProtocolSchema(pyd.BaseModel):
         parameters: Parameter definitions accepted by the protocol.
         components: Reusable protocol components and materials.
     """
+
     class Config:
         """Validation settings for ISA protocol schema parsing.
 
@@ -69,7 +70,7 @@ class IsaProtocolSchema(pyd.BaseModel):
     description: Optional[str] = None
     uri: Optional[str] = None
     version: Optional[str] = None
-    parameters: Optional[List[protocol_parameter_schema.IsaProtocolParameterModel]] = (None)
+    parameters: Optional[List[protocol_parameter_schema.IsaProtocolParameterModel]] = None
     components: Optional[List[Component]] = None
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 

@@ -4,13 +4,17 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.components.json.datasets import (JsonDictDataset,
-                                             JsonDictOfDictsDataset,
-                                             JsonDictOfListsOfDictsDataset,
-                                             JsonListDataset,
-                                             JsonListOfDictsDataset)
-from omnipy.components.json.flows import (transpose_dict_of_dicts_2_list_of_dicts,
-                                          transpose_dicts_of_lists_of_dicts_2_lists_of_dicts)
+from omnipy.components.json.datasets import (
+    JsonDictDataset,
+    JsonDictOfDictsDataset,
+    JsonDictOfListsOfDictsDataset,
+    JsonListDataset,
+    JsonListOfDictsDataset,
+)
+from omnipy.components.json.flows import (
+    transpose_dict_of_dicts_2_list_of_dicts,
+    transpose_dicts_of_lists_of_dicts_2_lists_of_dicts,
+)
 from omnipy.components.json.tasks import transpose_dicts_2_lists
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
@@ -22,8 +26,9 @@ def test_transpose_empty_dicts_2_nothing(runtime: Annotated[IsRuntime, pytest.fi
     assert out_dataset.to_data() == {}
 
 
-def test_transpose_dict_of_numbers_2_lists_of_numbers(runtime: Annotated[IsRuntime,
-                                                                         pytest.fixture],):
+def test_transpose_dict_of_numbers_2_lists_of_numbers(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+):
     """Transpose numeric dict values into grouped lists."""
 
     in_dataset = JsonDictDataset(dict(abc={'a': 123}, bcd={'a': 456}))
@@ -37,138 +42,122 @@ def test_transpose_dict_of_numbers_2_lists_of_numbers(runtime: Annotated[IsRunti
     assert out_dataset_2.to_data() == {'a': [123, 456], 'b': [321], 'c': [654]}
 
 
-def test_transpose_dicts_of_various_2_lists_of_various(runtime: Annotated[IsRuntime,
-                                                                          pytest.fixture],):
+def test_transpose_dicts_of_various_2_lists_of_various(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+):
     """Transpose mixed dict values while preserving structure."""
 
     out_dataset = transpose_dicts_2_lists.run(
         JsonDictDataset(
             dict(
                 abc={
-                    'a': [{
-                        'x': 33.2, 'y': 14.5
-                    }, {
-                        'x': 9.2, 'y': 21.3
-                    }],
+                    'a': [{'x': 33.2, 'y': 14.5}, {'x': 9.2, 'y': 21.3}],
                     'b': [1, 2, 3],
                 },
                 bcd={
-                    'a': {
-                        'x': 2.34, 'y': 3.3
-                    },
+                    'a': {'x': 2.34, 'y': 3.3},
                     'b': [4, 5, 6],
                     'c': 654,
-                })),)
+                },
+            )
+        ),
+    )
     assert type(out_dataset) is JsonListDataset
     assert out_dataset.to_data() == {
-        'a': [{
-            '_omnipy_id': 'abc', 'x': 33.2, 'y': 14.5
-        }, {
-            '_omnipy_id': 'abc_1', 'x': 9.2, 'y': 21.3
-        }, {
-            '_omnipy_id': 'bcd', 'x': 2.34, 'y': 3.3
-        }],
+        'a': [
+            {'_omnipy_id': 'abc', 'x': 33.2, 'y': 14.5},
+            {'_omnipy_id': 'abc_1', 'x': 9.2, 'y': 21.3},
+            {'_omnipy_id': 'bcd', 'x': 2.34, 'y': 3.3},
+        ],
         'b': [1, 2, 3, 4, 5, 6],
-        'c': [654]
+        'c': [654],
     }
 
 
-def test_transpose_dict_of_dicts_2_list_of_dicts(runtime: Annotated[IsRuntime, pytest.fixture],):
+def test_transpose_dict_of_dicts_2_list_of_dicts(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+):
     """Transpose nested dict datasets into lists of dicts."""
 
     out_dataset = transpose_dict_of_dicts_2_list_of_dicts.run(
         JsonDictOfDictsDataset(
             dict(
-                abc={
-                    'a': {
-                        'x': True, 'y': None
-                    }, 'b': {
-                        'i': 123, 'ii': 234
-                    }
-                },
-                bcd={
-                    'a': {
-                        'x': False
-                    }, 'b': {
-                        'i': 312, 'iii': 423
-                    }
-                },
-            )),
+                abc={'a': {'x': True, 'y': None}, 'b': {'i': 123, 'ii': 234}},
+                bcd={'a': {'x': False}, 'b': {'i': 312, 'iii': 423}},
+            )
+        ),
         id_key='myid',
     )
     assert type(out_dataset) is JsonListOfDictsDataset
     assert out_dataset.to_data() == {
         'a': [
-            {
-                'myid': 'abc', 'x': True, 'y': None
-            },
-            {
-                'myid': 'bcd', 'x': False
-            },
+            {'myid': 'abc', 'x': True, 'y': None},
+            {'myid': 'bcd', 'x': False},
         ],
-        'b': [{
-            'myid': 'abc', 'i': 123, 'ii': 234
-        }, {
-            'myid': 'bcd', 'i': 312, 'iii': 423
-        }],
+        'b': [{'myid': 'abc', 'i': 123, 'ii': 234}, {'myid': 'bcd', 'i': 312, 'iii': 423}],
     }
 
 
-def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(runtime: Annotated[IsRuntime,
-                                                                               pytest.fixture],):
+def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+):
     """Transpose dicts of dict-backed lists into list datasets."""
 
     out_dataset = transpose_dicts_of_lists_of_dicts_2_lists_of_dicts.run(
         JsonDictOfListsOfDictsDataset(
             dict(
                 real={
-                    'People': [{
-                        'First name': 'Elvis',
-                        'Last name': 'Presley',
-                    }, {
-                        'First name': 'Marilyn',
-                        'Last name': 'Monroe',
-                    }, {
-                        'First name': 'Muhammad',
-                        'Last name': 'Ali',
-                    }],
+                    'People': [
+                        {
+                            'First name': 'Elvis',
+                            'Last name': 'Presley',
+                        },
+                        {
+                            'First name': 'Marilyn',
+                            'Last name': 'Monroe',
+                        },
+                        {
+                            'First name': 'Muhammad',
+                            'Last name': 'Ali',
+                        },
+                    ],
                     'Cities': [
                         {
                             'Name': 'New York',
-                            'Country': {
-                                'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'
-                            }
+                            'Country': {'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'},
                         },
                         {
                             'Name': 'Tbilisi',
-                            'Country': {
-                                'Name': 'Georgia', 'Anthem': 'Tavisupleba'
-                            }
+                            'Country': {'Name': 'Georgia', 'Anthem': 'Tavisupleba'},
                         },
                     ],
                 },
                 fictional={
-                    'People': [{
-                        'First name': 'Clark',
-                        'Last name': 'Kent',
-                    }, {
-                        'First name': 'Mister',
-                        'Last name': 'Mxyzptlk',
-                    }],
+                    'People': [
+                        {
+                            'First name': 'Clark',
+                            'Last name': 'Kent',
+                        },
+                        {
+                            'First name': 'Mister',
+                            'Last name': 'Mxyzptlk',
+                        },
+                    ],
                     'Cities': [
                         {
                             'Name': 'Metropolis',
-                            'Country': {
-                                'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'
-                            }
+                            'Country': {'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'},
                         },
                         {
                             'Name': 'Dark City',
                             'Country': None,
                         },
                     ],
-                })),
-        id_key='local_id')
+                },
+            )
+        ),
+        id_key='local_id',
+    )
     assert type(out_dataset) is JsonListOfDictsDataset
     assert out_dataset.to_data() == {
         'People': [
@@ -202,23 +191,17 @@ def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(runtime: Annotated[I
             {
                 'local_id': 'real',
                 'Name': 'New York',
-                'Country': {
-                    'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'
-                }
+                'Country': {'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'},
             },
             {
                 'local_id': 'real_1',
                 'Name': 'Tbilisi',
-                'Country': {
-                    'Name': 'Georgia', 'Anthem': 'Tavisupleba'
-                }
+                'Country': {'Name': 'Georgia', 'Anthem': 'Tavisupleba'},
             },
             {
                 'local_id': 'fictional',
                 'Name': 'Metropolis',
-                'Country': {
-                    'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'
-                }
+                'Country': {'Name': 'USA', 'Anthem': 'The Star-Spangled Banner'},
             },
             {
                 'local_id': 'fictional_1',

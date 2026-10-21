@@ -24,6 +24,7 @@ class HttpUrlDataset(Dataset[HttpUrlModel]):
         >>> str(urls['users'])
         'https://example.com/users'
     """
+
     ...
 
 
@@ -46,4 +47,5 @@ class AutoResponseContentDataset(Dataset[AutoResponseContentModel]):
         >>> 'a' in responses
         True
     """
+
     ...

@@ -5,32 +5,36 @@ from dataclasses import dataclass
 import functools
 import os
 from textwrap import dedent
-from typing import (Any,
-                    Callable,
-                    ContextManager,
-                    IO,
-                    Iterable,
-                    Iterator,
-                    Mapping,
-                    overload,
-                    Protocol,
-                    runtime_checkable,
-                    Type,
-                    TypeAlias,
-                    TypedDict)
+from typing import (
+    Any,
+    Callable,
+    ContextManager,
+    IO,
+    Iterable,
+    Iterator,
+    Mapping,
+    overload,
+    Protocol,
+    runtime_checkable,
+    Type,
+    TypeAlias,
+    TypedDict,
+)
 
 from typing_extensions import override, Self, TypeVar
 
 from omnipy.shared.protocols._util import IsWeakKeyRefContainer
-from omnipy.shared.protocols.config import (IsDataConfig,
-                                            IsJupyterUserInterfaceConfig,
-                                            IsLayoutConfig,
-                                            IsTextConfig)
+from omnipy.shared.protocols.config import (
+    IsDataConfig,
+    IsJupyterUserInterfaceConfig,
+    IsLayoutConfig,
+    IsTextConfig,
+)
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.shared.protocols.typing import IsMutableMapping
 from omnipy.util.helpers import is_package_editable
-from omnipy.util.pydantic import Undefined, UndefinedType
 import omnipy.util.pydantic as pyd
+from omnipy.util.pydantic import Undefined, UndefinedType
 from omnipy.util.setdeque import SetDeque
 
 _RootT = TypeVar('_RootT')
@@ -43,14 +47,16 @@ ObjContraT = TypeVar('ObjContraT', contravariant=True, bound=object)
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISDATACLASSCREATOR_CONFIG_SUMMARY'] = (
-        'Return the data configuration shared by the owning data-class family.')
+        'Return the data configuration shared by the owning data-class family.'
+    )
     os.environ['OMNIPY_MACRO_ISDATACLASSCREATOR_CONFIG_DETAILS'] = dedent("""\
         Returns:
             IsDataConfig: Shared configuration object used by related models and datasets.
     """)
 
     os.environ['OMNIPY_MACRO_ISDATACLASSCREATOR_SET_CONFIG_SUMMARY'] = (
-        'Replace the shared data configuration for the owning data-class family.')
+        'Replace the shared data configuration for the owning data-class family.'
+    )
     os.environ['OMNIPY_MACRO_ISDATACLASSCREATOR_SET_CONFIG_DETAILS'] = dedent("""\
         Args:
             config: Data configuration object to store for related models and datasets.
@@ -94,6 +100,7 @@ class HasData(Protocol):
 @runtime_checkable
 class HasContent(Protocol[ContentT]):
     """Object with a typed ``content`` value that can be read or replaced."""
+
     @property
     def content(self) -> ContentT:
         """Return the wrapped content value.
@@ -116,6 +123,7 @@ class HasContent(Protocol[ContentT]):
 @runtime_checkable
 class IsModel(HasContent[_RootT], Protocol[_RootT]):
     """Single-value data wrapper with typed content and conversion support."""
+
     @classmethod
     def full_type(cls) -> type[_RootT]:
         """Return the fully resolved Python type represented by this model.
@@ -133,14 +141,14 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
     Datasets expose conversion helpers for plain data, JSON, and file-based
     load/save operations.
     """
+
     def __init__(
         self,
         value: Mapping[str, object] | Iterator[tuple[str, object]] | UndefinedType = Undefined,
         *,
         data: Mapping[str, object] | UndefinedType = Undefined,
         **input_data: object,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @classmethod
     @functools.cache
@@ -162,9 +170,9 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         """
         ...
 
-    def from_data(self,
-                  data: Mapping[str, Any] | Iterable[tuple[str, Any]],
-                  update: bool = True) -> None:
+    def from_data(
+        self, data: Mapping[str, Any] | Iterable[tuple[str, Any]], update: bool = True
+    ) -> None:
         """Populate the dataset from plain Python data.
 
         Args:
@@ -186,9 +194,9 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
         """
         ...
 
-    def from_json(self,
-                  data: Mapping[str, str] | Iterable[tuple[str, str]],
-                  update: bool = True) -> None:
+    def from_json(
+        self, data: Mapping[str, str] | Iterable[tuple[str, str]], update: bool = True
+    ) -> None:
         """Populate the dataset from JSON-encoded entries.
 
         Args:
@@ -308,43 +316,39 @@ class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatase
     # TODO: Remove methods of IsDataset that overlap with IsMutableMapping?
 
     @overload
-    def __getitem__(self, selector: str | int) -> _ModelOrDatasetT:
-        ...
+    def __getitem__(self, selector: str | int) -> _ModelOrDatasetT: ...
 
     @overload
-    def __getitem__(self, selector: slice | Iterable[str | int]) -> Self:
-        ...
+    def __getitem__(self, selector: slice | Iterable[str | int]) -> Self: ...
 
     @override
-    def __getitem__(self,
-                    selector: str | int | slice | Iterable[str | int]) -> '_ModelOrDatasetT | Self':
-        ...
+    def __getitem__(
+        self, selector: str | int | slice | Iterable[str | int]
+    ) -> '_ModelOrDatasetT | Self': ...
 
     @overload
-    def __setitem__(self, selector: str | int, data_obj: _ModelOrDatasetT) -> None:
-        ...
+    def __setitem__(self, selector: str | int, data_obj: _ModelOrDatasetT) -> None: ...
 
     @overload
-    def __setitem__(self,
-                    selector: slice | Iterable[str | int],
-                    data_obj: Mapping[str, _ModelOrDatasetT] | Iterable[_ModelOrDatasetT]) -> None:
-        ...
+    def __setitem__(
+        self,
+        selector: slice | Iterable[str | int],
+        data_obj: Mapping[str, _ModelOrDatasetT] | Iterable[_ModelOrDatasetT],
+    ) -> None: ...
 
     def __setitem__(
         self,
         selector: str | int | slice | Iterable[str | int],
-        data_obj: (_ModelOrDatasetT | Mapping[str, _ModelOrDatasetT]
-                   | Iterable[_ModelOrDatasetT]),
-    ) -> None:
-        ...
+        data_obj: (_ModelOrDatasetT | Mapping[str, _ModelOrDatasetT] | Iterable[_ModelOrDatasetT]),
+    ) -> None: ...
 
-    def __delitem__(self, selector: str | int | slice | Iterable[str | int]) -> None:
-        ...
+    def __delitem__(self, selector: str | int | slice | Iterable[str | int]) -> None: ...
 
 
 @runtime_checkable
 class IsMultiModelDataset(IsDataset[_ModelOrDatasetT], Protocol[_ModelOrDatasetT]):
     """Dataset protocol that can assign different model classes per item."""
+
     def set_model(self, data_file: str, model: type[IsModel]) -> None:
         """Assign a model class to one dataset entry.
 
@@ -382,6 +386,7 @@ class IsHttpUrlDataset(IsDataset, Protocol):
 
 class IsSerializer(Protocol[_DatasetT]):
     """Serializer interface for converting datasets to and from bytes."""
+
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         """Return whether the serializer can handle the dataset as-is.
@@ -442,10 +447,11 @@ class IsSerializer(Protocol[_DatasetT]):
 @runtime_checkable
 class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
     """Serializer extension that stores dataset entries inside tar archives."""
+
     @classmethod
-    def create_tarfile_from_dataset(cls,
-                                    dataset: _DatasetT,
-                                    data_encode_func: Callable[..., bytes | memoryview]) -> bytes:
+    def create_tarfile_from_dataset(
+        cls, dataset: _DatasetT, data_encode_func: Callable[..., bytes | memoryview]
+    ) -> bytes:
         """Create a tar archive payload from a dataset.
 
         Args:
@@ -486,8 +492,8 @@ class IsTarFileSerializer(IsSerializer[_DatasetT], Protocol[_DatasetT]):
 @runtime_checkable
 class IsSerializerRegistry(Protocol):
     """Registry that tracks serializers and selects suitable ones for datasets."""
-    def __init__(self) -> None:
-        ...
+
+    def __init__(self) -> None: ...
 
     def register(self, serializer_cls: Type[IsSerializer]) -> None:
         """Register a serializer class with the registry.
@@ -528,7 +534,8 @@ class IsSerializerRegistry(Protocol):
         ...
 
     def auto_detect_tar_file_serializer(
-            self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
+        self, dataset: IsDataset
+    ) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
         """Return the best tar-file serializer match for a dataset, if any.
 
         Args:
@@ -541,12 +548,13 @@ class IsSerializerRegistry(Protocol):
         ...
 
     @classmethod
-    def _autodetect_serializer(cls, dataset,
-                               serializers) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
-        ...
+    def _autodetect_serializer(
+        cls, dataset, serializers
+    ) -> tuple[IsDataset, IsSerializer] | tuple[None, None]: ...
 
     def detect_tar_file_serializers_from_dataset_cls(
-            self, dataset: IsDataset) -> tuple[Type[IsTarFileSerializer], ...]:
+        self, dataset: IsDataset
+    ) -> tuple[Type[IsTarFileSerializer], ...]:
         """Return tar-file serializers compatible with the dataset class.
 
         Args:
@@ -558,7 +566,8 @@ class IsSerializerRegistry(Protocol):
         ...
 
     def detect_tar_file_serializers_from_file_suffix(
-            self, file_suffix: str) -> tuple[Type[IsTarFileSerializer], ...]:
+        self, file_suffix: str
+    ) -> tuple[Type[IsTarFileSerializer], ...]:
         """Return tar-file serializers matching a file suffix.
 
         Args:
@@ -643,9 +652,12 @@ class IsSnapshotWrapper(Protocol[ObjContraT, ContentT]):
 
 
 @runtime_checkable
-class IsSnapshotHolder(IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasContentT, ContentT]],
-                       Protocol[HasContentT, ContentT]):
+class IsSnapshotHolder(
+    IsWeakKeyRefContainer[HasContentT, IsSnapshotWrapper[HasContentT, ContentT]],
+    Protocol[HasContentT, ContentT],
+):
     """Container protocol managing snapshots used for deepcopy/reactive tracking."""
+
     def clear(self) -> None:
         """Remove all tracked snapshots and bookkeeping state."""
         ...
@@ -716,6 +728,7 @@ class AvailableDisplayDims(TypedDict):
 @runtime_checkable
 class IsReactive(Protocol[ContentT]):
     """Mutable reactive value wrapper used for config/state propagation."""
+
     @property
     def value(self) -> ContentT:
         """Return the current reactive value.
@@ -744,13 +757,13 @@ class IsReactiveObjects(Protocol):
     available_display_dims_in_px: IsReactive[AvailableDisplayDims]
     obj_id_update_flags: IsReactive[dict[int, bool]]
 
-    def __eq__(self, other) -> bool:
-        ...
+    def __eq__(self, other) -> bool: ...
 
 
 @runtime_checkable
 class IsDataClassCreator(Protocol[HasContentT, ContentT]):
     """Factory/service protocol that wires config, reactive state, and snapshots."""
+
     @property
     def config(self) -> IsDataConfig:
         # %% Original docstring (managed by expand_docstr_macros.py) %%

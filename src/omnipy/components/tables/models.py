@@ -11,27 +11,31 @@ from typing import Callable, cast, Generic, get_args, overload, Protocol, Sized,
 from typing_extensions import NamedTuple, override, Self, TypeVar
 
 from omnipy.data.helpers import MethodInfo, TypeVarStore
-from omnipy.data.model import (convert_value_to_raw_data_if_model_or_dataset,
-                               is_model_instance,
-                               is_pure_pydantic_model_instance,
-                               Model,
-                               ModelMetaclass)
+from omnipy.data.model import (
+    convert_value_to_raw_data_if_model_or_dataset,
+    is_model_instance,
+    is_pure_pydantic_model_instance,
+    Model,
+    ModelMetaclass,
+)
 from omnipy.shared.exceptions import AssumedToBeImplementedException
-from omnipy.shared.protocols.content import (IsConcatenableItemSequenceLikeColumnContent,
-                                             IsConcatenableItemSequenceLikeContent,
-                                             IsDictOfConcatenableItemSequenceLikeColumnContent,
-                                             IsDictOfDictsContent,
-                                             IsListContent,
-                                             IsListOfDictsContent,
-                                             IsListOfListsContent,
-                                             SupportsKeysAndGetItem)
+from omnipy.shared.protocols.content import (
+    IsConcatenableItemSequenceLikeColumnContent,
+    IsConcatenableItemSequenceLikeContent,
+    IsDictOfConcatenableItemSequenceLikeColumnContent,
+    IsDictOfDictsContent,
+    IsListContent,
+    IsListOfDictsContent,
+    IsListOfListsContent,
+    SupportsKeysAndGetItem,
+)
 from omnipy.shared.protocols.data import HasContent
 from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
 from omnipy.shared.protocols.typing import IsMapping
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import all_type_variants, ensure_plain_type, first_key_in_mapping, is_union
-from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
+from omnipy.util.pydantic import ValidationError
 
 from ..general.models import Chain3
 from ..json.typedefs import JsonDictOfScalars, JsonListOfScalars, JsonScalar
@@ -52,46 +56,48 @@ _ColModelItemT = TypeVar(
     default='JsonScalar',
 )
 _ColWiseTableModelT = TypeVar(
-    '_ColWiseTableModelT', default='JsonScalarColumnWiseTableWithColNamesModel')
+    '_ColWiseTableModelT', default='JsonScalarColumnWiseTableWithColNamesModel'
+)
 _ConcatColumnModelT = TypeVar(
-    '_ConcatColumnModelT', bound=IsConcatenableItemSequenceLikeColumnContent)
+    '_ConcatColumnModelT', bound=IsConcatenableItemSequenceLikeColumnContent
+)
 
 if TYPE_CHECKING:  # noqa: C901
 
     class ConcatByAddArrayAdapterModel(
-            PlainModel[_ColumnT],
-            IsConcatenableItemSequenceLikeContent[_ItemT],
-            Generic[_ColumnT, _ItemT],
+        PlainModel[_ColumnT],
+        IsConcatenableItemSequenceLikeContent[_ItemT],
+        Generic[_ColumnT, _ItemT],
     ):
         _allowed_special_methods = frozenset()
 
         @staticmethod
-        def _as_item_list(values: _ColumnT) -> list[_ItemT]:
-            ...
+        def _as_item_list(values: _ColumnT) -> list[_ItemT]: ...
 
         @classmethod
-        def _concat_column_values(cls, left: _ColumnT, right: _ColumnT) -> _ColumnT:
-            ...
+        def _concat_column_values(cls, left: _ColumnT, right: _ColumnT) -> _ColumnT: ...
 
 else:
 
-    class ConcatByAddArrayAdapterModel(Model[_ColumnT | IsItemSequenceLike[_ItemT]
-                                             | Generator[_ItemT]],
-                                       Generic[_ColumnT, _ItemT]):
-        _allowed_special_methods = frozenset({
-            '__len__',
-            '__length_hint__',
-            '__getitem__',
-            '__setitem__',
-            '__delitem__',
-            '__iter__',
-            '__reversed__',
-            '__contains__',
-            '__copy__',
-            '__deepcopy__',
-            '__str__',
-            '__format__',
-        })
+    class ConcatByAddArrayAdapterModel(
+        Model[_ColumnT | IsItemSequenceLike[_ItemT] | Generator[_ItemT]], Generic[_ColumnT, _ItemT]
+    ):
+        _allowed_special_methods = frozenset(
+            {
+                '__len__',
+                '__length_hint__',
+                '__getitem__',
+                '__setitem__',
+                '__delitem__',
+                '__iter__',
+                '__reversed__',
+                '__contains__',
+                '__copy__',
+                '__deepcopy__',
+                '__str__',
+                '__format__',
+            }
+        )
 
         @classmethod
         def _get_special_methods_info_dict(cls) -> dict[str, MethodInfo]:
@@ -119,13 +125,15 @@ else:
         @functools.cache
         def _get_column_cls(cls) -> type[_ColModelT]:
             type_variant = all_type_variants(cls.outer_type(with_args=True))
-            assert len(type_variant) == 3, ('Expected exactly 3 type variants '
-                                            'in ConcatByAddArrayAdapterModel type')
+            assert len(type_variant) == 3, (
+                'Expected exactly 3 type variants in ConcatByAddArrayAdapterModel type'
+            )
             return type_variant[0]
 
         @classmethod
         def _parse_data(
-                cls, data: _ColumnT | IsItemSequenceLike[_ItemT] | Generator[_ItemT]) -> _ColumnT:
+            cls, data: _ColumnT | IsItemSequenceLike[_ItemT] | Generator[_ItemT]
+        ) -> _ColumnT:
             column_cls = cls._get_column_cls()
             if isinstance(data, column_cls):
                 return data
@@ -136,9 +144,9 @@ else:
 if TYPE_CHECKING:  # noqa: C901
 
     class ColumnModel(
-            PlainModel[_ColumnT],
-            IsConcatenableItemSequenceLikeColumnContent[_ItemT],
-            Generic[_ColumnT, _ItemT],
+        PlainModel[_ColumnT],
+        IsConcatenableItemSequenceLikeColumnContent[_ItemT],
+        Generic[_ColumnT, _ItemT],
     ):
         @classmethod
         def default_value(cls) -> _ItemT:
@@ -157,8 +165,10 @@ else:
             _TYPE_DEFAULT_ORDER = (None, float, int, str, list, dict, set)
 
             if not cls.is_nested_type():
-                raise TypeError('ColumnModel type must be nested, with explicit inner '
-                                'type. Current type: ' + str(cls.full_type()))
+                raise TypeError(
+                    'ColumnModel type must be nested, with explicit inner '
+                    'type. Current type: ' + str(cls.full_type())
+                )
 
             inner_type = cls.inner_type(with_args=True)
 
@@ -195,8 +205,10 @@ class JsonScalarColumnModel(ColumnModel[list[JsonScalar], JsonScalar]):
 JsonMaxLevel1Types: TypeAlias = JsonScalar | JsonDictOfScalars | JsonListOfScalars
 
 JsonMaxLevel2Types: TypeAlias = (
-    JsonScalar | list[JsonScalar | JsonDictOfScalars | JsonListOfScalars]
-    | dict[str, JsonScalar | JsonDictOfScalars | JsonListOfScalars])
+    JsonScalar
+    | list[JsonScalar | JsonDictOfScalars | JsonListOfScalars]
+    | dict[str, JsonScalar | JsonDictOfScalars | JsonListOfScalars]
+)
 
 
 class JsonMaxLevel1ColumnModel(ColumnModel[list[JsonMaxLevel1Types], JsonMaxLevel1Types]):
@@ -262,14 +274,15 @@ class PrintableTable:
 if TYPE_CHECKING:
 
     class RowWiseTableModel(
-            PlainModel[list[list[JsonScalar]]],
-            IsListOfListsContent[list[JsonScalar], JsonScalar],
+        PlainModel[list[list[JsonScalar]]],
+        IsListOfListsContent[list[JsonScalar], JsonScalar],
     ):
         """Represent row-wise tabular data without explicit column names.
 
         Each row is stored as an ordered list of JSON scalar values where column
         identity is positional.
         """
+
         ...
 
 else:
@@ -280,6 +293,7 @@ else:
         Each row is stored as an ordered list of JSON scalar values where column
         identity is positional.
         """
+
         ...
 
 
@@ -299,7 +313,8 @@ class _RowWiseColNamesMixin:
 
 
 class _RowWiseTableWithColNamesModel(
-        Model['list[dict[str, JsonScalar]] | ColumnWiseTableWithColNamesNoConvertModel']):
+    Model['list[dict[str, JsonScalar]] | ColumnWiseTableWithColNamesNoConvertModel']
+):
     @classmethod
     def _parse_data(
         cls, data: 'list[dict[str, JsonScalar]] | ColumnWiseTableWithColNamesNoConvertModel'
@@ -320,29 +335,31 @@ class _RowWiseTableWithColNamesModel(
 if TYPE_CHECKING:
 
     class RowWiseTableWithColNamesModel(
-            _RowWiseColNamesMixin,
-            PlainModel[list[dict[str, JsonScalar]]],
-            IsListOfDictsContent[IsMapping[str, JsonScalar], str, JsonScalar],
-            PrintableTable,
+        _RowWiseColNamesMixin,
+        PlainModel[list[dict[str, JsonScalar]]],
+        IsListOfDictsContent[IsMapping[str, JsonScalar], str, JsonScalar],
+        PrintableTable,
     ):
         """Represent row-wise tabular data keyed by column name.
 
         Each row is stored as a dictionary from column names to JSON scalar values.
         Column-wise inputs are normalized to this row-wise structure.
         """
+
         ...
 else:
 
     class RowWiseTableWithColNamesModel(
-            _RowWiseColNamesMixin,
-            _RowWiseTableWithColNamesModel,
-            PrintableTable,
+        _RowWiseColNamesMixin,
+        _RowWiseTableWithColNamesModel,
+        PrintableTable,
     ):
         """Represent row-wise tabular data keyed by column name.
 
         Each row is stored as a dictionary from column names to JSON scalar values.
         Column-wise inputs are normalized to this row-wise structure.
         """
+
         ...
 
 
@@ -359,45 +376,42 @@ class RowWiseTableWithColNamesNoConvertModel(Model[list[dict[str, JsonScalar]]])
 if TYPE_CHECKING:
 
     class ColumnWiseTableWithColNamesAndIndexModel(
-            PlainModel[dict[str, Mapping[str, JsonScalar]]],
-            IsDictOfDictsContent[str, IsMapping[str, JsonScalar], str, JsonScalar],
-            PrintableTable,
+        PlainModel[dict[str, Mapping[str, JsonScalar]]],
+        IsDictOfDictsContent[str, IsMapping[str, JsonScalar], str, JsonScalar],
+        PrintableTable,
     ):
         """Represent an indexed table keyed by external row identifiers.
 
         The outer mapping key identifies a row. Each row value maps column names to
         JSON scalar cell values.
         """
+
         ...
 else:
 
-    class ColumnWiseTableWithColNamesAndIndexModel(Model[dict[str, Mapping[str, JsonScalar]]]):
-        ...
+    class ColumnWiseTableWithColNamesAndIndexModel(Model[dict[str, Mapping[str, JsonScalar]]]): ...
 
 
-class _IsColumnWiseTableWithColNames(HasContent,
-                                     Sized,
-                                     SupportsKeysAndGetItem,
-                                     Protocol[_ColModelT, _ColModelItemT]):
+class _IsColumnWiseTableWithColNames(
+    HasContent, Sized, SupportsKeysAndGetItem, Protocol[_ColModelT, _ColModelItemT]
+):
     @property
-    def _content(self) -> Mapping[str, _ColModelT]:
-        ...
+    def _content(self) -> Mapping[str, _ColModelT]: ...
 
-    def _get_iter_row(self) -> IterRow[_ColModelT, _ColModelItemT]:
-        ...
+    def _get_iter_row(self) -> IterRow[_ColModelT, _ColModelItemT]: ...
 
     def _common_add(
         self,
         other: '_IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT] | ColWiseAddOtherType',
         reverse: bool,
-    ) -> 'ColumnWiseTableWithColNamesModel[_ColModelT, _ColModelItemT]':
-        ...
+    ) -> 'ColumnWiseTableWithColNamesModel[_ColModelT, _ColModelItemT]': ...
 
 
 class _ColumnWiseTableWithColNamesMixin(Generic[_ColModelT, _ColModelItemT]):
     @property
     def col_names(
-            self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT]) -> tuple[str, ...]:
+        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT],
+    ) -> tuple[str, ...]:
         """
         The column names in the table, in the order they first appear in the rows.
         """
@@ -405,8 +419,8 @@ class _ColumnWiseTableWithColNamesMixin(Generic[_ColModelT, _ColModelItemT]):
 
     @property
     def _content(
-        self: _IsColumnWiseTableWithColNames[_ColModelT,
-                                             _ColModelItemT]) -> Mapping[str, _ColModelT]:
+        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT],
+    ) -> Mapping[str, _ColModelT]:
         return cast(Mapping[str, _ColModelT], self.content)
 
     def __len__(self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT]) -> int:
@@ -416,18 +430,19 @@ class _ColumnWiseTableWithColNamesMixin(Generic[_ColModelT, _ColModelItemT]):
         except KeyError:
             return 0
 
-    def __contains__(self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT],
-                     item: str) -> bool:
+    def __contains__(
+        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT], item: str
+    ) -> bool:
         return item in self._content
 
     def _get_iter_row(
-        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT]
+        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT],
     ) -> IterRow[_ColModelT, _ColModelItemT]:
 
         return IterRow[_ColModelT, _ColModelItemT](self._content)
 
     def __iter__(
-        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT]
+        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT],
     ) -> Iterator[IterRow[_ColModelT, _ColModelItemT]]:
         _iter_row = self._get_iter_row()
 
@@ -436,17 +451,18 @@ class _ColumnWiseTableWithColNamesMixin(Generic[_ColModelT, _ColModelItemT]):
             yield _iter_row
 
     @overload
-    def __getitem__(self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT],
-                    item: str) -> _ColModelT:
-        ...
+    def __getitem__(
+        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT], item: str
+    ) -> _ColModelT: ...
 
     @overload
-    def __getitem__(self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT],
-                    item: int) -> IterRow[_ColModelT, _ColModelItemT]:
-        ...
+    def __getitem__(
+        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT], item: int
+    ) -> IterRow[_ColModelT, _ColModelItemT]: ...
 
-    def __getitem__(self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT],
-                    item: str | int) -> _ColModelT | IterRow[_ColModelT, _ColModelItemT]:
+    def __getitem__(
+        self: _IsColumnWiseTableWithColNames[_ColModelT, _ColModelItemT], item: str | int
+    ) -> _ColModelT | IterRow[_ColModelT, _ColModelItemT]:
         if isinstance(item, str):
             return self._content[item]
 
@@ -514,9 +530,8 @@ class _ColumnWiseTableWithColNamesMixin(Generic[_ColModelT, _ColModelItemT]):
 
 
 class _ColumnWiseTableWithColNamesModel(
-        Model[dict[str, _ColModelT]
-              | RowWiseTableWithColNamesNoConvertModel],
-        Generic[_ColModelT, _ColModelItemT],
+    Model[dict[str, _ColModelT] | RowWiseTableWithColNamesNoConvertModel],
+    Generic[_ColModelT, _ColModelItemT],
 ):
     @classmethod
     @functools.cache
@@ -554,7 +569,8 @@ class _ColumnWiseTableWithColNamesModel(
                 for col_name_not_in_row in column_wise_data.keys() - row.keys():
                     # Pad missing columns with default val
                     column_wise_list_data[col_name_not_in_row].append(
-                        column_model_cls.default_value())
+                        column_model_cls.default_value()
+                    )
 
             for col_name, col_list in column_wise_list_data.items():
                 column_wise_data[col_name] += col_list
@@ -569,57 +585,65 @@ class _ColumnWiseTableWithColNamesModel(
 if TYPE_CHECKING:
 
     class ColumnWiseTableWithColNamesModel(  # type: ignore[misc]
-            _ColumnWiseTableWithColNamesMixin[_ColModelT, _ColModelItemT],
-            PlainModel[dict[str, _ColModelT]],
-            IsDictOfConcatenableItemSequenceLikeColumnContent[_ColModelT, _ColModelItemT],
-            PrintableTable,
-            Generic[_ColModelT, _ColModelItemT],
+        _ColumnWiseTableWithColNamesMixin[_ColModelT, _ColModelItemT],
+        PlainModel[dict[str, _ColModelT]],
+        IsDictOfConcatenableItemSequenceLikeColumnContent[_ColModelT, _ColModelItemT],
+        PrintableTable,
+        Generic[_ColModelT, _ColModelItemT],
     ):
         """Represent tabular data as column names mapped to ordered value lists.
 
         Each key is a column name and each value is the ordered sequence of cells for
         that column.
         """
+
         ...
 
 else:
 
     class ColumnWiseTableWithColNamesModel(
-            _ColumnWiseTableWithColNamesMixin[_ColModelT, _ColModelItemT],
-            _ColumnWiseTableWithColNamesModel[_ColModelT, _ColModelItemT],
-            PrintableTable,
-            Generic[_ColModelT, _ColModelItemT],
+        _ColumnWiseTableWithColNamesMixin[_ColModelT, _ColModelItemT],
+        _ColumnWiseTableWithColNamesModel[_ColModelT, _ColModelItemT],
+        PrintableTable,
+        Generic[_ColModelT, _ColModelItemT],
     ):
         """Represent tabular data as column names mapped to ordered value lists.
 
         Each key is a column name and each value is the ordered sequence of cells for
         that column.
         """
+
         ...
 
 
-class JsonScalarColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesModel[
+class JsonScalarColumnWiseTableWithColNamesModel(
+    ColumnWiseTableWithColNamesModel[
         JsonScalarColumnModel,
         JsonScalar,
-]):
+    ]
+):
     """Column-wise table whose cells are JSON scalar values."""
 
     ...
 
 
-class JsonMaxLevel1ColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesModel[
+class JsonMaxLevel1ColumnWiseTableWithColNamesModel(
+    ColumnWiseTableWithColNamesModel[
         JsonMaxLevel1ColumnModel,
         JsonMaxLevel1Types,
-]):
+    ]
+):
     """Column-wise table whose cells allow JSON nesting up to one level."""
 
     ...
 
 
-class JsonMaxLevel2ColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesModel[
+class JsonMaxLevel2ColumnWiseTableWithColNamesModel(
+    ColumnWiseTableWithColNamesModel[
         JsonMaxLevel2ColumnModel,
         JsonMaxLevel2Types,
-]):
+    ]
+):
     """Column-wise table whose cells allow JSON nesting up to two levels."""
 
     ...
@@ -629,11 +653,11 @@ ColWiseAddOtherType: TypeAlias = (
     RowWiseTableWithColNamesModel
     | IsItemSequenceLike[IsMapping[str, JsonScalar]]
     | Generator[IsMapping[str, JsonScalar]]
-    | IsMapping[str, IsItemSequenceLike[JsonScalar] | Generator[JsonScalar]])
+    | IsMapping[str, IsItemSequenceLike[JsonScalar] | Generator[JsonScalar]]
+)
 
 
-class ColumnWiseTableWithColNamesNoConvertModel(Model[dict[str, JsonScalarColumnModel]]):
-    ...
+class ColumnWiseTableWithColNamesNoConvertModel(Model[dict[str, JsonScalarColumnModel]]): ...
 
 
 RowWiseTableWithColNamesModel.update_forward_refs()
@@ -643,8 +667,8 @@ ColumnWiseTableWithColNamesModel.update_forward_refs()
 class _RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]] | RowWiseTableModel]):
     @classmethod
     def _parse_data(
-            cls,
-            data: list[dict[str, JsonScalar]] | RowWiseTableModel) -> list[dict[str, JsonScalar]]:
+        cls, data: list[dict[str, JsonScalar]] | RowWiseTableModel
+    ) -> list[dict[str, JsonScalar]]:
         if isinstance(data, RowWiseTableModel):
             data_list_of_lists = data.content
 
@@ -655,8 +679,9 @@ class _RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]] | R
                 #       (preferably) provide a de-uniqueness normalization
                 #       (e.g. ["col", "col"] -> ["col", "col-2"]. Check
                 #       existing solution for Dataset key uniqueness.
-                return cls._convert_list_of_lists_to_list_of_dicts(data_list_of_lists,
-                                                                   first_row_as_colnames)
+                return cls._convert_list_of_lists_to_list_of_dicts(
+                    data_list_of_lists, first_row_as_colnames
+                )
             else:
                 return []
         else:
@@ -682,30 +707,32 @@ class _RowWiseTableFirstRowAsColNamesModel(Model[list[dict[str, JsonScalar]] | R
 if TYPE_CHECKING:
 
     class RowWiseTableFirstRowAsColNamesModel(
-            _RowWiseColNamesMixin,
-            PlainModel[list[dict[str, JsonScalar]]],
-            IsListOfDictsContent[IsMapping[str, JsonScalar], str, JsonScalar],
-            PrintableTable,
+        _RowWiseColNamesMixin,
+        PlainModel[list[dict[str, JsonScalar]]],
+        IsListOfDictsContent[IsMapping[str, JsonScalar], str, JsonScalar],
+        PrintableTable,
     ):
         """Represent row-wise data where the first row defines the header.
 
         The first row is interpreted as column names and subsequent rows are mapped to
         dictionaries keyed by those names.
         """
+
         ...
 
 else:
 
     class RowWiseTableFirstRowAsColNamesModel(
-            _RowWiseColNamesMixin,
-            _RowWiseTableFirstRowAsColNamesModel,
-            PrintableTable,
+        _RowWiseColNamesMixin,
+        _RowWiseTableFirstRowAsColNamesModel,
+        PrintableTable,
     ):
         """Represent row-wise data where the first row defines the header.
 
         The first row is interpreted as column names and subsequent rows are mapped to
         dictionaries keyed by those names.
         """
+
         ...
 
 
@@ -728,6 +755,7 @@ class PydanticRecordModelMetaclass(ModelMetaclass):
     The metaclass resolves the parameterized Pydantic model and exposes reusable
     header information through :attr:`header_info`.
     """
+
     def __init__(cls, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         cls._header_info: _HeaderInfo | None = None
@@ -776,9 +804,9 @@ class PydanticRecordModelMetaclass(ModelMetaclass):
 
 
 class PydanticRecordModelBase(
-        Model[TypeVarStore[_PydBaseModelT] | _DataWithColNamesModelT | _DataWithoutColNamesModelT],
-        Generic[_PydBaseModelT, _DataWithColNamesModelT, _DataWithoutColNamesModelT],
-        metaclass=PydanticRecordModelMetaclass,
+    Model[TypeVarStore[_PydBaseModelT] | _DataWithColNamesModelT | _DataWithoutColNamesModelT],
+    Generic[_PydBaseModelT, _DataWithColNamesModelT, _DataWithoutColNamesModelT],
+    metaclass=PydanticRecordModelMetaclass,
 ):
     """Validate tabular record data against a parameterized Pydantic schema.
 
@@ -786,6 +814,7 @@ class PydanticRecordModelBase(
     validated records, while this base class handles schema/header lookup and
     dispatching.
     """
+
     @classmethod
     @abstractmethod
     def _validate_record_model_with_col_names(
@@ -793,8 +822,7 @@ class PydanticRecordModelBase(
         pyd_model: type[pyd.BaseModel],
         data: _DataWithColNamesModelT,
         header_names: tuple[str, ...],
-    ) -> pyd.BaseModel | _DataWithColNamesModelT:
-        ...
+    ) -> pyd.BaseModel | _DataWithColNamesModelT: ...
 
     @classmethod
     @abstractmethod
@@ -804,8 +832,7 @@ class PydanticRecordModelBase(
         data: _DataWithoutColNamesModelT,
         output_type: type[_DataWithColNamesModelT],
         header_names: tuple[str, ...],
-    ) -> pyd.BaseModel | _DataWithColNamesModelT:
-        ...
+    ) -> pyd.BaseModel | _DataWithColNamesModelT: ...
 
     @override
     @classmethod
@@ -830,9 +857,10 @@ class PydanticRecordModelBase(
             else:
                 num_data_cols = len(content)
 
-            assert len(header_names) >= num_data_cols >= num_required_fields, \
-                (f'Incorrect number of data elements: '
-                 f'{len(header_names)} >= {num_data_cols} >= {num_required_fields}')
+            assert len(header_names) >= num_data_cols >= num_required_fields, (
+                f'Incorrect number of data elements: '
+                f'{len(header_names)} >= {num_data_cols} >= {num_required_fields}'
+            )
 
             data_without_col_names = cast(_DataWithoutColNamesModelT, data)
             return cls._validate_record_model_without_col_names(
@@ -848,31 +876,33 @@ class PydanticRecordModelBase(
 if TYPE_CHECKING:
 
     class PydanticRecordModel(
-            Model[_PydBaseModelT],
-            Generic[_PydBaseModelT],
+        Model[_PydBaseModelT],
+        Generic[_PydBaseModelT],
     ):
         """Validate a single record against a parameterized Pydantic model.
 
         Input may be provided either as a dictionary keyed by field names or as an
         ordered list aligned with model headers.
         """
+
         ...
 
 else:
 
     class PydanticRecordModel(
-            PydanticRecordModelBase[
-                _PydBaseModelT,
-                dict[str, JsonScalar],
-                list[JsonScalar],
-            ],
-            Generic[_PydBaseModelT],
+        PydanticRecordModelBase[
+            _PydBaseModelT,
+            dict[str, JsonScalar],
+            list[JsonScalar],
+        ],
+        Generic[_PydBaseModelT],
     ):
         """Validate a single record against a parameterized Pydantic model.
 
         Input may be provided either as a dictionary keyed by field names or as an
         ordered list aligned with model headers.
         """
+
         @override
         @classmethod
         def _validate_record_model_with_col_names(
@@ -898,36 +928,38 @@ else:
 if TYPE_CHECKING:  # noqa: C901
 
     class IteratingPydanticRecordsModel(
-            _ColumnWiseTableWithColNamesMixin,
-            PlainModel[_ColWiseTableModelT],
-            IsDictOfConcatenableItemSequenceLikeColumnContent[_ColModelT, _ColModelItemT],
-            PrintableTable,
-            Generic[_PydBaseModelT, _ColWiseTableModelT, _ColModelT, _ColModelItemT],
+        _ColumnWiseTableWithColNamesMixin,
+        PlainModel[_ColWiseTableModelT],
+        IsDictOfConcatenableItemSequenceLikeColumnContent[_ColModelT, _ColModelItemT],
+        PrintableTable,
+        Generic[_PydBaseModelT, _ColWiseTableModelT, _ColModelT, _ColModelItemT],
     ):
         """Validate every row in a table against a parameterized Pydantic model.
 
         Validated values are merged into a column-wise table representation while
         preserving row ordering.
         """
+
         ...
 
 else:
 
     class IteratingPydanticRecordsModel(
-            _ColumnWiseTableWithColNamesMixin,
-            PydanticRecordModelBase[
-                _PydBaseModelT,
-                _ColWiseTableModelT,
-                RowWiseTableModel,
-            ],
-            PrintableTable,
-            Generic[_PydBaseModelT, _ColWiseTableModelT, _ColModelT, _ColModelItemT],
+        _ColumnWiseTableWithColNamesMixin,
+        PydanticRecordModelBase[
+            _PydBaseModelT,
+            _ColWiseTableModelT,
+            RowWiseTableModel,
+        ],
+        PrintableTable,
+        Generic[_PydBaseModelT, _ColWiseTableModelT, _ColModelT, _ColModelItemT],
     ):
         """Validate every row in a table against a parameterized Pydantic model.
 
         Validated values are merged into a column-wise table representation while
         preserving row ordering.
         """
+
         @classmethod
         def _validate_over_all_rows(  # noqa: C901
             cls,
@@ -982,7 +1014,8 @@ else:
                         #       from IteratingPydanticRecordsModel if pyd_model is later wrapped
                         #       as Omnipy Model.
                         _, prepared_val = convert_value_to_raw_data_if_model_or_dataset(
-                            validated_val)
+                            validated_val
+                        )
                         try:
                             content[key][i] = prepared_val
                         except (TypeError, AssertionError, ValueError, ValidationError):
@@ -1025,39 +1058,43 @@ else:
 if TYPE_CHECKING:
 
     class TableOfPydanticRecordsModel(
-            PlainModel[list[PydanticRecordModel[_PydRecordT]]],
-            IsListContent[PydanticRecordModel[_PydRecordT]],
-            PrintableTable,
-            Generic[_PydRecordT],
+        PlainModel[list[PydanticRecordModel[_PydRecordT]]],
+        IsListContent[PydanticRecordModel[_PydRecordT]],
+        PrintableTable,
+        Generic[_PydRecordT],
     ):
         """Parse delimited text into validated Pydantic records.
 
         The model chains line splitting, column splitting, and per-row record
         validation into one parsing pipeline.
         """
+
         ...
 else:
 
     class TableOfPydanticRecordsModel(
-            Chain3[SplitToLinesModel,
-                   SplitLinesToColumnsModel,
-                   Model[list[PydanticRecordModel[_PydRecordT]]]],
-            PrintableTable,
-            Generic[_PydRecordT],
+        Chain3[
+            SplitToLinesModel,
+            SplitLinesToColumnsModel,
+            Model[list[PydanticRecordModel[_PydRecordT]]],
+        ],
+        PrintableTable,
+        Generic[_PydRecordT],
     ):
         """Parse delimited text into validated Pydantic records.
 
         The model chains line splitting, column splitting, and per-row record
         validation into one parsing pipeline.
         """
+
         ...
 
 
 if TYPE_CHECKING:
 
     class CsvReaderFromLinesModel(
-            PlainModel[list[list[str]]],
-            IsListOfListsContent[list[str], str],
+        PlainModel[list[list[str]]],
+        IsListOfListsContent[list[str], str],
     ):
         """CSV Reader that takes lines of text and splits them into columns.
 
@@ -1075,6 +1112,7 @@ else:
         Lines must be split by universal newlines and not stripped of
         whitespace.
         """
+
         @classmethod
         def _parse_data(cls, data: list[list[str]] | SplitToLinesNoStripModel) -> list[list[str]]:
             if isinstance(data, list) and (len(data) == 0 or isinstance(data[0], list)):
@@ -1086,31 +1124,35 @@ else:
 if TYPE_CHECKING:
 
     class CsvTableOfPydanticRecordsModel(
-            PlainModel[list[PydanticRecordModel[_PydRecordT]]],
-            IsListContent[PydanticRecordModel[_PydRecordT]],
-            PrintableTable,
-            Generic[_PydRecordT],
+        PlainModel[list[PydanticRecordModel[_PydRecordT]]],
+        IsListContent[PydanticRecordModel[_PydRecordT]],
+        PrintableTable,
+        Generic[_PydRecordT],
     ):
         """Parse CSV text into validated Pydantic records.
 
         The model applies CSV column splitting and validates each parsed row against
         the configured Pydantic record schema.
         """
+
         ...
 else:
 
     class CsvTableOfPydanticRecordsModel(
-            Chain3[SplitToLinesNoStripModel,
-                   CsvReaderFromLinesModel,
-                   Model[list[PydanticRecordModel[_PydRecordT]]]],
-            PrintableTable,
-            Generic[_PydRecordT],
+        Chain3[
+            SplitToLinesNoStripModel,
+            CsvReaderFromLinesModel,
+            Model[list[PydanticRecordModel[_PydRecordT]]],
+        ],
+        PrintableTable,
+        Generic[_PydRecordT],
     ):
         """Parse CSV text into validated Pydantic records.
 
         The model applies CSV column splitting and validates each parsed row against
         the configured Pydantic record schema.
         """
+
         ...
 
 
@@ -1121,58 +1163,62 @@ else:
 if TYPE_CHECKING:
 
     class TsvTableModel(
-            RowWiseTableFirstRowAsColNamesModel,
-            PrintableTable,
+        RowWiseTableFirstRowAsColNamesModel,
+        PrintableTable,
     ):
         """Parse TSV text into row-wise records with header-derived keys.
 
         Input is split into lines and tab-delimited columns, then transformed so the
         first row becomes the column-name header for subsequent rows.
         """
+
         ...
 else:
 
     class TsvTableModel(
-            Chain3[
-                SplitToLinesModel,
-                SplitLinesToColumnsModel,
-                RowWiseTableFirstRowAsColNamesModel,
-            ],
-            PrintableTable,
+        Chain3[
+            SplitToLinesModel,
+            SplitLinesToColumnsModel,
+            RowWiseTableFirstRowAsColNamesModel,
+        ],
+        PrintableTable,
     ):
         """Parse TSV text into row-wise records with header-derived keys.
 
         Input is split into lines and tab-delimited columns, then transformed so the
         first row becomes the column-name header for subsequent rows.
         """
+
         ...
 
 
 if TYPE_CHECKING:
 
     class CsvTableModel(
-            RowWiseTableFirstRowAsColNamesModel,
-            PrintableTable,
+        RowWiseTableFirstRowAsColNamesModel,
+        PrintableTable,
     ):
         """Parse CSV text into row-wise records with header-derived keys.
 
         Input is split into lines and comma-delimited columns, then transformed so
         the first row becomes the column-name header for subsequent rows.
         """
+
         ...
 else:
 
     class CsvTableModel(
-            Chain3[
-                SplitToLinesNoStripModel,
-                CsvReaderFromLinesModel,
-                RowWiseTableFirstRowAsColNamesModel,
-            ],
-            PrintableTable,
+        Chain3[
+            SplitToLinesNoStripModel,
+            CsvReaderFromLinesModel,
+            RowWiseTableFirstRowAsColNamesModel,
+        ],
+        PrintableTable,
     ):
         """Parse CSV text into row-wise records with header-derived keys.
 
         Input is split into lines and comma-delimited columns, then transformed so
         the first row becomes the column-name header for subsequent rows.
         """
+
         ...

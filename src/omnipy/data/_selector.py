@@ -32,8 +32,9 @@ Index2DataItemsType: TypeAlias = defaultdict[int, list[tuple[str, _ValT]]]
 MappingType: TypeAlias = MutableMapping[str, _ValT]
 
 
-def select_keys(selector: str | int | slice | Iterable[str | int],
-                mapping: MappingType[_ValT]) -> SelectedKeys:
+def select_keys(
+    selector: str | int | slice | Iterable[str | int], mapping: MappingType[_ValT]
+) -> SelectedKeys:
     """Resolve a dataset selector into normalized string keys.
 
     Args:
@@ -68,8 +69,10 @@ def select_keys(selector: str | int | slice | Iterable[str | int],
             return SelectedKeys(singular=False, keys=keys, last_index=last_index)
 
         else:
-            raise KeyError('Selector is of incorrect type. Must be a string, a positive integer,'
-                           'or a slice (e.g. `dataset[2:5]`).')
+            raise KeyError(
+                'Selector is of incorrect type. Must be a string, a positive integer,'
+                'or a slice (e.g. `dataset[2:5]`).'
+            )
 
 
 def prepare_selected_items_with_mapping_data(
@@ -100,7 +103,7 @@ def prepare_selected_items_with_mapping_data(
             break
 
     if len(keys) > len(data_obj_keys):
-        for key in keys[len(data_obj_keys):]:
+        for key in keys[len(data_obj_keys) :]:
             key_2_data_item[key] = None
 
     return key_2_data_item, index_2_data_items
@@ -135,11 +138,12 @@ def prepare_selected_items_with_iterable_data(
                 index_2_data_items[last_index].append((keys[i], data_val))
         else:
             index_2_data_items[last_index].extend(
-                (UNTITLED_KEY, val) for j, val in enumerate(data_obj[i:]))
+                (UNTITLED_KEY, val) for j, val in enumerate(data_obj[i:])
+            )
             break
 
     if len(keys) > len(data_obj):
-        for key in keys[len(data_obj):]:
+        for key in keys[len(data_obj) :]:
             key_2_data_item[key] = None
 
     return key_2_data_item, index_2_data_items

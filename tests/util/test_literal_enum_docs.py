@@ -6,8 +6,8 @@ import pytest
 from typing_extensions import assert_never, TypeIs
 
 from omnipy.util.literal_enum import LiteralEnum
-from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
+from omnipy.util.pydantic import ValidationError
 
 
 class ClearBoolChoices(LiteralEnum[bool]):

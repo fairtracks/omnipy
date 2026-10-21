@@ -71,14 +71,14 @@ NoConfigMockClass = callable_decorator_cls(NoConfigMockClassBase)
 KeywordConfigMockClass = callable_decorator_cls(KeywordConfigMockClassBase)
 PositionalKeywordConfigMockClass = callable_decorator_cls(PositionalKeywordConfigMockClassBase)
 CallablePositionalKeywordConfigMockClass = callable_decorator_cls(
-    CallablePositionalKeywordConfigMockClassBase)
+    CallablePositionalKeywordConfigMockClassBase
+)
 
 
 def test_fail_plain_decorator_not_callable_arg() -> None:
     @callable_decorator_cls  # type: ignore[arg-type]
     class MockClassNoCallableArg:
-        def __init__(self) -> None:
-            ...
+        def __init__(self) -> None: ...
 
     with pytest.raises(TypeError):
 
@@ -109,8 +109,10 @@ def test_plain_decorator() -> None:
 
     assert decorated_my_func_1.args == ()  # type:ignore [attr-defined]
     assert decorated_my_func_1.kwargs == {}  # type:ignore [attr-defined]
-    assert (decorated_my_func_1.func(1, 'b', c=True)  # type:ignore [attr-defined]
-            == dict(args=(1, 'b'), kwargs=dict(c=True)))
+    assert (
+        decorated_my_func_1.func(1, 'b', c=True)  # type:ignore [attr-defined]
+        == dict(args=(1, 'b'), kwargs=dict(c=True))
+    )
 
 
 def test_plain_decorator_parentheses() -> None:
@@ -190,11 +192,9 @@ def test_double_decorator_with_args_and_kwargs() -> None:
 def test_fail_decorator_with_single_callable_arg() -> None:
     @callable_decorator_cls
     class MockClassSingleCallableArg:
-        def __init__(self, decorated_func: Callable, other_func: Callable) -> None:
-            ...
+        def __init__(self, decorated_func: Callable, other_func: Callable) -> None: ...
 
-    def extra_func():
-        ...
+    def extra_func(): ...
 
     with pytest.raises(TypeError):
 
@@ -242,8 +242,9 @@ def test_decorator_as_function_callable_class() -> None:
 
 def test_decorator_with_single_callable_arg_disambiguation_hook() -> None:
     class MockClassWithHookBase:
-        def __init__(self, func: Callable[..., dict[str, object]], *args: object,
-                     **kwargs: object) -> None:
+        def __init__(
+            self, func: Callable[..., dict[str, object]], *args: object, **kwargs: object
+        ) -> None:
             self.func = func
             self.args = args
             self.kwargs = kwargs
@@ -253,7 +254,8 @@ def test_decorator_with_single_callable_arg_disambiguation_hook() -> None:
 
     MockClassWithHook = callable_decorator_cls(
         MockClassWithHookBase,
-        single_callable_arg_is_decorator_arg=_single_callable_arg_is_decorator_arg)
+        single_callable_arg_is_decorator_arg=_single_callable_arg_is_decorator_arg,
+    )
 
     class MyCallableClass:
         def __call__(self, *args: object, **kwargs: object) -> dict[str, object]:

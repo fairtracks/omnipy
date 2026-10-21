@@ -13,7 +13,7 @@ import omnipy.util.pydantic as pyd
 
 
 def rich_overflow_method(
-    horizontal_overflow_mode: HorizontalOverflowMode.Literals
+    horizontal_overflow_mode: HorizontalOverflowMode.Literals,
 ) -> rich.console.OverflowMethod | None:
     """Translate Omnipy overflow settings to Rich overflow methods."""
 
@@ -136,12 +136,12 @@ def crop_content_lines_vertically2(
 
         case VerticalOverflowMode.ELLIPSIS_BOTTOM:
             ellipsis_line_idx = crop_height - 1
-            uncropped_lines = lines[:ellipsis_line_idx + 1]
+            uncropped_lines = lines[: ellipsis_line_idx + 1]
             return uncropped_lines, {ellipsis_line_idx}
 
         case VerticalOverflowMode.ELLIPSIS_TOP:
             ellipsis_line_idx = len(lines) - crop_height - 1
-            uncropped_lines = lines[ellipsis_line_idx + 1:]
+            uncropped_lines = lines[ellipsis_line_idx + 1 :]
             return uncropped_lines, {0}
 
         case _:
@@ -161,7 +161,7 @@ def crop_content_line_horizontally(
     match horizontal_overflow_mode:
         case HorizontalOverflowMode.ELLIPSIS:
             if frame_width > 1:
-                return content_line[:frame_width - 1] + '…'
+                return content_line[: frame_width - 1] + '…'
             else:
                 return '…'
         case HorizontalOverflowMode.CROP:
@@ -180,14 +180,10 @@ def crop_content_with_extra_wide_chars(
 ) -> list[str]:
     """Crop text using rendered character widths rather than raw code-point counts."""
 
-    if has_width(frame.dims) \
-            and frame.fixed_width is False \
-            and frame.dims.width > 0:
-
+    if has_width(frame.dims) and frame.fixed_width is False and frame.dims.width > 0:
         ellipsis_if_overflow = config.h_overflow == HorizontalOverflowMode.ELLIPSIS
 
         for i, (line, newline) in enumerate(strip_and_split_newline(_) for _ in all_content_lines):
-
             stats = _calc_line_stats(
                 line,
                 config.tab,
@@ -195,7 +191,7 @@ def crop_content_with_extra_wide_chars(
                 width_limit=frame.dims.width,
             )
 
-            cropped_line = line[:stats.char_count]
+            cropped_line = line[: stats.char_count]
 
             if stats.overflow and ellipsis_if_overflow:
                 if stats.line_width == frame.dims.width > 0:

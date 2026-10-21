@@ -47,6 +47,7 @@ class IsaMaterialSchema(pyd.BaseModel):
         derivesFrom: Parent materials from which this material was derived.
         comments: Optional comments attached to the material.
     """
+
     class Config:
         """Validation settings for ISA material schema parsing.
 
@@ -63,8 +64,9 @@ class IsaMaterialSchema(pyd.BaseModel):
     field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     name: Optional[str] = None
     type: Optional[Type] = None
-    characteristics: Optional[List[
-        material_attribute_value_schema.IsaMaterialAttributeValueModel]] = None
+    characteristics: Optional[
+        List[material_attribute_value_schema.IsaMaterialAttributeValueModel]
+    ] = None
     derivesFrom: Optional[List['IsaMaterialModel']] = None
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 

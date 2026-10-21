@@ -13,7 +13,8 @@ from .panel.helpers.case_setup import FrameVariant, OutputPropertyType
 # Override autouse_runtime_data_config_variants fixture in tests.data.conftest
 @pytest.fixture(scope='function', autouse=True)
 def autouse_runtime_data_config_variants(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> IsRuntime:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> IsRuntime:
     """Provide the autouse runtime data configuration variants fixture."""
     return runtime
 
@@ -88,19 +89,22 @@ def colorized_html_page() -> OutputPropertyType:
 
 
 @pc.fixture
-@pc.parametrize('getter_func',
-                [
-                    plain_terminal,
-                    plain_html_tag,
-                    plain_html_page,
-                    bw_stylized_terminal,
-                    bw_stylized_html_tag,
-                    bw_stylized_html_page,
-                    colorized_terminal,
-                    colorized_html_tag,
-                    colorized_html_page
-                ])
+@pc.parametrize(
+    'getter_func',
+    [
+        plain_terminal,
+        plain_html_tag,
+        plain_html_page,
+        bw_stylized_terminal,
+        bw_stylized_html_tag,
+        bw_stylized_html_page,
+        colorized_terminal,
+        colorized_html_tag,
+        colorized_html_page,
+    ],
+)
 def output_format_accessor(
-        getter_func: Annotated[OutputPropertyType, pc.fixture]) -> OutputPropertyType:
+    getter_func: Annotated[OutputPropertyType, pc.fixture],
+) -> OutputPropertyType:
     """Parametrized fixture that provides access to all output format accessors."""
     return getter_func

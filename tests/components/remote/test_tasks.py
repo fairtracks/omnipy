@@ -15,12 +15,14 @@ from omnipy.components.raw.datasets import StrictBytesDataset, StrictStrDataset
 from omnipy.components.raw.models import BytesModel, StrictBytesModel, StrictStrModel, StrModel
 from omnipy.components.remote.datasets import AutoResponseContentDataset, HttpUrlDataset
 from omnipy.components.remote.models import HttpUrlModel
-from omnipy.components.remote.tasks import (get_auto_from_api_endpoint,
-                                            get_bytes_from_api_endpoint,
-                                            get_json_from_api_endpoint,
-                                            get_retry_client,
-                                            get_str_from_api_endpoint,
-                                            post_json_to_api_endpoint)
+from omnipy.components.remote.tasks import (
+    get_auto_from_api_endpoint,
+    get_bytes_from_api_endpoint,
+    get_json_from_api_endpoint,
+    get_retry_client,
+    get_str_from_api_endpoint,
+    post_json_to_api_endpoint,
+)
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.exceptions import FailedDataError
@@ -66,20 +68,24 @@ async def _run_get_json_with_retry_attempts(url: str, retry_attempts: int):
 
     async with aiohttp.ClientSession() as client_session:
         async with get_retry_client(
-                client_session=client_session,
-                retry_http_statuses=(503,),
-                retry_attempts=retry_attempts,
+            client_session=client_session,
+            retry_http_statuses=(503,),
+            retry_attempts=retry_attempts,
         ) as retry_client:
             return cast(
                 Any,
-                await
-                get_json_from_api_endpoint.run(cast(Any, query_urls), retry_client=retry_client))
+                await get_json_from_api_endpoint.run(
+                    cast(Any, query_urls), retry_client=retry_client
+                ),
+            )
 
 
 async def test_get_retry_client_with_single_attempt_fails_after_initial_503(
-        fails_once_then_succeeds_server_url: str) -> None:
+    fails_once_then_succeeds_server_url: str,
+) -> None:
     output = await _run_get_json_with_retry_attempts(
-        fails_once_then_succeeds_server_url, retry_attempts=1)
+        fails_once_then_succeeds_server_url, retry_attempts=1
+    )
     output_any = cast(Any, output)
 
     with pytest.raises(FailedDataError, match='HTTP status: 503'):
@@ -87,15 +93,18 @@ async def test_get_retry_client_with_single_attempt_fails_after_initial_503(
 
 
 async def test_get_retry_client_with_second_attempt_recovers_after_initial_503(
-        fails_once_then_succeeds_server_url: str) -> None:
+    fails_once_then_succeeds_server_url: str,
+) -> None:
     output = await _run_get_json_with_retry_attempts(
-        fails_once_then_succeeds_server_url, retry_attempts=2)
+        fails_once_then_succeeds_server_url, retry_attempts=2
+    )
     output_any = cast(Any, output)
     assert_model_or_val(output_any['flaky']['author'], str, 'Recovered Artist')
 
 
 async def test_post_json_to_api_endpoint_sends_json_request_body_and_decodes_json_response(
-        aiohttp_server) -> None:
+    aiohttp_server,
+) -> None:
     async def post_endpoint(request: web.Request) -> web.Response:
         assert request.method == 'POST'
         assert await request.json() == {'message': 'Hello, server!'}
@@ -131,9 +140,9 @@ async def test_get_from_api_endpoint_run_raises_for_non_200_response(
 
     async with aiohttp.ClientSession() as client_session:
         async with get_retry_client(
-                client_session=client_session,
-                retry_http_statuses=(),
-                retry_attempts=1,
+            client_session=client_session,
+            retry_http_statuses=(),
+            retry_attempts=1,
         ) as retry_client:
             output = await task.run(query_urls, retry_client=retry_client)
 
@@ -143,14 +152,19 @@ async def test_get_from_api_endpoint_run_raises_for_non_200_response(
     assert 'always_fails' in str(exc_info.value)
 
 
-def _assert_query_results(assert_model_if_dyn_conv_else_val,
-                          case: RequestTypeCase,
-                          data: Dataset,
-                          auto_model_type: type[Model]):
+def _assert_query_results(
+    assert_model_if_dyn_conv_else_val,
+    case: RequestTypeCase,
+    data: Dataset,
+    auto_model_type: type[Model],
+):
     """Assert remote query results for the requested dataset type."""
     assert isinstance(data, case.dataset_cls)
-    _type = case.dataset_cls.get_type(
-    ) if case.dataset_cls != AutoResponseContentDataset else auto_model_type
+    _type = (
+        case.dataset_cls.get_type()
+        if case.dataset_cls != AutoResponseContentDataset
+        else auto_model_type
+    )
     if _type in (BytesModel, StrictBytesModel):
         _assert_bytes_query_results(cast(StrictBytesDataset, data))
     elif _type in (StrModel, StrictStrModel):

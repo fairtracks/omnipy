@@ -6,25 +6,27 @@ from typing import Annotated, Any, ForwardRef, Generic, get_args, Iterator, Lite
 import pytest
 from typing_extensions import TypeVar
 
-from omnipy.util.helpers import (all_type_variants,
-                                 ensure_non_str_byte_iterable,
-                                 ensure_plain_type,
-                                 evaluate_any_forward_refs_if_possible,
-                                 get_calling_module_name,
-                                 get_first_item,
-                                 get_parametrized_type,
-                                 has_items,
-                                 is_iterable,
-                                 is_literal_type,
-                                 is_non_str_byte_iterable,
-                                 is_optional,
-                                 is_strict_subclass,
-                                 is_type_specialization,
-                                 is_union,
-                                 is_unreserved_identifier,
-                                 sorted_dict_hash,
-                                 split_to_union_variants,
-                                 transfer_generic_args_to_cls)
+from omnipy.util.helpers import (
+    all_type_variants,
+    ensure_non_str_byte_iterable,
+    ensure_plain_type,
+    evaluate_any_forward_refs_if_possible,
+    get_calling_module_name,
+    get_first_item,
+    get_parametrized_type,
+    has_items,
+    is_iterable,
+    is_literal_type,
+    is_non_str_byte_iterable,
+    is_optional,
+    is_strict_subclass,
+    is_type_specialization,
+    is_union,
+    is_unreserved_identifier,
+    sorted_dict_hash,
+    split_to_union_variants,
+    transfer_generic_args_to_cls,
+)
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -43,8 +45,7 @@ def test_key_sorted_dict_hash() -> None:
     assert sorted_dict_hash(d4) == sorted_dict_hash(d5)
 
 
-class MyGenericDict(dict[T, U], Generic[T, U]):
-    ...
+class MyGenericDict(dict[T, U], Generic[T, U]): ...
 
 
 def test_transfer_generic_params_to_new_generic_cls() -> None:
@@ -52,8 +53,7 @@ def test_transfer_generic_params_to_new_generic_cls() -> None:
 
     assert get_args(get_parametrized_type(init_dict)) == (str, int)
 
-    class MyDict(dict[T, U]):
-        ...
+    class MyDict(dict[T, U]): ...
 
     my_dict = MyDict({'b': 234})
 
@@ -90,8 +90,7 @@ def test_ensure_plain_type() -> None:
     assert ensure_plain_type(NoneType) is None  # NoneType
 
 
-class MyGlobalClass:
-    ...
+class MyGlobalClass: ...
 
 
 def test_evaluate_any_forward_refs_if_possible() -> None:
@@ -99,62 +98,84 @@ def test_evaluate_any_forward_refs_if_possible() -> None:
     assert evaluate_any_forward_refs_if_possible(ForwardRef('list[str]')) == list[str]
 
     assert evaluate_any_forward_refs_if_possible(ForwardRef('MyGlobalClass')) == MyGlobalClass
-    assert evaluate_any_forward_refs_if_possible(
-        list[ForwardRef('MyGlobalClass')]) == list[MyGlobalClass]  # type: ignore[misc]
-    assert evaluate_any_forward_refs_if_possible(
-        list[list[ForwardRef('MyGlobalClass')]]) == list[list[MyGlobalClass]]  # type: ignore[misc]
+    assert (
+        evaluate_any_forward_refs_if_possible(list[ForwardRef('MyGlobalClass')])
+        == list[MyGlobalClass]
+    )  # type: ignore[misc]
+    assert (
+        evaluate_any_forward_refs_if_possible(list[list[ForwardRef('MyGlobalClass')]])
+        == list[list[MyGlobalClass]]
+    )  # type: ignore[misc]
 
-    assert evaluate_any_forward_refs_if_possible(
-        ForwardRef('MyLocalClass')) == ForwardRef('MyLocalClass')
+    assert evaluate_any_forward_refs_if_possible(ForwardRef('MyLocalClass')) == ForwardRef(
+        'MyLocalClass'
+    )
 
     assert evaluate_any_forward_refs_if_possible(
         ForwardRef('MyLocalClass'),
         **locals(),
     ) == ForwardRef('MyLocalClass')
 
-    class MyLocalClass:
-        ...
-
-    assert evaluate_any_forward_refs_if_possible(
-        ForwardRef('MyLocalClass'),) == ForwardRef('MyLocalClass')
+    class MyLocalClass: ...
 
     assert evaluate_any_forward_refs_if_possible(
         ForwardRef('MyLocalClass'),
-        **locals(),
-    ) == MyLocalClass
+    ) == ForwardRef('MyLocalClass')
 
-    assert evaluate_any_forward_refs_if_possible(
-        ForwardRef('MyLocalClass'),
-        MyLocalClass=MyLocalClass,
-    ) == MyLocalClass
+    assert (
+        evaluate_any_forward_refs_if_possible(
+            ForwardRef('MyLocalClass'),
+            **locals(),
+        )
+        == MyLocalClass
+    )
 
-    assert evaluate_any_forward_refs_if_possible(
-        list[ForwardRef('MyLocalClass')],  # type: ignore[misc]
-        MyLocalClass=MyLocalClass,
-    ) == list[MyLocalClass]
+    assert (
+        evaluate_any_forward_refs_if_possible(
+            ForwardRef('MyLocalClass'),
+            MyLocalClass=MyLocalClass,
+        )
+        == MyLocalClass
+    )
 
-    assert evaluate_any_forward_refs_if_possible(
-        Union[
+    assert (
+        evaluate_any_forward_refs_if_possible(
             list[ForwardRef('MyLocalClass')],  # type: ignore[misc]
-            tuple[ForwardRef('MyLocalClass')]],  # type: ignore[misc]
-        MyLocalClass=MyLocalClass,
-    ) == Union[list[MyLocalClass], tuple[MyLocalClass]]
+            MyLocalClass=MyLocalClass,
+        )
+        == list[MyLocalClass]
+    )
 
-    assert evaluate_any_forward_refs_if_possible(
-        (list[ForwardRef('MyLocalClass')]
-         | tuple[ForwardRef('MyLocalClass')]),  # type: ignore[misc]
-        MyLocalClass=MyLocalClass,
-    ) == list[MyLocalClass] | tuple[MyLocalClass]
+    assert (
+        evaluate_any_forward_refs_if_possible(
+            Union[
+                list[ForwardRef('MyLocalClass')],  # type: ignore[misc]
+                tuple[ForwardRef('MyLocalClass')],
+            ],  # type: ignore[misc]
+            MyLocalClass=MyLocalClass,
+        )
+        == Union[list[MyLocalClass], tuple[MyLocalClass]]
+    )
+
+    assert (
+        evaluate_any_forward_refs_if_possible(
+            (list[ForwardRef('MyLocalClass')] | tuple[ForwardRef('MyLocalClass')]),  # type: ignore[misc]
+            MyLocalClass=MyLocalClass,
+        )
+        == list[MyLocalClass] | tuple[MyLocalClass]
+    )
 
 
 def test_all_type_variants() -> None:
     assert all_type_variants(list) == (list,)
     assert all_type_variants(list[str]) == (list[str],)
     assert all_type_variants(int | str) == (int, str)
-    assert all_type_variants(int | str | tuple[int] | list[int | str]) == (int,
-                                                                           str,
-                                                                           tuple[int],
-                                                                           list[int | str])
+    assert all_type_variants(int | str | tuple[int] | list[int | str]) == (
+        int,
+        str,
+        tuple[int],
+        list[int | str],
+    )
 
 
 def test_is_iterable() -> None:
@@ -170,8 +191,7 @@ def test_is_iterable() -> None:
     assert is_iterable({1: 2, 3: 4}) is True
     assert is_iterable({1, 5, 6}) is True
 
-    class MyNonIter:
-        ...
+    class MyNonIter: ...
 
     class MyHistoricIter:
         def __getitem__(self, index: int) -> int:
@@ -199,8 +219,7 @@ def test_is_non_str_byte_iterable() -> None:
     assert is_non_str_byte_iterable({1: 2, 3: 4}) is True
     assert is_non_str_byte_iterable({1, 5, 6}) is True
 
-    class MyNonIter:
-        ...
+    class MyNonIter: ...
 
     class MyHistoricIter:
         def __getitem__(self, index: int) -> int:
@@ -252,8 +271,7 @@ def test_has_items() -> None:
     assert has_items({1: 2, 3: 4}) is True
     assert has_items({1, 5, 6}) is True
 
-    class MyClass:
-        ...
+    class MyClass: ...
 
     def __len__(self):
         return 1
@@ -386,11 +404,9 @@ def test_is_literal_type() -> None:
 
 
 def test_is_type_specialization() -> None:
-    class MyGenericClass(Generic[T]):
-        ...
+    class MyGenericClass(Generic[T]): ...
 
-    class MySpecializedClass(MyGenericClass[int]):
-        ...
+    class MySpecializedClass(MyGenericClass[int]): ...
 
     assert is_type_specialization(MyGenericClass) is False
     assert is_type_specialization(MyGenericClass[int]) is False
@@ -405,20 +421,15 @@ def test_is_type_specialization() -> None:
 
 
 def test_is_strict_subclass() -> None:
-    class Mother:
-        ...
+    class Mother: ...
 
-    class Father:
-        ...
+    class Father: ...
 
-    class Sister(Mother, Father):
-        ...
+    class Sister(Mother, Father): ...
 
-    class Brother(Mother, Father):
-        ...
+    class Brother(Mother, Father): ...
 
-    class Child(Mother, Father):
-        ...
+    class Child(Mother, Father): ...
 
     assert issubclass(Child, Mother) is True
     assert issubclass(Child, Brother) is False
@@ -458,8 +469,10 @@ def test_get_calling_module_name() -> None:
     def local_call_get_calling_module_name() -> str | None:
         return get_calling_module_name()
 
-    from .helpers.other_module import (calling_module_name_when_importing_other_module,
-                                       other_module_call_get_calling_module_name)
+    from .helpers.other_module import (
+        calling_module_name_when_importing_other_module,
+        other_module_call_get_calling_module_name,
+    )
 
     assert local_call_get_calling_module_name() == 'tests.util.test_helpers'
     assert other_module_call_get_calling_module_name() == 'tests.util.test_helpers'

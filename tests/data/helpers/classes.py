@@ -86,7 +86,7 @@ class MyNumberBase:
         return self.val == other.val
 
 
-class MyPath():
+class MyPath:
     def __init__(self, *args, **kwargs):
         self._path = args[0] if len(args) > 0 else '.'
 

@@ -47,13 +47,15 @@ class RecommendedColorStyles(LiteralEnum[str]):
           long-session readability.
     """
 
-    Literals = Literal['auto',
-                       'ansi-dark',
-                       'ansi-light',
-                       'omnipy-selenized-black',
-                       'omnipy-selenized-dark',
-                       'omnipy-selenized-light',
-                       'omnipy-selenized-white']
+    Literals = Literal[
+        'auto',
+        'ansi-dark',
+        'ansi-light',
+        'omnipy-selenized-black',
+        'omnipy-selenized-dark',
+        'omnipy-selenized-light',
+        'omnipy-selenized-white',
+    ]
 
     AUTO: Literal['auto'] = 'auto'
     """Automatically select a recommended color style.
@@ -179,200 +181,203 @@ _COLOR_CONTRAST_TEXT = dedent("""\
 
 class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     """High-contrast dark Base16 themes from Tinted Theming."""
-    Literals = Literal['0x96f-t16',
-                       '3024-t16',
-                       'apathy-t16',
-                       'ashes-t16',
-                       'atelier-cave-t16',
-                       'atelier-dune-t16',
-                       'atelier-estuary-t16',
-                       'atelier-forest-t16',
-                       'atelier-heath-t16',
-                       'atelier-lakeside-t16',
-                       'atelier-plateau-t16',
-                       'atelier-savanna-t16',
-                       'atelier-seaside-t16',
-                       'atelier-sulphurpool-t16',
-                       'atlas-t16',
-                       'ayu-dark-t16',
-                       'ayu-mirage-t16',
-                       'aztec-t16',
-                       'bespin-t16',
-                       'black-metal-bathory-t16',
-                       'black-metal-burzum-t16',
-                       'black-metal-dark-funeral-t16',
-                       'black-metal-gorgoroth-t16',
-                       'black-metal-immortal-t16',
-                       'black-metal-khold-t16',
-                       'black-metal-marduk-t16',
-                       'black-metal-mayhem-t16',
-                       'black-metal-nile-t16',
-                       'black-metal-venom-t16',
-                       'black-metal-t16',
-                       'blueforest-t16',
-                       'blueish-t16',
-                       'brewer-t16',
-                       'bright-t16',
-                       'caroline-t16',
-                       'catppuccin-frappe-t16',
-                       'catppuccin-macchiato-t16',
-                       'catppuccin-mocha-t16',
-                       'charcoal-dark-t16',
-                       'chalk-t16',
-                       'chicago-night-t16',
-                       'chinoiserie-midnight-t16',
-                       'chinoiserie-morandi-t16',
-                       'chinoiserie-night-t16',
-                       'circus-t16',
-                       'classic-dark-t16',
-                       'codeschool-t16',
-                       'colors-t16',
-                       'da-one-black-t16',
-                       'da-one-gray-t16',
-                       'da-one-ocean-t16',
-                       'da-one-sea-t16',
-                       'danqing-t16',
-                       'darcula-t16',
-                       'darkmoss-t16',
-                       'darktooth-t16',
-                       'darkviolet-t16',
-                       'decaf-t16',
-                       'deep-oceanic-next-t16',
-                       'default-dark-t16',
-                       'digital-rain-t16',
-                       'dracula-t16',
-                       'edge-dark-t16',
-                       'eighties-t16',
-                       'embers-t16',
-                       'equilibrium-dark-t16',
-                       'equilibrium-gray-dark-t16',
-                       'espresso-t16',
-                       'evenok-dark-t16',
-                       'everforest-dark-hard-t16',
-                       'everforest-dark-soft-t16',
-                       'everforest-t16',
-                       'flat-t16',
-                       'framer-t16',
-                       'gigavolt-t16',
-                       'github-dark-t16',
-                       'google-dark-t16',
-                       'gotham-t16',
-                       'grayscale-dark-t16',
-                       'greenscreen-t16',
-                       'gruber-t16',
-                       'gruvbox-dark-hard-t16',
-                       'gruvbox-dark-medium-t16',
-                       'gruvbox-dark-pale-t16',
-                       'gruvbox-dark-soft-t16',
-                       'gruvbox-dark-t16',
-                       'gruvbox-material-dark-hard-t16',
-                       'gruvbox-material-dark-medium-t16',
-                       'gruvbox-material-dark-soft-t16',
-                       'hardcore-t16',
-                       'hardhacker-t16',
-                       'harmonic16-dark-t16',
-                       'heetch-t16',
-                       'helios-t16',
-                       'hopscotch-t16',
-                       'horizon-dark-t16',
-                       'horizon-terminal-dark-t16',
-                       'humanoid-dark-t16',
-                       'ia-dark-t16',
-                       'irblack-t16',
-                       'isotope-t16',
-                       'jabuti-t16',
-                       'kanagawa-dragon-t16',
-                       'kanagawa-t16',
-                       'katy-t16',
-                       'kimber-t16',
-                       'linux-vt-t16',
-                       'macintosh-t16',
-                       'marrakesh-t16',
-                       'materia-t16',
-                       'material-darker-t16',
-                       'material-palenight-t16',
-                       'material-t16',
-                       'measured-dark-t16',
-                       'mellow-purple-t16',
-                       'mocha-t16',
-                       'monokai-t16',
-                       'moonlight-t16',
-                       'mountain-t16',
-                       'nebula-t16',
-                       'nord-t16',
-                       'nova-t16',
-                       'ocean-t16',
-                       'oceanicnext-t16',
-                       'onedark-dark-t16',
-                       'onedark-t16',
-                       'outrun-dark-t16',
-                       'oxocarbon-dark-t16',
-                       'pandora-t16',
-                       'paraiso-t16',
-                       'pasque-t16',
-                       'penumbra-dark-contrast-plus-plus-t16',
-                       'penumbra-dark-contrast-plus-t16',
-                       'penumbra-dark-t16',
-                       'phd-t16',
-                       'pinky-t16',
-                       'pop-t16',
-                       'porple-t16',
-                       'precious-dark-eleven-t16',
-                       'precious-dark-fifteen-t16',
-                       'primer-dark-dimmed-t16',
-                       'primer-dark-t16',
-                       'purpledream-t16',
-                       'qualia-t16',
-                       'railscasts-t16',
-                       'rebecca-t16',
-                       'rose-pine-moon-t16',
-                       'rose-pine-t16',
-                       'saga-t16',
-                       'sandcastle-t16',
-                       'selenized-black-t16',
-                       'selenized-dark-t16',
-                       'seti-t16',
-                       'shades-of-purple-t16',
-                       'shadesmear-dark-t16',
-                       'silk-dark-t16',
-                       'snazzy-t16',
-                       'solarflare-t16',
-                       'solarized-dark-t16',
-                       'spaceduck-t16',
-                       'spacemacs-t16',
-                       'sparky-t16',
-                       'standardized-dark-t16',
-                       'stella-t16',
-                       'summerfruit-dark-t16',
-                       'synth-midnight-dark-t16',
-                       'tango-t16',
-                       'tender-t16',
-                       'terracotta-dark-t16',
-                       'tokyo-city-dark-t16',
-                       'tokyo-city-terminal-dark-t16',
-                       'tokyo-night-dark-t16',
-                       'tokyo-night-storm-t16',
-                       'tokyodark-terminal-t16',
-                       'tokyodark-t16',
-                       'tomorrow-night-eighties-t16',
-                       'tomorrow-night-t16',
-                       'tube-t16',
-                       'twilight-t16',
-                       'unikitty-dark-t16',
-                       'unikitty-reversible-t16',
-                       'uwunicorn-t16',
-                       'valua-t16',
-                       'vesper-t16',
-                       'vice-t16',
-                       'windows-10-t16',
-                       'windows-95-t16',
-                       'windows-highcontrast-t16',
-                       'windows-nt-t16',
-                       'woodland-t16',
-                       'xcode-dusk-t16',
-                       'zenbones-t16',
-                       'zenburn-t16',
-                       'random-dark-high-t16']
+
+    Literals = Literal[
+        '0x96f-t16',
+        '3024-t16',
+        'apathy-t16',
+        'ashes-t16',
+        'atelier-cave-t16',
+        'atelier-dune-t16',
+        'atelier-estuary-t16',
+        'atelier-forest-t16',
+        'atelier-heath-t16',
+        'atelier-lakeside-t16',
+        'atelier-plateau-t16',
+        'atelier-savanna-t16',
+        'atelier-seaside-t16',
+        'atelier-sulphurpool-t16',
+        'atlas-t16',
+        'ayu-dark-t16',
+        'ayu-mirage-t16',
+        'aztec-t16',
+        'bespin-t16',
+        'black-metal-bathory-t16',
+        'black-metal-burzum-t16',
+        'black-metal-dark-funeral-t16',
+        'black-metal-gorgoroth-t16',
+        'black-metal-immortal-t16',
+        'black-metal-khold-t16',
+        'black-metal-marduk-t16',
+        'black-metal-mayhem-t16',
+        'black-metal-nile-t16',
+        'black-metal-venom-t16',
+        'black-metal-t16',
+        'blueforest-t16',
+        'blueish-t16',
+        'brewer-t16',
+        'bright-t16',
+        'caroline-t16',
+        'catppuccin-frappe-t16',
+        'catppuccin-macchiato-t16',
+        'catppuccin-mocha-t16',
+        'charcoal-dark-t16',
+        'chalk-t16',
+        'chicago-night-t16',
+        'chinoiserie-midnight-t16',
+        'chinoiserie-morandi-t16',
+        'chinoiserie-night-t16',
+        'circus-t16',
+        'classic-dark-t16',
+        'codeschool-t16',
+        'colors-t16',
+        'da-one-black-t16',
+        'da-one-gray-t16',
+        'da-one-ocean-t16',
+        'da-one-sea-t16',
+        'danqing-t16',
+        'darcula-t16',
+        'darkmoss-t16',
+        'darktooth-t16',
+        'darkviolet-t16',
+        'decaf-t16',
+        'deep-oceanic-next-t16',
+        'default-dark-t16',
+        'digital-rain-t16',
+        'dracula-t16',
+        'edge-dark-t16',
+        'eighties-t16',
+        'embers-t16',
+        'equilibrium-dark-t16',
+        'equilibrium-gray-dark-t16',
+        'espresso-t16',
+        'evenok-dark-t16',
+        'everforest-dark-hard-t16',
+        'everforest-dark-soft-t16',
+        'everforest-t16',
+        'flat-t16',
+        'framer-t16',
+        'gigavolt-t16',
+        'github-dark-t16',
+        'google-dark-t16',
+        'gotham-t16',
+        'grayscale-dark-t16',
+        'greenscreen-t16',
+        'gruber-t16',
+        'gruvbox-dark-hard-t16',
+        'gruvbox-dark-medium-t16',
+        'gruvbox-dark-pale-t16',
+        'gruvbox-dark-soft-t16',
+        'gruvbox-dark-t16',
+        'gruvbox-material-dark-hard-t16',
+        'gruvbox-material-dark-medium-t16',
+        'gruvbox-material-dark-soft-t16',
+        'hardcore-t16',
+        'hardhacker-t16',
+        'harmonic16-dark-t16',
+        'heetch-t16',
+        'helios-t16',
+        'hopscotch-t16',
+        'horizon-dark-t16',
+        'horizon-terminal-dark-t16',
+        'humanoid-dark-t16',
+        'ia-dark-t16',
+        'irblack-t16',
+        'isotope-t16',
+        'jabuti-t16',
+        'kanagawa-dragon-t16',
+        'kanagawa-t16',
+        'katy-t16',
+        'kimber-t16',
+        'linux-vt-t16',
+        'macintosh-t16',
+        'marrakesh-t16',
+        'materia-t16',
+        'material-darker-t16',
+        'material-palenight-t16',
+        'material-t16',
+        'measured-dark-t16',
+        'mellow-purple-t16',
+        'mocha-t16',
+        'monokai-t16',
+        'moonlight-t16',
+        'mountain-t16',
+        'nebula-t16',
+        'nord-t16',
+        'nova-t16',
+        'ocean-t16',
+        'oceanicnext-t16',
+        'onedark-dark-t16',
+        'onedark-t16',
+        'outrun-dark-t16',
+        'oxocarbon-dark-t16',
+        'pandora-t16',
+        'paraiso-t16',
+        'pasque-t16',
+        'penumbra-dark-contrast-plus-plus-t16',
+        'penumbra-dark-contrast-plus-t16',
+        'penumbra-dark-t16',
+        'phd-t16',
+        'pinky-t16',
+        'pop-t16',
+        'porple-t16',
+        'precious-dark-eleven-t16',
+        'precious-dark-fifteen-t16',
+        'primer-dark-dimmed-t16',
+        'primer-dark-t16',
+        'purpledream-t16',
+        'qualia-t16',
+        'railscasts-t16',
+        'rebecca-t16',
+        'rose-pine-moon-t16',
+        'rose-pine-t16',
+        'saga-t16',
+        'sandcastle-t16',
+        'selenized-black-t16',
+        'selenized-dark-t16',
+        'seti-t16',
+        'shades-of-purple-t16',
+        'shadesmear-dark-t16',
+        'silk-dark-t16',
+        'snazzy-t16',
+        'solarflare-t16',
+        'solarized-dark-t16',
+        'spaceduck-t16',
+        'spacemacs-t16',
+        'sparky-t16',
+        'standardized-dark-t16',
+        'stella-t16',
+        'summerfruit-dark-t16',
+        'synth-midnight-dark-t16',
+        'tango-t16',
+        'tender-t16',
+        'terracotta-dark-t16',
+        'tokyo-city-dark-t16',
+        'tokyo-city-terminal-dark-t16',
+        'tokyo-night-dark-t16',
+        'tokyo-night-storm-t16',
+        'tokyodark-terminal-t16',
+        'tokyodark-t16',
+        'tomorrow-night-eighties-t16',
+        'tomorrow-night-t16',
+        'tube-t16',
+        'twilight-t16',
+        'unikitty-dark-t16',
+        'unikitty-reversible-t16',
+        'uwunicorn-t16',
+        'valua-t16',
+        'vesper-t16',
+        'vice-t16',
+        'windows-10-t16',
+        'windows-95-t16',
+        'windows-highcontrast-t16',
+        'windows-nt-t16',
+        'woodland-t16',
+        'xcode-dusk-t16',
+        'zenbones-t16',
+        'zenburn-t16',
+        'random-dark-high-t16',
+    ]
 
     NUMBER_0X96F_T16: Literal['0x96f-t16'] = '0x96f-t16'
     """
@@ -626,8 +631,9 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    BLACK_METAL_DARK_FUNERAL_T16: Literal[
-        'black-metal-dark-funeral-t16'] = 'black-metal-dark-funeral-t16'
+    BLACK_METAL_DARK_FUNERAL_T16: Literal['black-metal-dark-funeral-t16'] = (
+        'black-metal-dark-funeral-t16'
+    )
     """
     Black Metal (Dark Funeral): Base-16 color style by "metalelf0".
 
@@ -1409,8 +1415,9 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    GRUVBOX_MATERIAL_DARK_HARD_T16: Literal[
-        'gruvbox-material-dark-hard-t16'] = 'gruvbox-material-dark-hard-t16'
+    GRUVBOX_MATERIAL_DARK_HARD_T16: Literal['gruvbox-material-dark-hard-t16'] = (
+        'gruvbox-material-dark-hard-t16'
+    )
     """
     Gruvbox Material Dark, Hard: Base-16 color style by "Mayush Kumar".
 
@@ -1422,8 +1429,9 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    GRUVBOX_MATERIAL_DARK_MEDIUM_T16: Literal[
-        'gruvbox-material-dark-medium-t16'] = 'gruvbox-material-dark-medium-t16'
+    GRUVBOX_MATERIAL_DARK_MEDIUM_T16: Literal['gruvbox-material-dark-medium-t16'] = (
+        'gruvbox-material-dark-medium-t16'
+    )
     """
     Gruvbox Material Dark, Medium: Base-16 color style by "Mayush Kumar".
 
@@ -1435,8 +1443,9 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    GRUVBOX_MATERIAL_DARK_SOFT_T16: Literal[
-        'gruvbox-material-dark-soft-t16'] = 'gruvbox-material-dark-soft-t16'
+    GRUVBOX_MATERIAL_DARK_SOFT_T16: Literal['gruvbox-material-dark-soft-t16'] = (
+        'gruvbox-material-dark-soft-t16'
+    )
     """
     Gruvbox Material Dark, Soft: Base-16 color style by "Mayush Kumar".
 
@@ -1953,8 +1962,9 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    PENUMBRA_DARK_CONTRAST_PLUS_PLUS_T16: Literal[
-        'penumbra-dark-contrast-plus-plus-t16'] = 'penumbra-dark-contrast-plus-plus-t16'
+    PENUMBRA_DARK_CONTRAST_PLUS_PLUS_T16: Literal['penumbra-dark-contrast-plus-plus-t16'] = (
+        'penumbra-dark-contrast-plus-plus-t16'
+    )
     """
     Penumbra Dark Contrast Plus Plus: Base-16 color style by "Zachary
     Weiss".
@@ -1967,8 +1977,9 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    PENUMBRA_DARK_CONTRAST_PLUS_T16: Literal[
-        'penumbra-dark-contrast-plus-t16'] = 'penumbra-dark-contrast-plus-t16'
+    PENUMBRA_DARK_CONTRAST_PLUS_T16: Literal['penumbra-dark-contrast-plus-t16'] = (
+        'penumbra-dark-contrast-plus-t16'
+    )
     """
     Penumbra Dark Contrast Plus: Base-16 color style by "Zachary Weiss".
 
@@ -2427,8 +2438,9 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    TOKYO_CITY_TERMINAL_DARK_T16: Literal[
-        'tokyo-city-terminal-dark-t16'] = 'tokyo-city-terminal-dark-t16'
+    TOKYO_CITY_TERMINAL_DARK_T16: Literal['tokyo-city-terminal-dark-t16'] = (
+        'tokyo-city-terminal-dark-t16'
+    )
     """
     Tokyo City Terminal Dark: Base-16 color style by "Michaël Ball".
 
@@ -2488,8 +2500,9 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    TOMORROW_NIGHT_EIGHTIES_T16: Literal[
-        'tomorrow-night-eighties-t16'] = 'tomorrow-night-eighties-t16'
+    TOMORROW_NIGHT_EIGHTIES_T16: Literal['tomorrow-night-eighties-t16'] = (
+        'tomorrow-night-eighties-t16'
+    )
     """
     Tomorrow Night Eighties: Base-16 color style by "Chris Kempson".
 
@@ -2710,25 +2723,28 @@ class DarkHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 
 class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     """Lower-contrast dark Base16 themes from Tinted Theming."""
-    Literals = Literal['apprentice-t16',
-                       'brogrammer-t16',
-                       'brushtrees-dark-t16',
-                       'eris-t16',
-                       'eva-dim-t16',
-                       'eva-t16',
-                       'everforest-dark-medium-t16',
-                       'icy-t16',
-                       'lime-t16',
-                       'material-vivid-t16',
-                       'papercolor-dark-t16',
-                       'pico-t16',
-                       'summercamp-t16',
-                       'tarot-t16',
-                       'tokyo-night-moon-t16',
-                       'tokyo-night-terminal-dark-t16',
-                       'tokyo-night-terminal-storm-t16',
-                       'vulcan-t16',
-                       'random-dark-low-t16']
+
+    Literals = Literal[
+        'apprentice-t16',
+        'brogrammer-t16',
+        'brushtrees-dark-t16',
+        'eris-t16',
+        'eva-dim-t16',
+        'eva-t16',
+        'everforest-dark-medium-t16',
+        'icy-t16',
+        'lime-t16',
+        'material-vivid-t16',
+        'papercolor-dark-t16',
+        'pico-t16',
+        'summercamp-t16',
+        'tarot-t16',
+        'tokyo-night-moon-t16',
+        'tokyo-night-terminal-dark-t16',
+        'tokyo-night-terminal-storm-t16',
+        'vulcan-t16',
+        'random-dark-low-t16',
+    ]
 
     APPRENTICE_T16: Literal['apprentice-t16'] = 'apprentice-t16'
     """
@@ -2910,8 +2926,9 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     2.1 (https://www.w3.org/TR/WCAG21/).
     """
 
-    TOKYO_NIGHT_TERMINAL_DARK_T16: Literal[
-        'tokyo-night-terminal-dark-t16'] = 'tokyo-night-terminal-dark-t16'
+    TOKYO_NIGHT_TERMINAL_DARK_T16: Literal['tokyo-night-terminal-dark-t16'] = (
+        'tokyo-night-terminal-dark-t16'
+    )
     """
     Tokyo Night Terminal Dark: Base-16 color style by "Michaël Ball".
 
@@ -2923,8 +2940,9 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     2.1 (https://www.w3.org/TR/WCAG21/).
     """
 
-    TOKYO_NIGHT_TERMINAL_STORM_T16: Literal[
-        'tokyo-night-terminal-storm-t16'] = 'tokyo-night-terminal-storm-t16'
+    TOKYO_NIGHT_TERMINAL_STORM_T16: Literal['tokyo-night-terminal-storm-t16'] = (
+        'tokyo-night-terminal-storm-t16'
+    )
     """
     Tokyo Night Terminal Storm: Base-16 color style by "Michaël Ball".
 
@@ -2954,86 +2972,88 @@ class DarkLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     """High-contrast light Base16 themes from Tinted Theming."""
 
-    Literals = Literal['atelier-cave-light-t16',
-                       'atelier-dune-light-t16',
-                       'atelier-estuary-light-t16',
-                       'atelier-forest-light-t16',
-                       'atelier-heath-light-t16',
-                       'atelier-lakeside-light-t16',
-                       'atelier-plateau-light-t16',
-                       'atelier-savanna-light-t16',
-                       'atelier-seaside-light-t16',
-                       'atelier-sulphurpool-light-t16',
-                       'ayu-light-t16',
-                       'catppuccin-latte-t16',
-                       'charcoal-light-t16',
-                       'chicago-day-t16',
-                       'chinoiserie-t16',
-                       'classic-light-t16',
-                       'cupertino-t16',
-                       'da-one-paper-t16',
-                       'da-one-white-t16',
-                       'danqing-light-t16',
-                       'default-light-t16',
-                       'dirtysea-t16',
-                       'edge-light-t16',
-                       'embers-light-t16',
-                       'emil-t16',
-                       'equilibrium-gray-light-t16',
-                       'equilibrium-light-t16',
-                       'fruit-soda-t16',
-                       'github-t16',
-                       'google-light-t16',
-                       'grayscale-light-t16',
-                       'gruvbox-light-hard-t16',
-                       'gruvbox-light-medium-t16',
-                       'gruvbox-light-soft-t16',
-                       'gruvbox-light-t16',
-                       'gruvbox-material-light-hard-t16',
-                       'gruvbox-material-light-medium-t16',
-                       'gruvbox-material-light-soft-t16',
-                       'harmonic16-light-t16',
-                       'heetch-light-t16',
-                       'horizon-light-t16',
-                       'horizon-terminal-light-t16',
-                       'humanoid-light-t16',
-                       'ia-light-t16',
-                       'measured-light-t16',
-                       'mexico-light-t16',
-                       'nord-light-t16',
-                       'one-light-t16',
-                       'oxocarbon-light-t16',
-                       'papercolor-light-t16',
-                       'penumbra-light-contrast-plus-plus-t16',
-                       'penumbra-light-contrast-plus-t16',
-                       'penumbra-light-t16',
-                       'precious-light-warm-t16',
-                       'precious-light-white-t16',
-                       'primer-light-t16',
-                       'rose-pine-dawn-t16',
-                       'sagelight-t16',
-                       'sakura-t16',
-                       'selenized-light-t16',
-                       'selenized-white-t16',
-                       'shadesmear-light-t16',
-                       'shapeshifter-t16',
-                       'silk-light-t16',
-                       'solarflare-light-t16',
-                       'solarized-light-t16',
-                       'standardized-light-t16',
-                       'still-alive-t16',
-                       'summerfruit-light-t16',
-                       'synth-midnight-light-t16',
-                       'terracotta-t16',
-                       'tokyo-city-light-t16',
-                       'tokyo-city-terminal-light-t16',
-                       'tokyo-night-light-t16',
-                       'tokyo-night-terminal-light-t16',
-                       'tomorrow-t16',
-                       'unikitty-light-t16',
-                       'windows-95-light-t16',
-                       'windows-highcontrast-light-t16',
-                       'random-light-high-t16']
+    Literals = Literal[
+        'atelier-cave-light-t16',
+        'atelier-dune-light-t16',
+        'atelier-estuary-light-t16',
+        'atelier-forest-light-t16',
+        'atelier-heath-light-t16',
+        'atelier-lakeside-light-t16',
+        'atelier-plateau-light-t16',
+        'atelier-savanna-light-t16',
+        'atelier-seaside-light-t16',
+        'atelier-sulphurpool-light-t16',
+        'ayu-light-t16',
+        'catppuccin-latte-t16',
+        'charcoal-light-t16',
+        'chicago-day-t16',
+        'chinoiserie-t16',
+        'classic-light-t16',
+        'cupertino-t16',
+        'da-one-paper-t16',
+        'da-one-white-t16',
+        'danqing-light-t16',
+        'default-light-t16',
+        'dirtysea-t16',
+        'edge-light-t16',
+        'embers-light-t16',
+        'emil-t16',
+        'equilibrium-gray-light-t16',
+        'equilibrium-light-t16',
+        'fruit-soda-t16',
+        'github-t16',
+        'google-light-t16',
+        'grayscale-light-t16',
+        'gruvbox-light-hard-t16',
+        'gruvbox-light-medium-t16',
+        'gruvbox-light-soft-t16',
+        'gruvbox-light-t16',
+        'gruvbox-material-light-hard-t16',
+        'gruvbox-material-light-medium-t16',
+        'gruvbox-material-light-soft-t16',
+        'harmonic16-light-t16',
+        'heetch-light-t16',
+        'horizon-light-t16',
+        'horizon-terminal-light-t16',
+        'humanoid-light-t16',
+        'ia-light-t16',
+        'measured-light-t16',
+        'mexico-light-t16',
+        'nord-light-t16',
+        'one-light-t16',
+        'oxocarbon-light-t16',
+        'papercolor-light-t16',
+        'penumbra-light-contrast-plus-plus-t16',
+        'penumbra-light-contrast-plus-t16',
+        'penumbra-light-t16',
+        'precious-light-warm-t16',
+        'precious-light-white-t16',
+        'primer-light-t16',
+        'rose-pine-dawn-t16',
+        'sagelight-t16',
+        'sakura-t16',
+        'selenized-light-t16',
+        'selenized-white-t16',
+        'shadesmear-light-t16',
+        'shapeshifter-t16',
+        'silk-light-t16',
+        'solarflare-light-t16',
+        'solarized-light-t16',
+        'standardized-light-t16',
+        'still-alive-t16',
+        'summerfruit-light-t16',
+        'synth-midnight-light-t16',
+        'terracotta-t16',
+        'tokyo-city-light-t16',
+        'tokyo-city-terminal-light-t16',
+        'tokyo-night-light-t16',
+        'tokyo-night-terminal-light-t16',
+        'tomorrow-t16',
+        'unikitty-light-t16',
+        'windows-95-light-t16',
+        'windows-highcontrast-light-t16',
+        'random-light-high-t16',
+    ]
 
     ATELIER_CAVE_LIGHT_T16: Literal['atelier-cave-light-t16'] = 'atelier-cave-light-t16'
     """
@@ -3143,8 +3163,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    ATELIER_SULPHURPOOL_LIGHT_T16: Literal[
-        'atelier-sulphurpool-light-t16'] = 'atelier-sulphurpool-light-t16'
+    ATELIER_SULPHURPOOL_LIGHT_T16: Literal['atelier-sulphurpool-light-t16'] = (
+        'atelier-sulphurpool-light-t16'
+    )
     """
     Atelier Sulphurpool Light: Base-16 color style by "Bram de Haan".
 
@@ -3456,8 +3477,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    GRUVBOX_MATERIAL_LIGHT_HARD_T16: Literal[
-        'gruvbox-material-light-hard-t16'] = 'gruvbox-material-light-hard-t16'
+    GRUVBOX_MATERIAL_LIGHT_HARD_T16: Literal['gruvbox-material-light-hard-t16'] = (
+        'gruvbox-material-light-hard-t16'
+    )
     """
     Gruvbox Material Light, Hard: Base-16 color style by "Mayush Kumar".
 
@@ -3469,8 +3491,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    GRUVBOX_MATERIAL_LIGHT_MEDIUM_T16: Literal[
-        'gruvbox-material-light-medium-t16'] = 'gruvbox-material-light-medium-t16'
+    GRUVBOX_MATERIAL_LIGHT_MEDIUM_T16: Literal['gruvbox-material-light-medium-t16'] = (
+        'gruvbox-material-light-medium-t16'
+    )
     """
     Gruvbox Material Light, Medium: Base-16 color style by "Mayush Kumar".
 
@@ -3482,8 +3505,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    GRUVBOX_MATERIAL_LIGHT_SOFT_T16: Literal[
-        'gruvbox-material-light-soft-t16'] = 'gruvbox-material-light-soft-t16'
+    GRUVBOX_MATERIAL_LIGHT_SOFT_T16: Literal['gruvbox-material-light-soft-t16'] = (
+        'gruvbox-material-light-soft-t16'
+    )
     """
     Gruvbox Material Light, Soft: Base-16 color style by "Mayush Kumar".
 
@@ -3640,8 +3664,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    PENUMBRA_LIGHT_CONTRAST_PLUS_PLUS_T16: Literal[
-        'penumbra-light-contrast-plus-plus-t16'] = 'penumbra-light-contrast-plus-plus-t16'
+    PENUMBRA_LIGHT_CONTRAST_PLUS_PLUS_T16: Literal['penumbra-light-contrast-plus-plus-t16'] = (
+        'penumbra-light-contrast-plus-plus-t16'
+    )
     """
     Penumbra Light Contrast Plus Plus: Base-16 color style by "Zachary
     Weiss".
@@ -3654,8 +3679,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    PENUMBRA_LIGHT_CONTRAST_PLUS_T16: Literal[
-        'penumbra-light-contrast-plus-t16'] = 'penumbra-light-contrast-plus-t16'
+    PENUMBRA_LIGHT_CONTRAST_PLUS_T16: Literal['penumbra-light-contrast-plus-t16'] = (
+        'penumbra-light-contrast-plus-t16'
+    )
     """
     Penumbra Light Contrast Plus: Base-16 color style by "Zachary Weiss".
 
@@ -3909,8 +3935,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    TOKYO_CITY_TERMINAL_LIGHT_T16: Literal[
-        'tokyo-city-terminal-light-t16'] = 'tokyo-city-terminal-light-t16'
+    TOKYO_CITY_TERMINAL_LIGHT_T16: Literal['tokyo-city-terminal-light-t16'] = (
+        'tokyo-city-terminal-light-t16'
+    )
     """
     Tokyo City Terminal Light: Base-16 color style by "Michaël Ball".
 
@@ -3934,8 +3961,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    TOKYO_NIGHT_TERMINAL_LIGHT_T16: Literal[
-        'tokyo-night-terminal-light-t16'] = 'tokyo-night-terminal-light-t16'
+    TOKYO_NIGHT_TERMINAL_LIGHT_T16: Literal['tokyo-night-terminal-light-t16'] = (
+        'tokyo-night-terminal-light-t16'
+    )
     """
     Tokyo Night Terminal Light: Base-16 color style by "Michaël Ball".
 
@@ -3983,8 +4011,9 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     (https://www.w3.org/TR/WCAG21/).
     """
 
-    WINDOWS_HIGHCONTRAST_LIGHT_T16: Literal[
-        'windows-highcontrast-light-t16'] = 'windows-highcontrast-light-t16'
+    WINDOWS_HIGHCONTRAST_LIGHT_T16: Literal['windows-highcontrast-light-t16'] = (
+        'windows-highcontrast-light-t16'
+    )
     """
     Windows High Contrast Light: Base-16 color style by "Fergus Collins".
 
@@ -4002,12 +4031,14 @@ class LightHighContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
     """Lower-contrast light Base16 themes from Tinted Theming."""
 
-    Literals = Literal['brushtrees-t16',
-                       'cupcake-t16',
-                       'material-lighter-t16',
-                       'windows-10-light-t16',
-                       'windows-nt-light-t16',
-                       'random-light-low-t16']
+    Literals = Literal[
+        'brushtrees-t16',
+        'cupcake-t16',
+        'material-lighter-t16',
+        'windows-10-light-t16',
+        'windows-nt-light-t16',
+        'random-light-low-t16',
+    ]
 
     BRUSHTREES_T16: Literal['brushtrees-t16'] = 'brushtrees-t16'
     """
@@ -4073,40 +4104,46 @@ class LightLowContrastTintedThemingBase16ColorStyles(LiteralEnum[str]):
 
 
 class DarkTintedThemingBase16ColorStyles(
-        DarkHighContrastTintedThemingBase16ColorStyles,
-        DarkLowContrastTintedThemingBase16ColorStyles,
+    DarkHighContrastTintedThemingBase16ColorStyles,
+    DarkLowContrastTintedThemingBase16ColorStyles,
 ):
     """All dark Tinted Theming Base16 styles."""
 
-    Literals = Literal[DarkHighContrastTintedThemingBase16ColorStyles.Literals,
-                       DarkLowContrastTintedThemingBase16ColorStyles.Literals,
-                       'random-dark-t16']
+    Literals = Literal[
+        DarkHighContrastTintedThemingBase16ColorStyles.Literals,
+        DarkLowContrastTintedThemingBase16ColorStyles.Literals,
+        'random-dark-t16',
+    ]
 
     RANDOM_DARK_T16: Literal['random-dark-t16'] = 'random-dark-t16'
 
 
 class LightTintedThemingBase16ColorStyles(
-        LightHighContrastTintedThemingBase16ColorStyles,
-        LightLowContrastTintedThemingBase16ColorStyles,
+    LightHighContrastTintedThemingBase16ColorStyles,
+    LightLowContrastTintedThemingBase16ColorStyles,
 ):
     """All light Tinted Theming Base16 styles."""
 
-    Literals = Literal[LightHighContrastTintedThemingBase16ColorStyles.Literals,
-                       LightLowContrastTintedThemingBase16ColorStyles.Literals,
-                       'random-light-t16']
+    Literals = Literal[
+        LightHighContrastTintedThemingBase16ColorStyles.Literals,
+        LightLowContrastTintedThemingBase16ColorStyles.Literals,
+        'random-light-t16',
+    ]
 
     RANDOM_LIGHT_T16: Literal['random-light-t16'] = 'random-light-t16'
 
 
 class TintedThemingBase16ColorStyles(
-        DarkTintedThemingBase16ColorStyles,
-        LightTintedThemingBase16ColorStyles,
+    DarkTintedThemingBase16ColorStyles,
+    LightTintedThemingBase16ColorStyles,
 ):
     """All Tinted Theming Base16 styles across dark and light sets."""
 
-    Literals = Literal[DarkTintedThemingBase16ColorStyles.Literals,
-                       LightTintedThemingBase16ColorStyles.Literals,
-                       'random-t16']
+    Literals = Literal[
+        DarkTintedThemingBase16ColorStyles.Literals,
+        LightTintedThemingBase16ColorStyles.Literals,
+        'random-t16',
+    ]
 
     RANDOM_T16: Literal['random-t16'] = 'random-t16'
 
@@ -4228,8 +4265,9 @@ class LightLowContrastPygmentsColorStyles(LiteralEnum[str]):
     BORLAND_PYGMENTS: Literal['borland-pygments'] = 'borland-pygments'
     COLORFUL_PYGMENTS: Literal['colorful-pygments'] = 'colorful-pygments'
     EMACS_PYGMENTS: Literal['emacs-pygments'] = 'emacs-pygments'
-    FRIENDLY_GRAYSCALE_PYGMENTS: Literal[
-        'friendly_grayscale-pygments'] = 'friendly_grayscale-pygments'
+    FRIENDLY_GRAYSCALE_PYGMENTS: Literal['friendly_grayscale-pygments'] = (
+        'friendly_grayscale-pygments'
+    )
     FRIENDLY_PYGMENTS: Literal['friendly-pygments'] = 'friendly-pygments'
     GRUVBOX_LIGHT_PYGMENTS: Literal['gruvbox-light-pygments'] = 'gruvbox-light-pygments'
     IGOR_PYGMENTS: Literal['igor-pygments'] = 'igor-pygments'
@@ -4248,88 +4286,96 @@ class LightLowContrastPygmentsColorStyles(LiteralEnum[str]):
 
 
 class DarkHighContrastColorStyles(
-        DarkHighContrastTintedThemingBase16ColorStyles,
-        DarkHighContrastPygmentsColorStyles,
+    DarkHighContrastTintedThemingBase16ColorStyles,
+    DarkHighContrastPygmentsColorStyles,
 ):
     """All dark high-contrast syntax-highlighting styles."""
 
-    Literals = Literal[DarkHighContrastTintedThemingBase16ColorStyles.Literals,
-                       DarkHighContrastPygmentsColorStyles.Literals,
-                       'random-dark-high']
+    Literals = Literal[
+        DarkHighContrastTintedThemingBase16ColorStyles.Literals,
+        DarkHighContrastPygmentsColorStyles.Literals,
+        'random-dark-high',
+    ]
 
     RANDOM_DARK_HIGH_CONTRAST: Literal['random-dark-high'] = 'random-dark-high'
 
 
 class DarkLowContrastColorStyles(
-        DarkLowContrastTintedThemingBase16ColorStyles,
-        DarkLowContrastPygmentsColorStyles,
+    DarkLowContrastTintedThemingBase16ColorStyles,
+    DarkLowContrastPygmentsColorStyles,
 ):
     """All dark lower-contrast syntax-highlighting styles."""
 
-    Literals = Literal[DarkLowContrastTintedThemingBase16ColorStyles.Literals,
-                       DarkLowContrastPygmentsColorStyles.Literals,
-                       'random-dark-low']
+    Literals = Literal[
+        DarkLowContrastTintedThemingBase16ColorStyles.Literals,
+        DarkLowContrastPygmentsColorStyles.Literals,
+        'random-dark-low',
+    ]
 
     RANDOM_DARK_LOW_CONTRAST: Literal['random-dark-low'] = 'random-dark-low'
 
 
 class LightHighContrastColorStyles(
-        LightHighContrastTintedThemingBase16ColorStyles,
-        LightHighContrastPygmentsColorStyles,
+    LightHighContrastTintedThemingBase16ColorStyles,
+    LightHighContrastPygmentsColorStyles,
 ):
     """All light high-contrast syntax-highlighting styles."""
 
-    Literals = Literal[LightHighContrastTintedThemingBase16ColorStyles.Literals,
-                       LightHighContrastPygmentsColorStyles.Literals,
-                       'random-light-high']
+    Literals = Literal[
+        LightHighContrastTintedThemingBase16ColorStyles.Literals,
+        LightHighContrastPygmentsColorStyles.Literals,
+        'random-light-high',
+    ]
 
     RANDOM_LIGHT_HIGH_CONTRAST: Literal['random-light-high'] = 'random-light-high'
 
 
 class LightLowContrastColorStyles(
-        LightLowContrastTintedThemingBase16ColorStyles,
-        LightLowContrastPygmentsColorStyles,
+    LightLowContrastTintedThemingBase16ColorStyles,
+    LightLowContrastPygmentsColorStyles,
 ):
     """All light lower-contrast syntax-highlighting styles."""
 
-    Literals = Literal[LightLowContrastTintedThemingBase16ColorStyles.Literals,
-                       LightLowContrastPygmentsColorStyles.Literals,
-                       'random-light-low']
+    Literals = Literal[
+        LightLowContrastTintedThemingBase16ColorStyles.Literals,
+        LightLowContrastPygmentsColorStyles.Literals,
+        'random-light-low',
+    ]
 
     RANDOM_LIGHT_LOW_CONTRAST: Literal['random-light-low'] = 'random-light-low'
 
 
 class DarkColorStyles(
-        DarkHighContrastColorStyles,
-        DarkLowContrastColorStyles,
+    DarkHighContrastColorStyles,
+    DarkLowContrastColorStyles,
 ):
     """All dark syntax-highlighting styles."""
 
-    Literals = Literal[DarkHighContrastColorStyles.Literals,
-                       DarkLowContrastColorStyles.Literals,
-                       'random-dark']
+    Literals = Literal[
+        DarkHighContrastColorStyles.Literals, DarkLowContrastColorStyles.Literals, 'random-dark'
+    ]
 
     RANDOM_DARK: Literal['random-dark'] = 'random-dark'
 
 
 class LightColorStyles(
-        LightHighContrastColorStyles,
-        LightLowContrastColorStyles,
+    LightHighContrastColorStyles,
+    LightLowContrastColorStyles,
 ):
     """All light syntax-highlighting styles."""
 
-    Literals = Literal[LightHighContrastColorStyles.Literals,
-                       LightLowContrastColorStyles.Literals,
-                       'random-light']
+    Literals = Literal[
+        LightHighContrastColorStyles.Literals, LightLowContrastColorStyles.Literals, 'random-light'
+    ]
 
     RANDOM_LIGHT: Literal['random-light'] = 'random-light'
 
 
 class AllColorStyles(
-        RecommendedColorStyles,
-        DarkColorStyles,
-        LightColorStyles,
-        TintedThemingBase16ColorStyles,
+    RecommendedColorStyles,
+    DarkColorStyles,
+    LightColorStyles,
+    TintedThemingBase16ColorStyles,
 ):
     """All syntax-highlighting styles exposed by Omnipy.
 
@@ -4338,17 +4384,20 @@ class AllColorStyles(
     any available style, including non-recommended and random variants.
     """
 
-    Literals = Literal[RecommendedColorStyles.Literals,
-                       DarkColorStyles.Literals,
-                       LightColorStyles.Literals,
-                       TintedThemingBase16ColorStyles.Literals,
-                       'random']
+    Literals = Literal[
+        RecommendedColorStyles.Literals,
+        DarkColorStyles.Literals,
+        LightColorStyles.Literals,
+        TintedThemingBase16ColorStyles.Literals,
+        'random',
+    ]
 
     RANDOM_ALL: Literal['random'] = 'random'
 
     @classmethod
     def get_supercls_for_random_choice(
-            cls, choice: 'AllColorStyles.Literals | str') -> type[LiteralEnum[str]] | None:
+        cls, choice: 'AllColorStyles.Literals | str'
+    ) -> type[LiteralEnum[str]] | None:
         """Return the most specific superclass containing ``choice``.
 
         Args:
@@ -4358,6 +4407,9 @@ class AllColorStyles(
             type[LiteralEnum[str]] | None: Matching superclass, or ``None`` if not found.
         """
         for supercls in reversed(cls.__mro__):
-            if (issubclass(supercls, LiteralEnum) and supercls is not LiteralEnum
-                    and choice in supercls):
+            if (
+                issubclass(supercls, LiteralEnum)
+                and supercls is not LiteralEnum
+                and choice in supercls
+            ):
                 return supercls

@@ -25,6 +25,7 @@ class Void:
             async for _ in Void():  # For generator signature only; never run.
                 yield _
     """
+
     def __iter__(self):
         return iter(())
 

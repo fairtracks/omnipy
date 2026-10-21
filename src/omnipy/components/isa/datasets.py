@@ -11,6 +11,7 @@ class IsaJsonDataset(Dataset[IsaJsonModel]):
     Each record in the dataset is validated by :class:`IsaJsonModel`, allowing
     downstream ISA flows and tasks to operate on a consistent document shape.
     """
+
     ...
 
 
@@ -20,4 +21,5 @@ class FlattenedIsaJsonDataset(Dataset[FlattenedIsaJsonModel]):
     Records in this dataset follow :class:`FlattenedIsaJsonModel` and are
     intended for tabular-style processing after ISA structures are flattened.
     """
+
     ...

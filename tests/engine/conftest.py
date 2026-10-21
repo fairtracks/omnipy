@@ -1,4 +1,5 @@
 """Shared fixtures for engine tests."""
+
 from typing import Annotated, Callable, Type
 
 import pytest_cases as pc
@@ -12,20 +13,21 @@ from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
 from .helpers.classes import ComposedFlowCase, JobCase, JobRunnerStateChecker
 from .helpers.functions import apply_composed_flow_case, update_job_case_with_job
-from .helpers.mocks import (MockDagFlowTemplate,
-                            MockEngineConfig,
-                            MockFuncFlowTemplate,
-                            MockJobRunnerSubclass,
-                            MockLinearFlowTemplate,
-                            MockRunStateRegistry,
-                            MockTaskTemplate)
+from .helpers.mocks import (
+    MockDagFlowTemplate,
+    MockEngineConfig,
+    MockFuncFlowTemplate,
+    MockJobRunnerSubclass,
+    MockLinearFlowTemplate,
+    MockRunStateRegistry,
+    MockTaskTemplate,
+)
 
 # Prefect
 
 
 @pc.fixture(autouse=True, scope='session')
-def auto_prefect_test_fixture(prefect_test_fixture: Annotated[None, pc.fixture]) -> None:
-    ...
+def auto_prefect_test_fixture(prefect_test_fixture: Annotated[None, pc.fixture]) -> None: ...
 
 
 # Mock job templates
@@ -207,12 +209,14 @@ def dag_flow_mock_classes(
 @pc.fixture(scope='function')
 @pc.parametrize_with_cases('job_case', cases='.cases.tasks', has_tag='power')
 @pc.parametrize(
-    'job_mock_classes', [
+    'job_mock_classes',
+    [
         task_mock_classes,
         linear_flow_mock_classes,
         dag_flow_mock_classes,
     ],
-    ids=['', '', ''])
+    ids=['', '', ''],
+)
 @pc.parametrize('engine_decorator', [no_verbose_config_engine_decorator])
 @pc.parametrize('registry', [no_registry], ids=[''])
 def power_mock_jobs_mock_runner_cls_no_verbose_no_reg(
@@ -241,12 +245,14 @@ def power_mock_jobs_mock_runner_cls_no_verbose_no_reg(
 @pc.fixture(scope='function')
 @pc.parametrize_with_cases('job_case', cases='.cases.tasks')
 @pc.parametrize(
-    'job_mock_classes', [
+    'job_mock_classes',
+    [
         task_mock_classes,
         linear_flow_mock_classes,
         dag_flow_mock_classes,
     ],
-    ids=['', '', ''])
+    ids=['', '', ''],
+)
 @pc.parametrize('engine_decorator', [assert_runstate_engine_decorator])
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_func_types_mock_jobs_mock_runner_cls_assert_runstate_mock_reg(
@@ -278,12 +284,14 @@ def all_func_types_mock_jobs_mock_runner_cls_assert_runstate_mock_reg(
 @pc.fixture(scope='function')
 @pc.parametrize_with_cases('job_case', cases='.cases.tasks')
 @pc.parametrize(
-    'job_classes', [
+    'job_classes',
+    [
         task_mock_classes,
         linear_flow_mock_classes,
         dag_flow_mock_classes,
     ],
-    ids=['', '', ''])
+    ids=['', '', ''],
+)
 @pc.parametrize('engine', [all_engines], ids=[''])
 @pc.parametrize('engine_decorator', [assert_runstate_engine_decorator])
 @pc.parametrize('registry', [mock_registry], ids=[''])

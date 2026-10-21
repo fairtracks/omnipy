@@ -64,28 +64,31 @@ class JobRunnerStateChecker(IsJobRunnerEngine):
     def supports(self, job_type: JobType.Literals) -> bool:
         return self._engine.supports(job_type)
 
-    def apply_job_decorator(self,
-                            job_type: JobType.Literals,
-                            job: IsFuncArgJob,
-                            job_callback_accept_decorator: Callable) -> None:
+    def apply_job_decorator(
+        self, job_type: JobType.Literals, job: IsFuncArgJob, job_callback_accept_decorator: Callable
+    ) -> None:
         return self._engine.apply_job_decorator(job_type, job, job_callback_accept_decorator)
 
     def _init_task(self, task: IsTaskRunSpec) -> object:
         from .functions import assert_job_state
+
         assert_job_state(task._job, [RunState.INITIALIZED])  # type: ignore[attr-defined]
         return self._engine._init_task(task)  # noqa
 
     def _run_task(self, state: Any, task: IsTaskRunSpec, *args, **kwargs) -> object:
         from .functions import assert_job_state
+
         assert_job_state(task._job, [RunState.RUNNING])  # type: ignore[attr-defined]
         return self._engine._run_task(state, task, *args, **kwargs)  # noqa
 
     def _init_flow(self, flow: IsFlowRunSpec) -> object:
         from .functions import assert_job_state
+
         assert_job_state(flow._job, [RunState.INITIALIZED])  # type: ignore[attr-defined]
         return self._engine._init_flow(flow)  # noqa
 
     def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> object:
         from .functions import assert_job_state
+
         assert_job_state(flow._job, [RunState.RUNNING])  # type: ignore[attr-defined]
         return self._engine._run_flow(state, flow, *args, **kwargs)  # noqa

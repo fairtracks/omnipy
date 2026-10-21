@@ -21,6 +21,7 @@ class RegexMatch:
 
         >>> assert MyMapper('yea').to_data() == 'yes'
     """
+
     def __init__(self, text: str):
         self._text = text
 

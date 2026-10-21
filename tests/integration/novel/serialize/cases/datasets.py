@@ -16,14 +16,18 @@ from omnipy.data.model import Model
 def pandas_dataset() -> PandasDataset:
     """Provide pandas dataset."""
     _pandas_dataset = PandasDataset()
-    _pandas_dataset.from_data({
-        'pandas_person':
-            pandas.DataFrame((('John', 'Doe', 46), ('Jane', 'Doe', 42), ('Mr', 'Miyagi', 82)),
-                             columns=('firstname', 'lastname', 'age')),
-        'pandas_fruits':
-            pandas.DataFrame((('apple', 'sweet'), ('orange', 'sweet and sour'), ('lemon', 'sour')),
-                             columns=('fruit', 'taste'))
-    })
+    _pandas_dataset.from_data(
+        {
+            'pandas_person': pandas.DataFrame(
+                (('John', 'Doe', 46), ('Jane', 'Doe', 42), ('Mr', 'Miyagi', 82)),
+                columns=('firstname', 'lastname', 'age'),
+            ),
+            'pandas_fruits': pandas.DataFrame(
+                (('apple', 'sweet'), ('orange', 'sweet and sour'), ('lemon', 'sour')),
+                columns=('fruit', 'taste'),
+            ),
+        }
+    )
     return _pandas_dataset
 
 
@@ -34,12 +38,12 @@ def json_table_dataset() -> JsonDataset:
     _json_table_dataset['json_table_a'] = [
         dict(firstname='John', lastname='Doe', age=46),
         dict(firstname='Jane', lastname='Doe', age=42),
-        dict(firstname='Mr.', lastname='Miyagi', age=82)
+        dict(firstname='Mr.', lastname='Miyagi', age=82),
     ]
     _json_table_dataset['json_table_b'] = [
         dict(fruit='apple', taste='sweet'),
         dict(fruit='orange', taste='sweet and sour'),
-        dict(fruit='lemon', taste='sour')
+        dict(fruit='lemon', taste='sour'),
     ]
     return _json_table_dataset
 
@@ -51,12 +55,12 @@ def json_nested_table_dataset() -> JsonDataset:
     _json_nested_table_dataset['json_nested_table_a'] = [
         dict(name=dict(firstname='John', lastname='Doe'), age=46),
         dict(name=dict(firstname='Jane', lastname='Doe'), age=42),
-        dict(name=dict(firstname='Mr.', lastname='Miyagi'), age=82)
+        dict(name=dict(firstname='Mr.', lastname='Miyagi'), age=82),
     ]
     _json_nested_table_dataset['json_nested_table_b'] = [
         dict(name=dict(fruit='apple'), taste='sweet'),
         dict(name=dict(fruit='orange'), taste='sweet and sour'),
-        dict(name=dict(fruit='lemon'), taste='sour')
+        dict(name=dict(fruit='lemon'), taste='sour'),
     ]
     return _json_nested_table_dataset
 

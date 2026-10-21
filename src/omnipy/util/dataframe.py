@@ -58,11 +58,9 @@ def select_from_labels(df, labels, axis, level, invert=False):
     return formatted_idx
 
 
-def extract_subtable_by_labels(df,
-                               row_labels=None,
-                               col_labels=None,
-                               row_level=None,
-                               col_level=None):
+def extract_subtable_by_labels(
+    df, row_labels=None, col_labels=None, row_level=None, col_level=None
+):
     """Extract a subtable by row and column labels from selected index levels.
 
     Args:

@@ -6,18 +6,22 @@ from typing import Any, Protocol, runtime_checkable, TYPE_CHECKING
 
 from omnipy.shared.enums.colorstyles import AllColorStyles
 from omnipy.shared.enums.data import BackoffStrategy
-from omnipy.shared.enums.display import (DisplayColorSystem,
-                                         DisplayDimensionsUpdateMode,
-                                         HorizontalOverflowMode,
-                                         Justify,
-                                         MaxTitleHeight,
-                                         PanelDesign,
-                                         PrettyPrinterLib,
-                                         VerticalOverflowMode)
-from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
-                                     ConfigPersistOutputsOptions,
-                                     ConfigRestoreOutputsOptions,
-                                     EngineChoice)
+from omnipy.shared.enums.display import (
+    DisplayColorSystem,
+    DisplayDimensionsUpdateMode,
+    HorizontalOverflowMode,
+    Justify,
+    MaxTitleHeight,
+    PanelDesign,
+    PrettyPrinterLib,
+    VerticalOverflowMode,
+)
+from omnipy.shared.enums.job import (
+    ConfigOutputStorageProtocolOptions,
+    ConfigPersistOutputsOptions,
+    ConfigRestoreOutputsOptions,
+    EngineChoice,
+)
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, TerminalOutputUserInterfaceType
 from omnipy.shared.protocols.util import IsDataPublisher
 from omnipy.shared.typedefs import LocaleType
@@ -35,8 +39,8 @@ class IsConfigBase(IsDataPublisher, Protocol):
     Config objects publish updates, can be viewed as models, and provide a
     renderer-friendly string representation.
     """
-    def as_model(self) -> 'IsModel[Any]':
-        ...
+
+    def as_model(self) -> 'IsModel[Any]': ...
 
     def default_repr_to_terminal_str(
         self,
@@ -52,8 +56,7 @@ class IsConfigBase(IsDataPublisher, Protocol):
         """
         ...
 
-    def __str__(self) -> str:
-        ...
+    def __str__(self) -> str: ...
 
 
 # data

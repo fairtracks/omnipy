@@ -1,19 +1,23 @@
 from omnipy.compute.task import TaskTemplate
 
-from .models import (FinalSubmissionModel,
-                     FtpUrlModel,
-                     SampleAndMetadataToBioSampleVaultSubmissionMapper,
-                     SubmissionFileSchemaModel,
-                     SubmissionFilesDataset,
-                     SubmissionMetadataModel,
-                     SubmissionModel,
-                     SubmissionSampleModel,
-                     SubmissionSamplesDataset,
-                     SubmissionToSequenceDepotRequestMapper)
-from .services import (register_sample_with_biosamplevault,
-                       request_sequence_depot_submission_id,
-                       submit_final_submission_to_sequence_depot,
-                       transfer_file)
+from .models import (
+    FinalSubmissionModel,
+    FtpUrlModel,
+    SampleAndMetadataToBioSampleVaultSubmissionMapper,
+    SubmissionFileSchemaModel,
+    SubmissionFilesDataset,
+    SubmissionMetadataModel,
+    SubmissionModel,
+    SubmissionSampleModel,
+    SubmissionSamplesDataset,
+    SubmissionToSequenceDepotRequestMapper,
+)
+from .services import (
+    register_sample_with_biosamplevault,
+    request_sequence_depot_submission_id,
+    submit_final_submission_to_sequence_depot,
+    transfer_file,
+)
 
 # Helper task templates
 
@@ -44,7 +48,8 @@ def collect_submission_model(
 @TaskTemplate()
 async def allocate_sequence_depot_submission_id(submission: SubmissionModel) -> SubmissionModel:
     request_return = await request_sequence_depot_submission_id(
-        SubmissionToSequenceDepotRequestMapper(submission),)
+        SubmissionToSequenceDepotRequestMapper(submission),
+    )
     submission.metadata.sequence_depot_submission_id = request_return.sequence_depot_submission_id
 
     return submission
@@ -80,9 +85,11 @@ async def transfer_all_files(
 ) -> SubmissionFileSchemaModel:
     file = dataset
     file.staging_storage_uri = _create_staging_url(file, metadata)
-    status, error = await transfer_file(username=metadata.broker_id,
-                                        source_uri=file.source_storage_uri,
-                                        target_uri=file.staging_storage_uri)
+    status, error = await transfer_file(
+        username=metadata.broker_id,
+        source_uri=file.source_storage_uri,
+        target_uri=file.staging_storage_uri,
+    )
     file.transfer_status = status
     file.error = error
 

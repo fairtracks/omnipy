@@ -11,11 +11,13 @@ from .models import JsonModel
 
 class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
     """Serialize JSON datasets to and from gzipped tar archives."""
+
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         """Return whether a dataset can be serialized as JSON files."""
 
         from ..isa.datasets import IsaJsonDataset
+
         return isinstance(dataset, JsonBaseDataset) or isinstance(dataset, IsaJsonDataset)
 
     @classmethod
@@ -39,16 +41,16 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{SERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Serialize a dataset into a gzipped tar archive."""
+
         def json_encode_func(json_data: JsonModel) -> bytes:
             return json_data.to_json().encode('utf8')
 
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=json_encode_func)
 
     @classmethod
-    def deserialize(cls,
-                    serialized: bytes,
-                    any_file_suffix=False,
-                    ignore_dirs=False) -> JsonDataset:
+    def deserialize(
+        cls, serialized: bytes, any_file_suffix=False, ignore_dirs=False
+    ) -> JsonDataset:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Deserialize a gzipped tar archive back into a dataset."""

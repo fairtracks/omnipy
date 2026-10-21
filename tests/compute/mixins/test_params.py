@@ -197,7 +197,8 @@ def test_property_param_key_map_validation_task() -> None:
     """Test parameter key maps reject duplicate target names."""
 
     power_m1_template = TaskTemplate(param_key_map=[('number', 'n'), ('exponent', 'e')])(
-        power_m1_func)
+        power_m1_func
+    )
 
     for power_m1_obj in power_m1_template, power_m1_template.apply():
         assert power_m1_obj.param_key_map == {
@@ -234,8 +235,10 @@ def test_property_param_key_map_kwargs_task() -> None:
 
     kwargs_task = kwargs_tmpl.apply()
     assert kwargs_task(num=2, bool=False) == "{'number': 2, 'boolean': False}"
-    assert kwargs_task(num=2, bool=False, text='message') == \
-           "{'number': 2, 'boolean': False, 'text': 'message'}"
+    assert (
+        kwargs_task(num=2, bool=False, text='message')
+        == "{'number': 2, 'boolean': False, 'text': 'message'}"
+    )
 
 
 def test_error_property_param_key_map_var_positional_param_task() -> None:

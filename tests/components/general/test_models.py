@@ -5,13 +5,15 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from omnipy.components.general.models import (Chain2,
-                                              Chain3,
-                                              Chain4,
-                                              Chain5,
-                                              Chain6,
-                                              ConverterModel,
-                                              NotIterableExceptStrOrBytesModel)
+from omnipy.components.general.models import (
+    Chain2,
+    Chain3,
+    Chain4,
+    Chain5,
+    Chain6,
+    ConverterModel,
+    NotIterableExceptStrOrBytesModel,
+)
 from omnipy.data.model import Model
 from omnipy.util.pydantic import ValidationError
 
@@ -50,11 +52,12 @@ def test_chain2_model():
 
     MyListModel(MyList(['a', 'b', 'c']))
 
-    class SplitCharsToMyListModel(Chain2[
+    class SplitCharsToMyListModel(
+        Chain2[
             SplitCharsModel,
             MyListModel,
-    ]):
-        ...
+        ]
+    ): ...
 
     model = SplitCharsToMyListModel('abc')
     assert model.content == MyListModel(MyList('a', 'b', 'c'))
@@ -63,11 +66,13 @@ def test_chain2_model():
 
 def test_concat_chain2_model_with_to_data_conversion():
     """Concatenate Chain2 models while preserving data conversion."""
-    class SplitCharsToMyListModel(Chain2[
+
+    class SplitCharsToMyListModel(
+        Chain2[
             SplitCharsModel,
             MyListModel,
-    ]):
-        ...
+        ]
+    ): ...
 
     stream = SplitCharsModel('abc') + SplitCharsToMyListModel('def')
     assert stream.to_data() == ['a', 'b', 'c', 'd', 'e', 'f']
@@ -80,18 +85,15 @@ def test_chain2_union_models():
     """Document union handling for Chain2 models."""
     with pytest.raises(IndexError):
 
-        class FailingStrToBoolOrFloatModel(Chain2[Model[str], Model[bool] | Model[float]]):
-            ...
+        class FailingStrToBoolOrFloatModel(Chain2[Model[str], Model[bool] | Model[float]]): ...
 
         FailingStrToBoolOrFloatModel(3.4)
 
     # Could of course have used Model[bool | float] directly,
     # but this is to document a workaround for Chain2 with Unions
-    class BoolOrFloatModel(Model[Model[bool] | Model[float]]):
-        ...
+    class BoolOrFloatModel(Model[Model[bool] | Model[float]]): ...
 
-    class StrToBoolOrFloatModel(Chain2[Model[str], BoolOrFloatModel]):
-        ...
+    class StrToBoolOrFloatModel(Chain2[Model[str], BoolOrFloatModel]): ...
 
     float_data_model = StrToBoolOrFloatModel('3.4')
     assert float_data_model.to_data() == 3.4
@@ -116,12 +118,14 @@ def test_chain2_union_models():
 
 def test_chain3_model():
     """Compose three model conversions in sequence."""
-    class RotateOneAndSplitCharsToMyListModel(Chain3[
+
+    class RotateOneAndSplitCharsToMyListModel(
+        Chain3[
             RotateOneCharModel,
             SplitCharsModel,
             MyListModel,
-    ]):
-        ...
+        ]
+    ): ...
 
     model = RotateOneAndSplitCharsToMyListModel('abcdefg')
     assert model.content == MyListModel(MyList('b', 'c', 'd', 'e', 'f', 'g', 'a'))
@@ -130,13 +134,15 @@ def test_chain3_model():
 
 def test_chain4_model():
     """Compose four model conversions in sequence."""
-    class RotateTwoAndSplitCharsToMyListModel(Chain4[
+
+    class RotateTwoAndSplitCharsToMyListModel(
+        Chain4[
             RotateOneCharModel,
             RotateOneCharModel,
             SplitCharsModel,
             MyListModel,
-    ]):
-        ...
+        ]
+    ): ...
 
     model = RotateTwoAndSplitCharsToMyListModel('abcdefg')
     assert model.content == MyListModel(MyList('c', 'd', 'e', 'f', 'g', 'a', 'b'))
@@ -145,14 +151,16 @@ def test_chain4_model():
 
 def test_chain5_model():
     """Compose five model conversions in sequence."""
-    class RotateThreeAndSplitCharsToMyListModel(Chain5[
+
+    class RotateThreeAndSplitCharsToMyListModel(
+        Chain5[
             RotateOneCharModel,
             RotateOneCharModel,
             RotateOneCharModel,
             SplitCharsModel,
             MyListModel,
-    ]):
-        ...
+        ]
+    ): ...
 
     model = RotateThreeAndSplitCharsToMyListModel('abcdefg')
     assert model.content == MyListModel(MyList('d', 'e', 'f', 'g', 'a', 'b', 'c'))
@@ -161,15 +169,17 @@ def test_chain5_model():
 
 def test_chain6_model():
     """Compose six model conversions in sequence."""
-    class RotateThreeAndSplitCharsToMyListModel(Chain6[
+
+    class RotateThreeAndSplitCharsToMyListModel(
+        Chain6[
             RotateOneCharModel,
             RotateOneCharModel,
             RotateOneCharModel,
             RotateOneCharModel,
             SplitCharsModel,
             MyListModel,
-    ]):
-        ...
+        ]
+    ): ...
 
     model = RotateThreeAndSplitCharsToMyListModel('abcdefg')
     assert model.content == MyListModel(MyList('e', 'f', 'g', 'a', 'b', 'c', 'd'))
@@ -214,6 +224,7 @@ def _assert_convert_all_items(
 
 def test_converter_model_parses_plain_types():
     """Parse plain values into a fundamentally different plain target type."""
+
     class SlashDateToDateModel(ConverterModel[str, date]):
         @classmethod
         def _convert(cls, data: str) -> date:
@@ -231,18 +242,24 @@ def test_converter_model_parses_plain_types():
 
     assert SlashDateToDateModel.convert('2026/08/03') == date(2026, 8, 3)
 
-    assert tuple(SlashDateToDateModel.convert_all([
-        '2026/01/15',
-        '2026/12/24',
-    ])) == (
+    assert tuple(
+        SlashDateToDateModel.convert_all(
+            [
+                '2026/01/15',
+                '2026/12/24',
+            ]
+        )
+    ) == (
         date(2026, 1, 15),
         date(2026, 12, 24),
     )
 
-    converted_items = SlashDateToDateModel.convert_all_items({
-        'river': '2026/04/01',
-        'lake': '2026/04/02',
-    })
+    converted_items = SlashDateToDateModel.convert_all_items(
+        {
+            'river': '2026/04/01',
+            'lake': '2026/04/02',
+        }
+    )
     assert dict(converted_items) == {
         'river': date(2026, 4, 1),
         'lake': date(2026, 4, 2),
@@ -254,18 +271,14 @@ def test_converter_model_parses_model_to_model():
 
     if TYPE_CHECKING:
         # PlainModel to avoid Model[float] subclasses to be typed as Model_float
-        class FahrenheitModel(PlainModel[float]):
-            ...
+        class FahrenheitModel(PlainModel[float]): ...
 
-        class CelsiusModel(PlainModel[float]):
-            ...
+        class CelsiusModel(PlainModel[float]): ...
     else:
 
-        class FahrenheitModel(Model[float]):
-            ...
+        class FahrenheitModel(Model[float]): ...
 
-        class CelsiusModel(Model[float]):
-            ...
+        class CelsiusModel(Model[float]): ...
 
     class FahrenheitToCelsiusModel(ConverterModel[FahrenheitModel, CelsiusModel]):
         @classmethod
@@ -291,14 +304,10 @@ def test_converter_model_parses_model_to_model():
 
     _assert_convert_all_items(
         FahrenheitToCelsiusModel,
-        {
-            'yesterday': FahrenheitModel(77.0), 'today': FahrenheitModel(68.0)
-        },
+        {'yesterday': FahrenheitModel(77.0), 'today': FahrenheitModel(68.0)},
         CelsiusModel,
         float,
-        {
-            'yesterday': 25.0, 'today': 20.0
-        },
+        {'yesterday': 25.0, 'today': 20.0},
     )
 
     already_normalized = FahrenheitToCelsiusModel(CelsiusModel(4.5))
@@ -310,29 +319,25 @@ def test_converter_model_parses_two_models_to_one_model():
 
     if TYPE_CHECKING:
         # PlainModel to avoid Model[float] subclasses to be typed as Model_float
-        class CelsiusModel(PlainModel[float]):
-            ...
+        class CelsiusModel(PlainModel[float]): ...
 
-        class FahrenheitModel(PlainModel[float]):
-            ...
+        class FahrenheitModel(PlainModel[float]): ...
 
-        class KelvinModel(PlainModel[float]):
-            ...
+        class KelvinModel(PlainModel[float]): ...
     else:
 
-        class CelsiusModel(Model[float]):
-            ...
+        class CelsiusModel(Model[float]): ...
 
-        class FahrenheitModel(Model[float]):
-            ...
+        class FahrenheitModel(Model[float]): ...
 
-        class KelvinModel(Model[float]):
-            ...
+        class KelvinModel(Model[float]): ...
 
-    class TemperatureNormalizer(ConverterModel[
+    class TemperatureNormalizer(
+        ConverterModel[
             CelsiusModel | FahrenheitModel,
             KelvinModel,
-    ]):
+        ]
+    ):
         @classmethod
         def _convert(
             cls,
@@ -363,14 +368,10 @@ def test_converter_model_parses_two_models_to_one_model():
 
     _assert_convert_all_items(
         TemperatureNormalizer,
-        {
-            'celsius': CelsiusModel(100.0), 'fahrenheit': FahrenheitModel(212.0)
-        },
+        {'celsius': CelsiusModel(100.0), 'fahrenheit': FahrenheitModel(212.0)},
         KelvinModel,
         float,
-        {
-            'celsius': 373.15, 'fahrenheit': 373.15
-        },
+        {'celsius': 373.15, 'fahrenheit': 373.15},
     )
 
     already_normalized = TemperatureNormalizer(KelvinModel(0))

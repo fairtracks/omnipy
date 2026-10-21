@@ -9,13 +9,15 @@ from typing import List, Optional, Union
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
 
-from . import (comment_schema,
-               data_schema,
-               material_schema,
-               process_parameter_value_schema,
-               protocol_schema,
-               sample_schema,
-               source_schema)
+from . import (
+    comment_schema,
+    data_schema,
+    material_schema,
+    process_parameter_value_schema,
+    protocol_schema,
+    sample_schema,
+    source_schema,
+)
 from .validators import date_to_iso_format
 
 
@@ -41,6 +43,7 @@ class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
         previousProcess: Upstream process in a linked process chain.
         nextProcess: Downstream process in a linked process chain.
     """
+
     class Config:
         """Validation settings for ISA process-step schema parsing.
 
@@ -57,23 +60,32 @@ class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
     field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     name: Optional[str] = None
     executesProtocol: Optional[protocol_schema.IsaProtocolModel] = None
-    parameterValues: Optional[List[
-        process_parameter_value_schema.IsaProcessParameterValueModel]] = None
+    parameterValues: Optional[
+        List[process_parameter_value_schema.IsaProcessParameterValueModel]
+    ] = None
     performer: Optional[str] = None
     date: Optional[Union[datetime.datetime, datetime.date, pyd.constr(max_length=0)]] = None
     previousProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
     nextProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
-    inputs: Optional[List[Union[
-        source_schema.IsaSourceModel,
-        sample_schema.IsaSampleModel,
-        data_schema.IsaDataModel,
-        material_schema.IsaMaterialModel,
-    ]]] = None
-    outputs: Optional[List[Union[
-        sample_schema.IsaSampleModel,
-        data_schema.IsaDataModel,
-        material_schema.IsaMaterialModel,
-    ]]] = None
+    inputs: Optional[
+        List[
+            Union[
+                source_schema.IsaSourceModel,
+                sample_schema.IsaSampleModel,
+                data_schema.IsaDataModel,
+                material_schema.IsaMaterialModel,
+            ]
+        ]
+    ] = None
+    outputs: Optional[
+        List[
+            Union[
+                sample_schema.IsaSampleModel,
+                data_schema.IsaDataModel,
+                material_schema.IsaMaterialModel,
+            ]
+        ]
+    ] = None
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 
     _date_to_iso_format = pyd.validator('date', allow_reuse=True)(date_to_iso_format)

@@ -15,8 +15,7 @@ import re
 
 # Constants
 #: Marker inserted above expanded docstrings to preserve the macro source text.
-ORIGINAL_DOCSTRING_PREFIX =\
-    '%% Original docstring (managed by expand_docstr_macros.py) %%'
+ORIGINAL_DOCSTRING_PREFIX = '%% Original docstring (managed by expand_docstr_macros.py) %%'
 #: Environment-variable prefix used to define runtime docstring macros.
 ENV_MACRO_PREFIX = 'OMNIPY_MACRO_'
 
@@ -38,13 +37,14 @@ def get_macros_from_env() -> dict[str, str]:
         Dict mapping macro names (with {{...}} delimiters) to their expansion values
     """
     import os
+
     macros = {}
 
     for key, value in os.environ.items():
         if key.startswith(ENV_MACRO_PREFIX):
             # Extract macro name from env var name
             # OMNIPY_MACRO_COMMON_PARAM -> COMMON_PARAM
-            macro_name = key[len(ENV_MACRO_PREFIX):]
+            macro_name = key[len(ENV_MACRO_PREFIX) :]
             macros[macro_name] = value
 
     return macros
@@ -75,7 +75,7 @@ def expand_macros(
                 break
             indent = default_indent if macro_index == 0 else ''
             if macro_index > 0:
-                reversed_result_in_front_of_hit = result[macro_index - 1::-1]
+                reversed_result_in_front_of_hit = result[macro_index - 1 :: -1]
                 reverse_indent_match = re.match(r'^([ \t]*)', reversed_result_in_front_of_hit)
                 indent = reverse_indent_match.group(1)[::-1] if reverse_indent_match else ''
 
@@ -90,8 +90,10 @@ def expand_macros(
                         replace_value += indent + line
 
             result = (
-                result[:macro_index] + replace_value
-                + result[macro_index + len(f'{{{{{macro_name}}}}}'):])
+                result[:macro_index]
+                + replace_value
+                + result[macro_index + len(f'{{{{{macro_name}}}}}') :]
+            )
 
     return result
 
@@ -173,7 +175,7 @@ def _create_docblock_with_expansion(
     comment_block_lines = [f'{indent}# {ORIGINAL_DOCSTRING_PREFIX}']
     for line in original_docstring.split('\n'):
         if line.strip():
-            line_without_indent = line[len(indent):] if line.startswith(indent) else line
+            line_without_indent = line[len(indent) :] if line.startswith(indent) else line
             comment_block_lines.append(f'{indent}# {line_without_indent}')
         else:  # Blank line
             comment_block_lines.append(f'{indent}#')  # No whitespace after hash char
@@ -188,12 +190,13 @@ def _create_docblock_with_expansion(
     if verbose:
         print('  Expanding docstring with macros')
 
-    modified = (new_docblock != matched_docblock)
+    modified = new_docblock != matched_docblock
     return new_docblock, modified
 
 
 def process_content(  # noqa: C901
-        content: str, macros: dict[str, str], verbose: bool = False) -> tuple[str, bool]:
+    content: str, macros: dict[str, str], verbose: bool = False
+) -> tuple[str, bool]:
     """
     Process Python source code, expanding macros in docstrings.
 
@@ -248,7 +251,8 @@ def process_content(  # noqa: C901
         if comment_block is not None:
             # Extract the original (unexpanded) docstring from comments
             original_docstring = _extract_original_docstring_from_comment_block(
-                comment_block, verbose)
+                comment_block, verbose
+            )
         else:
             # First time - the docstring text is the original
             original_docstring = docstring_content
@@ -269,6 +273,7 @@ def process_content(  # noqa: C901
 
     # Apply the replacement
     new_content = re.sub(
-        pattern, _replace_docblock, content, flags=re.VERBOSE | re.DOTALL | re.MULTILINE)
+        pattern, _replace_docblock, content, flags=re.VERBOSE | re.DOTALL | re.MULTILINE
+    )
 
     return new_content, modified

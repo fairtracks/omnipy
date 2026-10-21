@@ -11,8 +11,8 @@ from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
+from omnipy.util.pydantic import ValidationError
 
 _GeneralModelT = TypeVar('_GeneralModelT', bound='Model')
 
@@ -67,9 +67,9 @@ class MultiModelDataset(Dataset[_GeneralModelT], Generic[_GeneralModelT]):
         else:
             return self.get_type()
 
-    def from_data(self,
-                  data: Mapping[str, Any] | Iterable[tuple[str, Any]],
-                  update: bool = True) -> None:
+    def from_data(
+        self, data: Mapping[str, Any] | Iterable[tuple[str, Any]], update: bool = True
+    ) -> None:
         """Populate the dataset and then enforce any per-key custom models.
 
         Args:

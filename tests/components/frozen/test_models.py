@@ -6,11 +6,13 @@ from types import MappingProxyType
 import pytest
 import pytest_cases as pc
 
-from omnipy.components._frozen.models import (_FrozenAnyUnionM,
-                                              _FrozenScalarM,
-                                              NestedFrozenDictsOrTuplesModel,
-                                              NestedFrozenOnlyDictsModel,
-                                              NestedFrozenOnlyTuplesModel)
+from omnipy.components._frozen.models import (
+    _FrozenAnyUnionM,
+    _FrozenScalarM,
+    NestedFrozenDictsOrTuplesModel,
+    NestedFrozenOnlyDictsModel,
+    NestedFrozenOnlyTuplesModel,
+)
 from omnipy.components._frozen.typedefs import FrozenDict
 from omnipy.data.model import Model
 from omnipy.util.pydantic import ValidationError
@@ -20,8 +22,8 @@ from ..helpers.classes import CaseInfo
 
 def test_frozen_scalar() -> None:
     """Validate frozen scalar models for integers."""
-    class FrozenScalarModel(Model[_FrozenScalarM[int]]):
-        ...
+
+    class FrozenScalarModel(Model[_FrozenScalarM[int]]): ...
 
     assert FrozenScalarModel().content == _FrozenScalarM[int](0)
 
@@ -36,8 +38,8 @@ def test_frozen_scalar() -> None:
 
 def test_frozen_scalar_of_none() -> None:
     """Validate frozen scalar models for None values."""
-    class FrozenScalarModel(Model[_FrozenScalarM[None]]):
-        ...
+
+    class FrozenScalarModel(Model[_FrozenScalarM[None]]): ...
 
     assert FrozenScalarModel().content == _FrozenScalarM[None](None)
     assert FrozenScalarModel(None).content == _FrozenScalarM[None](None)
@@ -51,11 +53,10 @@ def test_frozen_scalar_of_none() -> None:
 
 def test_frozen_dict_of_none() -> None:
     """Validate frozen dict models that map to None."""
-    class NoneModel(Model[None]):
-        ...
 
-    class FrozenDictsOfInt2NoneModel(Model[FrozenDict[int, NoneModel]]):
-        ...
+    class NoneModel(Model[None]): ...
+
+    class FrozenDictsOfInt2NoneModel(Model[FrozenDict[int, NoneModel]]): ...
 
     assert FrozenDictsOfInt2NoneModel().content == FrozenDict()
 
@@ -66,8 +67,9 @@ def test_frozen_dict_of_none() -> None:
         FrozenDictsOfInt2NoneModel([None])
 
     assert FrozenDictsOfInt2NoneModel({1: None}).content == FrozenDict({1: NoneModel(None)})
-    assert FrozenDictsOfInt2NoneModel(FrozenDict({1: None
-                                                  })).content == FrozenDict({1: NoneModel(None)})
+    assert FrozenDictsOfInt2NoneModel(FrozenDict({1: None})).content == FrozenDict(
+        {1: NoneModel(None)}
+    )
 
     with pytest.raises(ValidationError):
         FrozenDictsOfInt2NoneModel({'hello': None})
@@ -75,9 +77,10 @@ def test_frozen_dict_of_none() -> None:
 
 def test_nested_frozen_only_tuples() -> None:
     """Validate nested frozen tuple parsing for integers."""
+
     class NestedFrozenTuplesOfIntsModel(
-            Model[NestedFrozenOnlyTuplesModel[int]],):
-        ...
+        Model[NestedFrozenOnlyTuplesModel[int]],
+    ): ...
 
     assert NestedFrozenTuplesOfIntsModel().to_data() == ()
 
@@ -104,9 +107,10 @@ def test_nested_frozen_only_tuples() -> None:
 
 def test_nested_frozen_only_tuples_of_none() -> None:
     """Validate nested frozen tuple parsing for None values."""
+
     class NestedFrozenOnlyTuplesOfNoneModel(
-            Model[NestedFrozenOnlyTuplesModel[None]],):
-        ...
+        Model[NestedFrozenOnlyTuplesModel[None]],
+    ): ...
 
     assert NestedFrozenOnlyTuplesOfNoneModel().to_data() == ()
 
@@ -125,15 +129,18 @@ def test_nested_frozen_only_tuples_of_none() -> None:
 
     assert NestedFrozenOnlyTuplesOfNoneModel([[None, None]]).to_data() == ((None, None),)
 
-    assert NestedFrozenOnlyTuplesOfNoneModel(
-        (None, [None, (None, None)])).to_data() == (None, (None, (None, None)))
+    assert NestedFrozenOnlyTuplesOfNoneModel((None, [None, (None, None)])).to_data() == (
+        None,
+        (None, (None, None)),
+    )
 
 
 def test_nested_frozen_only_dicts() -> None:
     """Validate nested frozen dict parsing for typed keys and values."""
+
     class NestedFrozenOnlyDictsOfInt2StrModel(
-            Model[NestedFrozenOnlyDictsModel[int, str]],):
-        ...
+        Model[NestedFrozenOnlyDictsModel[int, str]],
+    ): ...
 
     assert NestedFrozenOnlyDictsOfInt2StrModel().to_data() == {}
 
@@ -146,9 +153,9 @@ def test_nested_frozen_only_dicts() -> None:
     with pytest.raises(ValidationError):
         NestedFrozenOnlyDictsOfInt2StrModel({None: 1})
 
-    assert NestedFrozenOnlyDictsOfInt2StrModel({
-        1: 'hello'
-    }).to_data() == MappingProxyType({1: 'hello'})
+    assert NestedFrozenOnlyDictsOfInt2StrModel({1: 'hello'}).to_data() == MappingProxyType(
+        {1: 'hello'}
+    )
 
     with pytest.raises(ValidationError):
         NestedFrozenOnlyDictsOfInt2StrModel({1: None})
@@ -159,20 +166,17 @@ def test_nested_frozen_only_dicts() -> None:
     with pytest.raises(ValidationError):
         NestedFrozenOnlyDictsOfInt2StrModel({1: [1, None]})
 
-    assert NestedFrozenOnlyDictsOfInt2StrModel({
-        '1': {
-            '2': 3
-        }
-    }).to_data() == MappingProxyType({1: {
-        2: '3'
-    }})
+    assert NestedFrozenOnlyDictsOfInt2StrModel({'1': {'2': 3}}).to_data() == MappingProxyType(
+        {1: {2: '3'}}
+    )
 
 
 def test_nested_frozen_only_dicts_of_none() -> None:
     """Validate nested frozen dict parsing with None values."""
+
     class NestedFrozenOnlyDictsOfInt2NoneModel(
-            Model[NestedFrozenOnlyDictsModel[int, None]],):
-        ...
+        Model[NestedFrozenOnlyDictsModel[int, None]],
+    ): ...
 
     assert NestedFrozenOnlyDictsOfInt2NoneModel().to_data() == {}
 
@@ -188,9 +192,9 @@ def test_nested_frozen_only_dicts_of_none() -> None:
     with pytest.raises(ValidationError):
         NestedFrozenOnlyDictsOfInt2NoneModel({'hello': None})
 
-    assert NestedFrozenOnlyDictsOfInt2NoneModel({
-        '4': None
-    }).to_data() == MappingProxyType({4: None})
+    assert NestedFrozenOnlyDictsOfInt2NoneModel({'4': None}).to_data() == MappingProxyType(
+        {4: None}
+    )
 
     with pytest.raises(ValidationError):
         NestedFrozenOnlyDictsOfInt2NoneModel([(1, 'str', 5)])
@@ -198,20 +202,17 @@ def test_nested_frozen_only_dicts_of_none() -> None:
     with pytest.raises(ValidationError):
         NestedFrozenOnlyDictsOfInt2NoneModel({1: [1, None]})
 
-    assert NestedFrozenOnlyDictsOfInt2NoneModel({
-        '1': {
-            '2': None
-        }
-    }).to_data() == MappingProxyType({1: {
-        2: None
-    }})
+    assert NestedFrozenOnlyDictsOfInt2NoneModel({'1': {'2': None}}).to_data() == MappingProxyType(
+        {1: {2: None}}
+    )
 
 
 def test_nested_frozen_dicts_or_tuples() -> None:
     """Validate mixed nested frozen dict-or-tuple parsing."""
+
     class NestedFrozenDictsOfInt2IntOrTuplesOfIntsModel(
-            Model[NestedFrozenDictsOrTuplesModel[int, int]],):
-        ...
+        Model[NestedFrozenDictsOrTuplesModel[int, int]],
+    ): ...
 
     assert NestedFrozenDictsOfInt2IntOrTuplesOfIntsModel().to_data() == 0
 
@@ -236,9 +237,9 @@ def test_nested_frozen_dicts_or_tuples() -> None:
     with pytest.raises(ValidationError):
         NestedFrozenDictsOfInt2IntOrTuplesOfIntsModel({1: [1, None]})
 
-    assert NestedFrozenDictsOfInt2IntOrTuplesOfIntsModel({
-        '1': [2, '3']
-    }).to_data() == MappingProxyType({1: (2, 3)})
+    assert NestedFrozenDictsOfInt2IntOrTuplesOfIntsModel(
+        {'1': [2, '3']}
+    ).to_data() == MappingProxyType({1: (2, 3)})
 
 
 def test_nested_frozen_dicts_or_tuples_of_none() -> None:
@@ -246,8 +247,8 @@ def test_nested_frozen_dicts_or_tuples_of_none() -> None:
     _FrozenAnyUnionM[int, None](None)
 
     class NestedFrozenDictsOfInt2NoneOrTuplesOfNoneModel(
-            Model[NestedFrozenDictsOrTuplesModel[int, None]],):
-        ...
+        Model[NestedFrozenDictsOrTuplesModel[int, None]],
+    ): ...
 
     assert NestedFrozenDictsOfInt2NoneOrTuplesOfNoneModel().to_data() is None
 
@@ -268,9 +269,7 @@ def test_nested_frozen_dicts_or_tuples_of_none() -> None:
     with pytest.raises(ValidationError):
         NestedFrozenDictsOfInt2NoneOrTuplesOfNoneModel({1: [1, None]})
 
-    assert NestedFrozenDictsOfInt2NoneOrTuplesOfNoneModel({
-        '1': [None, None]
-    }).to_data() == {
+    assert NestedFrozenDictsOfInt2NoneOrTuplesOfNoneModel({'1': [None, None]}).to_data() == {
         1: (None, None)
     }
 

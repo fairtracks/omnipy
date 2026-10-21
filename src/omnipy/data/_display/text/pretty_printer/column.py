@@ -16,6 +16,7 @@ from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
     """Format table-column content as newline-separated scalar values."""
+
     @override
     @classmethod
     def is_suitable_content(
@@ -37,8 +38,9 @@ class ColumnPrettyPrinter(PrettyPrinter[list[JsonScalar]]):
 
     @override
     @classmethod
-    def _get_content_for_draft_panel(cls, draft_panel: DraftPanel[object,
-                                                                  AnyFrame]) -> list[JsonScalar]:
+    def _get_content_for_draft_panel(
+        cls, draft_panel: DraftPanel[object, AnyFrame]
+    ) -> list[JsonScalar]:
         if not isinstance(draft_panel.content, ColumnModel):
             column_model = JsonScalarColumnModel(draft_panel.content)
         else:

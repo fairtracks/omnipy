@@ -4,9 +4,11 @@ from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.draft.base import DraftPanel, OutputConfig
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.hub.ui import detect_ui_type
-from omnipy.shared.enums.colorstyles import (DarkHighContrastColorStyles,
-                                             DarkLowContrastColorStyles,
-                                             RecommendedColorStyles)
+from omnipy.shared.enums.colorstyles import (
+    DarkHighContrastColorStyles,
+    DarkLowContrastColorStyles,
+    RecommendedColorStyles,
+)
 from omnipy.shared.enums.display import DisplayColorSystem, PrettyPrinterLib
 
 print(detect_ui_type())
@@ -116,7 +118,8 @@ config = OutputConfig(
     style=RecommendedColorStyles.OMNIPY_SELENIZED_WHITE,
     bg=True,
     syntax='python',
-    debug=False)
+    debug=False,
+)
 config1 = OutputConfig(
     system=DisplayColorSystem.ANSI_RGB,
     style=DarkHighContrastColorStyles.BLACK_METAL_KHOLD_T16,
@@ -131,7 +134,8 @@ config2 = OutputConfig(
     style=DarkHighContrastColorStyles.STELLA_T16,
     bg=True,
     syntax='python',
-    debug=False)
+    debug=False,
+)
 config3 = OutputConfig(
     system=DisplayColorSystem.ANSI_RGB,
     style=RecommendedColorStyles.OMNIPY_SELENIZED_BLACK,
@@ -139,7 +143,8 @@ config3 = OutputConfig(
     syntax='python',
     debug=False,
     printer=PrettyPrinterLib.RICH,
-    tab=12)
+    tab=12,
+)
 config4 = OutputConfig(
     system=DisplayColorSystem.ANSI_RGB,
     style=DarkLowContrastColorStyles.TAROT_T16,
@@ -157,7 +162,8 @@ def print_with_config(json, tsv, config1, config2, config3, width, height):
         second=ReflowedTextDraftPanel(json, title='Second panel', config=config2),
         third=ReflowedTextDraftPanel(tsv, title='Third panel', config=config3),
         fourth=DraftPanel(
-            j[2], frame=Frame(Dimensions(30, 100)), title='Fourth panel', config=config3),
+            j[2], frame=Frame(Dimensions(30, 100)), title='Fourth panel', config=config3
+        ),
     )
     p = DraftPanel(layout, frame=Frame(Dimensions(width, height)), config=config3)
     p1 = p.render_next_stage()

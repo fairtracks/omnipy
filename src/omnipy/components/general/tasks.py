@@ -1,4 +1,5 @@
 """General tasks for splitting, importing, and creating datasets and models."""
+
 from _operator import iadd, ior
 from collections.abc import Callable, Iterable, Iterator
 from copy import deepcopy
@@ -34,8 +35,8 @@ _SupportsIOrT = TypeVar('_SupportsIOrT', bound=SupportsIOr)
 
 @TaskTemplate()
 def split_dataset(
-        dataset: Dataset[Model[object]],
-        datafile_names_for_b: list[str]) -> tuple[Dataset[Model[object]], Dataset[Model[object]]]:
+    dataset: Dataset[Model[object]], datafile_names_for_b: list[str]
+) -> tuple[Dataset[Model[object]], Dataset[Model[object]]]:
     """Split a dataset into two datasets based on selected data-file names.
 
     Args:
@@ -48,23 +49,22 @@ def split_dataset(
     _type = dataset.get_type()
     datafile_names_for_a = set(dataset.keys()) - set(datafile_names_for_b)
     dataset_a = Dataset[_type](  # type: ignore[valid-type]
-        {
-            name: dataset[name] for name in dataset.keys() if name in datafile_names_for_a
-        })
+        {name: dataset[name] for name in dataset.keys() if name in datafile_names_for_a}
+    )
     dataset_b = Dataset[_type](  # type: ignore[valid-type]
-        {
-            name: dataset[name] for name in dataset.keys() if name in datafile_names_for_b
-        })
+        {name: dataset[name] for name in dataset.keys() if name in datafile_names_for_b}
+    )
     return dataset_a, dataset_b
 
 
 @TaskTemplate()
 def import_directory(
-        directory: str | Path,
-        exclude_prefixes: tuple[str, ...] = ('.', '_'),
-        include_suffixes: tuple[str, ...] = (),
-        dataset_cls: type[_DatasetT] = Dataset[Model[str]],  # type: ignore
-        open_func: Callable[[str], IOBase] = open) -> _DatasetT:
+    directory: str | Path,
+    exclude_prefixes: tuple[str, ...] = ('.', '_'),
+    include_suffixes: tuple[str, ...] = (),
+    dataset_cls: type[_DatasetT] = Dataset[Model[str]],  # type: ignore
+    open_func: Callable[[str], IOBase] = open,
+) -> _DatasetT:
     """Import files from a directory into a dataset keyed by filename stem.
 
     Args:
@@ -79,10 +79,12 @@ def import_directory(
     """
     dataset = dataset_cls()
     for import_filename in os.listdir(directory):
-        if not exclude_prefixes or \
-                not any(import_filename.startswith(prefix) for prefix in exclude_prefixes):
-            if not include_suffixes or \
-                    any(import_filename.endswith(suffix) for suffix in include_suffixes):
+        if not exclude_prefixes or not any(
+            import_filename.startswith(prefix) for prefix in exclude_prefixes
+        ):
+            if not include_suffixes or any(
+                import_filename.endswith(suffix) for suffix in include_suffixes
+            ):
                 with open_func(os.path.join(directory, import_filename)) as open_file:
                     dataset_name = '_'.join(import_filename.split('.')[:-1])
                     print(f"{import_filename} -> Dataset['{dataset_name}']")
@@ -91,10 +93,12 @@ def import_directory(
 
 
 @TaskTemplate()
-def create_dataset_from_args(*args: object,
-                             dataset_cls: type[_DatasetT],
-                             key: str | None = None,
-                             keys: tuple[str, ...] | None = None) -> _DatasetT:
+def create_dataset_from_args(
+    *args: object,
+    dataset_cls: type[_DatasetT],
+    key: str | None = None,
+    keys: tuple[str, ...] | None = None,
+) -> _DatasetT:
     """Create a dataset from one or more positional payload objects.
 
     With no positional inputs, an empty dataset is created. A single
@@ -116,20 +120,20 @@ def create_dataset_from_args(*args: object,
     Returns:
         A dataset instance of type ``dataset_cls``.
     """
-    assert (key is None or keys is None), \
-        'Only one of `key` or `keys` can be provided at a time.'
+    assert key is None or keys is None, 'Only one of `key` or `keys` can be provided at a time.'
     if key is not None:
         keys = (key,)
 
     if len(args) == 0:
-        assert keys is None, ('No positional arguments were provided, but '
-                              f'keys were provided: {keys}')
+        assert keys is None, (
+            f'No positional arguments were provided, but keys were provided: {keys}'
+        )
         return dataset_cls()
 
     if keys is not None:
-        assert len(keys) == len(args), ('Number of keys must match number '
-                                        'of positional arguments: '
-                                        f'{len(keys)} != {len(args)}')
+        assert len(keys) == len(args), (
+            f'Number of keys must match number of positional arguments: {len(keys)} != {len(args)}'
+        )
         return dataset_cls(dict(zip(keys, args)))
     else:
         if len(args) == 1:
@@ -187,7 +191,8 @@ def create_model_from_kwargs(*, model_cls: type[_ModelT], **data: object) -> _Mo
 
 
 def _extract_first_and_other_datasets(
-        datasets: dict[str, _DatasetT]) -> tuple[_DatasetT, tuple[_DatasetT, ...]]:
+    datasets: dict[str, _DatasetT],
+) -> tuple[_DatasetT, tuple[_DatasetT, ...]]:
     first_dataset, *other_datasets = datasets.values()
     return first_dataset, tuple(other_datasets)
 
@@ -256,8 +261,9 @@ def concat_all_vals_in_datasets_as_args(
 
 
 @TaskTemplate()
-def concat_all_vals_in_datasets_as_kwargs(**datasets: Dataset[Model[_SupportsIAddT]],
-                                          ) -> Model[_SupportsIAddT]:
+def concat_all_vals_in_datasets_as_kwargs(
+    **datasets: Dataset[Model[_SupportsIAddT]],
+) -> Model[_SupportsIAddT]:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Concatenate all values from keyword datasets.
     #
@@ -293,8 +299,9 @@ def union_all_vals_in_datasets_as_args(
 
 
 @TaskTemplate()
-def union_all_vals_in_datasets_as_kwargs(**datasets: Dataset[Model[_SupportsIOrT]],
-                                         ) -> Model[_SupportsIOrT]:
+def union_all_vals_in_datasets_as_kwargs(
+    **datasets: Dataset[Model[_SupportsIOrT]],
+) -> Model[_SupportsIOrT]:
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Union all dataset values from keyword datasets.
     #

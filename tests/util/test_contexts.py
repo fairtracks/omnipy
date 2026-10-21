@@ -7,15 +7,16 @@ from typing import Callable, TypeAlias
 
 import pytest
 
-from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
-                                  LastErrorHolder,
-                                  print_exception,
-                                  setup_and_teardown_callback_context)
+from omnipy.util.contexts import (
+    hold_and_reset_prev_attrib_value,
+    LastErrorHolder,
+    print_exception,
+    setup_and_teardown_callback_context,
+)
 
-StateAndSetupTeardownFuncs: TypeAlias = tuple[list[int],
-                                              Callable[[int], None],
-                                              Callable[[int], None],
-                                              Callable[[int], None]]
+StateAndSetupTeardownFuncs: TypeAlias = tuple[
+    list[int], Callable[[int], None], Callable[[int], None], Callable[[int], None]
+]
 
 
 @pytest.fixture
@@ -42,9 +43,9 @@ def test_setup_and_teardown_callback_context_no_args(state_and_callback_funcs) -
     state, setup, exception, teardown = state_and_callback_funcs
 
     with setup_and_teardown_callback_context(
-            setup_func=setup,
-            exception_func=exception,
-            teardown_func=teardown,
+        setup_func=setup,
+        exception_func=exception,
+        teardown_func=teardown,
     ) as number:
         assert number == 123
         assert state == [123]
@@ -57,9 +58,9 @@ def test_setup_and_teardown_callback_context_with_exception(state_and_callback_f
 
     try:
         with setup_and_teardown_callback_context(
-                setup_func=setup,
-                exception_func=exception,
-                teardown_func=teardown,
+            setup_func=setup,
+            exception_func=exception,
+            teardown_func=teardown,
         ) as number:
             assert number == 123
             assert state == [123]
@@ -75,12 +76,12 @@ def test_setup_and_teardown_callback_context_args_with_exception(state_and_callb
 
     try:
         with setup_and_teardown_callback_context(
-                setup_func=setup,
-                setup_func_args=(234,),
-                exception_func=exception,
-                exception_func_args=(234,),
-                teardown_func=teardown,
-                teardown_func_args=(234,),
+            setup_func=setup,
+            setup_func_args=(234,),
+            exception_func=exception,
+            exception_func_args=(234,),
+            teardown_func=teardown,
+            teardown_func_args=(234,),
         ) as number:
             assert number == 234
             assert state == [234]
@@ -92,17 +93,18 @@ def test_setup_and_teardown_callback_context_args_with_exception(state_and_callb
 
 
 def test_setup_and_teardown_callback_context_kwargs_with_exception(
-        state_and_callback_funcs) -> None:
+    state_and_callback_funcs,
+) -> None:
     state, setup, exception, teardown = state_and_callback_funcs
 
     try:
         with setup_and_teardown_callback_context(
-                setup_func=setup,
-                setup_func_kwargs=dict(number=345),
-                exception_func=exception,
-                exception_func_kwargs=dict(number=345),
-                teardown_func=teardown,
-                teardown_func_kwargs=dict(number=345),
+            setup_func=setup,
+            setup_func_kwargs=dict(number=345),
+            exception_func=exception,
+            exception_func_kwargs=dict(number=345),
+            teardown_func=teardown,
+            teardown_func_kwargs=dict(number=345),
         ) as number:
             assert number == 345
             assert state == [345]
@@ -118,8 +120,8 @@ def test_setup_and_teardown_callback_context_only_setup_func(state_and_callback_
 
     try:
         with setup_and_teardown_callback_context(
-                setup_func=setup,
-                setup_func_args=(234,),
+            setup_func=setup,
+            setup_func_args=(234,),
         ) as number:
             assert number == 234
             assert state == [234]
@@ -135,8 +137,8 @@ def test_setup_and_teardown_callback_context_only_exception_func(state_and_callb
 
     try:
         with setup_and_teardown_callback_context(
-                exception_func=exception,
-                exception_func_args=(234,),
+            exception_func=exception,
+            exception_func_args=(234,),
         ) as number:
             assert number is None
             assert state == []
@@ -154,8 +156,8 @@ def test_setup_and_teardown_callback_context_only_teardown_func(state_and_callba
 
     try:
         with setup_and_teardown_callback_context(
-                teardown_func=teardown,
-                teardown_func_args=(234,),
+            teardown_func=teardown,
+            teardown_func_args=(234,),
         ) as number:
             assert number is None
             assert state == [234]
@@ -213,7 +215,8 @@ def test_print_exception(capsys: pytest.CaptureFixture) -> None:
             dedent("""\
             Multi-line error!
             - More info here..
-            - And here are the nitty gritty details..."""))
+            - And here are the nitty gritty details...""")
+        )
 
     captured = capsys.readouterr()  # type: ignore
     assert captured.out == 'NotImplementedError: Multi-line error!'
@@ -221,6 +224,7 @@ def test_print_exception(capsys: pytest.CaptureFixture) -> None:
 
 def _raise_if_even_for_range(count: int):
     """Provide raise if even for range for test reuse."""
+
     def raise_if_even(a: int):
         if a % 2 == 0:
             raise ValueError(f'a={a} is even')
@@ -253,8 +257,7 @@ def test_with_last_error() -> None:
 
 
 def test_hold_and_reset_prev_attrib_value_at_teardown_and_exception() -> None:
-    class A:
-        ...
+    class A: ...
 
     class B:
         def __init__(self, num: int) -> None:

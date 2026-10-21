@@ -9,8 +9,7 @@ class AssertRowIter(Protocol):
         self,
         row_idx: int,
         row: Mapping[str, object],
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class AssertColumnWiseMappings(Protocol):
@@ -18,5 +17,4 @@ class AssertColumnWiseMappings(Protocol):
         self,
         a: IsMapping[str, Iterable[object]],
         b: IsMapping[str, Iterable[object]],
-    ) -> None:
-        ...
+    ) -> None: ...

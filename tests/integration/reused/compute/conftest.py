@@ -4,16 +4,17 @@ import pytest
 
 from omnipy.compute.task import TaskTemplateCore
 
-from ....compute.conftest import child_job_list_arg_flow_cls_tuple  # noqa
-from ....compute.conftest import \
-    child_job_list_arg_flow_cls_tuple_flow_cls_tuple  # type: ignore # noqa
-from ....compute.conftest import dag_flow_cls_tuple  # noqa
-from ....compute.conftest import flow_cls_tuple  # noqa
-from ....compute.conftest import flow_cls_tuple__flow_cls_tuple  # type: ignore[attr-defined] # noqa
-from ....compute.conftest import func_arg_flow_cls_tuple  # noqa
-from ....compute.conftest import func_arg_flow_cls_tuple_flow_cls_tuple  # type: ignore # noqa
-from ....compute.conftest import func_flow_cls_tuple  # noqa
-from ....compute.conftest import linear_flow_cls_tuple  # noqa
+from ....compute.conftest import (
+    child_job_list_arg_flow_cls_tuple,  # noqa
+    child_job_list_arg_flow_cls_tuple_flow_cls_tuple,  # type: ignore # noqa
+    dag_flow_cls_tuple,  # noqa
+    flow_cls_tuple,  # noqa
+    flow_cls_tuple__flow_cls_tuple,  # type: ignore[attr-defined] # noqa
+    func_arg_flow_cls_tuple,  # noqa
+    func_arg_flow_cls_tuple_flow_cls_tuple,  # type: ignore # noqa
+    func_flow_cls_tuple,  # noqa
+    linear_flow_cls_tuple,  # noqa
+)
 
 
 @pytest.fixture

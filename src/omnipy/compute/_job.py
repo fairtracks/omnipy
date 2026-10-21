@@ -33,10 +33,11 @@ _RetT = TypeVar('_RetT')
 
 
 class JobBase(
-        LogMixin,
-        DynamicMixinAcceptor,
-        Generic[_JobTemplateT, _JobT, _CallP, _RetT],
-        metaclass=JobBaseMeta):
+    LogMixin,
+    DynamicMixinAcceptor,
+    Generic[_JobTemplateT, _JobT, _CallP, _RetT],
+    metaclass=JobBaseMeta,
+):
     """Provide shared state and lifecycle helpers for all job objects.
 
     Concrete compute types combine this base with either `JobTemplateMixin` or
@@ -44,6 +45,7 @@ class JobBase(
     immutable configuration, and applied jobs carry engine decoration and runtime
     execution behavior.
     """
+
     @property
     def _job_creator(self) -> IsJobCreator:
         return self.__class__.job_creator
@@ -93,15 +95,18 @@ class JobBase(
         # Refactor using state machine (see JobBase._create_job())
 
         if not isinstance(self, JobTemplateMixin) and not isinstance(self, JobMixin):
-            raise JobStateException('JobBase and subclasses not inheriting from JobTemplateMixin '
-                                    'or JobMixin are not directly instantiatable')
+            raise JobStateException(
+                'JobBase and subclasses not inheriting from JobTemplateMixin '
+                'or JobMixin are not directly instantiatable'
+            )
 
         self._from_apply: bool
         from_apply: bool = hasattr(self, '_from_apply') and self._from_apply is True
         if isinstance(self, JobMixin) and not from_apply:
             raise JobStateException(
                 'JobMixin should only be instantiated using the "apply()" method of '
-                'an instance of JobTemplateMixin (or one of its subclasses)')
+                'an instance of JobTemplateMixin (or one of its subclasses)'
+            )
 
     @classmethod
     def _create_job_template(cls, *args: object, **kwargs: object) -> _JobTemplateT:
@@ -109,8 +114,9 @@ class JobBase(
             cls_as_doubly_callable = cast(Callable[..., Callable[[Callable], _JobTemplateT]], cls)
 
             if not callable(args[0]):
-                raise TypeError(f'First argument of a job is assumed to be a callable, '
-                                f'not: {args[0]}')
+                raise TypeError(
+                    f'First argument of a job is assumed to be a callable, not: {args[0]}'
+                )
             job_func = args[0]
             args = args[1:]
             return cls_as_doubly_callable(*args, **kwargs)(job_func)
@@ -153,8 +159,9 @@ class JobBase(
                     cur_val_dictable = as_dictable(cur_val)
                     refine_val_dictable = as_dictable(refine_val)
                     if cur_val_dictable is not None and refine_val_dictable is not None:
-                        new_val: object | dict = create_merged_dict(cur_val_dictable,
-                                                                    refine_val_dictable)
+                        new_val: object | dict = create_merged_dict(
+                            cur_val_dictable, refine_val_dictable
+                        )
                     else:
                         new_val = refine_kwargs[key]
                 else:
@@ -169,8 +176,9 @@ class JobBase(
 
     def _revise(self) -> _JobTemplateT:
         job_template_cls = self._get_job_template_subcls_for_revise()
-        job_template = job_template_cls.create_job_template(*self._get_init_args(),
-                                                            **self._get_init_kwargs())
+        job_template = job_template_cls.create_job_template(
+            *self._get_init_args(), **self._get_init_kwargs()
+        )
         return job_template
 
     def _get_init_args(self) -> tuple[object, ...]:
@@ -196,17 +204,20 @@ class JobBase(
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, JobBase):
             return NotImplemented
-        return self._get_init_args() == other._get_init_args() \
+        return (
+            self._get_init_args() == other._get_init_args()
             and self._get_init_kwargs() == other._get_init_kwargs()
+        )
 
     @classmethod
     def _get_job_template_subcls_for_revise(
-            cls) -> type[IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetT]]:
+        cls,
+    ) -> type[IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetT]]:
         raise ShouldNotOccurException()
 
     @classmethod
     def _get_job_subcls_for_apply(
-        cls
+        cls,
     ) -> type[IsJob[_JobTemplateT, IsJob[_JobTemplateT, _JobT, _CallP, _RetT], _CallP, _RetT]]:
         raise ShouldNotOccurException()
 
@@ -218,13 +229,14 @@ class JobBase(
 
         raise TypeError(f"'{self.__class__.__name__}' object is not callable. Try .run() method")
 
-    def _call_job(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetT:
-        ...
+    def _call_job(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetT: ...
 
     def _check_engine(self, engine_protocol: Type):
         if self.engine is None or not isinstance(self.engine, engine_protocol):
-            raise RuntimeError(f'Engine "{self.engine}" does not support '
-                               f'job runner protocol: {engine_protocol.__name__}')
+            raise RuntimeError(
+                f'Engine "{self.engine}" does not support '
+                f'job runner protocol: {engine_protocol.__name__}'
+            )
 
 
 class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
@@ -233,10 +245,13 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
     Template instances are configuration objects. They can be refined, applied to
     produce executable jobs, or run directly when the current context allows it.
     """
+
     def __init__(self, *args: object, **kwargs: object):
         if JobBase not in self.__class__.__mro__:
-            raise TypeError('JobTemplateMixin is not meant to be instantiated outside the context '
-                            'of a JobBase subclass.')
+            raise TypeError(
+                'JobTemplateMixin is not meant to be instantiated outside the context '
+                'of a JobBase subclass.'
+            )
 
     @classmethod
     def create_job_template(cls, *args: object, **kwargs: object) -> _JobTemplateT:
@@ -258,11 +273,12 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
         return cls_as_job_base._create_job_template(*args, **kwargs)
 
     def _cast_to_job_tmpl(
-        self
+        self,
     ) -> IsJobTemplate[_JobTemplateT, IsJob[_JobTemplateT, _JobT, _CallP, _RetT], _CallP, _RetT]:
         return cast(
             IsJobTemplate[_JobTemplateT, IsJob[_JobTemplateT, _JobT, _CallP, _RetT], _CallP, _RetT],
-            self)
+            self,
+        )
 
     def run(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetT:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
@@ -317,14 +333,16 @@ class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT
     Applied jobs are created from templates and are the place where engine
     decorators, runtime timestamps, and exception logging are attached.
     """
+
     def __init__(self, *args, **kwargs):
         if JobBase not in self.__class__.__mro__:
-            raise TypeError('JobMixin is not meant to be instantiated outside the context '
-                            'of a JobBase subclass.')
+            raise TypeError(
+                'JobMixin is not meant to be instantiated outside the context '
+                'of a JobBase subclass.'
+            )
 
     @abstractmethod
-    def _apply_engine_decorator(self, engine: IsEngine) -> None:
-        ...
+    def _apply_engine_decorator(self, engine: IsEngine) -> None: ...
 
     @property
     def time_of_cur_toplevel_flow_run(self) -> datetime | None:
@@ -370,7 +388,8 @@ class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT
         """
         self_as_job_base = cast(
             IsJobBase[IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetT], _JobT, _CallP, _RetT],
-            self)
+            self,
+        )
         job_template = self_as_job_base._revise()
         update_wrapper(job_template, self, updated=[])
         return cast(_JobTemplateT, job_template)

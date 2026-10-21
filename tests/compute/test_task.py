@@ -31,8 +31,9 @@ def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> 
 
 
 @pc.parametrize_with_cases('case', cases='.cases.tasks')
-def test_task_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-                  case: TaskCase) -> None:
+def test_task_run(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture], case: TaskCase
+) -> None:
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
@@ -54,7 +55,8 @@ def test_task_run(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
 
 
 def test_task_run_parameter_variants(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     """Test task runs accept positional and keyword variants."""
 
     if hasattr(mock_local_runner, 'finished'):

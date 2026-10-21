@@ -35,6 +35,7 @@ class IsaProcessParameterValueSchema(pyd.BaseModel):
         unit: Unit ontology annotation for quantitative values.
         comments: Optional comments attached to the value.
     """
+
     class Config:
         """Validation settings for ISA process-parameter schema parsing.
 

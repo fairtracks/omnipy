@@ -18,8 +18,7 @@ from ..cases.raw.functions import data_import_func
 
 def test_fail_property_iterate_over_data_files_no_arg_task() -> None:
     with pytest.raises(ValueError):
-        TaskTemplate(iterate_over_data_files=True)(
-            data_import_func)  # type: ignore[type-var, arg-type]
+        TaskTemplate(iterate_over_data_files=True)(data_import_func)  # type: ignore[type-var, arg-type]
 
 
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks')
@@ -42,7 +41,8 @@ async def test_property_iterate_over_data_files_task(case: IterateDataFilesCase)
     case = await unwrap(case)
 
     iter_template = TaskTemplate(iterate_over_data_files=case.iterate_over_data_files)(
-        case.task_func)
+        case.task_func
+    )
 
     for task_obj in (iter_template, iter_template.apply()):
         assert task_obj.iterate_over_data_files is case.iterate_over_data_files
@@ -72,8 +72,8 @@ async def test_property_output_dataset_cls_is_int_task(case: IterateDataFilesCas
     case = await unwrap(case)
 
     iter_dataset_cls_template_decorator = TaskTemplate(
-        iterate_over_data_files=case.iterate_over_data_files,
-        output_dataset_cls=Dataset[Model[int]])
+        iterate_over_data_files=case.iterate_over_data_files, output_dataset_cls=Dataset[Model[int]]
+    )
 
     if case.fail_with_output_dataset_cls_is_int:
         with pytest.raises(ValueError):
@@ -87,13 +87,15 @@ async def test_property_output_dataset_cls_is_int_task(case: IterateDataFilesCas
 
 @pc.parametrize_with_cases('case', cases='..cases.iterate_tasks')
 async def test_property_output_dataset_param_and_cls_is_int_task(
-        case: IterateDataFilesCase) -> None:
+    case: IterateDataFilesCase,
+) -> None:
     case = await unwrap(case)
 
     iter_dataset_cls_task_template_decorator = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
         output_dataset_param='output_dataset',
-        output_dataset_cls=Dataset[Model[int]])
+        output_dataset_cls=Dataset[Model[int]],
+    )
 
     if case.fail_with_output_dataset_param_and_cls_is_int:
         with pytest.raises(ValueError):
@@ -140,7 +142,8 @@ async def test_iterate_over_data_files_task(case: IterateDataFilesCase) -> None:
     """Test iterate tasks return string datasets."""
 
     task_template = TaskTemplate(iterate_over_data_files=case.iterate_over_data_files)(
-        case.task_func)
+        case.task_func
+    )
 
     dataset = Dataset[Model[int]](dict(a=3, b=5, c=-2))
 
@@ -151,15 +154,16 @@ async def test_iterate_over_data_files_task(case: IterateDataFilesCase) -> None:
 
 
 @pc.parametrize_with_cases(
-    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'str_output_dataset'])
+    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'str_output_dataset']
+)
 async def test_iterate_over_data_files_with_default_output_dataset_param_task(
-        case: IterateDataFilesCase) -> None:
+    case: IterateDataFilesCase,
+) -> None:
     """Test iterate tasks use the default output dataset parameter."""
 
     task_template = TaskTemplate(
-        iterate_over_data_files=case.iterate_over_data_files,
-        output_dataset_param='output_dataset')(
-            case.task_func)
+        iterate_over_data_files=case.iterate_over_data_files, output_dataset_param='output_dataset'
+    )(case.task_func)
 
     dataset = Dataset[Model[int]](dict(a=3, b=5, c=-2))
 
@@ -170,15 +174,16 @@ async def test_iterate_over_data_files_with_default_output_dataset_param_task(
 
 
 @pc.parametrize_with_cases(
-    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'str_output_dataset'])
+    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'str_output_dataset']
+)
 async def test_iterate_over_data_files_with_output_dataset_param_task(
-        case: IterateDataFilesCase) -> None:
+    case: IterateDataFilesCase,
+) -> None:
     """Test iterate tasks populate a provided output dataset."""
 
     task_template = TaskTemplate(
-        iterate_over_data_files=case.iterate_over_data_files,
-        output_dataset_param='output_dataset')(
-            case.task_func)
+        iterate_over_data_files=case.iterate_over_data_files, output_dataset_param='output_dataset'
+    )(case.task_func)
 
     dataset = Dataset[Model[int]](dict(a=3, b=5, c=-2))
     output_dataset = Dataset[Model[str]]()
@@ -190,15 +195,16 @@ async def test_iterate_over_data_files_with_output_dataset_param_task(
 
 
 @pc.parametrize_with_cases(
-    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'no_output_dataset'])
+    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'no_output_dataset']
+)
 async def test_iterate_over_data_files_with_output_dataset_cls_is_int_task(
-        case: IterateDataFilesCase) -> None:
+    case: IterateDataFilesCase,
+) -> None:
     """Test iterate tasks can target int output datasets."""
 
     task_template = TaskTemplate(
-        iterate_over_data_files=case.iterate_over_data_files,
-        output_dataset_cls=Dataset[Model[int]])(
-            case.task_func)
+        iterate_over_data_files=case.iterate_over_data_files, output_dataset_cls=Dataset[Model[int]]
+    )(case.task_func)
 
     dataset = Dataset[Model[int]](dict(a=3, b=5, c=-2))
 
@@ -212,16 +218,18 @@ async def test_iterate_over_data_files_with_output_dataset_cls_is_int_task(
 
 
 @pc.parametrize_with_cases(
-    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'int_output_dataset'])
+    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'int_output_dataset']
+)
 async def test_iterate_over_data_files_with_output_dataset_param_and_cls_is_int_task(
-        case: IterateDataFilesCase) -> None:
+    case: IterateDataFilesCase,
+) -> None:
     """Test iterate tasks support both output dataset options."""
 
     task_template = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
         output_dataset_param='output_dataset',
-        output_dataset_cls=Dataset[Model[int]])(
-            case.task_func)
+        output_dataset_cls=Dataset[Model[int]],
+    )(case.task_func)
 
     dataset = Dataset[Model[int]](dict(a=3, b=5, c=-2))
 
@@ -236,17 +244,19 @@ async def test_iterate_over_data_files_with_output_dataset_param_and_cls_is_int_
 
 
 @pc.parametrize_with_cases(
-    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'await_number_future'])
+    'case', cases='..cases.iterate_tasks', has_tag=['iterate', 'await_number_future']
+)
 @pc.parametrize('cancel_tasks', (False, True), ids=('run_tasks', 'cancel_tasks'))
-async def test_iterate_over_data_files_await_future_task(case: IterateDataFilesCase,
-                                                         cancel_tasks: bool) -> None:
+async def test_iterate_over_data_files_await_future_task(
+    case: IterateDataFilesCase, cancel_tasks: bool
+) -> None:
     case = await unwrap(case)
 
     task_template = TaskTemplate(
         iterate_over_data_files=case.iterate_over_data_files,
         output_dataset_param='output_dataset',
-        output_dataset_cls=Dataset[Model[int]])(
-            case.task_func)
+        output_dataset_cls=Dataset[Model[int]],
+    )(case.task_func)
 
     dataset = Dataset[Model[int]](dict(a=3, b=5, c=-2))
 
@@ -291,6 +301,8 @@ def _assert_all_failed_data(
     assert len(failed_task_details) == len(returned_dataset)
     for failed_data in failed_task_details.values():
         assert type(failed_data.exception) is exception_cls
-    assert failed_task_details['a'].job_name \
-           == failed_task_details['b'].job_name \
-           == failed_task_details['c'].job_name
+    assert (
+        failed_task_details['a'].job_name
+        == failed_task_details['b'].job_name
+        == failed_task_details['c'].job_name
+    )

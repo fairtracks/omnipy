@@ -10,10 +10,12 @@ from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
 
 StrippedUpperStr: TypeAlias = pyd.constr(  # type: ignore[valid-type]
-    strip_whitespace=True, to_upper=True)
+    strip_whitespace=True, to_upper=True
+)
 
 StrippedLowerStr: TypeAlias = pyd.constr(  # type: ignore[valid-type]
-    strip_whitespace=True, to_lower=True)
+    strip_whitespace=True, to_lower=True
+)
 
 _hex_regex = r'^[0-9a-f]+$'
 
@@ -59,12 +61,10 @@ class SubmissionSampleSchema(pyd.BaseModel):
 
 
 @mimics(SubmissionSampleSchema)
-class SubmissionSampleModel(Model[SubmissionSampleSchema]):
-    ...
+class SubmissionSampleModel(Model[SubmissionSampleSchema]): ...
 
 
-class SubmissionSamplesDataset(Dataset[SubmissionSampleModel]):
-    ...
+class SubmissionSamplesDataset(Dataset[SubmissionSampleModel]): ...
 
 
 class SubmissionFileSchema(pyd.BaseModel):
@@ -86,12 +86,10 @@ class SubmissionFileSchema(pyd.BaseModel):
 
 
 @mimics(SubmissionFileSchema)
-class SubmissionFileSchemaModel(Model[SubmissionFileSchema]):
-    ...
+class SubmissionFileSchemaModel(Model[SubmissionFileSchema]): ...
 
 
-class SubmissionFilesDataset(Dataset[SubmissionFileSchemaModel]):
-    ...
+class SubmissionFilesDataset(Dataset[SubmissionFileSchemaModel]): ...
 
 
 class SubmissionMetadataSchema(pyd.BaseModel):
@@ -105,8 +103,7 @@ class SubmissionMetadataSchema(pyd.BaseModel):
 
 
 @mimics(SubmissionMetadataSchema)
-class SubmissionMetadataModel(Model[SubmissionMetadataSchema]):
-    ...
+class SubmissionMetadataModel(Model[SubmissionMetadataSchema]): ...
 
 
 class SubmissionStatusSchema(pyd.BaseModel):
@@ -117,8 +114,7 @@ class SubmissionStatusSchema(pyd.BaseModel):
 
 
 @mimics(SubmissionStatusSchema)
-class SubmissionStatusModel(Model[SubmissionStatusSchema]):
-    ...
+class SubmissionStatusModel(Model[SubmissionStatusSchema]): ...
 
 
 class _SubmissionRecordDict(TypedDict):
@@ -151,7 +147,8 @@ class SubmissionRecord(pyd.BaseModel):
 
         for sample_alias in file_roles_per_sample:
             assert len(file_roles_per_sample[sample_alias]) == 2, (
-                f"Sample '{sample_alias}' must have exactly two files (read1 and read2).")
+                f"Sample '{sample_alias}' must have exactly two files (read1 and read2)."
+            )
 
         return files
 
@@ -167,9 +164,11 @@ class SubmissionRecord(pyd.BaseModel):
         sample_aliases = {sample.local_sample_alias for sample in values['samples'].values()}
         for file in files.values():
             if file.local_sample_alias not in sample_aliases:
-                raise ValueError(f'File "{file.file_id}" has local_sample_alias '
-                                 f'"{file.local_sample_alias}" which does not match any '
-                                 f'sample in the submission.')
+                raise ValueError(
+                    f'File "{file.file_id}" has local_sample_alias '
+                    f'"{file.local_sample_alias}" which does not match any '
+                    f'sample in the submission.'
+                )
         return files
 
 
@@ -235,13 +234,11 @@ class SubmissionRecordWithStatus(SubmissionRecord):
 
 
 @mimics(SubmissionRecordWithStatus)
-class SubmissionModel(Model[SubmissionRecordWithStatus]):
-    ...
+class SubmissionModel(Model[SubmissionRecordWithStatus]): ...
 
 
 @mimics(SubmissionRecord)
-class FinalSubmissionModel(Model[SubmissionRecord]):
-    ...
+class FinalSubmissionModel(Model[SubmissionRecord]): ...
 
 
 class SequenceDepotSubmissionIdRequest(pyd.BaseModel):
@@ -251,10 +248,12 @@ class SequenceDepotSubmissionIdRequest(pyd.BaseModel):
 
 
 @mimics(SequenceDepotSubmissionIdRequest)
-class SubmissionToSequenceDepotRequestMapper(ConverterModel[
+class SubmissionToSequenceDepotRequestMapper(
+    ConverterModel[
         SubmissionModel,
         SequenceDepotSubmissionIdRequest,
-]):
+    ]
+):
     @classmethod
     def _convert(cls, data: SubmissionModel) -> SequenceDepotSubmissionIdRequest:
         return SequenceDepotSubmissionIdRequest(
@@ -275,10 +274,12 @@ class BioSampleVaultSampleSubmissionSchema(pyd.BaseModel):
 
 
 @mimics(BioSampleVaultSampleSubmissionSchema)
-class SampleAndMetadataToBioSampleVaultSubmissionMapper(ConverterModel[
+class SampleAndMetadataToBioSampleVaultSubmissionMapper(
+    ConverterModel[
         Model[tuple[SubmissionSampleModel, SubmissionMetadataModel]],
         BioSampleVaultSampleSubmissionSchema,
-]):
+    ]
+):
     @classmethod
     def _convert(
         cls, data: Model[tuple[SubmissionSampleModel, SubmissionMetadataModel]]

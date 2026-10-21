@@ -24,52 +24,64 @@ from typing_extensions import override, Self, TypeIs, TypeVar
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin
 from omnipy.data._mixins.task import TaskDatasetMixin
-from omnipy.data._selector import (create_updated_mapping,
-                                   Index2DataItemsType,
-                                   Key2DataItemType,
-                                   prepare_selected_items_with_iterable_data,
-                                   prepare_selected_items_with_mapping_data,
-                                   select_keys)
-from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forward_refs,
-                                 cleanup_name_qualname_and_module)
+from omnipy.data._selector import (
+    create_updated_mapping,
+    Index2DataItemsType,
+    Key2DataItemType,
+    prepare_selected_items_with_iterable_data,
+    prepare_selected_items_with_mapping_data,
+    select_keys,
+)
+from omnipy.data.helpers import (
+    build_own_module_and_global_namespace_for_forward_refs,
+    cleanup_name_qualname_and_module,
+)
 from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
 from omnipy.shared.protocols._typeshed import SupportsItems
-from omnipy.shared.protocols.data import (IsHttpUrlDataset,
-                                          IsMultiModelDataset,
-                                          IsPathOrUrl,
-                                          IsPathsOrUrlsOneOrMoreOrNone)
+from omnipy.shared.protocols.data import (
+    IsHttpUrlDataset,
+    IsMultiModelDataset,
+    IsPathOrUrl,
+    IsPathsOrUrlsOneOrMoreOrNone,
+)
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util._placeholder import F
 from omnipy.util.decorators import call_super_if_available
 from omnipy.util.helpers import ConsistentUserDict as UserDict
-from omnipy.util.helpers import (contains_typevar,
-                                 evaluate_any_forward_refs_if_possible,
-                                 get_calling_module_name,
-                                 get_default_if_typevar,
-                                 get_event_loop_and_check_if_loop_is_running,
-                                 is_iterable,
-                                 remove_forward_ref_notation,
-                                 split_to_union_variants)
-from omnipy.util.pydantic import (lenient_isinstance,
-                                  lenient_issubclass,
-                                  Undefined,
-                                  UndefinedType,
-                                  ValidationError)
+from omnipy.util.helpers import (
+    contains_typevar,
+    evaluate_any_forward_refs_if_possible,
+    get_calling_module_name,
+    get_default_if_typevar,
+    get_event_loop_and_check_if_loop_is_running,
+    is_iterable,
+    remove_forward_ref_notation,
+    split_to_union_variants,
+)
 import omnipy.util.pydantic as pyd
+from omnipy.util.pydantic import (
+    lenient_isinstance,
+    lenient_issubclass,
+    Undefined,
+    UndefinedType,
+    ValidationError,
+)
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import (Model_bool,
-                                                  Model_bytes,
-                                                  Model_Dataset,
-                                                  Model_dict,
-                                                  Model_float,
-                                                  Model_int,
-                                                  Model_list,
-                                                  Model_set,
-                                                  Model_str,
-                                                  Model_tuple_pair,
-                                                  Model_tuple_same_type)
+    from omnipy.data._typing.mimic_models import (
+        Model_bool,
+        Model_bytes,
+        Model_Dataset,
+        Model_dict,
+        Model_float,
+        Model_int,
+        Model_list,
+        Model_set,
+        Model_str,
+        Model_tuple_pair,
+        Model_tuple_same_type,
+    )
     from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
     from omnipy.data.model import Model
 
@@ -115,13 +127,14 @@ class _DatasetMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
 
 
 class Dataset(
-        DatasetDisplayMixin,
-        TaskDatasetMixin,
-        DataClassBase,
-        pyd.GenericModel,
-        UserDict[str, _ModelOrDatasetT],
-        Generic[_ModelOrDatasetT],
-        metaclass=_DatasetMetaclass):
+    DatasetDisplayMixin,
+    TaskDatasetMixin,
+    DataClassBase,
+    pyd.GenericModel,
+    UserDict[str, _ModelOrDatasetT],
+    Generic[_ModelOrDatasetT],
+    metaclass=_DatasetMetaclass,
+):
     """Store named, typed data items in a dict-like container.
 
     ``Dataset`` is Omnipy's core container for collections of data items that all conform to the
@@ -147,6 +160,7 @@ class Dataset(
         {'one': 1}
 
     """
+
     class Config:
         """Configure Pydantic behavior for dataset instances.
 
@@ -157,6 +171,7 @@ class Dataset(
             validate_assignment: Re-validate fields whenever attributes are reassigned.
             arbitrary_types_allowed: Permit non-Pydantic helper types in the model definition.
         """
+
         validate_assignment = True
         arbitrary_types_allowed = True
 
@@ -169,19 +184,21 @@ class Dataset(
         data: dict_t[str, _ModelOrDatasetT] = pyd.Field(default={})
 
     else:
-
         # TODO: For pydantic v2, remove hack in Dataset to stop e.g.
         #       [{'a': 'b', 'c': 'd'}] to be coerced into {'a': 'c'} (remove
         #       first part of the union below, and edit get_type() and to_json_schema())
         data: list[dict_t[str, _ModelOrDatasetT]] | dict_t[str, _ModelOrDatasetT] = pyd.Field(
-            default={})
+            default={}
+        )
 
     # data: dict[str, _ModelOrDatasetT] = pyd.Field(default={})
 
     def __class_getitem__(  # type: ignore[override]
         cls,
-        params: type[_ModelOrDatasetT] | tuple[type[_ModelOrDatasetT]]
-        | tuple[type[_ModelOrDatasetT], Any] | TypeVar
+        params: type[_ModelOrDatasetT]
+        | tuple[type[_ModelOrDatasetT]]
+        | tuple[type[_ModelOrDatasetT], Any]
+        | TypeVar
         | tuple[TypeVar, ...],
     ) -> Self:
         """Specialize the dataset class with a concrete model or nested dataset type.
@@ -206,9 +223,11 @@ class Dataset(
             for type_variant in split_to_union_variants(orig_params):
                 from omnipy.data.model import is_model_subclass
 
-                if (not isinstance(type_variant,
-                                   (TypeVar, str)) and not is_model_subclass(type_variant)
-                        and not is_dataset_subclass(type_variant)):
+                if (
+                    not isinstance(type_variant, (TypeVar, str))
+                    and not is_model_subclass(type_variant)
+                    and not is_dataset_subclass(type_variant)
+                ):
                     cls._raise_type_exception(f'Invalid model: {orig_params} ')
         else:
             if isinstance(orig_params, TypeVar):
@@ -221,7 +240,8 @@ class Dataset(
         # (and not in the module of Dataset), e.g. for recursive datasets
         calling_module = None
         if cls == Dataset and any(
-                isinstance(variant, str) for variant in split_to_union_variants(orig_params)):
+            isinstance(variant, str) for variant in split_to_union_variants(orig_params)
+        ):
             calling_module = get_calling_module_name()
 
         created_dataset = super().__class_getitem__(_params)
@@ -254,7 +274,8 @@ class Dataset(
 
     def __init__(  # noqa: C901
         self,
-        value: SupportsItems[str, object] | Iterable[tuple[str, object]]
+        value: SupportsItems[str, object]
+        | Iterable[tuple[str, object]]
         | UndefinedType = Undefined,
         *,
         data: SupportsItems[str, object] | UndefinedType = Undefined,
@@ -276,20 +297,22 @@ class Dataset(
 
         super_kwargs = {}
 
-        assert DATA_KEY not in kwargs, \
-            ('Not allowed with "data" as kwargs key. Not sure how you managed this? Are you trying '
-             'to break Dataset init on purpose?')
+        assert DATA_KEY not in kwargs, (
+            'Not allowed with "data" as kwargs key. Not sure how you managed this? Are you trying '
+            'to break Dataset init on purpose?'
+        )
 
         if value != Undefined:
-            assert data == Undefined, \
+            assert data == Undefined, (
                 'Not allowed to combine positional and "data" keyword argument'
-            assert len(kwargs) == 0, \
-                'Not allowed to combine positional and keyword arguments'
+            )
+            assert len(kwargs) == 0, 'Not allowed to combine positional and keyword arguments'
             super_kwargs[DATA_KEY] = value
 
         if data != Undefined:
-            assert len(kwargs) == 0, \
+            assert len(kwargs) == 0, (
                 f"Not allowed to combine '{DATA_KEY}' with other keyword arguments"
+            )
             super_kwargs[DATA_KEY] = data
 
         if kwargs:
@@ -302,7 +325,8 @@ class Dataset(
             self._raise_type_exception()
 
         def _validate_any_models_or_datasets(
-                iterable_data: Iterable[tuple[str, object]]) -> tuple[dict, bool]:
+            iterable_data: Iterable[tuple[str, object]],
+        ) -> tuple[dict, bool]:
             """Validate model or dataset instances found in iterable input data.
 
             Args:
@@ -335,19 +359,23 @@ class Dataset(
                     super_kwargs[DATA_KEY] = cast(Dataset, input_data).to_data()
                 case _input_data if is_pure_pydantic_model_instance(_input_data):
                     super_kwargs[DATA_KEY], model_or_dataset_as_input = (
-                        _validate_any_models_or_datasets(_input_data.dict().items()))
+                        _validate_any_models_or_datasets(_input_data.dict().items())
+                    )
                 case SupportsItems():
                     super_kwargs[DATA_KEY], model_or_dataset_as_input = (
-                        _validate_any_models_or_datasets(cast(SupportsItems, input_data).items()))
+                        _validate_any_models_or_datasets(cast(SupportsItems, input_data).items())
+                    )
                 case Iterable():
                     try:
                         super_kwargs[DATA_KEY], model_or_dataset_as_input = (
-                            _validate_any_models_or_datasets(self._check_iterable(input_data)))
+                            _validate_any_models_or_datasets(self._check_iterable(input_data))
+                        )
                     except (TypeError, ValueError) as e:
                         raise TypeError(
                             'Data object must support items() or be an '
                             'iterable of (key, val) pairs',
-                            self.__class__) from e
+                            self.__class__,
+                        ) from e
 
                 case _:
                     ...
@@ -439,9 +467,9 @@ class Dataset(
         return pydantic_copy  # pyright: ignore [reportReturnType]
 
     @classmethod
-    def clone_dataset_cls(cls,
-                          new_dataset_cls_name: str,
-                          model_cls: type[_NewModelT] | None = None) -> type[Self]:
+    def clone_dataset_cls(
+        cls, new_dataset_cls_name: str, model_cls: type[_NewModelT] | None = None
+    ) -> type[Self]:
         """Create a new dataset subclass based on this dataset class.
 
         Args:
@@ -538,14 +566,15 @@ class Dataset(
         Returns:
             The standard descriptive text for the dataset backing field.
         """
-        return ('This class represents a dataset in the `omnipy` Python package and contains '
-                'a set of named data items that follows the same data model. '
-                'It is a statically typed specialization of the Dataset class according to a '
-                'particular specialization of the Model class. Both main classes are wrapping '
-                'the excellent Python package named `pydantic`.')
+        return (
+            'This class represents a dataset in the `omnipy` Python package and contains '
+            'a set of named data items that follows the same data model. '
+            'It is a statically typed specialization of the Dataset class according to a '
+            'particular specialization of the Model class. Both main classes are wrapping '
+            'the excellent Python package named `pydantic`.'
+        )
 
     if TYPE_CHECKING:  # noqa: C901
-
         # The code below is a hack needed because of a fundamental limitation of the current Python
         # typing syntax. There is no way (that we know of) to tell the type checkers that Model
         # objects can mimic the functionality of their type arguments, say that a Model[list] can
@@ -901,9 +930,11 @@ class Dataset(
         ...
 
     @overload
-    def __setitem__(self,
-                    selector: slice | Iterable[str | int],
-                    data_obj: Mapping[str, object] | Iterable[object]) -> None:
+    def __setitem__(
+        self,
+        selector: slice | Iterable[str | int],
+        data_obj: Mapping[str, object] | Iterable[object],
+    ) -> None:
         """Describe plural assignment for static type checkers.
 
         Args:
@@ -934,25 +965,27 @@ class Dataset(
         selected_keys = select_keys(selector, self.data)
 
         if selected_keys.singular:
-            self._set_data_file_and_validate(selected_keys.keys[0],
-                                             cast(_ModelOrDatasetT, data_obj))
+            self._set_data_file_and_validate(
+                selected_keys.keys[0], cast(_ModelOrDatasetT, data_obj)
+            )
         else:
             key_2_data_item: Key2DataItemType[object]
             index_2_data_items: Index2DataItemsType[object]
 
             if isinstance(data_obj, MutableMapping):
-                key_2_data_item, index_2_data_items = \
-                    prepare_selected_items_with_mapping_data(
-                        selected_keys.keys, selected_keys.last_index,
-                        cast(Mapping[str, object], data_obj),
-                    )
+                key_2_data_item, index_2_data_items = prepare_selected_items_with_mapping_data(
+                    selected_keys.keys,
+                    selected_keys.last_index,
+                    cast(Mapping[str, object], data_obj),
+                )
 
             elif is_iterable(data_obj) and not isinstance(data_obj, (str, bytes)):
-                key_2_data_item, index_2_data_items = \
-                    prepare_selected_items_with_iterable_data(
-                        selected_keys.keys, selected_keys.last_index, tuple(data_obj),
-                        cast(Mapping[str, object], self.data),
-                    )
+                key_2_data_item, index_2_data_items = prepare_selected_items_with_iterable_data(
+                    selected_keys.keys,
+                    selected_keys.last_index,
+                    tuple(data_obj),
+                    cast(Mapping[str, object], self.data),
+                )
 
             else:
                 raise TypeError('Data object must be a mapping or an iterable')
@@ -975,8 +1008,8 @@ class Dataset(
         """
 
         updated_mapping = create_updated_mapping(
-            cast(MutableMapping[str, object], self.data), key_2_data_item,
-            index_2_data_item)  # pyright: ignore [reportUndefinedVariable]
+            cast(MutableMapping[str, object], self.data), key_2_data_item, index_2_data_item
+        )  # pyright: ignore [reportUndefinedVariable]
         self._replace_data_with_mapping(updated_mapping)
 
     def _replace_data_with_mapping(self, updated_mapping: MutableMapping[str, object]) -> None:
@@ -1034,8 +1067,8 @@ class Dataset(
         """
         if isinstance(iterable, (str, bytes)):
             raise TypeError(
-                'Outer data iterables cannot be strings or, '
-                'bytes, got: {type(value)}', cls)
+                'Outer data iterables cannot be strings or, bytes, got: {type(value)}', cls
+            )
 
         def check_iterable_elements(iterable: Iterable) -> Iterator:
             """Validate and normalize each element of an outer dataset iterable.
@@ -1055,7 +1088,8 @@ class Dataset(
                         'Inner data iterable elements must be '
                         '(key, val) pairs, as tuples or lists, '
                         f'not: {type(el)}',
-                        cls)
+                        cls,
+                    )
                 if isinstance(el, Mapping):
                     yield from el.items()
                 else:
@@ -1111,8 +1145,9 @@ class Dataset(
         # own code.
         if calling_module is None:
             calling_module = get_calling_module_name()
-        own_module_ns, globalns = \
-            build_own_module_and_global_namespace_for_forward_refs(cls, calling_module, **localns)
+        own_module_ns, globalns = build_own_module_and_global_namespace_for_forward_refs(
+            cls, calling_module, **localns
+        )
 
         prev_type = cls._get_data_field().type_
 
@@ -1121,7 +1156,8 @@ class Dataset(
         cls._get_data_field().type_ = evaluate_any_forward_refs_if_possible(prev_type, **globalns)
         if DATA_KEY in cls.__annotations__:
             cls.__annotations__[DATA_KEY] = evaluate_any_forward_refs_if_possible(
-                cls.__annotations__[DATA_KEY], **globalns)
+                cls.__annotations__[DATA_KEY], **globalns
+            )
 
         cls._clean_type_caches()
 
@@ -1190,8 +1226,9 @@ class Dataset(
             self._force_full_validation()
 
     @staticmethod
-    def _basic_validation_func(type_variant: 'type[Model | Dataset]',
-                               value: UndefinedType | object) -> _ModelOrDatasetT:
+    def _basic_validation_func(
+        type_variant: 'type[Model | Dataset]', value: UndefinedType | object
+    ) -> _ModelOrDatasetT:
         """Construct one candidate model or dataset during validation.
 
         Args:
@@ -1209,7 +1246,8 @@ class Dataset(
         return cast(
             _ModelOrDatasetT,
             type_variant(value)  # type: ignore[arg-type]
-            if not isinstance(value, type_variant) else value,
+            if not isinstance(value, type_variant)
+            else value,
         )
 
     @classmethod
@@ -1377,15 +1415,16 @@ class Dataset(
         """
         return super().dict(**kwargs)[DATA_KEY]
 
-    def from_data(self,
-                  data: Mapping[str, Any] | Iterable[tuple[str, Any]],
-                  update: bool = True) -> None:
+    def from_data(
+        self, data: Mapping[str, Any] | Iterable[tuple[str, Any]], update: bool = True
+    ) -> None:
         """Populate the dataset from plain Python contents.
 
         Args:
             data: Mapping or iterable of ``(key, value)`` pairs to parse into validated items.
             update: Whether to merge into existing contents instead of replacing them first.
         """
+
         def callback_func(type_variant: 'Model | Dataset', content: Any):
             """Populate one item instance from plain Python content.
 
@@ -1398,10 +1437,12 @@ class Dataset(
 
         self._from_dict_with_callback(data, update, callback_func)
 
-    def _from_dict_with_callback(self,
-                                 data: Mapping[str, Any] | Iterable[tuple[str, Any]],
-                                 update: bool,
-                                 callback_func: 'Callable[[Model | Dataset, Any], None]'):
+    def _from_dict_with_callback(
+        self,
+        data: Mapping[str, Any] | Iterable[tuple[str, Any]],
+        update: bool,
+        callback_func: 'Callable[[Model | Dataset, Any], None]',
+    ):
         """Populate the dataset by applying a callback to fresh item instances.
 
         Args:
@@ -1489,15 +1530,16 @@ class Dataset(
 
         return result
 
-    def from_json(self,
-                  data: Mapping[str, str] | Iterable[tuple[str, str]],
-                  update: bool = True) -> None:
+    def from_json(
+        self, data: Mapping[str, str] | Iterable[tuple[str, str]], update: bool = True
+    ) -> None:
         """Populate the dataset from per-item JSON strings.
 
         Args:
             data: Mapping or iterable of ``(key, json_string)`` pairs.
             update: Whether to merge into existing contents instead of replacing them first.
         """
+
         def callback_func(type_variant: 'Model | Dataset', content: Any):
             """Populate one item instance from a JSON string.
 
@@ -1587,8 +1629,10 @@ class Dataset(
         parsed_dataset, serializer = serializer_registry.auto_detect_tar_file_serializer(self)
 
         if serializer is None:
-            print(f'Unable to find a serializer for dataset with data type "{type(self)}". '
-                  f'Will abort saving...')
+            print(
+                f'Unable to find a serializer for dataset with data type "{type(self)}". '
+                f'Will abort saving...'
+            )
         else:
             if not path.endswith('.tar.gz'):
                 out_tar_gz_path = f'{path}.tar.gz'
@@ -1701,14 +1745,16 @@ class Dataset(
                     raise NotImplementedError(
                         'Loading files with specified keys is not yet '
                         'implemented, as only tar.gz file import is '
-                        'supported until serializers have been refactored.') from exp
+                        'supported until serializers have been refactored.'
+                    ) from exp
                 return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
 
             case Iterable():
                 path_or_url_iterable = paths_or_urls
                 try:
                     http_url_dataset = HttpUrlDataset(
-                        zip(path_or_url_iterable, path_or_url_iterable))
+                        zip(path_or_url_iterable, path_or_url_iterable)
+                    )
                 except ValidationError:
                     return self._load_paths(
                         path_or_url_iterable,
@@ -1717,8 +1763,10 @@ class Dataset(
                     )
                 return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
             case _:
-                raise TypeError(f'"paths_or_urls" argument is of incorrect type. Type '
-                                f'{type(paths_or_urls)} is not supported.')
+                raise TypeError(
+                    f'"paths_or_urls" argument is of incorrect type. Type '
+                    f'{type(paths_or_urls)} is not supported.'
+                )
 
     def _load_http_urls(
         self,
@@ -1756,13 +1804,13 @@ class Dataset(
             for host in hosts:
                 host_config = self.config.http.for_host[host]
                 async with RateLimitingClientSession(
-                        host_config.requests_per_time_period,
-                        host_config.time_period_in_secs) as client_session:
+                    host_config.requests_per_time_period, host_config.time_period_in_secs
+                ) as client_session:
                     async with get_retry_client(
-                            client_session=client_session,
-                            retry_http_statuses=host_config.retry_http_statuses,
-                            retry_attempts=host_config.retry_attempts,
-                            retry_backoff_strategy=host_config.retry_backoff_strategy
+                        client_session=client_session,
+                        retry_http_statuses=host_config.retry_http_statuses,
+                        retry_attempts=host_config.retry_attempts,
+                        retry_backoff_strategy=host_config.retry_backoff_strategy,
                     ) as retry_client:
                         indices = hosts[host]
                         # fetch_task = get_auto_from_api_endpoint
@@ -1776,11 +1824,13 @@ class Dataset(
                         #             fetch_task = get_bytes_from_api_endpoint
 
                         ret = get_auto_from_api_endpoint.refine(
-                            output_dataset_param='output_dataset').run(
-                                http_url_dataset[indices],
-                                retry_client=retry_client,
-                                output_dataset=self,
-                                as_mime_type=as_mime_type)
+                            output_dataset_param='output_dataset'
+                        ).run(
+                            http_url_dataset[indices],
+                            retry_client=retry_client,
+                            output_dataset=self,
+                            as_mime_type=as_mime_type,
+                        )
 
                         if not isinstance(ret, asyncio.Task):
                             assert inspect.iscoroutine(ret)
@@ -1826,13 +1876,13 @@ class Dataset(
             tar_gz_file_path = self._ensure_tar_gz_file(path_or_url)
 
             if by_file_suffix:
-                loaded_dataset = \
-                    serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                        self, tar_gz_file_path, self, ignore_dirs=ignore_dirs)
+                loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_file_suffix(
+                    self, tar_gz_file_path, self, ignore_dirs=ignore_dirs
+                )
             else:
-                loaded_dataset = \
-                    serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
-                        self, tar_gz_file_path, self, any_file_suffix=True, ignore_dirs=ignore_dirs)
+                loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
+                    self, tar_gz_file_path, self, any_file_suffix=True, ignore_dirs=ignore_dirs
+                )
             if loaded_dataset is not None:
                 self.absorb(loaded_dataset)
                 continue
@@ -1863,8 +1913,10 @@ class Dataset(
         if not path.endswith('.tar.gz'):
             tar_gz_file_path = path + '.tar.gz'
             if not os.path.isfile(tar_gz_file_path):
-                print(f'Creating compressed file {os.path.abspath(tar_gz_file_path)} from '
-                      f'the content of "{os.path.abspath(path)}"')
+                print(
+                    f'Creating compressed file {os.path.abspath(tar_gz_file_path)} from '
+                    f'the content of "{os.path.abspath(path)}"'
+                )
 
                 with tarfile.open(tar_gz_file_path, 'w:gz') as tar:
                     if os.path.isdir(path):
@@ -1885,6 +1937,7 @@ class Dataset(
             The serializer registry singleton from :mod:`omnipy.components`.
         """
         from omnipy.components import get_serializer_registry
+
         return get_serializer_registry()
 
     def as_multi_model_dataset(self) -> 'IsMultiModelDataset[_ModelOrDatasetT]':
@@ -1911,10 +1964,12 @@ class Dataset(
             validated contents.
         """
         # return self.__class__ == other.__class__ and super().__eq__(other)
-        return isinstance(other, Dataset) \
-            and self.__class__ == other.__class__ \
-            and self.data == other.data \
-            and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
+        return (
+            isinstance(other, Dataset)
+            and self.__class__ == other.__class__
+            and self.data == other.data
+            and self.to_data() == other.to_data()
+        )  # last is probably unnecessary, but just in case
 
     def __repr_args__(self):
         """Return key-value pairs used by Pydantic when building ``repr()`` output.

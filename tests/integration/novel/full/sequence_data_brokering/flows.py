@@ -1,12 +1,14 @@
 from omnipy.compute.flow import DagFlowTemplate, LinearFlowTemplate
 
 from .models import SubmissionModel
-from .tasks import (allocate_sequence_depot_submission_id,
-                    collect_submission_model,
-                    explode_submission_model,
-                    finalize_sequence_depot_submission,
-                    register_all_samples_with_biosamplevault,
-                    transfer_all_files)
+from .tasks import (
+    allocate_sequence_depot_submission_id,
+    collect_submission_model,
+    explode_submission_model,
+    finalize_sequence_depot_submission,
+    register_all_samples_with_biosamplevault,
+    transfer_all_files,
+)
 
 
 @DagFlowTemplate(
@@ -18,8 +20,9 @@ from .tasks import (allocate_sequence_depot_submission_id,
     collect_submission_model,
     consume_kwargs_from_results=False,
 )
-async def coordinate_biosamplevault_registration(submission: SubmissionModel) -> SubmissionModel:
-    ...
+async def coordinate_biosamplevault_registration(
+    submission: SubmissionModel,
+) -> SubmissionModel: ...
 
 
 @DagFlowTemplate(
@@ -31,8 +34,7 @@ async def coordinate_biosamplevault_registration(submission: SubmissionModel) ->
     collect_submission_model,
     consume_kwargs_from_results=False,
 )
-async def coordinate_external_file_transfer(submission: SubmissionModel) -> SubmissionModel:
-    ...
+async def coordinate_external_file_transfer(submission: SubmissionModel) -> SubmissionModel: ...
 
 
 @LinearFlowTemplate(
@@ -41,5 +43,4 @@ async def coordinate_external_file_transfer(submission: SubmissionModel) -> Subm
     coordinate_external_file_transfer,
     finalize_sequence_depot_submission,
 )
-async def broker_sequence_submission_flow(submission: SubmissionModel) -> SubmissionModel:
-    ...
+async def broker_sequence_submission_flow(submission: SubmissionModel) -> SubmissionModel: ...

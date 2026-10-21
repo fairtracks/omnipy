@@ -14,6 +14,7 @@ from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
 
 class HexdumpPrettyPrinter(PrettyPrinter[str]):
     """Format byte content using a hexdump representation."""
+
     @override
     @classmethod
     def is_suitable_content(
@@ -49,6 +50,7 @@ class HexdumpPrettyPrinter(PrettyPrinter[str]):
     @classmethod
     def _get_content_for_draft_panel(cls, draft_panel: DraftPanel[object, AnyFrame]) -> str:
         from hexdump import hexdump
+
         if is_model_instance(draft_panel.content):
             raw_content = draft_panel.content.content
         else:

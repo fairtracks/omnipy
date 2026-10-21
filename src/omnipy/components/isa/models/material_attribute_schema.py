@@ -32,6 +32,7 @@ class IsaMaterialAttributeSchema(pyd.BaseModel):
     Attributes:
         characteristicType: Ontology term describing the attribute category.
     """
+
     class Config:
         """Validation settings for ISA material-attribute schema parsing.
 

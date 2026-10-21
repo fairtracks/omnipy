@@ -14,8 +14,8 @@ from .helpers.protocols import AssertColumnWiseMappings, AssertRowIter
 def assert_row_iter(runtime: Annotated[IsRuntime, pytest.fixture]) -> AssertRowIter:
     def _assert_row_iter(row_idx: int, row: IsMapping[str, object]) -> None:
         with hold_and_reset_prev_attrib_value(
-                runtime.config.data.model,
-                'dynamically_convert_elements_to_models',
+            runtime.config.data.model,
+            'dynamically_convert_elements_to_models',
         ):
             runtime.config.data.model.dynamically_convert_elements_to_models = False
             assert len(row) == 4
@@ -63,7 +63,8 @@ def assert_row_iter(runtime: Annotated[IsRuntime, pytest.fixture]) -> AssertRowI
 
 @pytest.fixture(scope='function')
 def assert_column_wise_mappings(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> AssertColumnWiseMappings:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> AssertColumnWiseMappings:
     def _assert_column_wise_mappings(
         a: IsMapping[str, Iterable[object]],
         b: IsMapping[str, Iterable[object]],
@@ -71,8 +72,8 @@ def assert_column_wise_mappings(
         assert set(a.keys()) == set(b.keys())
 
         with hold_and_reset_prev_attrib_value(
-                runtime.config.data.model,
-                'dynamically_convert_elements_to_models',
+            runtime.config.data.model,
+            'dynamically_convert_elements_to_models',
         ):
             runtime.config.data.model.dynamically_convert_elements_to_models = False
             for key in a.keys():

@@ -17,8 +17,8 @@ from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
-from omnipy.data._display.text.pretty import pretty_repr_of_draft_output
 import omnipy.data._display.text.pretty as pretty_module
+from omnipy.data._display.text.pretty import pretty_repr_of_draft_output
 import omnipy.data._display.text.preview_pruning as preview_pruning_module
 from omnipy.data.model import Model
 from omnipy.shared.enums.display import PrettyPrinterLib, SyntaxLanguageSpec
@@ -89,7 +89,9 @@ def _assert_pretty_repr_of_draft(
     assert out_draft_panel.within_frame.height is within_frame_height
 
 
-def _render_reflowed_text_panel_to_plain_terminal(panel: ReflowedTextDraftPanel,) -> str:
+def _render_reflowed_text_panel_to_plain_terminal(
+    panel: ReflowedTextDraftPanel,
+) -> str:
     return panel.render_next_stage().plain.terminal
 
 
@@ -98,7 +100,8 @@ def _render_reflowed_text_panel_to_plain_terminal(panel: ReflowedTextDraftPanel,
     [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
 )
 def test_pretty_repr_of_draft_multi_line_if_nested(
-        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    pretty_printer: PrettyPrinterLib.Literals,
+) -> None:
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     _assert_pretty_repr_of_draft(1, '1', config=config)
@@ -130,9 +133,7 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
     _assert_pretty_repr_of_draft([{1: 2, 3: 4}], '[{1: 2, 3: 4}]', config=config)
 
     _assert_pretty_repr_of_draft(
-        [{
-            1: 2, 3: 4
-        }],
+        [{1: 2, 3: 4}],
         dedent("""\
         [
           {
@@ -187,7 +188,9 @@ def test_pretty_repr_of_draft_multi_line_if_nested(
     'pretty_printer',
     [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
 )
-def test_pretty_repr_of_draft_indent(pretty_printer: PrettyPrinterLib.Literals,) -> None:
+def test_pretty_repr_of_draft_indent(
+    pretty_printer: PrettyPrinterLib.Literals,
+) -> None:
     config = OutputConfig(printer=pretty_printer, freedom=0, indent=4)
 
     _assert_pretty_repr_of_draft(
@@ -369,22 +372,18 @@ def test_pretty_repr_of_draft_in_frame(pretty_printer: PrettyPrinterLib.Literals
 @pytest.fixture
 def geometry_data() -> list:
     """Provide geometry data."""
-    return [{
-        'geometry': {
-            'location': {
-                'lng': 77.2295097, 'lat': 28.612912
-            },
-            'viewport': {
-                'northeast': {
-                    'lng': 77.2308586802915, 'lat': 28.6142609802915
+    return [
+        {
+            'geometry': {
+                'location': {'lng': 77.2295097, 'lat': 28.612912},
+                'viewport': {
+                    'northeast': {'lng': 77.2308586802915, 'lat': 28.6142609802915},
+                    'southwest': {'lng': 77.22816071970848, 'lat': 28.6115630197085},
                 },
-                'southwest': {
-                    'lng': 77.22816071970848, 'lat': 28.6115630197085
-                }
-            },
-            'location_type': 'APPROXIMATE',
+                'location_type': 'APPROXIMATE',
+            }
         }
-    }]
+    ]
 
 
 @pytest.mark.parametrize(
@@ -392,8 +391,8 @@ def geometry_data() -> list:
     [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
 )
 def test_pretty_repr_of_draft_approximately_in_frame(
-        geometry_data: Annotated[list, pytest.fixture],
-        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    geometry_data: Annotated[list, pytest.fixture], pretty_printer: PrettyPrinterLib.Literals
+) -> None:
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     _assert_pretty_repr_of_draft(
@@ -535,14 +534,16 @@ def test_pretty_repr_of_draft_approximately_in_frame(
                 os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
                 reason=dedent("""\
                     Devtools actually shortens the long line to fit the
-                    frame, which is not what we want to test here..""")),
+                    frame, which is not what we want to test here.."""),
+            ),
         ),
         PrettyPrinterLib.RICH,
         PrettyPrinterLib.COMPACT_JSON,
     ],
 )
 def test_pretty_repr_of_draft_one_line_wider_than_frame_dict(
-        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    pretty_printer: PrettyPrinterLib.Literals,
+) -> None:
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     # This is a test for the case where one line is wider than the frame
@@ -554,9 +555,7 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_dict(
 
     _assert_pretty_repr_of_draft(
         {
-            'nested': {
-                'short_key_1': 'short_value', 'short_key_2': 'short_value_2'
-            },
+            'nested': {'short_key_1': 'short_value', 'short_key_2': 'short_value_2'},
             'long_key': 'This is a very long value that will be too long for the frame',
         },
         dedent("""\
@@ -583,7 +582,8 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_dict(
                 os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
                 reason=dedent("""\
                     Devtools actually shortens the long line to fit the
-                    frame, which is not what we want to test here..""")),
+                    frame, which is not what we want to test here.."""),
+            ),
         ),
         PrettyPrinterLib.RICH,
         pytest.param(
@@ -593,12 +593,14 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_dict(
                 reason=dedent("""\
                     Known issue where long lines that necessarily overflow
                     make other lines overflow when it could have been
-                    averted.""")),
-        )
+                    averted."""),
+            ),
+        ),
     ],
 )
 def test_pretty_repr_of_draft_one_line_wider_than_frame_list(
-        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    pretty_printer: PrettyPrinterLib.Literals,
+) -> None:
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     # This is a test for the case where one line is wider than the frame
@@ -628,13 +630,11 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_list(
               }
             ]""")
     _assert_pretty_repr_of_draft(
-        [{
-            'h0': '##gff-version 3'
-        }, {
-            'h1': '##sequence-region NC_003424.3 1 5579133'
-        }, {
-            'h2': '##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=4896'
-        }],
+        [
+            {'h0': '##gff-version 3'},
+            {'h1': '##sequence-region NC_003424.3 1 5579133'},
+            {'h2': '##species https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=4896'},
+        ],
         expected_output,
         frame=Frame(Dimensions(60, 5), fixed_width=True),
         config=config,
@@ -652,14 +652,16 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_list(
                 os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
                 reason=dedent("""\
                     Devtools actually shortens the long line to fit the
-                    frame, which is not what we want to test here..""")),
+                    frame, which is not what we want to test here.."""),
+            ),
         ),
         PrettyPrinterLib.RICH,
         PrettyPrinterLib.COMPACT_JSON,
     ],
 )
 def test_pretty_repr_of_draft_one_line_wider_than_frame_complex(
-        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    pretty_printer: PrettyPrinterLib.Literals,
+) -> None:
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     # This is a test for the case where one line is wider than the frame
@@ -670,12 +672,12 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_complex(
     # having one line that is too wide for the frame.
 
     complex_content = {
-        'packages': [{
-            'extRefs': [{
-                'refCat': 'PKG', 'refLoc': 'john@v1', 'refType': 'purl'
-            }],
-            'copyrightText': 'Copyright (c) 2004-2010 John Incognito Doe <john.doe@nowhere.net>'
-        }]
+        'packages': [
+            {
+                'extRefs': [{'refCat': 'PKG', 'refLoc': 'john@v1', 'refType': 'purl'}],
+                'copyrightText': 'Copyright (c) 2004-2010 John Incognito Doe <john.doe@nowhere.net>',  # noqa: E501
+            }
+        ]
     }
     #
     # _assert_pretty_repr_of_draft(
@@ -728,10 +730,12 @@ def test_pretty_repr_of_draft_one_line_wider_than_frame_complex(
 def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) -> None:
     class ListOfIntsModel(Model[list[int]]):
         """Define ListOfIntsModel."""
+
         ...
 
     class ListOfListsOfIntsModel(Model[list[ListOfIntsModel]]):
         """Define ListOfListsOfIntsModel."""
+
         ...
 
     plain_output = dedent("""\
@@ -784,7 +788,8 @@ def test_pretty_repr_of_draft_models(pretty_printer: PrettyPrinterLib.Literals) 
     [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH, PrettyPrinterLib.COMPACT_JSON],
 )
 def test_pretty_repr_of_draft_variable_char_weight(
-        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    pretty_printer: PrettyPrinterLib.Literals,
+) -> None:
     config = OutputConfig(printer=pretty_printer, freedom=0)
 
     _assert_pretty_repr_of_draft(
@@ -823,7 +828,8 @@ def test_pretty_repr_of_draft_variable_char_weight(
 )
 @pytest.mark.parametrize('pretty_printer', [PrettyPrinterLib.DEVTOOLS, PrettyPrinterLib.RICH])
 def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
-        pretty_printer: PrettyPrinterLib.Literals) -> None:
+    pretty_printer: PrettyPrinterLib.Literals,
+) -> None:
     config = OutputConfig(printer=pretty_printer, freedom=0)
     _assert_pretty_repr_of_draft(
         [1, 2, '[...]'],
@@ -879,6 +885,7 @@ def test_plain_str_pretty_print() -> None:
 
     class A:
         """Define A."""
+
         def __repr__(self):
             return 'A()'
 
@@ -895,6 +902,7 @@ def test_plain_str_pretty_print() -> None:
 @dataclass
 class ColumnPrettyPrintCase:
     """Define ColumnPrettyPrintCase."""
+
     data: list[Any]
     expected_column_output: str
     expected_regular_output: str
@@ -946,7 +954,8 @@ def test_column_pretty_print(case: ColumnPrettyPrintCase) -> None:
 
 
 def test_pretty_repr_preview_pruning_preserves_viewport_and_skips_heavy_tail(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class _TrackedItem:
         touched_indices: set[int] = set()
 
@@ -1035,7 +1044,8 @@ def test_pretty_repr_preview_pruning_fail_open_for_unbounded_width_containers() 
 
 
 def test_pretty_repr_preview_pruning_fail_open_when_probe_raises(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class _TrackedItem:
         touched_indices: set[int] = set()
 
@@ -1064,7 +1074,8 @@ def test_pretty_repr_preview_pruning_fail_open_when_probe_raises(
 
 
 def test_pretty_repr_preview_pruning_fail_open_for_recursive_cycle_content(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class _TrackedItem:
         touched_indices: set[int] = set()
 
@@ -1126,7 +1137,8 @@ def test_pretty_repr_preview_pruning_fail_open_for_recursive_cycle_content(
 
 
 def test_pretty_repr_preview_pruning_prunes_growing_width_items(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class _GrowingWidthItem:
         touched_indices: set[int] = set()
 

@@ -15,8 +15,8 @@ from .models import PandasModel
 
 @TaskTemplate()
 def convert_dataset_list_of_dicts_to_pandas(
-        dataset: Dataset[Model[list[dict[str, NotIterableExceptStrOrBytesModel]]]]) \
-        -> PandasDataset:
+    dataset: Dataset[Model[list[dict[str, NotIterableExceptStrOrBytesModel]]]],
+) -> PandasDataset:
     """Convert list-of-dicts files to a pandas-backed dataset.
 
     Args:
@@ -45,12 +45,14 @@ def convert_dataset_list_of_dicts_to_pandas(
 
 
 @TaskTemplate()
-def convert_dataset_csv_to_pandas(dataset: Dataset[Model[bytes]],
-                                  delimiter: str = ',',
-                                  first_row_as_col_names=True,
-                                  col_names: list[str] | None = None,
-                                  ignore_comments: bool = True,
-                                  comments_char: str = '#') -> PandasDataset:
+def convert_dataset_csv_to_pandas(
+    dataset: Dataset[Model[bytes]],
+    delimiter: str = ',',
+    first_row_as_col_names=True,
+    col_names: list[str] | None = None,
+    ignore_comments: bool = True,
+    comments_char: str = '#',
+) -> PandasDataset:
     """Parse CSV-like files into a pandas-backed dataset.
 
     Args:
@@ -129,7 +131,8 @@ def convert_dataset_pandas_to_csv(
             sep=delimiter,
             header=col_names if col_names else True if first_row_as_col_names else False,
             encoding='utf8',
-            index=False)
+            index=False,
+        )
         out_dataset[key] = csv_stream.getvalue()
     return out_dataset
 
@@ -168,8 +171,9 @@ def extract_columns_as_files(dataset: PandasDataset, col_names: list[str]) -> Pa
 
 
 @TaskTemplate()
-def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSameNumberOfFiles,
-                                      vertical=True) -> PandasDataset:
+def concat_dataframes_across_datasets(
+    dataset_list: ListOfPandasDatasetsWithSameNumberOfFiles, vertical=True
+) -> PandasDataset:
     """Concatenate aligned files across multiple pandas datasets.
 
     Args:
@@ -199,17 +203,21 @@ def concat_dataframes_across_datasets(dataset_list: ListOfPandasDatasetsWithSame
     out_dataset = PandasDataset()
     out_datafile_names = tuple(dataset_list[0].keys())
     for df_index in range(len(out_datafile_names)):
-        df = pd.concat([tuple(dataset.values())[df_index] for dataset in dataset_list],
-                       axis=0 if vertical else 1)
+        df = pd.concat(
+            [tuple(dataset.values())[df_index] for dataset in dataset_list],
+            axis=0 if vertical else 1,
+        )
         out_dataset[out_datafile_names[df_index]] = df
     return out_dataset
 
 
 @TaskTemplate()
-def join_tables(table_1: PandasModel,
-                table_2: PandasModel,
-                join_type: str = 'outer',
-                on_cols: Sequence[str] | Mapping[str, str] | None = None) -> PandasModel:
+def join_tables(
+    table_1: PandasModel,
+    table_2: PandasModel,
+    join_type: str = 'outer',
+    on_cols: Sequence[str] | Mapping[str, str] | None = None,
+) -> PandasModel:
     """Join two tables by shared or explicitly mapped columns.
 
     Args:
@@ -242,12 +250,15 @@ def join_tables(table_1: PandasModel,
 
     common_colnames = extract_common_colnames(table_1, table_2)
 
-    if (on_cols is None and len(common_colnames) == 0) \
-            or (on_cols is not None and len(on_cols) == 0):
-        raise ValueError(f'No common column names were found. '
-                         f'table_1: {tuple(table_1.columns)}. '
-                         f'table_2: {tuple(table_2.columns)}. '
-                         f'on_cols: {on_cols}')
+    if (on_cols is None and len(common_colnames) == 0) or (
+        on_cols is not None and len(on_cols) == 0
+    ):
+        raise ValueError(
+            f'No common column names were found. '
+            f'table_1: {tuple(table_1.columns)}. '
+            f'table_2: {tuple(table_2.columns)}. '
+            f'on_cols: {on_cols}'
+        )
 
     on = None
     left_on = None
@@ -261,8 +272,9 @@ def join_tables(table_1: PandasModel,
     else:
         on = on_cols
 
-    column_info = f'common columns: {on}' if on is not None \
-        else f'column mappings: {tuple(on_cols.items())}'
+    column_info = (
+        f'common columns: {on}' if on is not None else f'column mappings: {tuple(on_cols.items())}'
+    )
     print(f'Joining tables on {column_info}, using join type: {join_type}...')
 
     merged_df = pd.merge(

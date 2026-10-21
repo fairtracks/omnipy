@@ -18,6 +18,7 @@ from omnipy.shared.protocols.compute.job import IsUniquelyNamedJob
 
 class RunStateRegistry(LogMixin):
     """Track uniquely named jobs and their state-transition history."""
+
     def __init__(self) -> None:
 
         self._jobs: dict[str, IsUniquelyNamedJob] = {}

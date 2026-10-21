@@ -30,12 +30,10 @@ from ...helpers.mocks import MockResizedStylablePlainCropPanel, MockStylablePlai
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=5, height=5))),
-
         #
         # id='exact_frame'
         #
@@ -43,7 +41,6 @@ from ...helpers.mocks import MockResizedStylablePlainCropPanel, MockStylablePlai
         # signalling more content. However, an empty layout has no
         # content, so the output is always empty.
         FrameTestCase(frame=Frame(Dimensions(width=0, height=1))),
-
         #
         # id='zero_frame'
         #
@@ -84,24 +81,24 @@ def case_layout_no_panels(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
-        FrameTestCase(frame=Frame(Dimensions(width=5, height=4)),),
-
+        FrameTestCase(
+            frame=Frame(Dimensions(width=5, height=4)),
+        ),
         #
         # id='exact_frame'
         #
-        FrameTestCase(frame=Frame(Dimensions(width=4, height=3)),),
-
+        FrameTestCase(
+            frame=Frame(Dimensions(width=4, height=3)),
+        ),
         #
         # id='smaller_frame'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=2, height=2)),
-            exp_plain_output=('╭╮\n'
-                              '╰╯\n'),
+            exp_plain_output=('╭╮\n╰╯\n'),
             # In all test cases in this module, ResizedLayoutDraftPanel is
             # created directly, skipping the layout reflow step for the
             # outer panel, which otherwise happens when transitioning from
@@ -112,15 +109,11 @@ def case_layout_no_panels(
             # Width and height are in any case cropped to 2 at the
             # "stylize" stage to fit the frame
             exp_stylized_dims=Dimensions(width=2, height=2),
-            exp_plain_output_only_width=('╭╮\n'
-                                         '││\n'
-                                         '╰╯\n'),
+            exp_plain_output_only_width=('╭╮\n││\n╰╯\n'),
             exp_stylized_dims_only_width=Dimensions(width=2, height=3),
-            exp_plain_output_only_height=('╭──╮\n'
-                                          '╰──╯\n'),
+            exp_plain_output_only_height=('╭──╮\n╰──╯\n'),
             exp_stylized_dims_only_height=Dimensions(width=4, height=2),
         ),
-
         #
         # id='tiny_width'
         #
@@ -137,12 +130,9 @@ def case_layout_no_panels(
             exp_stylized_dims=Dimensions(width=1, height=1),
             # For the 'only height' case, there is no cropping to a single
             # ellipsis character.
-            exp_plain_output_only_height=('╭──╮\n'
-                                          '│  │\n'
-                                          '╰──╯\n'),
+            exp_plain_output_only_height=('╭──╮\n│  │\n╰──╯\n'),
             exp_stylized_dims_only_height=Dimensions(width=4, height=3),
         ),
-
         #
         # id='tiny_height'
         #
@@ -157,9 +147,7 @@ def case_layout_no_panels(
             exp_stylized_dims=Dimensions(width=1, height=1),
             # For the 'only width' case, there is no cropping to a single
             # ellipsis character.
-            exp_plain_output_only_width=('╭──╮\n'
-                                         '│  │\n'
-                                         '╰──╯\n'),
+            exp_plain_output_only_width=('╭──╮\n│  │\n╰──╯\n'),
             exp_stylized_dims_only_width=Dimensions(width=4, height=3),
         ),
     ),
@@ -170,7 +158,8 @@ def case_layout_no_panels(
         'smaller_frame',
         'tiny_width',
         'tiny_height',
-    ))
+    ),
+)
 @pc.case(id='single_empty_panel', tags=['dims_and_edge_cases', 'layout'])
 def case_layout_single_empty_panel(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
@@ -178,9 +167,7 @@ def case_layout_single_empty_panel(
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(empty=MockStylablePlainCropPanel('')),
-        exp_plain_output_no_frame=('╭──╮\n'
-                                   '│  │\n'
-                                   '╰──╯\n'),
+        exp_plain_output_no_frame=('╭──╮\n│  │\n╰──╯\n'),
         exp_dims_all_stages_no_frame=Dimensions(width=4, height=3),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
@@ -194,31 +181,25 @@ def case_layout_single_empty_panel(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=5, height=3))),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=4, height=2))),
-
         #
         # id='smaller_frame'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=2, height=2)),
-            exp_plain_output=('╭╮\n'
-                              '╰╯\n'),
+            exp_plain_output=('╭╮\n╰╯\n'),
             # Width is cropped to 2 at the "stylize" stage to fit the frame
             exp_stylized_dims=Dimensions(width=2, height=2),
-            exp_plain_output_only_height=('╭──╮\n'
-                                          '╰──╯\n'),
+            exp_plain_output_only_height=('╭──╮\n╰──╯\n'),
             exp_stylized_dims_only_height=Dimensions(width=4, height=2),
         ),
-
         #
         # id='tiny_width'
         #
@@ -229,11 +210,9 @@ def case_layout_single_empty_panel(
             # 2 in the 'only height' case.
             exp_plain_output='…\n',
             exp_stylized_dims=Dimensions(width=1, height=1),
-            exp_plain_output_only_height=('╭──╮\n'
-                                          '╰──╯\n'),
+            exp_plain_output_only_height=('╭──╮\n╰──╯\n'),
             exp_stylized_dims_only_height=Dimensions(width=4, height=2),
         ),
-
         #
         # id='tiny_height'
         #
@@ -244,8 +223,7 @@ def case_layout_single_empty_panel(
             # 2 in the 'only width' case.
             exp_plain_output='…\n',
             exp_stylized_dims=Dimensions(width=1, height=1),
-            exp_plain_output_only_width=('╭──╮\n'
-                                         '╰──╯\n'),
+            exp_plain_output_only_width=('╭──╮\n╰──╯\n'),
             exp_stylized_dims_only_width=Dimensions(width=4, height=2),
         ),
     ),
@@ -256,7 +234,8 @@ def case_layout_single_empty_panel(
         'smaller_frame',
         'tiny_width',
         'tiny_height',
-    ))
+    ),
+)
 @pc.case(id='single_empty_panel_height_zero', tags=['dims_and_edge_cases', 'layout'])
 def case_layout_single_empty_panel_height_zero(
     frame_case: FrameTestCase[Layout, FrameWithWidthAndHeight],
@@ -264,12 +243,12 @@ def case_layout_single_empty_panel_height_zero(
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(
-            empty=MockStylablePlainCropPanel('', frame=Frame(Dimensions(width=None, height=0)))),
+            empty=MockStylablePlainCropPanel('', frame=Frame(Dimensions(width=None, height=0)))
+        ),
         # When the height of the empty panel is zero, the middle line of the
         # frame is not rendered, so the output is just the top and bottom
         # frame lines, also at the "resize" stage.
-        exp_plain_output_no_frame=('╭──╮\n'
-                                   '╰──╯\n'),
+        exp_plain_output_no_frame=('╭──╮\n╰──╯\n'),
         # Height is 2 at all stages, independent of the frame height
         exp_dims_all_stages_no_frame=Dimensions(width=4, height=2),
         frame_case=frame_case,
@@ -284,17 +263,14 @@ def case_layout_single_empty_panel_height_zero(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=20, height=5))),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=19, height=4))),
-
         #
         # id='taller_and_thinner_frame'
         #
@@ -326,19 +302,19 @@ def case_layout_single_empty_panel_height_zero(
             # See the test cases in 'layout_reflow' for examples on how
             # horizontal and vertical cropping modes are supposed to work
             # by default.
-            exp_plain_output=('╭────────────────╮\n'
-                              '│ This content i │\n'
-                              '│ extraordinary! │\n'
-                              '╰────────────────╯\n'),
+            exp_plain_output=(
+                '╭────────────────╮\n│ This content i │\n│ extraordinary! │\n╰────────────────╯\n'
+            ),
             exp_resized_dims=Dimensions(width=19, height=4),
             exp_stylized_dims=Dimensions(width=18, height=4),
-            exp_plain_output_only_height=('╭─────────────────╮\n'
-                                          '│ This content is │\n'
-                                          '│ extraordinary!  │\n'
-                                          '╰─────────────────╯\n'),
+            exp_plain_output_only_height=(
+                '╭─────────────────╮\n'
+                '│ This content is │\n'
+                '│ extraordinary!  │\n'
+                '╰─────────────────╯\n'
+            ),
             exp_stylized_dims_only_height=Dimensions(width=19, height=4),
         ),
-
         #
         # id='taller_and_thinner_frame_inner_frame_reflow'
         #
@@ -346,7 +322,11 @@ def case_layout_single_empty_panel_height_zero(
             content=Layout(
                 panel=MockStylablePlainCropPanel(
                     content='This content is\nextraordinary!',
-                    frame=Frame(Dimensions(width=14, height=3),))),
+                    frame=Frame(
+                        Dimensions(width=14, height=3),
+                    ),
+                )
+            ),
             frame=Frame(Dimensions(width=18, height=5)),
             # See comment to the `taller_and_thinner_frame` test case above
             # for default behavior in these test cases, with no automatic
@@ -356,14 +336,15 @@ def case_layout_single_empty_panel_height_zero(
             # part within the outer panel instead enables reflow of the
             # inner panel content, and the extra available height from the
             # outer frame is utilized.
-            exp_plain_output=('╭────────────────╮\n'
-                              '│ This content   │\n'
-                              '│ is             │\n'
-                              '│ extraordinary! │\n'
-                              '╰────────────────╯\n'),
+            exp_plain_output=(
+                '╭────────────────╮\n'
+                '│ This content   │\n'
+                '│ is             │\n'
+                '│ extraordinary! │\n'
+                '╰────────────────╯\n'
+            ),
             exp_dims_all_stages=Dimensions(width=18, height=5),
         ),
-
         #
         # id='taller_and_thinner_frame_inner_frame_reflow_justify_right'
         #
@@ -371,20 +352,24 @@ def case_layout_single_empty_panel_height_zero(
             content=Layout(
                 panel=MockStylablePlainCropPanel(
                     content='This content is\nextraordinary!',
-                    frame=Frame(Dimensions(width=14, height=3),),
+                    frame=Frame(
+                        Dimensions(width=14, height=3),
+                    ),
                     config=OutputConfig(justify=Justify.RIGHT),
-                )),
+                )
+            ),
             frame=Frame(Dimensions(width=18, height=5)),
             # As 'taller_and_thinner_frame_inner_frame_reflow', but with
             # right justification.
-            exp_plain_output=('╭────────────────╮\n'
-                              '│   This content │\n'
-                              '│             is │\n'
-                              '│ extraordinary! │\n'
-                              '╰────────────────╯\n'),
+            exp_plain_output=(
+                '╭────────────────╮\n'
+                '│   This content │\n'
+                '│             is │\n'
+                '│ extraordinary! │\n'
+                '╰────────────────╯\n'
+            ),
             exp_dims_all_stages=Dimensions(width=18, height=5),
         ),
-
         #
         # id='taller_and_thinner_frame_inner_frame_reflow_justify_center'
         #
@@ -392,17 +377,22 @@ def case_layout_single_empty_panel_height_zero(
             content=Layout(
                 panel=MockStylablePlainCropPanel(
                     content='This content is\nextraordinary!',
-                    frame=Frame(Dimensions(width=14, height=3),),
+                    frame=Frame(
+                        Dimensions(width=14, height=3),
+                    ),
                     config=OutputConfig(justify=Justify.CENTER),
-                )),
+                )
+            ),
             frame=Frame(Dimensions(width=18, height=5)),
             # As 'taller_and_thinner_frame_inner_frame_reflow', but with
             # right justification.
-            exp_plain_output=('╭────────────────╮\n'
-                              '│  This content  │\n'
-                              '│       is       │\n'
-                              '│ extraordinary! │\n'
-                              '╰────────────────╯\n'),
+            exp_plain_output=(
+                '╭────────────────╮\n'
+                '│  This content  │\n'
+                '│       is       │\n'
+                '│ extraordinary! │\n'
+                '╰────────────────╯\n'
+            ),
             exp_dims_all_stages=Dimensions(width=18, height=5),
         ),
         #
@@ -413,7 +403,8 @@ def case_layout_single_empty_panel_height_zero(
                 panel=MockResizedStylablePlainCropPanel(
                     content='This content is\nextraordinary!',
                     frame=Frame(Dimensions(width=17, height=3)),
-                )),
+                )
+            ),
             frame=Frame(Dimensions(width=18, height=3)),
             # See test cases 'taller_and_thinner_frame' and
             # 'taller_and_thinner_frame_inner_frame_reflow' above for
@@ -424,25 +415,24 @@ def case_layout_single_empty_panel_height_zero(
             # defined at the "resize" stage, larger than what is visible
             # through the outer frame, the content is plainly cropped to
             # fit the visible area at the "stylize" stage.
-            exp_plain_output=('╭────────────────╮\n'
-                              '│ This content i │\n'
-                              '╰────────────────╯\n'),
+            exp_plain_output=('╭────────────────╮\n│ This content i │\n╰────────────────╯\n'),
             exp_resized_dims=Dimensions(width=21, height=5),
             exp_stylized_dims=Dimensions(width=18, height=3),
-            exp_plain_output_only_width=('╭────────────────╮\n'
-                                         '│ This content i │\n'
-                                         '│ extraordinary! │\n'
-                                         '│                │\n'
-                                         '╰────────────────╯\n'),
+            exp_plain_output_only_width=(
+                '╭────────────────╮\n'
+                '│ This content i │\n'
+                '│ extraordinary! │\n'
+                '│                │\n'
+                '╰────────────────╯\n'
+            ),
             exp_resized_dims_only_width=Dimensions(width=21, height=5),
             exp_stylized_dims_only_width=Dimensions(width=18, height=5),
-            exp_plain_output_only_height=('╭───────────────────╮\n'
-                                          '│ This content is   │\n'
-                                          '╰───────────────────╯\n'),
+            exp_plain_output_only_height=(
+                '╭───────────────────╮\n│ This content is   │\n╰───────────────────╯\n'
+            ),
             exp_resized_dims_only_height=Dimensions(width=21, height=5),
             exp_stylized_dims_only_height=Dimensions(width=21, height=3),
         ),
-
         #
         # id='larger_frame_large_inner_panel'
         #
@@ -451,7 +441,8 @@ def case_layout_single_empty_panel_height_zero(
                 panel=MockResizedStylablePlainCropPanel(
                     content='This content is\nextraordinary!',
                     frame=Frame(Dimensions(width=17, height=3)),
-                )),
+                )
+            ),
             frame=Frame(Dimensions(width=23, height=6)),
             # See test cases 'smaller_frame_larger_inner_panel_crop' above
             # for context.
@@ -463,14 +454,15 @@ def case_layout_single_empty_panel_height_zero(
             # fit the inner panel within the visible area. Hence, one needs
             # to increase the inner panel frame in order to add whitespace,
             # not the outer panel frame.
-            exp_plain_output=('╭───────────────────╮\n'
-                              '│ This content is   │\n'
-                              '│ extraordinary!    │\n'
-                              '│                   │\n'
-                              '╰───────────────────╯\n'),
+            exp_plain_output=(
+                '╭───────────────────╮\n'
+                '│ This content is   │\n'
+                '│ extraordinary!    │\n'
+                '│                   │\n'
+                '╰───────────────────╯\n'
+            ),
             exp_dims_all_stages=Dimensions(width=21, height=5),
         ),
-
         #
         # id='larger_frame_large_inner_panel_flexible_frame'
         #
@@ -483,20 +475,22 @@ def case_layout_single_empty_panel_height_zero(
                         fixed_width=False,
                         fixed_height=False,
                     ),
-                )),
+                )
+            ),
             frame=Frame(Dimensions(width=23, height=6)),
             # Same as 'larger_frame_large_inner_panel', but with inner panel
             # frame set to flexible in both dimensions.
             #
             # In this case, the outer panel collapse to just fit the inner
             # panel content.
-            exp_plain_output=('╭─────────────────╮\n'
-                              '│ This content is │\n'
-                              '│ extraordinary!  │\n'
-                              '╰─────────────────╯\n'),
+            exp_plain_output=(
+                '╭─────────────────╮\n'
+                '│ This content is │\n'
+                '│ extraordinary!  │\n'
+                '╰─────────────────╯\n'
+            ),
             exp_dims_all_stages=Dimensions(width=19, height=4),
         ),
-
         #
         # id='smallest_frame'
         #
@@ -504,9 +498,7 @@ def case_layout_single_empty_panel_height_zero(
             frame=Frame(Dimensions(width=5, height=3)),
             # Smallest frame that can fit some panel content, which is
             # cropped into a single character.
-            exp_plain_output=('╭───╮\n'
-                              '│ T │\n'
-                              '╰───╯\n'),
+            exp_plain_output=('╭───╮\n│ T │\n╰───╯\n'),
             # Since the inner panel frame is undefined, no dimension
             # reduction happens in the "resize" stage. Instead, plain
             # cropping to a single character is applied at the "stylize"
@@ -515,14 +507,11 @@ def case_layout_single_empty_panel_height_zero(
             exp_stylized_dims=Dimensions(width=5, height=3),
             # The 'only width' case is cropped to a single character per
             # line.
-            exp_plain_output_only_width=('╭───╮\n'
-                                         '│ T │\n'
-                                         '│ e │\n'
-                                         '╰───╯\n'),
+            exp_plain_output_only_width=('╭───╮\n│ T │\n│ e │\n╰───╯\n'),
             exp_stylized_dims_only_width=Dimensions(width=5, height=4),
-            exp_plain_output_only_height=('╭─────────────────╮\n'
-                                          '│ This content is │\n'
-                                          '╰─────────────────╯\n'),
+            exp_plain_output_only_height=(
+                '╭─────────────────╮\n│ This content is │\n╰─────────────────╯\n'
+            ),
             exp_stylized_dims_only_height=Dimensions(width=19, height=3),
         ),
     ),
@@ -547,11 +536,13 @@ def case_layout_single_panel(
 ) -> PanelFrameVariantTestCase[Layout]:
     return PanelFrameVariantTestCase(
         content=Layout(
-            panel=MockStylablePlainCropPanel(content='This content is\nextraordinary!',)),
-        exp_plain_output_no_frame=('╭─────────────────╮\n'
-                                   '│ This content is │\n'
-                                   '│ extraordinary!  │\n'
-                                   '╰─────────────────╯\n'),
+            panel=MockStylablePlainCropPanel(
+                content='This content is\nextraordinary!',
+            )
+        ),
+        exp_plain_output_no_frame=(
+            '╭─────────────────╮\n│ This content is │\n│ extraordinary!  │\n╰─────────────────╯\n'
+        ),
         exp_dims_all_stages_no_frame=Dimensions(width=19, height=4),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
@@ -565,12 +556,10 @@ def case_layout_single_panel(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=23, height=5))),
-
         #
         # id='exact_frame_justify_right'
         #
@@ -581,21 +570,25 @@ def case_layout_single_panel(
                     title='A nice title',
                     frame=Frame(Dimensions(width=19, height=None)),
                     config=OutputConfig(justify=Justify.RIGHT),
-                ),),
+                ),
+            ),
             frame=Frame(Dimensions(width=23, height=5)),
-            exp_plain_output=('╭─────────────────────╮\n'
-                              '│    A nice title     │\n'
-                              '│                     │\n'
-                              '│   Here is some text │\n'
-                              '╰─────────────────────╯\n'),
-            exp_plain_output_only_height=('╭─────────────────────╮\n'
-                                          '│    A nice title     │\n'
-                                          '│                     │\n'
-                                          '│   Here is some text │\n'
-                                          '╰─────────────────────╯\n'),
+            exp_plain_output=(
+                '╭─────────────────────╮\n'
+                '│    A nice title     │\n'
+                '│                     │\n'
+                '│   Here is some text │\n'
+                '╰─────────────────────╯\n'
+            ),
+            exp_plain_output_only_height=(
+                '╭─────────────────────╮\n'
+                '│    A nice title     │\n'
+                '│                     │\n'
+                '│   Here is some text │\n'
+                '╰─────────────────────╯\n'
+            ),
             exp_dims_all_stages_only_height=Dimensions(width=23, height=5),
         ),
-
         #
         # id='exact_frame_justify_center'
         #
@@ -606,64 +599,67 @@ def case_layout_single_panel(
                     title='A nice title',
                     frame=Frame(Dimensions(width=19, height=None)),
                     config=OutputConfig(justify=Justify.CENTER),
-                ),),
+                ),
+            ),
             frame=Frame(Dimensions(width=23, height=5)),
-            exp_plain_output=('╭─────────────────────╮\n'
-                              '│    A nice title     │\n'
-                              '│                     │\n'
-                              '│  Here is some text  │\n'
-                              '╰─────────────────────╯\n'),
-            exp_plain_output_only_height=('╭─────────────────────╮\n'
-                                          '│    A nice title     │\n'
-                                          '│                     │\n'
-                                          '│  Here is some text  │\n'
-                                          '╰─────────────────────╯\n'),
+            exp_plain_output=(
+                '╭─────────────────────╮\n'
+                '│    A nice title     │\n'
+                '│                     │\n'
+                '│  Here is some text  │\n'
+                '╰─────────────────────╯\n'
+            ),
+            exp_plain_output_only_height=(
+                '╭─────────────────────╮\n'
+                '│    A nice title     │\n'
+                '│                     │\n'
+                '│  Here is some text  │\n'
+                '╰─────────────────────╯\n'
+            ),
             exp_dims_all_stages_only_height=Dimensions(width=23, height=5),
         ),
-
         #
         # id='exact_content_width_frame_single_line_title'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=21, height=5)),
-            exp_plain_output=('╭───────────────────╮\n'
-                              '│   A nice title    │\n'
-                              '│                   │\n'
-                              '│ Here is some text │\n'
-                              '╰───────────────────╯\n'),
+            exp_plain_output=(
+                '╭───────────────────╮\n'
+                '│   A nice title    │\n'
+                '│                   │\n'
+                '│ Here is some text │\n'
+                '╰───────────────────╯\n'
+            ),
             exp_stylized_dims=Dimensions(width=21, height=5),
         ),
-
         #
         # id='reduced_width_frame_single_line_title'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=20, height=5)),
-            exp_plain_output=('╭──────────────────╮\n'
-                              '│   A nice title   │\n'
-                              '│                  │\n'
-                              '│ Here is some tex │\n'
-                              '╰──────────────────╯\n'),
+            exp_plain_output=(
+                '╭──────────────────╮\n'
+                '│   A nice title   │\n'
+                '│                  │\n'
+                '│ Here is some tex │\n'
+                '╰──────────────────╯\n'
+            ),
             exp_stylized_dims=Dimensions(width=20, height=5),
         ),
-
         #
         # id='reduced_width_frame_not_double_line_title'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=14, height=6)),
-            exp_plain_output=('╭────────────╮\n'
-                              '│ A nice ti… │\n'
-                              '│            │\n'
-                              '│ Here is so │\n'
-                              '╰────────────╯\n'),
+            exp_plain_output=(
+                '╭────────────╮\n│ A nice ti… │\n│            │\n│ Here is so │\n╰────────────╯\n'
+            ),
             # Title is cropped at the `stylize` stage, even though there
             # is enough frame height to display it in two lines. This is
             # because the outer layout panel reflow is skipped for these
             # tests.
             exp_stylized_dims=Dimensions(width=14, height=5),
         ),
-
         #
         # id='reduced_height_frame_keep_title_at_bottom'
         #
@@ -673,28 +669,23 @@ def case_layout_single_panel(
             # extra lines of empty content, the outer layout panel height is
             # reduced to fit the inner panel dimensions.
             config=OutputConfig(title_at_top=False),
-            exp_plain_output=('╭────────╮\n'
-                              '│ Here i │\n'
-                              '│        │\n'
-                              '│ A nic… │\n'
-                              '╰────────╯\n'),
+            exp_plain_output=('╭────────╮\n│ Here i │\n│        │\n│ A nic… │\n╰────────╯\n'),
             exp_stylized_dims=Dimensions(width=10, height=5),
-            exp_plain_output_only_width=('╭────────╮\n'
-                                         '│ Here i │\n'
-                                         '│        │\n'
-                                         '│ A nic… │\n'
-                                         '╰────────╯\n'),
+            exp_plain_output_only_width=(
+                '╭────────╮\n│ Here i │\n│        │\n│ A nic… │\n╰────────╯\n'
+            ),
             exp_stylized_dims_only_width=Dimensions(width=10, height=5),
             # In the 'only height' case, the outer panel width is spanned
             # according to the width of the inner panel, adding whitespace.
-            exp_plain_output_only_height=('╭─────────────────────╮\n'
-                                          '│ Here is some text   │\n'
-                                          '│                     │\n'
-                                          '│    A nice title     │\n'
-                                          '╰─────────────────────╯\n'),
+            exp_plain_output_only_height=(
+                '╭─────────────────────╮\n'
+                '│ Here is some text   │\n'
+                '│                     │\n'
+                '│    A nice title     │\n'
+                '╰─────────────────────╯\n'
+            ),
             exp_stylized_dims_only_height=Dimensions(width=23, height=5),
         ),
-
         #
         # id='reduced_height_frame_taller_inner_panel_keep_title_at_bottom'
         #
@@ -704,38 +695,44 @@ def case_layout_single_panel(
                     content='Here is some text',
                     title='A nice title',
                     frame=Frame(Dimensions(width=19, height=5)),
-                )),
+                )
+            ),
             frame=Frame(Dimensions(width=10, height=7)),
             # Adding two lines to the inner panel frame height, spans the
             # outer panel height accordingly.
             config=OutputConfig(title_at_top=False),
-            exp_plain_output=('╭────────╮\n'
-                              '│ Here i │\n'
-                              '│        │\n'
-                              '│        │\n'
-                              '│        │\n'
-                              '│ A nic… │\n'
-                              '╰────────╯\n'),
+            exp_plain_output=(
+                '╭────────╮\n'
+                '│ Here i │\n'
+                '│        │\n'
+                '│        │\n'
+                '│        │\n'
+                '│ A nic… │\n'
+                '╰────────╯\n'
+            ),
             exp_resized_dims=Dimensions(width=23, height=7),
             exp_stylized_dims=Dimensions(width=10, height=7),
-            exp_plain_output_only_width=('╭────────╮\n'
-                                         '│ Here i │\n'
-                                         '│        │\n'
-                                         '│        │\n'
-                                         '│        │\n'
-                                         '│ A nic… │\n'
-                                         '╰────────╯\n'),
+            exp_plain_output_only_width=(
+                '╭────────╮\n'
+                '│ Here i │\n'
+                '│        │\n'
+                '│        │\n'
+                '│        │\n'
+                '│ A nic… │\n'
+                '╰────────╯\n'
+            ),
             exp_stylized_dims_only_width=Dimensions(width=10, height=7),
-            exp_plain_output_only_height=('╭─────────────────────╮\n'
-                                          '│ Here is some text   │\n'
-                                          '│                     │\n'
-                                          '│                     │\n'
-                                          '│                     │\n'
-                                          '│    A nice title     │\n'
-                                          '╰─────────────────────╯\n'),
+            exp_plain_output_only_height=(
+                '╭─────────────────────╮\n'
+                '│ Here is some text   │\n'
+                '│                     │\n'
+                '│                     │\n'
+                '│                     │\n'
+                '│    A nice title     │\n'
+                '╰─────────────────────╯\n'
+            ),
             exp_dims_all_stages_only_height=Dimensions(width=23, height=7),
         ),
-
         #
         # id='reduced_height_frame_does_not_remove_title'
         #
@@ -745,21 +742,18 @@ def case_layout_single_panel(
             # a single-line title, the title is removed. However, title
             # removal happens during outer layout panel reflow, which is
             # skipped in these tests.
-            exp_plain_output=('╭────────╮\n'
-                              '│ A nic… │\n'
-                              '│        │\n'
-                              '╰────────╯\n'),
+            exp_plain_output=('╭────────╮\n│ A nic… │\n│        │\n╰────────╯\n'),
             exp_stylized_dims=Dimensions(width=10, height=4),
-            exp_plain_output_only_width=('╭────────╮\n'
-                                         '│ A nic… │\n'
-                                         '│        │\n'
-                                         '│ Here i │\n'
-                                         '╰────────╯\n'),
+            exp_plain_output_only_width=(
+                '╭────────╮\n│ A nic… │\n│        │\n│ Here i │\n╰────────╯\n'
+            ),
             exp_stylized_dims_only_width=Dimensions(width=10, height=5),
-            exp_plain_output_only_height=('╭─────────────────────╮\n'
-                                          '│    A nice title     │\n'
-                                          '│                     │\n'
-                                          '╰─────────────────────╯\n'),
+            exp_plain_output_only_height=(
+                '╭─────────────────────╮\n'
+                '│    A nice title     │\n'
+                '│                     │\n'
+                '╰─────────────────────╯\n'
+            ),
             exp_stylized_dims_only_height=Dimensions(width=23, height=4),
         ),
     ),
@@ -787,18 +781,23 @@ def case_layout_single_panel_fixed_width_with_title(
                 content='Here is some text',
                 title='A nice title',
                 frame=Frame(Dimensions(width=19, height=None)),
-            )),
-        exp_plain_output_no_frame=('╭─────────────────────╮\n'
-                                   '│    A nice title     │\n'
-                                   '│                     │\n'
-                                   '│ Here is some text   │\n'
-                                   '╰─────────────────────╯\n'),
+            )
+        ),
+        exp_plain_output_no_frame=(
+            '╭─────────────────────╮\n'
+            '│    A nice title     │\n'
+            '│                     │\n'
+            '│ Here is some text   │\n'
+            '╰─────────────────────╯\n'
+        ),
         exp_dims_all_stages_no_frame=Dimensions(width=23, height=5),
-        exp_plain_output_only_height=('╭─────────────────────╮\n'
-                                      '│    A nice title     │\n'
-                                      '│                     │\n'
-                                      '│ Here is some text   │\n'
-                                      '╰─────────────────────╯\n'),
+        exp_plain_output_only_height=(
+            '╭─────────────────────╮\n'
+            '│    A nice title     │\n'
+            '│                     │\n'
+            '│ Here is some text   │\n'
+            '╰─────────────────────╯\n'
+        ),
         exp_dims_all_stages_only_height=Dimensions(width=23, height=5),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
@@ -812,17 +811,14 @@ def case_layout_single_panel_fixed_width_with_title(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=29, height=5))),
-
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=28, height=4))),
-
         #
         # id='width_27_frame'
         #
@@ -831,26 +827,28 @@ def case_layout_single_panel_fixed_width_with_title(
         # This reduces the width of the widest panel first.
         FrameTestCase(
             frame=Frame(Dimensions(width=27, height=4)),
-            exp_plain_output=('╭─────────────┬───────────╮\n'
-                              '│ Some conten │ (1, 2, 3) │\n'
-                              '│ is          │           │\n'
-                              '╰─────────────┴───────────╯\n'),
+            exp_plain_output=(
+                '╭─────────────┬───────────╮\n'
+                '│ Some conten │ (1, 2, 3) │\n'
+                '│ is          │           │\n'
+                '╰─────────────┴───────────╯\n'
+            ),
             exp_stylized_dims=Dimensions(width=27, height=4),
         ),
-
         #
         # id='width_25_frame'
         #
         # The two panels now have exactly the same width.
         FrameTestCase(
             frame=Frame(Dimensions(width=25, height=4)),
-            exp_plain_output=('╭───────────┬───────────╮\n'
-                              '│ Some cont │ (1, 2, 3) │\n'
-                              '│ is        │           │\n'
-                              '╰───────────┴───────────╯\n'),
+            exp_plain_output=(
+                '╭───────────┬───────────╮\n'
+                '│ Some cont │ (1, 2, 3) │\n'
+                '│ is        │           │\n'
+                '╰───────────┴───────────╯\n'
+            ),
             exp_stylized_dims=Dimensions(width=25, height=4),
         ),
-
         #
         # id='width_24_frame'
         #
@@ -858,25 +856,22 @@ def case_layout_single_panel_fixed_width_with_title(
         # rightmost panel first.
         FrameTestCase(
             frame=Frame(Dimensions(width=24, height=4)),
-            exp_plain_output=('╭───────────┬──────────╮\n'
-                              '│ Some cont │ (1, 2, 3 │\n'
-                              '│ is        │          │\n'
-                              '╰───────────┴──────────╯\n'),
+            exp_plain_output=(
+                '╭───────────┬──────────╮\n'
+                '│ Some cont │ (1, 2, 3 │\n'
+                '│ is        │          │\n'
+                '╰───────────┴──────────╯\n'
+            ),
             exp_stylized_dims=Dimensions(width=24, height=4),
         ),
-
         #
         # id='width_9_frame'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=9, height=4)),
-            exp_plain_output=('╭───┬───╮\n'
-                              '│ S │ ( │\n'
-                              '│ i │   │\n'
-                              '╰───┴───╯\n'),
+            exp_plain_output=('╭───┬───╮\n│ S │ ( │\n│ i │   │\n╰───┴───╯\n'),
             exp_stylized_dims=Dimensions(width=9, height=4),
         ),
-
         #
         # id='width_8_frame'
         #
@@ -884,13 +879,9 @@ def case_layout_single_panel_fixed_width_with_title(
         # rightmost panel first.
         FrameTestCase(
             frame=Frame(Dimensions(width=8, height=4)),
-            exp_plain_output=('╭───┬──╮\n'
-                              '│ S │  │\n'
-                              '│ i │  │\n'
-                              '╰───┴──╯\n'),
+            exp_plain_output=('╭───┬──╮\n│ S │  │\n│ i │  │\n╰───┴──╯\n'),
             exp_stylized_dims=Dimensions(width=8, height=4),
         ),
-
         #
         # id='width_7_frame'
         #
@@ -898,12 +889,9 @@ def case_layout_single_panel_fixed_width_with_title(
         # to 3.
         FrameTestCase(
             frame=Frame(Dimensions(width=7, height=4)),
-            exp_plain_output=('╭──┬──╮\n'
-                              '│  │  │\n'
-                              '╰──┴──╯\n'),
+            exp_plain_output=('╭──┬──╮\n│  │  │\n╰──┴──╯\n'),
             exp_stylized_dims=Dimensions(width=7, height=3),
         ),
-
         #
         # id='width_6_frame'
         #
@@ -913,60 +901,45 @@ def case_layout_single_panel_fixed_width_with_title(
         # maintaining consistency.
         FrameTestCase(
             frame=Frame(Dimensions(width=6, height=4)),
-            exp_plain_output=('╭─┬──╮\n'
-                              '│ │  │\n'
-                              '╰─┴──╯\n'),
+            exp_plain_output=('╭─┬──╮\n│ │  │\n╰─┴──╯\n'),
             exp_stylized_dims=Dimensions(width=6, height=3),
         ),
-
         #
         # id='width_5_frame'
         #
         # Reduce the widest panel
         FrameTestCase(
             frame=Frame(Dimensions(width=5, height=4)),
-            exp_plain_output=('╭─┬─╮\n'
-                              '│ │ │\n'
-                              '╰─┴─╯\n'),
+            exp_plain_output=('╭─┬─╮\n│ │ │\n╰─┴─╯\n'),
             exp_stylized_dims=Dimensions(width=5, height=3),
         ),
-
         #
         # id='width_4_frame'
         #
         # Reduce the rightmost panel
         FrameTestCase(
             frame=Frame(Dimensions(width=4, height=4)),
-            exp_plain_output=('╭─┬╮\n'
-                              '│ ││\n'
-                              '╰─┴╯\n'),
+            exp_plain_output=('╭─┬╮\n│ ││\n╰─┴╯\n'),
             exp_stylized_dims=Dimensions(width=4, height=3),
         ),
-
         #
         # id='width_3_frame'
         #
         # Reduce the widest panel
         FrameTestCase(
             frame=Frame(Dimensions(width=3, height=4)),
-            exp_plain_output=('╭┬╮\n'
-                              '│││\n'
-                              '╰┴╯\n'),
+            exp_plain_output=('╭┬╮\n│││\n╰┴╯\n'),
             exp_stylized_dims=Dimensions(width=3, height=3),
         ),
-
         #
         # id='width_2_frame'
         #
         # Remove the rightmost panel border
         FrameTestCase(
             frame=Frame(Dimensions(width=2, height=4)),
-            exp_plain_output=('╭┬\n'
-                              '││\n'
-                              '╰┴\n'),
+            exp_plain_output=('╭┬\n││\n╰┴\n'),
             exp_stylized_dims=Dimensions(width=2, height=3),
         ),
-
         #
         # id='width_1_frame'
         #
@@ -1006,10 +979,14 @@ def case_layout_two_panels_fixed_content_and_frame(
             # MockPanel->MockPanelStage2 carries out content reflow if the
             # frame dimensions are set.
             first=MockResizedStylablePlainCropPanel(
-                content='Some content\nis\nhere', frame=Frame(Dimensions(
-                    width=12,
-                    height=2,
-                ))),
+                content='Some content\nis\nhere',
+                frame=Frame(
+                    Dimensions(
+                        width=12,
+                        height=2,
+                    )
+                ),
+            ),
             # Here, the frame dimensions are not set, so MockPanel can be
             # used.
             second=MockStylablePlainCropPanel(content='(1, 2, 3)'),
@@ -1021,17 +998,21 @@ def case_layout_two_panels_fixed_content_and_frame(
             h_overflow=HorizontalOverflowMode.CROP,
             v_overflow=VerticalOverflowMode.CROP_BOTTOM,
         ),
-        exp_plain_output_no_frame=('╭──────────────┬───────────╮\n'
-                                   '│ Some content │ (1, 2, 3) │\n'
-                                   '│ is           │           │\n'
-                                   '╰──────────────┴───────────╯\n'),
+        exp_plain_output_no_frame=(
+            '╭──────────────┬───────────╮\n'
+            '│ Some content │ (1, 2, 3) │\n'
+            '│ is           │           │\n'
+            '╰──────────────┴───────────╯\n'
+        ),
         exp_dims_all_stages_no_frame=Dimensions(width=28, height=4),
         # No test cases reduce frame height. Thus, the 'only_height'
         # parameters are set globally for the entire test.
-        exp_plain_output_only_height=('╭──────────────┬───────────╮\n'
-                                      '│ Some content │ (1, 2, 3) │\n'
-                                      '│ is           │           │\n'
-                                      '╰──────────────┴───────────╯\n'),
+        exp_plain_output_only_height=(
+            '╭──────────────┬───────────╮\n'
+            '│ Some content │ (1, 2, 3) │\n'
+            '│ is           │           │\n'
+            '╰──────────────┴───────────╯\n'
+        ),
         exp_dims_all_stages_only_height=Dimensions(width=28, height=4),
         frame_case=frame_case,
         frame_variant=per_frame_variant,
@@ -1045,75 +1026,80 @@ def case_layout_two_panels_fixed_content_and_frame(
         # id='no_frame'
         #
         FrameTestCase(frame=None),
-
         #
         # id='larger_frame'
         #
-        FrameTestCase(frame=Frame(Dimensions(width=27, height=11)),),
-
+        FrameTestCase(
+            frame=Frame(Dimensions(width=27, height=11)),
+        ),
         #
         # id='exact_frame'
         #
         FrameTestCase(frame=Frame(Dimensions(width=25, height=9))),
-
         #
         # id='reduced_width_frame_single_line_title'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=20, height=9)),
-            exp_plain_output=('╭──────────────────╮\n'
-                              '│ Nested layout p… │\n'
-                              '│                  │\n'
-                              '│ ╭─────────────── │\n'
-                              '│ │ Inner text pan │\n'
-                              '│ │                │\n'
-                              '│ │ Here is some t │\n'
-                              '│ ╰─────────────── │\n'
-                              '╰──────────────────╯\n'),
+            exp_plain_output=(
+                '╭──────────────────╮\n'
+                '│ Nested layout p… │\n'
+                '│                  │\n'
+                '│ ╭─────────────── │\n'
+                '│ │ Inner text pan │\n'
+                '│ │                │\n'
+                '│ │ Here is some t │\n'
+                '│ ╰─────────────── │\n'
+                '╰──────────────────╯\n'
+            ),
             exp_stylized_dims=Dimensions(width=20, height=9),
-            exp_plain_output_only_height=('╭───────────────────────╮\n'
-                                          '│  Nested layout panel  │\n'
-                                          '│                       │\n'
-                                          '│ ╭───────────────────╮ │\n'
-                                          '│ │ Inner text panel  │ │\n'
-                                          '│ │                   │ │\n'
-                                          '│ │ Here is some text │ │\n'
-                                          '│ ╰───────────────────╯ │\n'
-                                          '╰───────────────────────╯\n'),
+            exp_plain_output_only_height=(
+                '╭───────────────────────╮\n'
+                '│  Nested layout panel  │\n'
+                '│                       │\n'
+                '│ ╭───────────────────╮ │\n'
+                '│ │ Inner text panel  │ │\n'
+                '│ │                   │ │\n'
+                '│ │ Here is some text │ │\n'
+                '│ ╰───────────────────╯ │\n'
+                '╰───────────────────────╯\n'
+            ),
             exp_dims_all_stages_only_height=Dimensions(width=25, height=9),
         ),
-
         #
         # id='reduced_width_frame_not_double_line_title'
         #
         FrameTestCase(
             frame=Frame(Dimensions(width=14, height=10)),
-            exp_plain_output=('╭────────────╮\n'
-                              '│ Nested la… │\n'
-                              '│            │\n'
-                              '│ ╭───────── │\n'
-                              '│ │ Inner te │\n'
-                              '│ │          │\n'
-                              '│ │ Here is  │\n'
-                              '│ ╰───────── │\n'
-                              '╰────────────╯\n'),
+            exp_plain_output=(
+                '╭────────────╮\n'
+                '│ Nested la… │\n'
+                '│            │\n'
+                '│ ╭───────── │\n'
+                '│ │ Inner te │\n'
+                '│ │          │\n'
+                '│ │ Here is  │\n'
+                '│ ╰───────── │\n'
+                '╰────────────╯\n'
+            ),
             # Title is cropped at the `stylize` stage, even though there
             # is enough frame height to display it in two lines. This is
             # because the outer layout panel reflow is skipped for these
             # tests.
             exp_stylized_dims=Dimensions(width=14, height=9),
-            exp_plain_output_only_height=('╭───────────────────────╮\n'
-                                          '│  Nested layout panel  │\n'
-                                          '│                       │\n'
-                                          '│ ╭───────────────────╮ │\n'
-                                          '│ │ Inner text panel  │ │\n'
-                                          '│ │                   │ │\n'
-                                          '│ │ Here is some text │ │\n'
-                                          '│ ╰───────────────────╯ │\n'
-                                          '╰───────────────────────╯\n'),
+            exp_plain_output_only_height=(
+                '╭───────────────────────╮\n'
+                '│  Nested layout panel  │\n'
+                '│                       │\n'
+                '│ ╭───────────────────╮ │\n'
+                '│ │ Inner text panel  │ │\n'
+                '│ │                   │ │\n'
+                '│ │ Here is some text │ │\n'
+                '│ ╰───────────────────╯ │\n'
+                '╰───────────────────────╯\n'
+            ),
             exp_dims_all_stages_only_height=Dimensions(width=25, height=9),
         ),
-
         #
         # id='reduced_height_frame'
         #
@@ -1123,26 +1109,29 @@ def case_layout_two_panels_fixed_content_and_frame(
             # a single-line title, the title is removed. However, title
             # removal happens during outer layout panel reflow, which is
             # skipped in these tests.
-            exp_plain_output=('╭───────────────────────╮\n'
-                              '│  Nested layout panel  │\n'
-                              '│                       │\n'
-                              '│ ╭───────────────────╮ │\n'
-                              '│ │ Inner text panel  │ │\n'
-                              '│ │                   │ │\n'
-                              '╰───────────────────────╯\n'),
+            exp_plain_output=(
+                '╭───────────────────────╮\n'
+                '│  Nested layout panel  │\n'
+                '│                       │\n'
+                '│ ╭───────────────────╮ │\n'
+                '│ │ Inner text panel  │ │\n'
+                '│ │                   │ │\n'
+                '╰───────────────────────╯\n'
+            ),
             exp_stylized_dims=Dimensions(width=25, height=7),
-            exp_plain_output_only_width=('╭───────────────────────╮\n'
-                                         '│  Nested layout panel  │\n'
-                                         '│                       │\n'
-                                         '│ ╭───────────────────╮ │\n'
-                                         '│ │ Inner text panel  │ │\n'
-                                         '│ │                   │ │\n'
-                                         '│ │ Here is some text │ │\n'
-                                         '│ ╰───────────────────╯ │\n'
-                                         '╰───────────────────────╯\n'),
+            exp_plain_output_only_width=(
+                '╭───────────────────────╮\n'
+                '│  Nested layout panel  │\n'
+                '│                       │\n'
+                '│ ╭───────────────────╮ │\n'
+                '│ │ Inner text panel  │ │\n'
+                '│ │                   │ │\n'
+                '│ │ Here is some text │ │\n'
+                '│ ╰───────────────────╯ │\n'
+                '╰───────────────────────╯\n'
+            ),
             exp_dims_all_stages_only_width=Dimensions(width=25, height=9),
         ),
-
         #
         # id='reduced_height_frame_keep_titles_at_bottom'
         #
@@ -1158,27 +1147,33 @@ def case_layout_two_panels_fixed_content_and_frame(
                         inner=MockStylablePlainCropPanel(
                             content='Here is some text',
                             title='Inner text panel',
-                        )),
+                        )
+                    ),
                     title='Nested layout panel',
                     config=OutputConfig(title_at_top=False),
-                )),
+                )
+            ),
             config=OutputConfig(title_at_top=False),
-            exp_plain_output=('╭───────────────────────╮\n'
-                              '│ ╭───────────────────╮ │\n'
-                              '│ │ Here is some text │ │\n'
-                              '│ │                   │ │\n'
-                              '│ │ Inner text panel  │ │\n'
-                              '╰───────────────────────╯\n'),
+            exp_plain_output=(
+                '╭───────────────────────╮\n'
+                '│ ╭───────────────────╮ │\n'
+                '│ │ Here is some text │ │\n'
+                '│ │                   │ │\n'
+                '│ │ Inner text panel  │ │\n'
+                '╰───────────────────────╯\n'
+            ),
             exp_stylized_dims=Dimensions(width=25, height=6),
-            exp_plain_output_only_width=('╭───────────────────────╮\n'
-                                         '│ ╭───────────────────╮ │\n'
-                                         '│ │ Here is some text │ │\n'
-                                         '│ │                   │ │\n'
-                                         '│ │ Inner text panel  │ │\n'
-                                         '│ ╰───────────────────╯ │\n'
-                                         '│                       │\n'
-                                         '│  Nested layout panel  │\n'
-                                         '╰───────────────────────╯\n'),
+            exp_plain_output_only_width=(
+                '╭───────────────────────╮\n'
+                '│ ╭───────────────────╮ │\n'
+                '│ │ Here is some text │ │\n'
+                '│ │                   │ │\n'
+                '│ │ Inner text panel  │ │\n'
+                '│ ╰───────────────────╯ │\n'
+                '│                       │\n'
+                '│  Nested layout panel  │\n'
+                '╰───────────────────────╯\n'
+            ),
             exp_dims_all_stages_only_width=Dimensions(width=25, height=9),
         ),
     ),
@@ -1204,18 +1199,22 @@ def case_layout_nested_layout_panels_with_title(
                     inner=MockStylablePlainCropPanel(
                         content='Here is some text',
                         title='Inner text panel',
-                    )),
+                    )
+                ),
                 title='Nested layout panel',
-            )),
-        exp_plain_output_no_frame=('╭───────────────────────╮\n'
-                                   '│  Nested layout panel  │\n'
-                                   '│                       │\n'
-                                   '│ ╭───────────────────╮ │\n'
-                                   '│ │ Inner text panel  │ │\n'
-                                   '│ │                   │ │\n'
-                                   '│ │ Here is some text │ │\n'
-                                   '│ ╰───────────────────╯ │\n'
-                                   '╰───────────────────────╯\n'),
+            )
+        ),
+        exp_plain_output_no_frame=(
+            '╭───────────────────────╮\n'
+            '│  Nested layout panel  │\n'
+            '│                       │\n'
+            '│ ╭───────────────────╮ │\n'
+            '│ │ Inner text panel  │ │\n'
+            '│ │                   │ │\n'
+            '│ │ Here is some text │ │\n'
+            '│ ╰───────────────────╯ │\n'
+            '╰───────────────────────╯\n'
+        ),
         exp_dims_all_stages_no_frame=Dimensions(width=25, height=9),
         frame_case=frame_case,
         frame_variant=per_frame_variant,

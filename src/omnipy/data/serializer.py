@@ -34,6 +34,7 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
 class Serializer(ABC, Generic[_DatasetT]):
     """Abstract base class for dataset serializers used by Omnipy import/export flows."""
+
     @classmethod
     @abstractmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
@@ -72,10 +73,11 @@ class Serializer(ABC, Generic[_DatasetT]):
 
 class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
     """Serializer base class for datasets stored as gzipped tar archives of item files."""
+
     @classmethod
-    def create_tarfile_from_dataset(cls,
-                                    dataset: _DatasetT,
-                                    data_encode_func: Callable[..., bytes | memoryview]) -> bytes:
+    def create_tarfile_from_dataset(
+        cls, dataset: _DatasetT, data_encode_func: Callable[..., bytes | memoryview]
+    ) -> bytes:
         """Build a gzipped tar archive by serializing each dataset item into one member file.
 
         Args:
@@ -124,17 +126,20 @@ class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
                 if ignore_dirs and tarfile_stream.getmember(filename).isdir():
                     continue
                 data_file = tarfile_stream.extractfile(filename)
-                assert data_file is not None, (f'Failed to extract file "{filename}" from tar '
-                                               f'archive.')
+                assert data_file is not None, (
+                    f'Failed to extract file "{filename}" from tar archive.'
+                )
                 if not any_file_suffix:
                     assert filename.endswith(f'.{cls.get_output_file_suffix()}')
                 data_file_name = os.path.basename('.'.join(filename.split('.')[:-1]))
                 getattr(dataset, import_method)(
-                    dictify_object_func(data_file_name, data_decode_func(data_file)))
+                    dictify_object_func(data_file_name, data_decode_func(data_file))
+                )
 
 
 class SerializerRegistry:
     """Registry and auto-detection helper for the serializers available to Omnipy."""
+
     def __init__(self) -> None:
         self._serializer_classes: list[Type[IsSerializer]] = []
 
@@ -161,7 +166,8 @@ class SerializerRegistry:
         return self._autodetect_serializer(dataset, self.serializers)
 
     def auto_detect_tar_file_serializer(
-            self, dataset: IsDataset) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
+        self, dataset: IsDataset
+    ) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
         """Try only tar-file serializers and return the first compatible pair."""
 
         return self._autodetect_serializer(dataset, self.tar_file_serializers)
@@ -174,14 +180,15 @@ class SerializerRegistry:
     ) -> tuple[IsDataset, IsSerializer] | tuple[None, None]:
 
         from omnipy.hub.runtime import runtime
+
         if runtime:
             with hold_and_reset_prev_attrib_value(
-                    runtime.config.data.model,
-                    'interactive',
+                runtime.config.data.model,
+                'interactive',
             ):
                 with hold_and_reset_prev_attrib_value(
-                        runtime.config.data.model,
-                        'dynamically_convert_elements_to_models',
+                    runtime.config.data.model,
+                    'dynamically_convert_elements_to_models',
                 ):
                     runtime.config.data.model.interactive = False
                     runtime.config.data.model.dynamically_convert_elements_to_models = False
@@ -235,7 +242,8 @@ class SerializerRegistry:
         return None, None
 
     def detect_tar_file_serializers_from_dataset_cls(
-            self, dataset: IsDataset) -> tuple[Type[IsTarFileSerializer], ...]:
+        self, dataset: IsDataset
+    ) -> tuple[Type[IsTarFileSerializer], ...]:
         """Return tar-file serializers that can load data into ``dataset``.
 
         If no direct match exists, serializers using the generic ``bytes`` suffix are returned as a
@@ -243,19 +251,28 @@ class SerializerRegistry:
         """
 
         serializers = tuple(
-            serializer_cls for serializer_cls in self.tar_file_serializers
-            if serializer_cls.is_dataset_directly_supported(dataset))
+            serializer_cls
+            for serializer_cls in self.tar_file_serializers
+            if serializer_cls.is_dataset_directly_supported(dataset)
+        )
         if len(serializers) == 0:
-            serializers = tuple(serializer_cls for serializer_cls in self.tar_file_serializers
-                                if serializer_cls.get_output_file_suffix() == 'bytes')
+            serializers = tuple(
+                serializer_cls
+                for serializer_cls in self.tar_file_serializers
+                if serializer_cls.get_output_file_suffix() == 'bytes'
+            )
         return serializers
 
     def detect_tar_file_serializers_from_file_suffix(
-            self, file_suffix: str) -> tuple[Type[IsTarFileSerializer], ...]:
+        self, file_suffix: str
+    ) -> tuple[Type[IsTarFileSerializer], ...]:
         """Return tar-file serializers whose output suffix matches ``file_suffix``."""
 
-        return tuple(serializer_cls for serializer_cls in self.tar_file_serializers
-                     if serializer_cls.get_output_file_suffix() == file_suffix)
+        return tuple(
+            serializer_cls
+            for serializer_cls in self.tar_file_serializers
+            if serializer_cls.get_output_file_suffix() == file_suffix
+        )
 
     def load_from_tar_file_path_based_on_file_suffix(
         self,
@@ -286,24 +303,28 @@ class SerializerRegistry:
         with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
             file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
         if len(file_suffixes) != 1:
-            log(f'Tar archive contains files with different or '
+            log(
+                f'Tar archive contains files with different or '
                 f'no file suffixes: {file_suffixes}. Serializer '
                 f'cannot be uniquely determined. Aborting '
-                f'restore.')
+                f'restore.'
+            )
         else:
             file_suffix = file_suffixes.pop()
             serializers = self.detect_tar_file_serializers_from_file_suffix(file_suffix)
             if len(serializers) == 0:
-                log(f'No serializer for file suffix "{file_suffix}" can be'
-                    f'determined. Aborting restore.')
+                log(
+                    f'No serializer for file suffix "{file_suffix}" can be'
+                    f'determined. Aborting restore.'
+                )
             else:
-                log(f'Reading dataset from a gzipped tarpack at'
-                    f' "{os.path.abspath(tar_file_path)}"')
+                log(f'Reading dataset from a gzipped tarpack at "{os.path.abspath(tar_file_path)}"')
 
                 serializer = serializers[0]
                 with open(tar_file_path, 'rb') as tarfile_binary:
                     auto_dataset = serializer.deserialize(
-                        tarfile_binary.read(), ignore_dirs=ignore_dirs)
+                        tarfile_binary.read(), ignore_dirs=ignore_dirs
+                    )
 
                 if to_dataset.get_type() is auto_dataset.get_type():
                     cast(HasData, to_dataset).data = cast(HasData, auto_dataset).data
@@ -347,13 +368,14 @@ class SerializerRegistry:
 
         serializers = self.detect_tar_file_serializers_from_dataset_cls(to_dataset)
         if len(serializers) == 0:
-            log(f'No serializer for Dataset with type "{type(to_dataset)}" can be '
-                f'determined.')
+            log(f'No serializer for Dataset with type "{type(to_dataset)}" can be determined.')
         else:
             for serializer in serializers:
-                log(f'Reading dataset from a gzipped tarpack at'
+                log(
+                    f'Reading dataset from a gzipped tarpack at'
                     f' "{os.path.abspath(tar_file_path)}" with serializer type: '
-                    f'"{serializer.__name__}"')
+                    f'"{serializer.__name__}"'
+                )
 
                 with open(tar_file_path, 'rb') as tarfile_binary:
                     out_dataset = serializer.deserialize(

@@ -29,8 +29,7 @@ async def test_sequence_submission_brokering(
     brokering_flow = broker_sequence_submission_flow.apply()
     completed_submission = await brokering_flow(submission)
 
-    assert completed_submission.to_data() == \
-        expected_sequence_depot_submission_payload
+    assert completed_submission.to_data() == expected_sequence_depot_submission_payload
 
     assert_job_state(brokering_flow, [RunState.FINISHED])
 

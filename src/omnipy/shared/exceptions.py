@@ -24,6 +24,7 @@ class AssumedToBeImplementedException(Exception):
     ellipsis or raises NotImplementedError, type checkers will check that
     the class actually implements the method.
     """
+
     ...
 
 

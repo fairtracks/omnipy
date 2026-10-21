@@ -41,13 +41,15 @@ def find_modules(path: Path, path_components: list[str]) -> Mapping[str, list[st
     ruined_module = '_'.join(path_components)
     if path.is_dir():
         modules[ruined_module] = (
-            path_components[1:] if len(path_components) > 1 else path_components)
+            path_components[1:] if len(path_components) > 1 else path_components
+        )
         for sub_path in path.iterdir():
             modules.update(find_modules(sub_path, path_components + [sub_path.stem]))
     elif path.is_file() and path.suffix == '.py':
         if path.stem != '__init__':
             modules[ruined_module] = (
-                path_components[1:-1] if len(path_components) > 2 else path_components[:-1])
+                path_components[1:-1] if len(path_components) > 2 else path_components[:-1]
+            )
     return modules
 
 
@@ -70,10 +72,12 @@ def main(base_name: str) -> None:
     modules = find_modules(Path(base_name), [base_name])
     modules = {key: val[0:1] for key, val in modules.items() if '__pycache__' not in key}
 
-    cp = subprocess.run(['pydeps', base_name, '--max-bacon=1', '--show-dot', '--no-output'],
-                        stdout=subprocess.PIPE,
-                        text=True,
-                        check=True)
+    cp = subprocess.run(
+        ['pydeps', base_name, '--max-bacon=1', '--show-dot', '--no-output'],
+        stdout=subprocess.PIPE,
+        text=True,
+        check=True,
+    )
     lines = cp.stdout.splitlines()
     header = [line for line in lines[:6] if 'concentrate' not in line and line != '']
     body = lines[6:-3]

@@ -36,6 +36,7 @@ class IsaSampleSchema(pyd.BaseModel):
         derivesFrom: Source materials from which the sample originates.
         comments: Optional comments attached to the sample.
     """
+
     class Config:
         """Validation settings for ISA sample schema parsing.
 
@@ -51,8 +52,9 @@ class IsaSampleSchema(pyd.BaseModel):
     field_context: Optional[str] = pyd.Field(None, alias='@context')
     field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     name: Optional[str] = None
-    characteristics: Optional[List[
-        material_attribute_value_schema.IsaMaterialAttributeValueModel]] = None
+    characteristics: Optional[
+        List[material_attribute_value_schema.IsaMaterialAttributeValueModel]
+    ] = None
     factorValues: Optional[List[factor_value_schema.IsaFactorValueModel]] = None
     derivesFrom: Optional[List[source_schema.IsaSourceModel]] = None
     comments: Optional[List[comment_schema.IsaCommentModel]] = None

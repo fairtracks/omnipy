@@ -77,7 +77,8 @@ store objects. Idea: Add a '_data' private member with 'data' as alias to keep U
 however with no values to not duplicate content. Keep difference between Dataset and
 MultiModelDataset as having two classes is useful for task typing, see e.g. the function
 definition of 'specialize_record_models' below.
-""")
+""",
+)
 def test_dataset_with_multiple_table_models_json_schema():
     my_dataset = MultiModelDataset[GeneralTable]()
 
@@ -90,16 +91,16 @@ def test_dataset_with_multiple_table_models_json_schema():
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_specialize_record_models_signature_and_return_type_func(
-        runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
-        case: FlowCase):
+    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
+    case: FlowCase,
+):
     for flow_obj in case.flow_template, case.flow_template.apply():
         assert inspect.signature(flow_obj).parameters == {
-            'tables':
-                Parameter(
-                    'tables',
-                    Parameter.POSITIONAL_OR_KEYWORD,
-                    annotation=Dataset[GeneralTable],
-                )
+            'tables': Parameter(
+                'tables',
+                Parameter.POSITIONAL_OR_KEYWORD,
+                annotation=Dataset[GeneralTable],
+            )
         }
         assert inspect.signature(flow_obj).return_annotation == MultiModelDataset[GeneralTable]
 
@@ -109,9 +110,10 @@ def test_specialize_record_models_signature_and_return_type_func(
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_run_specialize_record_models_consistent_types(
-        runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
-        skip_test_if_dynamically_convert_elements_to_models,
-        case: FlowCase):
+    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
+    skip_test_if_dynamically_convert_elements_to_models,
+    case: FlowCase,
+):
     specialize_record_models = case.flow_template.apply()
 
     old_dataset = Dataset[GeneralTable]()
@@ -132,8 +134,9 @@ def test_run_specialize_record_models_consistent_types(
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_fail_run_specialize_record_models_inconsistent_types(
-        runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
-        case: FlowCase):
+    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
+    case: FlowCase,
+):
     specialize_record_models = case.flow_template.apply()
 
     old_dataset = Dataset[GeneralTable]()

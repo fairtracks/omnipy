@@ -34,6 +34,7 @@ class IsaFactorValueSchema(pyd.BaseModel):
         unit: Unit ontology term for numeric values when applicable.
         comments: Optional comments describing the assignment.
     """
+
     class Config:
         """Validation settings for ISA factor-value schema parsing.
 

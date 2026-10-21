@@ -42,12 +42,14 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
 class TypeVarStore(Generic[_T]):
     """Sentinel generic used to expose a single type variable in helper type plumbing."""
+
     def __init__(self, t: _T) -> None:
         raise ValueError()
 
 
 class DoubleTypeVarStore(Generic[_T, _U]):
     """Sentinel generic used to expose one of two type variables to internal helpers."""
+
     def __init__(self, t: _T | _U) -> None:
         raise ValueError()
 
@@ -115,7 +117,6 @@ SPECIAL_METHODS_INFO_DICT: dict[str, MethodInfo] = {
     # '__ne__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__gt__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__ge__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
-
     # 3.3.7. Emulating container types ######################################
     '__len__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
     '__length_hint__': MethodInfo(state_changing=False, returns_same_type=YesNoMaybe.NO),
@@ -267,6 +268,7 @@ def cleanup_name_qualname_and_module(
         model_or_dataset: The generated specialized class whose metadata should be updated.
         orig_model: The type parameter representation used to build the specialized class name.
     """
+
     def _display_as_type(model: TypeForm):
         if isinstance(model, str):  # ForwardRef
             return model
@@ -277,8 +279,10 @@ def cleanup_name_qualname_and_module(
         elif is_union(model):
             return ' | '.join(_display_as_type(arg) for arg in get_args(model))
         elif len(get_args(model)) > 0:
-            return (f'{_display_as_type(get_origin(model))}'
-                    f"[{', '.join(_display_as_type(arg) for arg in get_args(model))}]")
+            return (
+                f'{_display_as_type(get_origin(model))}'
+                f'[{", ".join(_display_as_type(arg) for arg in get_args(model))}]'
+            )
         elif isinstance(model, TypeVar):
             return str(model)
         else:
@@ -322,14 +326,16 @@ def build_own_module_and_global_namespace_for_forward_refs(
         A tuple of (own_module_namespace, global_namespace) to be used for
         forward reference resolution.
     """
+
     def _module_loaded(module_name: str | None) -> TypeIs[str]:
         return module_name is not None and module_name in sys.modules
 
     own_module = getattr(own_class, '__module__', None)
-    own_module_ns = (sys.modules[own_module].__dict__ if _module_loaded(own_module) else {})
+    own_module_ns = sys.modules[own_module].__dict__ if _module_loaded(own_module) else {}
 
     calling_module_ns = (
-        sys.modules[calling_module].__dict__ if _module_loaded(calling_module) else {})
+        sys.modules[calling_module].__dict__ if _module_loaded(calling_module) else {}
+    )
 
     globalns: dict[str, Any] = {}
     globalns.update(own_module_ns)

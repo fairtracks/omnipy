@@ -35,6 +35,7 @@ class IsaMaterialAttributeValueSchema(pyd.BaseModel):
         unit: Unit ontology term when the value is quantitative.
         comments: Optional comments attached to the value.
     """
+
     class Config:
         """Validation settings for ISA attribute-value schema parsing.
 

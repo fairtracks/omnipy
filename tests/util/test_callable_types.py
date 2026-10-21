@@ -6,11 +6,13 @@ from typing import Any, AsyncGenerator, Callable, NamedTuple, Protocol
 import pytest
 import pytest_cases as pc
 
-from omnipy.util.callable_types import (callable_type_from_flags,
-                                        CallableType,
-                                        decorate_callable_by_type,
-                                        decorate_result_by_type,
-                                        get_callable_type)
+from omnipy.util.callable_types import (
+    callable_type_from_flags,
+    CallableType,
+    decorate_callable_by_type,
+    decorate_result_by_type,
+    get_callable_type,
+)
 
 
 class CallableTypeCase(NamedTuple):
@@ -153,15 +155,15 @@ def test_callable_type_from_flags(
 
 
 @pc.parametrize_with_cases('case', cases='.', has_tag='function')
-def test_decorate_callable_by_type_wrap_signature(case: CallableTypeCase,) -> None:
+def test_decorate_callable_by_type_wrap_signature(
+    case: CallableTypeCase,
+) -> None:
     call_func = case.create_call_func([])
 
     class CanAddInt(Protocol):
-        def __add__(self, other: int) -> int:
-            ...
+        def __add__(self, other: int) -> int: ...
 
-    def func_int_add(value: CanAddInt) -> int:
-        ...
+    def func_int_add(value: CanAddInt) -> int: ...
 
     func_int_add_sign = inspect.signature(func_int_add)
 
@@ -177,7 +179,9 @@ def test_decorate_callable_by_type_wrap_signature(case: CallableTypeCase,) -> No
 
 
 @pc.parametrize_with_cases('case', cases='.')
-def test_decorate_callable_by_type_with_context(case: CallableTypeCase,) -> None:
+def test_decorate_callable_by_type_with_context(
+    case: CallableTypeCase,
+) -> None:
     tracked_context = TrackedContext()
     call_func = case.create_call_func(tracked_context.state)
 
@@ -231,7 +235,8 @@ def test_decorate_callable_by_type_async_without_resolve_async_result_raises() -
 def test_decorate_result_by_type(case: CallableTypeCase) -> None:
     state: list[str] = []
     decorated_call = decorate_result_by_type(on_finished=lambda: state.append('finished'))(
-        case.create_call_func(state))
+        case.create_call_func(state)
+    )
 
     assert _execute_call(case, decorated_call) == case.expected_result
     assert state == [*case.expected_events, 'finished']

@@ -1,4 +1,5 @@
 """Shared fixtures for integration tests."""
+
 from typing import Annotated
 
 import pytest
@@ -16,5 +17,4 @@ def runtime_all_engines(runtime: Annotated[IsRuntime, pytest.fixture], engine: s
 
 
 @pc.fixture(autouse=True, scope='session')
-def auto_prefect_test_fixture(prefect_test_fixture: Annotated[None, pc.fixture]) -> None:
-    ...
+def auto_prefect_test_fixture(prefect_test_fixture: Annotated[None, pc.fixture]) -> None: ...

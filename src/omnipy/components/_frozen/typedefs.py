@@ -11,7 +11,8 @@ from ..general.models import NotIterableExceptStrOrBytesModel
 
 _KeyT = TypeVar('_KeyT', default=str | Hashable)
 _ValT = TypeVar(
-    '_ValT', bound=NotIterableExceptStrOrBytesModel, default=NotIterableExceptStrOrBytesModel)
+    '_ValT', bound=NotIterableExceptStrOrBytesModel, default=NotIterableExceptStrOrBytesModel
+)
 
 
 # Unfortunately, MappingProxyType is declared as a final class, which means it cannot be subclassed.
@@ -57,12 +58,15 @@ class FrozenDict(UserDict[_KeyT, _ValT], Generic[_KeyT, _ValT]):
         immutable list counterpart). Luckily, Omnipy provides just that guarantee with
         NestedFrozenDictsModel, NestedTuplesModel and NestedFrozenCollectionsModel.
     """
-    def __init__(self,
-                 unfrozen_dict: dict[_KeyT, _ValT] | Sequence[tuple[_KeyT, _ValT]] | None = None,
-                 /,
-                 **kwargs):
+
+    def __init__(
+        self,
+        unfrozen_dict: dict[_KeyT, _ValT] | Sequence[tuple[_KeyT, _ValT]] | None = None,
+        /,
+        **kwargs,
+    ):
         super().__init__(unfrozen_dict, **kwargs)
         self.data: MappingProxyType[_KeyT, _ValT] = MappingProxyType(self.data)  # type: ignore
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.data if hasattr(self, 'data') else ''})"
+        return f'{self.__class__.__name__}({self.data if hasattr(self, "data") else ""})'

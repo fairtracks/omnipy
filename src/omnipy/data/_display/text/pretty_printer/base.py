@@ -25,6 +25,7 @@ class PrettyPrinter(ABC, Generic[ContentT]):
     Subclasses define how content is selected, normalized, and formatted into a
     ``ReflowedTextDraftPanel`` that can continue through the rendering pipeline.
     """
+
     @classmethod
     @abstractmethod
     def is_suitable_content(
@@ -67,12 +68,14 @@ class PrettyPrinter(ABC, Generic[ContentT]):
 
     @classmethod
     @abstractmethod
-    def _get_content_for_draft_panel(cls, draft_panel: DraftPanel[object, AnyFrame]) -> ContentT:
-        ...
+    def _get_content_for_draft_panel(
+        cls, draft_panel: DraftPanel[object, AnyFrame]
+    ) -> ContentT: ...
 
     @classmethod
     def _get_default_constraints_for_draft_panel(
-            cls, draft_panel: DraftPanel[object, AnyFrame]) -> Constraints:
+        cls, draft_panel: DraftPanel[object, AnyFrame]
+    ) -> Constraints:
         return draft_panel.constraints
 
     @classmethod
@@ -166,9 +169,9 @@ class PrettyPrinter(ABC, Generic[ContentT]):
 
 
 class StatsTighteningPrettyPrinter(
-        PrettyPrinter[ContentT],
-        ABC,
-        Generic[ContentT],
+    PrettyPrinter[ContentT],
+    ABC,
+    Generic[ContentT],
 ):
     """Pretty printer that can iteratively tighten formatting constraints.
 
@@ -176,17 +179,20 @@ class StatsTighteningPrettyPrinter(
     detect whether successive formatting attempts moved in the expected
     direction.
     """
+
     def __init__(self) -> None:
         super().__init__()
         self._prev_stat_requirements: dict[str, pyd.NonNegativeInt | None] = {}
         self._prev_calculated_stats: dict[str, pyd.NonNegativeInt | None] = {}
 
     def __hash__(self) -> int:
-        return hash((
-            self.__class__,
-            sorted_dict_hash(self._prev_stat_requirements),
-            sorted_dict_hash(self._prev_calculated_stats),
-        ))
+        return hash(
+            (
+                self.__class__,
+                sorted_dict_hash(self._prev_stat_requirements),
+                sorted_dict_hash(self._prev_calculated_stats),
+            )
+        )
 
     @abstractmethod
     def prepare_draft_for_print_with_tightened_stat_reqs(
@@ -302,6 +308,7 @@ class WidthReducingPrettyPrinter(StatsTighteningPrettyPrinter[ContentT], Generic
     Each iteration lowers frame width and checks whether both required and
     observed width statistics tightened.
     """
+
     def _init_prev_frame_width(
         self,
         cur_reflowed_text_panel: ReflowedTextDraftPanel[FrameWithWidth],
@@ -372,13 +379,14 @@ class WidthReducingPrettyPrinter(StatsTighteningPrettyPrinter[ContentT], Generic
             'frame_width',
             draft_for_print.frame.dims.width,
             cur_reflowed_text_panel.orig_dims.width,
-            operator.lt)
+            operator.lt,
+        )
 
 
 class ConstraintTighteningPrettyPrinter(
-        StatsTighteningPrettyPrinter[ContentT],
-        ABC,
-        Generic[ContentT],
+    StatsTighteningPrettyPrinter[ContentT],
+    ABC,
+    Generic[ContentT],
 ):
     """Pretty printer that retries formatting with stricter constraints.
 

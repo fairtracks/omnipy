@@ -13,13 +13,15 @@ from typing import cast, Generic, overload
 
 from typing_extensions import TypeIs
 
-from omnipy.data._display.dimensions import (Dimensions,
-                                             DimensionsWithWidthAndHeight,
-                                             has_height,
-                                             has_width,
-                                             has_width_and_height,
-                                             HeightT,
-                                             WidthT)
+from omnipy.data._display.dimensions import (
+    Dimensions,
+    DimensionsWithWidthAndHeight,
+    has_height,
+    has_width,
+    has_width_and_height,
+    HeightT,
+    WidthT,
+)
 import omnipy.util.pydantic as pyd
 
 
@@ -67,6 +69,7 @@ class Frame(Generic[WidthT, HeightT]):
     frame. The layout panel reflow algorithm is defined in the module
     `omnipy.data._display.layout.flow.base.optimize_layout_to_fit_frame`.
     """
+
     dims: Dimensions[WidthT, HeightT]
     fixed_width: bool | None = None
     fixed_height: bool | None = None
@@ -85,8 +88,9 @@ class Frame(Generic[WidthT, HeightT]):
         dim_value = getattr(dims, dims_attr)
         if dim_value is None:
             if raise_if_incorrect:
-                assert fixed_value is not True, \
+                assert fixed_value is not True, (
                     f'Cannot fix {dims_attr} of frame with {dims_attr}=None'
+                )
             return False
         return True if fixed_value is None else fixed_value
 
@@ -107,8 +111,7 @@ class Frame(Generic[WidthT, HeightT]):
         return cls._auto_fixed_value_from_dims('height', fixed_height, values['dims'])
 
     @overload
-    def modified_copy(self, width: pyd.NonNegativeInt, **kwargs) -> 'FrameWithWidth':
-        ...
+    def modified_copy(self, width: pyd.NonNegativeInt, **kwargs) -> 'FrameWithWidth': ...
 
     @overload
     def modified_copy(
@@ -116,8 +119,7 @@ class Frame(Generic[WidthT, HeightT]):
         width: None | pyd.UndefinedType,
         height: pyd.NonNegativeInt,
         **kwargs,
-    ) -> 'FrameWithHeight':
-        ...
+    ) -> 'FrameWithHeight': ...
 
     @overload
     def modified_copy(
@@ -125,8 +127,7 @@ class Frame(Generic[WidthT, HeightT]):
         width: pyd.NonNegativeInt,
         height: pyd.NonNegativeInt,
         **kwargs,
-    ) -> 'FrameWithWidthAndHeight':
-        ...
+    ) -> 'FrameWithWidthAndHeight': ...
 
     @overload
     def modified_copy(
@@ -134,8 +135,7 @@ class Frame(Generic[WidthT, HeightT]):
         width: pyd.NonNegativeInt | None | pyd.UndefinedType = pyd.Undefined,
         height: pyd.NonNegativeInt | None | pyd.UndefinedType = pyd.Undefined,
         **kwargs,
-    ) -> 'Frame':
-        ...
+    ) -> 'Frame': ...
 
     def modified_copy(
         self,

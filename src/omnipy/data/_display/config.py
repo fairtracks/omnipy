@@ -7,20 +7,24 @@ import pygments.styles
 import pygments.util
 import rich.syntax
 
-from omnipy.shared.constants import (MAX_PANEL_NESTING_DEPTH,
-                                     MAX_PANELS_HORIZONTALLY,
-                                     MIN_CROP_WIDTH,
-                                     MIN_PANEL_WIDTH)
+from omnipy.shared.constants import (
+    MAX_PANEL_NESTING_DEPTH,
+    MAX_PANELS_HORIZONTALLY,
+    MIN_CROP_WIDTH,
+    MIN_PANEL_WIDTH,
+)
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
-from omnipy.shared.enums.display import (DarkBackground,
-                                         DisplayColorSystem,
-                                         HorizontalOverflowMode,
-                                         Justify,
-                                         MaxTitleHeight,
-                                         PanelDesign,
-                                         PrettyPrinterLib,
-                                         SyntaxLanguageSpec,
-                                         VerticalOverflowMode)
+from omnipy.shared.enums.display import (
+    DarkBackground,
+    DisplayColorSystem,
+    HorizontalOverflowMode,
+    Justify,
+    MaxTitleHeight,
+    PanelDesign,
+    PrettyPrinterLib,
+    SyntaxLanguageSpec,
+    VerticalOverflowMode,
+)
 from omnipy.shared.enums.ui import UserInterfaceType
 import omnipy.util.pydantic as pyd
 
@@ -221,6 +225,8 @@ class OutputConfig:
         min_panel_width = values.get('min_panel_width')
         if min_crop_width is not None and min_panel_width is not None:
             if min_crop_width < min_panel_width:
-                raise ValueError(f'min_crop_width ({min_crop_width}) cannot be less than '
-                                 f'min_panel_width ({min_panel_width})')
+                raise ValueError(
+                    f'min_crop_width ({min_crop_width}) cannot be less than '
+                    f'min_panel_width ({min_panel_width})'
+                )
         return values

@@ -1,4 +1,5 @@
 """Mixin for binding fixed parameters and parameter key remapping to jobs."""
+
 import os
 from textwrap import dedent
 from types import MappingProxyType
@@ -21,6 +22,7 @@ if is_package_editable('omnipy'):
 
 class ParamsFuncJobBaseMixin:
     """Apply fixed parameters and keyword remapping before job execution."""
+
     def __init__(
         self,
         *,
@@ -75,13 +77,18 @@ class ParamsFuncJobBaseMixin:
         self_as_signature_func_job_base_mixin = cast(SignatureFuncJobBaseMixin, self)
 
         mapped_fixed_params = self._param_key_mapper.delete_matching_keys(
-            self._fixed_params, inverse=True)
+            self._fixed_params, inverse=True
+        )
         mapped_kwargs = self._param_key_mapper.map_matching_keys_delete_inverse_matches_keep_rest(
-            kwargs, inverse=True)
+            kwargs, inverse=True
+        )
         try:
             if len(mapped_kwargs) < len(kwargs):
-                raise TypeError('Keyword arguments {} matches parameter key map inversely.'.format(
-                    tuple(set(kwargs.keys()) - set(mapped_kwargs.keys()))))
+                raise TypeError(
+                    'Keyword arguments {} matches parameter key map inversely.'.format(
+                        tuple(set(kwargs.keys()) - set(mapped_kwargs.keys()))
+                    )
+                )
 
             super_as_job_base = cast(IsJobBase, super())
             result = super_as_job_base._call_job(*args, **mapped_fixed_params, **mapped_kwargs)
@@ -89,16 +96,18 @@ class ParamsFuncJobBaseMixin:
         except TypeError as e:
             if str(e).startswith('Incorrect job function arguments'):
                 signature_values = self_as_signature_func_job_base_mixin.param_signatures.values()
-                raise TypeError(f'Incorrect job function arguments for job '
-                                f'"{self_as_name_job_base_mixin.name}"!\n'
-                                f'Job class name: {self.__class__.__name__}\n'
-                                f'Current parameter key map content: {self.param_key_map}\n'
-                                f'Positional arguments: {repr_max_len(args)}\n'
-                                f'Keyword arguments: {repr_max_len(kwargs)}\n'
-                                f'Mapped fixed parameters: {repr_max_len(mapped_fixed_params)}\n'
-                                f'Mapped keyword arguments: {repr_max_len(mapped_kwargs)}\n'
-                                f'Call function signature parameters: '
-                                f'{[(str(p), p.kind) for p in signature_values]}') from e
+                raise TypeError(
+                    f'Incorrect job function arguments for job '
+                    f'"{self_as_name_job_base_mixin.name}"!\n'
+                    f'Job class name: {self.__class__.__name__}\n'
+                    f'Current parameter key map content: {self.param_key_map}\n'
+                    f'Positional arguments: {repr_max_len(args)}\n'
+                    f'Keyword arguments: {repr_max_len(kwargs)}\n'
+                    f'Mapped fixed parameters: {repr_max_len(mapped_fixed_params)}\n'
+                    f'Mapped keyword arguments: {repr_max_len(mapped_kwargs)}\n'
+                    f'Call function signature parameters: '
+                    f'{[(str(p), p.kind) for p in signature_values]}'
+                ) from e
             else:
                 raise
 

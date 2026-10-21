@@ -7,8 +7,9 @@ from pathlib import Path
 def _set_prefect_config_path():
     prefect_module_dir = Path(__file__).resolve().parent
 
-    os.environ['PREFECT_LOGGING_SETTINGS_PATH'] = \
-        f"{prefect_module_dir.joinpath('settings', 'logging.yml')}"
+    os.environ['PREFECT_LOGGING_SETTINGS_PATH'] = (
+        f'{prefect_module_dir.joinpath("settings", "logging.yml")}'
+    )
 
 
 _set_prefect_config_path()

@@ -115,8 +115,10 @@ def test_constraints_satisfaction_immutable_properties() -> None:
 def test_constraints_satisfaction_repr() -> None:
     # Test case with no constraint limit (None)
     satisfied = ConstraintsSatisfaction(Constraints())
-    expected = ('ConstraintsSatisfaction(max_inline_container_width_incl=None, '
-                'max_inline_list_or_dict_width_excl=None)')
+    expected = (
+        'ConstraintsSatisfaction(max_inline_container_width_incl=None, '
+        'max_inline_list_or_dict_width_excl=None)'
+    )
     assert repr(satisfied) == expected
 
     # Test case with constraint limit but no max_inline_container_width_incl (False)
@@ -125,8 +127,10 @@ def test_constraints_satisfaction_repr() -> None:
         max_inline_list_or_dict_width_excl=10,
     )
     satisfied = ConstraintsSatisfaction(constraints)
-    expected = ('ConstraintsSatisfaction(max_inline_container_width_incl=False, '
-                'max_inline_list_or_dict_width_excl=False)')
+    expected = (
+        'ConstraintsSatisfaction(max_inline_container_width_incl=False, '
+        'max_inline_list_or_dict_width_excl=False)'
+    )
     assert repr(satisfied) == expected
 
     # Test case where max width is within limit (True)
@@ -135,8 +139,10 @@ def test_constraints_satisfaction_repr() -> None:
         max_inline_container_width_incl=10,
         max_inline_list_or_dict_width_excl=10,
     )
-    expected = ('ConstraintsSatisfaction(max_inline_container_width_incl=True, '
-                'max_inline_list_or_dict_width_excl=True)')
+    expected = (
+        'ConstraintsSatisfaction(max_inline_container_width_incl=True, '
+        'max_inline_list_or_dict_width_excl=True)'
+    )
     assert repr(satisfied) == expected
 
     # Test case where max width exceeds limit (False)
@@ -145,8 +151,10 @@ def test_constraints_satisfaction_repr() -> None:
         max_inline_container_width_incl=30,
         max_inline_list_or_dict_width_excl=20,
     )
-    expected = ('ConstraintsSatisfaction(max_inline_container_width_incl=False, '
-                'max_inline_list_or_dict_width_excl=False)')
+    expected = (
+        'ConstraintsSatisfaction(max_inline_container_width_incl=False, '
+        'max_inline_list_or_dict_width_excl=False)'
+    )
     assert repr(satisfied) == expected
 
     # Test edge case with zero constraint limit
@@ -159,8 +167,10 @@ def test_constraints_satisfaction_repr() -> None:
         max_inline_container_width_incl=0,
         max_inline_list_or_dict_width_excl=0,
     )
-    expected = ('ConstraintsSatisfaction(max_inline_container_width_incl=True, '
-                'max_inline_list_or_dict_width_excl=True)')
+    expected = (
+        'ConstraintsSatisfaction(max_inline_container_width_incl=True, '
+        'max_inline_list_or_dict_width_excl=True)'
+    )
     assert repr(satisfied) == expected
 
     # Test edge case where max width is 0 but limit is positive
@@ -169,6 +179,8 @@ def test_constraints_satisfaction_repr() -> None:
         max_inline_container_width_incl=0,
         max_inline_list_or_dict_width_excl=0,
     )
-    expected = ('ConstraintsSatisfaction(max_inline_container_width_incl=True, '
-                'max_inline_list_or_dict_width_excl=True)')
+    expected = (
+        'ConstraintsSatisfaction(max_inline_container_width_incl=True, '
+        'max_inline_list_or_dict_width_excl=True)'
+    )
     assert repr(satisfied) == expected

@@ -43,7 +43,9 @@ def test_resized_layout_draft_panel_reflow_cases(case: PanelFrameVariantTestCase
     cases='.cases.layout_reflow',
     has_tag=('reflow_cases', 'layout'),
 )
-def test_stylized_layout_panel_reflow_cases(case: PanelFrameVariantTestCase[Layout],) -> None:
+def test_stylized_layout_panel_reflow_cases(
+    case: PanelFrameVariantTestCase[Layout],
+) -> None:
     frame_case = apply_frame_variant_to_test_case(case, stylized_stage=True)
     draft_layout_panel = DraftPanel(
         frame_case.content,

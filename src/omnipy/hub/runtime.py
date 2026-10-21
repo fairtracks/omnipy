@@ -29,18 +29,22 @@ from omnipy.hub.ui import detect_and_setup_user_interface
 from omnipy.shared.enums.job import EngineChoice
 from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder, IsJobCreator
-from omnipy.shared.protocols.config import (IsDataConfig,
-                                            IsEngineConfig,
-                                            IsJobConfig,
-                                            IsJobRunnerConfig,
-                                            IsRootLogConfig)
+from omnipy.shared.protocols.config import (
+    IsDataConfig,
+    IsEngineConfig,
+    IsJobConfig,
+    IsJobRunnerConfig,
+    IsRootLogConfig,
+)
 from omnipy.shared.protocols.data import IsDataClassCreator, IsReactiveObjects, IsSerializerRegistry
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
-from omnipy.shared.protocols.hub.runtime import (IsRootLogObjects,
-                                                 IsRuntime,
-                                                 IsRuntimeConfig,
-                                                 IsRuntimeObjects)
+from omnipy.shared.protocols.hub.runtime import (
+    IsRootLogObjects,
+    IsRuntime,
+    IsRuntimeConfig,
+    IsRuntimeObjects,
+)
 from omnipy.util.publisher import DataPublisher, RuntimeEntryPublisher
 import omnipy.util.pydantic as pyd
 
@@ -239,8 +243,9 @@ class Runtime(DataPublisher):
 
         if UserInterfaceType.is_jupyter_in_browser(self.config.data.ui.detected_type):
             assert self.objects.reactive is not None
-            self.config.data.ui.subscribe_attr('jupyter',
-                                               self.objects.reactive.jupyter_ui_config.set)
+            self.config.data.ui.subscribe_attr(
+                'jupyter', self.objects.reactive.jupyter_ui_config.set
+            )
             self.config.data.ui.subscribe_attr('text', self.objects.reactive.text_config.set)
             self.config.data.ui.subscribe_attr('layout', self.objects.reactive.layout_config.set)
 

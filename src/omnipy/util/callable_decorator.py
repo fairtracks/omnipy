@@ -90,8 +90,9 @@ def callable_decorator_cls(  # noqa: C901
             obj = _wrapped_new(cls, *args, **kwargs)
             # setattr(cls, '__new__', _wrapped_new)
 
-        _wrapped_init: IsCallableParamAfterSelf = cast(IsCallableParamAfterSelf,
-                                                       obj.__class__.__init__)
+        _wrapped_init: IsCallableParamAfterSelf = cast(
+            IsCallableParamAfterSelf, obj.__class__.__init__
+        )
 
         # Wrapper method that replaces the __init__ method of the decorated class
         def _init_wrapper(self, *args: object, **kwargs: object) -> None:
@@ -101,9 +102,14 @@ def callable_decorator_cls(  # noqa: C901
                 _wrapped_init(self, callable_arg, *args_list, **kwargs)
                 update_wrapper(self, callable_arg, updated=[])
 
-            if (len(args_list) == 1 and _real_callable(args_list[0])
-                    and not (single_callable_arg_is_decorator_arg
-                             and single_callable_arg_is_decorator_arg(args_list[0]))):
+            if (
+                len(args_list) == 1
+                and _real_callable(args_list[0])
+                and not (
+                    single_callable_arg_is_decorator_arg
+                    and single_callable_arg_is_decorator_arg(args_list[0])
+                )
+            ):
                 # If no parentheses used in the decoration syntax (e.g. @decorator)
                 # then decorate the callable directly
                 _callable_arg = cast(Callable[_CallP, _RetT], args_list[0])
@@ -114,8 +120,9 @@ def callable_decorator_cls(  # noqa: C901
                 # then add an instance-level _obj_call method, which are again callable by the
                 # class-level __call__ method. When this method is called, the provided
                 # _callable_arg is decorated.
-                def _init_as_obj_call_method(self, _callable_arg: Callable[_CallP,
-                                                                           _RetT]) -> _DecoratedT:
+                def _init_as_obj_call_method(
+                    self, _callable_arg: Callable[_CallP, _RetT]
+                ) -> _DecoratedT:
                     _init(_callable_arg)
                     del self._obj_call
                     return self

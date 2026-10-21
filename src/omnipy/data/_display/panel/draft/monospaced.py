@@ -16,12 +16,13 @@ import omnipy.util.pydantic as pyd
 
 
 @pyd.dataclass(
-    init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
+    init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True)
+)
 class MonospacedDraftPanel(
-        DimensionsAwareDraftPanel[ContentT, FrameT],
-        DraftPanel[ContentT, FrameT],
-        Generic[ContentT, FrameT],
-        ABC,
+    DimensionsAwareDraftPanel[ContentT, FrameT],
+    DraftPanel[ContentT, FrameT],
+    Generic[ContentT, FrameT],
+    ABC,
 ):
     """Dimensions-aware draft panel that measures monospaced text content."""
 
@@ -29,8 +30,7 @@ class MonospacedDraftPanel(
 
     @cached_property
     @abstractmethod
-    def _content_lines(self) -> list[str]:
-        ...
+    def _content_lines(self) -> list[str]: ...
 
     def _line_width(self, line):
         stats = _calc_line_stats(

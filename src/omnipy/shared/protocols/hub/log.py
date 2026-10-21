@@ -10,14 +10,16 @@ from omnipy.util.helpers import is_package_editable
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_CANLOG_LOGGER_SUMMARY'] = (
-        'Return the logger bound to the concrete instance type.')
+        'Return the logger bound to the concrete instance type.'
+    )
     os.environ['OMNIPY_MACRO_CANLOG_LOGGER_DETAILS'] = dedent("""\
         Returns:
             Logger: Logger used by the object for Omnipy log messages.
     """)
 
     os.environ['OMNIPY_MACRO_CANLOG_LOG_SUMMARY'] = (
-        'Emit a log message, optionally using an explicit event timestamp.')
+        'Emit a log message, optionally using an explicit event timestamp.'
+    )
     os.environ['OMNIPY_MACRO_CANLOG_LOG_DETAILS'] = dedent("""\
         Args:
             log_msg: Message text to send to the logger.
@@ -28,6 +30,7 @@ if is_package_editable('omnipy'):
 
 class CanLog(Protocol):
     """Protocol for objects that expose a logger and log helper."""
+
     @property
     def logger(self) -> Logger:
         # %% Original docstring (managed by expand_docstr_macros.py) %%

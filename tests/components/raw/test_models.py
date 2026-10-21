@@ -1,4 +1,5 @@
 """Tests for raw models and nested split-join behavior."""
+
 import datetime
 from enum import Enum
 import os
@@ -9,27 +10,29 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.components.raw.enums import NewLine
-from omnipy.components.raw.models import (BytesModel,
-                                          DateModel,
-                                          DateTimeModel,
-                                          JoinColumnsByCommaToLinesModel,
-                                          JoinColumnsToLinesModel,
-                                          JoinItemsModel,
-                                          JoinLinesModel,
-                                          MatchItemsModel,
-                                          NestedJoinItemsModel,
-                                          NestedSplitToItemsModel,
-                                          SplitLinesToColumnsByCommaModel,
-                                          SplitLinesToColumnsModel,
-                                          SplitToItemsByTabModel,
-                                          SplitToItemsModel,
-                                          SplitToLinesModel,
-                                          SplitToLinesNoStripModel,
-                                          StrictBytesModel,
-                                          StrictStrModel,
-                                          StrModel,
-                                          TimeDeltaModel,
-                                          TimeModel)
+from omnipy.components.raw.models import (
+    BytesModel,
+    DateModel,
+    DateTimeModel,
+    JoinColumnsByCommaToLinesModel,
+    JoinColumnsToLinesModel,
+    JoinItemsModel,
+    JoinLinesModel,
+    MatchItemsModel,
+    NestedJoinItemsModel,
+    NestedSplitToItemsModel,
+    SplitLinesToColumnsByCommaModel,
+    SplitLinesToColumnsModel,
+    SplitToItemsByTabModel,
+    SplitToItemsModel,
+    SplitToLinesModel,
+    SplitToLinesNoStripModel,
+    StrictBytesModel,
+    StrictStrModel,
+    StrModel,
+    TimeDeltaModel,
+    TimeModel,
+)
 from omnipy.data.model import Model
 from omnipy.util.pydantic import ValidationError
 
@@ -113,12 +116,14 @@ def test_datetime_model() -> None:
 
     datetime_model_from_iso = DateTimeModel('2022-01-01T12:15:00Z')
     assert datetime_model_from_iso.content == datetime.datetime(
-        2022, 1, 1, 12, 15, 00, tzinfo=datetime.timezone.utc)
+        2022, 1, 1, 12, 15, 00, tzinfo=datetime.timezone.utc
+    )
     assert datetime_model_from_iso.to_data() == '2022-01-01T12:15:00+00:00'
 
     datetime_model_from_unix_secs = DateTimeModel(1786640576)
     assert datetime_model_from_unix_secs.content == datetime.datetime(
-        2026, 8, 13, 17, 2, 56, tzinfo=datetime.timezone.utc)
+        2026, 8, 13, 17, 2, 56, tzinfo=datetime.timezone.utc
+    )
     assert datetime_model_from_unix_secs.to_data() == '2026-08-13T17:02:56+00:00'
 
 
@@ -143,12 +148,14 @@ def test_timedelta_model() -> None:
 
     timedelta_model_from_str = TimeDeltaModel('12:34:56.789')
     assert timedelta_model_from_str.content == datetime.timedelta(
-        hours=12, minutes=34, seconds=56, microseconds=789000)
+        hours=12, minutes=34, seconds=56, microseconds=789000
+    )
     assert timedelta_model_from_str.to_data() == '12:34:56.789000'
 
     timedelta_model_from_iso = TimeDeltaModel('P182DT12H30M5S')
     assert timedelta_model_from_iso.content == datetime.timedelta(
-        days=182, hours=12, minutes=30, seconds=5)
+        days=182, hours=12, minutes=30, seconds=5
+    )
     assert timedelta_model_from_iso.to_data() == '182 days, 12:30:05'
 
 
@@ -164,7 +171,8 @@ def test_date_and_time_model_operations() -> None:
 
     timedelta_1_2 = datetime_model_2 - datetime_model_1
     assert timedelta_1_2 == TimeDeltaModel(
-        datetime.timedelta(days=1, hours=1, minutes=1, seconds=1))
+        datetime.timedelta(days=1, hours=1, minutes=1, seconds=1)
+    )
     assert datetime_model_1 + timedelta_1_2 == datetime_model_2
 
 
@@ -187,7 +195,7 @@ def test_split_to_lines_model(
     last_lines = lines_stripped[3:]
     assert last_lines[0:2].content == [
         'abhorred in my imagination it is! my gorge rises at',
-        'it. Here hung those lips that I have kissed I know'
+        'it. Here hung those lips that I have kissed I know',
     ]
     assert_model_if_dyn_conv_else_val(
         last_lines[-1],
@@ -276,7 +284,7 @@ def test_join_lines_model(last_hamlet_lines_stripped: Annotated[list[str], pytes
     assert joined_lines.content == dedent("""\
         abhorred in my imagination it is! my gorge rises at
         it. Here hung those lips that I have kissed I know""")
-    assert joined_lines[:joined_lines.index(' ')].content == 'abhorred'  # type: ignore
+    assert joined_lines[: joined_lines.index(' ')].content == 'abhorred'  # type: ignore
 
 
 def test_join_lines_by_os_linesep_model(
@@ -285,14 +293,17 @@ def test_join_lines_by_os_linesep_model(
 ) -> None:
 
     JoinLinesByOsLinesepModel = JoinLinesModel.adjust(
-        'JoinLinesByOsLinesepModel', delimiter=os.linesep)
+        'JoinLinesByOsLinesepModel', delimiter=os.linesep
+    )
 
     os_linesep_joined_lines = JoinLinesByOsLinesepModel(last_hamlet_lines_stripped[0:2])
 
-    assert os_linesep_joined_lines.content == os.linesep.join([
-        'abhorred in my imagination it is! my gorge rises at',
-        'it. Here hung those lips that I have kissed I know'
-    ])
+    assert os_linesep_joined_lines.content == os.linesep.join(
+        [
+            'abhorred in my imagination it is! my gorge rises at',
+            'it. Here hung those lips that I have kissed I know',
+        ]
+    )
 
 
 def test_join_lines_model_of_split_to_lines_model(
@@ -300,8 +311,9 @@ def test_join_lines_model_of_split_to_lines_model(
     hamlet_lines_stripped: Annotated[list[str], pytest.fixture],
     mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
 ) -> None:
-    assert JoinLinesModel(
-        SplitToLinesModel(hamlet_text_crlf)).content == '\n'.join(hamlet_lines_stripped)
+    assert JoinLinesModel(SplitToLinesModel(hamlet_text_crlf)).content == '\n'.join(
+        hamlet_lines_stripped
+    )
 
     SplitToLinesByOsLinesepModel = SplitToLinesModel.adjust(
         'SplitToLinesByOsLinesepModel',
@@ -310,14 +322,17 @@ def test_join_lines_model_of_split_to_lines_model(
     )
 
     assert JoinLinesModel(SplitToLinesByOsLinesepModel(hamlet_text_crlf)).content == '\n'.join(
-        hamlet_text_crlf.split(os.linesep))
+        hamlet_text_crlf.split(os.linesep)
+    )
 
 
 def test_split_to_lines_models_support_universal_newlines(
-    text_with_mixed_newlines_as_model_or_plain: (Annotated[
-        Model[str] | str,
-        pytest.fixture,
-    ]),
+    text_with_mixed_newlines_as_model_or_plain: (
+        Annotated[
+            Model[str] | str,
+            pytest.fixture,
+        ]
+    ),
 ) -> None:
     data = text_with_mixed_newlines_as_model_or_plain
 
@@ -385,7 +400,8 @@ def test_join_items_model(first_item_list: Annotated[list[str], pytest.fixture])
 
 
 def test_join_items_by_comma_space_model(
-        first_item_list: Annotated[list[str], pytest.fixture]) -> None:
+    first_item_list: Annotated[list[str], pytest.fixture],
+) -> None:
     JoinItemsByCommaSpaceModel = JoinItemsModel.adjust('JoinItemsByCommaSpaceModel', delimiter=', ')
 
     comma_space_joined_items = JoinItemsByCommaSpaceModel(first_item_list)  # type: ignore[index]
@@ -402,13 +418,15 @@ def test_split_lines_to_columns_model(
     assert_model_if_dyn_conv_else_val(
         cols_stripped_tab[0],  # type: ignore[index]
         list[str],
-        ['abc', 'def', 'ghi', 'jkl'])
+        ['abc', 'def', 'ghi', 'jkl'],
+    )
     assert_model_if_dyn_conv_else_val(cols_stripped_tab[0][1], str, 'def')  # type: ignore[index]
     assert cols_stripped_tab[1:2].content == [  # type: ignore[index]
         ['mno', 'pqr', 'stu', 'vwx']
     ]
     assert cols_stripped_tab[1:].to_data() == [  # type: ignore[index]
-        ['mno', 'pqr', 'stu', 'vwx'], ['yz']
+        ['mno', 'pqr', 'stu', 'vwx'],
+        ['yz'],
     ]
 
 
@@ -417,23 +435,27 @@ def test_split_lines_to_columns_no_strip_model(
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     SplitLinesToColumnsNoStripModel = SplitLinesToColumnsModel.adjust(
-        'SplitLinesToColumnsNoStripModel', strip=False)
+        'SplitLinesToColumnsNoStripModel', strip=False
+    )
 
     cols_unstripped_tab = SplitLinesToColumnsNoStripModel(forward_list_of_texts_with_tabs)
 
     assert_model_if_dyn_conv_else_val(
         cols_unstripped_tab[0],  # type: ignore[index]
         list[str],
-        ['abc', ' def ', 'ghi', ' jkl'])
+        ['abc', ' def ', 'ghi', ' jkl'],
+    )
     assert_model_if_dyn_conv_else_val(
         cols_unstripped_tab[0][1],  # type: ignore[index]
         str,
-        ' def ')
+        ' def ',
+    )
     assert cols_unstripped_tab[1:2].content == [  # type: ignore[index]
         ['mno', ' pqr', 'stu', ' vwx']
     ]
     assert cols_unstripped_tab[1:].to_data() == [  # type: ignore[index]
-        ['mno', ' pqr', 'stu', ' vwx'], ['yz']
+        ['mno', ' pqr', 'stu', ' vwx'],
+        ['yz'],
     ]
 
 
@@ -446,7 +468,8 @@ def test_split_lines_to_columns_by_comma_model(
     assert_model_if_dyn_conv_else_val(
         cols_stripped_comma[0],  # type: ignore[index]
         list[str],
-        ['abc', 'def', 'ghi', 'jkl'])
+        ['abc', 'def', 'ghi', 'jkl'],
+    )
     assert_model_if_dyn_conv_else_val(
         cols_stripped_comma[0][1],  # type: ignore[index]
         str,
@@ -456,12 +479,14 @@ def test_split_lines_to_columns_by_comma_model(
         ['mno', 'pqr', 'stu', 'vwx']
     ]
     assert cols_stripped_comma[1:].to_data() == [  # type: ignore[index]
-        ['mno', 'pqr', 'stu', 'vwx'], ['yz']
+        ['mno', 'pqr', 'stu', 'vwx'],
+        ['yz'],
     ]
 
 
 def test_join_columns_to_lines_model(
-        forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture]) -> None:
+    forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture],
+) -> None:
     joined_cols = JoinColumnsToLinesModel(forward_list_of_lists_of_items)  # type: ignore[index]
 
     assert joined_cols.content == ['mno\tpqr\tstu\tvwx', 'yz']
@@ -470,7 +495,8 @@ def test_join_columns_to_lines_model(
 
 
 def test_join_columns_to_lines_by_comma_models(
-        forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture]) -> None:
+    forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture],
+) -> None:
     joined_cols_by_comma = JoinColumnsByCommaToLinesModel(forward_list_of_lists_of_items)
 
     assert joined_cols_by_comma.content == ['mno,pqr,stu,vwx', 'yz']
@@ -479,9 +505,11 @@ def test_join_columns_to_lines_by_comma_models(
 
 
 def test_join_columns_to_lines_by_comma_space_models(
-        forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture]) -> None:
+    forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture],
+) -> None:
     JoinColumnsByCommaSpaceToLinesModel = JoinColumnsToLinesModel.adjust(
-        'JoinColumnsByCommaToLinesModel', delimiter=', ')
+        'JoinColumnsByCommaToLinesModel', delimiter=', '
+    )
 
     joined_cols_by_comma_space = JoinColumnsByCommaSpaceToLinesModel(forward_list_of_lists_of_items)
 
@@ -498,10 +526,17 @@ class PreSplitEnum(str, Enum):
     LEVEL_3 = 'level_3'
 
 
-SplittableDataType: TypeAlias = (str | list[str] | list[list[str]] | list[str | list[str]]
-                                 | list[list[list[str]]] | Model[str] | Model[list[str]]
-                                 | Model[list[list[str]]]
-                                 | Model[list[str | list[str]]]) | Model[list[list[list[str]]]]
+SplittableDataType: TypeAlias = (
+    str
+    | list[str]
+    | list[list[str]]
+    | list[str | list[str]]
+    | list[list[list[str]]]
+    | Model[str]
+    | Model[list[str]]
+    | Model[list[list[str]]]
+    | Model[list[str | list[str]]]
+) | Model[list[list[list[str]]]]
 
 SplittableDataReturnType: TypeAlias = tuple[
     PreSplitEnum,
@@ -532,19 +567,25 @@ def splittable_data(
     if not pre_split == PreSplitEnum.FALSE:
         split_data = list(raw_data.split(';'))
         doubly_split_data = [item.split('&') for item in split_data]
-        match (pre_split):
+        match pre_split:
             case PreSplitEnum.LEVEL_1:
                 data = Model[list[str]](split_data) if use_model else split_data
             case PreSplitEnum.LEVEL_2:
                 data = Model[list[list[str]]](doubly_split_data) if use_model else doubly_split_data
             case PreSplitEnum.MIXED_1_2:
                 mixed_split_data: list[str | list[str]] = [split_data[0].split('&'), split_data[1]]
-                data = Model[list[str
-                                  | list[str]]](mixed_split_data) if use_model else mixed_split_data
+                data = (
+                    Model[list[str | list[str]]](mixed_split_data)
+                    if use_model
+                    else mixed_split_data
+                )
             case PreSplitEnum.LEVEL_3:
                 triply_split_data = [[item.split('=') for item in x] for x in doubly_split_data]
-                data = Model[list[list[list[str]]]](
-                    triply_split_data) if use_model else triply_split_data
+                data = (
+                    Model[list[list[list[str]]]](triply_split_data)
+                    if use_model
+                    else triply_split_data
+                )
     else:
         data = Model[str](raw_data) if use_model else raw_data
 
@@ -559,7 +600,8 @@ def _assert_empty_model(model_cls: type[Model], default_value: object) -> None:
 
 
 def test_nested_split_to_items_model_default(
-        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    splittable_data: Annotated[SplittableDataReturnType, pc.fixture],
+) -> None:
     """Test default nested item splitting without explicit delimiters."""
 
     _assert_empty_model(NestedSplitToItemsModel, [])
@@ -576,7 +618,8 @@ def test_nested_split_to_items_model_default(
 
 
 def test_nested_split_to_items_model_one_level(
-        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    splittable_data: Annotated[SplittableDataReturnType, pc.fixture],
+) -> None:
     """Test nested item splitting with one delimiter level."""
 
     pre_split, raw_data, data = splittable_data
@@ -590,16 +633,19 @@ def test_nested_split_to_items_model_one_level(
 
     if pre_split in [PreSplitEnum.FALSE, PreSplitEnum.LEVEL_1]:
         top_level_split = OneLevelNestedSplitToItemsModel(data)
-        assert top_level_split.content == top_level_split.to_data() == [
-            'abc=def&ghi=jkl&pqr=stu&xyz=123', 'x=1&y=2'
-        ]
+        assert (
+            top_level_split.content
+            == top_level_split.to_data()
+            == ['abc=def&ghi=jkl&pqr=stu&xyz=123', 'x=1&y=2']
+        )
     else:
         with pytest.raises(ValidationError):
             OneLevelNestedSplitToItemsModel(data)
 
 
 def test_nested_split_to_items_model_two_levels(
-        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    splittable_data: Annotated[SplittableDataReturnType, pc.fixture],
+) -> None:
     """Test nested item splitting with two delimiter levels."""
 
     pre_split, raw_data, data = splittable_data
@@ -613,17 +659,22 @@ def test_nested_split_to_items_model_two_levels(
 
     if pre_split != PreSplitEnum.LEVEL_3:
         two_level_split = TwoLevelNestedSplitToItemsModel(data)
-        assert two_level_split.content == two_level_split.to_data() == [
-            ['abc=def', 'ghi=jkl', 'pqr=stu', 'xyz=123'],
-            ['x=1', 'y=2'],
-        ]
+        assert (
+            two_level_split.content
+            == two_level_split.to_data()
+            == [
+                ['abc=def', 'ghi=jkl', 'pqr=stu', 'xyz=123'],
+                ['x=1', 'y=2'],
+            ]
+        )
     else:
         with pytest.raises(ValidationError):
             TwoLevelNestedSplitToItemsModel(data)
 
 
 def test_nested_split_to_items_model_three_levels(
-        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    splittable_data: Annotated[SplittableDataReturnType, pc.fixture],
+) -> None:
     """Test nested item splitting with three delimiter levels."""
 
     pre_split, raw_data, data = splittable_data
@@ -636,10 +687,14 @@ def test_nested_split_to_items_model_three_levels(
     _assert_empty_model(ThreeLevelNestedSplitToItemsModel, [])
 
     three_level_split = ThreeLevelNestedSplitToItemsModel(data)
-    assert three_level_split.content == three_level_split.to_data() == [
-        [['abc', 'def'], ['ghi', 'jkl'], ['pqr', 'stu'], ['xyz', '123']],
-        [['x', '1'], ['y', '2']],
-    ]
+    assert (
+        three_level_split.content
+        == three_level_split.to_data()
+        == [
+            [['abc', 'def'], ['ghi', 'jkl'], ['pqr', 'stu'], ['xyz', '123']],
+            [['x', '1'], ['y', '2']],
+        ]
+    )
 
 
 def test_nested_split_to_items_model_mixed_levels() -> None:
@@ -655,12 +710,21 @@ def test_nested_split_to_items_model_mixed_levels() -> None:
     with pytest.raises(ValidationError):
         VarSpecNestedSplitToItemsModel(['a=1', 'b=2', ['c']])
 
-    assert VarSpecNestedSplitToItemsModel('a=1;b=2;c=3').to_data() == \
-        [['a', '1'], ['b', '2'], ['c', '3']]
-    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', 'c=3']).to_data() == \
-        [['a', '1'], ['b', '2'], ['c', '3']]
-    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', ['c', '3']]).to_data() == \
-        [['a', '1'], ['b', '2'], ['c', '3']]
+    assert VarSpecNestedSplitToItemsModel('a=1;b=2;c=3').to_data() == [
+        ['a', '1'],
+        ['b', '2'],
+        ['c', '3'],
+    ]
+    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', 'c=3']).to_data() == [
+        ['a', '1'],
+        ['b', '2'],
+        ['c', '3'],
+    ]
+    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', ['c', '3']]).to_data() == [
+        ['a', '1'],
+        ['b', '2'],
+        ['c', '3'],
+    ]
 
 
 def test_nested_split_to_items_model_parse_to_str() -> None:
@@ -677,17 +741,22 @@ def test_nested_split_to_items_model_parse_to_str() -> None:
         [[3, 6.0]],
     ]
     split_model = ThreeLevelNestedSplitToItemsModel(data)
-    assert split_model.content == split_model.to_data() == [
-        [
-            ['1', '2.0'],
-            ['2', '4.0'],
-        ],
-        [['3', '6.0']],
-    ]
+    assert (
+        split_model.content
+        == split_model.to_data()
+        == [
+            [
+                ['1', '2.0'],
+                ['2', '4.0'],
+            ],
+            [['3', '6.0']],
+        ]
+    )
 
 
 def test_nested_join_items_model_default(
-        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    splittable_data: Annotated[SplittableDataReturnType, pc.fixture],
+) -> None:
     """Test default nested item joining without explicit delimiters."""
 
     _assert_empty_model(NestedJoinItemsModel, '')
@@ -704,7 +773,8 @@ def test_nested_join_items_model_default(
 
 
 def test_nested_join_items_model_one_level(
-        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    splittable_data: Annotated[SplittableDataReturnType, pc.fixture],
+) -> None:
     """Test nested item joining with one delimiter level."""
 
     pre_split, raw_data, data = splittable_data
@@ -725,7 +795,8 @@ def test_nested_join_items_model_one_level(
 
 
 def test_nested_join_items_model_two_levels(
-        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    splittable_data: Annotated[SplittableDataReturnType, pc.fixture],
+) -> None:
     """Test nested item joining with two delimiter levels."""
 
     pre_split, raw_data, data = splittable_data
@@ -746,7 +817,8 @@ def test_nested_join_items_model_two_levels(
 
 
 def test_nested_join_items_model_three_levels(
-        splittable_data: Annotated[SplittableDataReturnType, pc.fixture]) -> None:
+    splittable_data: Annotated[SplittableDataReturnType, pc.fixture],
+) -> None:
     """Test nested item joining with three delimiter levels."""
 
     pre_split, raw_data, data = splittable_data
@@ -775,10 +847,11 @@ def test_nested_join_items_model_mixed_levels() -> None:
     with pytest.raises(ValidationError):
         VarSpecNestedJoinItemsModel([['a', '1'], ['b', '2'], ['c']])
 
-    assert (VarSpecNestedJoinItemsModel(['a=1;b=2;c=3']).to_data() == 'a=1;b=2;c=3')
-    assert (VarSpecNestedJoinItemsModel(['a=1', 'b=2', 'c=3']).to_data() == 'a=1;b=2;c=3')
-    assert (VarSpecNestedJoinItemsModel([['a', '1'], ['b', 2], ['c',
-                                                                '3']]).to_data() == 'a=1;b=2;c=3')
+    assert VarSpecNestedJoinItemsModel(['a=1;b=2;c=3']).to_data() == 'a=1;b=2;c=3'
+    assert VarSpecNestedJoinItemsModel(['a=1', 'b=2', 'c=3']).to_data() == 'a=1;b=2;c=3'
+    assert (
+        VarSpecNestedJoinItemsModel([['a', '1'], ['b', 2], ['c', '3']]).to_data() == 'a=1;b=2;c=3'
+    )
 
 
 def test_nested_join_items_model_parse_to_str() -> None:
@@ -811,13 +884,15 @@ def test_match_items_model_one_func() -> None:
     data = ['# comment 1', 'line 1', '# comment 2', 'line 2']
 
     MatchCommentsModel = MatchItemsModel.adjust(
-        'FilterCommentsModel', match_functions=(match_comments_func,), invert_matches=False)
+        'FilterCommentsModel', match_functions=(match_comments_func,), invert_matches=False
+    )
 
     matched_model = MatchCommentsModel(data)
     assert matched_model.content == matched_model.to_data() == ['# comment 1', '# comment 2']
 
     FilterCommentsModel = MatchItemsModel.adjust(
-        'FilterCommentsModel', match_functions=(match_comments_func,), invert_matches=True)
+        'FilterCommentsModel', match_functions=(match_comments_func,), invert_matches=True
+    )
 
     filtered_model = FilterCommentsModel(data)
     assert filtered_model.content == filtered_model.to_data() == ['line 1', 'line 2']
@@ -833,7 +908,8 @@ def test_match_items_model_two_funcs() -> None:
         'FilterCommentsModel',
         match_functions=(match_lowercase_func, match_alphanum_func),
         invert_matches=False,
-        match_all=True)
+        match_all=True,
+    )
 
     matched_model = MatchLowerCaseAndAlphaNumModel(data)
     assert matched_model.content == matched_model.to_data() == ['abc123']
@@ -842,7 +918,8 @@ def test_match_items_model_two_funcs() -> None:
         'FilterCommentsModel',
         match_functions=(match_lowercase_func, match_alphanum_func),
         invert_matches=False,
-        match_all=False)
+        match_all=False,
+    )
 
     matched_model = MatchLowerCaseOrAlphaNumModel(data)
     assert matched_model.content == matched_model.to_data() == ['abc123', 'ABC123', 'xyz-123']
@@ -851,7 +928,8 @@ def test_match_items_model_two_funcs() -> None:
         'FilterCommentsModel',
         match_functions=(match_lowercase_func, match_alphanum_func),
         invert_matches=True,
-        match_all=True)
+        match_all=True,
+    )
 
     matched_model = FilterLowerCaseAndAlphaNumModel(data)
     assert matched_model.content == matched_model.to_data() == ['ABC123', 'xyz-123', 'XYZ-123']
@@ -860,7 +938,8 @@ def test_match_items_model_two_funcs() -> None:
         'FilterCommentsModel',
         match_functions=(match_lowercase_func, match_alphanum_func),
         invert_matches=True,
-        match_all=False)
+        match_all=False,
+    )
 
     matched_model = FilterLowerCaseOrAlphaNumModel(data)
     assert matched_model.content == matched_model.to_data() == ['XYZ-123']

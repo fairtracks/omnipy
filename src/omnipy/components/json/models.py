@@ -10,12 +10,14 @@ from typing_extensions import TypeVar
 
 from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.protocols.builtins import IsBool, IsDict, IsFloat, IsInt, IsList, IsStr
-from omnipy.shared.protocols.content import (IsDictContent,
-                                             IsDictOfDictsContent,
-                                             IsDictOfListsContent,
-                                             IsListContent,
-                                             IsListOfDictsContent,
-                                             IsListOfListsContent)
+from omnipy.shared.protocols.content import (
+    IsDictContent,
+    IsDictOfDictsContent,
+    IsDictOfListsContent,
+    IsListContent,
+    IsListOfDictsContent,
+    IsListOfListsContent,
+)
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util.helpers import ensure_plain_type
 import omnipy.util.pydantic as pyd
@@ -24,11 +26,13 @@ from .helpers import parse_str_as_json
 from .typedefs import JsonScalar
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import (Model_bool,
-                                                  Model_float,
-                                                  Model_int,
-                                                  Model_str,
-                                                  PlainModel)
+    from omnipy.data._typing.mimic_models import (
+        Model_bool,
+        Model_float,
+        Model_int,
+        Model_str,
+        PlainModel,
+    )
 
 #
 # Private models
@@ -38,11 +42,13 @@ if TYPE_CHECKING:
 
 if TYPE_CHECKING:
     _JsonBaseT = TypeVar(
-        '_JsonBaseT', bound='_JsonAnyUnionContent | _JsonListM | _JsonDictM', default='JsonScalar')
+        '_JsonBaseT', bound='_JsonAnyUnionContent | _JsonListM | _JsonDictM', default='JsonScalar'
+    )
 
 else:
     _JsonBaseT = TypeVar(
-        '_JsonBaseT', bound='_JsonAnyUnion | _JsonListM | _JsonDictM', default='JsonScalar')
+        '_JsonBaseT', bound='_JsonAnyUnion | _JsonListM | _JsonDictM', default='JsonScalar'
+    )
 
 
 class _JsonListM(Model[list[_JsonBaseT]], Generic[_JsonBaseT]):
@@ -56,8 +62,8 @@ class _JsonListM(Model[list[_JsonBaseT]], Generic[_JsonBaseT]):
 
 
 class _JsonDictM(
-        Model[dict[str, _JsonBaseT]],
-        Generic[_JsonBaseT],
+    Model[dict[str, _JsonBaseT]],
+    Generic[_JsonBaseT],
 ):
     """Model wrapper for JSON-compatible dicts used in internal type composition.
 
@@ -83,41 +89,33 @@ class _JsonDictM(
 if TYPE_CHECKING:
 
     class _JsonAnyListM(
-            _JsonListM['_JsonAnyUnion'],
-            IsListContent['_JsonAnyUnionContent'],
-    ):
-        ...
+        _JsonListM['_JsonAnyUnion'],
+        IsListContent['_JsonAnyUnionContent'],
+    ): ...
 
     class _JsonAnyDictM(
-            _JsonDictM['_JsonAnyUnion'],
-            IsDictContent[str, '_JsonAnyUnionContent'],
-    ):
-        ...
+        _JsonDictM['_JsonAnyUnion'],
+        IsDictContent[str, '_JsonAnyUnionContent'],
+    ): ...
 
     class _JsonNestedListsM(
-            _JsonListM['_JsonOnlyListsUnion'],
-            IsListContent['_JsonOnlyListsUnionContent'],
-    ):
-        ...
+        _JsonListM['_JsonOnlyListsUnion'],
+        IsListContent['_JsonOnlyListsUnionContent'],
+    ): ...
 
     class _JsonNestedDictsM(
-            _JsonDictM['_JsonOnlyDictsUnion'],
-            IsDictContent[str, '_JsonOnlyDictsUnionContent'],
-    ):
-        ...
+        _JsonDictM['_JsonOnlyDictsUnion'],
+        IsDictContent[str, '_JsonOnlyDictsUnionContent'],
+    ): ...
 else:
 
-    class _JsonAnyListM(_JsonListM['_JsonAnyUnion']):
-        ...
+    class _JsonAnyListM(_JsonListM['_JsonAnyUnion']): ...
 
-    class _JsonAnyDictM(_JsonDictM['_JsonAnyUnion']):
-        ...
+    class _JsonAnyDictM(_JsonDictM['_JsonAnyUnion']): ...
 
-    class _JsonNestedListsM(_JsonListM['_JsonOnlyListsUnion']):
-        ...
+    class _JsonNestedListsM(_JsonListM['_JsonOnlyListsUnion']): ...
 
-    class _JsonNestedDictsM(_JsonDictM['_JsonOnlyDictsUnion']):
-        ...
+    class _JsonNestedDictsM(_JsonDictM['_JsonOnlyDictsUnion']): ...
 
 
 # TypeAliases
@@ -127,8 +125,11 @@ else:
 
 if TYPE_CHECKING:
     _JsonListOrDictContent: TypeAlias = (
-        _JsonAnyListM | Sequence['_JsonAnyUnionContent']
-        | _JsonAnyDictM | Mapping[str, '_JsonAnyUnionContent'])
+        _JsonAnyListM
+        | Sequence['_JsonAnyUnionContent']
+        | _JsonAnyDictM
+        | Mapping[str, '_JsonAnyUnionContent']
+    )
     _JsonAnyUnionContent: TypeAlias = JsonScalar | _JsonListOrDictContent
     _JsonNestedListsContent: TypeAlias = Sequence['_JsonOnlyListsUnionContent']
     _JsonNestedDictsContent: TypeAlias = Mapping[str, '_JsonOnlyDictsUnionContent']
@@ -178,6 +179,7 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
     form and convert it into parsed model content before the regular validation
     pipeline runs.
     """
+
     @classmethod
     def start_chars_for_json_content(cls) -> str:
         """Return leading characters that should trigger JSON-string parsing.
@@ -223,35 +225,28 @@ class JsonModel(ParseStrAsJsonMixin[_JsonAnyUnion], Model[_JsonAnyUnion]):
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         @overload
-        def __new__(cls, value: None) -> Model[None]:
-            ...
+        def __new__(cls, value: None) -> Model[None]: ...
 
         @overload
         def __new__(cls, value: IsBool) -> Model_bool:  # pyright: ignore[reportOverlappingOverload]
             ...
 
         @overload
-        def __new__(cls, value: IsInt) -> Model_int:
-            ...
+        def __new__(cls, value: IsInt) -> Model_int: ...
 
         @overload
-        def __new__(cls, value: IsFloat) -> Model_float:
-            ...
+        def __new__(cls, value: IsFloat) -> Model_float: ...
 
         @overload
-        def __new__(cls, value: IsList | _JsonAnyListM) -> _JsonAnyListM:
-            ...
+        def __new__(cls, value: IsList | _JsonAnyListM) -> _JsonAnyListM: ...
 
         @overload
-        def __new__(cls, value: IsDict | _JsonAnyDictM) -> _JsonAnyDictM:
-            ...
+        def __new__(cls, value: IsDict | _JsonAnyDictM) -> _JsonAnyDictM: ...
 
         @overload
-        def __new__(cls, value: IsStr | object) -> AnyJsonModel:
-            ...
+        def __new__(cls, value: IsStr | object) -> AnyJsonModel: ...
 
-        def __new__(cls, value: _JsonAnyUnionContent | object) -> AnyJsonModel:
-            ...
+        def __new__(cls, value: _JsonAnyUnionContent | object) -> AnyJsonModel: ...
 
 
 class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_JsonListOfDictUnion]):
@@ -282,6 +277,7 @@ class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_Json
         ...     print(str(e).splitlines()[0])
         34 validation errors for JsonListOrDictModel
     """
+
     @classmethod
     def start_chars_for_json_content(cls) -> str:
         """Return leading characters for non-scalar JSON-string parsing.
@@ -295,19 +291,15 @@ class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_Json
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         @overload
-        def __new__(cls, value: IsList | _JsonAnyListM) -> _JsonAnyListM:
-            ...
+        def __new__(cls, value: IsList | _JsonAnyListM) -> _JsonAnyListM: ...
 
         @overload
-        def __new__(cls, value: IsDict | _JsonAnyDictM) -> _JsonAnyDictM:
-            ...
+        def __new__(cls, value: IsDict | _JsonAnyDictM) -> _JsonAnyDictM: ...
 
         @overload
-        def __new__(cls, value: IsStr | object) -> AnyJsonListOrDictModel:
-            ...
+        def __new__(cls, value: IsStr | object) -> AnyJsonListOrDictModel: ...
 
-        def __new__(cls, value: _JsonListOrDictContent | object) -> AnyJsonListOrDictModel:
-            ...
+        def __new__(cls, value: _JsonListOrDictContent | object) -> AnyJsonListOrDictModel: ...
 
 
 # Scalars
@@ -346,31 +338,25 @@ class JsonScalarModel(Model[JsonScalar]):
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         @overload
-        def __new__(cls, value: None) -> Model[None]:
-            ...
+        def __new__(cls, value: None) -> Model[None]: ...
 
         @overload
         def __new__(cls, value: IsBool) -> Model_bool:  # pyright: ignore[reportOverlappingOverload]
             ...
 
         @overload
-        def __new__(cls, value: IsInt) -> Model_int:
-            ...
+        def __new__(cls, value: IsInt) -> Model_int: ...
 
         @overload
-        def __new__(cls, value: IsFloat) -> Model_float:
-            ...
+        def __new__(cls, value: IsFloat) -> Model_float: ...
 
         @overload
-        def __new__(cls, value: IsStr) -> Model_str:
-            ...
+        def __new__(cls, value: IsStr) -> Model_str: ...
 
         @overload
-        def __new__(cls, value: object) -> AnyJsonScalarModel:
-            ...
+        def __new__(cls, value: object) -> AnyJsonScalarModel: ...
 
-        def __new__(cls, value: JsonScalar | object) -> AnyJsonScalarModel:
-            ...
+        def __new__(cls, value: JsonScalar | object) -> AnyJsonScalarModel: ...
 
 
 # List at the top level
@@ -426,8 +412,8 @@ else:
 if TYPE_CHECKING:
 
     class JsonListOfScalarsModel(
-            PlainModel[_JsonListOfScalars],
-            IsListContent[JsonScalar],
+        PlainModel[_JsonListOfScalars],
+        IsListContent[JsonScalar],
     ):
         """Validate JSON arrays containing only scalar values.
 
@@ -438,8 +424,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonListOfListsModel(
-            PlainModel[_JsonListM[_JsonAnyListM]],
-            IsListOfListsContent[_JsonAnyListM, _JsonAnyUnionContent],
+        PlainModel[_JsonListM[_JsonAnyListM]],
+        IsListOfListsContent[_JsonAnyListM, _JsonAnyUnionContent],
     ):
         """Validate JSON arrays whose elements are JSON arrays.
 
@@ -450,8 +436,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonListOfListsOfScalarsModel(
-            PlainModel[_JsonListM[_JsonListOfScalars]],
-            IsListOfListsContent[JsonListOfScalarsModel, JsonScalar],
+        PlainModel[_JsonListM[_JsonListOfScalars]],
+        IsListOfListsContent[JsonListOfScalarsModel, JsonScalar],
     ):
         """Validate JSON arrays of scalar-only nested arrays.
 
@@ -462,8 +448,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonListOfDictsModel(
-            PlainModel[_JsonListM[_JsonAnyDictM]],
-            IsListOfDictsContent[_JsonAnyDictM, str, _JsonAnyUnionContent],
+        PlainModel[_JsonListM[_JsonAnyDictM]],
+        IsListOfDictsContent[_JsonAnyDictM, str, _JsonAnyUnionContent],
     ):
         """Validate JSON arrays whose elements are JSON objects.
 
@@ -474,8 +460,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonListOfDictsOfScalarsModel(
-            PlainModel[_JsonListM[_JsonDictOfScalars]],
-            IsListOfDictsContent['JsonDictOfScalarsModel', str, JsonScalar],
+        PlainModel[_JsonListM[_JsonDictOfScalars]],
+        IsListOfDictsContent['JsonDictOfScalarsModel', str, JsonScalar],
     ):
         """Validate JSON arrays of objects with scalar-only values.
 
@@ -585,8 +571,8 @@ else:
 if TYPE_CHECKING:
 
     class JsonDictOfScalarsModel(
-            PlainModel[_JsonDictOfScalars],
-            IsDictContent[str, JsonScalar],
+        PlainModel[_JsonDictOfScalars],
+        IsDictContent[str, JsonScalar],
     ):
         """Validate JSON objects whose values are scalar values.
 
@@ -596,8 +582,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonDictOfListsModel(
-            PlainModel[_JsonDictM[_JsonAnyListM]],
-            IsDictOfListsContent[str, _JsonAnyListM, _JsonAnyUnionContent],
+        PlainModel[_JsonDictM[_JsonAnyListM]],
+        IsDictOfListsContent[str, _JsonAnyListM, _JsonAnyUnionContent],
     ):
         """Validate JSON objects whose values are JSON arrays.
 
@@ -608,8 +594,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonDictOfListsOfScalarsModel(
-            PlainModel[_JsonDictM[_JsonListOfScalars]],
-            IsDictOfListsContent[str, JsonListOfScalarsModel, JsonScalar],
+        PlainModel[_JsonDictM[_JsonListOfScalars]],
+        IsDictOfListsContent[str, JsonListOfScalarsModel, JsonScalar],
     ):
         """Validate JSON objects whose values are scalar-only arrays.
 
@@ -620,8 +606,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonDictOfDictsModel(
-            PlainModel[_JsonDictM[_JsonAnyDictM]],
-            IsDictOfDictsContent[str, _JsonAnyDictM, str, _JsonAnyUnionContent],
+        PlainModel[_JsonDictM[_JsonAnyDictM]],
+        IsDictOfDictsContent[str, _JsonAnyDictM, str, _JsonAnyUnionContent],
     ):
         """Validate JSON objects whose values are JSON objects.
 
@@ -632,8 +618,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonDictOfDictsOfScalarsModel(
-            PlainModel[_JsonDictM[_JsonDictOfScalars]],
-            IsDictOfDictsContent[str, JsonDictOfScalarsModel, str, JsonScalar],
+        PlainModel[_JsonDictM[_JsonDictOfScalars]],
+        IsDictOfDictsContent[str, JsonDictOfScalarsModel, str, JsonScalar],
     ):
         """Validate nested JSON objects with scalar-only leaves.
 
@@ -704,35 +690,28 @@ class JsonOnlyListsModel(Model[_JsonOnlyListsUnion]):
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         @overload
-        def __new__(cls, value: None) -> Model[None]:
-            ...
+        def __new__(cls, value: None) -> Model[None]: ...
 
         @overload
         def __new__(cls, value: IsBool) -> Model_bool:  # pyright: ignore[reportOverlappingOverload]
             ...
 
         @overload
-        def __new__(cls, value: IsInt) -> Model_int:
-            ...
+        def __new__(cls, value: IsInt) -> Model_int: ...
 
         @overload
-        def __new__(cls, value: IsFloat) -> Model_float:
-            ...
+        def __new__(cls, value: IsFloat) -> Model_float: ...
 
         @overload
-        def __new__(cls, value: IsStr) -> Model_str:
-            ...
+        def __new__(cls, value: IsStr) -> Model_str: ...
 
         @overload
-        def __new__(cls, value: IsList | _JsonNestedListsM) -> _JsonNestedListsM:
-            ...
+        def __new__(cls, value: IsList | _JsonNestedListsM) -> _JsonNestedListsM: ...
 
         @overload
-        def __new__(cls, value: object) -> AnyJsonOnlyListsModel:
-            ...
+        def __new__(cls, value: object) -> AnyJsonOnlyListsModel: ...
 
-        def __new__(cls, value: _JsonOnlyListsUnionContent | object) -> AnyJsonOnlyListsModel:
-            ...
+        def __new__(cls, value: _JsonOnlyListsUnionContent | object) -> AnyJsonOnlyListsModel: ...
 
 
 class JsonOnlyDictsModel(Model[_JsonOnlyDictsUnion]):
@@ -745,42 +724,35 @@ class JsonOnlyDictsModel(Model[_JsonOnlyDictsUnion]):
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         @overload
-        def __new__(cls, value: None) -> Model[None]:
-            ...
+        def __new__(cls, value: None) -> Model[None]: ...
 
         @overload
         def __new__(cls, value: IsBool) -> Model_bool:  # pyright: ignore[reportOverlappingOverload]
             ...
 
         @overload
-        def __new__(cls, value: IsInt) -> Model_int:
-            ...
+        def __new__(cls, value: IsInt) -> Model_int: ...
 
         @overload
-        def __new__(cls, value: IsFloat) -> Model_float:
-            ...
+        def __new__(cls, value: IsFloat) -> Model_float: ...
 
         @overload
-        def __new__(cls, value: IsStr) -> Model_str:
-            ...
+        def __new__(cls, value: IsStr) -> Model_str: ...
 
         @overload
-        def __new__(cls, value: IsDict | _JsonNestedDictsM) -> _JsonNestedDictsM:
-            ...
+        def __new__(cls, value: IsDict | _JsonNestedDictsM) -> _JsonNestedDictsM: ...
 
         @overload
-        def __new__(cls, value: object) -> AnyJsonOnlyDictsModel:
-            ...
+        def __new__(cls, value: object) -> AnyJsonOnlyDictsModel: ...
 
-        def __new__(cls, value: _JsonOnlyDictsUnionContent | object) -> AnyJsonOnlyDictsModel:
-            ...
+        def __new__(cls, value: _JsonOnlyDictsUnionContent | object) -> AnyJsonOnlyDictsModel: ...
 
 
 if TYPE_CHECKING:
 
     class JsonNestedListsModel(
-            PlainModel[_JsonNestedListsM],
-            IsListContent[_JsonOnlyListsUnionContent],
+        PlainModel[_JsonNestedListsM],
+        IsListContent[_JsonOnlyListsUnionContent],
     ):
         """Validate recursively nested JSON arrays with scalar leaves.
 
@@ -791,8 +763,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonNestedDictsModel(
-            PlainModel[_JsonNestedDictsM],
-            IsDictContent[str, _JsonOnlyDictsUnionContent],
+        PlainModel[_JsonNestedDictsM],
+        IsDictContent[str, _JsonOnlyDictsUnionContent],
     ):
         """Validate recursively nested JSON objects with scalar leaves.
 
@@ -828,8 +800,8 @@ else:
 if TYPE_CHECKING:
 
     class JsonListOfNestedDictsModel(
-            PlainModel[_JsonListM[_JsonNestedDictsM]],
-            IsListOfDictsContent[JsonNestedDictsModel, str, _JsonOnlyDictsUnionContent],
+        PlainModel[_JsonListM[_JsonNestedDictsM]],
+        IsListOfDictsContent[JsonNestedDictsModel, str, _JsonOnlyDictsUnionContent],
     ):
         """Validate JSON arrays whose items are nested JSON objects.
 
@@ -840,8 +812,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonDictOfNestedListsModel(
-            PlainModel[_JsonDictM[_JsonNestedListsM]],
-            IsDictOfListsContent[str, JsonNestedListsModel, _JsonOnlyListsUnionContent],
+        PlainModel[_JsonDictM[_JsonNestedListsM]],
+        IsDictOfListsContent[str, JsonNestedListsModel, _JsonOnlyListsUnionContent],
     ):
         """Validate JSON objects whose values are nested JSON arrays.
 
@@ -852,8 +824,8 @@ if TYPE_CHECKING:
         ...
 
     class JsonDictOfListsOfDictsModel(
-            PlainModel[_JsonDictM[_JsonListM[_JsonAnyDictM]]],
-            IsDictOfListsContent[str, JsonListOfDictsModel, Mapping[str, '_JsonAnyUnionContent']],
+        PlainModel[_JsonDictM[_JsonListM[_JsonAnyDictM]]],
+        IsDictOfListsContent[str, JsonListOfDictsModel, Mapping[str, '_JsonAnyUnionContent']],
     ):
         """Validate JSON objects whose values are arrays of objects.
 
@@ -898,9 +870,9 @@ else:
 if TYPE_CHECKING:
 
     class JsonCustomListModel(
-            PlainModel[_JsonListM[_JsonBaseT]],
-            IsListContent[_JsonBaseT],
-            Generic[_JsonBaseT],
+        PlainModel[_JsonListM[_JsonBaseT]],
+        IsListContent[_JsonBaseT],
+        Generic[_JsonBaseT],
     ):
         """Validate JSON arrays constrained to a custom item type.
 
@@ -911,9 +883,9 @@ if TYPE_CHECKING:
         ...
 
     class JsonCustomDictModel(
-            PlainModel[_JsonDictM[_JsonBaseT]],
-            IsDictContent[str, _JsonBaseT],
-            Generic[_JsonBaseT],
+        PlainModel[_JsonDictM[_JsonBaseT]],
+        IsDictContent[str, _JsonBaseT],
+        Generic[_JsonBaseT],
     ):
         """Validate JSON objects constrained to a custom value type.
 
@@ -995,11 +967,17 @@ _rest_of_the_json_model_classes: list[Type[Model]] = [
 ]
 
 _internal_model_classes: list[Type[Model]] = [
-    _JsonListM, _JsonDictM, _JsonAnyListM, _JsonAnyDictM, _JsonNestedListsM, _JsonNestedDictsM
+    _JsonListM,
+    _JsonDictM,
+    _JsonAnyListM,
+    _JsonAnyDictM,
+    _JsonNestedListsM,
+    _JsonNestedDictsM,
 ]
 
 _all_json_model_classes: list[Type[Model]] = (
-    _dict_related_json_model_classes + _rest_of_the_json_model_classes + _internal_model_classes)
+    _dict_related_json_model_classes + _rest_of_the_json_model_classes + _internal_model_classes
+)
 
 
 def is_json_model_instance_hack(obj: Any) -> bool:

@@ -28,11 +28,14 @@ class Constraints:
 
 class ConstraintsSatisfaction:
     """Reports whether measured output satisfied configured formatting constraints."""
-    def __init__(self,
-                 constraints: Constraints,
-                 *,
-                 max_inline_container_width_incl: int | None = None,
-                 max_inline_list_or_dict_width_excl: int | None = None) -> None:
+
+    def __init__(
+        self,
+        constraints: Constraints,
+        *,
+        max_inline_container_width_incl: int | None = None,
+        max_inline_list_or_dict_width_excl: int | None = None,
+    ) -> None:
 
         self._max_inline_container_width_incl: bool | None = None
         self._max_inline_list_or_dict_width_excl: bool | None = None
@@ -40,13 +43,15 @@ class ConstraintsSatisfaction:
         if constraints.max_inline_container_width_incl is not None:
             self._max_inline_container_width_incl = (
                 max_inline_container_width_incl is not None
-                and max_inline_container_width_incl <= constraints.max_inline_container_width_incl)
+                and max_inline_container_width_incl <= constraints.max_inline_container_width_incl
+            )
 
         if constraints.max_inline_list_or_dict_width_excl is not None:
             self._max_inline_list_or_dict_width_excl = (
                 max_inline_list_or_dict_width_excl is not None
                 and max_inline_list_or_dict_width_excl
-                <= constraints.max_inline_list_or_dict_width_excl)
+                <= constraints.max_inline_list_or_dict_width_excl
+            )
 
     @property
     def max_inline_container_width_incl(self) -> bool | None:
@@ -57,7 +62,9 @@ class ConstraintsSatisfaction:
         return self._max_inline_list_or_dict_width_excl
 
     def __repr__(self) -> str:
-        return (f'ConstraintsSatisfaction('
-                f'max_inline_container_width_incl={self.max_inline_container_width_incl}, '
-                f'max_inline_list_or_dict_width_excl={self.max_inline_list_or_dict_width_excl}'
-                f')')
+        return (
+            f'ConstraintsSatisfaction('
+            f'max_inline_container_width_incl={self.max_inline_container_width_incl}, '
+            f'max_inline_list_or_dict_width_excl={self.max_inline_list_or_dict_width_excl}'
+            f')'
+        )

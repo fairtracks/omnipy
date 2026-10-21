@@ -12,7 +12,8 @@ from omnipy.util.helpers import is_package_editable
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISJOBRUNNERENGINE_SUPPORTS_SUMMARY'] = (
-        'Return whether the engine can initialize and run ``job_type`` jobs.')
+        'Return whether the engine can initialize and run ``job_type`` jobs.'
+    )
     os.environ['OMNIPY_MACRO_ISJOBRUNNERENGINE_SUPPORTS_DETAILS'] = dedent("""\
         Args:
             job_type: Job category to test.
@@ -22,7 +23,8 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISJOBRUNNERENGINE_APPLY_JOB_DECORATOR_SUMMARY'] = (
-        "Attach the engine's execution decorator to a job callback endpoint.")
+        "Attach the engine's execution decorator to a job callback endpoint."
+    )
     os.environ['OMNIPY_MACRO_ISJOBRUNNERENGINE_APPLY_JOB_DECORATOR_DETAILS'] = dedent("""\
         Args:
             job_type: Job category selecting the run behavior.
@@ -35,6 +37,7 @@ if is_package_editable('omnipy'):
 @runtime_checkable
 class IsJobRunnerEngine(IsEngine, Protocol):
     """"""
+
     supported_job_types: frozenset[JobType.Literals]
 
     def supports(self, job_type: JobType.Literals) -> bool:
@@ -72,14 +75,10 @@ class IsJobRunnerEngine(IsEngine, Protocol):
         """
         ...
 
-    def _init_task(self, task: IsTaskRunSpec) -> object:
-        ...
+    def _init_task(self, task: IsTaskRunSpec) -> object: ...
 
-    def _run_task(self, state: Any, task: IsTaskRunSpec, *args, **kwargs) -> object:
-        ...
+    def _run_task(self, state: Any, task: IsTaskRunSpec, *args, **kwargs) -> object: ...
 
-    def _init_flow(self, flow: IsFlowRunSpec) -> object:
-        ...
+    def _init_flow(self, flow: IsFlowRunSpec) -> object: ...
 
-    def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> object:
-        ...
+    def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> object: ...

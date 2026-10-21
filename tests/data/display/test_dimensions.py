@@ -4,17 +4,19 @@ from typing import TypedDict
 
 import pytest
 
-from omnipy.data._display.dimensions import (AnyDimensions,
-                                             Dimensions,
-                                             DimensionsFit,
-                                             DimensionsWithHeight,
-                                             DimensionsWithWidth,
-                                             DimensionsWithWidthAndHeight,
-                                             has_height,
-                                             has_width,
-                                             has_width_and_height,
-                                             Proportionally,
-                                             UndefinedDimensions)
+from omnipy.data._display.dimensions import (
+    AnyDimensions,
+    Dimensions,
+    DimensionsFit,
+    DimensionsWithHeight,
+    DimensionsWithWidth,
+    DimensionsWithWidthAndHeight,
+    has_height,
+    has_width,
+    has_width_and_height,
+    Proportionally,
+    UndefinedDimensions,
+)
 
 
 class _WidthAndHeightKwargs(TypedDict, total=False):
@@ -76,20 +78,15 @@ def test_dimensions() -> None:
 
 
 def test_dimension_types() -> None:
-    def undefined_dims_func(dims: UndefinedDimensions) -> None:
-        ...
+    def undefined_dims_func(dims: UndefinedDimensions) -> None: ...
 
-    def dims_with_widths_func(dims: DimensionsWithWidth) -> None:
-        ...
+    def dims_with_widths_func(dims: DimensionsWithWidth) -> None: ...
 
-    def dims_with_heights_func(dims: DimensionsWithHeight) -> None:
-        ...
+    def dims_with_heights_func(dims: DimensionsWithHeight) -> None: ...
 
-    def dims_with_width_and_height_func(dims: DimensionsWithWidthAndHeight) -> None:
-        ...
+    def dims_with_width_and_height_func(dims: DimensionsWithWidthAndHeight) -> None: ...
 
-    def any_dims_func(dims: AnyDimensions) -> None:
-        ...
+    def any_dims_func(dims: AnyDimensions) -> None: ...
 
     # Static type checkers SHOULD NOT raise errors here
     undefined_dims_func(Dimensions(None, None))
@@ -174,13 +171,15 @@ def test_fail_dimensions_if_extra_param() -> None:
         Dimensions(10, 20, extra=30)  # type: ignore
 
 
-def _assert_within_frame(width: int,
-                         height: int,
-                         frame_width: int | None,
-                         frame_height: int | None,
-                         fits_width: bool | None,
-                         fits_height: bool | None,
-                         fits_both: bool | None):
+def _assert_within_frame(
+    width: int,
+    height: int,
+    frame_width: int | None,
+    frame_height: int | None,
+    fits_width: bool | None,
+    fits_height: bool | None,
+    fits_both: bool | None,
+):
     """Provide assert within frame for test reuse."""
     fit = DimensionsFit(Dimensions(width, height), Dimensions(frame_width, frame_height))
     assert fit.width is fits_width
@@ -253,40 +252,54 @@ def test_dimensions_fit_proportionality_large_deviations() -> None:
     assert DimensionsFit(Dims(30, 10), Dims(40, 40)).proportionality is Proportionally.WIDER
 
     # Threshold for large deviations in proportionality can be adjusted with proportional_freedom
-    assert DimensionsFit(Dims(10, 30), Dims(40, 40), proportional_freedom=1.4).proportionality \
-           is Proportionally.MUCH_THINNER
-    assert DimensionsFit(Dims(30, 10), Dims(40, 40), proportional_freedom=1.4).proportionality \
-           is Proportionally.MUCH_WIDER
+    assert (
+        DimensionsFit(Dims(10, 30), Dims(40, 40), proportional_freedom=1.4).proportionality
+        is Proportionally.MUCH_THINNER
+    )
+    assert (
+        DimensionsFit(Dims(30, 10), Dims(40, 40), proportional_freedom=1.4).proportionality
+        is Proportionally.MUCH_WIDER
+    )
 
     # Proportional_freedom adjustment have less effect on larger relative frame sizes
     assert DimensionsFit(Dims(10, 30), Dims(200, 200)).proportionality is Proportionally.THINNER
     assert DimensionsFit(Dims(30, 10), Dims(200, 200)).proportionality is Proportionally.WIDER
 
-    assert DimensionsFit(Dims(10, 30), Dims(200, 200), proportional_freedom=1.4).proportionality \
-           is Proportionally.THINNER
-    assert DimensionsFit(Dims(30, 10), Dims(200, 200), proportional_freedom=1.4).proportionality \
-           is Proportionally.WIDER
+    assert (
+        DimensionsFit(Dims(10, 30), Dims(200, 200), proportional_freedom=1.4).proportionality
+        is Proportionally.THINNER
+    )
+    assert (
+        DimensionsFit(Dims(30, 10), Dims(200, 200), proportional_freedom=1.4).proportionality
+        is Proportionally.WIDER
+    )
 
 
 def test_dimensions_fit_proportionality_no_freedom() -> None:
     Dims = Dimensions
 
-    assert DimensionsFit(
-        Dims(10, 30), Dims(20, 20), proportional_freedom=None).proportionality is None
-    assert DimensionsFit(
-        Dims(30, 10), Dims(20, 20), proportional_freedom=None).proportionality is None
+    assert (
+        DimensionsFit(Dims(10, 30), Dims(20, 20), proportional_freedom=None).proportionality is None
+    )
+    assert (
+        DimensionsFit(Dims(30, 10), Dims(20, 20), proportional_freedom=None).proportionality is None
+    )
 
 
 def test_dimensions_fit_repr() -> None:
     # Test basic case with all properties defined
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(20, 20))
-    assert repr(fit) == \
-        'DimensionsFit(width=True, height=True, both=True, proportionality=Proportionally.SAME)'
+    assert (
+        repr(fit)
+        == 'DimensionsFit(width=True, height=True, both=True, proportionality=Proportionally.SAME)'
+    )
 
     # Test case where dimensions don't fit
     fit = DimensionsFit(Dimensions(25, 15), Dimensions(20, 20))
-    assert repr(fit) == \
-        'DimensionsFit(width=False, height=True, both=False, proportionality=Proportionally.WIDER)'
+    assert (
+        repr(fit)
+        == 'DimensionsFit(width=False, height=True, both=False, proportionality=Proportionally.WIDER)'  # noqa: E501
+    )
 
     # Test case with None frame width
     fit = DimensionsFit(Dimensions(10, 10), Dimensions(None, 20))
@@ -305,5 +318,7 @@ def test_dimensions_fit_repr() -> None:
 
     # Test thinner proportionality
     fit = DimensionsFit(Dimensions(10, 15), Dimensions(20, 20))
-    assert repr(fit) == \
-        'DimensionsFit(width=True, height=True, both=True, proportionality=Proportionally.THINNER)'
+    assert (
+        repr(fit)
+        == 'DimensionsFit(width=True, height=True, both=True, proportionality=Proportionally.THINNER)'  # noqa: E501
+    )

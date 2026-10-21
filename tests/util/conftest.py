@@ -4,10 +4,12 @@ from typing import Annotated, Callable
 
 import pytest
 
-from .helpers.mocks import (MockAttrSubscriberCls,
-                            MockConfigSubscriberCls,
-                            MockDataPublisher,
-                            MockParentConfigSubscriberCls)
+from .helpers.mocks import (
+    MockAttrSubscriberCls,
+    MockConfigSubscriberCls,
+    MockDataPublisher,
+    MockParentConfigSubscriberCls,
+)
 
 
 @pytest.fixture(scope='function')
@@ -36,8 +38,10 @@ def text_list() -> list[str]:
 
 @pytest.fixture(scope='function')
 def list_appender_subscriber_func(
-        text_list: Annotated[list[str], pytest.fixture]) -> Callable[[str], None]:
+    text_list: Annotated[list[str], pytest.fixture],
+) -> Callable[[str], None]:
     """Provide the list appender subscriber func fixture."""
+
     def list_appender_subscriber_func(text: str) -> None:
         text_list.append(text)
 

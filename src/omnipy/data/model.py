@@ -13,20 +13,22 @@ import inspect
 from itertools import chain
 import json
 from types import GenericAlias, NoneType, UnionType
-from typing import (Annotated,
-                    Any,
-                    cast,
-                    ContextManager,
-                    ForwardRef,
-                    Generator,
-                    Generic,
-                    get_args,
-                    get_origin,
-                    Iterator,
-                    Literal,
-                    Optional,
-                    overload,
-                    Union)
+from typing import (
+    Annotated,
+    Any,
+    cast,
+    ContextManager,
+    ForwardRef,
+    Generator,
+    Generic,
+    get_args,
+    get_origin,
+    Iterator,
+    Literal,
+    Optional,
+    overload,
+    Union,
+)
 
 from typing_extensions import get_original_bases, override, Self, TypeIs, TypeVar
 
@@ -34,46 +36,55 @@ from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import ModelDisplayMixin
 from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
 from omnipy.data.dataset import Dataset, is_dataset_instance
-from omnipy.data.helpers import (build_own_module_and_global_namespace_for_forward_refs,
-                                 cleanup_name_qualname_and_module,
-                                 MethodInfo,
-                                 ResetSolutionTuple,
-                                 SPECIAL_METHODS_INFO_DICT,
-                                 validate_cls_counts,
-                                 YesNoMaybe)
+from omnipy.data.helpers import (
+    build_own_module_and_global_namespace_for_forward_refs,
+    cleanup_name_qualname_and_module,
+    MethodInfo,
+    ResetSolutionTuple,
+    SPECIAL_METHODS_INFO_DICT,
+    validate_cls_counts,
+    YesNoMaybe,
+)
 from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.exceptions import OmnipyNoneIsNotAllowedError
 from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util._placeholder import F
-from omnipy.util.contexts import (hold_and_reset_prev_attrib_value,
-                                  LastErrorHolder,
-                                  nothing,
-                                  setup_and_teardown_callback_context)
+from omnipy.util.contexts import (
+    hold_and_reset_prev_attrib_value,
+    LastErrorHolder,
+    nothing,
+    setup_and_teardown_callback_context,
+)
 from omnipy.util.decorators import add_callback_after_call, no_context
-from omnipy.util.helpers import (all_equals,
-                                 all_type_variants,
-                                 ensure_plain_type,
-                                 evaluate_any_forward_refs_if_possible,
-                                 get_calling_module_name,
-                                 get_default_if_typevar,
-                                 is_instance_of_any_type_variant,
-                                 is_literal_type,
-                                 is_non_str_byte_iterable,
-                                 is_optional,
-                                 is_type_specialization,
-                                 is_union,
-                                 remove_forward_ref_notation,
-                                 split_to_union_variants)
-from omnipy.util.pydantic import (is_none_type,
-                                  lenient_isinstance,
-                                  lenient_issubclass,
-                                  Undefined,
-                                  UndefinedType,
-                                  ValidationError)
+from omnipy.util.helpers import (
+    all_equals,
+    all_type_variants,
+    ensure_plain_type,
+    evaluate_any_forward_refs_if_possible,
+    get_calling_module_name,
+    get_default_if_typevar,
+    is_instance_of_any_type_variant,
+    is_literal_type,
+    is_non_str_byte_iterable,
+    is_optional,
+    is_type_specialization,
+    is_union,
+    remove_forward_ref_notation,
+    split_to_union_variants,
+)
+
 # from orjson import orjson
 import omnipy.util.pydantic as pyd
+from omnipy.util.pydantic import (
+    is_none_type,
+    lenient_isinstance,
+    lenient_issubclass,
+    Undefined,
+    UndefinedType,
+    ValidationError,
+)
 from omnipy.util.setdeque import SetDeque
 
 _ReturnT = TypeVar('_ReturnT')
@@ -167,11 +178,11 @@ undefined_default_factory: Callable[[], Any] = lambda: Undefined
 
 
 class Model(  # type: ignore[misc]
-        ModelDisplayMixin,
-        DataClassBase[_RootT],
-        pyd.GenericModel,
-        Generic[_RootT],
-        metaclass=ModelMetaclass,
+    ModelDisplayMixin,
+    DataClassBase[_RootT],
+    pyd.GenericModel,
+    Generic[_RootT],
+    metaclass=ModelMetaclass,
 ):
     """Typed pydantic-backed container for a single validated value.
 
@@ -185,6 +196,7 @@ class Model(  # type: ignore[misc]
     Concrete models are created either as type aliases such as
     ``Model[list[int]]`` or by subclassing an already-specialized model class.
     """
+
     @classmethod
     def _get_special_methods_info_dict(cls) -> dict_t[str, MethodInfo]:
         return SPECIAL_METHODS_INFO_DICT
@@ -207,6 +219,7 @@ class Model(  # type: ignore[misc]
             smart_union: Enables pydantic's smarter union parsing behavior.
             use_enum_values: Serializes enums by their values.
         """
+
         arbitrary_types_allowed = True
         validate_all = True
         # validate_assignment = True
@@ -234,8 +247,8 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def _get_default_value_from_model(  # noqa: C901
-            cls,
-            model: type[_RootT] | TypeForm | TypeVar,
+        cls,
+        model: type[_RootT] | TypeForm | TypeVar,
     ) -> _RootT:
         """Instantiate a default root value from a type expression.
 
@@ -294,8 +307,8 @@ class Model(  # type: ignore[misc]
 
     @classmethod
     def _prepare_cls_members_to_mimic_model(  # noqa: C901
-            cls,
-            created_model: 'type[Model[_RootT]]',
+        cls,
+        created_model: 'type[Model[_RootT]]',
     ) -> None:
         """Install special-method proxies matching the wrapped root type.
 
@@ -346,8 +359,11 @@ class Model(  # type: ignore[misc]
 
             ALWAYS_SUPPORTED_METHODS = ('__delattr__', '__hash__')
 
-            if (_type is object or is_type_specialization(_type)
-                    or _method_name in ALWAYS_SUPPORTED_METHODS):
+            if (
+                _type is object
+                or is_type_specialization(_type)
+                or _method_name in ALWAYS_SUPPORTED_METHODS
+            ):
                 return True
 
             # __objclass__ exists for slot_wrappers (built-ins)
@@ -379,9 +395,11 @@ class Model(  # type: ignore[misc]
             names_to_check = (name, '__add__') if name in ('__iadd__', '__radd__') else (name,)
             for type_to_support in outer_types:
                 if any(_type_supports_method(type_to_support, _) for _ in names_to_check):
-                    setattr(created_model,
-                            name,
-                            functools.partialmethod(cls._special_method, name, method_info))
+                    setattr(
+                        created_model,
+                        name,
+                        functools.partialmethod(cls._special_method, name, method_info),
+                    )
                     break
 
     @override
@@ -413,7 +431,8 @@ class Model(  # type: ignore[misc]
         )
 
         created_model._get_root_field().field_info = deepcopy(
-            created_model._get_root_field().field_info)
+            created_model._get_root_field().field_info
+        )
 
         if cls is Model and orig_model is not _RootT:  # type: ignore[misc]
             created_model._get_root_field().field_info.extra = {'orig_model': orig_model}
@@ -459,20 +478,21 @@ class Model(  # type: ignore[misc]
             cls._clean_type_caches()
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':  # noqa: C901
-
         # mypy currently does not support overloads of __new__()
 
-        from omnipy.data._typing.mimic_models import (Model_bool,
-                                                      Model_bytes,
-                                                      Model_Dataset,
-                                                      Model_dict,
-                                                      Model_float,
-                                                      Model_int,
-                                                      Model_list,
-                                                      Model_set,
-                                                      Model_str,
-                                                      Model_tuple_pair,
-                                                      Model_tuple_same_type)
+        from omnipy.data._typing.mimic_models import (
+            Model_bool,
+            Model_bytes,
+            Model_Dataset,
+            Model_dict,
+            Model_float,
+            Model_int,
+            Model_list,
+            Model_set,
+            Model_str,
+            Model_tuple_pair,
+            Model_tuple_same_type,
+        )
 
         @overload
         def __new__(
@@ -718,9 +738,9 @@ class Model(  # type: ignore[misc]
     else:
 
         def __new__(  # type: ignore[no-redef]
-                cls,
-                *args: Any,
-                **kwargs: Any,
+            cls,
+            *args: Any,
+            **kwargs: Any,
         ) -> Self:
             """Create an instance only for concrete ``Model[T]`` specializations.
 
@@ -815,13 +835,15 @@ class Model(  # type: ignore[misc]
             # top-level union variant of the Model's full type.
             if not is_instance_of_any_type_variant(data, self.full_type()):
                 try:
-                    dataset_or_model_as_input, data = \
-                        convert_value_to_raw_data_if_model_or_dataset(data)
+                    dataset_or_model_as_input, data = convert_value_to_raw_data_if_model_or_dataset(
+                        data
+                    )
                 except Exception as exc:
                     vexc = ValueError(f'Failed to prepare value for validation: {exc}')
                     raise ValidationError(
                         [pyd.ErrorWrapper(exc, loc=ROOT_KEY), pyd.ErrorWrapper(vexc, loc=ROOT_KEY)],
-                        self.__class__)
+                        self.__class__,
+                    )
                 if dataset_or_model_as_input:
                     super_kwargs[ROOT_KEY] = cast(_RootT, data)
         self._init(super_kwargs, **kwargs)
@@ -878,13 +900,10 @@ class Model(  # type: ignore[misc]
         self.from_data(super_kwargs[ROOT_KEY])
 
     # TODO: Model._init() and Dataset._init() are unused. Consider removing?
-    def _init(self, super_kwargs: dict_t[str, Any], **kwargs: Any) -> None:
-        ...
+    def _init(self, super_kwargs: dict_t[str, Any], **kwargs: Any) -> None: ...
 
     def __del__(self):
-        """Schedule snapshot cleanup when the model instance is garbage-collected.
-
-        """
+        """Schedule snapshot cleanup when the model instance is garbage-collected."""
         content_id = id(self.content)
         self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id)
 
@@ -951,15 +970,16 @@ class Model(  # type: ignore[misc]
             TypeError: Always raised to explain how to bind a concrete model
                 type before instantiation.
         """
-        raise TypeError('Note: The Model class requires a concrete model to be specified as '
-                        'a type hierarchy within brackets either directly, e.g.:\n\n'
-                        '\tmodel = Model[list[int]]([1,2,3])\n\n'
-                        'or indirectly in a subclass definition, e.g.:\n\n'
-                        '\tclass MyNumberList(Model[list[int]]): ...\n\n')
+        raise TypeError(
+            'Note: The Model class requires a concrete model to be specified as '
+            'a type hierarchy within brackets either directly, e.g.:\n\n'
+            '\tmodel = Model[list[int]]([1,2,3])\n\n'
+            'or indirectly in a subclass definition, e.g.:\n\n'
+            '\tclass MyNumberList(Model[list[int]]): ...\n\n'
+        )
 
     def _set_standard_field_description(self) -> None:
-        """Populate the root field description when the class lacks a docstring.
-        """
+        """Populate the root field description when the class lacks a docstring."""
         self.__fields__[ROOT_KEY].field_info.description = self._get_standard_field_description()
 
     @classmethod
@@ -969,9 +989,11 @@ class Model(  # type: ignore[misc]
         Returns:
             str: Standard descriptive text for the root field metadata.
         """
-        return ('This class represents a concrete model for data items in the `omnipy` Python '
-                'package. It is a statically typed specialization of the Model class, '
-                'which is itself wrapping the excellent Python package named `pydantic`.')
+        return (
+            'This class represents a concrete model for data items in the `omnipy` Python '
+            'package. It is a statically typed specialization of the Model class, '
+            'which is itself wrapping the excellent Python package named `pydantic`.'
+        )
 
     @classmethod
     def validate(cls: type['Model'], value: Any) -> 'Model':
@@ -1083,8 +1105,9 @@ class Model(  # type: ignore[misc]
         # own code.
         if calling_module is None:
             calling_module = get_calling_module_name()
-        own_module_ns, globalns = \
-            build_own_module_and_global_namespace_for_forward_refs(cls, calling_module, **localns)
+        own_module_ns, globalns = build_own_module_and_global_namespace_for_forward_refs(
+            cls, calling_module, **localns
+        )
 
         cls._apply_typevar_defaults_to_root_field()
 
@@ -1094,12 +1117,14 @@ class Model(  # type: ignore[misc]
         super().update_forward_refs(**globalns)
 
         cls._get_root_field().outer_type_ = evaluate_any_forward_refs_if_possible(
-            prev_outer_type, **globalns)
+            prev_outer_type, **globalns
+        )
         cls._get_root_field().type_ = evaluate_any_forward_refs_if_possible(prev_type, **globalns)
         cls.set_orig_model(evaluate_any_forward_refs_if_possible(cls.get_orig_model(), **globalns))
         if ROOT_KEY in cls.__annotations__:
             cls.__annotations__[ROOT_KEY] = evaluate_any_forward_refs_if_possible(
-                cls.__annotations__[ROOT_KEY], **globalns)
+                cls.__annotations__[ROOT_KEY], **globalns
+            )
 
         cls._clean_type_caches()
 
@@ -1210,13 +1235,15 @@ class Model(  # type: ignore[misc]
             #       validated for snapshot. Perhaps add a dirty flag to snapshot that can be used
             #       to determine if re-validation is needed? This can also help avoid equality
             #       tests, which might be expensive for large data structures.
-            needs_pre_validation = (not self.has_snapshot()
-                                    or not self.content_validated_according_to_snapshot())
+            needs_pre_validation = (
+                not self.has_snapshot() or not self.content_validated_according_to_snapshot()
+            )
             if needs_pre_validation:
                 internal_reset_solution = self._get_reset_solution()
                 with internal_reset_solution:
                     self._validate_and_set_value(
-                        self.content, reset_solution=internal_reset_solution)
+                        self.content, reset_solution=internal_reset_solution
+                    )
                     snapshot_taken = True
 
         return ResetSolutionTuple(
@@ -1260,10 +1287,12 @@ class Model(  # type: ignore[misc]
                 None: Snapshot rollback is applied in place.
             """
             new_deepcopy_content_ids = SetDeque[int](
-                self.snapshot_holder.get_deepcopy_content_ids())
+                self.snapshot_holder.get_deepcopy_content_ids()
+            )
             new_deepcopy_content_ids.extend(prev_deepcopy_content_ids)
             self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
-                *new_deepcopy_content_ids)
+                *new_deepcopy_content_ids
+            )
             # self.content = self.snapshot_holder.get_snapshot_deepcopy(self)
             self.content = deepcopy(self.snapshot)
 
@@ -1305,7 +1334,7 @@ class Model(  # type: ignore[misc]
                 return
             inner_reset_solution = reset_solution_tuple.reset_solution
 
-        with (inner_reset_solution):
+        with inner_reset_solution:
             validated_content = self._validate_content_from_value(new_content)
 
             if validated_content is new_content:
@@ -1400,16 +1429,18 @@ class Model(  # type: ignore[misc]
             ``True`` when the current content is still represented by the stored
             snapshot and does not need re-validation.
         """
-        needs_validation = self.snapshot_differs_from_model(self) \
-            or not self.snapshot_taken_of_same_model(self)
+        needs_validation = self.snapshot_differs_from_model(
+            self
+        ) or not self.snapshot_taken_of_same_model(self)
         return not needs_validation
 
     def _take_snapshot_of_validated_content(self) -> None:
-        """Store a validated snapshot when interactive mode is enabled.
-        """
+        """Store a validated snapshot when interactive mode is enabled."""
         if self.config.model.interactive:
-            with self.deepcopy_context(self.snapshot_holder.take_snapshot_setup,
-                                       self.snapshot_holder.take_snapshot_teardown):
+            with self.deepcopy_context(
+                self.snapshot_holder.take_snapshot_setup,
+                self.snapshot_holder.take_snapshot_teardown,
+            ):
                 self.snapshot_holder.take_snapshot(self)
 
     @classmethod
@@ -1431,23 +1462,25 @@ class Model(  # type: ignore[misc]
         if ROOT_KEY in root_obj:
             value = root_obj[ROOT_KEY]
             outer_type = cls.outer_type()
-            if (lenient_issubclass(outer_type, Iterable)
-                    and not lenient_isinstance(value, outer_type)  # type: ignore[arg-type]
-                    and is_non_str_byte_iterable(value)
-                    # Leave the types below for pydantic to handle
-                    and not pyd.sequence_like(value)
-                    # Also, exclude mappings
-                    and not isinstance(value, Mapping)):
+            if (
+                lenient_issubclass(outer_type, Iterable)
+                and not lenient_isinstance(value, outer_type)  # type: ignore[arg-type]
+                and is_non_str_byte_iterable(value)
+                # Leave the types below for pydantic to handle
+                and not pyd.sequence_like(value)
+                # Also, exclude mappings
+                and not isinstance(value, Mapping)
+            ):
                 return {ROOT_KEY: (_ for _ in value)}
         return root_obj
 
     @classmethod
     def _wrap_non_omnipy_pydantic_model(cls, value: Any) -> Any:
         if is_non_omnipy_pydantic_model_instance(value):
-            pyd_model_cls_with_omnipy_wrappers = \
-                create_pydantic_model_subclass_with_wrappers(value.__class__)
-            dataset_or_model_as_input, value = \
-                convert_value_to_raw_data_if_model_or_dataset(value)
+            pyd_model_cls_with_omnipy_wrappers = create_pydantic_model_subclass_with_wrappers(
+                value.__class__
+            )
+            dataset_or_model_as_input, value = convert_value_to_raw_data_if_model_or_dataset(value)
             assert isinstance(value, dict)
             return pyd_model_cls_with_omnipy_wrappers(**value)
         return value
@@ -1459,8 +1492,9 @@ class Model(  # type: ignore[misc]
         value = parse_none_according_to_model(value, root_model=cls)
 
         config = cls.data_class_creator.config  # type: ignore[attr-defined]
-        with hold_and_reset_prev_attrib_value(config.model,
-                                              'dynamically_convert_elements_to_models'):
+        with hold_and_reset_prev_attrib_value(
+            config.model, 'dynamically_convert_elements_to_models'
+        ):
             config.model.dynamically_convert_elements_to_models = False
 
             value = cls._wrap_non_omnipy_pydantic_model(value)
@@ -1550,6 +1584,7 @@ class Model(  # type: ignore[misc]
         Args:
             value: Raw data to parse into the current model.
         """
+
         @contextmanager
         def _reset_to_default(*args, **kwds):
             """Temporarily restore the model's default content on rollback.
@@ -1568,7 +1603,8 @@ class Model(  # type: ignore[misc]
             yield
 
         self._validate_and_set_value(
-            value, reset_solution=_reset_to_default(), lazy_snapshot_if_possible=True)
+            value, reset_solution=_reset_to_default(), lazy_snapshot_if_possible=True
+        )
 
     def from_data(self, data: Any) -> None:
         """Parse raw Python data into this existing model instance.
@@ -1770,11 +1806,13 @@ class Model(  # type: ignore[misc]
             TypeError: If the model was created without a concrete root binding.
         """
         if ROOT_KEY not in self.__dict__:
-            raise TypeError('The Model class requires the specific model to be specified in as '
-                            'a type hierarchy within brackets either directly, e.g.:\n'
-                            '\t"model = Model[list[int]]([1,2,3])"\n'
-                            'or indirectly in a subclass definition, e.g.:\n'
-                            '\t"class MyNumberList(Model[list[int]]): ..."')
+            raise TypeError(
+                'The Model class requires the specific model to be specified in as '
+                'a type hierarchy within brackets either directly, e.g.:\n'
+                '\t"model = Model[list[int]]([1,2,3])"\n'
+                'or indirectly in a subclass definition, e.g.:\n'
+                '\t"class MyNumberList(Model[list[int]]): ..."'
+            )
 
     def __setattr__(self, attr: str, value: Any) -> None:
         """Set model attributes while protecting Omnipy's root-value invariants.
@@ -1794,7 +1832,7 @@ class Model(  # type: ignore[misc]
         if attr in ['__module__'] + list(self.__dict__.keys()) and attr not in [ROOT_KEY]:
             super().__setattr__(attr, value)
         else:
-            match (attr):
+            match attr:
                 case 'content':
                     content_prop = getattr(self.__class__, attr)
                     old_content_id = id(content_prop.__get__(self))
@@ -1805,7 +1843,8 @@ class Model(  # type: ignore[misc]
 
                         if self.config.model.interactive and self.has_snapshot():
                             self.snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
-                                old_content_id)
+                                old_content_id
+                            )
                 case 'repr_state':
                     prop = getattr(self.__class__, attr)
                     prop.__set__(self, value)
@@ -1815,12 +1854,14 @@ class Model(  # type: ignore[misc]
                             '__setattr__',
                             MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
                             attr,
-                            value)
+                            value,
+                        )
                     else:
                         raise RuntimeError('Model does not allow setting of extra attributes')
 
     def _special_method(  # noqa: C901
-            self, name: str, info: MethodInfo, *args: object, **kwargs: object) -> object:
+        self, name: str, info: MethodInfo, *args: object, **kwargs: object
+    ) -> object:
         """Execute a proxied special method against the wrapped content object.
 
         This helper centralizes Omnipy's logic for rollback handling,
@@ -1840,8 +1881,9 @@ class Model(  # type: ignore[misc]
 
         if info.state_changing:
 
-            def _call_special_method_and_return_self_if_inplace(*inner_args: object,
-                                                                **inner_kwargs: object) -> object:
+            def _call_special_method_and_return_self_if_inplace(
+                *inner_args: object, **inner_kwargs: object
+            ) -> object:
                 """Call the proxied method and preserve ``self`` for in-place ops.
 
                 Args:
@@ -1905,10 +1947,10 @@ class Model(  # type: ignore[misc]
         return ret
 
     def _call_special_method(  # noqa: C901
-            self,
-            name: str,
-            *args: object,
-            **kwargs: object,
+        self,
+        name: str,
+        *args: object,
+        **kwargs: object,
     ) -> object:
         content = self.content
 
@@ -1935,7 +1977,8 @@ class Model(  # type: ignore[misc]
             # return _add_new_other_model(*args, **kwargs)
             method = _add
             return self._call_single_arg_method_with_model_converted_other_first(
-                name, method, *args, model_converted_other_method=None, **kwargs)
+                name, method, *args, model_converted_other_method=None, **kwargs
+            )
 
         elif name == '__radd__' and (has_radd_method or has_add_method):
 
@@ -1997,7 +2040,8 @@ class Model(  # type: ignore[misc]
 
             method = _iadd
             return self._call_single_arg_method_with_model_converted_other_first(
-                name, method, *args, model_converted_other_method=None, **kwargs)
+                name, method, *args, model_converted_other_method=None, **kwargs
+            )
         else:
             try:
                 method = cast(Callable, self._getattr_from_content_obj(name))
@@ -2111,8 +2155,8 @@ class Model(  # type: ignore[misc]
                 type mismatch.
         """
         with hold_and_reset_prev_attrib_value(
-                self.config.model,
-                'dynamically_convert_elements_to_models',
+            self.config.model,
+            'dynamically_convert_elements_to_models',
         ):
             if reset_dyn_convert_els_to_models:
                 self.config.model.dynamically_convert_elements_to_models = False
@@ -2161,6 +2205,7 @@ class Model(  # type: ignore[misc]
             Callable[..., Generator]: Zero-argument generator factory yielding
                 converted elements.
         """
+
         def _convert_full_element_model_generator(elements=elements):
             """Yield model-converted elements from a captured iterable.
 
@@ -2175,8 +2220,9 @@ class Model(  # type: ignore[misc]
 
         return _convert_full_element_model_generator
 
-    def _get_convert_element_value_model_generator(self,
-                                                   elements: Iterable) -> Callable[..., Generator]:
+    def _get_convert_element_value_model_generator(
+        self, elements: Iterable
+    ) -> Callable[..., Generator]:
         """Build a generator factory that wraps mapping values as models.
 
         Args:
@@ -2187,6 +2233,7 @@ class Model(  # type: ignore[misc]
             Callable[..., Generator]: Zero-argument generator factory yielding
                 pairs with converted values.
         """
+
         def _convert_element_value_model_generator(elements=elements):
             """Yield key-value pairs with their values converted to models.
 
@@ -2243,12 +2290,13 @@ class Model(  # type: ignore[misc]
 
                         for level_up_type_to_check in all_type_variants(value_arg_type):
                             level_up_type_to_check = self._fix_tuple_type_from_args(
-                                level_up_type_to_check)
+                                level_up_type_to_check
+                            )
                             # Only non-Models content considered for dynamic conversion
                             if not is_model_instance(ret) and self._is_instance_or_literal(
-                                    ret,
-                                    ensure_plain_type(level_up_type_to_check),
-                                    level_up_type_to_check,
+                                ret,
+                                ensure_plain_type(level_up_type_to_check),
+                                level_up_type_to_check,
                             ):
                                 try:
                                     return Model[level_up_type_to_check](ret)  # type: ignore
@@ -2260,9 +2308,9 @@ class Model(  # type: ignore[misc]
 
                 else:
                     if self._is_instance_or_literal(
-                            ret,
-                            plain_type_to_check,
-                            type_to_check,
+                        ret,
+                        plain_type_to_check,
+                        type_to_check,
                     ):
                         try:
                             return self.__class__(ret)
@@ -2345,14 +2393,18 @@ class Model(  # type: ignore[misc]
             if inspect.isroutine(content_attr):
                 method_info = self.__class__._get_special_methods_info_dict().get(attr)
                 is_read_only_method = (
-                    method_info and not method_info.state_changing
-                    or attr in ('items', 'values', 'keys'))
+                    method_info
+                    and not method_info.state_changing
+                    or attr in ('items', 'values', 'keys')
+                )
 
                 if not is_read_only_method:
-                    reset_solution = \
+                    reset_solution = (
                         self._prepare_reset_solution_take_snapshot_if_needed().reset_solution
-                    new_content_attr: Callable = cast(Callable,
-                                                      self._getattr_from_content_obj(attr))
+                    )
+                    new_content_attr: Callable = cast(
+                        Callable, self._getattr_from_content_obj(attr)
+                    )
 
                     def _validate_content(ret: Any):
                         """Re-validate content after a proxied mutating method call.
@@ -2375,9 +2427,9 @@ class Model(  # type: ignore[misc]
                             raise_validation_errors=False,
                         )
 
-                    content_attr = add_callback_after_call(new_content_attr,
-                                                           _validate_content,
-                                                           reset_solution)
+                    content_attr = add_callback_after_call(
+                        new_content_attr, _validate_content, reset_solution
+                    )
 
             if attr in ('values', 'items'):
                 match attr:
@@ -2423,7 +2475,7 @@ class Model(  # type: ignore[misc]
             content compares equal.
         """
         if is_model_instance(other):
-            return (self.__class__ == other.__class__ and all_equals(self.content, other.content))
+            return self.__class__ == other.__class__ and all_equals(self.content, other.content)
             # and self.to_data() == other.to_data()  # last line is just in case
         else:
             return False
@@ -2441,7 +2493,8 @@ class Model(  # type: ignore[misc]
             '__call__',
             MethodInfo(state_changing=True, returns_same_type=YesNoMaybe.NO),
             *args,
-            **kwargs)
+            **kwargs,
+        )
 
     def __repr_args__(self):
         """Provide the root value to pydantic's representation machinery.
@@ -2465,8 +2518,8 @@ def create_pydantic_model_subclass_with_wrappers(model: type[pyd.BaseModel]) -> 
     for name, field in model.__fields__.items():
         outer_type = field.outer_type_
         is_wrappable_complex_type = (
-            (not is_literal_type(outer_type) and get_origin(outer_type) is not None)
-            or (isinstance(outer_type, type) and is_non_omnipy_pydantic_model_class(outer_type)))
+            not is_literal_type(outer_type) and get_origin(outer_type) is not None
+        ) or (isinstance(outer_type, type) and is_non_omnipy_pydantic_model_class(outer_type))
         if is_wrappable_complex_type:
             # Pydantic removes ``None`` from ``outer_type_`` for optional fields.
             # Retain the annotation in that case, while using the resolved outer
@@ -2540,7 +2593,8 @@ def _wrap_nested_pydantic_models(type_: TypeForm) -> TypeForm:
 
 
 def convert_value_to_raw_data_if_model_or_dataset(
-        value: object) -> tuple[bool, object | dict_t[str, Any]]:
+    value: object,
+) -> tuple[bool, object | dict_t[str, Any]]:
     """Convert model-like inputs to plain data before validation.
 
     Args:
@@ -2568,8 +2622,9 @@ def is_model_instance(__obj: object | _ModelT) -> 'TypeIs[_ModelT]':
     Returns:
         ``True`` when ``__obj`` is an instance of :class:`Model`.
     """
-    return lenient_isinstance(__obj, Model) \
-        and not is_none_type(__obj)  # Consequence of _ModelMetaclass hack
+    return lenient_isinstance(__obj, Model) and not is_none_type(
+        __obj
+    )  # Consequence of _ModelMetaclass hack
 
 
 @functools.cache
@@ -2582,8 +2637,9 @@ def is_model_subclass(__cls: TypeForm) -> 'TypeIs[type[Model]]':
     Returns:
         ``True`` when ``__cls`` is a subclass of :class:`Model`.
     """
-    return lenient_issubclass(__cls, Model) \
-        and not is_none_type(__cls)  # Consequence of _ModelMetaclass hack
+    return lenient_issubclass(__cls, Model) and not is_none_type(
+        __cls
+    )  # Consequence of _ModelMetaclass hack
 
 
 def obj_or_model_content_isinstance(
@@ -2628,10 +2684,12 @@ def is_non_omnipy_pydantic_model_class(cls: type) -> TypeIs[type[pyd.BaseModel]]
         :class:`~omnipy.data.dataset.Dataset`.
     """
     mro = cls.__mro__
-    return mro[0] != pyd.BaseModel \
-        and (pyd.BaseModel in mro or pyd.GenericModel in mro) \
-        and Model not in mro \
+    return (
+        mro[0] != pyd.BaseModel
+        and (pyd.BaseModel in mro or pyd.GenericModel in mro)
+        and Model not in mro
         and Dataset not in mro
+    )
 
 
 def is_non_omnipy_pydantic_model_instance(obj: object) -> TypeIs[pyd.BaseModel]:
@@ -2702,7 +2760,6 @@ def parse_none_according_to_model(value, root_model):  # IsModel
         flattened_union_variants = _flatten_two_level_tuple(union_variants)
 
         if any(is_model_subclass(tp_) or _supports_none(tp_) for tp_ in flattened_union_variants):
-
             # Fixed tuples
             if _outer_type_and_value_are_of_types(plain_outer_type, value, tuple) and outer_args:
                 return _parse_none_in_fixed_tuple(plain_outer_type, union_variants, value)
@@ -2786,7 +2843,8 @@ def _outer_type_and_value_are_of_types(plain_outer_type, value, *types):
     """
     return any(
         lenient_issubclass(plain_outer_type, type_) and lenient_isinstance(value, type_)
-        for type_ in types)
+        for type_ in types
+    )
 
 
 def _parse_none_in_mutable_sequence_or_tuple(plain_outer_type, inner_val_type, value):
@@ -2805,7 +2863,8 @@ def _parse_none_in_mutable_sequence_or_tuple(plain_outer_type, inner_val_type, v
 
     if any(is_model_subclass(_) or _supports_none(_) for _ in inner_val_union_types):
         return plain_outer_type(
-            _parse_none_in_types(inner_val_union_types) if val is None else val for val in value)
+            _parse_none_in_types(inner_val_union_types) if val is None else val for val in value
+        )
     return value
 
 
@@ -2824,18 +2883,25 @@ def _parse_none_in_mapping(plain_outer_type, outer_type_args, inner_val_type, va
     """
     inner_val_union_types = split_to_union_variants(inner_val_type)
 
-    inner_key_type = outer_type_args[0] if lenient_issubclass(
-        plain_outer_type, Mapping) and outer_type_args else Undefined
+    inner_key_type = (
+        outer_type_args[0]
+        if lenient_issubclass(plain_outer_type, Mapping) and outer_type_args
+        else Undefined
+    )
     inner_key_union_types = split_to_union_variants(inner_key_type)
 
     if any(
-            is_model_subclass(_) or _supports_none(_)
-            for _ in chain(inner_key_union_types, inner_val_union_types)):
-        return plain_outer_type({
-            _parse_none_in_types(inner_key_union_types) if key is None else key:
-                _parse_none_in_types(inner_val_union_types) if val is None else val
-            for key, val in value.items()
-        })
+        is_model_subclass(_) or _supports_none(_)
+        for _ in chain(inner_key_union_types, inner_val_union_types)
+    ):
+        return plain_outer_type(
+            {
+                _parse_none_in_types(inner_key_union_types)
+                if key is None
+                else key: _parse_none_in_types(inner_val_union_types) if val is None else val
+                for key, val in value.items()
+            }
+        )
     return value
 
 
@@ -2869,7 +2935,8 @@ def _parse_none_in_fixed_tuple(plain_outer_type, tuple_of_union_variant_types, v
     """
     return plain_outer_type(
         _parse_none_in_types(tuple_of_union_variant_types[i]) if val is None else val
-        for i, val in enumerate(value))
+        for i, val in enumerate(value)
+    )
 
 
 def _parse_none_in_union(flattened_union_variant_types, value):

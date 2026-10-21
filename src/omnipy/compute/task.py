@@ -18,10 +18,12 @@ from typing_extensions import TypeVar, Unpack
 
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute._job import JobMixin, JobTemplateMixin
-from omnipy.compute._typedefs import (JobCommonKwargs,
-                                      TaskTemplateIterDecorator,
-                                      TaskTemplateIterWithDatasetClsDecorator,
-                                      TaskTemplatePlainDecorator)
+from omnipy.compute._typedefs import (
+    JobCommonKwargs,
+    TaskTemplateIterDecorator,
+    TaskTemplateIterWithDatasetClsDecorator,
+    TaskTemplatePlainDecorator,
+)
 from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
 from omnipy.shared.protocols.compute.job import IsTask, IsTaskTemplate
 from omnipy.shared.protocols.data import IsDataset
@@ -42,13 +44,14 @@ _RetT = TypeVar('_RetT')
 _RetDatasetClsT = TypeVar('_RetDatasetClsT', bound=IsDataset)
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_TASK_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
-        dedent("""\
+    os.environ['OMNIPY_MACRO_TASK_TEMPLATE_DESCRIPTION'] = '\n\n'.join(
+        (
+            dedent("""\
             A task template wraps a Python callable that performs a single unit of work
             as a task. Use this when the work can be expressed as a self-contained
             function call."""),
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
-        dedent("""\
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
+            dedent("""\
             ### Wrapped callable
 
             The wrapped callable defines both the implementation and the public
@@ -75,10 +78,11 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
                 >>> add_suffix.run(text_files, suffix='!') == expected
                 True"""),
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
-    ))
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
+        )
+    )
 
 
 class TaskBase:
@@ -94,20 +98,20 @@ class TaskBase:
 
 
 class TaskTemplateCore(
-        FuncArgJobBase[
-            IsTaskTemplate[_CallP, _RetT],
-            IsTask[_CallP, _RetT],
-            _CallP,
-            _RetT,
-        ],
-        JobTemplateMixin[
-            IsTaskTemplate[_CallP, _RetT],
-            IsTask[_CallP, _RetT],
-            _CallP,
-            _RetT,
-        ],
-        TaskBase,
-        Generic[_CallP, _RetT],
+    FuncArgJobBase[
+        IsTaskTemplate[_CallP, _RetT],
+        IsTask[_CallP, _RetT],
+        _CallP,
+        _RetT,
+    ],
+    JobTemplateMixin[
+        IsTaskTemplate[_CallP, _RetT],
+        IsTask[_CallP, _RetT],
+        _CallP,
+        _RetT,
+    ],
+    TaskBase,
+    Generic[_CallP, _RetT],
 ):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Implement the core template behavior for tasks.
@@ -258,6 +262,7 @@ class TaskTemplateCore(
     Instances are normally produced through the [TaskTemplate][] decorator
     factory rather than by direct construction.
     """
+
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsTask[_CallP, _RetT]]:
         """Return the executable task type produced by this template.
@@ -281,8 +286,7 @@ def TaskTemplate(
     iterate_over_data_files: Literal[True],
     output_dataset_cls: type[_RetDatasetClsT],
     **kwargs: Unpack[JobCommonKwargs],
-) -> TaskTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]:
-    ...
+) -> TaskTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]: ...
 
 
 @overload
@@ -291,8 +295,7 @@ def TaskTemplate(
     iterate_over_data_files: Literal[True],
     output_dataset_cls: None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> TaskTemplateIterDecorator:
-    ...
+) -> TaskTemplateIterDecorator: ...
 
 
 @overload
@@ -301,8 +304,7 @@ def TaskTemplate(
     iterate_over_data_files: Literal[False] = False,
     output_dataset_cls: type[IsDataset] | None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> TaskTemplatePlainDecorator:
-    ...
+) -> TaskTemplatePlainDecorator: ...
 
 
 @overload
@@ -311,10 +313,11 @@ def TaskTemplate(
     iterate_over_data_files: bool,
     output_dataset_cls: type[_RetDatasetClsT] | None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> (TaskTemplatePlainDecorator
-      | TaskTemplateIterDecorator
-      | TaskTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]):
-    ...
+) -> (
+    TaskTemplatePlainDecorator
+    | TaskTemplateIterDecorator
+    | TaskTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]
+): ...
 
 
 def TaskTemplate(
@@ -521,10 +524,12 @@ def TaskTemplate(
     return ret
 
 
-class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP, _RetT],
-           TaskBase,
-           FuncArgJobBase[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP, _RetT],
-           Generic[_CallP, _RetT]):
+class Task(
+    JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP, _RetT],
+    TaskBase,
+    FuncArgJobBase[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP, _RetT],
+    Generic[_CallP, _RetT],
+):
     """Execute a single callable-backed Omnipy task.
 
     A ``Task`` is the runnable job object produced from a ``TaskTemplate``.
@@ -536,6 +541,7 @@ class Task(JobMixin[IsTaskTemplate[_CallP, _RetT], IsTask[_CallP, _RetT], _CallP
 
     Instances are typically produced by calling a ``TaskTemplate``.
     """
+
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         """Register the engine decorator for task execution.
 

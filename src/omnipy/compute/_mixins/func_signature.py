@@ -10,6 +10,7 @@ from omnipy.shared.protocols.compute.job import IsPlainFuncArgJobBase
 
 class SignatureFuncJobBaseMixin:
     """Cache a job function signature and expose signature helpers."""
+
     def __init__(self):
         self_as_plain_func_arg_job_base = cast(IsPlainFuncArgJobBase, self)
         self._func_signature = inspect.signature(self_as_plain_func_arg_job_base._job_func)
@@ -33,9 +34,9 @@ class SignatureFuncJobBaseMixin:
 
         return self._func_signature.return_annotation
 
-    def _check_param_keys_do_not_target_var_params(self,
-                                                   param_keys: Iterable[str],
-                                                   modifier_kwarg_key: str) -> None:
+    def _check_param_keys_do_not_target_var_params(
+        self, param_keys: Iterable[str], modifier_kwarg_key: str
+    ) -> None:
         """Reject direct targeting of ``*args``/``**kwargs`` parameter names.
 
         Parameter-modifier APIs such as ``fixed_params`` and
@@ -60,24 +61,28 @@ class SignatureFuncJobBaseMixin:
                     f'Parameter "{param_key}" is a {param_kind.name} parameter in the job '
                     'function signature, so it may not be targeted directly by the '
                     f'"{modifier_kwarg_key}" modifier. Target concrete keyword names '
-                    'instead.')
+                    'instead.'
+                )
 
     def _check_param_keys_in_func_signature(
         self,
         param_keys: Iterable[str],
         modifier_kwarg_key: str,
     ):
-        if any(param.kind == inspect.Parameter.VAR_KEYWORD
-               for param in self.param_signatures.values()):
+        if any(
+            param.kind == inspect.Parameter.VAR_KEYWORD for param in self.param_signatures.values()
+        ):
             return
 
         for param_key in param_keys:
             if param_key not in self.param_signatures:
-                raise KeyError('Parameter "{}" was not found in the '.format(param_key)
-                               + 'signature of the job function. Only parameters in the '
-                               'signature of the job function are '
-                               f'allowed as keys in the "{modifier_kwarg_key}" modifier: '
-                               f"{', '.join(key for key in self.param_signatures.keys())}")
+                raise KeyError(
+                    'Parameter "{}" was not found in the '.format(param_key)
+                    + 'signature of the job function. Only parameters in the '
+                    'signature of the job function are '
+                    f'allowed as keys in the "{modifier_kwarg_key}" modifier: '
+                    f'{", ".join(key for key in self.param_signatures.keys())}'
+                )
 
     def _check_param_keys(
         self,

@@ -23,25 +23,27 @@ import locale as pkg_locale
 import operator
 import sys
 from types import GenericAlias, ModuleType, NoneType, UnionType
-from typing import _AnnotatedAlias  # type: ignore[attr-defined]
-from typing import _LiteralGenericAlias  # type: ignore[attr-defined]
-from typing import _UnionGenericAlias  # type: ignore[attr-defined]
-from typing import (_SpecialForm,
-                    Any,
-                    Callable,
-                    cast,
-                    Concatenate,
-                    ForwardRef,
-                    Generic,
-                    get_args,
-                    get_origin,
-                    Literal,
-                    Mapping,
-                    overload,
-                    ParamSpec,
-                    TypeAlias,
-                    TypeGuard,
-                    Union)
+from typing import (
+    _AnnotatedAlias,  # type: ignore[attr-defined]
+    _LiteralGenericAlias,  # type: ignore[attr-defined]
+    _SpecialForm,
+    _UnionGenericAlias,  # type: ignore[attr-defined]
+    Any,
+    Callable,
+    cast,
+    Concatenate,
+    ForwardRef,
+    Generic,
+    get_args,
+    get_origin,
+    Literal,
+    Mapping,
+    overload,
+    ParamSpec,
+    TypeAlias,
+    TypeGuard,
+    Union,
+)
 
 from cachebox import cached, LRUCache
 from typing_extensions import NoDefault, TypeVar
@@ -85,6 +87,7 @@ def as_dictable(obj: object) -> Dictable | None:
         Iterable inputs are validated eagerly. Single-pass iterators may therefore
         be consumed by the tuple-pair check.
     """
+
     def _is_iterable_of_tuple_pairs(obj_inner: object) -> bool:
         """Return whether ``obj_inner`` is an iterable of ``(key, value)`` pairs.
 
@@ -94,8 +97,9 @@ def as_dictable(obj: object) -> Dictable | None:
         Returns:
             ``True`` when every iterated element is a 2-item tuple.
         """
-        return isinstance(obj_inner, Iterable) and \
-            all(isinstance(el, tuple) and len(el) == 2 for el in obj_inner)
+        return isinstance(obj_inner, Iterable) and all(
+            isinstance(el, tuple) and len(el) == 2 for el in obj_inner
+        )
 
     if isinstance(obj, Mapping) or _is_iterable_of_tuple_pairs(obj):
         return cast(Dictable, obj)
@@ -103,8 +107,9 @@ def as_dictable(obj: object) -> Dictable | None:
         return None
 
 
-def create_merged_dict(dictable_1: Dictable[_KeyT],
-                       dictable_2: Dictable[_KeyT]) -> dict[_KeyT, Any]:
+def create_merged_dict(
+    dictable_1: Dictable[_KeyT], dictable_2: Dictable[_KeyT]
+) -> dict[_KeyT, Any]:
     """Merge two mapping-like inputs into a new dictionary.
 
     Args:
@@ -126,7 +131,9 @@ def create_merged_dict(dictable_1: Dictable[_KeyT],
     return merged_dict
 
 
-def first_key_in_mapping(mapping: Mapping[_KeyT, Any],) -> _KeyT:
+def first_key_in_mapping(
+    mapping: Mapping[_KeyT, Any],
+) -> _KeyT:
     """Return the first key yielded by a mapping.
 
     Args:
@@ -143,7 +150,9 @@ def first_key_in_mapping(mapping: Mapping[_KeyT, Any],) -> _KeyT:
     raise KeyError('Mapping is empty, no first key.')
 
 
-def first_value_in_mapping(mapping: Mapping[Any, _ValueT],) -> _ValueT:
+def first_value_in_mapping(
+    mapping: Mapping[Any, _ValueT],
+) -> _ValueT:
     """Return the first value yielded by a mapping.
 
     Args:
@@ -285,8 +294,8 @@ def transfer_generic_args_to_cls(to_cls, from_generic_type):
 
 @overload
 def ensure_plain_type(  # pyright: ignore [reportOverlappingOverload]
-        in_type: ForwardRef) -> ForwardRef:
-    ...
+    in_type: ForwardRef,
+) -> ForwardRef: ...
 
 
 @overload
@@ -335,9 +344,9 @@ def ensure_plain_type(in_type: TypeForm) -> ForwardRef | TypeVar | type | _Speci
         return cast(type | ForwardRef | TypeVar, origin if get_args(in_type) else in_type)
 
 
-def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
-                                          calling_module: str | None = None,
-                                          **localns) -> TypeForm:
+def evaluate_any_forward_refs_if_possible(
+    in_type: TypeForm, calling_module: str | None = None, **localns
+) -> TypeForm:
     """Resolve forward references recursively when enough namespace data exists.
 
     Args:
@@ -364,7 +373,9 @@ def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
             return cast(
                 type | GenericAlias,
                 in_type._evaluate(
-                    globalns, localns if localns else locals(), recursive_guard=frozenset()))
+                    globalns, localns if localns else locals(), recursive_guard=frozenset()
+                ),
+            )
         except NameError:
             pass
     else:
@@ -373,7 +384,8 @@ def evaluate_any_forward_refs_if_possible(in_type: TypeForm,
         if origin and args:
             new_args = tuple(
                 evaluate_any_forward_refs_if_possible(arg, calling_module, **localns)
-                for arg in args)
+                for arg in args
+            )
             if origin == UnionType:
                 return functools.reduce(operator.or_, new_args)
             else:
@@ -399,10 +411,12 @@ def get_default_if_typevar(typ_: type[_ObjT] | TypeForm | TypeVar) -> type[_ObjT
         if default is not NoDefault:
             return default
         else:
-            raise TypeError(f'The TypeVar "{typ_.__name__}" needs to specify a default value. '
-                            f'This requires Python 3.13, but is supported in earlier versions '
-                            f'of Python by importing TypeVar from the library '
-                            f'"typing-extensions".')
+            raise TypeError(
+                f'The TypeVar "{typ_.__name__}" needs to specify a default value. '
+                f'This requires Python 3.13, but is supported in earlier versions '
+                f'of Python by importing TypeVar from the library '
+                f'"typing-extensions".'
+            )
     return typ_
 
 
@@ -420,7 +434,7 @@ def contains_typevar(typ_: object) -> bool:
 
 
 def all_type_variants(
-    in_type: type | GenericAlias | UnionType | _UnionGenericAlias
+    in_type: type | GenericAlias | UnionType | _UnionGenericAlias,
 ) -> tuple[type | GenericAlias, ...]:
     """Return a flat tuple of all direct variants in a union-like type.
 
@@ -438,7 +452,8 @@ def all_type_variants(
 
 
 def is_instance_of_any_type_variant(
-        obj: object, in_type: type | GenericAlias | UnionType | _UnionGenericAlias) -> bool:
+    obj: object, in_type: type | GenericAlias | UnionType | _UnionGenericAlias
+) -> bool:
     """Return whether ``obj`` is an instance of any variant in a union-like type
 
     Note: Generics and other types not supported by ``isinstance()`` are ignored.
@@ -480,7 +495,8 @@ def is_iterable(obj: Iterable[_ObjT] | _ObjT) -> TypeGuard[Iterable[_ObjT]]:
 
 
 def is_non_str_byte_iterable(
-        obj: Iterable[_ObjT] | _ObjT | str | bytes) -> TypeGuard[Iterable[_ObjT]]:
+    obj: Iterable[_ObjT] | _ObjT | str | bytes,
+) -> TypeGuard[Iterable[_ObjT]]:
     """Return whether ``obj`` is iterable but not ``str`` or ``bytes``.
 
     Args:
@@ -509,7 +525,7 @@ def ensure_non_str_byte_iterable(value):
 
 
 def takes_input_params_from(
-    func: Callable[Concatenate[Any, _P], Any]
+    func: Callable[Concatenate[Any, _P], Any],
 ) -> Callable[[Callable[Concatenate[Any, _P], _RetT]], Callable[Concatenate[Any, _P], _RetT]]:
     """Copy a callable parameter signature for static typing purposes.
 
@@ -532,8 +548,7 @@ def has_items(obj: object) -> bool:
     Returns:
         ``True`` when ``obj`` has ``__len__`` and its length is greater than zero.
     """
-    return hasattr(obj, '__len__') \
-        and obj.__len__() > 0  # pyright: ignore [reportAttributeAccessIssue]
+    return hasattr(obj, '__len__') and obj.__len__() > 0  # pyright: ignore [reportAttributeAccessIssue]
 
 
 def get_first_item(iterable: Iterable[object]) -> object:
@@ -620,8 +635,7 @@ def is_type_specialization(value: Any) -> bool:
 
 @functools.cache
 def is_strict_subclass(
-        __cls: type,
-        __class_or_tuple: type | UnionType | tuple[type | UnionType | tuple[Any, ...], ...]
+    __cls: type, __class_or_tuple: type | UnionType | tuple[type | UnionType | tuple[Any, ...], ...]
 ) -> bool:
     """Return whether ``__cls`` is a proper subclass of the given parent type.
 
@@ -692,9 +706,9 @@ def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):
     return module not in imported_modules and module.__name__.startswith('omnipy')
 
 
-def recursive_module_import_new(root_path: list[str],
-                                imported_modules: dict[str, ModuleType],
-                                excluded_set: set[str]):
+def recursive_module_import_new(
+    root_path: list[str], imported_modules: dict[str, ModuleType], excluded_set: set[str]
+):
     """Import modules discovered under ``root_path`` into ``imported_modules``.
 
     Args:
@@ -732,8 +746,9 @@ def recursive_module_import_new(root_path: list[str],
                 imported_modules[module_name] = loader.load_module(module_name)
 
 
-def recursive_module_import(module: ModuleType,
-                            imported_modules: list[ModuleType] = []) -> dict[str, object]:
+def recursive_module_import(
+    module: ModuleType, imported_modules: list[ModuleType] = []
+) -> dict[str, object]:
     """Recursively merge attributes from Omnipy base-class modules.
 
     Args:
@@ -790,6 +805,7 @@ def is_package_editable(package_name):
         # Get the location where package is installed
         if dist.read_text('direct_url.json'):
             import json
+
             direct_url = json.loads(dist.read_text('direct_url.json'))  # pyright: ignore
             return direct_url.get('dir_info', {}).get('editable', False)
         return False
@@ -837,8 +853,7 @@ def split_all_content_to_lines(content: str) -> list[str]:
     all_content_lines_stripped = content.splitlines(keepends=False)
     all_content_lines = content.splitlines(keepends=True)
 
-    if len(all_content_lines) == 0 \
-            or all_content_lines[-1] != all_content_lines_stripped[-1]:
+    if len(all_content_lines) == 0 or all_content_lines[-1] != all_content_lines_stripped[-1]:
         # If no content or the last line ends with a newline, we add an
         # empty line. This is needed as the last newline is excluded
         # from self.content (in line with typical repr output).
@@ -860,8 +875,9 @@ def strip_newline(line: str) -> str:
         AssertionError: If ``line`` contains more than one logical line.
     """
     line_stripped = line.splitlines()
-    assert len(line_stripped) <= 1, \
+    assert len(line_stripped) <= 1, (
         f'Expected a single line, but got {len(line_stripped)} lines: {line_stripped}'
+    )
     if len(line_stripped) == 0:
         return ''
     else:
@@ -878,7 +894,7 @@ def strip_and_split_newline(line: str) -> tuple[str, str]:
         A ``(content, newline)`` tuple.
     """
     line_stripped = strip_newline(line)
-    newline = line[len(line_stripped):]
+    newline = line[len(line_stripped) :]
     return line_stripped, newline
 
 
@@ -1027,6 +1043,7 @@ class ConsistentUserDict(UserDict[_KeyT, _ValueT], Generic[_KeyT, _ValueT]):
         >>> d.popitem()
         ('c', 3)
     """
+
     def popitem(self) -> tuple[_KeyT, _ValueT]:
         """
         D.popitem() -> (k, v), remove and return some (key, value) pair

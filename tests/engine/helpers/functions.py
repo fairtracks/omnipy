@@ -6,18 +6,20 @@ from time import sleep
 from typing import AsyncGenerator, AsyncIterator, Callable, cast, Type
 
 from omnipy.shared.enums.job import JobType, RunState
-from omnipy.shared.protocols.compute.job import (HasJobCreator,
-                                                 IsDagFlow,
-                                                 IsDagFlowTemplate,
-                                                 IsFlowTemplate,
-                                                 IsFuncArgJob,
-                                                 IsFuncArgJobTemplate,
-                                                 IsJob,
-                                                 IsJobBase,
-                                                 IsLinearFlow,
-                                                 IsLinearFlowTemplate,
-                                                 IsTask,
-                                                 IsTaskTemplate)
+from omnipy.shared.protocols.compute.job import (
+    HasJobCreator,
+    IsDagFlow,
+    IsDagFlowTemplate,
+    IsFlowTemplate,
+    IsFuncArgJob,
+    IsFuncArgJobTemplate,
+    IsJob,
+    IsJobBase,
+    IsLinearFlow,
+    IsLinearFlowTemplate,
+    IsTask,
+    IsTaskTemplate,
+)
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
@@ -72,11 +74,14 @@ def _check_timeout(
     if datetime.now() - start_time >= timedelta(seconds=timeout_secs):
         current_state = extract_job_run_state(job)
         current_state_text = (
-            RunState.name_for_value(current_state) if current_state else 'Unable to extract state')
-        raise TimeoutError(f'Run state of "{job.name}" not set to '
-                           f'{[RunState.name_for_value(state) for state in states]} '
-                           f'until timeout: {timeout_secs} sec(s). '
-                           f'Current state: {current_state_text}')
+            RunState.name_for_value(current_state) if current_state else 'Unable to extract state'
+        )
+        raise TimeoutError(
+            f'Run state of "{job.name}" not set to '
+            f'{[RunState.name_for_value(state) for state in states]} '
+            f'until timeout: {timeout_secs} sec(s). '
+            f'Current state: {current_state_text}'
+        )
 
 
 def sync_wait_for_job_state(job: IsJob, states: list[RunState.Literals], timeout_secs: float = 1):
@@ -87,9 +92,9 @@ def sync_wait_for_job_state(job: IsJob, states: list[RunState.Literals], timeout
         _check_timeout(start_time, timeout_secs, job, states)
 
 
-async def async_wait_for_job_state(job: IsJob,
-                                   states: list[RunState.Literals],
-                                   timeout_secs: float = 1):
+async def async_wait_for_job_state(
+    job: IsJob, states: list[RunState.Literals], timeout_secs: float = 1
+):
     """Provide async wait for job state for test reuse."""
     start_time = datetime.now()
     while extract_job_run_state(job) not in states:
@@ -99,6 +104,7 @@ async def async_wait_for_job_state(job: IsJob,
 
 def get_sync_assert_results_wait_a_bit_func(job: IsJob):
     """Return sync assert results wait a bit func."""
+
     def sync_assert_results_wait_a_bit(seconds: float) -> None:
         assert job(seconds) == seconds
 
@@ -107,6 +113,7 @@ def get_sync_assert_results_wait_a_bit_func(job: IsJob):
 
 def get_async_assert_results_wait_a_bit_func(job: IsJob):
     """Return async assert results wait a bit func."""
+
     async def async_assert_results_wait_a_bit(seconds: float) -> None:
         assert await resolve(job(seconds)) == seconds
 
@@ -144,6 +151,7 @@ def create_linear_flow_with_two_func_tasks(
     registry: IsRunStateRegistry | None,
 ) -> IsLinearFlow:
     """Provide create linear flow with two func tasks for test reuse."""
+
     @task_template_cls()
     def _passthrough_task(arg):
         return arg
@@ -172,7 +180,9 @@ def create_linear_flow_with_two_func_tasks(
         task_template_func,
         passthrough_task,  # pyright: ignore[reportArgumentType]
         name=name,
-    )(func,)
+    )(
+        func,
+    )
 
     cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
     if registry:
@@ -196,8 +206,7 @@ def create_dag_flow_with_two_func_tasks(
         task_template,
         name=name,
         consume_kwargs_from_results=False,
-    )(
-        func)
+    )(func)
 
     cast(HasJobCreator, task_template_cls).job_creator.set_engine(engine)
     if registry:

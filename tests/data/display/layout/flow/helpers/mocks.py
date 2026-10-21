@@ -5,20 +5,25 @@ from typing import cast, ClassVar
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.frame import AnyFrame, Frame
-from omnipy.data._display.panel.cropping import (crop_content_line_horizontally,
-                                                 crop_content_lines_vertically,
-                                                 crop_content_lines_vertically_for_resizing)
+from omnipy.data._display.panel.cropping import (
+    crop_content_line_horizontally,
+    crop_content_lines_vertically,
+    crop_content_lines_vertically_for_resizing,
+)
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, FullyRenderedDraftPanel
 import omnipy.util.pydantic as pyd
 
-from ....helpers.mocks import (MockDimsAwarePanelBase,
-                               MockFullyRenderedPanelBase,
-                               MockOutputVariantBase,
-                               MockPanelBase)
+from ....helpers.mocks import (
+    MockDimsAwarePanelBase,
+    MockFullyRenderedPanelBase,
+    MockOutputVariantBase,
+    MockPanelBase,
+)
 
 
 class MockConfigCropOutputVariant(MockOutputVariantBase):
     """Define mock Config Crop Output Variant."""
+
     def _crop_to_frame(self, lines: list[str], frame: Frame, config: OutputConfig) -> list[str]:
         vert_mode = config.v_overflow
         hor_mode = config.h_overflow
@@ -43,6 +48,7 @@ class MockConfigCropOutputVariant(MockOutputVariantBase):
 
 class SplitAndVerticallyCropContentMixin:
     """Define SplitAndVerticallyCropContentMixin."""
+
     @cached_property
     def _content_lines(self) -> list[str]:
         _self = cast(DimensionsAwareDraftPanel[str, AnyFrame], self)
@@ -59,16 +65,19 @@ class SplitAndVerticallyCropContentMixin:
 @pyd.dataclass(init=False, frozen=True)
 class MockStylizedConfigCropPanel(SplitAndVerticallyCropContentMixin, MockFullyRenderedPanelBase):
     """Define mock Stylized Config Crop Panel."""
+
     _output_variant_cls: ClassVar[type[MockOutputVariantBase]] = MockConfigCropOutputVariant
 
 
 @pyd.dataclass(init=False, frozen=True)
 class MockResizedConfigCropPanel(SplitAndVerticallyCropContentMixin, MockDimsAwarePanelBase):
     """Define mock Resized Config Crop Panel."""
+
     _fully_rendered_panel_cls: ClassVar[type[FullyRenderedDraftPanel]] = MockStylizedConfigCropPanel
 
 
 @pyd.dataclass(init=False, frozen=True)
 class MockConfigCropPanel(MockPanelBase):
     """Define mock Config Crop Panel."""
+
     _dims_aware_panel_cls: ClassVar[type[DimensionsAwareDraftPanel]] = MockResizedConfigCropPanel

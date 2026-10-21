@@ -3,45 +3,44 @@
 from typing import Annotated, Callable, Type
 
 import pytest
-from pytest_cases import filters
 import pytest_cases as pc
+from pytest_cases import filters
 
 from omnipy.compute.flow import DagFlowTemplateCore, LinearFlowTemplateCore
 from omnipy.compute.task import TaskTemplateCore
 from omnipy.hub._registry import RunStateRegistry
 from omnipy.shared.enums.job import JobType
-from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
-                                                 IsLinearFlowTemplate,
-                                                 IsTaskTemplate)
+from omnipy.shared.protocols.compute.job import (
+    IsDagFlowTemplate,
+    IsLinearFlowTemplate,
+    IsTaskTemplate,
+)
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
-from ....engine.conftest import all_flow_matrix_cases_all_engines_assert_runstate_mock_reg  # noqa
-from ....engine.conftest import \
-    all_flow_matrix_cases_all_engines_assert_runstate_mock_reg_engine  # type: ignore[attr-defined] # noqa
-from ....engine.conftest import \
-    all_flow_matrix_cases_all_engines_assert_runstate_mock_reg_engine_decorator  # type: ignore[attr-defined] # noqa
-from ....engine.conftest import \
-    all_flow_matrix_cases_all_engines_assert_runstate_mock_reg_registry  # type: ignore[attr-defined] # noqa
-from ....engine.conftest import assert_runstate_engine_decorator  # noqa
-from ....engine.conftest import mock_registry  # noqa
-from ....engine.conftest import \
-    nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg  # noqa
-from ....engine.conftest import \
-    nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg_engine  # type: ignore[attr-defined] # noqa
-from ....engine.conftest import \
-    nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg_engine_decorator  # type: ignore[attr-defined] # noqa
-from ....engine.conftest import \
-    nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg_registry  # type: ignore[attr-defined] # noqa
-from ....engine.conftest import all_engines
+from ....engine.conftest import (
+    all_engines,
+    all_flow_matrix_cases_all_engines_assert_runstate_mock_reg,  # noqa
+    all_flow_matrix_cases_all_engines_assert_runstate_mock_reg_engine,  # type: ignore[attr-defined] # noqa
+    all_flow_matrix_cases_all_engines_assert_runstate_mock_reg_engine_decorator,  # type: ignore[attr-defined] # noqa
+    all_flow_matrix_cases_all_engines_assert_runstate_mock_reg_registry,  # type: ignore[attr-defined] # noqa
+    assert_runstate_engine_decorator,  # noqa
+    mock_registry,  # noqa
+    nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg,  # noqa
+    nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg_engine,  # type: ignore[attr-defined] # noqa
+    nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg_engine_decorator,  # type: ignore[attr-defined] # noqa
+    nested_flow_semantic_floor_cases_all_engines_assert_runstate_mock_reg_registry,  # type: ignore[attr-defined] # noqa
+)
 from ....engine.helpers.classes import JobCase
 from ....engine.helpers.functions import update_job_case_with_job
 
 
 @pc.fixture(scope='function')
 @pc.parametrize(
-    'job_type', [JobType.TASK, JobType.LINEAR_FLOW, JobType.DAG_FLOW],
-    ids=['task', 'linear_flow', 'dag_flow'])
+    'job_type',
+    [JobType.TASK, JobType.LINEAR_FLOW, JobType.DAG_FLOW],
+    ids=['task', 'linear_flow', 'dag_flow'],
+)
 @pc.parametrize('task_template_cls', [TaskTemplateCore], ids=[''])
 @pc.parametrize('linear_flow_template_cls', [LinearFlowTemplateCore], ids=[''])
 @pc.parametrize('dag_flow_template_cls', [DagFlowTemplateCore], ids=[''])
@@ -79,9 +78,11 @@ def run_state_registry(
 @pc.parametrize_with_cases(
     'job_case',
     cases='....engine.cases.tasks',
-    filter=~(filters.id_has_prefix('sync-function-power(')
-             | filters.id_has_prefix('sync-generator-range')
-             | filters.id_has_prefix('async-generator-range')),
+    filter=~(
+        filters.id_has_prefix('sync-function-power(')
+        | filters.id_has_prefix('sync-generator-range')
+        | filters.id_has_prefix('async-generator-range')
+    ),
 )
 @pc.parametrize('job_classes', [all_job_classes], ids=[''])
 @pc.parametrize('engine', [all_engines], ids=[''])
@@ -89,10 +90,9 @@ def run_state_registry(
 @pc.parametrize('registry', [run_state_registry], ids=[''])
 def all_func_types_real_jobs_all_engines_real_reg(
     job_case: JobCase,
-    job_classes: tuple[JobType.Literals,
-                       Type[IsTaskTemplate],
-                       Type[IsLinearFlowTemplate],
-                       Type[IsDagFlowTemplate]],
+    job_classes: tuple[
+        JobType.Literals, Type[IsTaskTemplate], Type[IsLinearFlowTemplate], Type[IsDagFlowTemplate]
+    ],
     engine: IsJobRunnerEngine,
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
@@ -118,17 +118,20 @@ def all_func_types_real_jobs_all_engines_real_reg(
     )
 
 
-all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg = \
+all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg = (
     all_func_types_real_jobs_all_engines_real_reg
+)
 
 
 @pc.fixture(scope='function')
 @pc.parametrize_with_cases(
     'job_case',
     cases='....engine.cases.tasks',
-    filter=(filters.id_has_prefix('sync-function-power(')
-            | filters.id_has_prefix('sync-generator-range')
-            | filters.id_has_prefix('async-generator-range')),
+    filter=(
+        filters.id_has_prefix('sync-function-power(')
+        | filters.id_has_prefix('sync-generator-range')
+        | filters.id_has_prefix('async-generator-range')
+    ),
 )
 @pc.parametrize(
     'job_classes',
@@ -142,10 +145,9 @@ all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg = \
 @pc.parametrize('registry', [run_state_registry], ids=[''])
 def base_task_only_real_jobs_all_engines_real_reg(
     job_case: JobCase,
-    job_classes: tuple[JobType.Literals,
-                       Type[IsTaskTemplate],
-                       Type[IsLinearFlowTemplate],
-                       Type[IsDagFlowTemplate]],
+    job_classes: tuple[
+        JobType.Literals, Type[IsTaskTemplate], Type[IsLinearFlowTemplate], Type[IsDagFlowTemplate]
+    ],
     engine: IsJobRunnerEngine,
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,

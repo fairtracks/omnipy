@@ -11,6 +11,7 @@ import webbrowser
 
 class OmnipyMacOSXOSAScript(webbrowser.BaseBrowser):
     """Browser controller that opens URLs via AppleScript on macOS."""
+
     def __init__(self, name='default'):
         super().__init__(name)
 
@@ -66,8 +67,11 @@ class OmnipyMacOSXOSAScript(webbrowser.BaseBrowser):
         return cls._OSASCRIPT_TEMPLATE.format(
             type='application',
             browser='Safari',
-            pre_cmd_1=('make new document'
-                       if new == 1 else 'tell front window to set current tab to (make new tab)'),
+            pre_cmd_1=(
+                'make new document'
+                if new == 1
+                else 'tell front window to set current tab to (make new tab)'
+            ),
             pre_cmd_2='',
             open_url_cmds=cls._handle_url(url),
         )
@@ -107,8 +111,9 @@ class OmnipyMacOSXOSAScript(webbrowser.BaseBrowser):
         return cls._OSASCRIPT_TEMPLATE.format(
             type='process',
             browser='Firefox',
-            pre_cmd_1=('click menu item "New Window" of menu "File" of menu bar 1'
-                       if new == 1 else ''),
+            pre_cmd_1=(
+                'click menu item "New Window" of menu "File" of menu bar 1' if new == 1 else ''
+            ),
             pre_cmd_2='delay 1' if new == 1 else '',
             open_url_cmds=cls._handle_url(url),
         )
@@ -118,8 +123,9 @@ class OmnipyMacOSXOSAScript(webbrowser.BaseBrowser):
         return cls._OSASCRIPT_TEMPLATE.format(
             type='process',
             browser='LibreWolf',
-            pre_cmd_1=('click menu item "New Window" of menu "File" of menu bar 1'
-                       if new == 1 else ''),
+            pre_cmd_1=(
+                'click menu item "New Window" of menu "File" of menu bar 1' if new == 1 else ''
+            ),
             pre_cmd_2='delay 1' if new == 1 else '',
             open_url_cmds=cls._handle_url(url),
         )

@@ -1,17 +1,20 @@
 """Provide reusable compute test mocks and protocols."""
+
 from collections.abc import Iterable
 from datetime import datetime
 from types import MappingProxyType
-from typing import (Any,
-                    Callable,
-                    cast,
-                    Generic,
-                    Mapping,
-                    ParamSpec,
-                    Protocol,
-                    runtime_checkable,
-                    Type,
-                    TypeAlias)
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Generic,
+    Mapping,
+    ParamSpec,
+    Protocol,
+    runtime_checkable,
+    Type,
+    TypeAlias,
+)
 
 from typing_extensions import TypeVar
 
@@ -21,16 +24,18 @@ from omnipy.compute._mixins.flow_context import FlowContextJobMixin
 from omnipy.config import ConfigBase
 from omnipy.engine.run_spec import DagFlowRunSpec, FuncFlowRunSpec, LinearFlowRunSpec
 from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
-from omnipy.shared.protocols.compute.job import (IsDagFlow,
-                                                 IsFlow,
-                                                 IsFlowTemplate,
-                                                 IsFuncArgJob,
-                                                 IsFuncArgJobTemplate,
-                                                 IsFuncFlow,
-                                                 IsJob,
-                                                 IsJobTemplate,
-                                                 IsLinearFlow,
-                                                 IsTask)
+from omnipy.shared.protocols.compute.job import (
+    IsDagFlow,
+    IsFlow,
+    IsFlowTemplate,
+    IsFuncArgJob,
+    IsFuncArgJobTemplate,
+    IsFuncFlow,
+    IsJob,
+    IsJobTemplate,
+    IsLinearFlow,
+    IsTask,
+)
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.engine.base import IsEngine
@@ -52,63 +57,66 @@ RetContraT = TypeVar('RetContraT', contravariant=True)
 
 @runtime_checkable
 class IsMockJobTemplate(
-        IsJobTemplate['IsMockJobTemplate[CallP, RetT]', 'IsMockJob[CallP, RetT]', CallP, RetT],
-        Protocol[CallP, RetT],
+    IsJobTemplate['IsMockJobTemplate[CallP, RetT]', 'IsMockJob[CallP, RetT]', CallP, RetT],
+    Protocol[CallP, RetT],
 ):
     """"""
 
 
 @runtime_checkable
-class IsMockJob(IsJob['IsMockJobTemplate[CallP, RetT]', 'IsMockJob[CallP, RetT]', CallP, RetT],
-                Protocol[CallP, RetT]):
+class IsMockJob(
+    IsJob['IsMockJobTemplate[CallP, RetT]', 'IsMockJob[CallP, RetT]', CallP, RetT],
+    Protocol[CallP, RetT],
+):
     """"""
 
 
 class MockJobTemplateSubclass(
-        JobTemplateMixin[IsMockJobTemplate[CallP, RetT], IsMockJob[CallP, RetT], CallP, RetT],
-        JobBase[IsMockJobTemplate[CallP, RetT], IsMockJob[CallP, RetT], CallP, RetT],
-        Generic[CallP, RetT],
+    JobTemplateMixin[IsMockJobTemplate[CallP, RetT], IsMockJob[CallP, RetT], CallP, RetT],
+    JobBase[IsMockJobTemplate[CallP, RetT], IsMockJob[CallP, RetT], CallP, RetT],
+    Generic[CallP, RetT],
 ):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsMockJob[CallP, RetT]]:
         return cast(type[IsMockJob[CallP, RetT]], MockJobSubclass)
 
 
-class MockJobSubclass(JobMixin[IsMockJobTemplate[CallP, RetT], IsMockJob[CallP, RetT], CallP, RetT],
-                      JobBase,
-                      Generic[CallP, RetT]):
+class MockJobSubclass(
+    JobMixin[IsMockJobTemplate[CallP, RetT], IsMockJob[CallP, RetT], CallP, RetT],
+    JobBase,
+    Generic[CallP, RetT],
+):
     """Provide a reusable mock job subclass."""
+
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsMockJobTemplate[CallP, RetT]]:
         return cast(type[IsMockJobTemplate[CallP, RetT]], MockJobTemplateSubclass)
 
-    def _apply_engine_decorator(self, engine: IsEngine) -> None:
-        ...
+    def _apply_engine_decorator(self, engine: IsEngine) -> None: ...
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:
-        ...
+    def _call_job(self, *args: object, **kwargs: object) -> object: ...
 
 
 class IsMockFlowTemplate(
-        IsJobTemplate['IsMockFlowTemplate[CallP, RetT]', 'IsMockFlow[CallP, RetT]', CallP, RetT],
-        IsFlowTemplate,
-        Protocol[CallP, RetT],
+    IsJobTemplate['IsMockFlowTemplate[CallP, RetT]', 'IsMockFlow[CallP, RetT]', CallP, RetT],
+    IsFlowTemplate,
+    Protocol[CallP, RetT],
 ):
     """"""
 
 
 class IsMockFlow(
-        IsJob['IsMockFlowTemplate[CallP, RetT]', 'IsMockFlow[CallP, RetT]', CallP, RetT],
-        IsFlow,
-        Protocol[CallP, RetT],
+    IsJob['IsMockFlowTemplate[CallP, RetT]', 'IsMockFlow[CallP, RetT]', CallP, RetT],
+    IsFlow,
+    Protocol[CallP, RetT],
 ):
     """"""
 
 
 class MockFlowTemplateSubclass(
-        JobTemplateMixin['IsMockFlowTemplate[CallP, RetT]', 'IsMockFlow[CallP, RetT]', CallP, RetT],
-        JobBase[IsMockFlowTemplate[CallP, RetT], IsMockFlow[CallP, RetT], CallP, RetT],
-        Generic[CallP, RetT],
+    JobTemplateMixin['IsMockFlowTemplate[CallP, RetT]', 'IsMockFlow[CallP, RetT]', CallP, RetT],
+    JobBase[IsMockFlowTemplate[CallP, RetT], IsMockFlow[CallP, RetT], CallP, RetT],
+    Generic[CallP, RetT],
 ):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsMockFlow[CallP, RetT]]:
@@ -116,16 +124,15 @@ class MockFlowTemplateSubclass(
 
 
 class MockFlowSubclass(
-        JobMixin[IsMockFlowTemplate[CallP, RetT], IsMockFlow[CallP, RetT], CallP, RetT],
-        JobBase[IsMockFlowTemplate[CallP, RetT], IsMockFlow[CallP, RetT], CallP, RetT],
-        Generic[CallP, RetT],
+    JobMixin[IsMockFlowTemplate[CallP, RetT], IsMockFlow[CallP, RetT], CallP, RetT],
+    JobBase[IsMockFlowTemplate[CallP, RetT], IsMockFlow[CallP, RetT], CallP, RetT],
+    Generic[CallP, RetT],
 ):
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> type[IsMockFlowTemplate[CallP, RetT]]:
         return cast(type[IsMockFlowTemplate[CallP, RetT]], MockFlowTemplateSubclass)
 
-    def _apply_engine_decorator(self, engine: IsEngine) -> None:
-        ...
+    def _apply_engine_decorator(self, engine: IsEngine) -> None: ...
 
 
 MockFlowSubclass.accept_mixin(FlowContextJobMixin)
@@ -158,6 +165,7 @@ class CommandMockInit(JobBase, Generic[CallP, RetT]):
 
 class CommandMockParamMixin:
     """Provide immutable command parameter properties for tests."""
+
     def __init__(self, *, id: str = '', uppercase: bool = False, params: ParamsType = None):
 
         self._id = id
@@ -189,78 +197,75 @@ class HasCommandMockJobTemplateInit(Generic[JobTemplateT, CallP, RetContraT]):
         uppercase: bool = False,
         params: ParamsType = None,
         **kwargs: object,
-    ) -> JobTemplateT:
-        ...
+    ) -> JobTemplateT: ...
 
 
 class IsCommandMockJobBase(Protocol):
     """Describe shared command mock job properties."""
-    @property
-    def id(self) -> str:
-        ...
 
     @property
-    def uppercase(self) -> bool:
-        ...
+    def id(self) -> str: ...
 
     @property
-    def params(self) -> MappingProxyType[str, Any]:
-        ...
+    def uppercase(self) -> bool: ...
 
     @property
-    def engine_decorator_applied(self) -> bool:
-        ...
+    def params(self) -> MappingProxyType[str, Any]: ...
+
+    @property
+    def engine_decorator_applied(self) -> bool: ...
 
 
 @runtime_checkable
 class IsCommandMockJobTemplate(
-        IsCommandMockJobBase,
-        IsJobTemplate[
-            'IsCommandMockJobTemplate[CallP, RetT]',
-            'IsCommandMockJob[CallP, RetT]',
-            CallP,
-            RetT,
-        ],
-        Protocol[CallP, RetT],
+    IsCommandMockJobBase,
+    IsJobTemplate[
+        'IsCommandMockJobTemplate[CallP, RetT]',
+        'IsCommandMockJob[CallP, RetT]',
+        CallP,
+        RetT,
+    ],
+    Protocol[CallP, RetT],
 ):
     """"""
-    def refine(self,
-               update: bool = True,
-               name: str | None = None,
-               id: str = '',
-               uppercase: bool = False,
-               params: ParamsType = None,
-               **kwargs: object) -> 'IsCommandMockJobTemplate[CallP, RetT]':
-        ...
 
-    def apply(self) -> 'IsCommandMockJob[CallP, RetT]':
-        ...
+    def refine(
+        self,
+        update: bool = True,
+        name: str | None = None,
+        id: str = '',
+        uppercase: bool = False,
+        params: ParamsType = None,
+        **kwargs: object,
+    ) -> 'IsCommandMockJobTemplate[CallP, RetT]': ...
+
+    def apply(self) -> 'IsCommandMockJob[CallP, RetT]': ...
 
 
 class IsCommandMockJob(
-        IsCommandMockJobBase,
-        IsJob[
-            'IsCommandMockJobTemplate[CallP, RetT]',
-            'IsCommandMockJob[CallP, RetT]',
-            CallP,
-            RetT,
-        ],
-        Protocol[CallP, RetT],
+    IsCommandMockJobBase,
+    IsJob[
+        'IsCommandMockJobTemplate[CallP, RetT]',
+        'IsCommandMockJob[CallP, RetT]',
+        CallP,
+        RetT,
+    ],
+    Protocol[CallP, RetT],
 ):
     """"""
-    def revise(self) -> 'IsCommandMockJobTemplate[CallP, RetT]':
-        ...
+
+    def revise(self) -> 'IsCommandMockJobTemplate[CallP, RetT]': ...
 
 
 class CommandMockJobTemplateCore(
-        CommandMockInit[CallP, RetT],
-        JobTemplateMixin[
-            IsCommandMockJobTemplate[CallP, RetT],
-            IsCommandMockJob[CallP, RetT],
-            CallP,
-            RetT,
-        ],
-        Generic[CallP, RetT],
+    CommandMockInit[CallP, RetT],
+    JobTemplateMixin[
+        IsCommandMockJobTemplate[CallP, RetT],
+        IsCommandMockJob[CallP, RetT],
+        CallP,
+        RetT,
+    ],
+    Generic[CallP, RetT],
 ):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsCommandMockJob[CallP, RetT]]:
@@ -294,14 +299,14 @@ def CommandMockJobTemplate(
 
 
 class CommandMockJob(
-        CommandMockInit[CallP, RetT],
-        JobMixin[
-            IsCommandMockJobTemplate[CallP, RetT],
-            IsCommandMockJob[CallP, RetT],
-            CallP,
-            RetT,
-        ],
-        Generic[CallP, RetT],
+    CommandMockInit[CallP, RetT],
+    JobMixin[
+        IsCommandMockJobTemplate[CallP, RetT],
+        IsCommandMockJob[CallP, RetT],
+        CallP,
+        RetT,
+    ],
+    Generic[CallP, RetT],
 ):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         self.engine_decorator_applied = True
@@ -314,8 +319,9 @@ class CommandMockJob(
         param_self = cast(CommandMockParamMixin, self)
         if self._command in ['erase', 'restore']:
             if param_self._params and 'what' in param_self._params:
-                log = f"{param_self._params['what']} has been {self._command}d" + (
-                    f", {param_self._params['where']}" if 'where' in param_self._params else '')
+                log = f'{param_self._params["what"]} has been {self._command}d' + (
+                    f', {param_self._params["where"]}' if 'where' in param_self._params else ''
+                )
             else:
                 log = 'I know nothing'
             return log.upper() if param_self._uppercase else log
@@ -325,19 +331,22 @@ CommandMockJob.accept_mixin(CommandMockParamMixin)
 
 
 class PublicPropertyErrorsMockVerboseMixin:
-    """  Error: no attribute 'verbose' """
+    """Error: no attribute 'verbose'"""
+
     def __init__(self, *, verbose: bool = True):
         self._verbose = verbose
 
 
 class PublicPropertyErrorsMockCostMixin:
-    """  Error: 'cost' is object attribute """
+    """Error: 'cost' is object attribute"""
+
     def __init__(self, *, cost: int = 1):
         self.cost = cost
 
 
 class PublicPropertyErrorsMockStrengthMixin:
-    """  Error: 'strength' is class attribute """
+    """Error: 'strength' is class attribute"""
+
     strength = 1
 
     def __init__(self, *, strength: int = 1):
@@ -345,7 +354,8 @@ class PublicPropertyErrorsMockStrengthMixin:
 
 
 class PublicPropertyErrorsMockPowerMixin:
-    """  Error: 'power' is method """
+    """Error: 'power' is method"""
+
     def __init__(self, *, power: int = 1):
         self._power = power
 
@@ -354,7 +364,8 @@ class PublicPropertyErrorsMockPowerMixin:
 
 
 class PublicPropertyErrorsMockSpeedMixin:
-    """  Error: 'speed' property is writable """
+    """Error: 'speed' property is writable"""
+
     def __init__(self, *, speed: int = 1):
         self._speed = speed
 
@@ -368,7 +379,8 @@ class PublicPropertyErrorsMockSpeedMixin:
 
 
 class PublicPropertyErrorsMockParamsMixin:
-    """  Error: 'params' property value is mutable """
+    """Error: 'params' property value is mutable"""
+
     def __init__(self, *, params: Mapping[str, int | str | bool] | None = None):
         self._params = params if params is not None else {}
 
@@ -377,26 +389,28 @@ class PublicPropertyErrorsMockParamsMixin:
         return self._params
 
 
-class PublicPropertyErrorsMockJobTemplate(JobBase[IsJobTemplate, IsJob, CallP, RetT],
-                                          JobTemplateMixin[IsJobTemplate, IsJob, CallP, RetT]):
+class PublicPropertyErrorsMockJobTemplate(
+    JobBase[IsJobTemplate, IsJob, CallP, RetT], JobTemplateMixin[IsJobTemplate, IsJob, CallP, RetT]
+):
     """Provide a template that surfaces public-property validation errors."""
+
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsJob]:
         return cast(type[IsJob], PublicPropertyErrorsMockJob)
 
 
-class PublicPropertyErrorsMockJob(JobBase[IsJobTemplate, IsJob, CallP, RetT],
-                                  JobMixin[IsJobTemplate, IsJob, CallP, RetT]):
+class PublicPropertyErrorsMockJob(
+    JobBase[IsJobTemplate, IsJob, CallP, RetT], JobMixin[IsJobTemplate, IsJob, CallP, RetT]
+):
     """Provide a job that surfaces public-property validation errors."""
+
     @classmethod
     def _get_job_template_subcls_for_revise(cls) -> Type[IsJobTemplate]:
         return cast(type[IsJobTemplate], PublicPropertyErrorsMockJobTemplate)
 
-    def _apply_engine_decorator(self, engine: IsEngine) -> None:
-        ...
+    def _apply_engine_decorator(self, engine: IsEngine) -> None: ...
 
-    def _call_job(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetT:
-        ...
+    def _call_job(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetT: ...
 
 
 def mock_cmd_func(**params: bool) -> Any:  # noqa
@@ -405,12 +419,14 @@ def mock_cmd_func(**params: bool) -> Any:  # noqa
 
 
 class MockLocalRunner:
-    supported_job_types = frozenset({
-        JobType.TASK,
-        JobType.LINEAR_FLOW,
-        JobType.DAG_FLOW,
-        JobType.FUNC_FLOW,
-    })
+    supported_job_types = frozenset(
+        {
+            JobType.TASK,
+            JobType.LINEAR_FLOW,
+            JobType.DAG_FLOW,
+            JobType.FUNC_FLOW,
+        }
+    )
 
     def __init__(self) -> None:
         self.finished = False
@@ -419,22 +435,17 @@ class MockLocalRunner:
         return job_type in self.supported_job_types
 
     @classmethod
-    def get_config_cls(cls) -> Type[IsJobRunnerConfig]:
-        ...
+    def get_config_cls(cls) -> Type[IsJobRunnerConfig]: ...
 
-    def set_config(self, config: IsJobRunnerConfig) -> None:
-        ...
+    def set_config(self, config: IsJobRunnerConfig) -> None: ...
 
-    def set_registry(self, registry: IsRunStateRegistry | None) -> None:
-        ...
+    def set_registry(self, registry: IsRunStateRegistry | None) -> None: ...
 
     @property
-    def config(self) -> IsJobRunnerConfig:
-        ...
+    def config(self) -> IsJobRunnerConfig: ...
 
     @property
-    def registry(self) -> IsRunStateRegistry | None:
-        ...
+    def registry(self) -> IsRunStateRegistry | None: ...
 
     def apply_job_decorator(  # noqa: C901
         self,
@@ -489,18 +500,23 @@ class MockLocalRunner:
 
 class MockJobConfig(ConfigBase):
     """Provide a simple job config for tests."""
+
     persist_outputs: bool = True
     restore_outputs: bool = False
 
 
 class AssertSameTimeOfCurFlowRunJobBaseMixin:
     """Persist the top-level flow run time for assertions."""
+
     _persisted_time_of_cur_toplevel_flow_run: list[datetime] = []
 
     @property
     def persisted_time_of_cur_toplevel_flow_run(self) -> datetime | None:
-        return self._persisted_time_of_cur_toplevel_flow_run[0] \
-            if self._persisted_time_of_cur_toplevel_flow_run else None
+        return (
+            self._persisted_time_of_cur_toplevel_flow_run[0]
+            if self._persisted_time_of_cur_toplevel_flow_run
+            else None
+        )
 
     @classmethod
     def reset_persisted_time_of_cur_toplevel_flow_run(cls) -> None:
@@ -509,11 +525,14 @@ class AssertSameTimeOfCurFlowRunJobBaseMixin:
     def _call_func(self, *args: object, **kwargs: object) -> object:
         self_as_job = cast(IsJob, self)
         if self.persisted_time_of_cur_toplevel_flow_run:
-            assert self.persisted_time_of_cur_toplevel_flow_run == \
-                   self_as_job.time_of_cur_toplevel_flow_run
+            assert (
+                self.persisted_time_of_cur_toplevel_flow_run
+                == self_as_job.time_of_cur_toplevel_flow_run
+            )
         elif self_as_job.time_of_cur_toplevel_flow_run:
             self._persisted_time_of_cur_toplevel_flow_run.append(
-                self_as_job.time_of_cur_toplevel_flow_run)
+                self_as_job.time_of_cur_toplevel_flow_run
+            )
 
         super_as_func_arg_job = cast(FuncArgJobBase, super())
         return super_as_func_arg_job._call_func(*args, **kwargs)
@@ -521,67 +540,70 @@ class AssertSameTimeOfCurFlowRunJobBaseMixin:
 
 class AssertsSameTimeOfCurFlowRun(Protocol):
     """Describe helpers that persist a top-level flow run time."""
+
     @property
-    def persisted_time_of_cur_toplevel_flow_run(self) -> datetime | None:
-        ...
+    def persisted_time_of_cur_toplevel_flow_run(self) -> datetime | None: ...
 
     @classmethod
-    def reset_persisted_time_of_cur_toplevel_flow_run(cls) -> None:
-        ...
+    def reset_persisted_time_of_cur_toplevel_flow_run(cls) -> None: ...
 
 
 class IsMockTaskTemplateAssertSameTimeOfCurFlowRun(
-        IsFuncArgJobTemplate[
-            'IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT]',
-            'IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT]',
-            CallP,
-            RetT,
-        ],
-        AssertsSameTimeOfCurFlowRun,
-        Protocol[CallP, RetT],
+    IsFuncArgJobTemplate[
+        'IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT]',
+        'IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT]',
+        CallP,
+        RetT,
+    ],
+    AssertsSameTimeOfCurFlowRun,
+    Protocol[CallP, RetT],
 ):
     """"""
+
     ...
 
 
 class IsMockTaskAssertSameTimeOfCurFlowRun(
-        IsFuncArgJob[
-            'IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT]',
-            'IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT]',
-            CallP,
-            RetT,
-        ],
-        AssertsSameTimeOfCurFlowRun,
-        Protocol[CallP, RetT],
+    IsFuncArgJob[
+        'IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT]',
+        'IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT]',
+        CallP,
+        RetT,
+    ],
+    AssertsSameTimeOfCurFlowRun,
+    Protocol[CallP, RetT],
 ):
     """"""
 
 
 class MockTaskTemplateAssertSameTimeOfCurFlowRunCore(
-        FuncArgJobBase[
-            IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
-            IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
-            CallP,
-            RetT,
-        ],
-        JobTemplateMixin[
-            IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
-            IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
-            CallP,
-            RetT,
-        ],
-        Generic[CallP, RetT],
+    FuncArgJobBase[
+        IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
+        IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
+        CallP,
+        RetT,
+    ],
+    JobTemplateMixin[
+        IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
+        IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
+        CallP,
+        RetT,
+    ],
+    Generic[CallP, RetT],
 ):
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT]]:
-        return cast(type[IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT]],
-                    MockTaskAssertSameTimeOfCurFlowRun[CallP, RetT])
+        return cast(
+            type[IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT]],
+            MockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
+        )
 
 
 MockTaskTemplateAssertSameTimeOfCurFlowRunCore.accept_mixin(AssertSameTimeOfCurFlowRunJobBaseMixin)
 
 _MockTaskTemplateAssertSameTimeOfCurFlowRunFactory = callable_decorator_cls(
-    MockTaskTemplateAssertSameTimeOfCurFlowRunCore)
+    MockTaskTemplateAssertSameTimeOfCurFlowRunCore
+)
 
 
 def MockTaskTemplateAssertSameTimeOfCurFlowRun(
@@ -621,19 +643,19 @@ def MockTaskTemplateAssertSameTimeOfCurFlowRun(
 
 
 class MockTaskAssertSameTimeOfCurFlowRun(
-        JobMixin[
-            IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
-            IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
-            CallP,
-            RetT,
-        ],
-        FuncArgJobBase[
-            IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
-            IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
-            CallP,
-            RetT,
-        ],
-        Generic[CallP, RetT],
+    JobMixin[
+        IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
+        IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
+        CallP,
+        RetT,
+    ],
+    FuncArgJobBase[
+        IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT],
+        IsMockTaskAssertSameTimeOfCurFlowRun[CallP, RetT],
+        CallP,
+        RetT,
+    ],
+    Generic[CallP, RetT],
 ):
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         if self.engine:
@@ -647,7 +669,8 @@ class MockTaskAssertSameTimeOfCurFlowRun(
 
     @classmethod
     def _get_job_template_subcls_for_revise(
-            cls) -> type[IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT]]:
+        cls,
+    ) -> type[IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT]]:
         return cast(
             type[IsMockTaskTemplateAssertSameTimeOfCurFlowRun[CallP, RetT]],
             MockTaskTemplateAssertSameTimeOfCurFlowRun,

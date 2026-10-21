@@ -12,6 +12,7 @@ T = TypeVar('T')
 
 class MyList(Generic[T]):
     """Define MyList."""
+
     def __init__(self, *args: T):
         self.data = list(args)
 
@@ -31,6 +32,7 @@ class MyList(Generic[T]):
 
 class RotateOneCharModel(Model[str]):
     """Define RotateOneCharModel."""
+
     @classmethod
     def _parse_data(cls, data: str) -> str:
         return data[1:] + data[0]
@@ -38,6 +40,7 @@ class RotateOneCharModel(Model[str]):
 
 class SplitCharsModel(Model[list[str] | str]):
     """Define SplitCharsModel."""
+
     @classmethod
     def _parse_data(cls, data: list[str] | str) -> list[str]:
         if isinstance(data, str):
@@ -47,6 +50,7 @@ class SplitCharsModel(Model[list[str] | str]):
 
 class MyListModel(Model[MyList[str] | list[str]]):
     """Define MyListModel."""
+
     @classmethod
     def _parse_data(cls, data: MyList[str] | list[str]) -> MyList[str]:
         if isinstance(data, list):

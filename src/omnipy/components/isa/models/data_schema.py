@@ -44,7 +44,8 @@ class Type(Enum):
     Array_Data_File = 'Array Data File'
     Derived_Array_Data_File = 'Derived Array Data File'
     Post_Translational_Modification_Assignment_File = (
-        'Post Translational Modification Assignment File')
+        'Post Translational Modification Assignment File'
+    )
     Derived_Array_Data_Matrix_File = 'Derived Array Data Matrix File'
     Free_Induction_Decay_Data_File = 'Free Induction Decay Data File'
     Metabolite_Assignment_File = 'Metabolite Assignment File'
@@ -59,6 +60,7 @@ class IsaDataSchema(pyd.BaseModel):
         type: Controlled category describing the data file kind.
         comments: Optional free-form metadata attached to the file.
     """
+
     class Config:
         """Validation settings for ISA data-file schema parsing.
 

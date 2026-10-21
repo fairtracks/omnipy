@@ -26,7 +26,7 @@ class CaseInfo(NamedTuple):
     def _remove_error_prefix(name: str) -> str:
         """Strip the failure prefix from a data point name."""
         if name.startswith(ERROR_PREFIX):
-            name = name[len(ERROR_PREFIX):]
+            name = name[len(ERROR_PREFIX) :]
         return name
 
     def model_classes_for_data_point(self, name: str) -> tuple[Type[Model], ...]:

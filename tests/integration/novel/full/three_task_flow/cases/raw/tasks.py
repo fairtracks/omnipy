@@ -8,7 +8,7 @@ def uppercase(text: str) -> str:
 
 @TaskTemplate()
 def square_root(number: int) -> dict[str, float]:
-    return {'neg_root': -number**0.5, 'pos_root': number**0.5}
+    return {'neg_root': -(number**0.5), 'pos_root': number**0.5}
 
 
 @TaskTemplate()

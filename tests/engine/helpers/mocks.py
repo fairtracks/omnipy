@@ -49,9 +49,9 @@ class MockTask(LogMixin):
 
     def regenerate_unique_name(self) -> None:
         self.unique_run_slug = generate_run_slug()
-        self.unique_name = get_full_job_slug(self.__class__.__name__,
-                                             self.name,
-                                             self.unique_run_slug)
+        self.unique_name = get_full_job_slug(
+            self.__class__.__name__, self.name, self.unique_run_slug
+        )
 
     def __call__(self, *args: object, **kwargs: object) -> Any:
         return self._call_func(*args, **kwargs)
@@ -110,11 +110,13 @@ class MockTaskTemplate(MockTask):
 
 
 class MockLinearFlow(MockTask):
-    def __init__(self,
-                 func: Callable,
-                 *child_job_templates: IsFuncArgJobTemplate,
-                 name: str | None = None,
-                 **kwargs: object) -> None:
+    def __init__(
+        self,
+        func: Callable,
+        *child_job_templates: IsFuncArgJobTemplate,
+        name: str | None = None,
+        **kwargs: object,
+    ) -> None:
         self._child_job_templates = child_job_templates
         super().__init__(func, name=name, **kwargs)
 
@@ -139,12 +141,14 @@ class MockLinearFlowTemplate(MockLinearFlow):
 
 
 class MockDagFlow(MockTask):
-    def __init__(self,
-                 func: Callable,
-                 *child_job_templates: IsFuncArgJobTemplate,
-                 name: str | None = None,
-                 consume_kwargs_from_results: bool = True,
-                 **kwargs: object) -> None:
+    def __init__(
+        self,
+        func: Callable,
+        *child_job_templates: IsFuncArgJobTemplate,
+        name: str | None = None,
+        consume_kwargs_from_results: bool = True,
+        **kwargs: object,
+    ) -> None:
         self._child_job_templates = child_job_templates
         self._consume_kwargs_from_results = consume_kwargs_from_results
         super().__init__(func, name=name, **kwargs)
@@ -227,12 +231,14 @@ class MockBackendFlow:
 
 
 class MockJobRunnerSubclass(JobRunnerEngine):
-    supported_job_types = frozenset({
-        JobType.TASK,
-        JobType.LINEAR_FLOW,
-        JobType.DAG_FLOW,
-        JobType.FUNC_FLOW,
-    })
+    supported_job_types = frozenset(
+        {
+            JobType.TASK,
+            JobType.LINEAR_FLOW,
+            JobType.DAG_FLOW,
+            JobType.FUNC_FLOW,
+        }
+    )
 
     def _init_engine(self) -> None:
         self._update_from_config()

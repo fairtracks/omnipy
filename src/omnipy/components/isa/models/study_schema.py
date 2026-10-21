@@ -14,18 +14,20 @@ from typing import List, Optional, Union
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
 
-from . import (assay_schema,
-               comment_schema,
-               factor_schema,
-               material_attribute_schema,
-               material_schema,
-               ontology_annotation_schema,
-               person_schema,
-               process_schema,
-               protocol_schema,
-               publication_schema,
-               sample_schema,
-               source_schema)
+from . import (
+    assay_schema,
+    comment_schema,
+    factor_schema,
+    material_attribute_schema,
+    material_schema,
+    ontology_annotation_schema,
+    person_schema,
+    process_schema,
+    protocol_schema,
+    publication_schema,
+    sample_schema,
+    source_schema,
+)
 from .validators import date_to_iso_format
 
 
@@ -45,8 +47,7 @@ class _Materials(pyd.BaseModel):
     otherMaterials: Optional[List[material_schema.IsaMaterialModel]] = None
 
 
-class _MaterialsModel(Model[_Materials]):
-    ...
+class _MaterialsModel(Model[_Materials]): ...
 
 
 class IsaStudySchema(pyd.BaseModel):
@@ -60,6 +61,7 @@ class IsaStudySchema(pyd.BaseModel):
         assays: Assay entries defined for the study.
         factors: Experimental factors used to structure comparisons.
     """
+
     class Config:
         """Validation settings for ISA study schema parsing.
 
@@ -82,30 +84,34 @@ class IsaStudySchema(pyd.BaseModel):
     publicReleaseDate: Optional[Union[datetime, date, pyd.constr(max_length=0)]] = None
     publications: Optional[List[publication_schema.IsaPublicationModel]] = None
     people: Optional[List[person_schema.IsaPersonModel]] = None
-    studyDesignDescriptors: Optional[List[
-        ontology_annotation_schema.IsaOntologyReferenceModel]] = None
+    studyDesignDescriptors: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = (
+        None
+    )
     protocols: Optional[List[protocol_schema.IsaProtocolModel]] = None
     materials: Optional[_Materials] = None
     processSequence: Optional[List[process_schema.IsaProcessOrProtocolApplicationModel]] = None
     assays: Optional[List[assay_schema.IsaAssayJsonModel]] = None
     factors: Optional[List[factor_schema.IsaFactorModel]] = None
-    characteristicCategories: Optional[List[
-        material_attribute_schema.IsaMaterialAttributeModel]] = \
-        pyd.Field(
-            None,
-            description='List of all the characteristics categories (or material attributes) '
-                        'defined in the study, used to avoid duplication of their declaration '
-                        'when each material_attribute_value is created. ')
-    unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = \
+    characteristicCategories: Optional[
+        List[material_attribute_schema.IsaMaterialAttributeModel]
+    ] = pyd.Field(
+        None,
+        description='List of all the characteristics categories (or material attributes) '
+        'defined in the study, used to avoid duplication of their declaration '
+        'when each material_attribute_value is created. ',
+    )
+    unitCategories: Optional[List[ontology_annotation_schema.IsaOntologyReferenceModel]] = (
         pyd.Field(
             None,
             description='List of all the units defined in the study, used to avoid duplication '
-                        'of their declaration when each value is created. ')
+            'of their declaration when each value is created. ',
+        )
+    )
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 
-    _date_to_iso_format = pyd.validator(
-        'submissionDate', 'publicReleaseDate', allow_reuse=True)(
-            date_to_iso_format)
+    _date_to_iso_format = pyd.validator('submissionDate', 'publicReleaseDate', allow_reuse=True)(
+        date_to_iso_format
+    )
 
 
 class IsaStudyModel(Model[IsaStudySchema]):

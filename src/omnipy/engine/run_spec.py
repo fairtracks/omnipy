@@ -14,12 +14,14 @@ from logging import INFO, Logger
 from types import MappingProxyType
 from typing import Any, Callable, cast, Generator
 
-from omnipy.shared.protocols.compute.job import (ChildJobTemplateLike,
-                                                 IsAnyFlow,
-                                                 IsChildJobListArgJob,
-                                                 IsFuncArgJob,
-                                                 IsFuncArgJobTemplate,
-                                                 IsTask)
+from omnipy.shared.protocols.compute.job import (
+    ChildJobTemplateLike,
+    IsAnyFlow,
+    IsChildJobListArgJob,
+    IsFuncArgJob,
+    IsFuncArgJobTemplate,
+    IsTask,
+)
 from omnipy.util.callable_types import CallableType, decorate_callable_by_type
 from omnipy.util.helpers import resolve
 
@@ -28,11 +30,13 @@ def _has_any_async_coroutine_jobs(flow_run_spec: 'ChildJobListArgFlowRunSpec') -
     return any(
         child.callable_type is CallableType.ASYNC_COROUTINE
         for child in flow_run_spec.child_job_templates
-        if not inspect.isclass(child))
+        if not inspect.isclass(child)
+    )
 
 
-def _keyword_param_keys_for_job(job: IsFuncArgJobTemplate,
-                                positional_arg_count: int = 0) -> set[str]:
+def _keyword_param_keys_for_job(
+    job: IsFuncArgJobTemplate, positional_arg_count: int = 0
+) -> set[str]:
     signature_params = list(inspect.signature(job).parameters.values())
 
     keyword_param_keys = {
@@ -42,9 +46,10 @@ def _keyword_param_keys_for_job(job: IsFuncArgJobTemplate,
     }
 
     positional_params = [
-        param for param in signature_params
-        if param.kind in (inspect.Parameter.POSITIONAL_ONLY,
-                          inspect.Parameter.POSITIONAL_OR_KEYWORD)
+        param
+        for param in signature_params
+        if param.kind
+        in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
     ]
     consumed_positional_kw_keys = {
         param.name
@@ -70,19 +75,21 @@ def _keyword_param_keys_for_job(job: IsFuncArgJobTemplate,
 def _accepts_var_keyword_args(job: IsFuncArgJobTemplate) -> bool:
     return any(
         param.kind is inspect.Parameter.VAR_KEYWORD
-        for param in inspect.signature(job).parameters.values())
+        for param in inspect.signature(job).parameters.values()
+    )
 
 
-def _collect_matching_kwargs_for_job(job: IsFuncArgJobTemplate,
-                                     kwargs: Mapping[str, object],
-                                     positional_arg_count: int = 0) -> dict[str, object]:
+def _collect_matching_kwargs_for_job(
+    job: IsFuncArgJobTemplate, kwargs: Mapping[str, object], positional_arg_count: int = 0
+) -> dict[str, object]:
     if _accepts_var_keyword_args(job):
         matched_kwargs = dict(kwargs)
 
         positional_params = [
-            param for param in inspect.signature(job).parameters.values()
-            if param.kind in (inspect.Parameter.POSITIONAL_ONLY,
-                              inspect.Parameter.POSITIONAL_OR_KEYWORD)
+            param
+            for param in inspect.signature(job).parameters.values()
+            if param.kind
+            in (inspect.Parameter.POSITIONAL_ONLY, inspect.Parameter.POSITIONAL_OR_KEYWORD)
         ]
         consumed_positional_kw_keys = {
             param.name
@@ -134,6 +141,7 @@ async def _drain_async_results(
 
 class JobRunSpec(ABC):
     """Base adapter exposing engine-facing metadata and callables for a job."""
+
     def __init__(self, job: IsFuncArgJob, run_callable: Callable) -> None:
         self._job = job
         self._run_callable = run_callable
@@ -219,6 +227,7 @@ class JobRunSpec(ABC):
 
 class TaskRunSpec(JobRunSpec):
     """Run-spec adapter for applied tasks."""
+
     @property
     def in_flow_context(self) -> bool:
         """Proxies whether the wrapped task is running inside a flow.
@@ -240,6 +249,7 @@ class TaskRunSpec(JobRunSpec):
 
 class FlowRunSpec(JobRunSpec, ABC):
     """Base run-spec adapter for flow jobs."""
+
     @property
     def flow_context(self):
         """Proxies the wrapped flow's nested execution context.
@@ -273,12 +283,12 @@ class FlowRunSpec(JobRunSpec, ABC):
         )
 
     @abstractmethod
-    def _create_default_run_callable(self) -> Callable:
-        ...
+    def _create_default_run_callable(self) -> Callable: ...
 
 
 class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
     """Base run spec for flows defined by ordered child-job templates."""
+
     @property
     def child_job_templates(self) -> tuple[ChildJobTemplateLike, ...]:
         """Proxies the wrapped flow's ordered child templates.
@@ -290,10 +300,12 @@ class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
         return flow.child_job_templates
 
     def _drive_child_job_run_generator(
-            self, run_all_child_jobs_callable: Callable[
-                ...,
-                Generator[object, object, object],
-            ]) -> Callable:
+        self,
+        run_all_child_jobs_callable: Callable[
+            ...,
+            Generator[object, object, object],
+        ],
+    ) -> Callable:
 
         if _has_any_async_coroutine_jobs(self):
 
@@ -328,6 +340,7 @@ class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
     child-job routing. Keyword-only parameters remain available as matching
     keyword arguments for every child.
     """
+
     def _create_default_run_callable(self) -> Callable:
         def _run_all_linear_tasks(
             *args: object,
@@ -352,6 +365,7 @@ class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
 
 class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
     """Run spec for DAG flows that route named results into downstream inputs."""
+
     def _create_default_run_callable(self) -> Callable:  # noqa: C901
         def _run_all_dag_child_jobs(
             *args: object,
@@ -387,5 +401,6 @@ class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
 
 class FuncFlowRunSpec(FlowRunSpec):
     """Run spec for callable-backed flows that execute a single wrapped callable."""
+
     def _create_default_run_callable(self) -> Callable:
         return self._run_callable

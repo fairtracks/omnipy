@@ -18,12 +18,12 @@ _ReturnDatasetT: TypeAlias = Dataset[Model[_ReturnT]] | Dataset[_ModelReturnT]
 
 class IsIterateInnerCallable(Protocol):
     """"""
+
     def __call__(
         self,
         data_file: _InputT | _ModelInputT,
         *args: object,
         **kwargs: object,
-    ) -> _ReturnT | _ModelReturnT:
-        ...
+    ) -> _ReturnT | _ModelReturnT: ...
 
     __name__: str

@@ -10,14 +10,16 @@ import pytest_cases as pc
 from omnipy.data.model import Model
 from omnipy.shared.protocols.compute.job import IsTask, IsTaskTemplate
 
-from .raw.functions import (action_func_no_params,
-                            action_func_with_params,
-                            data_import_func,
-                            dict_of_squared_func,
-                            empty_dict_func,
-                            format_to_string_func,
-                            plus_one_dict_func,
-                            power_m1_func)
+from .raw.functions import (
+    action_func_no_params,
+    action_func_with_params,
+    data_import_func,
+    dict_of_squared_func,
+    empty_dict_func,
+    format_to_string_func,
+    plus_one_dict_func,
+    power_m1_func,
+)
 
 CallP = ParamSpec('CallP')
 RetT = TypeVar('RetT')
@@ -26,6 +28,7 @@ RetT = TypeVar('RetT')
 @dataclass
 class TaskCase(Generic[CallP, RetT]):
     """Bundle reusable task inputs and assertions."""
+
     task_func: Callable[CallP, RetT]
     args: tuple[Any, ...]
     kwargs: dict[str, Any]
@@ -39,6 +42,7 @@ class TaskCase(Generic[CallP, RetT]):
 )
 def case_sync_action_func_no_params() -> TaskCase[[], None]:
     """Provide a no-parameter action task case."""
+
     def assert_results(result: None) -> None:
         assert result is None
 
@@ -61,16 +65,16 @@ def case_sync_action_func_no_params() -> TaskCase[[], None]:
 )
 def case_sync_action_func_with_params() -> TaskCase[[str, bool], None]:
     """Provide an action task case with parameters."""
+
     def assert_results(result: None) -> None:
         assert result is None
 
     def assert_param_signature_and_return_type(task_obj: IsTaskTemplate | IsTask):
         assert task_obj.param_signatures == {
-            'command':
-                Parameter('command', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
-            'verbose':
-                Parameter(
-                    'verbose', Parameter.POSITIONAL_OR_KEYWORD, annotation=bool, default=False),
+            'command': Parameter('command', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
+            'verbose': Parameter(
+                'verbose', Parameter.POSITIONAL_OR_KEYWORD, annotation=bool, default=False
+            ),
         }
         assert task_obj.return_type is None
 
@@ -89,6 +93,7 @@ def case_sync_action_func_with_params() -> TaskCase[[str, bool], None]:
 )
 def case_sync_data_import_func() -> TaskCase[[], str]:
     """Provide a data import task case."""
+
     def assert_results(json_data: str) -> None:
         assert type(json_data) is str
         assert json.loads(json_data) == dict(my_data=[123, 234, 345, 456])
@@ -112,6 +117,7 @@ def case_sync_data_import_func() -> TaskCase[[], str]:
 )
 def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
     """Provide a formatting task case."""
+
     def assert_results(result: str) -> None:
         assert result == 'Number: 12'
 
@@ -137,22 +143,22 @@ def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
 )
 def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
     """Provide a power-minus-one task case."""
+
     def assert_results(result: int) -> None:
         assert result == 64
 
     def assert_param_signature_and_return_type(task_obj: IsTaskTemplate | IsTask):
         assert task_obj.param_signatures == {
-            'number':
-                Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int | Model[int]),
-            'exponent':
-                Parameter('exponent', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
-            'minus_one':
-                Parameter(
-                    'minus_one',
-                    Parameter.POSITIONAL_OR_KEYWORD,
-                    annotation=bool,
-                    default=True,
-                )
+            'number': Parameter(
+                'number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int | Model[int]
+            ),
+            'exponent': Parameter('exponent', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
+            'minus_one': Parameter(
+                'minus_one',
+                Parameter.POSITIONAL_OR_KEYWORD,
+                annotation=bool,
+                default=True,
+            ),
         }
         assert task_obj.return_type is int
 
@@ -171,6 +177,7 @@ def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
 )
 def case_sync_empty_dict_fun() -> TaskCase[[], dict]:
     """Provide an empty-dict task case."""
+
     def assert_results(result: dict) -> None:
         assert result == {}
 
@@ -193,6 +200,7 @@ def case_sync_empty_dict_fun() -> TaskCase[[], dict]:
 )
 def case_sync_plus_one_dict_func() -> TaskCase[[int], dict[str, int]]:
     """Provide a plus-one-dict task case."""
+
     def assert_results(result: dict[str, int]) -> None:
         assert result == {'number': 4}
 
@@ -217,6 +225,7 @@ def case_sync_plus_one_dict_func() -> TaskCase[[int], dict[str, int]]:
 )
 def case_sync_dict_of_squared_fun() -> TaskCase[[int], dict[int, int]]:
     """Provide a squared-dict task case."""
+
     def assert_results(result: dict[int, int]) -> None:
         assert result == {0: 0, 1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
 

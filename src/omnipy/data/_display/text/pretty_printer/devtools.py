@@ -12,8 +12,10 @@ from omnipy.data._display.frame import AnyFrame, FrameWithWidth
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.typedefs import FrameT
-from omnipy.data._display.text.pretty_printer.base import (ConstraintTighteningPrettyPrinter,
-                                                           WidthReducingPrettyPrinter)
+from omnipy.data._display.text.pretty_printer.base import (
+    ConstraintTighteningPrettyPrinter,
+    WidthReducingPrettyPrinter,
+)
 from omnipy.data._display.text.pretty_printer.mixins import PythonStatsTighteningPrettyPrinter
 from omnipy.shared.constants import MAX_TERMINAL_SIZE
 from omnipy.shared.enums.display import PrettyPrinterLib
@@ -21,9 +23,9 @@ import omnipy.util.pydantic as pyd
 
 
 class DevtoolsPrettyPrinter(
-        PythonStatsTighteningPrettyPrinter,
-        ConstraintTighteningPrettyPrinter[object],
-        WidthReducingPrettyPrinter[object],
+    PythonStatsTighteningPrettyPrinter,
+    ConstraintTighteningPrettyPrinter[object],
+    WidthReducingPrettyPrinter[object],
 ):
     """Format generic Python objects with the ``devtools`` pretty formatter."""
 
@@ -47,9 +49,11 @@ class DevtoolsPrettyPrinter(
     @override
     @classmethod
     def _get_default_constraints_for_draft_panel(
-            cls, draft_panel: DraftPanel[object, AnyFrame]) -> Constraints:
+        cls, draft_panel: DraftPanel[object, AnyFrame]
+    ) -> Constraints:
         return Constraints(
-            max_inline_container_width_incl=(draft_panel.frame.dims.width or MAX_TERMINAL_SIZE))
+            max_inline_container_width_incl=(draft_panel.frame.dims.width or MAX_TERMINAL_SIZE)
+        )
 
     @override
     def prepare_draft_for_print_with_tightened_stat_reqs(
@@ -71,12 +75,15 @@ class DevtoolsPrettyPrinter(
         # in the future, so calling both constraint tightening and width
         # tightening simultaneously is good enough for now.
 
-        draft_panel_for_print = \
+        draft_panel_for_print = (
             ConstraintTighteningPrettyPrinter.prepare_draft_for_print_with_tightened_stat_reqs(
-                self, draft_panel, cur_reflowed_text_panel)
+                self, draft_panel, cur_reflowed_text_panel
+            )
+        )
 
         return WidthReducingPrettyPrinter.prepare_draft_for_print_with_tightened_stat_reqs(
-            self, draft_panel_for_print, cur_reflowed_text_panel)
+            self, draft_panel_for_print, cur_reflowed_text_panel
+        )
 
     @override
     def print_draft_to_str(self, draft_panel: DraftPanel[object, AnyFrame]) -> str:

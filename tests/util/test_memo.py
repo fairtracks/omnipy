@@ -17,10 +17,9 @@ from .helpers.classes import SomeObject
 BasicType: TypeAlias = list | tuple | dict | set | str | float | int | complex | bool | SomeObject
 
 
-def _assert_values_in_memo(memo: RefCountMemoDict,
-                           all_ids: tuple[int, ...],
-                           contained: tuple[bool, ...],
-                           total_len: int) -> None:
+def _assert_values_in_memo(
+    memo: RefCountMemoDict, all_ids: tuple[int, ...], contained: tuple[bool, ...], total_len: int
+) -> None:
     """Provide assert values in memo for test reuse."""
     for id_, is_contained in zip(all_ids, contained):
         assert (id_ in memo) == is_contained
@@ -47,8 +46,7 @@ def test_ref_count_memo_dict_basics() -> None:
 def test_ref_count_memo_dict_atomic_types() -> None:
     ref_count_memo_dict: RefCountMemoDict = RefCountMemoDict()
 
-    def my_func():
-        ...
+    def my_func(): ...
 
     atomic_objs = [
         None,
@@ -77,8 +75,7 @@ def test_ref_count_memo_dict_atomic_types() -> None:
 def test_ref_count_memo_dict_non_atomic_types() -> None:
     ref_count_memo_dict: RefCountMemoDict = RefCountMemoDict()
 
-    class MyClass:
-        ...
+    class MyClass: ...
 
     non_atomic_type_objs = [[1, 2, 3], {1: 2, 3: 4}, {2, 4, 6}, MyClass()]
 
@@ -249,9 +246,7 @@ def test_ref_count_memo_dict_deepcopy_keep_alive() -> None:
         tmp_obj: BasicType
         all_memoized_basic_objs: list[BasicType] = [
             [1, 3, 5],
-            {
-                1: 2, 3: 4
-            },
+            {1: 2, 3: 4},
             {2, 4, 6},
             SomeObject('some_object'),
         ]
@@ -275,9 +270,9 @@ def test_ref_count_memo_dict_deepcopy_keep_alive() -> None:
 
         all_basic_objs_copy: list[BasicType] = deepcopy(all_basic_objs)
 
-        memo_target: list[BasicType | list[BasicType]] = \
-            [all_basic_objs_copy[i:] for i in range(len(all_basic_objs_copy))] \
-            + all_memoized_basic_objs_copy
+        memo_target: list[BasicType | list[BasicType]] = [
+            all_basic_objs_copy[i:] for i in range(len(all_basic_objs_copy))
+        ] + all_memoized_basic_objs_copy
 
         tmp_obj_ids: SetDeque[int] = SetDeque()
 
@@ -336,8 +331,7 @@ def test_ref_count_memo_dict_deepcopy_pydantic_model_with_parsing() -> None:
         def _parse_data(cls, data):
             return data.upper()
 
-    class ListOfUpperStrModel(Model[list[MyUpperStrModel]]):
-        ...
+    class ListOfUpperStrModel(Model[list[MyUpperStrModel]]): ...
 
     my_model = ListOfUpperStrModel(['abc'])
     id_my_model = id(my_model)
@@ -350,16 +344,18 @@ def test_ref_count_memo_dict_deepcopy_pydantic_model_with_parsing() -> None:
     assert ref_count_memo_dict.all_are_empty()
 
 
-@pytest.mark.skip(reason='Repeated deepcopy of the same object is not supported. Changes to the '
-                  'object between deepcopies might result in fragments of the old object '
-                  'being kept alive. While there at least partial solutions to this '
-                  'problem commented out in the code, they are not needed in practice, as'
-                  'validation of Model.content is always run before taking a snapshot if the '
-                  'content has changed, returning a new object to be taken snapshot of. '
-                  'Then SnapshotHolder replaces the old snapshot with the new one, and the old '
-                  'snapshot is scheduled for deletion, in order to correctly remove all '
-                  'unreferenced fragments that are still being kept alive. The test is kept '
-                  'here for documentation purposes.')
+@pytest.mark.skip(
+    reason='Repeated deepcopy of the same object is not supported. Changes to the '
+    'object between deepcopies might result in fragments of the old object '
+    'being kept alive. While there at least partial solutions to this '
+    'problem commented out in the code, they are not needed in practice, as'
+    'validation of Model.content is always run before taking a snapshot if the '
+    'content has changed, returning a new object to be taken snapshot of. '
+    'Then SnapshotHolder replaces the old snapshot with the new one, and the old '
+    'snapshot is scheduled for deletion, in order to correctly remove all '
+    'unreferenced fragments that are still being kept alive. The test is kept '
+    'here for documentation purposes.'
+)
 def test_ref_count_memo_dict_repeated_deepcopy_same_obj_not_needed() -> None:
     ref_count_memo_dict = RefCountMemoDict[Any]()
 

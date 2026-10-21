@@ -12,14 +12,17 @@ from omnipy.data._display.panel.styling.output import OutputMode
 from omnipy.shared.exceptions import ShouldNotOccurException
 import omnipy.util.pydantic as pyd
 
-from ...helpers.mocks import (MockDimsAwarePanelBase,
-                              MockFullyRenderedPanelBase,
-                              MockOutputVariantBase,
-                              MockPanelBase)
+from ...helpers.mocks import (
+    MockDimsAwarePanelBase,
+    MockFullyRenderedPanelBase,
+    MockOutputVariantBase,
+    MockPanelBase,
+)
 
 
 class MockPlainCropOutputVariant(MockOutputVariantBase):
     """Define mock Plain Crop Output Variant."""
+
     def _crop_to_frame(
         self,
         lines: list[str],
@@ -31,7 +34,7 @@ class MockPlainCropOutputVariant(MockOutputVariantBase):
             if has_height(frame.dims) and line_num >= frame.dims.height:
                 break
             if has_width(frame.dims) and len(line) > frame.dims.width:
-                cropped_lines.append(line[:frame.dims.width])
+                cropped_lines.append(line[: frame.dims.width])
             else:
                 cropped_lines.append(line)
         return cropped_lines
@@ -67,23 +70,18 @@ class MockPlainCropOutputVariant(MockOutputVariantBase):
         html_core = '<br>'.join(self._cropped_lines)
         match self._output_mode:
             case OutputMode.PLAIN:
-                return (f'<html><body>'
-                        f'{html_core}'
-                        f'</body></html>')
+                return f'<html><body>{html_core}</body></html>'
             case OutputMode.BW_STYLIZED:
-                return (f'<html><body>'
-                        f'<strong>{html_core}</strong>'
-                        '</body></html>')
+                return f'<html><body><strong>{html_core}</strong></body></html>'
             case OutputMode.COLORIZED:
-                return (f'<html><body style="color: blue">'
-                        f'<strong>{html_core}</strong>'
-                        '</body></html>')
+                return f'<html><body style="color: blue"><strong>{html_core}</strong></body></html>'
             case _:
                 raise ShouldNotOccurException(f'Unexpected output mode: {self._output_mode}')
 
 
 class SplitContentMixin:
     """Define SplitContentMixin."""
+
     @cached_property
     def _content_lines(self) -> list[str]:
         _self = cast(DimensionsAwareDraftPanel[str, AnyFrame], self)
@@ -93,17 +91,21 @@ class SplitContentMixin:
 @pyd.dataclass(init=False, frozen=True)
 class MockStylizedPlainCropPanel(SplitContentMixin, MockFullyRenderedPanelBase):
     """Define mock Stylized Plain Crop Panel."""
+
     _output_variant_cls: ClassVar[type[MockOutputVariantBase]] = MockPlainCropOutputVariant
 
 
 @pyd.dataclass(init=False, frozen=True)
 class MockResizedStylablePlainCropPanel(SplitContentMixin, MockDimsAwarePanelBase):
     """Define mock Resized Stylable Plain Crop Panel."""
+
     _fully_rendered_panel_cls: ClassVar[type[FullyRenderedDraftPanel]] = MockStylizedPlainCropPanel
 
 
 @pyd.dataclass(init=False, frozen=True)
 class MockStylablePlainCropPanel(MockPanelBase):
     """Define mock Stylable Plain Crop Panel."""
-    _dims_aware_panel_cls: ClassVar[
-        type[DimensionsAwareDraftPanel]] = MockResizedStylablePlainCropPanel
+
+    _dims_aware_panel_cls: ClassVar[type[DimensionsAwareDraftPanel]] = (
+        MockResizedStylablePlainCropPanel
+    )

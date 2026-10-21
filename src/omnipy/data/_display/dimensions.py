@@ -49,8 +49,8 @@ DimensionsWithHeight = Dimensions[pyd.NonNegativeInt | None, pyd.NonNegativeInt]
 DimensionsWithWidthAndHeight = Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]
 DimensionsWithWidthOrHeight = DimensionsWithWidth | DimensionsWithHeight
 AnyDimensions = (
-    GeneralDimensions | DimensionsWithWidth | DimensionsWithHeight
-    | DimensionsWithWidthAndHeight)
+    GeneralDimensions | DimensionsWithWidth | DimensionsWithHeight | DimensionsWithWidthAndHeight
+)
 
 
 def has_width(dims: AnyDimensions) -> TypeIs[DimensionsWithWidth | DimensionsWithWidthAndHeight]:
@@ -91,10 +91,13 @@ class Proportionally(LiteralEnum[int]):
 
 class DimensionsFit:
     """Summarize whether rendered dimensions fit a target frame."""
-    def __init__(self,
-                 dims: DimensionsWithWidthAndHeight,
-                 frame_dims: Dimensions,
-                 proportional_freedom: pyd.NonNegativeFloat | None = 2.5):
+
+    def __init__(
+        self,
+        dims: DimensionsWithWidthAndHeight,
+        frame_dims: Dimensions,
+        proportional_freedom: pyd.NonNegativeFloat | None = 2.5,
+    ):
         assert has_width_and_height(dims)
 
         self._width: bool | None = None
@@ -111,8 +114,12 @@ class DimensionsFit:
             if frame_dims.height is not None:
                 self._height = dims.height <= frame_dims.height
 
-            if (dims.width > 0 and dims.height > 0 and frame_dims.width not in [None, 0]
-                    and frame_dims.height not in [None, 0]):
+            if (
+                dims.width > 0
+                and dims.height > 0
+                and frame_dims.width not in [None, 0]
+                and frame_dims.height not in [None, 0]
+            ):
                 assert has_width_and_height(frame_dims)
                 self._proportionality = self._calculate_proportionality(dims, frame_dims)
 
@@ -192,11 +199,16 @@ class DimensionsFit:
 
     def __repr__(self) -> str:
         # Format proportionality properly - None without quotes, strings with quotes
-        prop_str = f'Proportionally.{Proportionally.name_for_value(self.proportionality)}' \
-            if self.proportionality is not None else 'None'
+        prop_str = (
+            f'Proportionally.{Proportionally.name_for_value(self.proportionality)}'
+            if self.proportionality is not None
+            else 'None'
+        )
 
-        return (f'DimensionsFit('
-                f'width={self.width}, '
-                f'height={self.height}, '
-                f'both={self.both}, '
-                f'proportionality={prop_str})')
+        return (
+            f'DimensionsFit('
+            f'width={self.width}, '
+            f'height={self.height}, '
+            f'both={self.both}, '
+            f'proportionality={prop_str})'
+        )

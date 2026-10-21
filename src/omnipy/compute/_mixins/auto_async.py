@@ -20,6 +20,7 @@ if is_package_editable('omnipy'):
 
 class AutoAsyncJobBaseMixin:
     """Add optional automatic execution of coroutine jobs."""
+
     def __init__(
         self,
         *,

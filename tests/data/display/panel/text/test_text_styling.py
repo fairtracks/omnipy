@@ -14,19 +14,23 @@ from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 from omnipy.shared.enums.colorstyles import RecommendedColorStyles
 from omnipy.shared.enums.display import SyntaxLanguageSpec
 
-from ..helpers.case_setup import (apply_frame_variant_to_test_case,
-                                  FrameVariant,
-                                  OutputPropertyType,
-                                  PanelFrameVariantTestCase,
-                                  PanelOutputTestCase,
-                                  set_case_config,
-                                  StylizedPanelOutputExpectations,
-                                  StylizedPanelTestCaseSetup)
+from ..helpers.case_setup import (
+    apply_frame_variant_to_test_case,
+    FrameVariant,
+    OutputPropertyType,
+    PanelFrameVariantTestCase,
+    PanelOutputTestCase,
+    set_case_config,
+    StylizedPanelOutputExpectations,
+    StylizedPanelTestCaseSetup,
+)
 from ..helpers.panel_assert import assert_dims_aware_panel, strip_all_styling_from_panel_output
 
 
 def test_syntax_stylized_text_panel_init() -> None:
-    stylized_text_panel = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]'),)
+    stylized_text_panel = SyntaxStylizedTextPanel(
+        ReflowedTextDraftPanel('[123, 234, 345]'),
+    )
 
     assert stylized_text_panel.content == '[123, 234, 345]'
     assert stylized_text_panel.title == ''
@@ -67,20 +71,30 @@ def test_syntax_stylized_text_panel_hashable() -> None:
     panel_3 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]'))
     panel_4 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('', title='Some title'))
     panel_5 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20))))
+        ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20)))
+    )
     panel_6 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', constraints=Constraints(max_inline_container_width_incl=9)))
+        ReflowedTextDraftPanel('', constraints=Constraints(max_inline_container_width_incl=9))
+    )
     panel_7 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('', config=OutputConfig(indent=4)))
 
-    assert hash(panel_1) != hash(panel_3) != hash(panel_4) != hash(panel_5) != hash(panel_6) \
-           != hash(panel_7)
+    assert (
+        hash(panel_1)
+        != hash(panel_3)
+        != hash(panel_4)
+        != hash(panel_5)
+        != hash(panel_6)
+        != hash(panel_7)
+    )
 
     panel_8 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]'))
     panel_9 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('', title='Some title'))
     panel_10 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20))))
+        ReflowedTextDraftPanel('', frame=Frame(Dimensions(width=10, height=20)))
+    )
     panel_11 = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel('', constraints=Constraints(max_inline_container_width_incl=9)))
+        ReflowedTextDraftPanel('', constraints=Constraints(max_inline_container_width_incl=9))
+    )
     panel_12 = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('', config=OutputConfig(indent=4)))
 
     assert hash(panel_3) == hash(panel_8)
@@ -92,13 +106,16 @@ def test_syntax_stylized_text_panel_hashable() -> None:
 
 def test_fail_syntax_stylized_text_panel_if_extra_params() -> None:
     with pytest.raises(TypeError):
-        SyntaxStylizedTextPanel(
-            ReflowedTextDraftPanel('[123, 234, 345]'), extra=123)  # type: ignore[call-arg]
+        SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]'), extra=123)  # type: ignore[call-arg]
 
 
 # noinspection PyDataclass
 def test_syntax_stylized_text_panel_no_assignments() -> None:
-    text_panel = SyntaxStylizedTextPanel(ReflowedTextDraftPanel('[123, 234, 345]',))
+    text_panel = SyntaxStylizedTextPanel(
+        ReflowedTextDraftPanel(
+            '[123, 234, 345]',
+        )
+    )
 
     with pytest.raises(AttributeError):
         text_panel.content = '[234, 345, 456]'  # type: ignore[misc]
@@ -111,7 +128,8 @@ def test_syntax_stylized_text_panel_no_assignments() -> None:
 
     with pytest.raises(AttributeError):
         text_panel.constraints = Constraints(  # type: ignore[misc]
-            max_inline_container_width_incl=10)
+            max_inline_container_width_incl=10
+        )
 
     with pytest.raises(AttributeError):
         text_panel.config = OutputConfig()  # type: ignore[misc]
@@ -128,8 +146,10 @@ def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> None:
     if isinstance(any_case, PanelFrameVariantTestCase):
-        if any_case.frame_variant != FrameVariant(True, True) \
-                and output_format_accessor != plain_terminal:
+        if (
+            any_case.frame_variant != FrameVariant(True, True)
+            and output_format_accessor != plain_terminal
+        ):
             pytest.skip('Skip test combination to increase test efficiency.')
 
         case = apply_frame_variant_to_test_case(any_case, stylized_stage=True)
@@ -143,7 +163,8 @@ def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
             case.content,
             frame=case.frame,
             config=case.config,
-        ))
+        )
+    )
     assert_dims_aware_panel(
         text_panel,
         exp_dims=case.exp_dims,
@@ -161,14 +182,16 @@ def test_syntax_stylized_text_panel_basic_dims_and_edge_cases(
 
 def test_syntax_stylized_text_panel_variable_width_chars() -> None:
     def _get_plain_terminal_output_from_content(
-            content: str,
-            config: OutputConfig = OutputConfig(),
+        content: str,
+        config: OutputConfig = OutputConfig(),
     ) -> str:
         """Get plain terminal output from content."""
-        return SyntaxStylizedTextPanel(ReflowedTextDraftPanel(
-            content,
-            config=config,
-        )).plain.terminal
+        return SyntaxStylizedTextPanel(
+            ReflowedTextDraftPanel(
+                content,
+                config=config,
+            )
+        ).plain.terminal
 
     # Mandarin Chinese characters are double-width
     assert _get_plain_terminal_output_from_content('北京') == '北京\n'
@@ -198,7 +221,8 @@ def test_syntax_stylized_text_panel_overflow_modes(
     output_format_accessor: Annotated[OutputPropertyType, pc.fixture],
 ) -> None:
     text_panel = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel(case.content, frame=case.frame, config=case.config))
+        ReflowedTextDraftPanel(case.content, frame=case.frame, config=case.config)
+    )
     processed_text_panel = strip_all_styling_from_panel_output(text_panel, output_format_accessor)
 
     assert case.exp_within_frame is not None
@@ -228,7 +252,8 @@ def test_output_properties_of_syntax_stylized_text_panel(
     get_output_property, exp_plain_output_for_case_id = output_prop_expectations
 
     text_panel = SyntaxStylizedTextPanel(
-        ReflowedTextDraftPanel(content, title=title, frame=frame, config=config))
+        ReflowedTextDraftPanel(content, title=title, frame=frame, config=config)
+    )
     for _ in range(2):
         assert get_output_property(text_panel) == exp_plain_output_for_case_id(case_id)
 
@@ -242,7 +267,9 @@ def test_syntax_stylized_text_panel_json() -> None:
             config=OutputConfig(
                 syntax=SyntaxLanguageSpec.JSON,
                 style=RecommendedColorStyles.ANSI_DARK,
-            )))
+            ),
+        )
+    )
 
     assert text_panel.content == json_content
     assert text_panel.config.syntax == SyntaxLanguageSpec.JSON
@@ -252,8 +279,10 @@ def test_syntax_stylized_text_panel_json() -> None:
 
     # Checking that 'true' is recognized as a keyword in the colorized terminal and HTML outputs
     assert '\x1b[94mtrue\x1b[0m' in text_panel.colorized.terminal
-    assert ('<span style="color: #0000ff; text-decoration-color: #0000ff">true</span>'
-            in text_panel.colorized.html_tag)
+    assert (
+        '<span style="color: #0000ff; text-decoration-color: #0000ff">true</span>'
+        in text_panel.colorized.html_tag
+    )
 
 
 def test_syntax_stylized_text_panel_console_recording_not_deleted_by_filtering() -> None:

@@ -34,8 +34,9 @@ class _PanelPreviewBudget:
 
 @dataclass
 class _PreviewPruningMemo:
-    probe_cache: dict[tuple[int, int, int, int, int, int], tuple[int,
-                                                                 int]] = field(default_factory=dict)
+    probe_cache: dict[tuple[int, int, int, int, int, int], tuple[int, int]] = field(
+        default_factory=dict
+    )
     active_object_ids: set[int] = field(default_factory=set)
 
 
@@ -129,8 +130,10 @@ def _maybe_prune_draft_panel(
         width_stabilization_window=width_stabilization_window,
     )
     if selected_path is None:
-        _log_prune('Skipping pruning: actionable: unable to select deterministic chunk path safely',
-                   draft_panel)
+        _log_prune(
+            'Skipping pruning: actionable: unable to select deterministic chunk path safely',
+            draft_panel,
+        )
         return draft_panel
 
     _log_prune(f'Granularity path selected: {_format_chunk_path(selected_path)}', draft_panel)
@@ -220,8 +223,10 @@ def _pruning_skip_reason(draft_panel: Any, content: object, budget: _PanelPrevie
 
 
 def _looks_like_ellipsis_panel(draft_panel: Any) -> bool:
-    return getattr(draft_panel, 'title',
-                   None) == '…' and _content_for_pruning(draft_panel) in ('', '…')
+    return getattr(draft_panel, 'title', None) == '…' and _content_for_pruning(draft_panel) in (
+        '',
+        '…',
+    )
 
 
 def _format_panel_log_context(draft_panel: Any | None) -> str:
@@ -538,7 +543,8 @@ def _attempt_path_prune(
 
     if prefix_size is not None and prefix_size < plan.total_chunks:
         if not _should_apply_prefix_reduction(
-                content=path.content, total_chunks=plan.total_chunks, prefix_size=prefix_size):
+            content=path.content, total_chunks=plan.total_chunks, prefix_size=prefix_size
+        ):
             return None, False
 
         pruned_content = _build_root_prefix_content_for_path(
@@ -620,8 +626,10 @@ def _compute_prefix_size_fail_open(
     """
     object_id = id(prunable_content)
     if object_id in memo.active_object_ids:
-        _log_prune('Skipping pruning: actionable: detected active recursion for content object',
-                   draft_panel)
+        _log_prune(
+            'Skipping pruning: actionable: detected active recursion for content object',
+            draft_panel,
+        )
         return None, True
 
     memo.active_object_ids.add(object_id)
@@ -742,7 +750,7 @@ def _embed_child_prefix_into_parent(
         if not isinstance(parent_content, (list, tuple)):
             return None
 
-        parent_prefix = list(parent_content[:parent_locator.index + 1])
+        parent_prefix = list(parent_content[: parent_locator.index + 1])
         if not parent_prefix:
             return None
 
@@ -774,8 +782,11 @@ def _build_chunk_plan(content: object) -> _ChunkPlan | None:
     Returns:
         Chunk plan when content is chunkable, otherwise ``None``.
     """
-    return (_build_builtin_chunk_plan(content) or _build_mapping_like_chunk_plan(content)
-            or _build_sequence_like_chunk_plan(content))
+    return (
+        _build_builtin_chunk_plan(content)
+        or _build_mapping_like_chunk_plan(content)
+        or _build_sequence_like_chunk_plan(content)
+    )
 
 
 def _build_builtin_chunk_plan(content: object) -> _ChunkPlan | None:
@@ -876,8 +887,11 @@ def _looks_like_mapping(content: object) -> bool:
     if _is_sliceable(content):
         return False
 
-    return hasattr(content, '__iter__') and hasattr(content, '__getitem__') and hasattr(
-        content, '__len__')
+    return (
+        hasattr(content, '__iter__')
+        and hasattr(content, '__getitem__')
+        and hasattr(content, '__len__')
+    )
 
 
 def _freeze_mapping_keys(content: object) -> _FrozenMappingKeys | None:
@@ -952,7 +966,7 @@ def _build_mapping_prefix_with_replaced_child(  # noqa: C901
         return None
 
     prefix_mapping: dict[object, object] = {}
-    prefix_keys = frozen_keys.keys[:replacement_index + 1]
+    prefix_keys = frozen_keys.keys[: replacement_index + 1]
     for idx, key in enumerate(prefix_keys):
         try:
             if idx == replacement_index:
@@ -980,7 +994,7 @@ def _chunk_str(text: str) -> list[str]:
         return text.splitlines(keepends=True)
 
     return [
-        text[start:start + _DEFAULT_STRING_CHUNK_SIZE]
+        text[start : start + _DEFAULT_STRING_CHUNK_SIZE]
         for start in range(0, len(text), _DEFAULT_STRING_CHUNK_SIZE)
     ]
 
@@ -990,7 +1004,7 @@ def _chunk_bytes(content: bytes) -> list[bytes]:
         return content.splitlines(keepends=True)
 
     return [
-        content[start:start + _DEFAULT_STRING_CHUNK_SIZE]
+        content[start : start + _DEFAULT_STRING_CHUNK_SIZE]
         for start in range(0, len(content), _DEFAULT_STRING_CHUNK_SIZE)
     ]
 
@@ -1030,14 +1044,14 @@ def _find_prefix_size(
         )
         growth_history.append((n, rendered_width, rendered_height))
 
-        height_reached = (
-            budget.height_budget is not None and rendered_height > budget.height_budget)
+        height_reached = budget.height_budget is not None and rendered_height > budget.height_budget
         width_stable = _width_stabilized(
             width_history=[width for _, width, _ in growth_history],
             width_stabilization_window=width_stabilization_window,
         )
         width_stable_allowed = (
-            budget.height_budget is None or rendered_height >= budget.height_budget)
+            budget.height_budget is None or rendered_height >= budget.height_budget
+        )
         reached_end = n >= plan.total_chunks
         reached_cap = n >= cap
 
@@ -1070,15 +1084,16 @@ def _find_prefix_size(
     while low < high:
         mid = (low + high) // 2
         if _prefix_satisfies_stop_condition(
-                draft_panel=draft_panel,
-                budget=budget,
-                plan=plan,
-                prefix_size=mid,
-                max_prefix_size=cap,
-                stop_reason=stop_reason,
-                probe_render=probe_render,
-                memo=memo,
-                width_stabilization_window=width_stabilization_window):
+            draft_panel=draft_panel,
+            budget=budget,
+            plan=plan,
+            prefix_size=mid,
+            max_prefix_size=cap,
+            stop_reason=stop_reason,
+            probe_render=probe_render,
+            memo=memo,
+            width_stabilization_window=width_stabilization_window,
+        ):
             high = mid
         else:
             low = mid + 1
@@ -1170,8 +1185,9 @@ def _width_stabilized(width_history: list[int], width_stabilization_window: int)
     return len(set(tail)) == 1
 
 
-def _probe_cache_key(draft_panel: Any, plan: _ChunkPlan,
-                     prefix_size: int) -> tuple[int, int, int, int, int, int]:
+def _probe_cache_key(
+    draft_panel: Any, plan: _ChunkPlan, prefix_size: int
+) -> tuple[int, int, int, int, int, int]:
     frame_hash = hash(draft_panel.frame)
     config_hash = hash(draft_panel.config)
     printer_hash = hash(getattr(draft_panel.config, 'printer', None))

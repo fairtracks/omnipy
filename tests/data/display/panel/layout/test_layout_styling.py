@@ -14,13 +14,15 @@ from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.styling.layout import StylizedLayoutPanel
 from omnipy.shared.enums.display import PanelDesign
 
-from ..helpers.case_setup import (OutputPropertyType,
-                                  PanelFrameVariantTestCase,
-                                  PanelOutputTestCase,
-                                  prepare_test_case_for_stylized_layout,
-                                  set_case_config,
-                                  StylizedPanelOutputExpectations,
-                                  StylizedPanelTestCaseSetup)
+from ..helpers.case_setup import (
+    OutputPropertyType,
+    PanelFrameVariantTestCase,
+    PanelOutputTestCase,
+    prepare_test_case_for_stylized_layout,
+    set_case_config,
+    StylizedPanelOutputExpectations,
+    StylizedPanelTestCaseSetup,
+)
 from ..helpers.mocks import MockStylablePlainCropPanel, MockStylizedPlainCropPanel
 from ..helpers.panel_assert import assert_dims_aware_panel, strip_all_styling_from_panel_output
 
@@ -44,7 +46,8 @@ def test_stylized_layout_panel_init() -> None:
             frame=frame,
             config=config,
             constraints=constraints,
-        ))
+        )
+    )
 
     assert configured_layout_panel.content is not layout
     assert isinstance(configured_layout_panel.content['panel'], MockStylizedPlainCropPanel)
@@ -97,7 +100,8 @@ def test_stylized_layout_panel_basic_dims_and_edge_cases(
             title=case.title,
             frame=case.frame,
             config=case.config,
-        ))
+        )
+    )
     assert_dims_aware_panel(
         layout_panel,
         exp_dims=case.exp_dims,
@@ -136,7 +140,8 @@ def test_output_properties_of_stylized_layout_panel(
             title=title,
             frame=frame,
             config=config,
-        ))
+        )
+    )
     for _ in range(2):
         assert get_output_property(layout_panel) == exp_plain_output_for_case_id(case_id)
 

@@ -6,15 +6,18 @@ from .tasks import merge_key_value_into_str, square_root, uppercase
 @DagFlowTemplate(
     uppercase.refine(result_key='upper'),
     square_root,
-    merge_key_value_into_str.refine(param_key_map={
-        'key': 'upper',
-        'val': 'pos_root',
-    }),
+    merge_key_value_into_str.refine(
+        param_key_map={
+            'key': 'upper',
+            'val': 'pos_root',
+        }
+    ),
     name='pos_square_root',
-    result_key='pos_square_root')
+    result_key='pos_square_root',
+)
 def pos_square_root_dag_flow(  # type: ignore
-        number: int,  # noqa
-        text: str,  # noqa
+    number: int,  # noqa
+    text: str,  # noqa
 ) -> str:
     """Return pos square root dag flow."""
     ...

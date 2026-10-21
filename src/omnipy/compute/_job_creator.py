@@ -19,6 +19,7 @@ from omnipy.shared.protocols.engine.base import IsEngine
 
 class JobCreator(AbstractContextManager):
     """Manage shared runtime state for a concrete job class hierarchy."""
+
     def __init__(self) -> None:
         self._engine: IsEngine | None = None
         self._config: IsJobConfig = cast(IsJobConfig, JobConfig())

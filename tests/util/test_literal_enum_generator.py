@@ -22,7 +22,7 @@ def test_generate_literal_enum_code_basic_tuple() -> None:
         '',
         "    ACTIVE: Literal['active'] = 'active'",
         "    INACTIVE: Literal['inactive'] = 'inactive'",
-        "    PENDING: Literal['pending'] = 'pending'"
+        "    PENDING: Literal['pending'] = 'pending'",
     ]
 
     assert code == '\n'.join(expected_lines)
@@ -40,7 +40,7 @@ def test_generate_literal_enum_code_basic_tuple_no_imports() -> None:
         '',
         "    ACTIVE: Literal['active'] = 'active'",
         "    INACTIVE: Literal['inactive'] = 'inactive'",
-        "    PENDING: Literal['pending'] = 'pending'"
+        "    PENDING: Literal['pending'] = 'pending'",
     ]
 
     assert code == '\n'.join(expected_lines)
@@ -51,9 +51,11 @@ def test_generate_literal_enum_code_basic_tuple_with_docstrings() -> None:
         ('active', 'inactive', 'pending'),
         docstrings={
             'active': ('This is an active state',),
-            'inactive': ('This is an inactive state. This docstring is longer than the others, '
-                         'and more than 74 characters long.',
-                         'Here is a second paragraph.'),
+            'inactive': (
+                'This is an inactive state. This docstring is longer than the others, '
+                'and more than 74 characters long.',
+                'Here is a second paragraph.',
+            ),
         },
         include_imports=False,
     )
@@ -256,7 +258,9 @@ def test_error_generate_literal_enum_code_invalid_class_name() -> None:
 
 def test_error_generate_literal_enum_code_invalid_value_type() -> None:
     with pytest.raises(ValueError, match='Unsupported value type: dict'):
-        generate_literal_enum_code(({1: 2},),)  # type: ignore[arg-type]
+        generate_literal_enum_code(
+            ({1: 2},),
+        )  # type: ignore[arg-type]
 
     with pytest.raises(ValueError, match='is not a valid Python class name'):
         generate_literal_enum_code(

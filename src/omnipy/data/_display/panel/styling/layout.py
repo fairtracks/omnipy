@@ -14,29 +14,37 @@ from typing_extensions import override
 
 from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.layout.base import Layout, PanelDesignDims
-from omnipy.data._display.panel.base import (DimensionsAwarePanel,
-                                             OutputVariant,
-                                             panel_is_dimensions_aware)
-from omnipy.data._display.panel.draft.base import (DraftPanel,
-                                                   FullyRenderedDraftPanel,
-                                                   FullyRenderedDraftPanelLayout)
+from omnipy.data._display.panel.base import (
+    DimensionsAwarePanel,
+    OutputVariant,
+    panel_is_dimensions_aware,
+)
+from omnipy.data._display.panel.draft.base import (
+    DraftPanel,
+    FullyRenderedDraftPanel,
+    FullyRenderedDraftPanelLayout,
+)
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
-from omnipy.data._display.panel.helpers import (calculate_bg_color_from_color_style,
-                                                ForceAutodetect,
-                                                get_token_style_from_color_style)
+from omnipy.data._display.panel.helpers import (
+    calculate_bg_color_from_color_style,
+    ForceAutodetect,
+    get_token_style_from_color_style,
+)
 from omnipy.data._display.panel.styling.base import StylizedMonospacedPanel, StylizedRichTypes
 from omnipy.data._display.panel.styling.output import OutputMode, TableCroppingOutputVariant
 from omnipy.data._display.panel.typedefs import FrameInvT
-from omnipy.shared.constants import (INFO_BASE_16_TOKEN,
-                                     INFO_GENERAL_TOKEN,
-                                     PANEL_TITLE_BASE_16_TOKEN,
-                                     PANEL_TITLE_EXTRA_STYLE,
-                                     PANEL_TITLE_GENERAL_TOKEN,
-                                     TABLE_BORDER_BG_BASE_16_TOKEN,
-                                     TABLE_BORDER_GENERAL_TOKEN,
-                                     TABLE_BORDER_NO_BG_BASE_16_TOKEN,
-                                     TITLE_BLANK_LINES)
+from omnipy.shared.constants import (
+    INFO_BASE_16_TOKEN,
+    INFO_GENERAL_TOKEN,
+    PANEL_TITLE_BASE_16_TOKEN,
+    PANEL_TITLE_EXTRA_STYLE,
+    PANEL_TITLE_GENERAL_TOKEN,
+    TABLE_BORDER_BG_BASE_16_TOKEN,
+    TABLE_BORDER_GENERAL_TOKEN,
+    TABLE_BORDER_NO_BG_BASE_16_TOKEN,
+    TITLE_BLANK_LINES,
+)
 from omnipy.shared.enums.display import DisplayColorSystem, PanelDesign
 import omnipy.util.pydantic as pyd
 
@@ -47,25 +55,28 @@ import omnipy.util.pydantic as pyd
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
 )
 class StylizedLayoutPanel(
-        StylizedMonospacedPanel[ResizedLayoutDraftPanel[FrameInvT],
-                                FullyRenderedDraftPanelLayout,
-                                FrameInvT],
-        Generic[FrameInvT],
+    StylizedMonospacedPanel[
+        ResizedLayoutDraftPanel[FrameInvT], FullyRenderedDraftPanelLayout, FrameInvT
+    ],
+    Generic[FrameInvT],
 ):
     """Styled layout panel that renders nested panels inside a table shell.
 
     The panel ensures child panels are fully rendered before composing them into
     a Rich table with consistent border, title, and cropping behavior.
     """
+
     def __init__(self, panel: DraftPanel[Layout, FrameInvT] | ResizedLayoutDraftPanel[FrameInvT]):
         if not panel_is_dimensions_aware(panel):
             resized_panel: ResizedLayoutDraftPanel[FrameInvT] = cast(
-                ResizedLayoutDraftPanel[FrameInvT], panel.render_next_stage())
+                ResizedLayoutDraftPanel[FrameInvT], panel.render_next_stage()
+            )
         else:
             resized_panel = panel
 
         super().__init__(
-            cast(MonospacedDraftPanel[FullyRenderedDraftPanelLayout, FrameInvT], resized_panel))
+            cast(MonospacedDraftPanel[FullyRenderedDraftPanelLayout, FrameInvT], resized_panel)
+        )
 
     @pyd.validator('content', pre=True)
     def _copy_content(cls, content: Layout) -> Layout:
@@ -146,7 +157,8 @@ class StylizedLayoutPanel(
             panel_design_dims = PanelDesignDims.create(self.config.panel)
             frame_cropped_table_cell_height = (
                 self.frame.dims.height
-                - panel_design_dims.num_extra_vertical_chars(num_vertical_panels=1))
+                - panel_design_dims.num_extra_vertical_chars(num_vertical_panels=1)
+            )
             table_cell_height = min(table_cell_height, frame_cropped_table_cell_height)
 
         return table_cell_height
@@ -203,14 +215,16 @@ class PanelElementStyles:
 
         if outer_panel.config.bg:
             style_bg_color = calculate_bg_color_from_color_style(
-                color_style, force_autodetect=force_autodetect_bg_color)
+                color_style, force_autodetect=force_autodetect_bg_color
+            )
         else:
             style_bg_color = None
 
         basic_title_style = get_token_style_from_color_style(PANEL_TITLE_BASE_16_TOKEN, color_style)
         if basic_title_style is rich.style.Style.null():
-            basic_title_style = get_token_style_from_color_style(PANEL_TITLE_GENERAL_TOKEN,
-                                                                 color_style)
+            basic_title_style = get_token_style_from_color_style(
+                PANEL_TITLE_GENERAL_TOKEN, color_style
+            )
 
         self.title_style = rich.style.Style(color=basic_title_style.color, bgcolor=style_bg_color)
         self.title_style += rich.style.Style.parse(PANEL_TITLE_EXTRA_STYLE)
@@ -222,21 +236,23 @@ class PanelElementStyles:
 
         basic_table_style = get_token_style_from_color_style(table_border_token, color_style)
         if basic_table_style is rich.style.Style.null():
-            basic_table_style = get_token_style_from_color_style(TABLE_BORDER_GENERAL_TOKEN,
-                                                                 color_style)
+            basic_table_style = get_token_style_from_color_style(
+                TABLE_BORDER_GENERAL_TOKEN, color_style
+            )
         self.table_style = rich.style.Style(color=basic_table_style.color, bgcolor=style_bg_color)
 
         basic_info_style = get_token_style_from_color_style(INFO_BASE_16_TOKEN, color_style)
         if basic_info_style is rich.style.Style.null():
             basic_info_style = get_token_style_from_color_style(INFO_GENERAL_TOKEN, color_style)
 
-        self.info_style = (
-            rich.style.Style(color=basic_info_style.color, bgcolor=style_bg_color)
-            + rich.style.Style(italic=True))
+        self.info_style = rich.style.Style(
+            color=basic_info_style.color, bgcolor=style_bg_color
+        ) + rich.style.Style(italic=True)
 
 
 class InnerPanelStyler:
     """Style one rendered inner panel for placement inside an outer layout."""
+
     def __init__(
         self,
         inner_panel: FullyRenderedDraftPanel,
@@ -255,16 +271,18 @@ class InnerPanelStyler:
             if len(last_title_line) > 0:
                 max_title_width = (
                     max(self._panel.dims.width, self._panel.frame.dims.width)
-                    if has_width(self._panel.frame.dims) else self._panel.dims.width)
+                    if has_width(self._panel.frame.dims)
+                    else self._panel.dims.width
+                )
 
                 # Add ellipsis if title height is cropped
-                title_lines[-1] = f'{last_title_line[:max_title_width - 1]}…'
+                title_lines[-1] = f'{last_title_line[: max_title_width - 1]}…'
 
         return title_lines
 
     @cached_property
     def _title_lines(self) -> list[str]:
-        title_lines = self._panel.resized_title[:self._panel.title_height]
+        title_lines = self._panel.resized_title[: self._panel.title_height]
         title_lines = self._add_ellipsis_to_title_if_vertically_cropped(title_lines)
         return title_lines
 
@@ -304,8 +322,7 @@ class InnerPanelStyler:
             if self._panel_title_at_top:
                 title_with_space = '\n'.join(self._title_lines + [''] * TITLE_BLANK_LINES)
             else:
-                num_blank_lines = (
-                    TITLE_BLANK_LINES + self._num_extra_blank_lines_if_title_at_bottom)
+                num_blank_lines = TITLE_BLANK_LINES + self._num_extra_blank_lines_if_title_at_bottom
                 title_with_space = '\n'.join(([''] * num_blank_lines) + self._title_lines)
 
             title = rich.text.Text(
@@ -321,8 +338,7 @@ class InnerPanelStyler:
     def _style_and_crop_content(self) -> rich.text.Text:
         content = rich.text.Text.from_ansi(self._panel.colorized.terminal, no_wrap=True)
 
-        content_lines: list[rich.text.Text] | rich.containers.Lines = \
-            content.split('\n')
+        content_lines: list[rich.text.Text] | rich.containers.Lines = content.split('\n')
 
         if len(content_lines) < self._num_content_lines:
             # rich.text.Text.from_ansi() might remove empty lines at the end.
@@ -332,7 +348,7 @@ class InnerPanelStyler:
 
         elif len(content_lines) > self._num_content_lines:
             # Crop content_lines if too high
-            content_lines = content_lines[:self._num_content_lines]
+            content_lines = content_lines[: self._num_content_lines]
 
         linesep_text = rich.text.Text('\n', no_wrap=True)
         return linesep_text.join(content_lines)
@@ -376,6 +392,7 @@ class InnerPanelStyler:
 
 class OuterLayoutPanelStyler:
     """Build the outer Rich table that hosts styled inner panels."""
+
     def __init__(
         self,
         outer_panel: 'StylizedLayoutPanel[FrameInvT]',

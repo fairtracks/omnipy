@@ -1,10 +1,12 @@
 import omnipy as om
 
 om.runtime.config.data.ui.terminal.width = 140
-model = om.Model[list[list[str | int]]]([
-    [123, 234, 345, 456, 567],
-    ['abc', 'bce', 'cde', 'def', 'efg'],
-])
+model = om.Model[list[list[str | int]]](
+    [
+        [123, 234, 345, 456, 567],
+        ['abc', 'bce', 'cde', 'def', 'efg'],
+    ]
+)
 data = om.Dataset[om.Model[list[list[str | int]]]](
     abcd=model,
     bcde=model,

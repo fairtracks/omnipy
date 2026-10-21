@@ -8,10 +8,12 @@ import pytest_cases as pc
 
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
-                                                 IsFuncFlowTemplate,
-                                                 IsLinearFlowTemplate,
-                                                 IsTaskTemplate)
+from omnipy.shared.protocols.compute.job import (
+    IsDagFlowTemplate,
+    IsFuncFlowTemplate,
+    IsLinearFlowTemplate,
+    IsTaskTemplate,
+)
 
 from .tasks import TaskCase
 
@@ -22,6 +24,7 @@ RetT = TypeVar('RetT')
 @dataclass
 class FlowCase(Generic[CallP, RetT]):
     """Bundle reusable flow inputs and assertions."""
+
     flow_func: Callable[CallP, RetT]
     flow_template: IsLinearFlowTemplate | IsDagFlowTemplate | IsFuncFlowTemplate
     args: tuple[Any, ...]

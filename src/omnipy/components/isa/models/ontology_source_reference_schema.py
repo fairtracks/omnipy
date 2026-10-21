@@ -35,6 +35,7 @@ class IsaOntologySourceReferenceSchema(pyd.BaseModel):
         file: Optional URI or file reference for the ontology.
         description: Human-readable source description.
     """
+
     class Config:
         """Validation settings for ISA ontology-source schema parsing.
 

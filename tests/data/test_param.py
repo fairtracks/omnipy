@@ -6,12 +6,13 @@ from typing import Annotated
 import pytest
 
 from omnipy.data.param import params_dataclass, ParamsBase
-from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
+from omnipy.util.pydantic import ValidationError
 
 
 def test_params_parameter_lookup(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = 123
@@ -28,7 +29,8 @@ def test_params_parameter_lookup(
 
 
 def test_params_parameter_value_is_read_only(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = 123
@@ -44,7 +46,8 @@ def test_params_parameter_value_is_read_only(
 
 
 def test_params_default_value_validation(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
     class MyPydanticModel(pyd.BaseModel):
         a: str
         b: int
@@ -79,11 +82,12 @@ def test_params_default_value_validation(
     reason="""
 Due to a pydantic v1 "feature" which sets the type of a field to Optional[<type>] when default is
 None, instead if raising a ValidationError.
-""")
+""",
+)
 def test_params_default_value_validation_known_issue(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    class MyClass:
-        ...
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
+    class MyClass: ...
 
     with pytest.raises(ValidationError):
 
@@ -93,7 +97,8 @@ def test_params_default_value_validation_known_issue(
 
 
 def test_params_no_default_value(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
     with pytest.raises(ValueError):
 
         @params_dataclass
@@ -107,7 +112,8 @@ def test_params_no_default_value(
 
 
 def test_params_validation(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
     @params_dataclass
     class MyParams(ParamsBase):
         my_int: int = 123
@@ -121,7 +127,8 @@ def test_params_validation(
 
 
 def test_params_copy_and_adjust(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
     class MyPydanticModel(pyd.BaseModel):
         a: str
         b: int

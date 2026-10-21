@@ -7,9 +7,11 @@ import pytest
 
 from omnipy.components.json.models import JsonScalarModel
 from omnipy.components.nested.datasets import NestedDataset, StructuredNestedDataset
-from omnipy.components.nested.models import (EnumeratedListModel,
-                                             EnumeratedListOfTuplesModel,
-                                             ListAsStructuredNestedDatasetModel)
+from omnipy.components.nested.models import (
+    EnumeratedListModel,
+    EnumeratedListOfTuplesModel,
+    ListAsStructuredNestedDatasetModel,
+)
 from omnipy.data.dataset import Dataset
 from omnipy.util.pydantic import ValidationError
 
@@ -107,9 +109,12 @@ def test_list_as_nested_dataset_model() -> None:
     """Convert lists into nested-dataset-compatible mappings."""
     list_data = [123, 'abc', 45.6, True, None, {'x': 1, 'y': 2}]
     list_data_expected_output = {
-        '0': 123, '1': 'abc', '2': 45.6, '3': True, '4': None, '5': {
-            'x': 1, 'y': 2
-        }
+        '0': 123,
+        '1': 'abc',
+        '2': 45.6,
+        '3': True,
+        '4': None,
+        '5': {'x': 1, 'y': 2},
     }
 
     list_as_nested_dataset_model = ListAsStructuredNestedDatasetModel(list_data)
@@ -137,36 +142,31 @@ def test_nested_dataset_forward_ref_updates_with_table_model_variants() -> None:
 
 # Known issue: StructuredNestedDataset incompatibility with dynamic conversion of elements to models
 def test_nested_dataset_lists_and_dicts(
-        skip_test_if_dynamically_convert_elements_to_models: Annotated[None,
-                                                                       pytest.fixture]) -> None:
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
+) -> None:
     """Handle nested datasets containing both lists and dicts."""
     nested_lists_and_dict_data = {
         'id_0': {
-            'name':
-                'Alice',
-            'age':
-                30,
-            'kids': [{
-                'name': 'Charlie',
-                'age': 5,
-                'toys': ['car', 'doll'],
-            }, {
-                'name': 'Daisy', 'age': 3
-            }, {
-                'name': 'Eve', 'age': 1
-            }]
+            'name': 'Alice',
+            'age': 30,
+            'kids': [
+                {
+                    'name': 'Charlie',
+                    'age': 5,
+                    'toys': ['car', 'doll'],
+                },
+                {'name': 'Daisy', 'age': 3},
+                {'name': 'Eve', 'age': 1},
+            ],
         },
         'id_1': {
-            'name':
-                'Bob',
-            'age':
-                25,
-            'kids': [{
-                'name': 'Frank', 'age': 4, 'toys': ['ball']
-            }, {
-                'name': 'Grace', 'age': 2, 'toys': ['puzzle']
-            }]
-        }
+            'name': 'Bob',
+            'age': 25,
+            'kids': [
+                {'name': 'Frank', 'age': 4, 'toys': ['ball']},
+                {'name': 'Grace', 'age': 2, 'toys': ['puzzle']},
+            ],
+        },
     }
 
     expected_lists_and_dict_output = {
@@ -174,49 +174,49 @@ def test_nested_dataset_lists_and_dicts(
             'name': 'Alice',
             'age': 30,
             'kids': {
-                '0': {
-                    'name': 'Charlie', 'age': 5, 'toys': ['car', 'doll']
-                },
-                '1': {
-                    'name': 'Daisy', 'age': 3
-                },
-                '2': {
-                    'name': 'Eve', 'age': 1
-                }
-            }
+                '0': {'name': 'Charlie', 'age': 5, 'toys': ['car', 'doll']},
+                '1': {'name': 'Daisy', 'age': 3},
+                '2': {'name': 'Eve', 'age': 1},
+            },
         },
         'id_1': {
             'name': 'Bob',
             'age': 25,
             'kids': {
-                '0': {
-                    'name': 'Frank', 'age': 4, 'toys': ['ball']
-                },
-                '1': {
-                    'name': 'Grace', 'age': 2, 'toys': ['puzzle']
-                }
-            }
-        }
+                '0': {'name': 'Frank', 'age': 4, 'toys': ['ball']},
+                '1': {'name': 'Grace', 'age': 2, 'toys': ['puzzle']},
+            },
+        },
     }
     nested_lists_and_dict_dataset = StructuredNestedDataset(nested_lists_and_dict_data)
     assert nested_lists_and_dict_dataset.to_data() == expected_lists_and_dict_output
 
     assert len(nested_lists_and_dict_dataset) == 2
     assert list(nested_lists_and_dict_dataset['id_0'].keys()) == [  # pyright: ignore
-        'name', 'age', 'kids'
+        'name',
+        'age',
+        'kids',
     ]
     assert nested_lists_and_dict_dataset['id_0'].to_data() == expected_lists_and_dict_output['id_0']
     assert list(nested_lists_and_dict_dataset['id_0']['kids'].keys()) == [  # pyright: ignore
-        '0', '1', '2'
+        '0',
+        '1',
+        '2',
     ]
     assert len(nested_lists_and_dict_dataset['id_0']['kids']) == 3  # pyright: ignore
     assert nested_lists_and_dict_dataset['id_0']['kids'][0].to_data() == {  # pyright: ignore
-        'name': 'Charlie', 'age': 5, 'toys': ['car', 'doll']
+        'name': 'Charlie',
+        'age': 5,
+        'toys': ['car', 'doll'],
     }
-    assert (nested_lists_and_dict_dataset['id_0']['kids'][0]['name']  # pyright: ignore
-            == JsonScalarModel('Charlie'))
-    assert (nested_lists_and_dict_dataset['id_0']['kids'][0]['name'].to_data()  # pyright: ignore
-            == 'Charlie')
+    assert (
+        nested_lists_and_dict_dataset['id_0']['kids'][0]['name']  # pyright: ignore
+        == JsonScalarModel('Charlie')
+    )
+    assert (
+        nested_lists_and_dict_dataset['id_0']['kids'][0]['name'].to_data()  # pyright: ignore
+        == 'Charlie'
+    )
 
     nested_lists_and_dict_dataset['id_0']['kids'][0]['age'] = 6  # pyright: ignore
     assert nested_lists_and_dict_dataset['id_0']['kids'][0]['age'].to_data() == 6  # pyright: ignore
@@ -224,20 +224,18 @@ def test_nested_dataset_lists_and_dicts(
     nested_lists_and_dict_dataset['id_2'] = {
         'name': 'Charlie',
         'age': 28,
-        'kids': [{
-            'name': 'Hannah', 'age': 2, 'toys': ['teddy bear']
-        }]
+        'kids': [{'name': 'Hannah', 'age': 2, 'toys': ['teddy bear']}],
     }
     assert nested_lists_and_dict_dataset['id_2']['kids'].to_data() == {  # pyright: ignore
-        '0': {
-            'name': 'Hannah', 'age': 2, 'toys': ['teddy bear']
-        }
+        '0': {'name': 'Hannah', 'age': 2, 'toys': ['teddy bear']}
     }
 
     nested_lists_and_dict_dataset['id_2'][  # pyright: ignore
-        'kids'] = nested_lists_and_dict_dataset['id_1']['kids']  # pyright: ignore
+        'kids'
+    ] = nested_lists_and_dict_dataset['id_1']['kids']  # pyright: ignore
     nested_lists_and_dict_dataset['id_0']['kids'][  # pyright: ignore
-        0, 2] = nested_lists_and_dict_dataset['id_2']['kids'][0, 1]  # pyright: ignore
+        0, 2
+    ] = nested_lists_and_dict_dataset['id_2']['kids'][0, 1]  # pyright: ignore
 
     with pytest.raises(ValidationError):
         nested_lists_and_dict_dataset['id_1']['kids'][1]['age'] = 1 + 2j  # pyright: ignore

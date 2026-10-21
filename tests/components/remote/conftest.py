@@ -22,6 +22,7 @@ from .helpers.classes import EndpointCase
 @pc.fixture(scope='function')
 async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:  # noqa: C901
     """Provide a test server exposing lyrics endpoints with varied response types."""
+
     async def _get_lyrics(url: str):
         url_model = HttpUrlModel(url)
         match url_model.query.get('song'):
@@ -33,7 +34,8 @@ async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:  # 
                         'Her kommer den kalde fine tida',
                         "Her kommer vinter'n",
                         'Endelig fred å få',
-                    ])
+                    ],
+                )
             case 'Blues fra Oslo Ø':
                 data = dict(
                     author='Odd Børretzen',
@@ -47,7 +49,8 @@ async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:  # 
                         "Arbe' og slite",
                         'tjene lite',
                         'og 25 øre for å drite',
-                    ])
+                    ],
+                )
             case '1984':
                 data = dict(
                     author='deLillos',
@@ -57,7 +60,8 @@ async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:  # 
                         'Den kaldeste dagen',
                         'Overalt',
                         'Den kaldeste dagen i Nittenåttifire',
-                    ])
+                    ],
+                )
             case 'Arne':
                 data = dict(
                     author='deLillos',
@@ -67,7 +71,8 @@ async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:  # 
                         'Men jeg lever til jeg dør',
                         'Faen som det regner ute',
                         'Jeg lurer på om det er i natt det begynner å snø',
-                    ])
+                    ],
+                )
             case _:
                 data = dict(author='Unknown', lyrics=['No lyrics found for the requested song.'])
         return data
@@ -112,25 +117,29 @@ async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:  # 
 
 @pc.fixture(scope='function')
 async def lyrics_bytes_server_url(
-        lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
+    lyrics_server: Annotated[TestServer, pc.fixture],
+) -> AsyncGenerator[str, None]:
     yield str(lyrics_server.make_url('/lyrics_bytes'))
 
 
 @pc.fixture(scope='function')
 async def lyrics_text_server_url(
-        lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
+    lyrics_server: Annotated[TestServer, pc.fixture],
+) -> AsyncGenerator[str, None]:
     yield str(lyrics_server.make_url('/lyrics_text'))
 
 
 @pc.fixture(scope='function')
 async def lyrics_json_server_url(
-        lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
+    lyrics_server: Annotated[TestServer, pc.fixture],
+) -> AsyncGenerator[str, None]:
     yield str(lyrics_server.make_url('/lyrics_json'))
 
 
 @pc.fixture(scope='function')
 async def timeout_lyrics_server_url(
-        lyrics_server: Annotated[TestServer, pc.fixture]) -> AsyncGenerator[str, None]:
+    lyrics_server: Annotated[TestServer, pc.fixture],
+) -> AsyncGenerator[str, None]:
     yield str(lyrics_server.make_url('/timeout_lyrics'))
 
 
@@ -143,12 +152,14 @@ async def timeout_lyrics_server_url(
         (lyrics_json_server_url, JsonModel),
         (timeout_lyrics_server_url, JsonModel),
     ],
-    ids=['bytes_content', 'text_content', 'json_content', 'timeout_issues'])
+    ids=['bytes_content', 'text_content', 'json_content', 'timeout_issues'],
+)
 def endpoint(server_url: str, auto_model_type: type[Model]) -> EndpointCase:
     """Return endpoint cases with song query URLs and expected auto model type."""
     urls = HttpUrlDataset()
-    for key, song in dict(jokke='Her kommer vinteren', odd='Blues fra Oslo Ø',
-                          delillos='1984', delillos_2='Arne').items():
+    for key, song in dict(
+        jokke='Her kommer vinteren', odd='Blues fra Oslo Ø', delillos='1984', delillos_2='Arne'
+    ).items():
         urls[key] = HttpUrlModel(str(server_url))
         urls[key].query['song'] = song
     return EndpointCase(query_urls=urls, auto_model_type=auto_model_type)

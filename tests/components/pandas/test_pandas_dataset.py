@@ -21,10 +21,13 @@ def test_pandas_dataset_input_variants():
     from omnipy.components.pandas.lazy_import import pd
 
     table = RowWiseTableWithColNamesModel([{'a': 'abc', 'b': 12}])
-    df = pd.concat([
-        pd.Series(['abc'], dtype='string'),
-        pd.Series([12], dtype='Int64'),
-    ], axis=1)
+    df = pd.concat(
+        [
+            pd.Series(['abc'], dtype='string'),
+            pd.Series([12], dtype='Int64'),
+        ],
+        axis=1,
+    )
     df.columns = ('a', 'b')
 
     dataset_1 = PandasDataset()
@@ -71,11 +74,7 @@ def test_pandas_dataset_list_of_objects_same_keys():
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,
-        pd.DataFrame([{
-            'a': 'abc', 'b': 12
-        }, {
-            'a': 'bcd', 'b': 23
-        }]),
+        pd.DataFrame([{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]),
         check_dtype=False,
     )
     assert_pandas_frame_dtypes(pandas_data['data_file'], ('string', 'Int64'))
@@ -90,11 +89,7 @@ def test_pandas_dataset_json_list_of_objects_same_keys():
     pandas_data.from_json(json_data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,
-        pd.DataFrame([{
-            'a': 'abc', 'b': 12
-        }, {
-            'a': 'bcd', 'b': 23
-        }]),
+        pd.DataFrame([{'a': 'abc', 'b': 12}, {'a': 'bcd', 'b': 23}]),
         check_dtype=False,
     )
     assert_pandas_frame_dtypes(pandas_data['data_file'], ('string', 'Int64'))
@@ -109,11 +104,7 @@ def test_pandas_dataset_list_of_objects_different_keys():
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,
-        pd.DataFrame([{
-            'a': 'abc', 'b': 12, 'c': None
-        }, {
-            'a': None, 'b': None, 'c': 'bcd'
-        }]),
+        pd.DataFrame([{'a': 'abc', 'b': 12, 'c': None}, {'a': None, 'b': None, 'c': 'bcd'}]),
         check_dtype=False,
     )
     assert_pandas_frame_dtypes(pandas_data['data_file'], ('string', 'Int64', 'string'))
@@ -125,7 +116,8 @@ def test_pandas_dataset_list_of_objects_different_keys():
     reason="""
 Pandas converts 'a' column into 'Int64' since all values can be cast into integers.
  Should remain floats.
-""")
+""",
+)
 def test_pandas_dataset_list_of_objects_float_numbers():
     from omnipy.components.pandas.lazy_import import pd
 
@@ -134,11 +126,7 @@ def test_pandas_dataset_list_of_objects_float_numbers():
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,
-        pd.DataFrame([{
-            'a': 12.0, 'b': 12.1
-        }, {
-            'a': 3.0, 'b': None
-        }]),
+        pd.DataFrame([{'a': 12.0, 'b': 12.1}, {'a': 3.0, 'b': None}]),
     )
     assert_pandas_frame_dtypes(pandas_data['data_file'], ('Float64', 'Float64'))
     assert not DeepDiff(pandas_data.to_data(), data, significant_digits=3)
@@ -152,12 +140,9 @@ def test_pandas_dataset_list_of_nested_objects():
     pandas_data.from_data(data)
     pd.testing.assert_frame_equal(
         pandas_data['data_file'].content,
-        pd.DataFrame([{
-            'a': 'abc', 'b': {
-                'c': [1, 3]
-            }
-        }]),
-        check_dtype=False)
+        pd.DataFrame([{'a': 'abc', 'b': {'c': [1, 3]}}]),
+        check_dtype=False,
+    )
     assert_pandas_frame_dtypes(pandas_data['data_file'], ('string', 'object'))
     assert pandas_data.to_data() == data
     assert pandas_data['data_file'].content.loc[0, 'b'] == {'c': [1, 3]}
@@ -167,7 +152,8 @@ def test_pandas_dataset_list_of_nested_objects():
 def test_pandas_dataset_missing_values():
     pandas_data = PandasDataset()
     pandas_data.from_data(
-        {'data_file': [dict(a=1, b='a', c=1.0, d=True), dict(a=None, b=None, c=None, d=None)]})
+        {'data_file': [dict(a=1, b='a', c=1.0, d=True), dict(a=None, b=None, c=None, d=None)]}
+    )
     assert pandas_data.to_data() == {
         'data_file': [dict(a=1, b='a', c=1.0, d=True), dict(a=None, b='', c=nan, d=None)]
     }
@@ -180,8 +166,10 @@ def test_pandas_dataset_empty_list():
     assert pandas_data.to_data() == {}
 
     pandas_data.from_data({'data_file': []})
-    assert isinstance(pandas_data['data_file'].content,
-                      pd.DataFrame) and pandas_data['data_file'].content.empty
+    assert (
+        isinstance(pandas_data['data_file'].content, pd.DataFrame)
+        and pandas_data['data_file'].content.empty
+    )
     assert pandas_data.to_data() == {'data_file': {}}
 
 
@@ -213,5 +201,4 @@ def test_pandas_dataset_error_empty_objects():
 
 
 # Placeholder
-def test_pandas_model_input_output_json():
-    ...
+def test_pandas_model_input_output_json(): ...

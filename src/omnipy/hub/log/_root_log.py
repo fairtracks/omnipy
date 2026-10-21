@@ -122,7 +122,7 @@ class RootLogObjects(DataPublisher):
     def _configure_common_filters(self):
         class ExtractEngineFilter(logging.Filter):
             def filter(self, record):
-                engine = f"{record.name.split('.')[0].upper()}"
+                engine = f'{record.name.split(".")[0].upper()}'
                 if len(engine) < 7:
                     engine += ' '
                 setattr(record, 'engine', engine)
@@ -140,7 +140,8 @@ class RootLogObjects(DataPublisher):
     def _remove_all_handlers_from_root_logger(self):
         root_logger = logging.root
         handlersToRemove = [
-            handler for handler in root_logger.handlers
+            handler
+            for handler in root_logger.handlers
             if isinstance(handler, StreamHandler) or isinstance(handler, DailyRotatingFileHandler)
         ]
         for handler in handlersToRemove:

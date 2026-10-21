@@ -25,17 +25,21 @@ class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
     ``EnumeratedListModel`` uses it as the canonical form before list positions
     become names for Dataset items.
     """
+
     @classmethod
     def _parse_data(cls, data: list[tuple[int, object]]) -> list[tuple[int, object]]:
         for expected_index, (actual_index, _) in enumerate(data):
             if expected_index != actual_index:
-                raise ValueError(f'Indices are not sequential starting from 0: '
-                                 f'expected {expected_index}, got {actual_index}')
+                raise ValueError(
+                    f'Indices are not sequential starting from 0: '
+                    f'expected {expected_index}, got {actual_index}'
+                )
         return data
 
 
-class EnumeratedListModel(Model[EnumeratedListOfTuplesModel | list[object]
-                                | list[dict[str, object]]]):
+class EnumeratedListModel(
+    Model[EnumeratedListOfTuplesModel | list[object] | list[dict[str, object]]]
+):
     """A Model for list data before it becomes named Dataset items.
 
     Ordinary list input is given explicit zero-based positions in an
@@ -46,6 +50,7 @@ class EnumeratedListModel(Model[EnumeratedListOfTuplesModel | list[object]
     happen to be tuples from list data that is already prepared for
     interpretation as Dataset items.
     """
+
     @classmethod
     def _parse_data(
         cls, data: EnumeratedListOfTuplesModel | list[object] | list[dict[str, object]]
@@ -56,15 +61,17 @@ class EnumeratedListModel(Model[EnumeratedListOfTuplesModel | list[object]
             return data
 
 
-class _ListAsStructuredNestedDatasetModel(Chain2[EnumeratedListModel, 'StructuredNestedDataset']):
-    ...
+class _ListAsStructuredNestedDatasetModel(
+    Chain2[EnumeratedListModel, 'StructuredNestedDataset']
+): ...
 
 
 if TYPE_CHECKING:
     from ..json.models import JsonScalarModel  # noqa: F401
 
     class ListAsStructuredNestedDatasetModel(
-            Model[Dataset['StructuredNestedDataset | JsonScalarModel']]):
+        Model[Dataset['StructuredNestedDataset | JsonScalarModel']]
+    ):
         """A Model representing a list as a position-keyed StructuredNestedDataset.
 
         List positions become the names of Dataset items: ``['a', {'b': 1}]`` is

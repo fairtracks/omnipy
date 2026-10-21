@@ -12,7 +12,8 @@ from ..conftest import MockJobClasses
 
 
 def test_property_name_default_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, _ = mock_job_classes
     job_tmpl = JobTemplate()
 
@@ -60,7 +61,8 @@ def test_property_name_default_func_flow() -> None:
 
 
 def test_property_name_change_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name='my_job')
@@ -73,7 +75,8 @@ def test_property_name_change_mock(
 
 
 def test_property_name_validation_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name=None)
@@ -87,7 +90,8 @@ def test_property_name_validation_mock(
 
 
 def test_property_unique_name_default_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate()
@@ -102,7 +106,8 @@ def test_property_unique_name_default_mock(
 
 
 def test_property_unique_name_change_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name='my_job')
@@ -121,7 +126,8 @@ def test_property_unique_name_change_mock(
 
 
 def test_property_unique_name_uniqueness_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, _ = mock_job_classes
 
     job_tmpl = JobTemplate(name='my_job')
@@ -143,7 +149,8 @@ def test_property_unique_name_uniqueness_mock(
 
 
 def test_property_unique_name_regenerate_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, _ = mock_job_classes
 
     job = JobTemplate(name='my_job').apply()
@@ -166,7 +173,8 @@ def test_property_unique_name_regenerate_mock(
 
 
 def test_property_unique_name_revise_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, _ = mock_job_classes
 
     job = JobTemplate(name='my_job').apply()
@@ -179,18 +187,23 @@ def test_property_unique_name_revise_mock(
 
 
 def test_equal_job_dependent_on_name_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, _ = mock_job_classes
 
     my_job_tmpl = JobTemplate(name='my_job')
     my_job_tmpl_2 = JobTemplate(name='my_job')
 
-    for (my_job_obj, my_job_obj_2) in [(my_job_tmpl, my_job_tmpl_2),
-                                       (my_job_tmpl.apply(), my_job_tmpl_2.apply())]:
+    for my_job_obj, my_job_obj_2 in [
+        (my_job_tmpl, my_job_tmpl_2),
+        (my_job_tmpl.apply(), my_job_tmpl_2.apply()),
+    ]:
         assert my_job_obj == my_job_obj_2
 
     other_job_tmpl = JobTemplate(name='other_job')
 
-    for (my_job_obj, other_job_obj) in [(my_job_tmpl, other_job_tmpl),
-                                        (my_job_tmpl.apply(), other_job_tmpl.apply())]:
+    for my_job_obj, other_job_obj in [
+        (my_job_tmpl, other_job_tmpl),
+        (my_job_tmpl.apply(), other_job_tmpl.apply()),
+    ]:
         assert my_job_obj != other_job_obj

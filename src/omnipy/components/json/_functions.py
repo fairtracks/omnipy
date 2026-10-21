@@ -3,12 +3,14 @@
 from copy import copy
 from typing import cast
 
-from .typedefs import (JsonDict,
-                       JsonDictOfListsOfDicts,
-                       JsonDictOfScalars,
-                       JsonList,
-                       JsonListOfDicts,
-                       JsonScalar)
+from .typedefs import (
+    JsonDict,
+    JsonDictOfListsOfDicts,
+    JsonDictOfScalars,
+    JsonList,
+    JsonListOfDicts,
+    JsonScalar,
+)
 
 
 def flatten_outer_level_of_nested_record(
@@ -22,7 +24,8 @@ def flatten_outer_level_of_nested_record(
     """Split nested JSON fields into scalar fields and child record collections."""
 
     record_id = _ensure_item_first_in_nested_record(
-        nested_record, key=id_key, value=f'{data_file_title}.{record_id}')
+        nested_record, key=id_key, value=f'{data_file_title}.{record_id}'
+    )
 
     new_data_files: JsonDictOfListsOfDicts = JsonDictOfListsOfDicts()
     records_of_scalars: JsonDictOfScalars = JsonDictOfScalars()
@@ -31,10 +34,12 @@ def flatten_outer_level_of_nested_record(
         if any(isinstance(value, typ) for typ in (dict, list)):
             new_data_file_title: str = f'{data_file_title}.{key}'
             new_data_file: JsonListOfDicts = _transform_into_list_of_dicts(
-                cast(JsonList | JsonDict, value), default_key=default_key)
+                cast(JsonList | JsonDict, value), default_key=default_key
+            )
 
             _add_references_to_parent_in_child_records(
-                child=new_data_file, parent_title=data_file_title, ident=record_id, ref_key=ref_key)
+                child=new_data_file, parent_title=data_file_title, ident=record_id, ref_key=ref_key
+            )
 
             new_data_files[new_data_file_title] = new_data_file
         else:
@@ -92,4 +97,5 @@ def _add_references_to_parent_in_child_records(
 ):
     for new_nested_record in child:
         _ensure_item_first_in_nested_record(
-            new_nested_record, key=ref_key, value=ident, fail_if_present=True)
+            new_nested_record, key=ref_key, value=ident, fail_if_present=True
+        )

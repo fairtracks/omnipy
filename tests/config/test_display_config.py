@@ -10,10 +10,12 @@ import omnipy.util.pydantic as pyd
 
 class NoSizeDisplayDimsModeConfig(DimsModeConfig):
     """Provide a dims config with no detected display size."""
+
     @classmethod
     @override
     def _get_available_display_dims(
-            cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+        cls,
+    ) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         return None, None
 
 
@@ -48,13 +50,15 @@ def test_dims_mode_config_no_display_dims_size_set() -> None:
 
 class BothSizesDisplayDimsModeConfig(DimsModeConfig):
     """Provide a dims config with detected width and height."""
+
     display_width: ClassVar[pyd.NonNegativeInt] = 200
     display_height: ClassVar[pyd.NonNegativeInt] = 200
 
     @classmethod
     @override
     def _get_available_display_dims(
-            cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+        cls,
+    ) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         return cls.display_width, cls.display_height
 
 
@@ -98,13 +102,15 @@ def test_dims_mode_config_both_display_dims_size_set() -> None:
 
 class OnlyWidthDisplayDimsModeConfig(DimsModeConfig):
     """Provide a dims config with only detected width."""
+
     display_width: ClassVar[pyd.NonNegativeInt] = 200
     display_height: ClassVar[pyd.NonNegativeInt | None] = None
 
     @classmethod
     @override
     def _get_available_display_dims(
-            cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+        cls,
+    ) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         return cls.display_width, cls.display_height
 
 
@@ -180,7 +186,8 @@ def test_color_config_auto_style_more_colors() -> None:
 
 def test_color_config_specific_not_recommended_style() -> None:
     color_config = ColorConfig(
-        system=DisplayColorSystem.ANSI_RGB, style=DarkHighContrastColorStyles.GOTHAM_T16)
+        system=DisplayColorSystem.ANSI_RGB, style=DarkHighContrastColorStyles.GOTHAM_T16
+    )
     # If a specific style is set, it overrides the automatic style selection.
     assert color_config.style is DarkHighContrastColorStyles.GOTHAM_T16
 

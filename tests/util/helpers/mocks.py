@@ -4,8 +4,7 @@ from omnipy.util.publisher import DataPublisher
 import omnipy.util.pydantic as pyd
 
 
-class MockFoo:
-    ...
+class MockFoo: ...
 
 
 class MockDataPublisher(DataPublisher):
@@ -45,8 +44,9 @@ class MockConfigSubscriberCls:
 
 class MockParentConfigSubscriberCls:
     def __init__(self) -> None:
-        self.parent_config: MockDataPublisherParent | MockConfigSubscriberCls = \
+        self.parent_config: MockDataPublisherParent | MockConfigSubscriberCls = (
             MockConfigSubscriberCls()
+        )
 
     def set_parent_config(self, parent_config: MockDataPublisherParent) -> None:
         self.parent_config = parent_config

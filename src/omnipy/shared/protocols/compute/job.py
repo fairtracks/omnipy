@@ -8,9 +8,11 @@ from types import MappingProxyType
 from typing import Any, Callable, Iterable, Mapping, ParamSpec, Protocol, runtime_checkable, TypeVar
 
 from omnipy.shared._typedefs import _JobT, _JobTemplateT
-from omnipy.shared.enums.job import (OutputStorageProtocolOptions,
-                                     PersistOutputsOptions,
-                                     RestoreOutputsOptions)
+from omnipy.shared.enums.job import (
+    OutputStorageProtocolOptions,
+    PersistOutputsOptions,
+    RestoreOutputsOptions,
+)
 from omnipy.shared.protocols.compute.job_creator import IsJobCreator
 from omnipy.shared.protocols.compute.mixins import IsNestedContext, IsUniquelyNamedJob
 from omnipy.shared.protocols.config import IsJobConfig
@@ -28,77 +30,88 @@ _RetContraT = TypeVar('_RetContraT', contravariant=True)
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISJOBBASE_CONFIG_SUMMARY'] = (
-        'Return the job configuration visible to this instance.')
+        'Return the job configuration visible to this instance.'
+    )
     os.environ['OMNIPY_MACRO_ISJOBBASE_CONFIG_DETAILS'] = dedent("""\
         Returns:
             IsJobConfig: Active job configuration used for runtime behavior.
     """)
 
     os.environ['OMNIPY_MACRO_ISJOBBASE_ENGINE_SUMMARY'] = (
-        'Return the engine associated with this job, if any.')
+        'Return the engine associated with this job, if any.'
+    )
     os.environ['OMNIPY_MACRO_ISJOBBASE_ENGINE_DETAILS'] = dedent("""\
         Returns:
             IsEngine | None: Engine used for decoration and execution, or ``None``.
     """)
 
     os.environ['OMNIPY_MACRO_ISJOBBASE_IN_FLOW_CONTEXT_SUMMARY'] = (
-        'Return whether the job is currently executing inside a flow context.')
+        'Return whether the job is currently executing inside a flow context.'
+    )
     os.environ['OMNIPY_MACRO_ISJOBBASE_IN_FLOW_CONTEXT_DETAILS'] = dedent("""\
         Returns:
             bool: ``True`` when a surrounding flow context is active.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_RETURN_TYPE_SUMMARY'] = (
-        'Return the annotated return type of the job callable.')
+        'Return the annotated return type of the job callable.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_RETURN_TYPE_DETAILS'] = dedent("""\
         Returns:
             type: Return annotation for the callable.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_ITERATE_OVER_DATA_FILES_SUMMARY'] = (
-        'Return whether the job should iterate over dataset items automatically.')
+        'Return whether the job should iterate over dataset items automatically.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_ITERATE_OVER_DATA_FILES_DETAILS'] = dedent("""\
         Returns:
             bool: ``True`` when the first dataset argument is expanded item-by-item.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_OUTPUT_DATASET_PARAM_SUMMARY'] = (
-        'Return the parameter name used for an explicit output dataset, if any.')
+        'Return the parameter name used for an explicit output dataset, if any.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_OUTPUT_DATASET_PARAM_DETAILS'] = dedent("""\
         Returns:
             str | None: Output-dataset parameter name, or ``None`` when not configured.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_OUTPUT_DATASET_CLS_SUMMARY'] = (
-        'Return the dataset class used for iterated outputs, if configured.')
+        'Return the dataset class used for iterated outputs, if configured.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_OUTPUT_DATASET_CLS_DETAILS'] = dedent("""\
         Returns:
             type[IsDataset] | None: Output dataset type, or ``None`` when inferred.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_AUTO_ASYNC_SUMMARY'] = (
-        'Return whether coroutine jobs should auto-run outside flow contexts.')
+        'Return whether coroutine jobs should auto-run outside flow contexts.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_AUTO_ASYNC_DETAILS'] = dedent("""\
         Returns:
             bool: ``True`` when coroutine jobs are automatically awaited or scheduled.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_PERSIST_OUTPUTS_SUMMARY'] = (
-        'Return the configured per-job output-persistence preference.')
+        'Return the configured per-job output-persistence preference.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_PERSIST_OUTPUTS_DETAILS'] = dedent("""\
         Returns:
             PersistOutputsOptions.Literals: Persistence setting before config fallback.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_RESTORE_OUTPUTS_SUMMARY'] = (
-        'Return the configured per-job output-restore preference.')
+        'Return the configured per-job output-restore preference.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_RESTORE_OUTPUTS_DETAILS'] = dedent("""\
         Returns:
             RestoreOutputsOptions.Literals: Restore setting before config fallback.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_OUTPUT_STORAGE_PROTOCOL_SUMMARY'] = (
-        'Return the configured output-storage protocol preference.')
+        'Return the configured output-storage protocol preference.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_OUTPUT_STORAGE_PROTOCOL_DETAILS'] = dedent("""\
         Returns:
             OutputStorageProtocolOptions.Literals: Storage-protocol setting before
@@ -106,7 +119,8 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_WILL_PERSIST_OUTPUTS_SUMMARY'] = (
-        'Return the resolved output-persistence behavior for this run.')
+        'Return the resolved output-persistence behavior for this run.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_WILL_PERSIST_OUTPUTS_DETAILS'] = dedent("""\
         Returns:
             PersistOutputsOptions.Literals: Effective persistence behavior after
@@ -114,7 +128,8 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_WILL_RESTORE_OUTPUTS_SUMMARY'] = (
-        'Return the resolved output-restore behavior for this run.')
+        'Return the resolved output-restore behavior for this run.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_WILL_RESTORE_OUTPUTS_DETAILS'] = dedent("""\
         Returns:
             RestoreOutputsOptions.Literals: Effective restore behavior after applying
@@ -122,30 +137,33 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_OUTPUT_STORAGE_PROTOCOL_TO_USE_SUMMARY'] = (
-        'Return the resolved storage protocol used for persisted outputs.')
-    os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_OUTPUT_STORAGE_PROTOCOL_TO_USE_DETAILS'] = (
-        dedent("""\
+        'Return the resolved storage protocol used for persisted outputs.'
+    )
+    os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_OUTPUT_STORAGE_PROTOCOL_TO_USE_DETAILS'] = dedent("""\
         Returns:
             OutputStorageProtocolOptions.Literals: Effective storage protocol for this
                 run.
-    """))
+    """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_RESULT_KEY_SUMMARY'] = (
-        'Return the dictionary key used to wrap results, if configured.')
+        'Return the dictionary key used to wrap results, if configured.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_RESULT_KEY_DETAILS'] = dedent("""\
         Returns:
             str | None: Result wrapper key, or ``None`` when results are returned raw.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_FIXED_PARAMS_SUMMARY'] = (
-        'Return parameters that are always supplied when the job callable runs.')
+        'Return parameters that are always supplied when the job callable runs.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_FIXED_PARAMS_DETAILS'] = dedent("""\
         Returns:
             MappingProxyType[str, object]: Read-only mapping of fixed keyword values.
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_PARAM_KEY_MAP_SUMMARY'] = (
-        'Return keyword-name remappings applied before calling the job callable.')
+        'Return keyword-name remappings applied before calling the job callable.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_PARAM_KEY_MAP_DETAILS'] = dedent("""\
         Returns:
             MappingProxyType[str, str]: Mapping from external keyword names to callable
@@ -153,7 +171,8 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_GET_BOUND_ARGS_SUMMARY'] = (
-        'Bind arguments to the job callable signature.')
+        'Bind arguments to the job callable signature.'
+    )
     os.environ['OMNIPY_MACRO_ISFUNCARGJOBBASE_GET_BOUND_ARGS_DETAILS'] = dedent("""\
         Args:
             *args: Positional call arguments.
@@ -164,14 +183,16 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISJOB_TIME_OF_CUR_TOPLEVEL_FLOW_RUN_SUMMARY'] = (
-        'Return the start time of the active top-level flow run, if any.')
+        'Return the start time of the active top-level flow run, if any.'
+    )
     os.environ['OMNIPY_MACRO_ISJOB_TIME_OF_CUR_TOPLEVEL_FLOW_RUN_DETAILS'] = dedent("""\
         Returns:
             datetime | None: Timestamp for the current outermost flow run, or ``None``.
     """)
 
     os.environ['OMNIPY_MACRO_ISJOB_CREATE_JOB_SUMMARY'] = (
-        'Create an applied job instance from the concrete job class.')
+        'Create an applied job instance from the concrete job class.'
+    )
     os.environ['OMNIPY_MACRO_ISJOB_CREATE_JOB_DETAILS'] = dedent("""\
         Args:
             *args: Positional constructor arguments.
@@ -182,14 +203,16 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISJOB_REVISE_SUMMARY'] = (
-        'Return a template reconstructed from this applied job.')
+        'Return a template reconstructed from this applied job.'
+    )
     os.environ['OMNIPY_MACRO_ISJOB_REVISE_DETAILS'] = dedent("""\
         Returns:
             _JobTemplateT: Template carrying the current job configuration.
     """)
 
     os.environ['OMNIPY_MACRO_ISJOBTEMPLATE_CREATE_JOB_TEMPLATE_SUMMARY'] = (
-        'Create a job template instance from the concrete template class.')
+        'Create a job template instance from the concrete template class.'
+    )
     os.environ['OMNIPY_MACRO_ISJOBTEMPLATE_CREATE_JOB_TEMPLATE_DETAILS'] = dedent("""\
         Args:
             *args: Positional constructor arguments.
@@ -200,7 +223,8 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISJOBTEMPLATE_RUN_SUMMARY'] = (
-        'Apply the template and execute the resulting job immediately.')
+        'Apply the template and execute the resulting job immediately.'
+    )
     os.environ['OMNIPY_MACRO_ISJOBTEMPLATE_RUN_DETAILS'] = dedent("""\
         Args:
             *args: Positional arguments passed to the applied job.
@@ -211,7 +235,8 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISJOBTEMPLATE_APPLY_SUMMARY'] = (
-        'Create an applied job from this template without executing it.')
+        'Create an applied job from this template without executing it.'
+    )
     os.environ['OMNIPY_MACRO_ISJOBTEMPLATE_APPLY_DETAILS'] = dedent("""\
         Returns:
             _JobT: Applied job instance ready to be called.
@@ -220,6 +245,7 @@ if is_package_editable('omnipy'):
 
 class HasJobCreator(Protocol):
     """Protocol for objects exposing a shared :class:`IsJobCreator` instance."""
+
     @property
     def job_creator(self) -> IsJobCreator:
         """Return the shared creator object backing the job family.
@@ -236,9 +262,9 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[_JobTemplateT, _JobT, _Call
     Implementations expose stable naming, logging, configuration, and the
     lifecycle hooks used to move between template, applied-job, and run states.
     """
+
     @property
-    def _job_creator(self) -> IsJobCreator:
-        ...
+    def _job_creator(self) -> IsJobCreator: ...
 
     @property
     def config(self) -> IsJobConfig:
@@ -279,31 +305,23 @@ class IsJobBase(CanLog, IsUniquelyNamedJob, Protocol[_JobTemplateT, _JobT, _Call
         """
         ...
 
-    def __eq__(self, other: object) -> bool:
-        ...
+    def __eq__(self, other: object) -> bool: ...
 
     @classmethod
-    def _create_job_template(cls, *args: object, **kwargs: object) -> _JobTemplateT:
-        ...
+    def _create_job_template(cls, *args: object, **kwargs: object) -> _JobTemplateT: ...
 
     @classmethod
-    def _create_job(cls, *args: object, **kwargs: object) -> _JobT:
-        ...
+    def _create_job(cls, *args: object, **kwargs: object) -> _JobT: ...
 
-    def _apply(self) -> _JobT:
-        ...
+    def _apply(self) -> _JobT: ...
 
-    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> _JobTemplateT:
-        ...
+    def _refine(self, *args: Any, update: bool = True, **kwargs: object) -> _JobTemplateT: ...
 
-    def _revise(self) -> _JobTemplateT:
-        ...
+    def _revise(self) -> _JobTemplateT: ...
 
-    def _call_job_template(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT:
-        ...
+    def _call_job_template(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT: ...
 
-    def _call_job(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT:
-        ...
+    def _call_job(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT: ...
 
 
 class IsFuncArgJobBase(Protocol):
@@ -312,6 +330,7 @@ class IsFuncArgJobBase(Protocol):
     This contract adds signature inspection, dataset-iteration controls, result
     shaping, and persisted-output settings on top of the base job lifecycle.
     """
+
     @property
     def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
         """Return the inspected parameter signature of the job callable.
@@ -545,32 +564,36 @@ class IsPlainFuncArgJobBase(Protocol):
 
     _job_func: Callable
 
-    def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None:
-        ...
+    def _accept_call_func_decorator(self, call_func_decorator: GeneralDecorator) -> None: ...
 
 
 _CallableT = TypeVar('_CallableT', bound=Callable)
 
 
-class IsJobBaseCallable(IsJobBase[_JobTemplateT, _JobT, _CallP, _RetCovT],
-                        Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
+class IsJobBaseCallable(
+    IsJobBase[_JobTemplateT, _JobT, _CallP, _RetCovT],
+    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT],
+):
     """Protocol for job objects that expose a normal callable interface.
 
     Templates and applied jobs both satisfy this contract, but they may route
     calls differently depending on whether they are inside a flow context.
     """
-    def __call__(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT:
-        ...
+
+    def __call__(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetCovT: ...
 
 
 @runtime_checkable
-class IsJob(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
-            Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
+class IsJob(
+    IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
+    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT],
+):
     """Protocol for an applied job that is ready to execute.
 
     Applied jobs carry runtime state such as engine decoration and flow-run
     timing, and they can be revised back into templates when needed.
     """
+
     @property
     def time_of_cur_toplevel_flow_run(self) -> datetime | None:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
@@ -613,18 +636,20 @@ class IsJob(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
         """
         ...
 
-    def _apply_engine_decorator(self, engine: IsEngine) -> None:
-        ...
+    def _apply_engine_decorator(self, engine: IsEngine) -> None: ...
 
 
 @runtime_checkable
-class IsJobTemplate(IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
-                    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
+class IsJobTemplate(
+    IsJobBaseCallable[_JobTemplateT, _JobT, _CallP, _RetCovT],
+    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT],
+):
     """Protocol for a reusable job template with immutable configuration.
 
     Templates can be created, refined, applied to produce runnable jobs, or run
     directly through the apply-and-execute convenience path.
     """
+
     @classmethod
     def create_job_template(cls, *args: object, **kwargs: object) -> _JobTemplateT:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
@@ -677,6 +702,7 @@ class HasFuncArgJobTemplateInit(Protocol[_CallP, _RetCovT]):
     This is the decorator-facing constructor shape used by task templates and
     callable-backed flow templates.
     """
+
     def __init__(
         self,
         *,
@@ -735,6 +761,7 @@ class IsChildJobListArgJobBase(IsFuncArgJobBase, Protocol):
     The child templates define the nested jobs a flow applies or orchestrates in
     addition to its own callable-backed configuration.
     """
+
     @property
     def child_job_templates(self) -> tuple['ChildJobTemplateLike', ...]:
         """Return the ordered templates of child jobs owned by the flow template.
@@ -753,6 +780,7 @@ class HasChildJobListArgJobTemplateInit(Protocol[_CallP, _RetCovT]):
     The initializer receives both the coordinating callable and the ordered child
     templates that make up the flow body.
     """
+
     def __init__(
         self,
         /,
@@ -815,14 +843,16 @@ class HasChildJobListArgJobTemplateInit(Protocol[_CallP, _RetCovT]):
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISFLOW_FLOW_CONTEXT_SUMMARY'] = (
-        'Return a context manager that enters and exits the shared flow context.')
+        'Return a context manager that enters and exits the shared flow context.'
+    )
     os.environ['OMNIPY_MACRO_ISFLOW_FLOW_CONTEXT_DETAILS'] = dedent("""\
         Returns:
             IsNestedContext: Context manager that tracks top-level flow execution state.
     """)
 
     os.environ['OMNIPY_MACRO_ISFLOW_TIME_OF_LAST_RUN_SUMMARY'] = (
-        'Return the timestamp captured for the most recent top-level flow run.')
+        'Return the timestamp captured for the most recent top-level flow run.'
+    )
     os.environ['OMNIPY_MACRO_ISFLOW_TIME_OF_LAST_RUN_DETAILS'] = dedent("""\
         Returns:
             datetime | None: Timestamp from the latest top-level flow run, or ``None`` if the
@@ -830,30 +860,34 @@ if is_package_editable('omnipy'):
     """)
 
 
-class IsFuncArgJobTemplate(HasFuncArgJobTemplateInit[_CallP, _RetCovT],
-                           IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT],
-                           IsFuncArgJobBase,
-                           Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
+class IsFuncArgJobTemplate(
+    HasFuncArgJobTemplateInit[_CallP, _RetCovT],
+    IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT],
+    IsFuncArgJobBase,
+    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT],
+):
     """Template protocol for callable-backed tasks and function-style flows.
 
     Implementations refine the wrapped callable's execution options without
     changing the public callable contract seen by template consumers.
     """
+
     def refine(
-            self,
-            *args: Any,
-            update: bool = True,
-            name: str | None = None,
-            iterate_over_data_files: bool = False,
-            output_dataset_param: str | None = None,
-            output_dataset_cls: type[IsDataset] | None = None,
-            auto_async: bool = True,
-            result_key: str | None = None,
-            fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
-            param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
-            persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
-            restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
-            **kwargs: object) -> _JobTemplateT:
+        self,
+        *args: Any,
+        update: bool = True,
+        name: str | None = None,
+        iterate_over_data_files: bool = False,
+        output_dataset_param: str | None = None,
+        output_dataset_cls: type[IsDataset] | None = None,
+        auto_async: bool = True,
+        result_key: str | None = None,
+        fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+        param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+        persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+        restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
+        **kwargs: object,
+    ) -> _JobTemplateT:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # Return a template with updated configuration.
         #
@@ -904,25 +938,29 @@ class IsFuncArgJobTemplate(HasFuncArgJobTemplateInit[_CallP, _RetCovT],
 ChildJobTemplateLike = IsFuncArgJobTemplate | type[IsDataset] | type[IsModel]
 
 
-class IsTaskTemplate(IsFuncArgJobTemplate['IsTaskTemplate[_CallP, _RetT]',
-                                          'IsTask[_CallP, _RetT]',
-                                          _CallP,
-                                          _RetT],
-                     Protocol[_CallP, _RetT]):
+class IsTaskTemplate(
+    IsFuncArgJobTemplate['IsTaskTemplate[_CallP, _RetT]', 'IsTask[_CallP, _RetT]', _CallP, _RetT],
+    Protocol[_CallP, _RetT],
+):
     """
     Loosely coupled type replacement for the :py:class:`~omnipy.compute.task.TaskTemplate` class
     """
+
     ...
 
 
-class IsFuncArgJob(IsJob[_JobTemplateT, _JobT, _CallP, _RetCovT],
-                   IsFuncArgJobBase,
-                   Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
+class IsFuncArgJob(
+    IsJob[_JobTemplateT, _JobT, _CallP, _RetCovT],
+    IsFuncArgJobBase,
+    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT],
+):
     """Applied-job protocol for callable-backed tasks and flows."""
 
 
-class IsTask(IsFuncArgJob['IsTaskTemplate[_CallP, _RetT]', 'IsTask[_CallP, _RetT]', _CallP, _RetT],
-             Protocol[_CallP, _RetT]):
+class IsTask(
+    IsFuncArgJob['IsTaskTemplate[_CallP, _RetT]', 'IsTask[_CallP, _RetT]', _CallP, _RetT],
+    Protocol[_CallP, _RetT],
+):
     """Protocol for an applied Omnipy task.
 
     A task represents one runnable callable-backed compute step with no owned
@@ -940,6 +978,7 @@ class IsFlowTemplate(Protocol):
 
 class IsFlow(Protocol):
     """Protocol for applied flows with run-state metadata."""
+
     @property
     def flow_context(self) -> IsNestedContext:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
@@ -968,30 +1007,34 @@ class IsFlow(Protocol):
         ...
 
 
-class IsChildJobListArgJobTemplate(HasChildJobListArgJobTemplateInit[_CallP, _RetCovT],
-                                   IsFuncArgJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT],
-                                   IsChildJobListArgJobBase,
-                                   Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
+class IsChildJobListArgJobTemplate(
+    HasChildJobListArgJobTemplateInit[_CallP, _RetCovT],
+    IsFuncArgJobTemplate[_JobTemplateT, _JobT, _CallP, _RetCovT],
+    IsChildJobListArgJobBase,
+    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT],
+):
     """Template protocol for flows composed from an ordered child-template list.
 
     Refinement can replace the owned child templates while keeping the shared
     callable-backed configuration contract from :class:`IsFuncArgJobTemplate`.
     """
+
     def refine(
-            self,
-            *child_job_templates: ChildJobTemplateLike,
-            update: bool = True,
-            name: str | None = None,
-            iterate_over_data_files: bool = False,
-            output_dataset_param: str | None = None,
-            output_dataset_cls: type[IsDataset] | None = None,
-            auto_async: bool = True,
-            result_key: str | None = None,
-            fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
-            param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
-            persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
-            restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
-            **kwargs: object) -> _JobTemplateT:
+        self,
+        *child_job_templates: ChildJobTemplateLike,
+        update: bool = True,
+        name: str | None = None,
+        iterate_over_data_files: bool = False,
+        output_dataset_param: str | None = None,
+        output_dataset_cls: type[IsDataset] | None = None,
+        auto_async: bool = True,
+        result_key: str | None = None,
+        fixed_params: Mapping[str, object] | Iterable[tuple[str, object]] | None = None,
+        param_key_map: Mapping[str, str] | Iterable[tuple[str, str]] | None = None,
+        persist_outputs: PersistOutputsOptions.Literals = PersistOutputsOptions.FOLLOW_CONFIG,
+        restore_outputs: RestoreOutputsOptions.Literals = RestoreOutputsOptions.FOLLOW_CONFIG,
+        **kwargs: object,
+    ) -> _JobTemplateT:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # Return a flow template with updated child jobs or configuration.
         #
@@ -1044,41 +1087,47 @@ class IsChildJobListArgJobTemplate(HasChildJobListArgJobTemplateInit[_CallP, _Re
         ...
 
 
-class IsLinearFlowTemplate(IsChildJobListArgJobTemplate['IsLinearFlowTemplate[_CallP, _RetCovT]',
-                                                        'IsLinearFlow[_CallP, _RetCovT]',
-                                                        _CallP,
-                                                        _RetCovT],
-                           IsFlowTemplate,
-                           Protocol[_CallP, _RetCovT]):
+class IsLinearFlowTemplate(
+    IsChildJobListArgJobTemplate[
+        'IsLinearFlowTemplate[_CallP, _RetCovT]', 'IsLinearFlow[_CallP, _RetCovT]', _CallP, _RetCovT
+    ],
+    IsFlowTemplate,
+    Protocol[_CallP, _RetCovT],
+):
     """Protocol for linear flow templates."""
 
     ...
 
 
-class IsChildJobListArgJob(IsChildJobListArgJobBase,
-                           IsFuncArgJob[_JobTemplateT, _JobT, _CallP, _RetCovT],
-                           Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT]):
+class IsChildJobListArgJob(
+    IsChildJobListArgJobBase,
+    IsFuncArgJob[_JobTemplateT, _JobT, _CallP, _RetCovT],
+    Protocol[_JobTemplateT, _JobT, _CallP, _RetCovT],
+):
     """Protocol for applied flows that keep an ordered child-job list."""
 
 
-class IsLinearFlow(IsChildJobListArgJob['IsLinearFlowTemplate[_CallP, _RetCovT]',
-                                        'IsLinearFlow[_CallP, _RetCovT]',
-                                        _CallP,
-                                        _RetCovT],
-                   IsFlow,
-                   Protocol[_CallP, _RetCovT]):
+class IsLinearFlow(
+    IsChildJobListArgJob[
+        'IsLinearFlowTemplate[_CallP, _RetCovT]', 'IsLinearFlow[_CallP, _RetCovT]', _CallP, _RetCovT
+    ],
+    IsFlow,
+    Protocol[_CallP, _RetCovT],
+):
     """Protocol for applied linear flows."""
 
     ...
 
 
-class IsDagFlowTemplate(IsChildJobListArgJobTemplate['IsDagFlowTemplate[_CallP, _RetCovT]',
-                                                     'IsDagFlow[_CallP, _RetCovT]',
-                                                     _CallP,
-                                                     _RetCovT],
-                        IsFlowTemplate,
-                        Protocol[_CallP, _RetCovT]):
+class IsDagFlowTemplate(
+    IsChildJobListArgJobTemplate[
+        'IsDagFlowTemplate[_CallP, _RetCovT]', 'IsDagFlow[_CallP, _RetCovT]', _CallP, _RetCovT
+    ],
+    IsFlowTemplate,
+    Protocol[_CallP, _RetCovT],
+):
     """Protocol for DAG flow templates."""
+
     def __init__(
         self,
         /,
@@ -1146,58 +1195,65 @@ class IsDagFlowTemplate(IsChildJobListArgJobTemplate['IsDagFlowTemplate[_CallP, 
         ...
 
 
-class IsDagFlow(IsChildJobListArgJob['IsDagFlowTemplate[_CallP, _RetCovT]',
-                                     'IsDagFlow[_CallP, _RetCovT]',
-                                     _CallP,
-                                     _RetCovT],
-                IsFlow,
-                Protocol[_CallP, _RetCovT]):
+class IsDagFlow(
+    IsChildJobListArgJob[
+        'IsDagFlowTemplate[_CallP, _RetCovT]', 'IsDagFlow[_CallP, _RetCovT]', _CallP, _RetCovT
+    ],
+    IsFlow,
+    Protocol[_CallP, _RetCovT],
+):
     """Protocol for applied DAG flows."""
 
     ...
 
 
-class IsFuncFlowTemplate(IsFuncArgJobTemplate['IsFuncFlowTemplate[_CallP, _RetCovT]',
-                                              'IsFuncFlow[_CallP, _RetCovT]',
-                                              _CallP,
-                                              _RetCovT],
-                         IsFlowTemplate,
-                         Protocol[_CallP, _RetCovT]):
+class IsFuncFlowTemplate(
+    IsFuncArgJobTemplate[
+        'IsFuncFlowTemplate[_CallP, _RetCovT]', 'IsFuncFlow[_CallP, _RetCovT]', _CallP, _RetCovT
+    ],
+    IsFlowTemplate,
+    Protocol[_CallP, _RetCovT],
+):
     """Protocol for callable-backed flow templates."""
 
     ...
 
 
-class IsFuncFlow(IsFuncArgJob['IsFuncFlowTemplate[_CallP, _RetCovT]',
-                              'IsFuncFlow[_CallP, _RetCovT]',
-                              _CallP,
-                              _RetCovT],
-                 IsFlow,
-                 Protocol[_CallP, _RetCovT]):
+class IsFuncFlow(
+    IsFuncArgJob[
+        'IsFuncFlowTemplate[_CallP, _RetCovT]', 'IsFuncFlow[_CallP, _RetCovT]', _CallP, _RetCovT
+    ],
+    IsFlow,
+    Protocol[_CallP, _RetCovT],
+):
     """Protocol for callable-backed applied flows."""
 
     ...
 
 
-class IsAnyFlowTemplate(IsFuncArgJobTemplate['IsAnyFlowTemplate[_CallP, _RetCovT]',
-                                             'IsAnyFlow[_CallP, _RetCovT]',
-                                             _CallP,
-                                             _RetCovT],
-                        IsFlowTemplate,
-                        Protocol[_CallP, _RetCovT]):
+class IsAnyFlowTemplate(
+    IsFuncArgJobTemplate[
+        'IsAnyFlowTemplate[_CallP, _RetCovT]', 'IsAnyFlow[_CallP, _RetCovT]', _CallP, _RetCovT
+    ],
+    IsFlowTemplate,
+    Protocol[_CallP, _RetCovT],
+):
     """Protocol for flow templates of any concrete flow kind."""
+
     ...
 
 
-class IsAnyFlow(IsFuncArgJob['IsAnyFlowTemplate[_CallP, _RetCovT]',
-                             'IsAnyFlow[_CallP, _RetCovT]',
-                             _CallP,
-                             _RetCovT],
-                IsFlow,
-                Protocol[_CallP, _RetCovT]):
+class IsAnyFlow(
+    IsFuncArgJob[
+        'IsAnyFlowTemplate[_CallP, _RetCovT]', 'IsAnyFlow[_CallP, _RetCovT]', _CallP, _RetCovT
+    ],
+    IsFlow,
+    Protocol[_CallP, _RetCovT],
+):
     """Protocol covering any applied Omnipy flow variant.
 
     This union-style flow contract is useful where task, linear-flow, DAG-flow,
     and function-flow implementations are all accepted.
     """
+
     ...

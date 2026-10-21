@@ -36,6 +36,7 @@ class IsaPersonSchema(pyd.BaseModel):
         affiliation: Organizational affiliation text.
         roles: Ontology terms describing investigation roles.
     """
+
     class Config:
         """Validation settings for ISA person schema parsing.
 

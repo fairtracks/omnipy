@@ -3,16 +3,18 @@
 import pytest
 
 from omnipy.data._display.dimensions import AnyDimensions, Dimensions
-from omnipy.data._display.frame import (AnyFrame,
-                                        empty_frame,
-                                        Frame,
-                                        frame_has_height,
-                                        frame_has_width,
-                                        frame_has_width_and_height,
-                                        FrameWithHeight,
-                                        FrameWithWidth,
-                                        FrameWithWidthAndHeight,
-                                        UndefinedFrame)
+from omnipy.data._display.frame import (
+    AnyFrame,
+    empty_frame,
+    Frame,
+    frame_has_height,
+    frame_has_width,
+    frame_has_width_and_height,
+    FrameWithHeight,
+    FrameWithWidth,
+    FrameWithWidthAndHeight,
+    UndefinedFrame,
+)
 from omnipy.util.pydantic import ValidationError
 
 
@@ -99,7 +101,8 @@ def test_frame_fixed_dims() -> None:
     assert both_dims_frame_width_not_fixed.fixed_height is False
 
     both_dims_frame_width_not_fixed = Frame(
-        Dimensions(10, 20), fixed_width=False, fixed_height=False)
+        Dimensions(10, 20), fixed_width=False, fixed_height=False
+    )
     assert both_dims_frame_width_not_fixed.fixed_width is False
     assert both_dims_frame_width_not_fixed.fixed_height is False
 
@@ -119,20 +122,15 @@ def test_fail_frame_fixed_dims_if_none() -> None:
 
 
 def test_frame_types() -> None:
-    def undefined_frame_func(dims: UndefinedFrame) -> None:
-        ...
+    def undefined_frame_func(dims: UndefinedFrame) -> None: ...
 
-    def frame_with_widths_func(dims: FrameWithWidth) -> None:
-        ...
+    def frame_with_widths_func(dims: FrameWithWidth) -> None: ...
 
-    def frame_with_heights_func(dims: FrameWithHeight) -> None:
-        ...
+    def frame_with_heights_func(dims: FrameWithHeight) -> None: ...
 
-    def frame_with_width_and_height_func(dims: FrameWithWidthAndHeight) -> None:
-        ...
+    def frame_with_width_and_height_func(dims: FrameWithWidthAndHeight) -> None: ...
 
-    def any_frame_func(dims: AnyFrame) -> None:
-        ...
+    def any_frame_func(dims: AnyFrame) -> None: ...
 
     # Static type checkers SHOULD NOT raise errors here
     undefined_frame_func(Frame(Dimensions(None, None)))

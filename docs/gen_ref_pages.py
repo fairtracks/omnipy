@@ -30,7 +30,8 @@ for path in sorted(Path('src').rglob('*.py')):
     parts = list(module_path.parts)
 
     if _any_matching_paths(path, IGNORED_PATHS) or any(
-            part.startswith('_') and not part.startswith('__') for part in parts):
+        part.startswith('_') and not part.startswith('__') for part in parts
+    ):
         print(f'Skipping {path}')
         continue
 

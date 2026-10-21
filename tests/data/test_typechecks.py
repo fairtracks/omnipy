@@ -6,12 +6,14 @@ import pytest
 from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
-from omnipy.data.model import (is_model_instance,
-                               is_model_subclass,
-                               is_non_omnipy_pydantic_model_instance,
-                               is_pure_pydantic_model_instance,
-                               Model,
-                               obj_or_model_content_isinstance)
+from omnipy.data.model import (
+    is_model_instance,
+    is_model_subclass,
+    is_non_omnipy_pydantic_model_instance,
+    is_pure_pydantic_model_instance,
+    Model,
+    obj_or_model_content_isinstance,
+)
 import omnipy.util.pydantic as pyd
 
 from .helpers.models import PydanticParentModel
@@ -29,11 +31,9 @@ def test_is_model_subclass() -> None:
     assert not is_model_subclass(int)
     assert is_model_subclass(Model[int])
 
-    class A:
-        ...
+    class A: ...
 
-    class MyModel(Model[list[int]]):
-        ...
+    class MyModel(Model[list[int]]): ...
 
     assert not is_model_subclass(A)
     assert is_model_subclass(MyModel)
@@ -93,8 +93,7 @@ def test_obj_or_model_content_isinstance_for_models() -> None:
 def test_all_model_type_variants() -> None:
     from omnipy.data._typing.helpers import all_model_type_variants
 
-    class MyModel(Model[list[int] | float | Model[list[str] | list[int]]]):
-        ...
+    class MyModel(Model[list[int] | float | Model[list[str] | list[int]]]): ...
 
     variants = all_model_type_variants(MyModel)
     assert variants == (list[int], float, Model[list[str] | list[int]])
@@ -104,42 +103,32 @@ def test_all_dataset_type_variants() -> None:
     from omnipy.data._typing.helpers import all_dataset_type_variants
     from omnipy.data.dataset import Dataset
 
-    class MyDataset(Dataset[Model[list[int] | float | Model[str] | Dataset[Model[list[int]]]]]):
-        ...
+    class MyDataset(Dataset[Model[list[int] | float | Model[str] | Dataset[Model[list[int]]]]]): ...
 
     variants = all_dataset_type_variants(MyDataset)
     assert variants == (list[int], float, Model[str], Dataset[Model[list[int]]])
 
 
 def test_is_pydantic_model() -> None:
-    class PydanticModel(pyd.BaseModel):
-        ...
+    class PydanticModel(pyd.BaseModel): ...
 
     T = TypeVar('T')
 
-    class GenericPydanticModel(pyd.GenericModel, Generic[T]):
-        ...
+    class GenericPydanticModel(pyd.GenericModel, Generic[T]): ...
 
-    class Mixin:
-        ...
+    class Mixin: ...
 
-    class MultiInheritModel(pyd.BaseModel, Mixin):
-        ...
+    class MultiInheritModel(pyd.BaseModel, Mixin): ...
 
-    class PydanticModelSubclass(PydanticModel):
-        ...
+    class PydanticModelSubclass(PydanticModel): ...
 
-    class OmnipyModel(Model[int]):
-        ...
+    class OmnipyModel(Model[int]): ...
 
-    class OmnipyModelSubclass(Model[int]):
-        ...
+    class OmnipyModelSubclass(Model[int]): ...
 
-    class MultiInheritOmnipyAndPydanticModel(Model[int], pyd.BaseModel):
-        ...
+    class MultiInheritOmnipyAndPydanticModel(Model[int], pyd.BaseModel): ...
 
-    class MultiInheritOmnipyAndGenericPydanticModel(Model[int], pyd.GenericModel, Generic[T]):
-        ...
+    class MultiInheritOmnipyAndGenericPydanticModel(Model[int], pyd.GenericModel, Generic[T]): ...
 
     assert is_pure_pydantic_model_instance(PydanticModel())
     assert not is_pure_pydantic_model_instance(pyd.BaseModel())

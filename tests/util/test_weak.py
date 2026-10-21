@@ -10,12 +10,10 @@ from omnipy.util.weak import WeakKeyRefContainer
 from .helpers.classes import SomeObject
 
 
-class MyList(UserList):
-    ...
+class MyList(UserList): ...
 
 
-class MyDict(UserDict):
-    ...
+class MyDict(UserDict): ...
 
 
 def test_weak_key_ref_container() -> None:

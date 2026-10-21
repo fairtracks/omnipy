@@ -5,9 +5,11 @@ from omnipy.engine._base import Engine
 from omnipy.engine.run_spec import DagFlowRunSpec, FuncFlowRunSpec, LinearFlowRunSpec, TaskRunSpec
 from omnipy.shared.enums.job import JobType, RunState
 from omnipy.shared.protocols.compute.job import IsFuncArgJob
-from omnipy.shared.protocols.engine.run_spec import (IsFlowRunSpec,
-                                                     IsJobRunSpecFactory,
-                                                     IsTaskRunSpec)
+from omnipy.shared.protocols.engine.run_spec import (
+    IsFlowRunSpec,
+    IsJobRunSpecFactory,
+    IsTaskRunSpec,
+)
 from omnipy.util.callable_types import decorate_result_by_type
 
 InitRunHookName = Literal['_init_task', '_init_flow']
@@ -36,29 +38,38 @@ JOB_TYPE_TO_RUN_DEF: dict[JobType.Literals, JobRunDef] = {
 
 class JobRunnerEngine(Engine, ABC):
     """Base class for job runner engine implementations"""
+
     supported_job_types: ClassVar[frozenset[JobType.Literals]] = frozenset()
 
     @classmethod
     def __init_subclass__(cls) -> None:
         super().__init_subclass__()
 
-        assert cls.supported_job_types, ('`supported_job_types` must be set '
-                                         'on JobRunnerEngine subclasses')
+        assert cls.supported_job_types, (
+            '`supported_job_types` must be set on JobRunnerEngine subclasses'
+        )
 
         def _require_hook_override(hook_name: str, support_desc: str) -> None:
             if getattr(cls, hook_name) is getattr(JobRunnerEngine, hook_name):
-                raise TypeError(f'JobRunnerEngine subclass {cls.__name__} supports '
-                                f'{support_desc} but does not override {hook_name}')
+                raise TypeError(
+                    f'JobRunnerEngine subclass {cls.__name__} supports '
+                    f'{support_desc} but does not override {hook_name}'
+                )
 
         unknown_job_types = set(cls.supported_job_types) - set(JOB_TYPE_TO_RUN_DEF)
         if unknown_job_types:
-            raise TypeError(f'JobRunnerEngine subclass {cls.__name__} has unknown supported job '
-                            f'types: {sorted(unknown_job_types)}')
+            raise TypeError(
+                f'JobRunnerEngine subclass {cls.__name__} has unknown supported job '
+                f'types: {sorted(unknown_job_types)}'
+            )
 
         required_run_hooks = {
-            hook_name for job_type in cls.supported_job_types for hook_name in (
+            hook_name
+            for job_type in cls.supported_job_types
+            for hook_name in (
                 JOB_TYPE_TO_RUN_DEF[job_type].init_hook_name,
-                JOB_TYPE_TO_RUN_DEF[job_type].run_hook_name,)
+                JOB_TYPE_TO_RUN_DEF[job_type].run_hook_name,
+            )
         }
         for hook_name in required_run_hooks:
             _require_hook_override(hook_name, 'supported jobs')
@@ -80,8 +91,9 @@ class JobRunnerEngine(Engine, ABC):
 
     def _require_support(self, job_type: JobType.Literals) -> None:
         if not self.supports(job_type):
-            raise RuntimeError(f'JobRunnerEngine "{self.__class__.__name__}" does not '
-                               f'support job type: {job_type}')
+            raise RuntimeError(
+                f'JobRunnerEngine "{self.__class__.__name__}" does not support job type: {job_type}'
+            )
 
     def apply_job_decorator(
         self,
@@ -113,7 +125,8 @@ class JobRunnerEngine(Engine, ABC):
         )
 
     def _job_type_to_run_spec_and_funcs(
-            self, job_type: JobType.Literals) -> tuple[IsJobRunSpecFactory, Callable, Callable]:
+        self, job_type: JobType.Literals
+    ) -> tuple[IsJobRunSpecFactory, Callable, Callable]:
         if job_type not in JOB_TYPE_TO_RUN_DEF:
             raise ValueError(f'Unknown job type: {job_type}')
 
@@ -147,8 +160,9 @@ class JobRunnerEngine(Engine, ABC):
 
         job_callback_accept_decorator(_job_decorator)
 
-    def _decorate_result_with_job_finalization_detector(self, job: IsFuncArgJob,
-                                                        job_result: object):
+    def _decorate_result_with_job_finalization_detector(
+        self, job: IsFuncArgJob, job_result: object
+    ):
         def _register_job_finished() -> None:
             self._register_job_state(job, RunState.FINISHED)
 

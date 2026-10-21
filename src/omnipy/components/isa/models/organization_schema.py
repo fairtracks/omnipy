@@ -30,6 +30,7 @@ class IsaOrganizationSchema(pyd.BaseModel):
     Attributes:
         name: Organization name.
     """
+
     class Config:
         """Validation settings for ISA organization schema parsing.
 

@@ -9,18 +9,22 @@ from typing_extensions import override, TypeIs
 
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.constraints import Constraints
-from omnipy.data._display.dimensions import (Dimensions,
-                                             DimensionsFit,
-                                             DimensionsWithWidthAndHeight,
-                                             has_height)
+from omnipy.data._display.dimensions import (
+    Dimensions,
+    DimensionsFit,
+    DimensionsWithWidthAndHeight,
+    has_height,
+)
 from omnipy.data._display.frame import empty_frame, Frame
 from omnipy.data._display.helpers import soft_wrap_words
 from omnipy.data._display.panel.typedefs import FrameT
-from omnipy.shared.constants import (DOUBLE_LINE_TITLE_HEIGHT,
-                                     MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE,
-                                     MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE,
-                                     SINGLE_LINE_TITLE_HEIGHT,
-                                     TITLE_BLANK_LINES)
+from omnipy.shared.constants import (
+    DOUBLE_LINE_TITLE_HEIGHT,
+    MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE,
+    MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE,
+    SINGLE_LINE_TITLE_HEIGHT,
+    TITLE_BLANK_LINES,
+)
 import omnipy.util.pydantic as pyd
 
 
@@ -30,6 +34,7 @@ class OutputVariant(ABC):
     Implementations provide plain terminal text plus HTML fragments/pages for
     the same rendered panel content.
     """
+
     @cached_property
     @abstractmethod
     def terminal(self) -> str:
@@ -69,16 +74,19 @@ class Panel(Generic[FrameT]):
     Panels move through rendering stages, where each stage refines content from
     draft form to dimensions-aware and eventually fully rendered output.
     """
+
     title: str
     frame: FrameT
     constraints: Constraints
     config: OutputConfig
 
-    def __init__(self,
-                 title: str = '',
-                 frame: FrameT | None = None,
-                 constraints: Constraints | None = None,
-                 config: OutputConfig | None = None):
+    def __init__(
+        self,
+        title: str = '',
+        frame: FrameT | None = None,
+        constraints: Constraints | None = None,
+        config: OutputConfig | None = None,
+    ):
         """Initialize a panel with optional title, frame, constraints, and output config."""
         object.__setattr__(self, 'title', title)
         object.__setattr__(self, 'frame', frame or cast(FrameT, empty_frame()))
@@ -144,6 +152,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
     This stage can evaluate cropping, title placement, and frame fitness before
     final style-specific output is produced.
     """
+
     @cached_property
     @abstractmethod
     def dims(self) -> Dimensions[pyd.NonNegativeInt, pyd.NonNegativeInt]:
@@ -155,7 +164,9 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
         ...
 
     @cached_property
-    def cropped_dims(self,) -> DimensionsWithWidthAndHeight:
+    def cropped_dims(
+        self,
+    ) -> DimensionsWithWidthAndHeight:
         """Return panel dimensions cropped to the frame limits.
 
         Returns:
@@ -192,7 +203,9 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
             return cast(
                 FrameT,
                 self.frame.modified_copy(
-                    height=self.frame.dims.height - self.title_height_with_blank_lines,))
+                    height=self.frame.dims.height - self.title_height_with_blank_lines,
+                ),
+            )
         else:
             return self.frame
 
@@ -253,12 +266,16 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
             # Enough space for single-line title
             return 1
         else:  # title needs to make use of panel space
-            if (self.frame.dims.height - DOUBLE_LINE_TITLE_HEIGHT
-                    >= MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE):
+            if (
+                self.frame.dims.height - DOUBLE_LINE_TITLE_HEIGHT
+                >= MIN_PANEL_LINES_SHOWN_TO_ALLOW_DOUBLE_LINE_TITLE
+            ):
                 # Enough content shown for double-line title
                 return 2
-            elif (self.frame.dims.height - SINGLE_LINE_TITLE_HEIGHT
-                  >= MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE):
+            elif (
+                self.frame.dims.height - SINGLE_LINE_TITLE_HEIGHT
+                >= MIN_PANEL_LINES_SHOWN_TO_ALLOW_SINGLE_LINE_TITLE
+            ):
                 # Enough content shown for single-line title
                 return 1
             else:
@@ -339,6 +356,7 @@ class DimensionsAwarePanel(Panel[FrameT], Generic[FrameT], ABC):
 
 class FullyRenderedPanel(DimensionsAwarePanel[FrameT], Generic[FrameT], ABC):
     """Panel stage that can export terminal and HTML output variants."""
+
     @override
     def render_next_stage(self) -> 'FullyRenderedPanel[FrameT]':
         """Raise because fully rendered panels are terminal in the pipeline.

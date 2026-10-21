@@ -35,6 +35,7 @@ class IsaStudyGroupSchema(pyd.BaseModel):
         study_group_size: Number of members in the group.
         members: Sample entries assigned to the group.
     """
+
     class Config:
         """Validation settings for ISA study-group schema parsing.
 

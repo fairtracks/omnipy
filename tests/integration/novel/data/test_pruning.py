@@ -13,7 +13,8 @@ from .helpers import render_panel_to_plain_terminal
 
 
 def test_model_peek_preview_pruning_preserves_viewport_and_skips_hidden_tail(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class _TrackedItem:
         touched_indices: set[int] = set()
 
@@ -40,7 +41,8 @@ def test_model_peek_preview_pruning_preserves_viewport_and_skips_hidden_tail(
                 ui=UserInterfaceType.TERMINAL,
                 printer=PrettyPrinterLib.RICH,
                 freedom=0,
-            ))
+            )
+        )
     unpruned_max_touched_idx = max(_TrackedItem.touched_indices)
 
     _TrackedItem.touched_indices.clear()
@@ -51,7 +53,8 @@ def test_model_peek_preview_pruning_preserves_viewport_and_skips_hidden_tail(
             ui=UserInterfaceType.TERMINAL,
             printer=PrettyPrinterLib.RICH,
             freedom=0,
-        ))
+        )
+    )
     pruned_max_touched_idx = max(_TrackedItem.touched_indices)
 
     assert pruned_output == unpruned_output
@@ -60,7 +63,8 @@ def test_model_peek_preview_pruning_preserves_viewport_and_skips_hidden_tail(
 
 
 def test_model_peek_preview_pruning_memo_is_per_top_level_render_call(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     model = Model[list[int]](list(range(180)))
 
     observed_memos: list[object] = []
@@ -79,7 +83,8 @@ def test_model_peek_preview_pruning_memo_is_per_top_level_render_call(
             ui=UserInterfaceType.TERMINAL,
             printer=PrettyPrinterLib.RICH,
             freedom=0,
-        ))
+        )
+    )
     render_panel_to_plain_terminal(
         model._peek(
             width=26,
@@ -87,14 +92,16 @@ def test_model_peek_preview_pruning_memo_is_per_top_level_render_call(
             ui=UserInterfaceType.TERMINAL,
             printer=PrettyPrinterLib.RICH,
             freedom=0,
-        ))
+        )
+    )
 
     assert len(observed_memos) >= 2
     assert observed_memos[0] is not observed_memos[1]
 
 
 def test_model_json_preview_pruning_triggers_for_large_json_list(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     model = Model[list[int]](range(10000))
 
     observed_pruned_json_model_panel = False
@@ -120,13 +127,15 @@ def test_model_json_preview_pruning_triggers_for_large_json_list(
             printer=PrettyPrinterLib.RICH,
             freedom=0,
             debug=False,
-        ))
+        )
+    )
 
     assert observed_pruned_json_model_panel is True
 
 
 def test_model_json_verbose_prune_logs_reduced_preparation(
-        capsys: pytest.CaptureFixture[str]) -> None:
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     import omnipy.shared.constants as const
 
     model = Model[list[int]](range(10000))
@@ -153,7 +162,8 @@ def test_model_json_verbose_prune_logs_reduced_preparation(
 
 
 def test_dataset_list_bounded_height_materializes_only_front_rows(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     dataset = Dataset[Model[list[int]]]({f'row_{i}': [i, i + 1] for i in range(30)})
 
     len_calls = 0
@@ -180,14 +190,16 @@ def test_dataset_list_bounded_height_materializes_only_front_rows(
     monkeypatch.setattr(type(dataset), '_len_if_available', classmethod(_track_len))
     monkeypatch.setattr(type(dataset), '_obj_size_if_available', classmethod(_track_size))
     monkeypatch.setattr(
-        type(dataset), '_dataset_list_rows_to_materialize', classmethod(_track_rows_to_materialize))
+        type(dataset), '_dataset_list_rows_to_materialize', classmethod(_track_rows_to_materialize)
+    )
 
     rendered_output = render_panel_to_plain_terminal(
         dataset._list(
             width=80,
             height=9,
             ui=UserInterfaceType.TERMINAL,
-        ))
+        )
+    )
 
     assert materialized_row_counts
     assert materialized_row_counts[-1] == 6
@@ -204,7 +216,8 @@ def test_dataset_list_bounded_height_materializes_only_front_rows(
 
 
 def test_dataset_list_unbounded_height_still_materializes_all_rows(
-        monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     dataset = Dataset[Model[list[int]]]({f'row_{i}': [i, i + 1] for i in range(12)})
 
     len_calls = 0
@@ -231,14 +244,16 @@ def test_dataset_list_unbounded_height_still_materializes_all_rows(
     monkeypatch.setattr(type(dataset), '_len_if_available', classmethod(_track_len))
     monkeypatch.setattr(type(dataset), '_obj_size_if_available', classmethod(_track_size))
     monkeypatch.setattr(
-        type(dataset), '_dataset_list_rows_to_materialize', classmethod(_track_rows_to_materialize))
+        type(dataset), '_dataset_list_rows_to_materialize', classmethod(_track_rows_to_materialize)
+    )
 
     rendered_output = render_panel_to_plain_terminal(
         dataset._list(
             width=80,
             height=None,
             ui=UserInterfaceType.TERMINAL,
-        ))
+        )
+    )
 
     assert materialized_row_counts
     assert materialized_row_counts[-1] == len(dataset)

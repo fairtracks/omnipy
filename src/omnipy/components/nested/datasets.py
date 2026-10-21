@@ -8,16 +8,19 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
 from ..json.models import JsonScalarModel
-from ..tables.models import (JsonScalarColumnModel,
-                             JsonScalarColumnWiseTableWithColNamesModel,
-                             RowWiseTableWithColNamesModel)
+from ..tables.models import (
+    JsonScalarColumnModel,
+    JsonScalarColumnWiseTableWithColNamesModel,
+    RowWiseTableWithColNamesModel,
+)
 from .models import ListAsStructuredNestedDatasetModel
 
 NestedAnyUnionT = TypeVar('NestedAnyUnionT', bound='Dataset | Model')
 
 
-class NestedDataset(Dataset['NestedDataset[NestedAnyUnionT]| NestedAnyUnionT'],
-                    Generic[NestedAnyUnionT]):
+class NestedDataset(
+    Dataset['NestedDataset[NestedAnyUnionT]| NestedAnyUnionT'], Generic[NestedAnyUnionT]
+):
     """A recursive Dataset with a caller-defined leaf Model or Dataset type.
 
     Each named data item is either another ``NestedDataset[T]`` or an instance
@@ -50,6 +53,7 @@ class StructuredNestedDataset(Dataset[NestedUnion]):
     ``StructuredNestedDataset`` items, allowing the same interpretation at
     every level of the hierarchy.
     """
+
     ...
 
 

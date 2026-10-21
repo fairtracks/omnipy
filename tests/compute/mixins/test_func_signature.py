@@ -32,7 +32,8 @@ def test_property_param_signature_and_return_type_immutable_task() -> None:
 
         with pytest.raises(TypeError):
             task_obj.param_signatures['new'] = Parameter(  # type: ignore[index]
-                'new', Parameter.POSITIONAL_OR_KEYWORD, annotation=bool)
+                'new', Parameter.POSITIONAL_OR_KEYWORD, annotation=bool
+            )
 
         with pytest.raises(AttributeError):
             task_obj.return_type = int  # type: ignore[misc]

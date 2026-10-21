@@ -7,34 +7,37 @@ from typing_extensions import TypeVar
 from omnipy.data.dataset import Dataset
 from omnipy.data.param import bind_adjust_dataset_func
 
-from .models import (BytesModel,
-                     JoinColumnsToLinesModel,
-                     JoinItemsModel,
-                     JoinItemsModelBase,
-                     JoinLinesModel,
-                     JoinSubitemsToItemsModelBase,
-                     SplitItemsToSubitemsModelBase,
-                     SplitLinesToColumnsModel,
-                     SplitToItemsModel,
-                     SplitToItemsModelBase,
-                     SplitToLinesModel,
-                     SplitToLinesNoStripModel,
-                     StrictBytesModel,
-                     StrictStrModel,
-                     StrModel)
+from .models import (
+    BytesModel,
+    JoinColumnsToLinesModel,
+    JoinItemsModel,
+    JoinItemsModelBase,
+    JoinLinesModel,
+    JoinSubitemsToItemsModelBase,
+    SplitItemsToSubitemsModelBase,
+    SplitLinesToColumnsModel,
+    SplitToItemsModel,
+    SplitToItemsModelBase,
+    SplitToLinesModel,
+    SplitToLinesNoStripModel,
+    StrictBytesModel,
+    StrictStrModel,
+    StrModel,
+)
 
 _BytesModelT = TypeVar('_BytesModelT', bound=BytesModel)
 _StrModelT = TypeVar('_StrModelT', bound=StrModel)
 _SplitToItemsModelT = TypeVar('_SplitToItemsModelT', bound=SplitToItemsModelBase)
 _JoinItemsModelT = TypeVar('_JoinItemsModelT', bound=JoinItemsModelBase)
 _SplitItemsToSubitemsModelT = TypeVar(
-    '_SplitItemsToSubitemsModelT', bound=SplitItemsToSubitemsModelBase)
+    '_SplitItemsToSubitemsModelT', bound=SplitItemsToSubitemsModelBase
+)
 _JoinSubitemsToItemsModelT = TypeVar(
-    '_JoinSubitemsToItemsModelT', bound=JoinSubitemsToItemsModelBase)
+    '_JoinSubitemsToItemsModelT', bound=JoinSubitemsToItemsModelBase
+)
 
 
-class _BytesDataset(Dataset[_BytesModelT], Generic[_BytesModelT]):
-    ...
+class _BytesDataset(Dataset[_BytesModelT], Generic[_BytesModelT]): ...
 
 
 class BytesDataset(_BytesDataset[BytesModel]):
@@ -53,8 +56,7 @@ class StrictBytesDataset(Dataset[StrictBytesModel]):
     ...
 
 
-class _StrDataset(Dataset[_StrModelT], Generic[_StrModelT]):
-    ...
+class _StrDataset(Dataset[_StrModelT], Generic[_StrModelT]): ...
 
 
 class StrDataset(_StrDataset[StrModel]):
@@ -73,8 +75,7 @@ class StrictStrDataset(Dataset[StrictStrModel]):
     ...
 
 
-class _SplitToItemsDataset(Dataset[_SplitToItemsModelT], Generic[_SplitToItemsModelT]):
-    ...
+class _SplitToItemsDataset(Dataset[_SplitToItemsModelT], Generic[_SplitToItemsModelT]): ...
 
 
 class SplitToItemsDataset(_SplitToItemsDataset[SplitToItemsModel]):
@@ -107,8 +108,7 @@ class SplitToLinesNoStripDataset(_SplitToItemsDataset[SplitToLinesNoStripModel])
     )
 
 
-class _JoinItemsDataset(Dataset[_JoinItemsModelT], Generic[_JoinItemsModelT]):
-    ...
+class _JoinItemsDataset(Dataset[_JoinItemsModelT], Generic[_JoinItemsModelT]): ...
 
 
 class JoinItemsDataset(_JoinItemsDataset[JoinItemsModel]):
@@ -131,9 +131,9 @@ class JoinLinesDataset(_JoinItemsDataset[JoinLinesModel]):
     )
 
 
-class _SplitItemsToSubitemsDataset(Dataset[_SplitItemsToSubitemsModelT],
-                                   Generic[_SplitItemsToSubitemsModelT]):
-    ...
+class _SplitItemsToSubitemsDataset(
+    Dataset[_SplitItemsToSubitemsModelT], Generic[_SplitItemsToSubitemsModelT]
+): ...
 
 
 class SplitLinesToColumnsDataset(_SplitItemsToSubitemsDataset[SplitLinesToColumnsModel]):
@@ -146,9 +146,9 @@ class SplitLinesToColumnsDataset(_SplitItemsToSubitemsDataset[SplitLinesToColumn
     )
 
 
-class _JoinSubitemsToItemsDataset(Dataset[_JoinSubitemsToItemsModelT],
-                                  Generic[_JoinSubitemsToItemsModelT]):
-    ...
+class _JoinSubitemsToItemsDataset(
+    Dataset[_JoinSubitemsToItemsModelT], Generic[_JoinSubitemsToItemsModelT]
+): ...
 
 
 class JoinColumnsToLinesDataset(_JoinSubitemsToItemsDataset[JoinColumnsToLinesModel]):

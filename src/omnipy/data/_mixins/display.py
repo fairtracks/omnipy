@@ -33,43 +33,53 @@ from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions, has_height, has_width
 from omnipy.data._display.frame import empty_frame, Frame
-from omnipy.data._display.integrations.browser.macosx import (OmnipyMacOSXOSAScript,
-                                                              setup_macosx_browser_integration)
+from omnipy.data._display.integrations.browser.macosx import (
+    OmnipyMacOSXOSAScript,
+    setup_macosx_browser_integration,
+)
 from omnipy.data._display.layout.base import Layout, PanelDesignDims
 from omnipy.data._display.layout.flow.helpers import create_ellipsis_panel
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.styles.dynamic_styles import resolve_and_fetch_style
 from omnipy.data.helpers import FailedData, PendingData
-from omnipy.hub.ui import (detect_dark_background,
-                           detect_display_color_system,
-                           get_terminal_prompt_height,
-                           note_mime_bundle)
-from omnipy.shared.constants import (MAX_MODEL_ARG_REPR_LEN,
-                                     MAX_PANEL_NESTING_DEPTH,
-                                     MAX_PANELS_HORIZONTALLY,
-                                     MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED,
-                                     MIN_CROP_WIDTH,
-                                     MIN_PANEL_WIDTH,
-                                     TITLE_BLANK_LINES)
+from omnipy.hub.ui import (
+    detect_dark_background,
+    detect_display_color_system,
+    get_terminal_prompt_height,
+    note_mime_bundle,
+)
+from omnipy.shared.constants import (
+    MAX_MODEL_ARG_REPR_LEN,
+    MAX_PANEL_NESTING_DEPTH,
+    MAX_PANELS_HORIZONTALLY,
+    MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED,
+    MIN_CROP_WIDTH,
+    MIN_PANEL_WIDTH,
+    TITLE_BLANK_LINES,
+)
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
-from omnipy.shared.enums.display import (DarkBackground,
-                                         DisplayColorSystem,
-                                         HorizontalOverflowMode,
-                                         Justify,
-                                         MaxTitleHeight,
-                                         PanelDesign,
-                                         PrettyPrinterLib,
-                                         SyntaxLanguageSpec,
-                                         VerticalOverflowMode)
-from omnipy.shared.enums.ui import (BrowserPageUserInterfaceType,
-                                    BrowserTagUserInterfaceType,
-                                    BrowserUserInterfaceType,
-                                    JupyterEmbeddedUserInterfaceType,
-                                    JupyterInBrowserUserInterfaceType,
-                                    SpecifiedUserInterfaceType,
-                                    TerminalOutputUserInterfaceType,
-                                    UserInterfaceType)
+from omnipy.shared.enums.display import (
+    DarkBackground,
+    DisplayColorSystem,
+    HorizontalOverflowMode,
+    Justify,
+    MaxTitleHeight,
+    PanelDesign,
+    PrettyPrinterLib,
+    SyntaxLanguageSpec,
+    VerticalOverflowMode,
+)
+from omnipy.shared.enums.ui import (
+    BrowserPageUserInterfaceType,
+    BrowserTagUserInterfaceType,
+    BrowserUserInterfaceType,
+    JupyterEmbeddedUserInterfaceType,
+    JupyterInBrowserUserInterfaceType,
+    SpecifiedUserInterfaceType,
+    TerminalOutputUserInterfaceType,
+    UserInterfaceType,
+)
 from omnipy.shared.protocols.config import IsHtmlUserInterfaceConfig, IsUserInterfaceTypeConfig
 from omnipy.shared.typedefs import Method
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
@@ -100,6 +110,7 @@ class _DimsRestatedParams:
     """
     NOTE: Only used to generate parameter lists, not a real dataclass
     """
+
     width: pyd.NonNegativeInt | None = None
     height: pyd.NonNegativeInt | None = None
 
@@ -113,6 +124,7 @@ class _DisplayMethodParams(OutputConfig, _DimsRestatedParams):
     """
     NOTE: Only used to generate parameter lists, not a real dataclass
     """
+
     ...
 
 
@@ -126,8 +138,9 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
         views are automatically limited by the available display
         dimensions.""")
 
-    os.environ['OMNIPY_MACRO_FULL_SUMMARY'] = ('Display the content of the Model or '
-                                               'Dataset in full height.')
+    os.environ['OMNIPY_MACRO_FULL_SUMMARY'] = (
+        'Display the content of the Model or Dataset in full height.'
+    )
 
     os.environ['OMNIPY_MACRO_FULL_DESCRIPTION'] = dedent("""\
         `full()` is a shorthand for `peek(height=None)` for both
@@ -135,7 +148,8 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
         limited in width by the available display dimensions.""")
 
     os.environ['OMNIPY_MACRO_JSON_SUMMARY'] = (
-        'Preview the data content of the Model or Dataset as JSON.')
+        'Preview the data content of the Model or Dataset as JSON.'
+    )
 
     os.environ['OMNIPY_MACRO_JSON_DESCRIPTION'] = dedent("""\
         In contrast to e.g. `peek()`, `json()` displays the "data
@@ -148,7 +162,8 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
         dimensions.""")
 
     os.environ['OMNIPY_MACRO_BROWSE_SUMMARY'] = (
-        'Opens the model or dataset in a browser, if possible.')
+        'Opens the model or dataset in a browser, if possible.'
+    )
 
     os.environ['OMNIPY_MACRO_BROWSE_DESCRIPTION'] = dedent("""\
         For models, this is a detailed view of the model's content,
@@ -156,7 +171,8 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
         contained in the dataset, one model per browser tab.""")
 
     os.environ['OMNIPY_MACRO_LIST_SUMMARY'] = (
-        'Displays a summary list of all models in the dataset.')
+        'Displays a summary list of all models in the dataset.'
+    )
 
     os.environ['OMNIPY_MACRO_LIST_DESCRIPTION'] = dedent("""\
         The summary list includes a number of key properties for each
@@ -393,8 +409,13 @@ class IsDisplayMethod(Protocol):
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
         dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
-        fonts: tuple[str,
-                     ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
+        fonts: tuple[str, ...] = (
+            'Menlo',
+            'DejaVu Sans Mono',
+            'Consolas',
+            'Courier New',
+            'monospace',
+        ),
         font_size: 'pyd.NonNegativeFloat | None' = 14,
         font_weight: 'pyd.NonNegativeInt | None' = 400,
         line_height: 'pyd.NonNegativeFloat | None' = 1.25,
@@ -409,8 +430,7 @@ class IsDisplayMethod(Protocol):
         max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
         max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
-    ) -> object:
-        ...
+    ) -> object: ...
 
 
 class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
@@ -430,6 +450,7 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         >>> def show(*, ui=UserInterfaceType.AUTO, **kwargs) -> Element | None:
         ...     return None
     """
+
     @override
     def __call__(
         self,
@@ -447,8 +468,13 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
         dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
-        fonts: tuple[str,
-                     ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
+        fonts: tuple[str, ...] = (
+            'Menlo',
+            'DejaVu Sans Mono',
+            'Consolas',
+            'Courier New',
+            'monospace',
+        ),
         font_size: 'pyd.NonNegativeFloat | None' = 14,
         font_weight: 'pyd.NonNegativeInt | None' = 400,
         line_height: 'pyd.NonNegativeFloat | None' = 1.25,
@@ -463,8 +489,7 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
         max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
-    ) -> 'Element | None':
-        ...
+    ) -> 'Element | None': ...
 
 
 class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
@@ -484,6 +509,7 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         >>> def open_browser(*, ui=UserInterfaceType.AUTO, **kwargs) -> None:
         ...     return None
     """
+
     @override
     def __call__(
         self,
@@ -501,8 +527,13 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
         dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
-        fonts: tuple[str,
-                     ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
+        fonts: tuple[str, ...] = (
+            'Menlo',
+            'DejaVu Sans Mono',
+            'Consolas',
+            'Courier New',
+            'monospace',
+        ),
         font_size: 'pyd.NonNegativeFloat | None' = 14,
         font_weight: 'pyd.NonNegativeInt | None' = 400,
         line_height: 'pyd.NonNegativeFloat | None' = 1.25,
@@ -517,8 +548,7 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
         max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
         max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
-    ) -> None:
-        ...
+    ) -> None: ...
 
 
 class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
@@ -538,6 +568,7 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         >>> def docs(*, ui=UserInterfaceType.BROWSER_TAG, **kwargs) -> str:
         ...     return '<pre>...</pre>'
     """
+
     @override
     def __call__(
         self,
@@ -555,8 +586,13 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
         dark: DarkBackground.Literals = DarkBackground.AUTO,
         bg: bool = False,
-        fonts: tuple[str,
-                     ...] = ('Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', 'monospace'),
+        fonts: tuple[str, ...] = (
+            'Menlo',
+            'DejaVu Sans Mono',
+            'Consolas',
+            'Courier New',
+            'monospace',
+        ),
         font_size: 'pyd.NonNegativeFloat | None' = 14,
         font_weight: 'pyd.NonNegativeInt | None' = 400,
         line_height: 'pyd.NonNegativeFloat | None' = 1.25,
@@ -571,8 +607,7 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
         max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
-    ) -> str:
-        ...
+    ) -> str: ...
 
 
 class IsBaseDisplayMixin(Protocol):
@@ -647,9 +682,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         ...     def _default_panel(self, **kwargs) -> DraftPanel:
         ...         return DraftPanel('example')
     """
+
     @abstractmethod
-    def _default_panel(self, **kwargs) -> DraftPanel:
-        ...
+    def _default_panel(self, **kwargs) -> DraftPanel: ...
 
     def default_repr_to_terminal_str(
         self,
@@ -688,11 +723,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
-            fonts: tuple[str, ...] = ('Menlo',
-                                      'DejaVu Sans Mono',
-                                      'Consolas',
-                                      'Courier New',
-                                      'monospace'),
+            fonts: tuple[str, ...] = (
+                'Menlo',
+                'DejaVu Sans Mono',
+                'Consolas',
+                'Courier New',
+                'monospace',
+            ),
             font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
@@ -1078,8 +1115,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         if ui_from_kwargs is UserInterfaceType.AUTO:
             return cast(DataClassBase, self).config.ui.detected_type
         else:
-            assert ui_from_kwargs in SpecifiedUserInterfaceType, \
+            assert ui_from_kwargs in SpecifiedUserInterfaceType, (
                 f'Invalid value for SpecifiedUserInterfaceType: {ui_from_kwargs}'
+            )
             return cast(SpecifiedUserInterfaceType.Literals, ui_from_kwargs)
 
     @classmethod
@@ -1123,11 +1161,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
-            fonts: tuple[str, ...] = ('Menlo',
-                                      'DejaVu Sans Mono',
-                                      'Consolas',
-                                      'Courier New',
-                                      'monospace'),
+            fonts: tuple[str, ...] = (
+                'Menlo',
+                'DejaVu Sans Mono',
+                'Consolas',
+                'Courier New',
+                'monospace',
+            ),
             font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
@@ -1502,7 +1542,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 ui_type=self._extract_ui_type(**kwargs),
                 return_output_if_str=False,
                 output_method=self._full,
-                **kwargs)
+                **kwargs,
+            )
 
         full.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
@@ -1524,11 +1565,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
-            fonts: tuple[str, ...] = ('Menlo',
-                                      'DejaVu Sans Mono',
-                                      'Consolas',
-                                      'Courier New',
-                                      'monospace'),
+            fonts: tuple[str, ...] = (
+                'Menlo',
+                'DejaVu Sans Mono',
+                'Consolas',
+                'Courier New',
+                'monospace',
+            ),
             font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
@@ -1909,7 +1952,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 ui_type=self._extract_ui_type(**kwargs),
                 return_output_if_str=False,
                 output_method=self._json,
-                **kwargs)
+                **kwargs,
+            )
 
         json.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
 
@@ -1931,11 +1975,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
-            fonts: tuple[str, ...] = ('Menlo',
-                                      'DejaVu Sans Mono',
-                                      'Consolas',
-                                      'Courier New',
-                                      'monospace'),
+            fonts: tuple[str, ...] = (
+                'Menlo',
+                'DejaVu Sans Mono',
+                'Consolas',
+                'Courier New',
+                'monospace',
+            ),
             font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
@@ -2278,16 +2324,15 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         browse.__signature__ = signature(IsDisplayMethodReturnNone.__call__)
 
     @abstractmethod
-    def _peek(self, **kwargs) -> DraftPanel:
-        ...
+    def _peek(self, **kwargs) -> DraftPanel: ...
 
     @abstractmethod
-    def _full(self, **kwargs) -> DraftPanel:
-        ...
+    def _full(self, **kwargs) -> DraftPanel: ...
 
     def _get_self_as_json_model(self) -> 'Model':
         """Convert the current object to a JSON-compatible model view."""
         from omnipy.components.json.models import JsonModel
+
         self_as_dataset_or_model = cast('Dataset | Model', self)
         return JsonModel(self_as_dataset_or_model.to_data())
 
@@ -2295,8 +2340,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         return self._get_self_as_json_model()._peek(**self._prepare_kwargs_for_json(kwargs))
 
     @abstractmethod
-    def _browse(self, **kwargs) -> None:
-        ...
+    def _browse(self, **kwargs) -> None: ...
 
     @takes_input_params_from(IsDisplayMethodReturnNone.__call__)
     def _docs(self, *args, **kwargs) -> str:
@@ -2524,8 +2568,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         output_method: Method[P, DraftPanel],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     @overload
     def _display_according_to_ui_type(
@@ -2535,8 +2578,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         output_method: Method[P, DraftPanel],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     @overload
     def _display_according_to_ui_type(
@@ -2546,8 +2588,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         output_method: Method[P, DraftPanel],
         *args: P.args,
         **kwargs: P.kwargs,
-    ) -> None:
-        ...
+    ) -> None: ...
 
     def _display_according_to_ui_type(  # noqa: C901
         self,
@@ -2573,6 +2614,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             requested, a Jupyter element for browser-backed notebook output, or
             ``None`` when the method writes directly to the active frontend.
         """
+
         def _render_panel(
             ui_type: SpecifiedUserInterfaceType.Literals,
             *args: P.args,
@@ -2619,20 +2661,23 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     from reacton.core import Element
                     import solara
 
-                    from omnipy.data._display.integrations.jupyter.components import \
-                        ReactivelyResizingHtml
+                    from omnipy.data._display.integrations.jupyter.components import (
+                        ReactivelyResizingHtml,
+                    )
 
                     browser_tag_ui_type = BrowserTagUserInterfaceType.BROWSER_TAG
 
                     mime_bundle = note_mime_bundle(
                         bullet='⚠️',
-                        html_content=('Widget for reactive Omnipy output '
-                                      'was not loaded. If you are running '
-                                      'Jupyter in a web browser, you '
-                                      'probably want to rerun the code '
-                                      'cell above (<i>Click in the code '
-                                      'cell, and press Shift+Enter '
-                                      '<kbd>⇧</kbd>+<kbd>↩</kbd></i>).'),
+                        html_content=(
+                            'Widget for reactive Omnipy output '
+                            'was not loaded. If you are running '
+                            'Jupyter in a web browser, you '
+                            'probably want to rerun the code '
+                            'cell above (<i>Click in the code '
+                            'cell, and press Shift+Enter '
+                            '<kbd>⇧</kbd>+<kbd>↩</kbd></i>).'
+                        ),
                     )
                     mime_bundle['text/html'] += _render_output(rendered_panel, browser_tag_ui_type)
 
@@ -2651,6 +2696,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
                 else:
                     import IPython.display
+
                     IPython.display.display(mime_bundle, raw=True)
             case _:
                 rendered_panel = _render_panel(ui_type, *args, **kwargs)
@@ -2687,7 +2733,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         ui_type = self._extract_ui_type(**kwargs)
         config, config_kwargs, frame = self._initial_config_setup(
-            ui_type, kwargs, use_min_crop_width=True, frame=frame, level=level)
+            ui_type, kwargs, use_min_crop_width=True, frame=frame, level=level
+        )
 
         max_num_panels_in_frame: None | int = self._calc_max_num_panels_in_frame(config, frame)
 
@@ -2705,12 +2752,12 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 # horizontally, we stop adding more panels.
                 break
 
-            is_dataset = (
-                is_dataset_instance(model_or_dataset)
-                or (is_model_instance(model_or_dataset)
-                    and is_dataset_instance(model_or_dataset.content)))
+            is_dataset = is_dataset_instance(model_or_dataset) or (
+                is_model_instance(model_or_dataset)
+                and is_dataset_instance(model_or_dataset.content)
+            )
             is_ellipsis_panel = config.max_panels_hor is not None and i == config.max_panels_hor
-            not_too_deep = (config.max_nesting_depth and level < config.max_nesting_depth - 1)
+            not_too_deep = config.max_nesting_depth and level < config.max_nesting_depth - 1
 
             if config.debug:
                 layout[inner_title] = self._create_inner_panel_for_model(
@@ -2720,7 +2767,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     **config_kwargs,
                 )
 
-            elif (is_dataset and not is_ellipsis_panel and not_too_deep):
+            elif is_dataset and not is_ellipsis_panel and not_too_deep:
                 layout[inner_title] = cast(Dataset, model_or_dataset)._peek_dataset_models(
                     inner_title,
                     empty_frame(),
@@ -2757,9 +2804,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         frame: Frame | None = None,
         level: int = 0,
     ) -> tuple[
-            OutputConfig,
-            dict[str, object],
-            Frame,
+        OutputConfig,
+        dict[str, object],
+        Frame,
     ]:
         """Build the starting config, validated kwargs, and frame.
 
@@ -2780,7 +2827,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         config_kwargs = self._validate_kwargs_for_config(**kwargs)
         config = self._apply_validated_config_kwargs_to_config(config, **config_kwargs)
         config, config_kwargs = self._resolve_auto_values_and_other_initial_config_updates(
-            config, ui_type, level, **config_kwargs)
+            config, ui_type, level, **config_kwargs
+        )
 
         if not frame:
             frame = self._define_frame_from_available_display_dims(ui_type)
@@ -2822,8 +2870,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             )
         assert config.dark in [False, True]
 
-        if (config.style in RecommendedColorStyles
-                and config_kwargs.get('style') in [None, RecommendedColorStyles.AUTO]):
+        if config.style in RecommendedColorStyles and config_kwargs.get('style') in [
+            None,
+            RecommendedColorStyles.AUTO,
+        ]:
             config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
                 config,
                 config_kwargs,
@@ -2838,7 +2888,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
                 config,
                 config_kwargs,
-                panel=self._show_style_in_panel_if_random_style(config.panel, config.style))
+                panel=self._show_style_in_panel_if_random_style(config.panel, config.style),
+            )
 
             # Do not propagate the TABLE_SHOW_STYLE style to nested panels, as style info should
             # only be shown on the top-level panel.
@@ -2849,14 +2900,15 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
                 config,
                 config_kwargs,
-                max_panels_hor=min_or_none(config.max_panels_hor,
-                                           MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED))
+                max_panels_hor=min_or_none(
+                    config.max_panels_hor, MAX_PANELS_HORIZONTALLY_DEEPLY_NESTED
+                ),
+            )
 
         if level == 0:
             config, config_kwargs = self._update_config_and_config_kwargs_from_initial_config_setup(
-                config,
-                config_kwargs,
-                style=resolve_and_fetch_style(config.style))
+                config, config_kwargs, style=resolve_and_fetch_style(config.style)
+            )
 
         return config, config_kwargs
 
@@ -2955,15 +3007,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
     def _check_kwarg_keys(self, **kwargs):
         """Reject keyword arguments outside the supported display config set."""
-        supported_keys = (
-            list(_DimsRestatedParams.__annotations__.keys())
-            + list(OutputConfig.__annotations__.keys()))
-        extra_keys = (kwargs.keys() - set(supported_keys))
+        supported_keys = list(_DimsRestatedParams.__annotations__.keys()) + list(
+            OutputConfig.__annotations__.keys()
+        )
+        extra_keys = kwargs.keys() - set(supported_keys)
 
         if extra_keys:
-            raise TypeError(f"Unexpected keyword arguments: {', '.join(extra_keys)}. "
-                            f'Expected only Dimensions and OutputConfig parameters: '
-                            f"{', '.join(supported_keys)}.")
+            raise TypeError(
+                f'Unexpected keyword arguments: {", ".join(extra_keys)}. '
+                f'Expected only Dimensions and OutputConfig parameters: '
+                f'{", ".join(supported_keys)}.'
+            )
 
     def _browse_nested_content(
         self,
@@ -3005,6 +3059,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         if not nested_call:
             if UserInterfaceType.is_jupyter_in_browser(ui_type):
                 from omnipy.data._display.integrations.jupyter.components import ModelBrowser
+
                 ModelBrowser(html_content=html_output)._ipython_display_()  # pyright: ignore
             else:
                 for filename, html_content in html_output.items():
@@ -3044,9 +3099,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         **config_kwargs,
     ) -> DraftPanel:
         from omnipy.components.general.models import AllChainTypes
-        from omnipy.components.tables.models import (ColumnWiseTableWithColNamesModel,
-                                                     JsonMaxLevel1ColumnWiseTableWithColNamesModel,
-                                                     PrintableTable)
+        from omnipy.components.tables.models import (
+            ColumnWiseTableWithColNamesModel,
+            JsonMaxLevel1ColumnWiseTableWithColNamesModel,
+            PrintableTable,
+        )
 
         config = self._update_config_with_overflow_modes(config, 'text', **config_kwargs)
         content = model
@@ -3084,8 +3141,10 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                     '\n'.join(str(i) for i in range(len(column_wise_table))),
                     title='#',
                     frame=Frame(
-                        Dimensions(len(str(len(column_wise_table))), None), fixed_width=True),
-                    config=number_config)
+                        Dimensions(len(str(len(column_wise_table))), None), fixed_width=True
+                    ),
+                    config=number_config,
+                )
 
                 table_config = self._update_config(
                     config,
@@ -3194,7 +3253,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         return color_system
 
     def _define_frame_from_available_display_dims(
-            self, ui_type: SpecifiedUserInterfaceType.Literals) -> Frame:
+        self, ui_type: SpecifiedUserInterfaceType.Literals
+    ) -> Frame:
         """Create the default frame from configured display dimensions."""
         ui_config = cast(DataClassBase, self).config.ui
         ui_type_config: IsUserInterfaceTypeConfig = ui_config.get_ui_type_config(ui_type)
@@ -3222,12 +3282,14 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             cut_splice_str = ' … '
             end_cut_len = MAX_MODEL_ARG_REPR_LEN - len(cut_splice_str) // 2
             repr_str = (
-                repr_str[:end_cut_len].rstrip() + cut_splice_str + repr_str[-end_cut_len:].lstrip())
+                repr_str[:end_cut_len].rstrip() + cut_splice_str + repr_str[-end_cut_len:].lstrip()
+            )
 
         return repr_str
 
     def update_reactive_views(self):
         from omnipy.hub.runtime import runtime
+
         assert runtime.objects.reactive is not None
         obj_id_update_flags = runtime.objects.reactive.obj_id_update_flags.value.copy()
         flag = obj_id_update_flags.get(id(self), False)
@@ -3258,6 +3320,7 @@ def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
         ... def _peek(self, **kwargs):
         ...     return self._peek_nested_content({}, **kwargs)
     """
+
     def wrapper(self, **kwargs) -> _RetT:
         """Call dataset or model display implementation for wrapped content.
 
@@ -3310,6 +3373,7 @@ class ModelDisplayMixin(BaseDisplayMixin):
     Example:
         >>> model.peek(width=100)
     """
+
     @_call_dataset_method_if_applicable
     def _default_panel(self, **kwargs) -> DraftPanel:
         return self._peek(**kwargs)
@@ -3334,7 +3398,8 @@ class ModelDisplayMixin(BaseDisplayMixin):
         ui_type = UserInterfaceType.BROWSER_PAGE
 
         config, config_kwargs, frame = self._initial_config_setup(
-            ui_type, kwargs, use_min_crop_width=False)
+            ui_type, kwargs, use_min_crop_width=False
+        )
 
         return self._create_inner_panel_for_model(
             config,
@@ -3364,18 +3429,16 @@ class DatasetDisplayMixin(BaseDisplayMixin):
     Example:
         >>> dataset.list(height=20)
     """
+
     def _default_panel(self, **kwargs) -> DraftPanel:
         return self._list(**kwargs)
 
     def _peek(self, **kwargs) -> DraftPanel:
         return self._peek_dataset_models(**kwargs)
 
-    def _peek_dataset_models(self,
-                             title: str = '',
-                             frame: Frame | None = None,
-                             level: int = 0,
-                             /,
-                             **kwargs: object) -> DraftPanel:
+    def _peek_dataset_models(
+        self, title: str = '', frame: Frame | None = None, level: int = 0, /, **kwargs: object
+    ) -> DraftPanel:
         """Create the nested preview layout for models contained in a dataset.
 
         Args:
@@ -3399,7 +3462,8 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             title,
             frame,
             level,
-            **kwargs)
+            **kwargs,
+        )
 
     def _full(self, **kwargs) -> DraftPanel:
         # TODO: Get feedback from users whether list() or peek() should be
@@ -3426,11 +3490,13 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
             dark: DarkBackground.Literals = DarkBackground.AUTO,
             bg: bool = False,
-            fonts: tuple[str, ...] = ('Menlo',
-                                      'DejaVu Sans Mono',
-                                      'Consolas',
-                                      'Courier New',
-                                      'monospace'),
+            fonts: tuple[str, ...] = (
+                'Menlo',
+                'DejaVu Sans Mono',
+                'Consolas',
+                'Courier New',
+                'monospace',
+            ),
             font_size: 'pyd.NonNegativeFloat | None' = 14,
             font_weight: 'pyd.NonNegativeInt | None' = 400,
             line_height: 'pyd.NonNegativeFloat | None' = 1.25,
@@ -3820,7 +3886,8 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         ui_type = self._extract_ui_type(**kwargs)
         config, config_kwargs, frame = self._initial_config_setup(
-            ui_type, kwargs, use_min_crop_width=False)
+            ui_type, kwargs, use_min_crop_width=False
+        )
 
         config = self._update_config_with_overflow_modes(config, 'layout', **config_kwargs)
         config = self._update_config(config, config_kwargs, max_title_height=MaxTitleHeight.ONE)
@@ -3848,20 +3915,26 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             '\n'.join(str(i) for i in range(len(row_items))),
             title='#',
             frame=Frame(
-                Dimensions(max_digits_for_dataset_list_index_numbers, None), fixed_width=True),
-            config=config)
+                Dimensions(max_digits_for_dataset_list_index_numbers, None), fixed_width=True
+            ),
+            config=config,
+        )
         layout['Data file name'] = DraftPanel(
-            '\n'.join(row_keys), title='Data file name', config=text_config)
+            '\n'.join(row_keys), title='Data file name', config=text_config
+        )
         layout['Type'] = DraftPanel(
-            '\n'.join(self._type_str(v) for v in row_models), title='Type', config=config)
+            '\n'.join(self._type_str(v) for v in row_models), title='Type', config=config
+        )
         layout['Length'] = DraftPanel(
             '\n'.join(str(self._len_if_available(v)) for v in row_models),
             title='Length',
-            config=right_justified_config)
+            config=right_justified_config,
+        )
         layout['Size (in memory)'] = DraftPanel(
             '\n'.join(self._obj_size_if_available(v) for v in row_models),
             title='Size (in memory)',
-            config=right_justified_config)
+            config=right_justified_config,
+        )
 
         return DraftPanel(layout, frame=frame, config=config)
 
@@ -3876,8 +3949,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         if has_height(frame.dims):
             inner_frame_height = (
-                frame.dims.height - panels_design_dims.num_extra_vertical_chars(1)
-                - config.max_title_height - TITLE_BLANK_LINES)
+                frame.dims.height
+                - panels_design_dims.num_extra_vertical_chars(1)
+                - config.max_title_height
+                - TITLE_BLANK_LINES
+            )
             num_panels_listed_in_view = min(len(dataset), inner_frame_height)
         else:
             num_panels_listed_in_view = len(dataset)
@@ -3912,8 +3988,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
         panels_design_dims = PanelDesignDims.create(config.panel)
         inner_frame_height = (
-            frame.dims.height - panels_design_dims.num_extra_vertical_chars(1)
-            - config.max_title_height - TITLE_BLANK_LINES)
+            frame.dims.height
+            - panels_design_dims.num_extra_vertical_chars(1)
+            - config.max_title_height
+            - TITLE_BLANK_LINES
+        )
 
         if inner_frame_height <= 0:
             return 0
@@ -3951,12 +4030,11 @@ class DatasetDisplayMixin(BaseDisplayMixin):
         )
 
         self._browse_nested_content(
-            {
-                f'{i}. {title}': model for i, (title, model) in enumerate(self_data_as_dict.items())
-            },
+            {f'{i}. {title}': model for i, (title, model) in enumerate(self_data_as_dict.items())},
             html_output,
             nested_call,
-            **kwargs)
+            **kwargs,
+        )
 
     @classmethod
     def _type_str(cls, obj: Any) -> str:

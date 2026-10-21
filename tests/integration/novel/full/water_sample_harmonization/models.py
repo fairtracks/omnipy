@@ -33,8 +33,7 @@ class NormalizedBatchRecord(pyd.BaseModel):
     measurements: list[NormalizedMeasurementRecord]
 
 
-class NormalizedBatchesDataset(Dataset[Model[list[NormalizedBatchRecord]]]):
-    ...
+class NormalizedBatchesDataset(Dataset[Model[list[NormalizedBatchRecord]]]): ...
 
 
 class RiverMeasurementRecord(pyd.BaseModel):
@@ -54,7 +53,8 @@ class RiverUgConcMeasurementRecord(RiverMeasurementRecord):
 
 
 RiverMeasurementRecordType: TypeAlias = (
-    RiverTempMeasurementRecord | RiverMgConcMeasurementRecord | RiverUgConcMeasurementRecord)
+    RiverTempMeasurementRecord | RiverMgConcMeasurementRecord | RiverUgConcMeasurementRecord
+)
 
 
 class RiverBatchRecord(pyd.BaseModel):
@@ -93,10 +93,12 @@ class MeasurementTypeMapper(ConverterModel[str, MeasurementType]):
                 return cast(MeasurementType, data.lower())
 
 
-class NormalizedRiverMeasurementMapper(ConverterModel[
+class NormalizedRiverMeasurementMapper(
+    ConverterModel[
         RiverMeasurementRecordType,
         NormalizedMeasurementRecord,
-]):
+    ]
+):
     @classmethod
     def _convert(cls, data: RiverMeasurementRecordType) -> NormalizedMeasurementRecord:
         match data:
@@ -120,10 +122,12 @@ class NormalizedRiverMeasurementMapper(ConverterModel[
                 )
 
 
-class NormalizedRiverBatchRecordMapper(ConverterModel[
+class NormalizedRiverBatchRecordMapper(
+    ConverterModel[
         RiverBatchRecord,
         NormalizedBatchRecord,
-]):
+    ]
+):
     @classmethod
     def _convert(cls, data: RiverBatchRecord) -> NormalizedBatchRecord:
         return NormalizedBatchRecord(
@@ -147,10 +151,12 @@ class UnitMapper(ConverterModel[str, Unit]):
                 raise ValueError(f'Invalid unit: {data}')
 
 
-class NormalizedWastewaterMeasurementMapper(ConverterModel[
+class NormalizedWastewaterMeasurementMapper(
+    ConverterModel[
         WastewaterMeasurementRecord,
         NormalizedMeasurementRecord,
-]):
+    ]
+):
     @classmethod
     def _convert(cls, data: WastewaterMeasurementRecord) -> NormalizedMeasurementRecord:
         return NormalizedMeasurementRecord(
@@ -160,10 +166,12 @@ class NormalizedWastewaterMeasurementMapper(ConverterModel[
         )
 
 
-class NormalizedWastewaterBatchRecordMapper(ConverterModel[
+class NormalizedWastewaterBatchRecordMapper(
+    ConverterModel[
         WastewaterBatchRecord,
         NormalizedBatchRecord,
-]):
+    ]
+):
     @classmethod
     def _convert(cls, data: WastewaterBatchRecord) -> NormalizedBatchRecord:
         return NormalizedBatchRecord(

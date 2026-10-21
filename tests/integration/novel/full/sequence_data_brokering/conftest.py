@@ -82,70 +82,43 @@ def expected_sequence_depot_submission_payload() -> dict[str, object]:
                 'md5': 'd2fc58de0e46e6a1a036bf323f7b501f',
                 'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-a_R1.fastq.gz',
                 'staging_storage_uri': 'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/'
-                                       'sample-a_R1.fastq.gz',
+                'sample-a_R1.fastq.gz',
                 'transfer_status': 'completed',
                 'error': None,
             },
             'file-id-2': {
-                'file_id':
-                    'file-id-2',
-                'local_sample_alias':
-                    'sample-a',
-                'file_role':
-                    'read2',
-                'file_name':
-                    'sample-a_R2.fastq.gz',
-                'md5':
-                    '61c4828d7d8e13f8872d1185b28ac492',
-                'source_storage_uri':
-                    's3://lab-sequences/sub-2026-alpha/sample-a_R2.fastq.gz',
-                'staging_storage_uri':
-                    'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/sample-a_R2.fastq.gz',
-                'transfer_status':
-                    'completed',
-                'error':
-                    None,
+                'file_id': 'file-id-2',
+                'local_sample_alias': 'sample-a',
+                'file_role': 'read2',
+                'file_name': 'sample-a_R2.fastq.gz',
+                'md5': '61c4828d7d8e13f8872d1185b28ac492',
+                'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-a_R2.fastq.gz',
+                'staging_storage_uri': 'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/sample-a_R2.fastq.gz',
+                'transfer_status': 'completed',
+                'error': None,
             },
             'file-id-3': {
-                'file_id':
-                    'file-id-3',
-                'local_sample_alias':
-                    'sample-b',
-                'file_role':
-                    'read1',
-                'file_name':
-                    'sample-b_R1.fastq.gz',
-                'md5':
-                    '525821c178b6b23320fa56bfaa66e4e4',
-                'source_storage_uri':
-                    's3://lab-sequences/sub-2026-alpha/sample-b_R1.fastq.gz',
-                'staging_storage_uri':
-                    'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/sample-b_R1.fastq.gz',
-                'transfer_status':
-                    'completed',
-                'error':
-                    None,
+                'file_id': 'file-id-3',
+                'local_sample_alias': 'sample-b',
+                'file_role': 'read1',
+                'file_name': 'sample-b_R1.fastq.gz',
+                'md5': '525821c178b6b23320fa56bfaa66e4e4',
+                'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-b_R1.fastq.gz',
+                'staging_storage_uri': 'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/sample-b_R1.fastq.gz',
+                'transfer_status': 'completed',
+                'error': None,
             },
             'file-id-4': {
-                'file_id':
-                    'file-id-4',
-                'local_sample_alias':
-                    'sample-b',
-                'file_role':
-                    'read2',
-                'file_name':
-                    'sample-b_R2.fastq.gz',
-                'md5':
-                    'c0c488a07871ca1c742ce848ce905741',
-                'source_storage_uri':
-                    's3://lab-sequences/sub-2026-alpha/sample-b_R2.fastq.gz',
-                'staging_storage_uri':
-                    'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/sample-b_R2.fastq.gz',
-                'transfer_status':
-                    'completed',
-                'error':
-                    None,
-            }
+                'file_id': 'file-id-4',
+                'local_sample_alias': 'sample-b',
+                'file_role': 'read2',
+                'file_name': 'sample-b_R2.fastq.gz',
+                'md5': 'c0c488a07871ca1c742ce848ce905741',
+                'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-b_R2.fastq.gz',
+                'staging_storage_uri': 'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/sample-b_R2.fastq.gz',
+                'transfer_status': 'completed',
+                'error': None,
+            },
         },
         'metadata': {
             'broker_id': 'omnipy-broker',
@@ -162,22 +135,22 @@ def expected_sequence_depot_submission_payload() -> dict[str, object]:
                 'collection_site': 'North Works',
                 'local_sample_alias': 'sample-a',
                 'sampled_at': '2026-05-03',
-                'specimen_type': 'wastewater solids'
+                'specimen_type': 'wastewater solids',
             },
             'Sample-B': {
                 'biosample_vault_sample_id': 'BSV:80907462',
                 'collection_site': 'River Mouth',
                 'local_sample_alias': 'sample-b',
                 'sampled_at': '2026-05-10',
-                'specimen_type': 'river grab'
-            }
+                'specimen_type': 'river grab',
+            },
         },
         'status': {
             'biosample_vault_status': 'completed',
             'sequence_depot_submission_id_status': 'completed',
             'sequence_depot_submission_status': 'completed',
-            'transfer_status': 'completed'
-        }
+            'transfer_status': 'completed',
+        },
     }
 
 

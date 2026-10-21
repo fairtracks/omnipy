@@ -13,6 +13,7 @@ Attributes:
     ProtocolOpts: Enum that selects the storage and serialization protocol used
         for persisted outputs.
 """
+
 import asyncio
 from datetime import datetime
 import inspect
@@ -27,9 +28,11 @@ from omnipy.compute._mixins.name import NameJobBaseMixin
 from omnipy.data.dataset import Dataset, is_dataset_subclass
 from omnipy.data.model import is_model_instance, is_model_subclass, Model
 from omnipy.shared.enums.job import ConfigPersistOutputsOptions as ConfigPersistOpts
-from omnipy.shared.enums.job import (OutputStorageProtocolOptions,
-                                     PersistOutputsOptions,
-                                     RestoreOutputsOptions)
+from omnipy.shared.enums.job import (
+    OutputStorageProtocolOptions,
+    PersistOutputsOptions,
+    RestoreOutputsOptions,
+)
 from omnipy.shared.protocols.compute.job import IsFlow, IsJob, IsJobBase
 from omnipy.shared.protocols.config import IsJobConfig
 from omnipy.shared.protocols.data import IsDataset, IsSerializerRegistry
@@ -72,8 +75,9 @@ class SerializerFuncJobBaseMixin:
         # TODO: Possibly reimplement logic using a state machine, e.g. "transitions" package
         self._persist_outputs: PersistOutputsOptions.Literals = persist_outputs
         self._restore_outputs: RestoreOutputsOptions.Literals = restore_outputs
-        self._output_storage_protocol: OutputStorageProtocolOptions.Literals = \
+        self._output_storage_protocol: OutputStorageProtocolOptions.Literals = (
             output_storage_protocol
+        )
 
     @property
     def _job_config(self) -> IsJobConfig:
@@ -150,12 +154,15 @@ class SerializerFuncJobBaseMixin:
 
             match self._job_config.output_storage.persist_outputs:
                 case ConfigPersistOpts.ENABLE_FLOW_OUTPUTS:
-                    return PersistOpts.ENABLED if isinstance(self,
-                                                             FlowBase) else PersistOpts.DISABLED
+                    return (
+                        PersistOpts.ENABLED if isinstance(self, FlowBase) else PersistOpts.DISABLED
+                    )
                 case ConfigPersistOpts.ENABLE_FLOW_AND_TASK_OUTPUTS:
-                    return PersistOpts.ENABLED \
-                        if any(isinstance(self, cls) for cls in (FlowBase, TaskBase)) \
+                    return (
+                        PersistOpts.ENABLED
+                        if any(isinstance(self, cls) for cls in (FlowBase, TaskBase))
                         else PersistOpts.DISABLED
+                    )
                 case ConfigPersistOpts.DISABLED:
                     return PersistOpts.DISABLED
 
@@ -200,7 +207,8 @@ class SerializerFuncJobBaseMixin:
             self._serializer_registry = get_serializer_registry()
 
         if self.will_restore_outputs in [
-                RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS, RestoreOpts.FORCE_ENABLE_IGNORE_PARAMS
+            RestoreOpts.AUTO_ENABLE_IGNORE_PARAMS,
+            RestoreOpts.FORCE_ENABLE_IGNORE_PARAMS,
         ]:
             try:
                 return self._deserialize_and_restore_outputs()
@@ -230,9 +238,11 @@ class SerializerFuncJobBaseMixin:
                 else:
                     self._serialize_and_persist_outputs(results)
             else:
-                self._log(f'Results of {self_as_name_job_base_mixin.unique_name} '
-                          f'is not a Model or Dataset and cannot be '
-                          f'automatically serialized and persisted!')
+                self._log(
+                    f'Results of {self_as_name_job_base_mixin.unique_name} '
+                    f'is not a Model or Dataset and cannot be '
+                    f'automatically serialized and persisted!'
+                )
 
         return results
 
@@ -245,8 +255,9 @@ class SerializerFuncJobBaseMixin:
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
 
         datetime_str = self._generate_datetime_str()
-        output_path = Path(
-            self._job_config.output_storage.local.persist_data_dir_path).joinpath(datetime_str)
+        output_path = Path(self._job_config.output_storage.local.persist_data_dir_path).joinpath(
+            datetime_str
+        )
 
         os.makedirs(output_path, exist_ok=True)
 
@@ -255,13 +266,16 @@ class SerializerFuncJobBaseMixin:
 
         file_path = output_path.joinpath(f'{num_cur_files:02}_{job_name}.tar.gz')
 
-        parsed_dataset, serializer = \
-            self._serializer_registry.auto_detect_tar_file_serializer(results)
+        parsed_dataset, serializer = self._serializer_registry.auto_detect_tar_file_serializer(
+            results
+        )
 
         if serializer is None:
-            self._log('Unable to find a serializer for results of job '
-                      f'"{self_as_name_job_base_mixin.name}", with data type "{type(results)}". '
-                      f'Will abort persisting results...')
+            self._log(
+                'Unable to find a serializer for results of job '
+                f'"{self_as_name_job_base_mixin.name}", with data type "{type(results)}". '
+                f'Will abort persisting results...'
+            )
         else:
             assert parsed_dataset is not None
             self._log(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
@@ -293,7 +307,8 @@ class SerializerFuncJobBaseMixin:
 
     @staticmethod
     def _all_job_output_file_paths_in_reverse_order_for_last_run(
-            persist_data_dir_path: Path, job_name: str) -> Generator[Path, None, None]:
+        persist_data_dir_path: Path, job_name: str
+    ) -> Generator[Path, None, None]:
 
         sorted_date_dirs = iter(reversed(sorted(os.listdir(persist_data_dir_path))))
 
@@ -317,10 +332,12 @@ class SerializerFuncJobBaseMixin:
         persist_data_dir_path = Path(self._job_config.output_storage.local.persist_data_dir_path)
         if os.path.exists(persist_data_dir_path):
             for tar_file_path in self._all_job_output_file_paths_in_reverse_order_for_last_run(
-                    persist_data_dir_path, self._job_name()):
+                persist_data_dir_path, self._job_name()
+            ):
                 to_dataset = cast(Type[Dataset], self._return_type)
                 return self._serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                    self_as_job_base, str(tar_file_path), to_dataset())
+                    self_as_job_base, str(tar_file_path), to_dataset()
+                )
 
         raise RuntimeError('No persisted output')
 

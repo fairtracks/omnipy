@@ -6,5 +6,4 @@ if TYPE_CHECKING:
     from ..raw.models import StrictBytesModel, StrModel  # noqa: F401
 
 
-class GeneralFileDataset(Dataset['GeneralFileDataset | StrModel | StrictBytesModel']):
-    ...
+class GeneralFileDataset(Dataset['GeneralFileDataset | StrModel | StrictBytesModel']): ...

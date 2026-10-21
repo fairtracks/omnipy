@@ -72,7 +72,8 @@ def all_int_dataset_plus_int_return_str_dataset_func(
 
 
 async def async_all_int_dataset_plus_int_return_str_dataset_func(
-        dataset: Dataset[Model[int]], number: int) -> Dataset[Model[str]]:
+    dataset: Dataset[Model[int]], number: int
+) -> Dataset[Model[str]]:
     """Run async all int dataset plus int return string dataset func."""
     await asyncio.sleep(0.1)
     return all_int_dataset_plus_int_return_str_dataset_func(dataset, number)

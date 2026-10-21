@@ -12,17 +12,20 @@ import pygments.util
 from ruamel.yaml import YAML
 
 from omnipy.data._display.styles.helpers import Base16Theme, get_styles_from_base16_colors
-from omnipy.shared.constants import (ANSI_PREFIX,
-                                     PYGMENTS_SUFFIX,
-                                     RANDOM_PREFIX,
-                                     STYLE_CLS_NAME_SUFFIX,
-                                     STYLE_CLS_NAME_TINTED_BASE16_PREFIX,
-                                     THEME_KEY_TINTED_BASE16_SUFFIX)
+from omnipy.shared.constants import (
+    ANSI_PREFIX,
+    PYGMENTS_SUFFIX,
+    RANDOM_PREFIX,
+    STYLE_CLS_NAME_SUFFIX,
+    STYLE_CLS_NAME_TINTED_BASE16_PREFIX,
+    THEME_KEY_TINTED_BASE16_SUFFIX,
+)
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
-_BASE16_DOWNLOAD_URL = ('https://raw.githubusercontent.com/tinted-theming/'
-                        'schemes/refs/heads/spec-0.11/base16/')
+_BASE16_DOWNLOAD_URL = (
+    'https://raw.githubusercontent.com/tinted-theming/schemes/refs/heads/spec-0.11/base16/'
+)
 _runtime: IsRuntime | None = None
 
 
@@ -38,6 +41,7 @@ def fetch_base16_theme(theme_url: str) -> Base16Theme:
     """Fetch, cache, and parse a Base16 theme definition from a URL."""
 
     from omnipy.hub.runtime import runtime
+
     if not runtime:
         # TODO: Revisit how runtime is distributed, e.g. fetch_base16_theme
         #       should not include a hook just for pytest
@@ -75,7 +79,8 @@ def create_dynamic_base16_style_class(
     """Create a Pygments style class from a parsed Base16 theme."""
 
     return type(
-        _create_base_16_class_name_from_theme_key(theme_key), (TintedBase16Style,),
+        _create_base_16_class_name_from_theme_key(theme_key),
+        (TintedBase16Style,),
         {
             'name': base16_theme.name,
             'author': base16_theme.author,
@@ -83,7 +88,8 @@ def create_dynamic_base16_style_class(
             'background_color': base16_theme.palette.base00,
             'highlight_color': base16_theme.palette.base02,
             'styles': get_styles_from_base16_colors(base16_theme.palette),
-        })
+        },
+    )
 
 
 def _fetch_base16_theme_and_create_dynamic_style_class(
@@ -98,11 +104,13 @@ def _create_base_16_class_name_from_theme_key(base16_theme_name: str):
     from inflection import underscore
 
     assert base16_theme_name.endswith(THEME_KEY_TINTED_BASE16_SUFFIX)
-    base16_theme_name_stripped = base16_theme_name[:-len(THEME_KEY_TINTED_BASE16_SUFFIX)]
+    base16_theme_name_stripped = base16_theme_name[: -len(THEME_KEY_TINTED_BASE16_SUFFIX)]
 
-    class_name = (f'{STYLE_CLS_NAME_TINTED_BASE16_PREFIX}'
-                  f"{_capitalize_words(underscore(base16_theme_name_stripped)).replace(' ', '')}"
-                  f'{STYLE_CLS_NAME_SUFFIX}')
+    class_name = (
+        f'{STYLE_CLS_NAME_TINTED_BASE16_PREFIX}'
+        f'{_capitalize_words(underscore(base16_theme_name_stripped)).replace(" ", "")}'
+        f'{STYLE_CLS_NAME_SUFFIX}'
+    )
 
     return class_name
 
@@ -115,11 +123,13 @@ def _capitalize_words(text: str) -> str:
 def __getattr__(attr: str) -> type[pygments.style.Style]:
     try:
         if attr.startswith(STYLE_CLS_NAME_TINTED_BASE16_PREFIX) and attr.endswith(
-                STYLE_CLS_NAME_SUFFIX):
+            STYLE_CLS_NAME_SUFFIX
+        ):
             from inflection import dasherize, underscore
 
-            stripped_name = \
-                attr[len(STYLE_CLS_NAME_TINTED_BASE16_PREFIX):-len(STYLE_CLS_NAME_SUFFIX)]
+            stripped_name = attr[
+                len(STYLE_CLS_NAME_TINTED_BASE16_PREFIX) : -len(STYLE_CLS_NAME_SUFFIX)
+            ]
 
             core_name = dasherize(underscore(stripped_name))
             filename = core_name + '.yaml'
@@ -170,7 +180,7 @@ def clean_style_name(name: str | AllColorStyles.Literals) -> str:
     """Normalize style names for Rich and Pygments compatibility."""
 
     if name.endswith(PYGMENTS_SUFFIX):
-        return name[:-len(PYGMENTS_SUFFIX)]  # Remove suffix for Pygments compatibility
+        return name[: -len(PYGMENTS_SUFFIX)]  # Remove suffix for Pygments compatibility
     elif name.startswith(ANSI_PREFIX):
         return name.replace('-', '_')  # Convert dashes to underscores for Rich compatibility
     return name

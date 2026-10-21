@@ -9,6 +9,7 @@ import omnipy.util.pydantic as pyd
 
 class RecordSchemaBase(pyd.BaseModel):
     """Define RecordSchemaBase."""
+
     class Config:
         extra = pyd.Extra.forbid
 
@@ -62,14 +63,18 @@ RecordSchemaDefType = dict[str, Type[object]]
 
 class RecordSchemaDef(Model[RecordSchemaDefType]):
     """Define RecordSchemaDef."""
+
     ...
 
 
-def record_schema_factory(data_file: str,
-                          record_schema_def: RecordSchemaDefType) -> Type[RecordSchemaBase]:
+def record_schema_factory(
+    data_file: str, record_schema_def: RecordSchemaDefType
+) -> Type[RecordSchemaBase]:
     """Create schema factory."""
+
     class Config(pyd.BaseConfig):
         """Define Config."""
+
         extra = pyd.Extra.forbid
 
     # For real-world implementation,
@@ -79,9 +84,7 @@ def record_schema_factory(data_file: str,
     return pyd.create_model(
         data_file,
         __base__=RecordSchemaBase,
-        **{
-            key: (val, val()) for key, val in record_schema_def.items()
-        },
+        **{key: (val, val()) for key, val in record_schema_def.items()},
     )
 
 
@@ -93,25 +96,21 @@ if TYPE_CHECKING:
         a: int
         b: str
 
-    class MyRecordSchema(Model[MyRecordSchemaBase]):
-        ...
+    class MyRecordSchema(Model[MyRecordSchemaBase]): ...
 
     class MyOtherRecordSchemaBase(RecordSchemaBase):
         b: str
         c: int
 
-    class MyOtherRecordSchemaModel(Model[MyOtherRecordSchemaBase]):
-        ...
+    class MyOtherRecordSchemaModel(Model[MyOtherRecordSchemaBase]): ...
 else:
     MyRecordSchemaBase = record_schema_factory('MyRecordSchemaBase', {'a': int, 'b': str})
 
-    class MyRecordSchema(Model[MyRecordSchemaBase]):
-        ...
+    class MyRecordSchema(Model[MyRecordSchemaBase]): ...
 
     MyOtherRecordSchemaBase = record_schema_factory('MyOtherRecordSchemaBase', {'b': str, 'c': int})
 
-    class MyOtherRecordSchema(Model[MyOtherRecordSchemaBase]):
-        ...
+    class MyOtherRecordSchema(Model[MyOtherRecordSchemaBase]): ...
 
 
 class TableTemplate(Model[list[RecordT]], Generic[RecordT]):

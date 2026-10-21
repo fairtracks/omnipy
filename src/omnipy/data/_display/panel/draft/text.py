@@ -6,17 +6,21 @@ from typing import Generic, Iterator, overload
 
 from typing_extensions import override
 
-from omnipy.components.json.helpers import (is_json_scalar,
-                                            parse_line_as_elements_of_dict,
-                                            parse_line_as_elements_of_list,
-                                            parse_str_as_json)
+from omnipy.components.json.helpers import (
+    is_json_scalar,
+    parse_line_as_elements_of_dict,
+    parse_line_as_elements_of_list,
+    parse_str_as_json,
+)
 from omnipy.components.json.typedefs import JsonDict, JsonList
 from omnipy.data._display.constraints import ConstraintsSatisfaction
 from omnipy.data._display.dimensions import Dimensions, DimensionsFit, has_height
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.base import FullyRenderedPanel
-from omnipy.data._display.panel.cropping import (crop_content_lines_vertically_for_resizing,
-                                                 crop_content_with_extra_wide_chars)
+from omnipy.data._display.panel.cropping import (
+    crop_content_lines_vertically_for_resizing,
+    crop_content_with_extra_wide_chars,
+)
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.panel.draft.monospaced import MonospacedDraftPanel
 from omnipy.data._display.panel.typedefs import FrameInvT, FrameT
@@ -25,24 +29,25 @@ import omnipy.util.pydantic as pyd
 
 
 @pyd.dataclass(
-    init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True))
+    init=False, frozen=True, config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True)
+)
 class ReflowedTextDraftPanel(
-        MonospacedDraftPanel[str, FrameT],
-        Generic[FrameT],
+    MonospacedDraftPanel[str, FrameT],
+    Generic[FrameT],
 ):
     """Draft panel containing text reflowed to frame/title constraints.
 
     The panel computes dimensions from cropped display lines while keeping
     access to original content dimensions for fit heuristics.
     """
+
     @classmethod
     @overload
     def create_from_draft_panel(
         cls,
         draft_panel: DraftPanel[str, FrameInvT],
         other_content: None = None,
-    ) -> 'ReflowedTextDraftPanel[FrameInvT]':
-        ...
+    ) -> 'ReflowedTextDraftPanel[FrameInvT]': ...
 
     @classmethod
     @overload
@@ -50,8 +55,7 @@ class ReflowedTextDraftPanel(
         cls,
         draft_panel: DraftPanel[object, FrameInvT],
         other_content: str,
-    ) -> 'ReflowedTextDraftPanel[FrameInvT]':
-        ...
+    ) -> 'ReflowedTextDraftPanel[FrameInvT]': ...
 
     @classmethod
     def create_from_draft_panel(
@@ -70,7 +74,7 @@ class ReflowedTextDraftPanel(
             Reflowed text draft panel with copied title, frame, constraints,
             and config.
         """
-        content = (draft_panel.content if other_content is None else other_content)
+        content = draft_panel.content if other_content is None else other_content
         return ReflowedTextDraftPanel(
             content,  # type: ignore[arg-type]
             title=draft_panel.title,
@@ -91,7 +95,8 @@ class ReflowedTextDraftPanel(
 
         if has_height(self.frame.dims):
             crop_frame = self.frame.modified_copy(
-                height=(self.frame.dims.height - self.title_height_with_blank_lines))
+                height=(self.frame.dims.height - self.title_height_with_blank_lines)
+            )
         else:
             crop_frame = self.frame
         content_lines = self._split_and_crop_content_lines(crop_frame)
@@ -112,6 +117,7 @@ class ReflowedTextDraftPanel(
         Returns:
             Content dimensions calculated after title-aware reflow.
         """
+
         def _del_attrs_if_defined(*attrs: str):
             for attr in attrs:
                 try:
@@ -200,6 +206,7 @@ class ReflowedTextDraftPanel(
         Returns:
             Maximum width of ``{...}``, ``[...]``, or ``(...)`` matches.
         """
+
         def _max_inline_container_width_incl_for_line(line):
             # Find all containers in the line using regex
             containers = re.findall(r'\{.*\}|\[.*\]|\(.*\)', line)
@@ -209,7 +216,8 @@ class ReflowedTextDraftPanel(
         # Calculate the maximum (inclusive) inline container width across all lines
         return max(
             (_max_inline_container_width_incl_for_line(line) for line in self._content_lines),
-            default=0)
+            default=0,
+        )
 
     @cached_property
     def max_inline_list_or_dict_width_excl(self) -> int:  # noqa: C901
@@ -218,6 +226,7 @@ class ReflowedTextDraftPanel(
         Returns:
             Maximum detected width of inline list/dict content segments.
         """
+
         def _as_json_dict_with_line_as_single_el(_line: str) -> JsonDict | None:
             _dict_with_line_as_elements = parse_line_as_elements_of_dict(_line)
             if not isinstance(_dict_with_line_as_elements, pyd.UndefinedType):
@@ -246,8 +255,9 @@ class ReflowedTextDraftPanel(
                 else:
                     return len(_line)
 
-            if (_as_json_dict_with_line_as_single_el(_line)
-                    or _as_json_list_with_line_as_single_el(_line)):
+            if _as_json_dict_with_line_as_single_el(_line) or _as_json_list_with_line_as_single_el(
+                _line
+            ):
                 return 0
 
             return len(_line)
@@ -279,14 +289,15 @@ class ReflowedTextDraftPanel(
                         assert line.find(f'"{first_key}"') == 0, line
                         key_length = len(f'"{first_key}"')
                         index_of_dict_colon = key_length + line[key_length:].find(':')
-                        value_part = line[index_of_dict_colon + 1:].strip()
+                        value_part = line[index_of_dict_colon + 1 :].strip()
 
                         # Add the length of the value part to the
                         # widths, unless it's a simple JSON element
                         # (see docstring of
                         # _line_length_if_not_simple_json_element)
                         inline_list_or_dict_widths.append(
-                            _line_length_if_not_simple_json_element(value_part))
+                            _line_length_if_not_simple_json_element(value_part)
+                        )
 
                         continue
 
@@ -303,9 +314,11 @@ class ReflowedTextDraftPanel(
                         # unless it is a simple JSON element (see docstring
                         # of _line_length_if_not_simple_json_element)
                         inline_list_or_dict_widths.append(
-                            _line_length_if_not_simple_json_element(line))
-                elif ((line.startswith('{') and line.endswith('}'))
-                      or (line.startswith('[') and line.endswith(']'))):
+                            _line_length_if_not_simple_json_element(line)
+                        )
+                elif (line.startswith('{') and line.endswith('}')) or (
+                    line.startswith('[') and line.endswith(']')
+                ):
                     # If the line is a dict or list, we add the width of the
                     # line, excluding the outer braces/brackets
                     inline_list_or_dict_widths.append(len(line[1:-1].strip()))
@@ -342,5 +355,6 @@ class ReflowedTextDraftPanel(
             Fully rendered panel with syntax-aware styling applied.
         """
         from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
+
         panel: SyntaxStylizedTextPanel[FrameT] = SyntaxStylizedTextPanel(self)
         return panel

@@ -36,15 +36,19 @@ def test_set_config() -> None:
 
 
 def test_set_reactive_objects() -> None:
-    from omnipy.data._display.integrations.jupyter.helpers import (ReactiveConfigCopy,
-                                                                   ReactiveObjects)
+    from omnipy.data._display.integrations.jupyter.helpers import (
+        ReactiveConfigCopy,
+        ReactiveObjects,
+    )
 
     data_class_creator = DataClassCreator()
     assert data_class_creator.reactive_objects is None
 
     new_reactive_objects = ReactiveObjects(
         jupyter_ui_config=ReactiveConfigCopy[IsJupyterUserInterfaceConfig](
-            JupyterUserInterfaceConfig(dims_mode='fixed')))
+            JupyterUserInterfaceConfig(dims_mode='fixed')
+        )
+    )
     assert data_class_creator.reactive_objects != new_reactive_objects
 
     data_class_creator.set_reactive_objects(new_reactive_objects)
@@ -124,7 +128,8 @@ def test_deepcopy_context() -> None:
 
 
 def test_config_property_mutable_from_data_class_creator(
-        teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
+    teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
+) -> None:
     _assert_property_is_singularly_mutable(
         property='config',
         property_type=DataConfig,
@@ -135,8 +140,10 @@ def test_config_property_mutable_from_data_class_creator(
 
 
 def test_reactive_objects_property_mutable_from_data_class_creator(
-        teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
+    teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
+) -> None:
     from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
+
     _assert_property_is_singularly_mutable(
         property='reactive_objects',
         property_type=NoneType,
@@ -147,18 +154,21 @@ def test_reactive_objects_property_mutable_from_data_class_creator(
 
 
 def test_snapshot_holder_property_immutable(
-        teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
+    teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
+) -> None:
     _assert_property_is_singularly_immutable(
         property='snapshot_holder',
         property_type=SnapshotHolder,
     )
 
 
-def _assert_property_is_singularly_mutable(property: str,
-                                           property_type: type,
-                                           set_property_from_data_class: bool,
-                                           new_val: object,
-                                           property_setter: str | None = None) -> None:
+def _assert_property_is_singularly_mutable(
+    property: str,
+    property_type: type,
+    set_property_from_data_class: bool,
+    new_val: object,
+    property_setter: str | None = None,
+) -> None:
     """Provide assert property is singularly mutable for test reuse."""
     data_classes = (MockDataset, MockModel, DataClassBase)
     data_objects = (MockDataset(), MockModel())
@@ -209,17 +219,18 @@ def _assert_property_is_singularly_immutable(property: str, property_type: type)
     assert not hasattr(MockDataset.data_class_creator, property_setter)
 
 
-def _assert_property_in_classes(data_classes: tuple[DataClassBaseMeta, ...],
-                                property: str,
-                                val: object) -> None:
+def _assert_property_in_classes(
+    data_classes: tuple[DataClassBaseMeta, ...], property: str, val: object
+) -> None:
     """Provide assert property in classes for test reuse."""
     for data_cls in data_classes:
         assert getattr(data_cls.data_class_creator, property) is val
         assert hasattr(data_cls, property)
 
 
-def _assert_property_in_objects(data_objects: tuple[DataClassBase, ...], property: str,
-                                val: object) -> None:
+def _assert_property_in_objects(
+    data_objects: tuple[DataClassBase, ...], property: str, val: object
+) -> None:
     """Provide assert property in objects for test reuse."""
     for data_obj in data_objects:
         assert getattr(data_obj.__class__.data_class_creator, property) is val

@@ -16,6 +16,7 @@ from omnipy.shared.protocols.compute.mixins import IsNestedContext
 
 class FlowContextJobMixin:
     """Add flow-context tracking to executable flow jobs."""
+
     def __init__(self) -> None:
         self._time_of_last_run: datetime | None = None
 
@@ -30,6 +31,7 @@ class FlowContextJobMixin:
         Returns:
             IsNestedContext: Context manager that tracks top-level flow execution state.
         """
+
         class FlowContext(AbstractContextManager):
             @classmethod
             def __enter__(cls) -> None:  # pyright: ignore [reportIncompatibleMethodOverride]
@@ -40,10 +42,8 @@ class FlowContextJobMixin:
 
             @classmethod
             def __exit__(  # pyright: ignore [reportIncompatibleMethodOverride]
-                    cls,
-                    exc_type,
-                    exc_value,
-                    traceback) -> None:
+                cls, exc_type, exc_value, traceback
+            ) -> None:
                 self_as_job_base = cast(JobBase, self)
                 self_as_job_base.__class__.job_creator.__exit__(exc_type, exc_value, traceback)
 

@@ -11,6 +11,7 @@ from omnipy.shared.protocols.compute.job import IsTaskTemplate
 @dataclass
 class EndpointCase:
     """Define EndpointCase."""
+
     query_urls: HttpUrlDataset
     auto_model_type: type[Model]
 
@@ -18,6 +19,7 @@ class EndpointCase:
 @dataclass
 class RequestTypeCase:
     """Define RequestTypeCase."""
+
     is_async: bool
     job: IsTaskTemplate
     kwargs: dict[str, object]

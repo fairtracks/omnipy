@@ -25,7 +25,10 @@ other_non_overlapping_col_wise_dict_of_lists_data: dict[str, list[JsonScalar]] =
     'e': [23.4, 32.3],
 }
 col_wise_dict_of_empty_lists_data: dict[str, list[JsonScalar]] = {
-    'a': [], 'b': [], 'c': [], 'd': []
+    'a': [],
+    'b': [],
+    'c': [],
+    'd': [],
 }
 other_row_wise_list_of_dicts_data: list[dict[str, JsonScalar]] = [
     {
@@ -100,12 +103,8 @@ reversed_concat_col_wise_list_likes_of_int_data: dict[str, ListLikeNoAdd[int]] =
 # float
 
 row_wise_dict_of_other_float_data: list[dict[str, float]] = [
-    {
-        'c': 3.5
-    },
-    {
-        'a': 8.1, 'b': 8.1
-    },
+    {'c': 3.5},
+    {'a': 8.1, 'b': 8.1},
 ]
 
 concat_col_wise_list_likes_of_float_data: dict[str, ListLikeNoAdd[float]] = {

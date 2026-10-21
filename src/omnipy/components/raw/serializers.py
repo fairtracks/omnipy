@@ -13,6 +13,7 @@ from .datasets import StrictBytesDataset, StrictStrDataset
 
 class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
     """Serialize raw string datasets to and from gzipped tar archives."""
+
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         """Return whether a dataset stores raw strings."""
@@ -41,16 +42,16 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{SERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Serialize a dataset into a gzipped tar archive."""
+
         def raw_encode_func(content: str) -> bytes:
             return content.encode('utf8')
 
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
 
     @classmethod
-    def deserialize(cls,
-                    serialized: bytes,
-                    any_file_suffix=False,
-                    ignore_dirs=False) -> StrictStrDataset:
+    def deserialize(
+        cls, serialized: bytes, any_file_suffix=False, ignore_dirs=False
+    ) -> StrictStrDataset:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Deserialize a gzipped tar archive back into a dataset."""
@@ -78,6 +79,7 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
 
 class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
     """Serialize raw bytes datasets to and from gzipped tar archives."""
+
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         """Return whether a dataset stores raw bytes."""
@@ -106,16 +108,16 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{SERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Serialize a dataset into a gzipped tar archive."""
+
         def raw_encode_func(content: bytes) -> bytes:
             return content
 
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
 
     @classmethod
-    def deserialize(cls,
-                    serialized: bytes,
-                    any_file_suffix=False,
-                    ignore_dirs=False) -> StrictBytesDataset:
+    def deserialize(
+        cls, serialized: bytes, any_file_suffix=False, ignore_dirs=False
+    ) -> StrictBytesDataset:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Deserialize a gzipped tar archive back into a dataset."""
@@ -135,6 +137,7 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
             dictify_object_func=python_dictify_object,
             import_method='from_data',
             any_file_suffix=any_file_suffix,
-            ignore_dirs=ignore_dirs)  # noqa
+            ignore_dirs=ignore_dirs,
+        )  # noqa
 
         return dataset

@@ -9,12 +9,15 @@ from omnipy.shared.protocols.engine.run_spec import IsFlowRunSpec, IsTaskRunSpec
 
 class LocalRunner(JobRunnerEngine):
     """Local job runner"""
-    supported_job_types = frozenset({
-        JobType.TASK,
-        JobType.LINEAR_FLOW,
-        JobType.DAG_FLOW,
-        JobType.FUNC_FLOW,
-    })
+
+    supported_job_types = frozenset(
+        {
+            JobType.TASK,
+            JobType.LINEAR_FLOW,
+            JobType.DAG_FLOW,
+            JobType.FUNC_FLOW,
+        }
+    )
 
     def _init_engine(self) -> None:
         """Initialize local-runner-specific engine state."""
@@ -40,14 +43,12 @@ class LocalRunner(JobRunnerEngine):
         """
         return cast(Type[IsLocalRunnerConfig], LocalRunnerConfig)
 
-    def _init_task(self, task: IsTaskRunSpec) -> object:
-        ...
+    def _init_task(self, task: IsTaskRunSpec) -> object: ...
 
     def _run_task(self, state: Any, task: IsTaskRunSpec, *args, **kwargs) -> object:
         return task.create_default_run_callable()(*args, **kwargs)
 
-    def _init_flow(self, flow: IsFlowRunSpec) -> object:
-        ...
+    def _init_flow(self, flow: IsFlowRunSpec) -> object: ...
 
     def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> object:
         return flow.create_default_run_callable()(*args, **kwargs)

@@ -46,8 +46,7 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         frame: FrameInvT,
         *args,
         **kwargs,
-    ) -> 'DraftPanel[ContentInvT, FrameInvT]':
-        ...
+    ) -> 'DraftPanel[ContentInvT, FrameInvT]': ...
 
     @overload
     def create_modified_copy(
@@ -56,8 +55,7 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         frame: None = None,
         *args,
         **kwargs,
-    ) -> 'DraftPanel[ContentInvT, FrameT]':
-        ...
+    ) -> 'DraftPanel[ContentInvT, FrameT]': ...
 
     def create_modified_copy(
         self,
@@ -108,17 +106,18 @@ class DraftPanel(Panel[FrameT], Generic[ContentT, FrameT]):
         """
         if isinstance(self.content, Layout):
             from omnipy.data._display.layout.flow.base import optimize_layout_to_fit_frame
+
             layout_panel = cast('DraftPanel[Layout[DraftPanel], FrameT]', self)
             return optimize_layout_to_fit_frame(layout_panel)
         else:
             from omnipy.data._display.text.pretty import pretty_repr_of_draft_output
+
             return pretty_repr_of_draft_output(self)
 
 
-class DimensionsAwareDraftPanel(DimensionsAwarePanel[FrameT],
-                                DraftPanel[ContentT, FrameT],
-                                Generic[ContentT, FrameT],
-                                ABC):
+class DimensionsAwareDraftPanel(
+    DimensionsAwarePanel[FrameT], DraftPanel[ContentT, FrameT], Generic[ContentT, FrameT], ABC
+):
     """Draft panel whose content has been measured for layout decisions.
 
     This marker type combines draft content with dimensions-aware behavior.
@@ -127,11 +126,14 @@ class DimensionsAwareDraftPanel(DimensionsAwarePanel[FrameT],
     ...
 
 
-class FullyRenderedDraftPanel(FullyRenderedPanel[FrameT],
-                              DimensionsAwareDraftPanel[ContentT, FrameT],
-                              Generic[ContentT, FrameT],
-                              ABC):
+class FullyRenderedDraftPanel(
+    FullyRenderedPanel[FrameT],
+    DimensionsAwareDraftPanel[ContentT, FrameT],
+    Generic[ContentT, FrameT],
+    ABC,
+):
     """Draft panel that has completed rendering and can export output variants."""
+
     @override
     def render_next_stage(self) -> 'FullyRenderedDraftPanel[ContentT, FrameT]':
         """Raise because fully rendered draft panels have no further stage.
@@ -146,8 +148,8 @@ class FullyRenderedDraftPanel(FullyRenderedPanel[FrameT],
 
 
 class DimensionsAwareDraftPanelLayout(
-        Layout[DimensionsAwareDraftPanel[Any, AnyFrame]],
-        DimensionsAwarePanelLayoutMixin,
+    Layout[DimensionsAwareDraftPanel[Any, AnyFrame]],
+    DimensionsAwarePanelLayoutMixin,
 ):
     """Layout of dimensions-aware draft panels.
 
@@ -158,8 +160,8 @@ class DimensionsAwareDraftPanelLayout(
 
 
 class FullyRenderedDraftPanelLayout(
-        Layout[FullyRenderedDraftPanel[AnyFrame]],
-        DimensionsAwarePanelLayoutMixin,
+    Layout[FullyRenderedDraftPanel[AnyFrame]],
+    DimensionsAwarePanelLayoutMixin,
 ):
     """Layout of fully rendered draft panels ready for styling composition.
 

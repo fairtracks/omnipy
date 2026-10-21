@@ -34,6 +34,7 @@ class IsaFactorSchema(pyd.BaseModel):
         factorType: Ontology term describing the factor category.
         comments: Optional comments attached to the factor definition.
     """
+
     class Config:
         """Validation settings for ISA factor schema parsing.
 

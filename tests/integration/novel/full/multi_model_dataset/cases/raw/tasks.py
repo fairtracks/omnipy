@@ -24,14 +24,17 @@ def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
 # @TaskTemplate(extra_validators=(first_dataset_keys_in_all_datasets,))
 @TaskTemplate()
 def apply_models_to_dataset(
-        dataset: Dataset[GeneralTable],
-        record_schema_defs: Dataset[RecordSchemaDef]) -> MultiModelDataset[GeneralTable]:
+    dataset: Dataset[GeneralTable], record_schema_defs: Dataset[RecordSchemaDef]
+) -> MultiModelDataset[GeneralTable]:
     multi_model_dataset = dataset.as_multi_model_dataset()
     for data_file in multi_model_dataset.keys():
         multi_model_dataset.set_model(
             data_file,
-            TableTemplate[record_schema_factory(
-                data_file,
-                record_schema_defs[data_file],
-            )])
+            TableTemplate[
+                record_schema_factory(
+                    data_file,
+                    record_schema_defs[data_file],
+                )
+            ],
+        )
     return multi_model_dataset

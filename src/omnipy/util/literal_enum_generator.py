@@ -17,7 +17,8 @@ from omnipy.util.literal_enum import LiteralEnum, LiteralEnumInnerTypes
 ValueType = (
     Sequence[LiteralEnumInnerTypes]
     | Mapping[str, LiteralEnumInnerTypes]
-    | MappingProxyType[str, LiteralEnumInnerTypes])
+    | MappingProxyType[str, LiteralEnumInnerTypes]
+)
 
 
 def generate_literal_enum_code(
@@ -130,10 +131,12 @@ def _generate_attribute_name(value: Any, used_names: KeysView[str]) -> str:
     return candidate
 
 
-def _check_params(values: ValueType,
-                  docstrings: Mapping[LiteralEnumInnerTypes, Sequence[str]] | None,
-                  class_name: str,
-                  enum_mappings: Mapping[str, LiteralEnumInnerTypes]) -> None:
+def _check_params(
+    values: ValueType,
+    docstrings: Mapping[LiteralEnumInnerTypes, Sequence[str]] | None,
+    class_name: str,
+    enum_mappings: Mapping[str, LiteralEnumInnerTypes],
+) -> None:
     if not values:
         raise ValueError('At least one value must be provided')
 
@@ -153,7 +156,7 @@ def _build_import_lines(lines: list[str], include_imports: bool) -> list[str]:
             'from typing import Literal',
             'from omnipy.util.literal_enum import LiteralEnum',
             '',
-            ''
+            '',
         ]
 
     return lines
@@ -170,15 +173,17 @@ def _build_class_definition_lines(
     inner_types = LiteralEnum.ALLOWED_LITERAL_INNER_TYPES
     for name, type_ in value_types.items():
         if type_ not in inner_types:
-            raise ValueError(f'Unsupported value type: {name}. Allowed types: '
-                             f"{', '.join(_.__name__ for _ in inner_types)}.")
+            raise ValueError(
+                f'Unsupported value type: {name}. Allowed types: '
+                f'{", ".join(_.__name__ for _ in inner_types)}.'
+            )
 
     # Build the literals string
     literals_str = ', '.join(repr(value) for value in enum_mappings.values())
 
     # Add class definition
     lines += [
-        f"class {class_name}(LiteralEnum[{' | '.join(value_types.keys())}]):",
+        f'class {class_name}(LiteralEnum[{" | ".join(value_types.keys())}]):',
         f'    Literals = Literal[{literals_str}]',
         '',
     ]

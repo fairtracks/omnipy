@@ -8,9 +8,11 @@ import solara
 from omnipy.data._display.panel.base import FullyRenderedPanel
 from omnipy.data._display.panel.helpers import is_color_dark
 from omnipy.shared.enums.display import DisplayDimensionsUpdateMode
-from omnipy.shared.protocols.config import (IsJupyterUserInterfaceConfig,
-                                            IsLayoutConfig,
-                                            IsTextConfig)
+from omnipy.shared.protocols.config import (
+    IsJupyterUserInterfaceConfig,
+    IsLayoutConfig,
+    IsTextConfig,
+)
 from omnipy.shared.protocols.data import AvailableDisplayDims, IsReactiveObjects
 from omnipy.shared.typing import TYPE_CHECKING
 
@@ -39,7 +41,8 @@ def _comma_join_fonts(families: tuple[str, ...]) -> str:
 
 
 def _get_available_display_dims(
-        reactive_jupyter_ui_config: IsJupyterUserInterfaceConfig) -> AvailableDisplayDims:
+    reactive_jupyter_ui_config: IsJupyterUserInterfaceConfig,
+) -> AvailableDisplayDims:
     return AvailableDisplayDims(
         width=reactive_jupyter_ui_config.width,
         height=reactive_jupyter_ui_config.height,
@@ -53,8 +56,8 @@ def ReactiveBgColorUpdater(jupyter_ui_config: IsJupyterUserInterfaceConfig):
     _bg_color = solara.use_reactive('')
 
     with PageBgColorDetector(
-            bg_color=_bg_color.value,
-            on_bg_color=_bg_color.set,
+        bg_color=_bg_color.value,
+        on_bg_color=_bg_color.set,
     ):
         if jupyter_ui_config.color.dark_background != _is_dark_background(_bg_color.value):
             jupyter_ui_config.color.dark_background = _is_dark_background(_bg_color.value)
@@ -104,8 +107,12 @@ def ShowHtml(
     render_output_method: Callable[[FullyRenderedPanel], str],
     **kwargs: Any,
 ):
-    if (update_flag is not None or jupyter_ui_config != orig_jupyter_ui_config
-            or text_config != orig_text_config or layout_config != orig_layout_config):
+    if (
+        update_flag is not None
+        or jupyter_ui_config != orig_jupyter_ui_config
+        or text_config != orig_text_config
+        or layout_config != orig_layout_config
+    ):
         rendered_panel = render_panel_method(**kwargs)
 
     solara.HTML(
@@ -131,8 +138,8 @@ def ReactiveAvailableDisplaySizeUpdater(
             )
 
     with AvailableDisplayDimsDetector(
-            available_display_dims_in_px=reactive_objects.available_display_dims_in_px.value,
-            on_available_display_dims_in_px=reactive_objects.available_display_dims_in_px.set,
+        available_display_dims_in_px=reactive_objects.available_display_dims_in_px.value,
+        on_available_display_dims_in_px=reactive_objects.available_display_dims_in_px.set,
     ):
         DimsCalculator(
             available_display_dims_in_px=reactive_objects.available_display_dims_in_px.value,
@@ -176,15 +183,15 @@ def ReactivelyResizingHtml(
             reactive_kwargs.set(kwargs_copy)
 
         with DimsCalculator(
-                available_display_dims_in_px=reactive_objs.available_display_dims_in_px.value,
-                available_display_dims=_get_available_display_dims(reactive_jupyter_ui_config),
-                on_available_display_dims=_set_width_and_height_in_kwargs,
-                font_weight=kwargs.get('font_weight') or reactive_jupyter_ui_config.font.weight,
-                font_size=kwargs.get('font_size') or reactive_jupyter_ui_config.font.size,
-                font_family=_comma_join_fonts(
-                    kwargs.get('fonts') or reactive_jupyter_ui_config.font.families),
-                line_height=(kwargs.get('line_height')
-                             or reactive_jupyter_ui_config.font.line_height),
+            available_display_dims_in_px=reactive_objs.available_display_dims_in_px.value,
+            available_display_dims=_get_available_display_dims(reactive_jupyter_ui_config),
+            on_available_display_dims=_set_width_and_height_in_kwargs,
+            font_weight=kwargs.get('font_weight') or reactive_jupyter_ui_config.font.weight,
+            font_size=kwargs.get('font_size') or reactive_jupyter_ui_config.font.size,
+            font_family=_comma_join_fonts(
+                kwargs.get('fonts') or reactive_jupyter_ui_config.font.families
+            ),
+            line_height=(kwargs.get('line_height') or reactive_jupyter_ui_config.font.line_height),
         ):
             if 'width' in kwargs and 'height' in kwargs:
                 # re-render panel as dims most probably have changed
@@ -201,7 +208,8 @@ def ReactivelyResizingHtml(
         rendered_panel=rendered_panel,
         render_panel_method=render_panel_method,
         render_output_method=render_output_method,
-        **kwargs)
+        **kwargs,
+    )
 
 
 @solara.component_vue('PageBgColorDetector.vue')

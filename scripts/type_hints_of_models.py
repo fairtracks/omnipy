@@ -2,35 +2,39 @@ from types import MappingProxyType, NoneType
 
 from typing_extensions import reveal_type
 
-from omnipy import (Dataset,
-                    JsonDictDataset,
-                    JsonDictModel,
-                    JsonDictOfDictsOfScalarsModel,
-                    JsonNestedListsDataset,
-                    Model)
+from omnipy import (
+    Dataset,
+    JsonDictDataset,
+    JsonDictModel,
+    JsonDictOfDictsOfScalarsModel,
+    JsonNestedListsDataset,
+    Model,
+)
 from omnipy.components.json.datasets import JsonListOfListsDataset
-from omnipy.components.json.models import (AnyJsonListOrDictModel,
-                                           AnyJsonModel,
-                                           AnyJsonOnlyDictsModel,
-                                           AnyJsonOnlyListsModel,
-                                           AnyJsonScalarModel,
-                                           JsonCustomDictModel,
-                                           JsonCustomListModel,
-                                           JsonDictOfDictsModel,
-                                           JsonDictOfListsModel,
-                                           JsonDictOfListsOfDictsModel,
-                                           JsonDictOfNestedListsModel,
-                                           JsonListModel,
-                                           JsonListOfDictsOfScalarsModel,
-                                           JsonListOfListsOfScalarsModel,
-                                           JsonListOfNestedDictsModel,
-                                           JsonListOfScalarsModel,
-                                           JsonListOrDictModel,
-                                           JsonModel,
-                                           JsonNestedListsModel,
-                                           JsonOnlyDictsModel,
-                                           JsonOnlyListsModel,
-                                           JsonScalarModel)
+from omnipy.components.json.models import (
+    AnyJsonListOrDictModel,
+    AnyJsonModel,
+    AnyJsonOnlyDictsModel,
+    AnyJsonOnlyListsModel,
+    AnyJsonScalarModel,
+    JsonCustomDictModel,
+    JsonCustomListModel,
+    JsonDictOfDictsModel,
+    JsonDictOfListsModel,
+    JsonDictOfListsOfDictsModel,
+    JsonDictOfNestedListsModel,
+    JsonListModel,
+    JsonListOfDictsOfScalarsModel,
+    JsonListOfListsOfScalarsModel,
+    JsonListOfNestedDictsModel,
+    JsonListOfScalarsModel,
+    JsonListOrDictModel,
+    JsonModel,
+    JsonNestedListsModel,
+    JsonOnlyDictsModel,
+    JsonOnlyListsModel,
+    JsonScalarModel,
+)
 from omnipy.shared.protocols.builtins import IsInt
 from omnipy.shared.protocols.data import IsModel
 
@@ -183,8 +187,7 @@ and_result_Model_set_int: Model[set[int]] = model12 & Model[set[str]]({3, '4'})
 and_result_Model_set_int2: Model[set[int]] = model12 & {3, '4'}
 and_result_Model_set_int3: Model[set[int]] = model12 & range(3)
 or_result_Model_set_int: Model[set[int]] = model12 | Model[set[int]]({3, '4'})
-or_result_set_of_int_or_str: set[int | str] = \
-    Model[set[str]]({'a', 'b'}) | 'cd'  # pyright: ignore[reportOperatorIssue]
+or_result_set_of_int_or_str: set[int | str] = Model[set[str]]({'a', 'b'}) | 'cd'  # pyright: ignore[reportOperatorIssue]
 union_result_Model_set_int: Model[set[str]] = Model[set[str]]({'a', 'b'}).union('cd')
 
 # Known issue: Model[AnyClass] does not mimic AnyClass behavior.
@@ -265,9 +268,8 @@ nested_or_dataset_outer_a[1] = 5
 # model_of_dataset_model_list_int_outer.append(4)
 
 model_of_nested_dataset = Model[Dataset[Dataset[Model[list[int]]] | Model[str]]](
-    outer={
-        'a': [1, 2, 3]
-    })
+    outer={'a': [1, 2, 3]}
+)
 reveal_type(Model[Dataset[Dataset[Model[list[int]]] | Model[str]]])
 reveal_type(model_of_nested_dataset)
 reveal_type(model_of_nested_dataset['outer'])
@@ -374,18 +376,19 @@ json_list_of_scalars_model + (3, 4)
 json_list_of_scalars_model.asdf()  # pyright: ignore[reportAttributeAccessIssue]
 reveal_type(json_list_of_scalars_model[2])
 
-json_list_of_lists_of_scalars_model: JsonListOfListsOfScalarsModel = \
-    JsonListOfListsOfScalarsModel([[1, 2], ['a', 'b']])
-json_list_of_lists_of_scalars_model2: JsonListOfListsOfScalarsModel = \
-    JsonListOfListsOfScalarsModel([[1, 2], ['a', 'b']])
+json_list_of_lists_of_scalars_model: JsonListOfListsOfScalarsModel = JsonListOfListsOfScalarsModel(
+    [[1, 2], ['a', 'b']]
+)
+json_list_of_lists_of_scalars_model2: JsonListOfListsOfScalarsModel = JsonListOfListsOfScalarsModel(
+    [[1, 2], ['a', 'b']]
+)
 reveal_type(json_list_of_lists_of_scalars_model)
 json_list_of_lists_of_scalars_model.append(3)  # pyright: ignore[reportArgumentType]
 json_list_of_lists_of_scalars_model.append([3, 4])
 json_list_of_lists_of_scalars_model.append([3, ['a']])  # pyright: ignore[reportArgumentType]
 json_list_of_lists_of_scalars_model.append(range(3))
 json_list_of_lists_of_scalars_model.append(_ for _ in range(3))
-json_list_of_lists_of_scalars_model.append(
-    _ for _ in [[1], [2]])  # pyright: ignore[reportArgumentType]
+json_list_of_lists_of_scalars_model.append(_ for _ in [[1], [2]])  # pyright: ignore[reportArgumentType]
 json_list_of_lists_of_scalars_model.append(json_list_of_lists_of_scalars_model2[0])
 json_list_of_lists_of_scalars_model + json_list_of_lists_of_scalars_model2
 reveal_type(json_list_of_lists_of_scalars_model.__add__)
@@ -413,8 +416,9 @@ json_list_of_lists_dataset['d'].append([True, False])
 json_list_of_lists_dataset['d'].append({'c': 5})  # pyright: ignore[reportArgumentType]
 json_list_of_lists_dataset['d'][0].append(3)
 
-json_list_of_dicts_of_scalars_model: JsonListOfDictsOfScalarsModel = \
-    JsonListOfDictsOfScalarsModel([{'a': 1}, {'b': [2, 3]}])
+json_list_of_dicts_of_scalars_model: JsonListOfDictsOfScalarsModel = JsonListOfDictsOfScalarsModel(
+    [{'a': 1}, {'b': [2, 3]}]
+)
 reveal_type(json_list_of_dicts_of_scalars_model)
 json_list_of_dicts_of_scalars_model.append({'c': 3})
 json_list_of_dicts_of_scalars_model.append({'c': [3, 4]})  # pyright: ignore[reportArgumentType]
@@ -428,11 +432,11 @@ json_list_of_dicts_of_scalars_model_0 | {'x': 4}
 json_list_of_dicts_of_scalars_model_0 | [('x', 4)]
 json_list_of_dicts_of_scalars_model_0 | {'x': [3, 4]}  # pyright: ignore[reportOperatorIssue]
 json_list_of_dicts_of_scalars_model_0.update({'y': '5'})
-json_list_of_dicts_of_scalars_model_0.update(
-    {'y': [5, 6]})  # pyright: ignore[reportCallIssue, reportArgumentType]
+json_list_of_dicts_of_scalars_model_0.update({'y': [5, 6]})  # pyright: ignore[reportCallIssue, reportArgumentType]
 
-json_dict_of_lists_model: JsonDictOfListsModel = \
-    JsonDictOfListsModel({'a': [1, 2], 'b': ['x', 'y']})
+json_dict_of_lists_model: JsonDictOfListsModel = JsonDictOfListsModel(
+    {'a': [1, 2], 'b': ['x', 'y']}
+)
 reveal_type(json_dict_of_lists_model)
 json_dict_of_lists_model['c'] = {'a': 5}  # pyright: ignore[reportArgumentType]
 json_dict_of_lists_model['c'] = [3, 4]
@@ -443,10 +447,10 @@ or_result_json_dict_of_lists_model: JsonDictOfListsModel = json_dict_of_lists_mo
 or_result_json_dict_of_lists_model2: JsonDictOfListsModel = json_dict_of_lists_model | {
     'd': range(3)
 }
-or_result_json_dict_of_lists_model3: JsonDictOfListsModel = \
-    json_dict_of_lists_model | {'d': (_ for _ in range(3))}
-or_result_json_dict_of_lists_model4: JsonDictOfListsModel = \
-    json_dict_of_lists_model | {'d': 'abc'}  # pyright: ignore[reportOperatorIssue]
+or_result_json_dict_of_lists_model3: JsonDictOfListsModel = json_dict_of_lists_model | {
+    'd': (_ for _ in range(3))
+}
+or_result_json_dict_of_lists_model4: JsonDictOfListsModel = json_dict_of_lists_model | {'d': 'abc'}  # pyright: ignore[reportOperatorIssue]
 json_dict_of_lists_model | {'d': 4}  # pyright: ignore[reportOperatorIssue]
 json_dict_of_lists_model_a = json_dict_of_lists_model['a']
 reveal_type(json_dict_of_lists_model_a)
@@ -456,8 +460,9 @@ assert not isinstance(json_dict_of_lists_model_a_0, (NoneType, str, float, int, 
 reveal_type(json_dict_of_lists_model_a_0)
 reveal_type(json_dict_of_lists_model_a_0[0])  # pyright: ignore[reportArgumentType]
 
-json_dict_of_dicts_model: JsonDictOfDictsModel = \
-    JsonDictOfDictsModel({'a': {'x': 1}, 'b': {'y': 2}})
+json_dict_of_dicts_model: JsonDictOfDictsModel = JsonDictOfDictsModel(
+    {'a': {'x': 1}, 'b': {'y': 2}}
+)
 reveal_type(json_dict_of_dicts_model)
 json_dict_of_dicts_model['c'] = [3, 4]  # pyright: ignore[reportArgumentType]
 json_dict_of_dicts_model['c'] = {'z': 3}
@@ -471,8 +476,9 @@ reveal_type(json_dict_of_dicts_model_a)
 json_dict_of_dicts_model_a | {'z': 3}
 reveal_type(json_dict_of_dicts_model_a['x'])
 
-json_dict_of_dicts_of_scalars_model: JsonDictOfDictsOfScalarsModel = \
-    JsonDictOfDictsOfScalarsModel({'a': {'x': 1}, 'b': {'y': '2'}})
+json_dict_of_dicts_of_scalars_model: JsonDictOfDictsOfScalarsModel = JsonDictOfDictsOfScalarsModel(
+    {'a': {'x': 1}, 'b': {'y': '2'}}
+)
 reveal_type(json_dict_of_dicts_of_scalars_model)
 json_dict_of_dicts_of_scalars_model['c'] = [4, 5]  # pyright: ignore[reportArgumentType]
 json_dict_of_dicts_of_scalars_model['c'] = {'z': 3}
@@ -515,8 +521,9 @@ reveal_type(json_nested_dataset)
 reveal_type(json_nested_dataset['a'])
 json_nested_dataset['c'] = [6, [7]]
 
-json_only_dicts_model: AnyJsonOnlyDictsModel = \
-    JsonOnlyDictsModel(Model[dict[str, int]]({'a': 1, 'b': {'c': 2, 'd': {'e': 3}}}))
+json_only_dicts_model: AnyJsonOnlyDictsModel = JsonOnlyDictsModel(
+    Model[dict[str, int]]({'a': 1, 'b': {'c': 2, 'd': {'e': 3}}})
+)
 reveal_type(json_only_dicts_model)
 json_only_dicts_model['f'] = 4
 json_only_dicts_model['f'] = {'h': 5}
@@ -527,8 +534,9 @@ reveal_type(json_only_dicts_model['c'])
 json_only_dicts_model_obj = JsonOnlyDictsModel(object())
 reveal_type(json_only_dicts_model_obj)
 
-json_list_of_nested_dicts_model: JsonListOfNestedDictsModel = \
-    JsonListOfNestedDictsModel([{'a': 1}, {'b': {'c': 2}}])
+json_list_of_nested_dicts_model: JsonListOfNestedDictsModel = JsonListOfNestedDictsModel(
+    [{'a': 1}, {'b': {'c': 2}}]
+)
 reveal_type(json_list_of_nested_dicts_model)
 json_list_of_nested_dicts_model.append(3)  # pyright: ignore[reportArgumentType]
 json_list_of_nested_dicts_model.append({'d': {'e': 4}})
@@ -545,8 +553,9 @@ json_list_of_nested_dicts_model_0 | {'x': {'y': 5}}
 json_list_of_nested_dicts_model_0 | {'x': {'y': [3, 4]}}  # pyright: ignore[reportOperatorIssue]
 reveal_type(json_list_of_nested_dicts_model[0]['a'])
 
-json_dict_of_nested_lists_model: JsonDictOfNestedListsModel = \
-    JsonDictOfNestedListsModel({'a': [1, [2, 3]], 'b': {'c': [4, 5]}})
+json_dict_of_nested_lists_model: JsonDictOfNestedListsModel = JsonDictOfNestedListsModel(
+    {'a': [1, [2, 3]], 'b': {'c': [4, 5]}}
+)
 reveal_type(json_dict_of_nested_lists_model)
 json_dict_of_nested_lists_model['d'] = [6, [7, 8]]
 json_dict_of_nested_lists_model['d'] = {'e': [9, 10]}  # pyright: ignore[reportArgumentType]
@@ -570,8 +579,9 @@ json_custom_dict_model | {'c': 4}
 json_custom_dict_model | {'c': '4'}  # pyright: ignore[reportOperatorIssue]
 reveal_type(json_custom_dict_model['a'])
 
-json_custom_list_model: JsonCustomListModel[list[int]] = \
-    JsonCustomListModel[list[int]]([[3, 4], [5, 6]])
+json_custom_list_model: JsonCustomListModel[list[int]] = JsonCustomListModel[list[int]](
+    [[3, 4], [5, 6]]
+)
 reveal_type(json_custom_list_model)
 json_custom_list_model[1] = '5'  # pyright: ignore[reportArgumentType, reportCallIssue]
 json_custom_list_model[1] = [5]
@@ -579,17 +589,20 @@ json_custom_list_model.append([6, 7])
 json_custom_list_model.append(8)  # pyright: ignore[reportArgumentType]
 reveal_type(json_custom_list_model[0])
 
-json_dict_of_lists_of_dicts_model: JsonDictOfListsOfDictsModel = \
-    JsonDictOfListsOfDictsModel({'a': [{'x': 1}, {'y': 2}]})
+json_dict_of_lists_of_dicts_model: JsonDictOfListsOfDictsModel = JsonDictOfListsOfDictsModel(
+    {'a': [{'x': 1}, {'y': 2}]}
+)
 reveal_type(json_dict_of_lists_of_dicts_model)
 json_dict_of_lists_of_dicts_model['b'] = [{'z': 3}]
 json_dict_of_lists_of_dicts_model['b'] = {'z': 3}  # pyright: ignore[reportArgumentType]
 json_dict_of_lists_of_dicts_model.update({'b': [{'z': 3}]})
-json_dict_of_lists_of_dicts_model.update({  # pyright: ignore[reportCallIssue]
-    'b': {  # pyright: ignore[reportArgumentType]
-        'z': 3
+json_dict_of_lists_of_dicts_model.update(
+    {  # pyright: ignore[reportCallIssue]
+        'b': {  # pyright: ignore[reportArgumentType]
+            'z': 3
+        }
     }
-})
+)
 json_dict_of_lists_of_dicts_model | {'b': [{'z': 3}]}
 json_dict_of_lists_of_dicts_model | {'b': {'z': 3}}  # pyright: ignore[reportOperatorIssue]
 json_dict_of_lists_of_dicts_model_a = json_dict_of_lists_of_dicts_model['a']

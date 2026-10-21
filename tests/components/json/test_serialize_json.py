@@ -33,9 +33,9 @@ def test_json_dataset_serializer_to_tar_file():
             "c": "bcd"
           }
         ]""")
-    json_data.from_json({
-        'data_file_1': f'{data_file_1_json}', 'data_file_2': f'{data_file_2_json}'
-    })
+    json_data.from_json(
+        {'data_file_1': f'{data_file_1_json}', 'data_file_2': f'{data_file_2_json}'}
+    )
 
     serializer = JsonDatasetToTarFileSerializer()
     assert serializer.get_dataset_cls_for_new() is JsonDataset

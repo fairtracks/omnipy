@@ -8,19 +8,21 @@ from typing import Annotated, Any, TypeAlias
 import pytest
 import pytest_cases as pc
 
-from omnipy.components.json.models import (_JsonAnyDictM,
-                                           _JsonAnyListM,
-                                           _JsonDictM,
-                                           _JsonListM,
-                                           JsonCustomDictModel,
-                                           JsonCustomListModel,
-                                           JsonDictModel,
-                                           JsonDictOfDictsModel,
-                                           JsonDictOfScalarsModel,
-                                           JsonListModel,
-                                           JsonListOfScalarsModel,
-                                           JsonModel,
-                                           JsonScalarModel)
+from omnipy.components.json.models import (
+    _JsonAnyDictM,
+    _JsonAnyListM,
+    _JsonDictM,
+    _JsonListM,
+    JsonCustomDictModel,
+    JsonCustomListModel,
+    JsonDictModel,
+    JsonDictOfDictsModel,
+    JsonDictOfScalarsModel,
+    JsonListModel,
+    JsonListOfScalarsModel,
+    JsonModel,
+    JsonScalarModel,
+)
 from omnipy.components.json.typedefs import JsonScalar
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.pydantic import ValidationError
@@ -65,21 +67,21 @@ def test_json_model_consistency_basic() -> None:
     assert JsonModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': 2312})
     assert JsonDictModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': 2312})
     assert JsonDictOfScalarsModel(example_dict_data).content == _JsonDictM[JsonScalar](
-        __root__={
-            'abc': 2312
-        })
+        __root__={'abc': 2312}
+    )
     assert MyJsonDictOfScalarsModel(example_dict_data).content == _JsonDictM[JsonScalar](
-        __root__={
-            'abc': 2312
-        })
+        __root__={'abc': 2312}
+    )
 
     example_list_data = ['abc', 2312]
     assert JsonModel(example_list_data).content == _JsonAnyListM(__root__=['abc', 2312])
     assert JsonListModel(example_list_data).content == _JsonAnyListM(__root__=['abc', 2312])
     assert JsonListOfScalarsModel(example_list_data).content == _JsonListM[JsonScalar](
-        __root__=['abc', 2312])
+        __root__=['abc', 2312]
+    )
     assert MyJsonListOfScalarsModel(example_list_data).content == _JsonListM[JsonScalar](
-        __root__=['abc', 2312])
+        __root__=['abc', 2312]
+    )
 
 
 def test_json_model_consistency_with_none() -> None:
@@ -90,14 +92,12 @@ def test_json_model_consistency_with_none() -> None:
     assert JsonDictModel(example_dict_data).content == _JsonAnyDictM(__root__={'abc': None})
 
     assert JsonDictOfScalarsModel(example_dict_data).content == _JsonDictM[JsonScalar](
-        __root__={
-            'abc': None
-        })
+        __root__={'abc': None}
+    )
 
     assert MyJsonDictOfScalarsModel(example_dict_data).content == _JsonDictM[JsonScalar](
-        __root__={
-            'abc': None
-        })
+        __root__={'abc': None}
+    )
 
     example_list_data = ['abc', None]
     assert JsonModel(example_list_data).content == _JsonAnyListM(__root__=['abc', None])
@@ -105,10 +105,12 @@ def test_json_model_consistency_with_none() -> None:
     assert JsonListModel(example_list_data).content == _JsonAnyListM(__root__=['abc', None])
 
     assert JsonListOfScalarsModel(example_list_data).content == _JsonListM[JsonScalar](
-        __root__=['abc', None])
+        __root__=['abc', None]
+    )
 
     assert MyJsonListOfScalarsModel(example_list_data).content == _JsonListM[JsonScalar](
-        __root__=['abc', None])
+        __root__=['abc', None]
+    )
 
 
 # TODO: Revisit test_error_list_of_single_dict_with_two_elements_known_issue after pydantic v2 is
@@ -118,7 +120,8 @@ def test_json_model_consistency_with_none() -> None:
     reason=dedent("""\
       Known issue with pydantic v1 due to attempting to parse a list of tuples to a dictionary.
       Here the inner dict is treated as a sequence, which returns the keys.
-      """))
+      """),
+)
 def test_error_list_of_single_dict_with_two_elements_known_issue():
     """Document the known pydantic v1 list-of-dict issue."""
     with pytest.raises(ValidationError):
@@ -152,7 +155,8 @@ def test_error_list_of_single_dict_with_two_elements_known_issue():
         While v1 behavior is consistent with the builtin dict (`dict([]) == {}`), it may cause
         hard-to-detect bugs. While Omnipy in general moves in the direction of as broadly
         interoperable parsing as possible, the stricter v2 behavior is in this case preferable.
-    """))
+    """),
+)
 def test_error_dict_with_empty_list_known_issue(runtime: Annotated[IsRuntime, pytest.fixture]):
     """Document known pydantic v1 empty-list dict behavior."""
     with pytest.raises(ValidationError):
@@ -216,25 +220,23 @@ def test_json_model_operations(
 #       entities.
 
 
-@pc.parametrize('json_string, expected_data',
-                [
-                    ('{"a": 1, "b": 2}', {
-                        'a': 1, 'b': 2
-                    }),
-                    ('[1, 2, 3]', [1, 2, 3]),
-                    ('{"a": [1, -2.5, null, true]}', {
-                        'a': [1, -2.5, None, True]
-                    }),
-                    ('"A simple JSON string"', '"A simple JSON string"'),
-                    ('12', 12),
-                    ('"12"', '"12"'),
-                    ('0.25', 0.25),
-                    ('"0.25"', '"0.25"'),
-                    ('null', None),
-                    ('"null"', '"null"'),
-                    ('false', False),
-                    ('"false"', '"false"'),
-                ])
+@pc.parametrize(
+    'json_string, expected_data',
+    [
+        ('{"a": 1, "b": 2}', {'a': 1, 'b': 2}),
+        ('[1, 2, 3]', [1, 2, 3]),
+        ('{"a": [1, -2.5, null, true]}', {'a': [1, -2.5, None, True]}),
+        ('"A simple JSON string"', '"A simple JSON string"'),
+        ('12', 12),
+        ('"12"', '"12"'),
+        ('0.25', 0.25),
+        ('"0.25"', '"0.25"'),
+        ('null', None),
+        ('"null"', '"null"'),
+        ('false', False),
+        ('"false"', '"false"'),
+    ],
+)
 def test_json_parsing_of_json_strings(json_string: str, expected_data: Any) -> None:
     """Parse JSON strings into the expected JSON model data."""
     assert JsonModel(json_string).to_data() == expected_data

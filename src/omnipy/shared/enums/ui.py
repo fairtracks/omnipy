@@ -5,10 +5,12 @@ from typing import Literal
 
 from typing_extensions import TypeIs
 
-from omnipy.shared.constants import (JUPYTER_DEFAULT_HEIGHT,
-                                     JUPYTER_DEFAULT_WIDTH,
-                                     TERMINAL_DEFAULT_HEIGHT,
-                                     TERMINAL_DEFAULT_WIDTH)
+from omnipy.shared.constants import (
+    JUPYTER_DEFAULT_HEIGHT,
+    JUPYTER_DEFAULT_WIDTH,
+    TERMINAL_DEFAULT_HEIGHT,
+    TERMINAL_DEFAULT_WIDTH,
+)
 from omnipy.util.literal_enum import LiteralEnum
 
 _IPYTHON_DESCRIPTION = dedent("""\
@@ -156,8 +158,8 @@ class JupyterInBrowserUserInterfaceType(LiteralEnum[str]):
 
 
 class JupyterUserInterfaceType(
-        JupyterEmbeddedUserInterfaceType,
-        JupyterInBrowserUserInterfaceType,
+    JupyterEmbeddedUserInterfaceType,
+    JupyterInBrowserUserInterfaceType,
 ):
     """Jupyter UI enum values for embedded and browser-hosted notebooks."""
 
@@ -200,10 +202,12 @@ class BrowserUserInterfaceType(BrowserPageUserInterfaceType, BrowserTagUserInter
     Literals = Literal[BrowserPageUserInterfaceType.Literals, BrowserTagUserInterfaceType.Literals]
 
 
-class RgbColorUserInterfaceType(PlainTerminalEmbeddedUserInterfaceType,
-                                IpythonEmbeddedTerminalUserInterfaceType,
-                                JupyterUserInterfaceType,
-                                BrowserUserInterfaceType):
+class RgbColorUserInterfaceType(
+    PlainTerminalEmbeddedUserInterfaceType,
+    IpythonEmbeddedTerminalUserInterfaceType,
+    JupyterUserInterfaceType,
+    BrowserUserInterfaceType,
+):
     """UI enum values that support RGB color output."""
 
     Literals = Literal[
@@ -215,9 +219,9 @@ class RgbColorUserInterfaceType(PlainTerminalEmbeddedUserInterfaceType,
 
 
 class TerminalOutputUserInterfaceType(
-        PlainTerminalUserInterfaceType,
-        IpythonTerminalUserInterfaceType,
-        JupyterEmbeddedUserInterfaceType,
+    PlainTerminalUserInterfaceType,
+    IpythonTerminalUserInterfaceType,
+    JupyterEmbeddedUserInterfaceType,
 ):
     """UI enum values that require ANSI terminal output."""
 
@@ -229,8 +233,8 @@ class TerminalOutputUserInterfaceType(
 
 
 class HtmlTagOutputUserInterfaceType(
-        JupyterInBrowserUserInterfaceType,
-        BrowserTagUserInterfaceType,
+    JupyterInBrowserUserInterfaceType,
+    BrowserTagUserInterfaceType,
 ):
     """UI enum values that require self-contained HTML tag output."""
 
@@ -247,9 +251,9 @@ class HtmlPageOutputUserInterfaceType(BrowserPageUserInterfaceType):
 
 
 class AutoDetectableUserInterfaceType(
-        PlainTerminalUserInterfaceType,
-        IpythonTerminalUserInterfaceType,
-        JupyterUserInterfaceType,
+    PlainTerminalUserInterfaceType,
+    IpythonTerminalUserInterfaceType,
+    JupyterUserInterfaceType,
 ):
     """User interface types that Omnipy can detect automatically.
 
@@ -264,10 +268,12 @@ class AutoDetectableUserInterfaceType(
     ]
 
 
-class SpecifiedUserInterfaceType(PlainTerminalUserInterfaceType,
-                                 IpythonTerminalUserInterfaceType,
-                                 JupyterUserInterfaceType,
-                                 BrowserUserInterfaceType):
+class SpecifiedUserInterfaceType(
+    PlainTerminalUserInterfaceType,
+    IpythonTerminalUserInterfaceType,
+    JupyterUserInterfaceType,
+    BrowserUserInterfaceType,
+):
     """User interface types represented as explicit concrete UI values.
 
     User interface types that are specified as a particular UI type, either
@@ -308,9 +314,10 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
     interface type has not yet been determined, and that it should be
     automatically determined by Omnipy. This is the default value.
     """
+
     @classmethod
     def is_plain_terminal(
-            cls, ui_type: 'UserInterfaceType.Literals'
+        cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[PlainTerminalUserInterfaceType.Literals]:
         """Check whether a UI type is a plain terminal variant.
 
@@ -325,7 +332,7 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def is_ipython_terminal(
-            cls, ui_type: 'UserInterfaceType.Literals'
+        cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[IpythonTerminalUserInterfaceType.Literals]:
         """Check whether a UI type is an IPython terminal variant.
 
@@ -339,8 +346,8 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def is_terminal(
-            cls,
-            ui_type: 'UserInterfaceType.Literals') -> TypeIs[TerminalUserInterfaceType.Literals]:
+        cls, ui_type: 'UserInterfaceType.Literals'
+    ) -> TypeIs[TerminalUserInterfaceType.Literals]:
         """Check whether a UI type is any terminal variant.
 
         Args:
@@ -354,7 +361,7 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def is_jupyter_embedded(
-            cls, ui_type: 'UserInterfaceType.Literals'
+        cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[JupyterEmbeddedUserInterfaceType.Literals]:
         """Check whether a UI type is an embedded Jupyter variant.
 
@@ -368,7 +375,7 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def supports_dark_terminal_bg_detection(
-            cls, ui_type: 'UserInterfaceType.Literals'
+        cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[SupportsDarkTerminalBgDetection.Literals]:
         """Check whether a UI type supports dark terminal background detection.
 
@@ -397,8 +404,8 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def is_jupyter(
-            cls,
-            ui_type: 'UserInterfaceType.Literals') -> TypeIs[JupyterUserInterfaceType.Literals]:
+        cls, ui_type: 'UserInterfaceType.Literals'
+    ) -> TypeIs[JupyterUserInterfaceType.Literals]:
         """Check whether a UI type is any Jupyter variant.
 
         Args:
@@ -411,8 +418,8 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def is_browser(
-            cls,
-            ui_type: 'UserInterfaceType.Literals') -> TypeIs[BrowserUserInterfaceType.Literals]:
+        cls, ui_type: 'UserInterfaceType.Literals'
+    ) -> TypeIs[BrowserUserInterfaceType.Literals]:
         """Check whether a UI type is a browser output variant.
 
         Args:
@@ -425,8 +432,8 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def supports_rgb_color_output(
-            cls,
-            ui_type: 'UserInterfaceType.Literals') -> TypeIs[RgbColorUserInterfaceType.Literals]:
+        cls, ui_type: 'UserInterfaceType.Literals'
+    ) -> TypeIs[RgbColorUserInterfaceType.Literals]:
         """Check whether a UI type supports RGB color output.
 
         Args:
@@ -439,7 +446,7 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def requires_terminal_output(
-            cls, ui_type: 'UserInterfaceType.Literals'
+        cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[TerminalOutputUserInterfaceType.Literals]:
         """Check whether a UI type requires ANSI terminal-style output.
 
@@ -454,7 +461,7 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def requires_html_tag_output(
-            cls, ui_type: 'UserInterfaceType.Literals'
+        cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[HtmlTagOutputUserInterfaceType.Literals]:
         """Check whether a UI type requires self-contained HTML tag output.
 
@@ -468,7 +475,7 @@ class UserInterfaceType(SpecifiedUserInterfaceType, LiteralEnum[str]):
 
     @classmethod
     def requires_html_page_output(
-            cls, ui_type: 'UserInterfaceType.Literals'
+        cls, ui_type: 'UserInterfaceType.Literals'
     ) -> TypeIs[HtmlPageOutputUserInterfaceType.Literals]:
         """Check whether a UI type requires full HTML page output.
 

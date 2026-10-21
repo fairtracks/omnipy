@@ -10,8 +10,9 @@ from .functions import encode_api
 
 
 @TaskTemplate()
-def import_dataset_from_encode(endpoints: Iterable[pyd.constr(min_length=1)],
-                               max_data_item_count: pyd.PositiveInt) -> JsonDataset:
+def import_dataset_from_encode(
+    endpoints: Iterable[pyd.constr(min_length=1)], max_data_item_count: pyd.PositiveInt
+) -> JsonDataset:
     """Import ENCODE endpoint payloads into a JSON dataset."""
 
     dataset = JsonDataset()

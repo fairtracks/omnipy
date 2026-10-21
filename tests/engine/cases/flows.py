@@ -12,41 +12,45 @@ from omnipy.util.callable_types import CallableType
 from omnipy.util.helpers import resolve
 
 from ..helpers.classes import ComposedFlowCase
-from ..helpers.functions import (apply_job,
-                                 assert_async_generator_result,
-                                 assert_async_result,
-                                 assert_case_callable_type_and_finished_state,
-                                 assert_nested_async_generator_result,
-                                 assert_sync_generator_result,
-                                 assert_sync_result)
-from .raw.tasks import (add_one,
-                        add_two,
-                        add_two_numbers,
-                        async_double_number,
-                        compute_base,
-                        double_number,
-                        emit_async_values,
-                        emit_async_values_with_offset,
-                        emit_doubled_async_values,
-                        emit_doubled_sync_values_as_async,
-                        emit_offset_series,
-                        emit_stepped_series,
-                        emit_sync_doubled_values,
-                        emit_sync_wrapped_async_values,
-                        emit_three_values,
-                        generate_square_sequence,
-                        generate_window,
-                        multiply_milliseconds_after_wait,
-                        multiply_numbers,
-                        pass_async_values_through,
-                        square_number,
-                        subtract_numbers,
-                        sum_async_values,
-                        sum_async_values_with_offset,
-                        sum_values,
-                        sum_values_async,
-                        wait_and_double_milliseconds,
-                        wait_and_return_milliseconds)
+from ..helpers.functions import (
+    apply_job,
+    assert_async_generator_result,
+    assert_async_result,
+    assert_case_callable_type_and_finished_state,
+    assert_nested_async_generator_result,
+    assert_sync_generator_result,
+    assert_sync_result,
+)
+from .raw.tasks import (
+    add_one,
+    add_two,
+    add_two_numbers,
+    async_double_number,
+    compute_base,
+    double_number,
+    emit_async_values,
+    emit_async_values_with_offset,
+    emit_doubled_async_values,
+    emit_doubled_sync_values_as_async,
+    emit_offset_series,
+    emit_stepped_series,
+    emit_sync_doubled_values,
+    emit_sync_wrapped_async_values,
+    emit_three_values,
+    generate_square_sequence,
+    generate_window,
+    multiply_milliseconds_after_wait,
+    multiply_numbers,
+    pass_async_values_through,
+    square_number,
+    subtract_numbers,
+    sum_async_values,
+    sum_async_values_with_offset,
+    sum_values,
+    sum_values_async,
+    wait_and_double_milliseconds,
+    wait_and_return_milliseconds,
+)
 
 
 @pc.case(
@@ -59,8 +63,7 @@ def case_linear_flow_sync_function_terminal_child() -> ComposedFlowCase[[int], i
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         # Linear Flow
         @LinearFlowTemplate(add_two, square_number, add_one)
-        def linear_flow_sync_function_terminal(number: int) -> int:
-            ...
+        def linear_flow_sync_function_terminal(number: int) -> int: ...
 
         return apply_job(linear_flow_sync_function_terminal, engine, registry)
 
@@ -111,8 +114,7 @@ def case_linear_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[int],
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         # Linear Flow
         @LinearFlowTemplate(add_two, double_number, wait_and_return_milliseconds)
-        async def linear_flow_async_coroutine_terminal(milliseconds: int) -> int:
-            ...
+        async def linear_flow_async_coroutine_terminal(milliseconds: int) -> int: ...
 
         return apply_job(linear_flow_async_coroutine_terminal, engine, registry)
 
@@ -144,9 +146,9 @@ def case_linear_flow_async_generator_terminal_child() -> ComposedFlowCase[[int],
         return apply_job(linear_flow_async_generator_terminal, engine, registry)
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
-        await assert_async_generator_result(job,
-                                            expected_callable_type, [100, 101, 102, 103, 104],
-                                            2)
+        await assert_async_generator_result(
+            job, expected_callable_type, [100, 101, 102, 103, 104], 2
+        )
 
     return ComposedFlowCase[[int], AsyncGenerator](
         name='linear-async-generator-terminal-child',
@@ -168,14 +170,15 @@ def case_dag_flow_sync_function_terminal_child() -> ComposedFlowCase[[int], int]
         @DagFlowTemplate(
             add_two.refine(result_key='base_number'),
             square_number.refine(result_key='branch_bonus'),
-            add_two_numbers.refine(param_key_map={
-                'left_value': 'base_number',
-                'right_value': 'branch_bonus',
-            }),
+            add_two_numbers.refine(
+                param_key_map={
+                    'left_value': 'base_number',
+                    'right_value': 'branch_bonus',
+                }
+            ),
             consume_kwargs_from_results=False,
         )
-        def dag_flow_sync_function_terminal(number: int) -> int:
-            ...
+        def dag_flow_sync_function_terminal(number: int) -> int: ...
 
         return apply_job(dag_flow_sync_function_terminal, engine, registry)
 
@@ -236,8 +239,7 @@ def case_dag_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[int], Aw
             multiply_milliseconds_after_wait,
             consume_kwargs_from_results=False,
         )
-        async def dag_flow_async_coroutine_terminal(number: int) -> int:
-            ...
+        async def dag_flow_async_coroutine_terminal(number: int) -> int: ...
 
         return apply_job(dag_flow_async_coroutine_terminal, engine, registry)
 
@@ -403,13 +405,11 @@ def case_linear_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         # Linear Child Flow
         @LinearFlowTemplate(square_number, add_one)
-        def linear_child(number: int) -> int:
-            ...
+        def linear_child(number: int) -> int: ...
 
         # Linear Parent Flow
         @LinearFlowTemplate(add_two, linear_child)
-        def linear_parent(number: int) -> int:
-            ...
+        def linear_parent(number: int) -> int: ...
 
         return apply_job(linear_parent, engine, registry)
 
@@ -436,19 +436,19 @@ def case_linear_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
         @DagFlowTemplate(
             square_number.refine(result_key='base'),
             add_one.refine(result_key='bonus'),
-            add_two_numbers.refine(param_key_map={
-                'left_value': 'base',
-                'right_value': 'bonus',
-            }),
+            add_two_numbers.refine(
+                param_key_map={
+                    'left_value': 'base',
+                    'right_value': 'bonus',
+                }
+            ),
             consume_kwargs_from_results=False,
         )
-        def dag_child(number: int) -> int:
-            ...
+        def dag_child(number: int) -> int: ...
 
         # Linear Parent Flow
         @LinearFlowTemplate(add_one, dag_child)
-        def linear_parent(number: int) -> int:
-            ...
+        def linear_parent(number: int) -> int: ...
 
         return apply_job(linear_parent, engine, registry)
 
@@ -479,8 +479,7 @@ def case_linear_parent_with_func_child() -> ComposedFlowCase[[int], int]:
 
         # Linear Parent Flow
         @LinearFlowTemplate(double_number, func_child)
-        def linear_parent(number: int) -> int:
-            ...
+        def linear_parent(number: int) -> int: ...
 
         return apply_job(linear_parent, engine, registry)
 
@@ -506,14 +505,15 @@ def case_dag_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
         # Tasks
         # Linear Child Flow
         @LinearFlowTemplate(
-            add_two_numbers.refine(param_key_map={
-                'left_value': 'base_value',
-                'right_value': 'branch_value',
-            }),
+            add_two_numbers.refine(
+                param_key_map={
+                    'left_value': 'base_value',
+                    'right_value': 'branch_value',
+                }
+            ),
             add_one,
         )
-        def linear_child_from_dag_parent(base_value: int, branch_value: int) -> int:
-            ...
+        def linear_child_from_dag_parent(base_value: int, branch_value: int) -> int: ...
 
         # DAG Parent Flow
         @DagFlowTemplate(
@@ -522,8 +522,7 @@ def case_dag_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
             linear_child_from_dag_parent,
             consume_kwargs_from_results=False,
         )
-        def dag_parent_with_linear_child(number: int) -> int:
-            ...
+        def dag_parent_with_linear_child(number: int) -> int: ...
 
         return apply_job(dag_parent_with_linear_child, engine, registry)
 
@@ -556,14 +555,15 @@ def case_dag_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
                 },
                 result_key='child_gap',
             ),
-            add_two_numbers.refine(param_key_map={
-                'left_value': 'child_total',
-                'right_value': 'child_gap',
-            }),
+            add_two_numbers.refine(
+                param_key_map={
+                    'left_value': 'child_total',
+                    'right_value': 'child_gap',
+                }
+            ),
             consume_kwargs_from_results=False,
         )
-        def dag_child_from_dag_parent(left_value: int, right_value: int) -> int:
-            ...
+        def dag_child_from_dag_parent(left_value: int, right_value: int) -> int: ...
 
         # DAG Parent Flow
         @DagFlowTemplate(
@@ -572,8 +572,7 @@ def case_dag_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
             dag_child_from_dag_parent,
             consume_kwargs_from_results=False,
         )
-        def dag_parent_with_dag_child(number: int) -> int:
-            ...
+        def dag_parent_with_dag_child(number: int) -> int: ...
 
         return apply_job(dag_parent_with_dag_child, engine, registry)
 
@@ -610,8 +609,7 @@ def case_dag_parent_with_func_child() -> ComposedFlowCase[[int], int]:
             func_child_from_dag_parent,
             consume_kwargs_from_results=False,
         )
-        def dag_parent_with_func_child(number: int) -> int:
-            ...
+        def dag_parent_with_func_child(number: int) -> int: ...
 
         return apply_job(dag_parent_with_func_child, engine, registry)
 
@@ -647,11 +645,11 @@ def case_dag_parent_child_routing() -> ComposedFlowCase[[int], int]:
                 param_key_map={
                     'left_value': 'child_value',
                     'right_value': 'scaled_value',
-                },),
+                },
+            ),
             consume_kwargs_from_results=False,
         )
-        def dag_child_with_routing(child_value: int, child_multiplier: int) -> int:
-            ...
+        def dag_child_with_routing(child_value: int, child_multiplier: int) -> int: ...
 
         # DAG Parent Flow
         @DagFlowTemplate(
@@ -668,11 +666,11 @@ def case_dag_parent_child_routing() -> ComposedFlowCase[[int], int]:
                 param_key_map={
                     'minuend': 'child_checksum',
                     'subtrahend': 'mapped_input',
-                },),
+                },
+            ),
             consume_kwargs_from_results=False,
         )
-        def dag_parent_child_routing(seed: int) -> int:
-            ...
+        def dag_parent_child_routing(seed: int) -> int: ...
 
         return apply_job(dag_parent_child_routing, engine, registry)
 
@@ -699,15 +697,13 @@ def case_dag_parent_child_refine_revise() -> ComposedFlowCase[[int], int]:  # no
         add_two_numbers,
         double_number.refine(param_key_map={'number': 'combined_value'}),
     )
-    def initial_linear_child(left_value: int, right_value: int) -> int:
-        ...
+    def initial_linear_child(left_value: int, right_value: int) -> int: ...
 
     @LinearFlowTemplate(
         add_two_numbers,
         add_one.refine(param_key_map={'number': 'combined_value'}),
     )
-    def replacement_linear_child(left_value: int, right_value: int) -> int:
-        ...
+    def replacement_linear_child(left_value: int, right_value: int) -> int: ...
 
     # DAG Parent Flow
     @DagFlowTemplate(
@@ -717,8 +713,7 @@ def case_dag_parent_child_refine_revise() -> ComposedFlowCase[[int], int]:  # no
         add_two.refine(param_key_map={'number': 'child_result'}),
         consume_kwargs_from_results=False,
     )
-    def dag_parent_child_refine_revise(number: int) -> int:
-        ...
+    def dag_parent_child_refine_revise(number: int) -> int: ...
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         return apply_job(dag_parent_child_refine_revise, engine, registry)
@@ -758,8 +753,7 @@ def case_func_flow_calls_linear_child() -> ComposedFlowCase[[int], int]:
         # Tasks
         # Linear Child Flow
         @LinearFlowTemplate(add_one, double_number)
-        def linear_child_flow(number: int) -> int:
-            ...
+        def linear_child_flow(number: int) -> int: ...
 
         # Func Parent Flow
         @FuncFlowTemplate()
@@ -789,8 +783,7 @@ def case_func_flow_mixed_sync_async() -> ComposedFlowCase[[int], Awaitable[int]]
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         # Sync Child Flow
         @LinearFlowTemplate(add_two, square_number)
-        def sync_linear_child(number: int) -> int:
-            ...
+        def sync_linear_child(number: int) -> int: ...
 
         # Async Child Flow
         @FuncFlowTemplate()
@@ -845,8 +838,9 @@ def case_func_flow_sync_generator_child_sync_function() -> ComposedFlowCase[[int
     id='func-flow-async-coroutine-child-async-generator',
     tags=['semantic-floor', 'func-flow-child-ac-parent-ag'],
 )
-def case_func_flow_async_coroutine_child_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:
+def case_func_flow_async_coroutine_child_async_generator() -> ComposedFlowCase[
+    [int], AsyncGenerator
+]:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -873,8 +867,9 @@ def case_func_flow_async_coroutine_child_async_generator(
     id='func-flow-async-generator-child-async-coroutine',
     tags=['semantic-floor', 'func-flow-child-ag-parent-ac'],
 )
-def case_func_flow_async_generator_child_async_coroutine(
-) -> ComposedFlowCase[[int], Awaitable[int]]:
+def case_func_flow_async_generator_child_async_coroutine() -> ComposedFlowCase[
+    [int], Awaitable[int]
+]:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -932,8 +927,9 @@ def case_func_flow_async_generator_child_sync_generator() -> ComposedFlowCase[[i
     id='func-flow-sync-generator-child-async-coroutine',
     tags=['semantic-floor', 'func-flow-child-sg-parent-ac'],
 )
-def case_func_flow_sync_generator_child_async_coroutine(
-) -> ComposedFlowCase[[int], Awaitable[int]]:
+def case_func_flow_sync_generator_child_async_coroutine() -> ComposedFlowCase[
+    [int], Awaitable[int]
+]:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -959,8 +955,9 @@ def case_func_flow_sync_generator_child_async_coroutine(
     id='func-flow-sync-generator-child-async-generator',
     tags=['semantic-floor', 'func-flow-child-sg-parent-ag'],
 )
-def case_func_flow_sync_generator_child_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:
+def case_func_flow_sync_generator_child_async_generator() -> ComposedFlowCase[
+    [int], AsyncGenerator
+]:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1196,12 +1193,13 @@ def case_linear_flow_early_async_generator_terminal_async_coroutine(  # noqa: C9
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(emit_async_values, sum_async_values)
-        async def linear_flow_early_async_generator_terminal_async_coroutine(number: int) -> int:
-            ...
+        async def linear_flow_early_async_generator_terminal_async_coroutine(
+            number: int,
+        ) -> int: ...
 
-        return apply_job(linear_flow_early_async_generator_terminal_async_coroutine,
-                         engine,
-                         registry)
+        return apply_job(
+            linear_flow_early_async_generator_terminal_async_coroutine, engine, registry
+        )
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         await assert_async_result(job, expected_callable_type, 9, 2)
@@ -1225,13 +1223,14 @@ def case_linear_flow_early_async_generator_terminal_async_generator(  # noqa: C9
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(emit_async_values, emit_doubled_async_values)
         async def linear_flow_early_async_generator_terminal_async_generator(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
                 yield _
 
-        return apply_job(linear_flow_early_async_generator_terminal_async_generator,
-                         engine,
-                         registry)
+        return apply_job(
+            linear_flow_early_async_generator_terminal_async_generator, engine, registry
+        )
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         await assert_async_generator_result(job, expected_callable_type, [4, 6, 8], 2)
@@ -1254,8 +1253,7 @@ def case_dag_flow_early_async_generator_terminal_async_coroutine(  # noqa: C901
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @DagFlowTemplate(emit_async_values.refine(result_key='values'), sum_async_values)
-        async def dag_flow_early_async_generator_terminal_async_coroutine(number: int) -> int:
-            ...
+        async def dag_flow_early_async_generator_terminal_async_coroutine(number: int) -> int: ...
 
         return apply_job(dag_flow_early_async_generator_terminal_async_coroutine, engine, registry)
 
@@ -1281,7 +1279,8 @@ def case_dag_flow_early_async_generator_terminal_async_generator(  # noqa: C901
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @DagFlowTemplate(emit_async_values.refine(result_key='values'), emit_doubled_async_values)
         async def dag_flow_early_async_generator_terminal_async_generator(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
                 yield _
 
@@ -1309,12 +1308,12 @@ def case_linear_flow_early_async_generator_middle_sync_terminal_async_coroutine(
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(emit_async_values, pass_async_values_through, sum_async_values)
         async def linear_flow_early_async_generator_middle_sync_terminal_async_coroutine(
-                number: int) -> int:
-            ...
+            number: int,
+        ) -> int: ...
 
-        return apply_job(linear_flow_early_async_generator_middle_sync_terminal_async_coroutine,
-                         engine,
-                         registry)
+        return apply_job(
+            linear_flow_early_async_generator_middle_sync_terminal_async_coroutine, engine, registry
+        )
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         await assert_async_result(job, expected_callable_type, 9, 2)
@@ -1338,13 +1337,14 @@ def case_linear_flow_early_async_generator_middle_sync_terminal_async_generator(
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(emit_async_values, pass_async_values_through, emit_doubled_async_values)
         async def linear_flow_early_async_generator_middle_sync_terminal_async_generator(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
                 yield _
 
-        return apply_job(linear_flow_early_async_generator_middle_sync_terminal_async_generator,
-                         engine,
-                         registry)
+        return apply_job(
+            linear_flow_early_async_generator_middle_sync_terminal_async_generator, engine, registry
+        )
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         await assert_async_generator_result(job, expected_callable_type, [4, 6, 8], 2)
@@ -1373,8 +1373,8 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_coroutin
             consume_kwargs_from_results=False,
         )
         async def dag_flow_early_async_generator_independent_sync_terminal_async_coroutine(
-                number: int) -> int:
-            ...
+            number: int,
+        ) -> int: ...
 
         return apply_job(
             dag_flow_early_async_generator_independent_sync_terminal_async_coroutine,
@@ -1461,7 +1461,8 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_generato
             consume_kwargs_from_results=False,
         )
         async def dag_flow_early_async_generator_independent_sync_terminal_async_generator(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
                 yield _
 
@@ -1493,7 +1494,8 @@ def case_linear_flow_early_async_generator_terminal_sync_function(  # noqa: C901
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(emit_async_values, pass_async_values_through)
         async def linear_flow_early_async_generator_terminal_sync_function(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For async-generator signature only; never run.
                 yield _
 
@@ -1521,13 +1523,14 @@ def case_linear_flow_early_async_generator_terminal_sync_generator(  # noqa: C90
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(emit_async_values, emit_sync_wrapped_async_values)
         async def linear_flow_early_async_generator_terminal_sync_generator(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For async-generator signature only; never run.
                 yield _
 
-        return apply_job(linear_flow_early_async_generator_terminal_sync_generator,
-                         engine,
-                         registry)
+        return apply_job(
+            linear_flow_early_async_generator_terminal_sync_generator, engine, registry
+        )
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         await assert_nested_async_generator_result(job, expected_callable_type, [(2, 3, 4)], 2)
@@ -1550,8 +1553,7 @@ def case_linear_flow_early_async_terminal_sync_function(  # noqa: C901
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(add_one, async_double_number, add_two)
-        async def linear_flow_early_async_terminal_sync_function(number: int) -> int:
-            ...
+        async def linear_flow_early_async_terminal_sync_function(number: int) -> int: ...
 
         return apply_job(linear_flow_early_async_terminal_sync_function, engine, registry)
 
@@ -1576,8 +1578,7 @@ def case_linear_flow_early_sync_generator_terminal_sync_function(  # noqa: C901
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(emit_three_values, sum_values)
-        def linear_flow_early_sync_generator_terminal_sync_function(number: int) -> int:
-            ...
+        def linear_flow_early_sync_generator_terminal_sync_function(number: int) -> int: ...
 
         return apply_job(linear_flow_early_sync_generator_terminal_sync_function, engine, registry)
 
@@ -1602,12 +1603,11 @@ def case_linear_flow_early_sync_generator_terminal_async_coroutine(  # noqa: C90
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(emit_three_values, sum_values_async)
-        async def linear_flow_early_sync_generator_terminal_async_coroutine(number: int) -> int:
-            ...
+        async def linear_flow_early_sync_generator_terminal_async_coroutine(number: int) -> int: ...
 
-        return apply_job(linear_flow_early_sync_generator_terminal_async_coroutine,
-                         engine,
-                         registry)
+        return apply_job(
+            linear_flow_early_sync_generator_terminal_async_coroutine, engine, registry
+        )
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         await assert_async_result(job, expected_callable_type, 18, 2)
@@ -1631,13 +1631,14 @@ def case_linear_flow_early_sync_generator_terminal_async_generator(  # noqa: C90
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @LinearFlowTemplate(emit_three_values, emit_doubled_sync_values_as_async)
         async def linear_flow_early_sync_generator_terminal_async_generator(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
                 yield _
 
-        return apply_job(linear_flow_early_sync_generator_terminal_async_generator,
-                         engine,
-                         registry)
+        return apply_job(
+            linear_flow_early_sync_generator_terminal_async_generator, engine, registry
+        )
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         await assert_async_generator_result(job, expected_callable_type, [4, 6, 8], 2)
@@ -1662,14 +1663,15 @@ def case_dag_flow_early_async_terminal_sync_function(  # noqa: C901
         @DagFlowTemplate(
             compute_base,
             async_double_number.refine(param_key_map={'number': 'base'}, result_key='async_value'),
-            add_two_numbers.refine(param_key_map={
-                'left_value': 'base',
-                'right_value': 'async_value',
-            }),
+            add_two_numbers.refine(
+                param_key_map={
+                    'left_value': 'base',
+                    'right_value': 'async_value',
+                }
+            ),
             consume_kwargs_from_results=False,
         )
-        async def dag_flow_early_async_terminal_sync_function(number: int) -> int:
-            ...
+        async def dag_flow_early_async_terminal_sync_function(number: int) -> int: ...
 
         return apply_job(dag_flow_early_async_terminal_sync_function, engine, registry)
 
@@ -1694,8 +1696,7 @@ def case_dag_flow_early_sync_generator_terminal_sync_function(  # noqa: C901
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @DagFlowTemplate(emit_three_values.refine(result_key='values'), sum_values)
-        def dag_flow_early_sync_generator_terminal_sync_function(number: int) -> int:
-            ...
+        def dag_flow_early_sync_generator_terminal_sync_function(number: int) -> int: ...
 
         return apply_job(dag_flow_early_sync_generator_terminal_sync_function, engine, registry)
 
@@ -1720,8 +1721,7 @@ def case_dag_flow_early_sync_generator_terminal_async_coroutine(  # noqa: C901
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @DagFlowTemplate(emit_three_values.refine(result_key='values'), sum_values_async)
-        async def dag_flow_early_sync_generator_terminal_async_coroutine(number: int) -> int:
-            ...
+        async def dag_flow_early_sync_generator_terminal_async_coroutine(number: int) -> int: ...
 
         return apply_job(dag_flow_early_sync_generator_terminal_async_coroutine, engine, registry)
 
@@ -1746,9 +1746,11 @@ def case_dag_flow_early_sync_generator_terminal_async_generator(  # noqa: C901
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @DagFlowTemplate(
-            emit_three_values.refine(result_key='values'), emit_doubled_sync_values_as_async)
+            emit_three_values.refine(result_key='values'), emit_doubled_sync_values_as_async
+        )
         async def dag_flow_early_sync_generator_terminal_async_generator(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For generator signature only; never run.
                 yield _
 
@@ -1776,7 +1778,8 @@ def case_dag_flow_early_async_generator_terminal_sync_function(  # noqa: C901
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @DagFlowTemplate(emit_async_values.refine(result_key='values'), pass_async_values_through)
         async def dag_flow_early_async_generator_terminal_sync_function(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For async-generator signature only; never run.
                 yield _
 
@@ -1803,9 +1806,11 @@ def case_dag_flow_early_async_generator_terminal_sync_generator(  # noqa: C901
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         @DagFlowTemplate(
-            emit_async_values.refine(result_key='values'), emit_sync_wrapped_async_values)
+            emit_async_values.refine(result_key='values'), emit_sync_wrapped_async_values
+        )
         async def dag_flow_early_async_generator_terminal_sync_generator(
-                number: int) -> AsyncGenerator:
+            number: int,
+        ) -> AsyncGenerator:
             async for _ in Void():  # For async-generator signature only; never run.
                 yield _
 
@@ -1826,8 +1831,9 @@ def case_dag_flow_early_async_generator_terminal_sync_generator(  # noqa: C901
     id='linear-flow-param-key-map-result-key-async-terminal-child',
     tags=['semantic-floor', 'linear-flow-param-key-map-result-key-async-terminal-child'],
 )
-def case_linear_flow_param_key_map_result_key_async_terminal_child(
-) -> ComposedFlowCase[[int], Awaitable[int]]:
+def case_linear_flow_param_key_map_result_key_async_terminal_child() -> ComposedFlowCase[
+    [int], Awaitable[int]
+]:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1836,14 +1842,15 @@ def case_linear_flow_param_key_map_result_key_async_terminal_child(
             wait_and_double_milliseconds.refine(
                 param_key_map=dict(milliseconds='number'),
                 result_key='doubled',
-            ))
+            )
+        )
         async def linear_flow_param_key_map_result_key_async_terminal_child(
-                milliseconds: int) -> int:
-            ...
+            milliseconds: int,
+        ) -> int: ...
 
-        return apply_job(linear_flow_param_key_map_result_key_async_terminal_child,
-                         engine,
-                         registry)
+        return apply_job(
+            linear_flow_param_key_map_result_key_async_terminal_child, engine, registry
+        )
 
     async def run_and_assert_results(job: IsFuncArgJob) -> None:
         await assert_async_result(
@@ -1865,15 +1872,15 @@ def case_linear_flow_param_key_map_result_key_async_terminal_child(
     id='func-flow-async-func-flow-child-async-linear-flow-grandchild',
     tags=['semantic-floor', 'func-flow-async-func-flow-child-async-linear-flow-grandchild'],
 )
-def case_func_flow_async_func_flow_child_async_linear_flow_grandchild(
-) -> ComposedFlowCase[[int], Awaitable[int]]:
+def case_func_flow_async_func_flow_child_async_linear_flow_grandchild() -> ComposedFlowCase[
+    [int], Awaitable[int]
+]:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
         # Nested Async Child Flow
         @LinearFlowTemplate(add_one, async_double_number)
-        async def async_linear_grandchild(number: int) -> int:
-            ...
+        async def async_linear_grandchild(number: int) -> int: ...
 
         @FuncFlowTemplate()
         async def async_func_child(number: int) -> int:

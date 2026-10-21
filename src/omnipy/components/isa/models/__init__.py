@@ -1,5 +1,7 @@
-from omnipy.components.tables.models import (JsonScalarColumnWiseTableWithColNamesModel,
-                                             PrintableTable)
+from omnipy.components.tables.models import (
+    JsonScalarColumnWiseTableWithColNamesModel,
+    PrintableTable,
+)
 from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
@@ -18,6 +20,7 @@ class IsaTopLevelSchema(pyd.BaseModel):
     Attributes:
         investigation: Wrapped investigation payload when present.
     """
+
     class Config:
         """Pydantic settings for top-level ISA validation.
 
@@ -49,6 +52,7 @@ class IsaJsonModel(Model[IsaInvestigationSchema | IsaTopLevelModel]):
     Input can be either a raw :class:`IsaInvestigationSchema` object or a
     top-level wrapper containing the ``investigation`` field.
     """
+
     class Config:  # pyright: ignore[reportIncompatibleVariableOverride]
         """Pydantic settings for ISA union parsing behavior.
 
@@ -66,5 +70,4 @@ class IsaJsonModel(Model[IsaInvestigationSchema | IsaTopLevelModel]):
             return IsaTopLevelModel(investigation=data)
 
 
-class FlattenedIsaJsonModel(Model[JsonScalarColumnWiseTableWithColNamesModel], PrintableTable):
-    ...
+class FlattenedIsaJsonModel(Model[JsonScalarColumnWiseTableWithColNamesModel], PrintableTable): ...

@@ -37,6 +37,7 @@ def add_callback_if_exception(
     Returns:
         A wrapped callable with exception-triggered fallback behavior.
     """
+
     def _inner(*args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs) -> _DecoratedR:
         """Invoke primary callable and fall back on handled exceptions.
 
@@ -59,12 +60,13 @@ def add_callback_if_exception(
     return _inner
 
 
-def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
-                            callback_func: Callable[Concatenate[_DecoratedR, _CallbackP],
-                                                    _DecoratedR],
-                            with_context: ContextManager[None] | None,
-                            *cb_args: _CallbackP.args,
-                            **cb_kwargs: _CallbackP.kwargs) -> Callable[_DecoratedP, _DecoratedR]:
+def add_callback_after_call(
+    decorated_func: Callable[_DecoratedP, _DecoratedR],
+    callback_func: Callable[Concatenate[_DecoratedR, _CallbackP], _DecoratedR],
+    with_context: ContextManager[None] | None,
+    *cb_args: _CallbackP.args,
+    **cb_kwargs: _CallbackP.kwargs,
+) -> Callable[_DecoratedP, _DecoratedR]:
     """Return a wrapper that post-processes a successful result.
 
     Args:
@@ -78,8 +80,10 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
         A wrapped callable that runs ``callback_func`` only when the decorated
         call succeeds without raising an exception.
     """
+
     class CallbackAfterCall(AbstractContextManager):
         """Context manager running callback only after successful call completion."""
+
         def __init__(self, dec_func, *args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs):
             """Store callable and invocation arguments for deferred execution.
 
@@ -113,7 +117,7 @@ def add_callback_after_call(decorated_func: Callable[_DecoratedP, _DecoratedR],
 
             Returns:
                 ``None`` to preserve normal exception propagation behavior.
-        """
+            """
             ret = None
 
             if exc_val is None:
@@ -169,7 +173,8 @@ def apply_decorator_to_property(prop: property, decorator: Callable[[Callable], 
         fget=decorator(prop.fget) if prop.fget is not None else None,
         fset=decorator(prop.fset) if prop.fset is not None else None,
         fdel=decorator(prop.fdel) if prop.fdel is not None else None,
-        doc=prop.__doc__)
+        doc=prop.__doc__,
+    )
 
 
 def call_super_if_available(call_super_before_method: bool):
@@ -187,8 +192,10 @@ def call_super_if_available(call_super_before_method: bool):
         If the parent class has no same-named callable, the original method is
         executed directly.
     """
+
     class SuperCaller(Generic[_SelfOrClsT, _ArgT]):
         """Descriptor binding method calls and optional ``super()`` delegation."""
+
         def __init__(self, method: Callable[[_SelfOrClsT, _ArgT], _ArgT]):
             """Store the decorated method and descriptor state placeholders.
 
@@ -245,7 +252,8 @@ def call_super_if_available(call_super_before_method: bool):
             super_method: Callable[[_ArgT], _ArgT] | None = getattr(
                 super(self._cls_of_decorated_method, self._calling_obj_or_cls),
                 self._method.__name__,
-                None)
+                None,
+            )
             if super_method and callable(super_method):
                 if call_super_before_method:
                     return method(self._calling_obj_or_cls, super_method(arg))
@@ -295,6 +303,7 @@ class class_or_instance_method(Generic[T, _DecoratedP, _DecoratedR], object):
             A callable that forwards arguments to the wrapped implementation with
             both ``instance`` and ``cls``.
         """
+
         def _func(*args: _DecoratedP.args, **kwargs: _DecoratedP.kwargs) -> _DecoratedR:
             """Forward invocation to the stored dual-bound implementation.
 

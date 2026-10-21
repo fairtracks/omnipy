@@ -11,7 +11,8 @@ from omnipy.util.helpers import is_package_editable
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_ISRUNSTATEREGISTRY_GET_JOB_STATE_SUMMARY'] = (
-        'Return the current run state registered for a job.')
+        'Return the current run state registered for a job.'
+    )
     os.environ['OMNIPY_MACRO_ISRUNSTATEREGISTRY_GET_JOB_STATE_DETAILS'] = dedent("""\
         Args:
             job: Job whose current run state should be looked up.
@@ -21,7 +22,8 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISRUNSTATEREGISTRY_GET_JOB_STATE_DATETIME_SUMMARY'] = (
-        'Return when the job was recorded in a specific run state.')
+        'Return when the job was recorded in a specific run state.'
+    )
     os.environ['OMNIPY_MACRO_ISRUNSTATEREGISTRY_GET_JOB_STATE_DATETIME_DETAILS'] = dedent("""\
         Args:
             job: Job whose transition time should be looked up.
@@ -32,7 +34,8 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISRUNSTATEREGISTRY_ALL_JOBS_SUMMARY'] = (
-        'Return all registered jobs, optionally filtered by their current state.')
+        'Return all registered jobs, optionally filtered by their current state.'
+    )
     os.environ['OMNIPY_MACRO_ISRUNSTATEREGISTRY_ALL_JOBS_DETAILS'] = dedent("""\
         Args:
             state: Optional run-state filter limiting the returned jobs.
@@ -42,7 +45,8 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISRUNSTATEREGISTRY_SET_JOB_STATE_SUMMARY'] = (
-        'Register a job transition, update indexes, and emit the matching log event.')
+        'Register a job transition, update indexes, and emit the matching log event.'
+    )
     os.environ['OMNIPY_MACRO_ISRUNSTATEREGISTRY_SET_JOB_STATE_DETAILS'] = dedent("""\
         Args:
             job: Job whose state transition should be recorded.
@@ -53,8 +57,8 @@ if is_package_editable('omnipy'):
 @runtime_checkable
 class IsRunStateRegistry(Protocol):
     """Protocol for registries that track job run states."""
-    def __init__(self) -> None:
-        ...
+
+    def __init__(self) -> None: ...
 
     def get_job_state(self, job: IsUniquelyNamedJob) -> RunState.Literals:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
@@ -87,8 +91,7 @@ class IsRunStateRegistry(Protocol):
         """
         ...
 
-    def all_jobs(self,
-                 state: RunState.Literals | None = None) -> tuple[IsUniquelyNamedJob, ...]:  # noqa
+    def all_jobs(self, state: RunState.Literals | None = None) -> tuple[IsUniquelyNamedJob, ...]:  # noqa
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{ISRUNSTATEREGISTRY_ALL_JOBS_SUMMARY}}
         #

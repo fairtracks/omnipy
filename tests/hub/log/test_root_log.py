@@ -17,9 +17,11 @@ from omnipy.hub.log._root_log import RootLogObjects
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.helpers import get_datetime_format
 
-from ..helpers.functions import (assert_log_line_from_stream,
-                                 format_datetime_obj,
-                                 read_log_line_from_stream)
+from ..helpers.functions import (
+    assert_log_line_from_stream,
+    format_datetime_obj,
+    read_log_line_from_stream,
+)
 
 
 def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: Path):
@@ -39,7 +41,9 @@ def _assert_root_log_config_default(root_log: RootLogConfig, dir_path: Path):
     assert root_log.file_log_path == str(dir_path / 'logs' / 'omnipy.log')
 
 
-def _assert_root_log_objects(root_log_objects: RootLogObjects,) -> None:
+def _assert_root_log_objects(
+    root_log_objects: RootLogObjects,
+) -> None:
     """Assert root log objects."""
     assert isinstance(root_log_objects.formatter, logging.Formatter)
     assert isinstance(root_log_objects.stdout_handler, logging.StreamHandler)
@@ -52,7 +56,8 @@ def test_root_log_config_default() -> None:
 
 
 def test_root_log_objects_default(
-        teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture]) -> None:
+    teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture],
+) -> None:
     _assert_root_log_objects(RootLogObjects())
 
 
@@ -71,7 +76,8 @@ def _log_record_for_level(level: int, datetime_obj: datetime | None = None):
     """Provide log record for level."""
     test_logger = logging.getLogger('test.logger')
     record = test_logger.makeRecord(
-        name=test_logger.name, level=level, fn='', lno=0, msg='my log msg', args=(), exc_info=None)
+        name=test_logger.name, level=level, fn='', lno=0, msg='my log msg', args=(), exc_info=None
+    )
     record.engine = 'TEST'
     if datetime_obj:
         record.created = time.mktime(datetime_obj.timetuple())
@@ -109,7 +115,8 @@ def test_log_formatter_date_localization(runtime: Annotated[IsRuntime, pytest.fi
     assert new_formatter is not prev_formatter
 
     formatted_log_entry = new_formatter.format(
-        _log_record_for_level(logging.INFO, datetime_obj=fixed_datetime_now))
+        _log_record_for_level(logging.INFO, datetime_obj=fixed_datetime_now)
+    )
 
     assert_log_line_from_stream(
         StringIO(formatted_log_entry),
@@ -134,11 +141,11 @@ def logger() -> logging.Logger:
 
 
 def _log_and_assert_log_line_from_stream(
-        runtime: IsRuntime,
-        logger: logging.Logger,
-        level: int,
-        stream: TextIOBase,
-        datetime_obj: datetime = datetime.now(),
+    runtime: IsRuntime,
+    logger: logging.Logger,
+    level: int,
+    stream: TextIOBase,
+    datetime_obj: datetime = datetime.now(),
 ):
     """Provide log and assert log line from stream."""
     logger.log(level, 'Test log message', extra={'timestamp': datetime_obj.timestamp()})
@@ -303,11 +310,9 @@ def test_log_to_file_with_specific_datetime(
 
     specific_date = datetime(2021, 1, 1, 12, 0, 0)
     with open(log_file_path, 'r+') as log_file:
-        _log_and_assert_log_line_from_stream(runtime,
-                                             logger,
-                                             logging.WARNING,
-                                             log_file,
-                                             specific_date)
+        _log_and_assert_log_line_from_stream(
+            runtime, logger, logging.WARNING, log_file, specific_date
+        )
 
 
 def test_daily_log_file_rotation(

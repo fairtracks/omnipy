@@ -97,23 +97,24 @@ def assert_dims_aware_panel(
     else:
         assert exp_frame is not None
 
-    assert panel.dims.width == exp_dims.width, \
-        f'{panel.dims.width} != {exp_dims.width}'
-    assert panel.dims.height == exp_dims.height, \
-        f'{panel.dims.height} != {exp_dims.height}'
-    assert panel.frame.dims.width == exp_frame.dims.width, \
+    assert panel.dims.width == exp_dims.width, f'{panel.dims.width} != {exp_dims.width}'
+    assert panel.dims.height == exp_dims.height, f'{panel.dims.height} != {exp_dims.height}'
+    assert panel.frame.dims.width == exp_frame.dims.width, (
         f'{panel.frame.dims.width} != {exp_frame.dims.width}'
-    assert panel.frame.dims.height == exp_frame.dims.height, \
+    )
+    assert panel.frame.dims.height == exp_frame.dims.height, (
         f'{panel.frame.dims.height} != {exp_frame.dims.height}'
+    )
 
     if exp_within_frame is not None:
         dims_fit = panel.within_frame
-        assert dims_fit.width == exp_within_frame.width, \
+        assert dims_fit.width == exp_within_frame.width, (
             f'{dims_fit.width} != {exp_within_frame.width}'
-        assert dims_fit.height == exp_within_frame.height, \
+        )
+        assert dims_fit.height == exp_within_frame.height, (
             f'{dims_fit.height} != {exp_within_frame.height}'
-        assert dims_fit.both == exp_within_frame.both, \
-            f'{dims_fit.both} != {exp_within_frame.both}'
+        )
+        assert dims_fit.both == exp_within_frame.both, f'{dims_fit.both} != {exp_within_frame.both}'
 
 
 def assert_next_stage_panel(
@@ -124,18 +125,15 @@ def assert_next_stage_panel(
     exp_config: OutputConfig | None = None,
 ) -> None:
     assert isinstance(next_stage, next_stage_panel_cls)
-    assert next_stage.frame == this_panel.frame, \
-        f'\n{next_stage.frame} != \n{this_panel.frame}'
-    assert next_stage.title == this_panel.title, \
-        f'\n{next_stage.title} != \n{this_panel.title}'
-    assert next_stage.constraints == this_panel.constraints, \
+    assert next_stage.frame == this_panel.frame, f'\n{next_stage.frame} != \n{this_panel.frame}'
+    assert next_stage.title == this_panel.title, f'\n{next_stage.title} != \n{this_panel.title}'
+    assert next_stage.constraints == this_panel.constraints, (
         f'\n{next_stage.constraints} != \n{this_panel.constraints}'
+    )
     if exp_config is None:
         exp_config = this_panel.config
-    assert next_stage.config == exp_config, \
-        f'\n{next_stage.config} != \n{exp_config}'
-    assert next_stage.content == exp_content, \
-        f'\n{next_stage.content} != \n{exp_content}'
+    assert next_stage.config == exp_config, f'\n{next_stage.config} != \n{exp_config}'
+    assert next_stage.content == exp_content, f'\n{next_stage.content} != \n{exp_content}'
 
 
 def _strip_html(html: str) -> str:
@@ -147,6 +145,7 @@ def _strip_html(html: str) -> str:
 
     def _to_char(match: re.Match) -> str:
         import sys
+
         byte_as_str = match[1]
         return int(byte_as_str, 16).to_bytes(length=1, byteorder=sys.byteorder).decode()
 
@@ -166,15 +165,18 @@ def strip_all_styling_from_panel_output(
 
 
 def _get_font_style_by_case_id(case_id: str | None) -> str:
-    DEFAULT_FONT_STYLE = ("font-family: 'Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', "
-                          "'monospace'; font-size: 14.0px; font-weight: 400; line-height: 1.25; ")
+    DEFAULT_FONT_STYLE = (
+        "font-family: 'Menlo', 'DejaVu Sans Mono', 'Consolas', 'Courier New', "
+        "'monospace'; font-size: 14.0px; font-weight: 400; line-height: 1.25; "
+    )
 
     FONT_STYLING_ONLY = 'font-weight: 500; line-height: 1.0; '
 
-    FULL_FONT_CONF = ("font-family: 'monospace'; font-size: 15.0px; "
-                      'font-weight: 600; line-height: 1.1; ')
+    FULL_FONT_CONF = (
+        "font-family: 'monospace'; font-size: 15.0px; font-weight: 600; line-height: 1.1; "
+    )
 
-    match (case_id):
+    match case_id:
         case str(case_id) if 'no-fonts' in case_id:
             return ''
         case str(case_id) if 'font-styling-only' in case_id:
@@ -186,11 +188,9 @@ def _get_font_style_by_case_id(case_id: str | None) -> str:
 
 
 def fill_html_tag_template(data: str, color_style: str = '', case_id: str | None = None) -> str:
-    HTML_TAG_TEMPLATE = ('<pre>'
-                         '<code style="{display_style}{font_style}{color_style}">'
-                         '{data}\n'
-                         '</code>'
-                         '</pre>')
+    HTML_TAG_TEMPLATE = (
+        '<pre><code style="{display_style}{font_style}{color_style}">{data}\n</code></pre>'
+    )
 
     return HTML_TAG_TEMPLATE.format(
         display_style=_DISPLAY_STYLE,

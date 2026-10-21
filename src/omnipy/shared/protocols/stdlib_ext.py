@@ -18,6 +18,7 @@ class IsItemSequenceLike(Protocol[_ItemCovT]):
     useful for array/dataframe-style structures that don't implement the full
     sequence interface.
     """
+
     @overload
     def __getitem__(self, index: SupportsIndex, /) -> _ItemCovT:
         raise AssumedToBeImplementedException
@@ -26,8 +27,9 @@ class IsItemSequenceLike(Protocol[_ItemCovT]):
     def __getitem__(self, index: slice, /) -> 'IsItemSequenceLike[_ItemCovT]':
         raise AssumedToBeImplementedException
 
-    def __getitem__(self, index: SupportsIndex | slice,
-                    /) -> _ItemCovT | 'IsItemSequenceLike[_ItemCovT]':
+    def __getitem__(
+        self, index: SupportsIndex | slice, /
+    ) -> _ItemCovT | 'IsItemSequenceLike[_ItemCovT]':
         raise AssumedToBeImplementedException
 
     def __len__(self) -> int:

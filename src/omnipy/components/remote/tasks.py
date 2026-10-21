@@ -28,8 +28,9 @@ if TYPE_CHECKING:
 _JsonDatasetT = TypeVar('_JsonDatasetT', bound=IsDataset)
 
 
-async def _call_get(url: HttpUrlModel,
-                    session: 'ClientSession') -> 'AsyncGenerator[ClientResponse, None]':
+async def _call_get(
+    url: HttpUrlModel, session: 'ClientSession'
+) -> 'AsyncGenerator[ClientResponse, None]':
     """Perform a GET request and yield the validated successful response.
 
     Args:
@@ -51,8 +52,9 @@ async def _call_get(url: HttpUrlModel,
         yield response
 
 
-async def _call_post(url: HttpUrlModel, data: JsonModel,
-                     session: 'ClientSession') -> 'AsyncGenerator[ClientResponse, None]':
+async def _call_post(
+    url: HttpUrlModel, data: JsonModel, session: 'ClientSession'
+) -> 'AsyncGenerator[ClientResponse, None]':
     """Perform a JSON POST request and yield the validated successful response.
 
     Args:
@@ -69,9 +71,9 @@ async def _call_post(url: HttpUrlModel, data: JsonModel,
 
 def _check_response_status(response: 'ClientResponse') -> None:
     if response.status != 200:
-        raise ConnectionError(f'Failed to get data. '
-                              f'HTTP status: {response.status}. '
-                              f'URL: {response.url}')
+        raise ConnectionError(
+            f'Failed to get data. HTTP status: {response.status}. URL: {response.url}'
+        )
 
 
 def get_retry_client(
@@ -115,14 +117,17 @@ def get_retry_client(
 
 
 async def _ensure_retry_session(
-        retry_client: 'RetryClient | None') -> 'AsyncGenerator[RetryClient, None]':
+    retry_client: 'RetryClient | None',
+) -> 'AsyncGenerator[RetryClient, None]':
     from .lazy_import import ClientSession
 
     if retry_client:
         yield retry_client
     else:
         async with ClientSession() as tmp_session:
-            yield get_retry_client(tmp_session,)
+            yield get_retry_client(
+                tmp_session,
+            )
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=JsonDataset)
@@ -153,7 +158,9 @@ async def get_json_from_api_endpoint(
     """
     from .lazy_import import ClientSession
 
-    async for retry_session in _ensure_retry_session(retry_client,):
+    async for retry_session in _ensure_retry_session(
+        retry_client,
+    ):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
             _check_response_status(response)
             return JsonModel(await response.json(content_type=None))
@@ -226,7 +233,9 @@ async def get_str_from_api_endpoint(
     """
     from .lazy_import import ClientSession
 
-    async for retry_session in _ensure_retry_session(retry_client,):
+    async for retry_session in _ensure_retry_session(
+        retry_client,
+    ):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
             _check_response_status(response)
             return StrModel(await response.text())
@@ -261,7 +270,9 @@ async def get_bytes_from_api_endpoint(
     """
     from .lazy_import import ClientSession
 
-    async for retry_session in _ensure_retry_session(retry_client,):
+    async for retry_session in _ensure_retry_session(
+        retry_client,
+    ):
         async for response in _call_get(url, cast(ClientSession, retry_session)):
             _check_response_status(response)
             return BytesModel(await response.read())
@@ -317,7 +328,8 @@ async def get_auto_from_api_endpoint(
                     content = await response.read()
 
             model = AutoResponseContentModel(
-                ResponseContentPydModel(content_type=content_type_header, response=content))
+                ResponseContentPydModel(content_type=content_type_header, response=content)
+            )
             return model
 
     raise ShouldNotOccurException('Other exception should have been raised before this point.')
@@ -439,8 +451,9 @@ def get_github_repo_urls(
         return _get_url_for_single_file(repo_context)
 
 
-def _get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext,
-                                           file_suffix: str) -> HttpUrlDataset:
+def _get_urls_for_files_in_dir_with_suffix(
+    ctx: GithubRepoContext, file_suffix: str
+) -> HttpUrlDataset:
     """Build raw-content URLs for files in a repository directory filtered by suffix.
 
     Args:
@@ -495,8 +508,9 @@ async def async_get_github_repo_urls(
         return _get_url_for_single_file(repo_context)
 
 
-async def _async_get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext,
-                                                       file_suffix: str) -> HttpUrlDataset:
+async def _async_get_urls_for_files_in_dir_with_suffix(
+    ctx: GithubRepoContext, file_suffix: str
+) -> HttpUrlDataset:
     """Asynchronously build filtered raw-content URLs for a repository directory.
 
     Args:
@@ -507,8 +521,9 @@ async def _async_get_urls_for_files_in_dir_with_suffix(ctx: GithubRepoContext,
         HttpUrlDataset: URL dataset containing matching files.
     """
     api_url = _create_api_url_for_file_list(ctx)
-    file_list = await cast(asyncio.Task[JsonListOfDictsDataset],
-                           JsonListOfDictsDataset.load(api_url))
+    file_list = await cast(
+        asyncio.Task[JsonListOfDictsDataset], JsonListOfDictsDataset.load(api_url)
+    )
     return _create_url_dataset_for_files_with_suffix(file_list, file_suffix, ctx)
 
 

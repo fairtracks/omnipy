@@ -3,9 +3,11 @@ from typing import Generic, Iterator, overload, SupportsIndex
 
 from typing_extensions import Self, TypeVar
 
-from omnipy.components.tables.models import (ColumnModel,
-                                             ColumnWiseTableWithColNamesModel,
-                                             ConcatByAddArrayAdapterModel)
+from omnipy.components.tables.models import (
+    ColumnModel,
+    ColumnWiseTableWithColNamesModel,
+    ConcatByAddArrayAdapterModel,
+)
 
 T = TypeVar('T')
 
@@ -88,15 +90,17 @@ class FloatListLikeColumnModel(ColumnModel[ListLikeAdapterModel[float], float]):
         return nan
 
 
-class IntListLikeColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesModel[
+class IntListLikeColumnWiseTableWithColNamesModel(
+    ColumnWiseTableWithColNamesModel[
         IntListLikeColumnModel,
         int,
-]):
-    ...
+    ]
+): ...
 
 
-class FloatListLikeColumnWiseTableWithColNamesModel(ColumnWiseTableWithColNamesModel[
+class FloatListLikeColumnWiseTableWithColNamesModel(
+    ColumnWiseTableWithColNamesModel[
         FloatListLikeColumnModel,
         float,
-]):
-    ...
+    ]
+): ...

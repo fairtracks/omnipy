@@ -88,7 +88,8 @@ def test_characterize_peek_json_full_viewport_output() -> None:
             width=32,
             height=8,
             ui=UserInterfaceType.TERMINAL,
-        ))
+        )
+    )
     assert bounded_peek_output == dedent("""\
         ╭────────────────────────╮
         │ Model[list[list[int]]] │
@@ -105,7 +106,8 @@ def test_characterize_peek_json_full_viewport_output() -> None:
             width=32,
             height=None,
             ui=UserInterfaceType.TERMINAL,
-        ))
+        )
+    )
     assert unbounded_height_peek_output == dedent("""\
         ╭────────────────────────╮
         │ Model[list[list[int]]] │
@@ -126,7 +128,8 @@ def test_characterize_peek_json_full_viewport_output() -> None:
             width=None,
             height=8,
             ui=UserInterfaceType.TERMINAL,
-        ))
+        )
+    )
     assert unbounded_width_peek_output == dedent("""\
         ╭────────────────────────────────────────────────────────────────────────────╮
         │                           Model[list[list[int]]]                           │
@@ -140,7 +143,8 @@ def test_characterize_peek_json_full_viewport_output() -> None:
             width=32,
             height=8,
             ui=UserInterfaceType.TERMINAL,
-        ))
+        )
+    )
     assert bounded_json_output == dedent("""\
         ╭───────────────────╮
         │     JsonModel     │
@@ -157,7 +161,8 @@ def test_characterize_peek_json_full_viewport_output() -> None:
             width=32,
             height=4,
             ui=UserInterfaceType.TERMINAL,
-        ))
+        )
+    )
     assert full_output == unbounded_height_peek_output
     assert '│ …                      │' not in full_output
 
@@ -182,7 +187,8 @@ def test_characterize_dataset_list_framing_and_rows() -> None:
             width=80,
             height=9,
             ui=UserInterfaceType.TERMINAL,
-        ))
+        )
+    )
     assert _normalize_bytes_size(bounded_list_output) == _normalize_bytes_size(
         dedent("""\
         ╭───┬────────────────┬──────────────────┬────────┬──────────────────╮
@@ -194,14 +200,16 @@ def test_characterize_dataset_list_framing_and_rows() -> None:
         │ 3 │ row_3          │ Model[list[int]] │      2 │        649 Bytes │
         │ … │ …              │ …                │      … │                … │
         ╰───┴────────────────┴──────────────────┴────────┴──────────────────╯
-        """))
+        """)
+    )
 
     unbounded_height_list_output = render_panel_to_plain_terminal(
         dataset._list(
             width=80,
             height=None,
             ui=UserInterfaceType.TERMINAL,
-        ))
+        )
+    )
     assert _normalize_bytes_size(unbounded_height_list_output) == _normalize_bytes_size(
         dedent("""\
         ╭────┬────────────────┬──────────────────┬────────┬──────────────────╮
@@ -220,4 +228,5 @@ def test_characterize_dataset_list_framing_and_rows() -> None:
         │ 10 │ row_10         │ Model[list[int]] │      2 │        649 Bytes │
         │ 11 │ row_11         │ Model[list[int]] │      2 │        649 Bytes │
         ╰────┴────────────────┴──────────────────┴────────┴──────────────────╯
-        """))
+        """)
+    )

@@ -10,8 +10,8 @@ from .datasets import GeneralFileDataset
 class ZipFileModel(Model[GeneralFileDataset | StrictBytesModel]):
     @classmethod
     def _parse_data(
-            cls,
-            data: GeneralFileDataset | StrictBytesModel) -> GeneralFileDataset | StrictBytesModel:
+        cls, data: GeneralFileDataset | StrictBytesModel
+    ) -> GeneralFileDataset | StrictBytesModel:
 
         if isinstance(data, StrictBytesModel):
             from .datasets import GeneralFileDataset

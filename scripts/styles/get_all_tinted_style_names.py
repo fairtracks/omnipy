@@ -4,10 +4,12 @@ from textwrap import dedent
 
 from inflection import humanize
 
-from omnipy import get_github_repo_urls
 import omnipy as om
-from omnipy.data._display.styles.dynamic_styles import (_create_base_16_class_name_from_theme_key,
-                                                        fetch_base16_theme)
+from omnipy import get_github_repo_urls
+from omnipy.data._display.styles.dynamic_styles import (
+    _create_base_16_class_name_from_theme_key,
+    fetch_base16_theme,
+)
 from omnipy.shared.constants import THEME_KEY_TINTED_BASE16_SUFFIX
 from omnipy.util.literal_enum import LiteralEnumInnerTypes
 from omnipy.util.literal_enum_generator import generate_literal_enum_code
@@ -21,18 +23,17 @@ def get_all_tinted_themes() -> ThemesPerVariantType:
     # `pip install color-contrast` to run
     from color_contrast import AccessibilityLevel, check_contrast
 
-    all_theme_urls = get_github_repo_urls.run('tinted-theming',
-                                              'schemes',
-                                              'spec-0.11',
-                                              'base16',
-                                              '.yaml')
+    all_theme_urls = get_github_repo_urls.run(
+        'tinted-theming', 'schemes', 'spec-0.11', 'base16', '.yaml'
+    )
 
     all_themes = {name: fetch_base16_theme(str(url)) for name, url in all_theme_urls.items()}
 
     themes_per_variant = defaultdict(list)
     for name, theme in all_themes.items():
         high_contrast = check_contrast(
-            theme.palette.base05, theme.palette.base00, level=AccessibilityLevel.AA)
+            theme.palette.base05, theme.palette.base00, level=AccessibilityLevel.AA
+        )
         themes_per_variant[(high_contrast, theme.variant)].append((name, theme.name, theme.author))
 
     return themes_per_variant
@@ -383,7 +384,8 @@ def create_pyproject_code_from_themes_per_variant(themes_per_variant: ThemesPerV
             pyproject_lines.append(
                 f'"{pygments_theme_name}"'
                 f' = "omnipy.data._display.styles.dynamic_styles:'
-                f'{_create_base_16_class_name_from_theme_key(pygments_theme_name)}"')
+                f'{_create_base_16_class_name_from_theme_key(pygments_theme_name)}"'
+            )
 
     return '\n'.join(sorted(pyproject_lines))
 

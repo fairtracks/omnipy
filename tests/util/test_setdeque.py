@@ -40,6 +40,7 @@ def test_setdeque_append() -> None:
 
 def _assert_len3_setdeque_unique_vals(setdeque: SetDeque[int]) -> None:
     """Provide assert len3 SetDeque unique vals for test reuse."""
+
     def _assert_len3_setdeque(setdeque: SetDeque[int]) -> None:
         assert len(setdeque) == 3
 
@@ -189,8 +190,9 @@ def test_setdeque_add_iadd() -> None:
 
     setdeque_1 = SetDeque[str](['a', 'b', 'c'])
 
-    assert setdeque_empty + setdeque_1 == setdeque_1 + setdeque_empty == \
-           SetDeque[str](['a', 'b', 'c'])
+    assert (
+        setdeque_empty + setdeque_1 == setdeque_1 + setdeque_empty == SetDeque[str](['a', 'b', 'c'])
+    )
     assert setdeque_empty == SetDeque[str]()
     assert setdeque_1 == SetDeque[str](['a', 'b', 'c'])
 
@@ -351,8 +353,12 @@ def test_setdeque_copy_deepcopy() -> None:
     setdeque = SetDeque[MyClass]([my_obj_1, my_obj_2])
 
     from copy import copy, deepcopy
-    for setdeque_copy, deep in \
-            [(setdeque.copy(), False), (copy(setdeque), False), (deepcopy(setdeque), True),]:
+
+    for setdeque_copy, deep in [
+        (setdeque.copy(), False),
+        (copy(setdeque), False),
+        (deepcopy(setdeque), True),
+    ]:
         assert setdeque_copy == setdeque
         assert setdeque_copy is not setdeque
 

@@ -73,14 +73,9 @@ class PrettyPrinterLib(LiteralEnum[str]):
     `True`, as it is specifically designed for that purpose.
     """
 
-    Literals = Literal['rich',
-                       'devtools',
-                       'compact-json',
-                       'text',
-                       'code',
-                       'column',
-                       'hexdump',
-                       'auto']
+    Literals = Literal[
+        'rich', 'devtools', 'compact-json', 'text', 'code', 'column', 'hexdump', 'auto'
+    ]
 
     RICH: Literal['rich'] = 'rich'
     """Rich pretty printer for Python objects.
@@ -177,18 +172,20 @@ class JsonSyntaxLanguage(LiteralEnum[str]):
 class TextSyntaxLanguage(LiteralEnum[str]):
     """General text syntax language enum values for syntax highlighting."""
 
-    Literals = Literal['text',
-                       'yaml',
-                       'xml',
-                       'toml',
-                       'bash',
-                       'sql',
-                       'html',
-                       'markdown',
-                       'css',
-                       'numpy',
-                       'sparql',
-                       'tex']
+    Literals = Literal[
+        'text',
+        'yaml',
+        'xml',
+        'toml',
+        'bash',
+        'sql',
+        'html',
+        'markdown',
+        'css',
+        'numpy',
+        'sparql',
+        'tex',
+    ]
 
     TEXT: Literal['text'] = 'text'
     YAML: Literal['yaml'] = 'yaml'
@@ -220,10 +217,9 @@ class PythonSyntaxLanguage(LiteralEnum[str]):
     PYTHON: Literal['python'] = 'python'
 
 
-class SyntaxLanguage(JsonSyntaxLanguage,
-                     TextSyntaxLanguage,
-                     HexdumpSyntaxLanguage,
-                     PythonSyntaxLanguage):
+class SyntaxLanguage(
+    JsonSyntaxLanguage, TextSyntaxLanguage, HexdumpSyntaxLanguage, PythonSyntaxLanguage
+):
     """Supported languages for syntax recognition and highlighting.
 
     A selected subset of the lexer languages supported by the Pygments
@@ -231,10 +227,12 @@ class SyntaxLanguage(JsonSyntaxLanguage,
     relevant for Omnipy.
     """
 
-    Literals = Literal[JsonSyntaxLanguage.Literals,
-                       TextSyntaxLanguage.Literals,
-                       HexdumpSyntaxLanguage.Literals,
-                       PythonSyntaxLanguage.Literals]
+    Literals = Literal[
+        JsonSyntaxLanguage.Literals,
+        TextSyntaxLanguage.Literals,
+        HexdumpSyntaxLanguage.Literals,
+        PythonSyntaxLanguage.Literals,
+    ]
 
 
 class SyntaxLanguageSpec(SyntaxLanguage):
@@ -255,6 +253,7 @@ class SyntaxLanguageSpec(SyntaxLanguage):
     config parameter). The syntax language specified in the
     `get_default_syntax_language()` class method is selected.
     """
+
     @classmethod
     def is_syntax_language_spec(cls, syntax: str) -> 'TypeIs[SyntaxLanguageSpec.Literals]':
         """Check for a valid syntax language specification.

@@ -8,14 +8,17 @@ from omnipy.compute.task import TaskTemplate
 from ..json.datasets import JsonListOfDictsDataset
 from ..json.typedefs import JsonScalar
 from .datasets import TableWithColNamesDataset
-from .models import (ColumnWiseTableWithColNamesAndIndexModel,
-                     RowWiseTableFirstRowAsColNamesModel,
-                     RowWiseTableWithColNamesModel)
+from .models import (
+    ColumnWiseTableWithColNamesAndIndexModel,
+    RowWiseTableFirstRowAsColNamesModel,
+    RowWiseTableWithColNamesModel,
+)
 
 
 @TaskTemplate()
-def remove_columns(json_dataset: JsonListOfDictsDataset,
-                   column_keys_for_data_items: dict[str, list[str]]) -> JsonListOfDictsDataset:
+def remove_columns(
+    json_dataset: JsonListOfDictsDataset, column_keys_for_data_items: dict[str, list[str]]
+) -> JsonListOfDictsDataset:
     """Build a JSON list-of-dicts dataset using a per-item column-removal mapping.
 
     Args:
@@ -39,8 +42,9 @@ def remove_columns(json_dataset: JsonListOfDictsDataset,
 
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=TableWithColNamesDataset)
-def rename_col_names(data_file: RowWiseTableFirstRowAsColNamesModel,
-                     prev2new_keymap: dict[str, str]) -> RowWiseTableFirstRowAsColNamesModel:
+def rename_col_names(
+    data_file: RowWiseTableFirstRowAsColNamesModel, prev2new_keymap: dict[str, str]
+) -> RowWiseTableFirstRowAsColNamesModel:
     """Rename selected column names in a row-wise table.
 
     Args:
@@ -50,14 +54,21 @@ def rename_col_names(data_file: RowWiseTableFirstRowAsColNamesModel,
     Returns:
         A new table with renamed column keys.
     """
-    return RowWiseTableFirstRowAsColNamesModel([{
-        prev2new_keymap[key] if key in prev2new_keymap else key: val for key, val in row.items()
-    } for row in data_file])
+    return RowWiseTableFirstRowAsColNamesModel(
+        [
+            {
+                prev2new_keymap[key] if key in prev2new_keymap else key: val
+                for key, val in row.items()
+            }
+            for row in data_file
+        ]
+    )
 
 
 @TaskTemplate()
-def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
-                                      exclude_cols: tuple[str]) -> None:
+def transpose_columns_with_data_files(
+    dataset: TableWithColNamesDataset, exclude_cols: tuple[str]
+) -> None:
     """Transpose table columns so data-file names become nested keys.
 
     Args:
@@ -102,8 +113,9 @@ def transpose_columns_with_data_files(dataset: TableWithColNamesDataset,
 
 
 @TaskTemplate(iterate_over_data_files=True)
-def create_row_index_from_column(list_of_dicts: RowWiseTableWithColNamesModel,
-                                 column_key: str) -> ColumnWiseTableWithColNamesAndIndexModel:
+def create_row_index_from_column(
+    list_of_dicts: RowWiseTableWithColNamesModel, column_key: str
+) -> ColumnWiseTableWithColNamesAndIndexModel:
     """Re-key a row-wise table by promoting one column to the row index.
 
     Args:

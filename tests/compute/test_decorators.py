@@ -5,18 +5,22 @@ from typing import Annotated, Callable
 import pytest
 import pytest_cases as pc
 
-from omnipy.compute.flow import (DagFlow,
-                                 DagFlowTemplateCore,
-                                 FuncFlow,
-                                 FuncFlowTemplate,
-                                 FuncFlowTemplateCore,
-                                 LinearFlow,
-                                 LinearFlowTemplateCore)
+from omnipy.compute.flow import (
+    DagFlow,
+    DagFlowTemplateCore,
+    FuncFlow,
+    FuncFlowTemplate,
+    FuncFlowTemplateCore,
+    LinearFlow,
+    LinearFlowTemplateCore,
+)
 from omnipy.compute.task import Task, TaskTemplate, TaskTemplateCore
-from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
-                                                 IsFuncFlowTemplate,
-                                                 IsLinearFlowTemplate,
-                                                 IsTaskTemplate)
+from omnipy.shared.protocols.compute.job import (
+    IsDagFlowTemplate,
+    IsFuncFlowTemplate,
+    IsLinearFlowTemplate,
+    IsTaskTemplate,
+)
 
 from .helpers.mocks import MockLocalRunner
 
@@ -30,8 +34,7 @@ def test_task_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_one_template: IsTaskTemplate,
 ) -> None:
-    assert isinstance(plus_one_template,
-                      TaskTemplateCore)  # noqa  # Pycharm static type checker bug
+    assert isinstance(plus_one_template, TaskTemplateCore)  # noqa  # Pycharm static type checker bug
     assert plus_one_template.name == 'plus_one'  # noqa  # Pycharm static type checker bug
 
     plus_one = plus_one_template.apply()  # noqa  # Pycharm static type checker bug

@@ -34,6 +34,7 @@ class IsaSourceSchema(pyd.BaseModel):
         characteristics: Material attribute values describing the source.
         comments: Optional comments attached to the source entry.
     """
+
     class Config:
         """Validation settings for ISA source schema parsing.
 
@@ -50,8 +51,9 @@ class IsaSourceSchema(pyd.BaseModel):
     field_context: Optional[str] = pyd.Field(None, alias='@context')
     field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
     name: Optional[str] = None
-    characteristics: Optional[List[
-        material_attribute_value_schema.IsaMaterialAttributeValueModel]] = None
+    characteristics: Optional[
+        List[material_attribute_value_schema.IsaMaterialAttributeValueModel]
+    ] = None
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 
 

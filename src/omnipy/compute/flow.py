@@ -26,24 +26,28 @@ from omnipy.compute._job import JobMixin, JobTemplateMixin
 from omnipy.compute._joblist_job import ChildJobListArgJobBase
 from omnipy.compute._mixins.dag_kwargs_consumption import DagKwargsConsumptionJobMixin
 from omnipy.compute._mixins.flow_context import FlowContextJobMixin
-from omnipy.compute._typedefs import (DagFlowTemplateIterDecorator,
-                                      DagFlowTemplateIterWithDatasetClsDecorator,
-                                      DagFlowTemplatePlainDecorator,
-                                      FuncFlowTemplateIterDecorator,
-                                      FuncFlowTemplateIterWithDatasetClsDecorator,
-                                      FuncFlowTemplatePlainDecorator,
-                                      JobCommonKwargs,
-                                      LinearFlowTemplateIterDecorator,
-                                      LinearFlowTemplateIterWithDatasetClsDecorator,
-                                      LinearFlowTemplatePlainDecorator)
+from omnipy.compute._typedefs import (
+    DagFlowTemplateIterDecorator,
+    DagFlowTemplateIterWithDatasetClsDecorator,
+    DagFlowTemplatePlainDecorator,
+    FuncFlowTemplateIterDecorator,
+    FuncFlowTemplateIterWithDatasetClsDecorator,
+    FuncFlowTemplatePlainDecorator,
+    JobCommonKwargs,
+    LinearFlowTemplateIterDecorator,
+    LinearFlowTemplateIterWithDatasetClsDecorator,
+    LinearFlowTemplatePlainDecorator,
+)
 from omnipy.shared.enums.job import JobType, PersistOutputsOptions, RestoreOutputsOptions
-from omnipy.shared.protocols.compute.job import (ChildJobTemplateLike,
-                                                 IsDagFlow,
-                                                 IsDagFlowTemplate,
-                                                 IsFuncFlow,
-                                                 IsFuncFlowTemplate,
-                                                 IsLinearFlow,
-                                                 IsLinearFlowTemplate)
+from omnipy.shared.protocols.compute.job import (
+    ChildJobTemplateLike,
+    IsDagFlow,
+    IsDagFlowTemplate,
+    IsFuncFlow,
+    IsFuncFlowTemplate,
+    IsLinearFlow,
+    IsLinearFlowTemplate,
+)
 from omnipy.shared.protocols.data import IsDataset
 from omnipy.shared.protocols.engine.base import IsEngine
 from omnipy.shared.protocols.engine.job_runner import IsJobRunnerEngine
@@ -68,14 +72,15 @@ _RetT = TypeVar('_RetT')
 _RetDatasetClsT = TypeVar('_RetDatasetClsT', bound=IsDataset)
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
-    os.environ['OMNIPY_MACRO_FUNC_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
-        dedent("""\
+    os.environ['OMNIPY_MACRO_FUNC_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join(
+        (
+            dedent("""\
             A function flow template wraps a Python callable that orchestrates
             work as a flow. Use this when the control flow is easiest to
             express directly in Python instead of as an explicit task list or
             dependency graph."""),
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
-        dedent("""\
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
+            dedent("""\
             ### Wrapped callable
 
             The wrapped callable defines both the implementation and the public
@@ -100,18 +105,20 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 >>> expected = TextDataset({'a': 'hi!', 'b': 'bye!'})
                 >>> append_suffix_to_all.run(text_files, '!') == expected
                 True"""),
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
-    ))
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
+        )
+    )
 
-    os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
-        dedent("""\
+    os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join(
+        (
+            dedent("""\
             A linear flow template wraps a Python callable together with an ordered
             list of child job templates that run sequentially. Use this when work
             should proceed step by step in a fixed declaration order."""),
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
-        dedent("""\
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
+            dedent("""\
             ### Outer callable and child jobs
 
             The wrapped callable defines the public outer signature of the flow,
@@ -136,22 +143,24 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 >>> expected = TextDataset({'a': 'hi', 'b': 'bye'})
                 >>> clean_texts.run(text_files) == expected
                 True"""),
-        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
-        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
-        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
-        os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_ORCHESTRATION'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
-    ))
+            os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
+            os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
+            os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
+            os.environ['OMNIPY_MACRO_LINEAR_FLOW_TEMPLATE_ORCHESTRATION'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
+        )
+    )
 
-    os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join((
-        dedent("""\
+    os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_DESCRIPTION'] = '\n\n'.join(
+        (
+            dedent("""\
             A DAG flow template wraps a Python callable together with child job
             templates whose dependencies form a directed acyclic graph. Use this
             when flow steps branch and join but must not form cycles."""),
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
-        dedent("""\
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_DECORATOR_USAGE'],
+            dedent("""\
             ### Outer callable and child jobs
 
             The wrapped callable defines the public outer signature of the flow,
@@ -189,14 +198,15 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
                 >>> expected = TextDataset({'a': 'HI|hi', 'b': 'BYE|bye'})
                 >>> my_dag.run(text_files) == expected
                 True"""),
-        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
-        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
-        os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
-        os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_ORCHESTRATION'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
-        os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
-    ))
+            os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CHILDREN_AND_DATA_CLASSES'],
+            os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_CALLABLE_TYPE_RULES'],
+            os.environ['OMNIPY_MACRO_FLOW_TEMPLATE_VOID_SHORTHAND'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_OUTER_SIGNATURE_AND_MODIFIERS'],
+            os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_ORCHESTRATION'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_TASKS_AND_FLOWS'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_COMMON_LIFECYCLE'],
+        )
+    )
 
     os.environ['OMNIPY_MACRO_DAG_FLOW_TEMPLATE_KWARG_DOCS'] = dedent("""\
             consume_kwargs_from_results: Whether keyword arguments matched by a
@@ -207,7 +217,8 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 def _is_data_class_decorator_arg(arg: object) -> bool:
     """Identify dataset/model class arguments passed as flow child components."""
     has_dataset_interface = all(
-        hasattr(arg, dataset_attr) for dataset_attr in ('get_type', 'to_data', 'from_data'))
+        hasattr(arg, dataset_attr) for dataset_attr in ('get_type', 'to_data', 'from_data')
+    )
     return inspect.isclass(arg) and (has_dataset_interface or hasattr(arg, 'full_type'))
 
 
@@ -224,20 +235,20 @@ class FlowBase:
 
 
 class LinearFlowTemplateCore(
-        ChildJobListArgJobBase[
-            IsLinearFlowTemplate[_CallP, _RetT],
-            IsLinearFlow[_CallP, _RetT],
-            _CallP,
-            _RetT,
-        ],
-        JobTemplateMixin[
-            IsLinearFlowTemplate[_CallP, _RetT],
-            IsLinearFlow[_CallP, _RetT],
-            _CallP,
-            _RetT,
-        ],
-        FlowBase,
-        Generic[_CallP, _RetT],
+    ChildJobListArgJobBase[
+        IsLinearFlowTemplate[_CallP, _RetT],
+        IsLinearFlow[_CallP, _RetT],
+        _CallP,
+        _RetT,
+    ],
+    JobTemplateMixin[
+        IsLinearFlowTemplate[_CallP, _RetT],
+        IsLinearFlow[_CallP, _RetT],
+        _CallP,
+        _RetT,
+    ],
+    FlowBase,
+    Generic[_CallP, _RetT],
 ):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Implement the core template behavior for linear flows.
@@ -503,6 +514,7 @@ class LinearFlowTemplateCore(
     Instances are normally produced through the [LinearFlowTemplate][]
     decorator factory rather than by direct construction.
     """
+
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsLinearFlow[_CallP, _RetT]]:
         """Return the executable flow type produced by this template.
@@ -530,8 +542,7 @@ def LinearFlowTemplate(
     iterate_over_data_files: Literal[True],
     output_dataset_cls: type[_RetDatasetClsT],
     **kwargs: Unpack[JobCommonKwargs],
-) -> LinearFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]:
-    ...
+) -> LinearFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]: ...
 
 
 @overload
@@ -540,8 +551,7 @@ def LinearFlowTemplate(
     iterate_over_data_files: Literal[True],
     output_dataset_cls: None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> LinearFlowTemplateIterDecorator:
-    ...
+) -> LinearFlowTemplateIterDecorator: ...
 
 
 @overload
@@ -550,8 +560,7 @@ def LinearFlowTemplate(
     iterate_over_data_files: Literal[False] = False,
     output_dataset_cls: type[IsDataset] | None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> LinearFlowTemplatePlainDecorator:
-    ...
+) -> LinearFlowTemplatePlainDecorator: ...
 
 
 @overload
@@ -560,9 +569,11 @@ def LinearFlowTemplate(
     iterate_over_data_files: bool,
     output_dataset_cls: type[_RetDatasetClsT] | None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> (LinearFlowTemplatePlainDecorator | LinearFlowTemplateIterDecorator
-      | LinearFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]):
-    ...
+) -> (
+    LinearFlowTemplatePlainDecorator
+    | LinearFlowTemplateIterDecorator
+    | LinearFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]
+): ...
 
 
 def LinearFlowTemplate(
@@ -892,16 +903,14 @@ def LinearFlowTemplate(
     return ret
 
 
-class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
-                          IsLinearFlow[_CallP, _RetT],
-                          _CallP,
-                          _RetT],
-                 FlowBase,
-                 ChildJobListArgJobBase[IsLinearFlowTemplate[_CallP, _RetT],
-                                        IsLinearFlow[_CallP, _RetT],
-                                        _CallP,
-                                        _RetT],
-                 Generic[_CallP, _RetT]):
+class LinearFlow(
+    JobMixin[IsLinearFlowTemplate[_CallP, _RetT], IsLinearFlow[_CallP, _RetT], _CallP, _RetT],
+    FlowBase,
+    ChildJobListArgJobBase[
+        IsLinearFlowTemplate[_CallP, _RetT], IsLinearFlow[_CallP, _RetT], _CallP, _RetT
+    ],
+    Generic[_CallP, _RetT],
+):
     """Execute a flow whose tasks run in declaration order.
 
     A ``LinearFlow`` runs its constituent tasks in declaration order, making
@@ -911,6 +920,7 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
     Instances are typically produced by calling a ``LinearFlowTemplate``
     rather than by constructing ``LinearFlow`` directly.
     """
+
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         """Register the engine decorator for linear-flow execution.
 
@@ -945,16 +955,14 @@ class LinearFlow(JobMixin[IsLinearFlowTemplate[_CallP, _RetT],
         return cast(type[IsLinearFlowTemplate[_CallP, _RetT]], LinearFlowTemplateCore)
 
 
-class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT],
-                                                 IsDagFlow[_CallP, _RetT],
-                                                 _CallP,
-                                                 _RetT],
-                          JobTemplateMixin[IsDagFlowTemplate[_CallP, _RetT],
-                                           IsDagFlow[_CallP, _RetT],
-                                           _CallP,
-                                           _RetT],
-                          FlowBase,
-                          Generic[_CallP, _RetT]):
+class DagFlowTemplateCore(
+    ChildJobListArgJobBase[
+        IsDagFlowTemplate[_CallP, _RetT], IsDagFlow[_CallP, _RetT], _CallP, _RetT
+    ],
+    JobTemplateMixin[IsDagFlowTemplate[_CallP, _RetT], IsDagFlow[_CallP, _RetT], _CallP, _RetT],
+    FlowBase,
+    Generic[_CallP, _RetT],
+):
     _coerce_data_class_children_from_kwargs: ClassVar[bool] = True
 
     # %% Original docstring (managed by expand_docstr_macros.py) %%
@@ -1266,6 +1274,7 @@ class DagFlowTemplateCore(ChildJobListArgJobBase[IsDagFlowTemplate[_CallP, _RetT
     Instances are normally produced through the [DagFlowTemplate][] decorator
     factory rather than by direct construction.
     """
+
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsDagFlow[_CallP, _RetT]]:
         """Return the executable DAG flow type produced by this template.
@@ -1293,8 +1302,7 @@ def DagFlowTemplate(
     iterate_over_data_files: Literal[True],
     output_dataset_cls: type[_RetDatasetClsT],
     **kwargs: Unpack[JobCommonKwargs],
-) -> DagFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]:
-    ...
+) -> DagFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]: ...
 
 
 @overload
@@ -1304,8 +1312,7 @@ def DagFlowTemplate(
     iterate_over_data_files: Literal[True],
     output_dataset_cls: None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> DagFlowTemplateIterDecorator:
-    ...
+) -> DagFlowTemplateIterDecorator: ...
 
 
 @overload
@@ -1315,8 +1322,7 @@ def DagFlowTemplate(
     iterate_over_data_files: Literal[False] = False,
     output_dataset_cls: type[IsDataset] | None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> DagFlowTemplatePlainDecorator:
-    ...
+) -> DagFlowTemplatePlainDecorator: ...
 
 
 @overload
@@ -1326,9 +1332,11 @@ def DagFlowTemplate(
     iterate_over_data_files: bool,
     output_dataset_cls: type[_RetDatasetClsT] | None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> (DagFlowTemplatePlainDecorator | DagFlowTemplateIterDecorator
-      | DagFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]):
-    ...
+) -> (
+    DagFlowTemplatePlainDecorator
+    | DagFlowTemplateIterDecorator
+    | DagFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]
+): ...
 
 
 def DagFlowTemplate(
@@ -1710,15 +1718,15 @@ def DagFlowTemplate(
 
 
 class DagFlow(
-        JobMixin[IsDagFlowTemplate[_CallP, _RetT], IsDagFlow[_CallP, _RetT], _CallP, _RetT],
-        FlowBase,
-        ChildJobListArgJobBase[
-            IsDagFlowTemplate[_CallP, _RetT],
-            IsDagFlow[_CallP, _RetT],
-            _CallP,
-            _RetT,
-        ],
-        Generic[_CallP, _RetT],
+    JobMixin[IsDagFlowTemplate[_CallP, _RetT], IsDagFlow[_CallP, _RetT], _CallP, _RetT],
+    FlowBase,
+    ChildJobListArgJobBase[
+        IsDagFlowTemplate[_CallP, _RetT],
+        IsDagFlow[_CallP, _RetT],
+        _CallP,
+        _RetT,
+    ],
+    Generic[_CallP, _RetT],
 ):
     """Execute a flow whose child jobs exchange data through named DAG keys.
 
@@ -1729,6 +1737,7 @@ class DagFlow(
     Instances are typically produced by calling a ``DagFlowTemplate`` rather
     than by constructing ``DagFlow`` directly.
     """
+
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         """Register the engine decorator for DAG-flow execution.
 
@@ -1764,20 +1773,20 @@ class DagFlow(
 
 
 class FuncFlowTemplateCore(
-        FuncArgJobBase[
-            IsFuncFlowTemplate[_CallP, _RetT],
-            IsFuncFlow[_CallP, _RetT],
-            _CallP,
-            _RetT,
-        ],
-        JobTemplateMixin[
-            IsFuncFlowTemplate[_CallP, _RetT],
-            IsFuncFlow[_CallP, _RetT],
-            _CallP,
-            _RetT,
-        ],
-        FlowBase,
-        Generic[_CallP, _RetT],
+    FuncArgJobBase[
+        IsFuncFlowTemplate[_CallP, _RetT],
+        IsFuncFlow[_CallP, _RetT],
+        _CallP,
+        _RetT,
+    ],
+    JobTemplateMixin[
+        IsFuncFlowTemplate[_CallP, _RetT],
+        IsFuncFlow[_CallP, _RetT],
+        _CallP,
+        _RetT,
+    ],
+    FlowBase,
+    Generic[_CallP, _RetT],
 ):
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Implement the core template behavior for function flows.
@@ -1927,6 +1936,7 @@ class FuncFlowTemplateCore(
     Instances are normally produced through the [FuncFlowTemplate][] decorator
     factory rather than by direct construction.
     """
+
     @classmethod
     def _get_job_subcls_for_apply(cls) -> type[IsFuncFlow[_CallP, _RetT]]:
         """Return the executable function flow type produced by this template.
@@ -1951,8 +1961,7 @@ def FuncFlowTemplate(
     iterate_over_data_files: Literal[True],
     output_dataset_cls: type[_RetDatasetClsT],
     **kwargs: Unpack[JobCommonKwargs],
-) -> FuncFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]:
-    ...
+) -> FuncFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]: ...
 
 
 @overload
@@ -1961,8 +1970,7 @@ def FuncFlowTemplate(
     iterate_over_data_files: Literal[True],
     output_dataset_cls: None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> FuncFlowTemplateIterDecorator:
-    ...
+) -> FuncFlowTemplateIterDecorator: ...
 
 
 @overload
@@ -1971,8 +1979,7 @@ def FuncFlowTemplate(
     iterate_over_data_files: Literal[False] = False,
     output_dataset_cls: type[IsDataset] | None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> FuncFlowTemplatePlainDecorator:
-    ...
+) -> FuncFlowTemplatePlainDecorator: ...
 
 
 @overload
@@ -1981,9 +1988,11 @@ def FuncFlowTemplate(
     iterate_over_data_files: bool,
     output_dataset_cls: type[_RetDatasetClsT] | None = None,
     **kwargs: Unpack[JobCommonKwargs],
-) -> (FuncFlowTemplatePlainDecorator | FuncFlowTemplateIterDecorator
-      | FuncFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]):
-    ...
+) -> (
+    FuncFlowTemplatePlainDecorator
+    | FuncFlowTemplateIterDecorator
+    | FuncFlowTemplateIterWithDatasetClsDecorator[_RetDatasetClsT]
+): ...
 
 
 def FuncFlowTemplate(
@@ -2190,20 +2199,20 @@ def FuncFlowTemplate(
 
 
 class FuncFlow(
-        JobMixin[
-            IsFuncFlowTemplate[_CallP, _RetT],
-            IsFuncFlow[_CallP, _RetT],
-            _CallP,
-            _RetT,
-        ],
-        FlowBase,
-        FuncArgJobBase[
-            IsFuncFlowTemplate[_CallP, _RetT],
-            IsFuncFlow[_CallP, _RetT],
-            _CallP,
-            _RetT,
-        ],
-        Generic[_CallP, _RetT],
+    JobMixin[
+        IsFuncFlowTemplate[_CallP, _RetT],
+        IsFuncFlow[_CallP, _RetT],
+        _CallP,
+        _RetT,
+    ],
+    FlowBase,
+    FuncArgJobBase[
+        IsFuncFlowTemplate[_CallP, _RetT],
+        IsFuncFlow[_CallP, _RetT],
+        _CallP,
+        _RetT,
+    ],
+    Generic[_CallP, _RetT],
 ):
     """Execute a flow backed by one coordinating callable.
 
@@ -2214,6 +2223,7 @@ class FuncFlow(
     Instances are typically produced by calling a ``FuncFlowTemplate`` rather
     than by constructing ``FuncFlow`` directly.
     """
+
     def _apply_engine_decorator(self, engine: IsEngine) -> None:
         """Register the engine decorator for callable-backed flow execution.
 

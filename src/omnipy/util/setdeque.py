@@ -35,6 +35,7 @@ class SetDeque(deque, Generic[_ObjT]):
         set. Use this type primarily without ``maxlen`` unless that edge case is
         acceptable for the calling code.
     """
+
     def __init__(self, iterable: Iterable = (), maxlen: int | None = None):
         unique_ordered_els = dict.fromkeys(iterable).keys()
         super().__init__(iterable=unique_ordered_els, maxlen=maxlen)
@@ -58,11 +59,9 @@ class SetDeque(deque, Generic[_ObjT]):
         self._set.remove(el)
         return el
 
-    def _remove_explicit_element(self,
-                                 method_name: str,
-                                 *args: object,
-                                 el: _ObjT,
-                                 add_el_to_args: bool) -> None:
+    def _remove_explicit_element(
+        self, method_name: str, *args: object, el: _ObjT, add_el_to_args: bool
+    ) -> None:
         if add_el_to_args:
             args = args + (el,)
         getattr(super(), method_name)(*args)

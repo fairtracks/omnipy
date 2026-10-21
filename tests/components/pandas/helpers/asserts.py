@@ -13,8 +13,9 @@ def assert_pandas_frame_dtypes(frame: 'pd.DataFrame', expected_dtypes: tuple) ->
     assert real_dtypes == expected_dtypes, f'{real_dtypes} != {expected_dtypes}'
 
 
-def assert_pandas_dataset_equals(pandas_dataset_1: PandasDataset,
-                                 pandas_dataset_2: PandasDataset) -> None:
+def assert_pandas_dataset_equals(
+    pandas_dataset_1: PandasDataset, pandas_dataset_2: PandasDataset
+) -> None:
     """Assert pandas dataset equals."""
     from omnipy.components.pandas.lazy_import import pd
 

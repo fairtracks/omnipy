@@ -39,6 +39,7 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         _sub_obj_ids: Mapping from root object id to the ordered ids of sub-objects
             touched while copying that root.
     """
+
     def __init__(self) -> None:
         super().__init__()
         self._cur_deepcopy_obj_id: int | None = None
@@ -58,8 +59,12 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
             all empty; otherwise ``False``.
         """
         _all_are_empty = (
-            len(self) == 0 and len(self._keep_alive_dict) == 0 and len(self._sub_obj_ids) == 0
-            and self._cur_deepcopy_obj_id is None and len(self._cur_keep_alive_list) == 0)
+            len(self) == 0
+            and len(self._keep_alive_dict) == 0
+            and len(self._sub_obj_ids) == 0
+            and self._cur_deepcopy_obj_id is None
+            and len(self._cur_keep_alive_list) == 0
+        )
 
         if debug:
             print()
@@ -74,9 +79,11 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
             if len(self) > 0:
                 print('==================================================')
                 for key in self:
-                    print(f'Content id: {key} '
-                          f'[{sys.getrefcount(self[key]) - 1} refs, id={id(self[key])}]: '
-                          f'{repr(self[key])}')
+                    print(
+                        f'Content id: {key} '
+                        f'[{sys.getrefcount(self[key]) - 1} refs, id={id(self[key])}]: '
+                        f'{repr(self[key])}'
+                    )
 
                 for key in self:
                     print('--------------------------------------------------')
@@ -135,10 +142,12 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
                 keep-alive state is not empty, or this object id is already
                 registered in the memo state.
         """
-        assert self._cur_deepcopy_obj_id is None, \
+        assert self._cur_deepcopy_obj_id is None, (
             f'self._cur_deepcopy_obj_id is not None, but {self._cur_deepcopy_obj_id}'
-        assert len(self._cur_keep_alive_list) == 0, \
+        )
+        assert len(self._cur_keep_alive_list) == 0, (
             f'len(self._cur_keep_alive_list) == {len(self._cur_keep_alive_list)} instead of 0'
+        )
 
         # Solution to test_ref_count_memo_dict_repeated_deepcopy_same_obj(), but not
         # necessary for the current implementation (see comments on the test). Fix unnecessarily
@@ -146,10 +155,11 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         # Instead, there is a check to ensure that the current object has not already been
         # deepcopied, which is the assumption behind disabling the fix
 
-        assert id(obj) not in self._sub_obj_ids, \
-            (f'Object with id: {id(obj)} already in deepcopy_memo. It has either already been '
-             f'deepcopied, or it is reusing the id of a deleted object which has not been deleted '
-             'from the deepcopy memo.')
+        assert id(obj) not in self._sub_obj_ids, (
+            f'Object with id: {id(obj)} already in deepcopy_memo. It has either already been '
+            f'deepcopied, or it is reusing the id of a deleted object which has not been deleted '
+            'from the deepcopy memo.'
+        )
 
         self._cur_deepcopy_obj_id = id(obj)
 
@@ -190,9 +200,10 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
         #     if possibly_added_obj in self and possibly_added_obj not in self._keep_alive_dict:
         #         del self[possibly_added_obj]
 
-        if self._cur_deepcopy_obj_id and \
-                (self._cur_deepcopy_obj_id in self._sub_obj_ids
-                 and self._cur_deepcopy_obj_id not in self._keep_alive_dict):
+        if self._cur_deepcopy_obj_id and (
+            self._cur_deepcopy_obj_id in self._sub_obj_ids
+            and self._cur_deepcopy_obj_id not in self._keep_alive_dict
+        ):
             del self._sub_obj_ids[self._cur_deepcopy_obj_id]
 
         self._cur_deepcopy_obj_id = None
@@ -329,8 +340,9 @@ class RefCountMemoDict(UserDict[int, _ObjT], Generic[_ObjT]):
 
         return keys_to_delete
 
-    def _add_sub_obj_ids_to_deletion_keys(self, key: int,
-                                          keys_to_delete: SetDeque[int]) -> SetDeque[int]:
+    def _add_sub_obj_ids_to_deletion_keys(
+        self, key: int, keys_to_delete: SetDeque[int]
+    ) -> SetDeque[int]:
         if key in self._sub_obj_ids:
             for i, sub_obj_id in enumerate(self._sub_obj_ids[key]):
                 if sub_obj_id != key and sub_obj_id not in keys_to_delete:

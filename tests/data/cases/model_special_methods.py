@@ -42,13 +42,9 @@ def case_dataset() -> ModelValueAssignmentSpec:
 def case_pydantic_model() -> ModelValueAssignmentSpec:
     """Provide the pydantic model case."""
     return ModelValueAssignmentSpec(
-        value_factory=lambda: PydanticChildModel(**{
-            '@id': 7, 'value': 1.5
-        }),
+        value_factory=lambda: PydanticChildModel(**{'@id': 7, 'value': 1.5}),
         setitem_target_factory=lambda: Model[dict[str, dict[str, float]]]({}),
         setattr_target_factory=lambda: Model[FloatDictHolder](),
-        expected_value={
-            '@id': 7.0, 'value': 1.5
-        },
+        expected_value={'@id': 7.0, 'value': 1.5},
         forbidden_key='id',
     )

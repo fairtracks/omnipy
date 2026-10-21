@@ -1,4 +1,5 @@
 """Mixin for wrapping job results under a configured dictionary key."""
+
 import os
 from textwrap import dedent
 from typing import cast
@@ -16,6 +17,7 @@ if is_package_editable('omnipy'):
 
 class ResultKeyFuncJobBaseMixin:
     """Optionally wrap a job result in a single-key dictionary."""
+
     def __init__(self, *, result_key: str | None = None):
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
 

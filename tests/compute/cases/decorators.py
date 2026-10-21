@@ -4,10 +4,12 @@ import pytest_cases as pc
 
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
-                                                 IsFuncFlowTemplate,
-                                                 IsLinearFlowTemplate,
-                                                 IsTaskTemplate)
+from omnipy.shared.protocols.compute.job import (
+    IsDagFlowTemplate,
+    IsFuncFlowTemplate,
+    IsLinearFlowTemplate,
+    IsTaskTemplate,
+)
 
 
 @pc.case(
@@ -16,6 +18,7 @@ from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
 )
 def case_task_plus_one_template() -> IsTaskTemplate:
     """Provide a plain plus-one task template."""
+
     @TaskTemplate()
     def plus_one(number: int) -> int:
         return number + 1
@@ -29,6 +32,7 @@ def case_task_plus_one_template() -> IsTaskTemplate:
 )
 def case_task_plus_other_as_plus_one_template() -> IsTaskTemplate:
     """Provide a renamed plus-one task template with fixed params."""
+
     @TaskTemplate(
         name='plus_one',
         fixed_params=dict(other=1),
@@ -46,9 +50,9 @@ def case_task_plus_other_as_plus_one_template() -> IsTaskTemplate:
 @pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
 def case_linear_flow_number_plus_five_template(plus_one_template) -> IsLinearFlowTemplate:
     """Provide a linear flow template that adds five."""
+
     @LinearFlowTemplate(*((plus_one_template,) * 5))
-    def plus_five(number: int) -> int:
-        ...
+    def plus_five(number: int) -> int: ...
 
     return plus_five
 
@@ -60,11 +64,12 @@ def case_linear_flow_number_plus_five_template(plus_one_template) -> IsLinearFlo
 @pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
 def case_linear_flow_x_plus_five_template(plus_one_template) -> IsLinearFlowTemplate:
     """Provide an x-based linear flow template that adds five."""
-    iterative_x_plus_one_template = plus_one_template.refine(param_key_map=dict(number='x'),)
+    iterative_x_plus_one_template = plus_one_template.refine(
+        param_key_map=dict(number='x'),
+    )
 
     @LinearFlowTemplate(*((iterative_x_plus_one_template,) * 5))
-    def plus_five(x: int) -> int:
-        ...
+    def plus_five(x: int) -> int: ...
 
     return plus_five
 
@@ -80,8 +85,7 @@ def case_dag_flow_number_plus_five_template(plus_one_template) -> IsDagFlowTempl
     iterative_number_plus_one_template = plus_one_template.refine(result_key='number')
 
     @DagFlowTemplate(*((iterative_number_plus_one_template,) * 5))
-    def plus_five(number: int) -> int:
-        ...
+    def plus_five(number: int) -> int: ...
 
     return plus_five
 
@@ -102,8 +106,7 @@ def case_dag_flow_x_plus_five_template(plus_one_template) -> IsDagFlowTemplate:
     )
 
     @DagFlowTemplate(*((iterative_x_plus_one_template,) * 5))
-    def plus_five(x: int) -> int:
-        ...
+    def plus_five(x: int) -> int: ...
 
     return plus_five
 
@@ -115,6 +118,7 @@ def case_dag_flow_x_plus_five_template(plus_one_template) -> IsDagFlowTemplate:
 @pc.parametrize_with_cases('plus_one_template', cases='.', has_tag='task')
 def case_func_flow_plus_y_template(plus_one_template) -> IsFuncFlowTemplate:
     """Provide a function flow template that adds y."""
+
     @FuncFlowTemplate()
     def plus_y(number: int, y: int) -> int:
         for _ in range(y):

@@ -31,10 +31,10 @@ PanelT = TypeVar('PanelT', bound=MonospacedDraftPanel, covariant=True)
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True, arbitrary_types_allowed=True),
 )
 class StylizedMonospacedPanel(
-        FullyRenderedPanel[FrameT],
-        MonospacedDraftPanel[ContentT, FrameT],
-        Generic[PanelT, ContentT, FrameT],
-        ABC,
+    FullyRenderedPanel[FrameT],
+    MonospacedDraftPanel[ContentT, FrameT],
+    Generic[PanelT, ContentT, FrameT],
+    ABC,
 ):
     """Fully rendered monospaced panel backed by Rich renderables."""
 
@@ -100,7 +100,8 @@ class StylizedMonospacedPanel(
 
     @staticmethod
     def _calc_inner_cropped_dims(
-            panel: MonospacedDraftPanel[ContentT, FrameT]) -> DimensionsWithWidthAndHeight:
+        panel: MonospacedDraftPanel[ContentT, FrameT],
+    ) -> DimensionsWithWidthAndHeight:
         return panel.inner_frame.crop_dims(panel.dims, ignore_fixed_dims=True)
 
     @cached_property
@@ -109,7 +110,8 @@ class StylizedMonospacedPanel(
 
     @staticmethod
     def _apply_console_newline_hack(
-            console_dims: DimensionsWithWidthAndHeight) -> DimensionsWithWidthAndHeight:
+        console_dims: DimensionsWithWidthAndHeight,
+    ) -> DimensionsWithWidthAndHeight:
         """
         Hack to allow rich.console to output newline content when
         width == 0
@@ -187,15 +189,12 @@ class StylizedMonospacedPanel(
 
     @cached_property
     @abstractmethod
-    def plain(self) -> OutputVariant:
-        ...
+    def plain(self) -> OutputVariant: ...
 
     @cached_property
     @abstractmethod
-    def bw_stylized(self) -> OutputVariant:
-        ...
+    def bw_stylized(self) -> OutputVariant: ...
 
     @cached_property
     @abstractmethod
-    def colorized(self) -> OutputVariant:
-        ...
+    def colorized(self) -> OutputVariant: ...

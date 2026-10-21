@@ -35,7 +35,8 @@ def hamlet_lines_stripped(hamlet_lines: Annotated[list[str], pytest.fixture]) ->
 
 @pytest.fixture(scope='function')
 def last_hamlet_lines_stripped(
-        hamlet_lines_stripped: Annotated[list[str], pytest.fixture]) -> list[str]:
+    hamlet_lines_stripped: Annotated[list[str], pytest.fixture],
+) -> list[str]:
     return hamlet_lines_stripped[3:]
 
 
@@ -69,7 +70,9 @@ def hamlet_text_crlf_as_model_or_plain(
 
 @pc.fixture(scope='function')
 @pc.parametrize('use_str_model', [True, False], ids=['use_str_model=True', 'use_str_model=False'])
-def text_with_mixed_newlines_as_model_or_plain(use_str_model: bool,) -> Model[str] | str:
+def text_with_mixed_newlines_as_model_or_plain(
+    use_str_model: bool,
+) -> Model[str] | str:
     raw_data = 'first \n second  \r\nthird\rfourth\n'
     return Model[str](raw_data) if use_str_model else raw_data
 
@@ -164,7 +167,7 @@ def forward_list_of_texts_with_comma(
     forward_list_of_texts_with_tabs: Annotated[
         list[Model[str]] | list[str],
         pytest.fixture,
-    ]
+    ],
 ) -> list[Model[str]] | list[str]:
     return [
         text.replace('\t', ',')  # type: ignore[union-attr]
@@ -177,7 +180,7 @@ def reverse_list_of_texts_with_comma(
     reverse_list_of_texts_with_tabs: Annotated[
         list[Model[str]] | list[str],
         pytest.fixture,
-    ]
+    ],
 ) -> list[Model[str]] | list[str]:
     return [
         text.replace('\t', ',')  # type: ignore[union-attr]
@@ -233,12 +236,13 @@ def assert_line_of_os_linesep_split_crlf_text(
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> AssertLineOfOsLinesepSplitCrlfTextFunc:
     """Return an assertion helper for model or plain-value access."""
+
     def _assert_line_of_os_linesep_split_crlf_text(
         data: str,
         expected: str,
         with_newline: bool,
     ):
-        match (os.linesep):
+        match os.linesep:
             case NewLine.LF:
                 expected = expected + NewLine.CR
             case NewLine.CR:

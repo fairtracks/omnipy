@@ -10,41 +10,47 @@ from typing_extensions import override
 
 from omnipy.config import ConfigBase
 from omnipy.hub.ui import detect_display_color_system
-from omnipy.shared.constants import (BROWSER_DEFAULT_HEIGHT,
-                                     BROWSER_DEFAULT_WIDTH,
-                                     DEFAULT_DARK_BACKGROUND,
-                                     JUPYTER_DEFAULT_HEIGHT,
-                                     JUPYTER_DEFAULT_WIDTH,
-                                     MAX_PANEL_NESTING_DEPTH,
-                                     MAX_PANELS_HORIZONTALLY,
-                                     MIN_CROP_WIDTH,
-                                     MIN_PANEL_WIDTH,
-                                     TERMINAL_DEFAULT_HEIGHT,
-                                     TERMINAL_DEFAULT_WIDTH)
+from omnipy.shared.constants import (
+    BROWSER_DEFAULT_HEIGHT,
+    BROWSER_DEFAULT_WIDTH,
+    DEFAULT_DARK_BACKGROUND,
+    JUPYTER_DEFAULT_HEIGHT,
+    JUPYTER_DEFAULT_WIDTH,
+    MAX_PANEL_NESTING_DEPTH,
+    MAX_PANELS_HORIZONTALLY,
+    MIN_CROP_WIDTH,
+    MIN_PANEL_WIDTH,
+    TERMINAL_DEFAULT_HEIGHT,
+    TERMINAL_DEFAULT_WIDTH,
+)
 from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyles
 from omnipy.shared.enums.data import BackoffStrategy
-from omnipy.shared.enums.display import (DisplayColorSystem,
-                                         DisplayDimensionsUpdateMode,
-                                         HorizontalOverflowMode,
-                                         Justify,
-                                         MaxTitleHeight,
-                                         PanelDesign,
-                                         PrettyPrinterLib,
-                                         VerticalOverflowMode)
+from omnipy.shared.enums.display import (
+    DisplayColorSystem,
+    DisplayDimensionsUpdateMode,
+    HorizontalOverflowMode,
+    Justify,
+    MaxTitleHeight,
+    PanelDesign,
+    PrettyPrinterLib,
+    VerticalOverflowMode,
+)
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, UserInterfaceType
-from omnipy.shared.protocols.config import (IsBrowserUserInterfaceConfig,
-                                            IsColorConfig,
-                                            IsFontConfig,
-                                            IsHttpConfig,
-                                            IsHttpRequestsConfig,
-                                            IsJupyterUserInterfaceConfig,
-                                            IsLayoutConfig,
-                                            IsModelConfig,
-                                            IsOverflowConfig,
-                                            IsTerminalUserInterfaceConfig,
-                                            IsTextConfig,
-                                            IsUserInterfaceConfig,
-                                            IsUserInterfaceTypeConfig)
+from omnipy.shared.protocols.config import (
+    IsBrowserUserInterfaceConfig,
+    IsColorConfig,
+    IsFontConfig,
+    IsHttpConfig,
+    IsHttpRequestsConfig,
+    IsJupyterUserInterfaceConfig,
+    IsLayoutConfig,
+    IsModelConfig,
+    IsOverflowConfig,
+    IsTerminalUserInterfaceConfig,
+    IsTextConfig,
+    IsUserInterfaceConfig,
+    IsUserInterfaceTypeConfig,
+)
 import omnipy.util.pydantic as pyd
 
 
@@ -59,6 +65,7 @@ class ColorConfig(ConfigBase):
     """
     Configuration for color output.
     """
+
     system: DisplayColorSystem.Literals = DisplayColorSystem.AUTO
     style: AllColorStyles.Literals | str = RecommendedColorStyles.AUTO
     dark_background: bool = DEFAULT_DARK_BACKGROUND
@@ -119,7 +126,7 @@ class UserInterfaceTypeConfig(ConfigBase):
             >>> ui_cfg = UserInterfaceTypeConfig()
             >>> ui_cfg.set_width_and_height(120, 40)
         """
-        for (dim_name, dim_value) in (('width', width), ('height', height)):
+        for dim_name, dim_value in (('width', width), ('height', height)):
             object.__setattr__(self, dim_name, dim_value)
             self._call_subscribers(dim_name, dim_value)
         self._call_self_subscribers()
@@ -133,15 +140,18 @@ class DimsModeMixin(pyd.BaseModel):
 
 class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
     """Base config that can refresh width and height from the active display."""
+
     class Config:  # pyright: ignore [reportIncompatibleVariableOverride]
         """Pydantic model configuration: validates all fields and validates on assignment."""
+
         validate_all = True
         validate_assignment = True
 
     @classmethod
     @abstractmethod
     def _get_available_display_dims(
-            cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+        cls,
+    ) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         """Fetch currently available display dimensions for a UI target.
 
         Returns:
@@ -263,8 +273,10 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
             >>> cfg.width
             120
         """
-        if (attr in ['width', 'height']
-                and object.__getattribute__(self, 'dims_mode') is DisplayDimensionsUpdateMode.AUTO):
+        if (
+            attr in ['width', 'height']
+            and object.__getattribute__(self, 'dims_mode') is DisplayDimensionsUpdateMode.AUTO
+        ):
             width, height = object.__getattribute__(self, '_get_available_display_dims')()
             if width is not None:
                 setattr(self, 'width', width)
@@ -275,10 +287,12 @@ class DimsModeConfig(UserInterfaceTypeConfig, DimsModeMixin, ABC):
 
 class TerminalUserInterfaceConfig(DimsModeConfig):
     """Terminal-specific UI configuration with live terminal size detection."""
+
     @classmethod
     @override
     def _get_available_display_dims(
-            cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+        cls,
+    ) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         """Fetch terminal width and height from the current shell session.
 
         Returns:
@@ -317,10 +331,12 @@ class HtmlUserInterfaceConfig(UserInterfaceTypeConfig):
 
 class JupyterUserInterfaceConfig(HtmlUserInterfaceConfig, DimsModeConfig):
     """Jupyter-specific UI configuration with notebook defaults."""
+
     @classmethod
     @override
     def _get_available_display_dims(
-            cls) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
+        cls,
+    ) -> tuple[pyd.NonNegativeInt | None, pyd.NonNegativeInt | None]:
         """Return notebook display dimensions when they can be queried.
 
         Returns:
@@ -363,6 +379,7 @@ class BrowserUserInterfaceConfig(HtmlUserInterfaceConfig):
     """
     Configuration for browser user interface type.
     """
+
     def __init__(self, **data: Any) -> None:
         """Initialize browser defaults for dimensions and color settings.
 
@@ -390,6 +407,7 @@ class OverflowConfig(ConfigBase):
     """
     Configuration for overflow handling.
     """
+
     horizontal: HorizontalOverflowMode.Literals = HorizontalOverflowMode.ELLIPSIS
     vertical: VerticalOverflowMode.Literals = VerticalOverflowMode.ELLIPSIS_BOTTOM
 
@@ -438,6 +456,7 @@ class UserInterfaceConfig(ConfigBase):
     Configuration for the user interface, including inputs and output
     devices.
     """
+
     detected_type: SpecifiedUserInterfaceType.Literals = UserInterfaceType.UNKNOWN
     terminal: IsTerminalUserInterfaceConfig = pyd.Field(default_factory=TerminalUserInterfaceConfig)
     jupyter: IsJupyterUserInterfaceConfig = pyd.Field(default_factory=JupyterUserInterfaceConfig)
@@ -479,6 +498,7 @@ class ModelConfig(ConfigBase):
     """
     Configuration for behavior of the Model class.
     """
+
     interactive: bool = True
     dynamically_convert_elements_to_models: bool = False
 
@@ -487,6 +507,7 @@ class HttpRequestsConfig(ConfigBase):
     """
     Configuration for HTTP requests.
     """
+
     # For RateLimitingClientSession helper class
     requests_per_time_period: float = 60
     time_period_in_secs: float = 60
@@ -502,12 +523,13 @@ class HttpConfig(ConfigBase):
 
     defaults: IsHttpRequestsConfig = pyd.Field(default_factory=HttpRequestsConfig)
     for_host: defaultdict[str, IsHttpRequestsConfig] = pyd.Field(
-        default_factory=lambda: defaultdict(HttpRequestsConfig))
+        default_factory=lambda: defaultdict(HttpRequestsConfig)
+    )
 
     @pyd.validator('for_host', always=True)
-    def update_http_defaults(cls,
-                             _for_host: defaultdict[str, HttpRequestsConfig],
-                             values: dict[str, Any]) -> defaultdict[str, HttpRequestsConfig]:
+    def update_http_defaults(
+        cls, _for_host: defaultdict[str, HttpRequestsConfig], values: dict[str, Any]
+    ) -> defaultdict[str, HttpRequestsConfig]:
         """Create a host map that clones current HTTP defaults per new key.
 
         Args:
@@ -535,6 +557,7 @@ class DataConfig(ConfigBase):
     """
     Configuration for data module.
     """
+
     ui: IsUserInterfaceConfig = pyd.Field(default_factory=lambda: UserInterfaceConfig())
     model: IsModelConfig = pyd.Field(default_factory=lambda: ModelConfig())
     http: IsHttpConfig = pyd.Field(default_factory=HttpConfig)

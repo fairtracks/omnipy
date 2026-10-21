@@ -31,6 +31,7 @@ class IsaCommentSchema(pyd.BaseModel):
         name: Comment key or label.
         value: Comment text associated with ``name``.
     """
+
     class Config:
         """Validation settings for ISA comment schema parsing.
 

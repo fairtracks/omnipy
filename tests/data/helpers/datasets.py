@@ -13,21 +13,18 @@ from .models import DefaultStrModel, MyFloatObjModel, ParamUpperStrModel
 ChildT = TypeVar('ChildT', default=object)
 
 
-class MyFloatObjDataset(Dataset[MyFloatObjModel]):
-    ...
+class MyFloatObjDataset(Dataset[MyFloatObjModel]): ...
 
 
 class CBA:
-    class MyGenericDataset(Dataset[Model[Optional[ChildT]]], Generic[ChildT]):
-        ...
+    class MyGenericDataset(Dataset[Model[Optional[ChildT]]], Generic[ChildT]): ...
 
 
 MyFwdRefDataset: TypeAlias = CBA.MyGenericDataset['NumberModel']
 MyNestedFwdRefDataset: TypeAlias = CBA.MyGenericDataset['str | NumberModel']
 
 
-class NumberModel(Model[int]):
-    ...
+class NumberModel(Model[int]): ...
 
 
 MyFwdRefDataset.update_forward_refs(NumberModel=NumberModel)
@@ -36,8 +33,7 @@ MyNestedFwdRefDataset.update_forward_refs(NumberModel=NumberModel)
 ParamUpperStrModelT = TypeVar('ParamUpperStrModelT', default=ParamUpperStrModel)
 
 
-class _ParamUpperStrDataset(Dataset[ParamUpperStrModelT], Generic[ParamUpperStrModelT]):
-    ...
+class _ParamUpperStrDataset(Dataset[ParamUpperStrModelT], Generic[ParamUpperStrModelT]): ...
 
 
 class ParamUpperStrDataset(_ParamUpperStrDataset[ParamUpperStrModel]):
@@ -51,8 +47,7 @@ class ParamUpperStrDataset(_ParamUpperStrDataset[ParamUpperStrModel]):
 DefaultStrModelT = TypeVar('DefaultStrModelT', default=DefaultStrModel)
 
 
-class _DefaultStrDataset(Dataset[DefaultStrModelT], Generic[DefaultStrModelT]):
-    ...
+class _DefaultStrDataset(Dataset[DefaultStrModelT], Generic[DefaultStrModelT]): ...
 
 
 class DefaultStrDataset(_DefaultStrDataset[DefaultStrModel]):

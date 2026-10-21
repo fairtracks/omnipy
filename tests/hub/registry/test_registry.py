@@ -13,11 +13,13 @@ from omnipy.shared.enums.job import RunState
 from omnipy.shared.protocols.compute.job import IsDagFlow, IsTask
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
-from ...engine.helpers.mocks import (MockDagFlow,
-                                     MockDagFlowTemplate,
-                                     MockJobRunnerSubclass,
-                                     MockTask,
-                                     MockTaskTemplate)
+from ...engine.helpers.mocks import (
+    MockDagFlow,
+    MockDagFlowTemplate,
+    MockJobRunnerSubclass,
+    MockTask,
+    MockTaskTemplate,
+)
 from ..helpers.functions import read_log_lines_from_stream
 
 
@@ -62,6 +64,7 @@ def task_b(task_template_b) -> MockTask:
 @pytest.fixture(scope='module')
 def dag_flow_a(task_template_a, task_template_b) -> MockDagFlow:
     """Provide dag flow a."""
+
     @MockDagFlowTemplate(task_template_a, task_template_b, name='a')
     def concat_a(s: str) -> str:
         """Provide concat a."""
@@ -73,6 +76,7 @@ def dag_flow_a(task_template_a, task_template_b) -> MockDagFlow:
 @pytest.fixture(scope='module')
 def dag_flow_b(task_template_a, task_template_b) -> MockDagFlow:
     """Provide dag flow b."""
+
     @MockDagFlowTemplate(task_template_a, task_template_b, name='b')
     def concat_b(s: str) -> str:
         """Provide concat b."""
@@ -285,21 +289,25 @@ def test_state_change_logging(
 
         assert len(log_lines) == 6
 
-        assert log_lines[0].endswith('INFO: '
-                                     f'Initialized "{job_a.unique_name}" '
-                                     f'(omnipy.hub._registry.RunStateRegistry)')
-        assert log_lines[1].endswith(f'INFO: '
-                                     f'Started running "{job_a.unique_name}"... '
-                                     f'(omnipy.hub._registry.RunStateRegistry)')
-        assert log_lines[2].endswith(f'INFO: '
-                                     f'Initialized "{job_b.unique_name}" '
-                                     f'(omnipy.hub._registry.RunStateRegistry)')
-        assert log_lines[3].endswith(f'INFO: '
-                                     f'Finished running "{job_a.unique_name}"! '
-                                     f'(omnipy.hub._registry.RunStateRegistry)')
-        assert log_lines[4].endswith(f'INFO: '
-                                     f'Started running "{job_b.unique_name}"... '
-                                     f'(omnipy.hub._registry.RunStateRegistry)')
-        assert log_lines[5].endswith(f'INFO: '
-                                     f'Finished running "{job_b.unique_name}"! '
-                                     f'(omnipy.hub._registry.RunStateRegistry)')
+        assert log_lines[0].endswith(
+            f'INFO: Initialized "{job_a.unique_name}" (omnipy.hub._registry.RunStateRegistry)'
+        )
+        assert log_lines[1].endswith(
+            f'INFO: '
+            f'Started running "{job_a.unique_name}"... '
+            f'(omnipy.hub._registry.RunStateRegistry)'
+        )
+        assert log_lines[2].endswith(
+            f'INFO: Initialized "{job_b.unique_name}" (omnipy.hub._registry.RunStateRegistry)'
+        )
+        assert log_lines[3].endswith(
+            f'INFO: Finished running "{job_a.unique_name}"! (omnipy.hub._registry.RunStateRegistry)'
+        )
+        assert log_lines[4].endswith(
+            f'INFO: '
+            f'Started running "{job_b.unique_name}"... '
+            f'(omnipy.hub._registry.RunStateRegistry)'
+        )
+        assert log_lines[5].endswith(
+            f'INFO: Finished running "{job_b.unique_name}"! (omnipy.hub._registry.RunStateRegistry)'
+        )

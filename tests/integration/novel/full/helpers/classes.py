@@ -10,5 +10,6 @@ _ReturnT = TypeVar('_ReturnT')
 @dataclass
 class FlowCase(Generic[_ArgT, _ReturnT]):
     """Define FlowCase."""
+
     name: str
     flow_template: IsAnyFlowTemplate

@@ -35,12 +35,10 @@ class HasContentMixin(Generic[ContentT]):
         return f'{self.__class__.__name__}({self.content})'
 
 
-class MyList(HasContentMixin[list], UserList):
-    ...
+class MyList(HasContentMixin[list], UserList): ...
 
 
-class MyDict(HasContentMixin[dict], UserDict):
-    ...
+class MyDict(HasContentMixin[dict], UserDict): ...
 
 
 def _take_snapshot(snapshot_holder: IsSnapshotHolder, obj: HasContent) -> None:
@@ -84,7 +82,8 @@ def test_snapshot_holder_all_are_empty_and_clear() -> None:
     something_else = [2, 3, 4]
     snapshot_holder.take_snapshot(my_list)
     snapshot_holder.schedule_deepcopy_content_ids_for_deletion(
-        *[id(my_list.content), id(something_else)])
+        *[id(my_list.content), id(something_else)]
+    )
 
     del my_list
     snapshot_holder.delete_scheduled_deepcopy_content_ids()
@@ -206,7 +205,8 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
             arbitrary_types_allowed = True
 
     def _inner_test_snapshot_deepcopy_reuse_objects(
-            snapshot_holder: SnapshotHolder[MyMemoDeletingList, list | dict]) -> None:
+        snapshot_holder: SnapshotHolder[MyMemoDeletingList, list | dict],
+    ) -> None:
 
         inner = MyMemoDeletingList([2, 4])
         middle = MyMemoDeletingList([{1, 3}, inner])
@@ -219,32 +219,46 @@ def test_snapshot_deepcopy_reuse_objects() -> None:
         assert type(outer[1].my_list[-1]) is type(middle[-1]) is type(inner) is MyMemoDeletingList
         assert id(outer[1].my_list[-1]) == id(middle[-1]) == id(inner)
 
-        assert type(snapshot_holder[outer].snapshot[1].my_list[-1]) \
-               is type(snapshot_holder[middle].snapshot[-1]) \
-               is MyMemoDeletingList
-        assert id(snapshot_holder[outer].snapshot[1].my_list[-1]) \
-               == id(snapshot_holder[middle].snapshot[-1])
+        assert (
+            type(snapshot_holder[outer].snapshot[1].my_list[-1])
+            is type(snapshot_holder[middle].snapshot[-1])
+            is MyMemoDeletingList
+        )
+        assert id(snapshot_holder[outer].snapshot[1].my_list[-1]) == id(
+            snapshot_holder[middle].snapshot[-1]
+        )
 
-        assert type(outer[1].my_list[-1].content) is type(middle[-1].content) is type(
-            inner.content) is list
+        assert (
+            type(outer[1].my_list[-1].content)
+            is type(middle[-1].content)
+            is type(inner.content)
+            is list
+        )
         assert id(outer[1].my_list[-1].content) == id(middle[-1].content) == id(inner.content)
 
-        assert type(snapshot_holder[outer].snapshot[1].my_list[-1].content) \
-               is type(snapshot_holder[middle].snapshot[-1].content) \
-               is type(snapshot_holder[inner].snapshot) \
-               is list
-        assert id(snapshot_holder[outer].snapshot[1].my_list[-1].content) \
-               == id(snapshot_holder[middle].snapshot[-1].content) \
-               == id(snapshot_holder[inner].snapshot)
+        assert (
+            type(snapshot_holder[outer].snapshot[1].my_list[-1].content)
+            is type(snapshot_holder[middle].snapshot[-1].content)
+            is type(snapshot_holder[inner].snapshot)
+            is list
+        )
+        assert (
+            id(snapshot_holder[outer].snapshot[1].my_list[-1].content)
+            == id(snapshot_holder[middle].snapshot[-1].content)
+            == id(snapshot_holder[inner].snapshot)
+        )
 
         assert type(outer[1].my_list.content) is type(middle.content) is list
         assert id(outer[1].my_list.content) == id(middle.content)
 
-        assert type(snapshot_holder[outer].snapshot[1].my_list.content) \
-               is type(snapshot_holder[middle].snapshot) \
-               is list
-        assert id(snapshot_holder[outer].snapshot[1].my_list.content) \
-               == id(snapshot_holder[middle].snapshot)
+        assert (
+            type(snapshot_holder[outer].snapshot[1].my_list.content)
+            is type(snapshot_holder[middle].snapshot)
+            is list
+        )
+        assert id(snapshot_holder[outer].snapshot[1].my_list.content) == id(
+            snapshot_holder[middle].snapshot
+        )
 
     # snapshot_holder = SnapshotHolder[MyMemoDeletingList, list]()
     _inner_test_snapshot_deepcopy_reuse_objects(snapshot_holder)
@@ -300,44 +314,55 @@ def test_snapshot_holder_deepcopy_memo_status_delete_and_clear() -> None:
     _take_snapshot(snapshot_holder, my_third_list)
 
     assert len(snapshot_holder) == 2
-    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque((
-        content_id_first_list,
-        content_id_third_list,
-    ))
+    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque(
+        (
+            content_id_first_list,
+            content_id_third_list,
+        )
+    )
     assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == SetDeque()
 
     snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id_first_list)
 
     assert len(snapshot_holder) == 2
-    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque((
-        content_id_first_list,
-        content_id_third_list,
-    ))
+    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque(
+        (
+            content_id_first_list,
+            content_id_third_list,
+        )
+    )
     assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == SetDeque(
-        (content_id_first_list,))
+        (content_id_first_list,)
+    )
 
     # Duplicates are ignored
     snapshot_holder.schedule_deepcopy_content_ids_for_deletion(content_id_first_list)
 
     assert len(snapshot_holder) == 2
-    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque((
-        content_id_first_list,
-        content_id_third_list,
-    ))
+    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque(
+        (
+            content_id_first_list,
+            content_id_third_list,
+        )
+    )
     assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == SetDeque(
-        (content_id_first_list,))
+        (content_id_first_list,)
+    )
 
     # Not deleted if there are still references to the content object. Object is still
     # scheduled for deletion, just in case
     snapshot_holder.delete_scheduled_deepcopy_content_ids()
 
     assert len(snapshot_holder) == 2
-    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque((
-        content_id_first_list,
-        content_id_third_list,
-    ))
+    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque(
+        (
+            content_id_first_list,
+            content_id_third_list,
+        )
+    )
     assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == SetDeque(
-        (content_id_first_list,))
+        (content_id_first_list,)
+    )
 
     # Automatic deletion of snapshots from snapshot_holder, but no automatic deletion of
     # objects from deepcopy_memo, even if already scheduled for deletion
@@ -346,12 +371,15 @@ def test_snapshot_holder_deepcopy_memo_status_delete_and_clear() -> None:
     gc.collect()
 
     assert len(snapshot_holder) == 1
-    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque((
-        content_id_first_list,
-        content_id_third_list,
-    ))
+    assert snapshot_holder.get_deepcopy_content_ids() == SetDeque(
+        (
+            content_id_first_list,
+            content_id_third_list,
+        )
+    )
     assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == SetDeque(
-        (content_id_first_list,))
+        (content_id_first_list,)
+    )
 
     # Delete scheduled object at controlled places
     snapshot_holder.delete_scheduled_deepcopy_content_ids()
@@ -374,7 +402,8 @@ def test_snapshot_holder_deepcopy_memo_status_delete_and_clear() -> None:
     assert len(snapshot_holder) == 1
     assert snapshot_holder.get_deepcopy_content_ids() == SetDeque((content_id_third_list,))
     assert snapshot_holder.get_deepcopy_content_ids_scheduled_for_deletion() == SetDeque(
-        (content_id_third_list,))
+        (content_id_third_list,)
+    )
 
     snapshot_holder.clear()
 

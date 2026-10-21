@@ -35,6 +35,7 @@ class IsaOntologyReferenceSchema(pyd.BaseModel):
         termAccession: Accession identifier for the ontology term.
         comments: Optional comments attached to the annotation.
     """
+
     class Config:
         """Validation settings for ISA ontology-annotation parsing.
 

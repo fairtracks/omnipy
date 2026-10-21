@@ -12,7 +12,7 @@ if __name__ == '__main__':
     print(f'project_path: {project_path}')
 
     assert script_path.startswith(project_path)
-    module = '.'.join(script_path.split('.')[0][len(project_path) + 1:].split('/'))
+    module = '.'.join(script_path.split('.')[0][len(project_path) + 1 :].split('/'))
 
     # print(f'package: {package}')
     print(f'module: {module}')

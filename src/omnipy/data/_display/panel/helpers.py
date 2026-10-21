@@ -26,7 +26,8 @@ class ForceAutodetect(LiteralEnum[str]):
 
 @lru_cache
 def get_syntax_theme_from_color_style(
-        color_style: AllColorStyles.Literals) -> rich.syntax.SyntaxTheme:
+    color_style: AllColorStyles.Literals,
+) -> rich.syntax.SyntaxTheme:
     """Return the Rich syntax theme associated with an Omnipy color style."""
 
     color_style_name = clean_style_name(color_style)
@@ -68,7 +69,8 @@ def calculate_fg_color_from_color_style(color_style: AllColorStyles.Literals) ->
 
 @lru_cache
 def calculate_fg_color_triplet_from_color_style(
-        color_style: AllColorStyles.Literals) -> rich.color_triplet.ColorTriplet:
+    color_style: AllColorStyles.Literals,
+) -> rich.color_triplet.ColorTriplet:
     """Return the truecolor foreground triplet for a style."""
 
     syntax_theme_fg_color = calculate_fg_color_from_color_style(color_style)
@@ -89,8 +91,10 @@ def calculate_bg_color_from_color_style(
     force_autodetect: ForceAutodetect.Literals,
 ) -> rich.color.Color | None:
     """Calculate the effective background color for a style."""
+
     def _auto_detect_bw_background_color(
-            fg_color_triplet: rich.color_triplet.ColorTriplet) -> rich.color.Color:
+        fg_color_triplet: rich.color_triplet.ColorTriplet,
+    ) -> rich.color.Color:
         """
         Auto-detects a black or bright white background color based on the luminance of the
         foreground color (i.e. whether the style is light or dark).
@@ -109,8 +113,9 @@ def calculate_bg_color_from_color_style(
     # bright white background, so we instead also autodetect a black or bright white background
     # color also in this case.
 
-    if (bg_color is None and force_autodetect is ForceAutodetect.IF_NO_BG_COLOR_IN_STYLE) \
-            or (force_autodetect is ForceAutodetect.ALWAYS):
+    if (bg_color is None and force_autodetect is ForceAutodetect.IF_NO_BG_COLOR_IN_STYLE) or (
+        force_autodetect is ForceAutodetect.ALWAYS
+    ):
         fg_color_triplet = calculate_fg_color_triplet_from_color_style(color_style)
         bg_color = _auto_detect_bw_background_color(fg_color_triplet)
 

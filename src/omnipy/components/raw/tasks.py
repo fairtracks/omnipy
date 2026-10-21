@@ -44,9 +44,11 @@ def decode_bytes(data: Model[bytes], encoding: str | None = None) -> str:
         # TODO: Implement simple solution to log from a task/flow.
         # TODO: Implement solution to add information to the dataset metadata and apply this to
         #       decode_bytes() for storing detected encoding etc.
-        print(f'Automatically detected text encoding to be "{encoding}" with confidence '
-              f'"{confidence}". The language is predicted to be "{language}". '
-              f'(All predictions have been made by the "chardet" library.)')
+        print(
+            f'Automatically detected text encoding to be "{encoding}" with confidence '
+            f'"{confidence}". The language is predicted to be "{language}". '
+            f'(All predictions have been made by the "chardet" library.)'
+        )
 
         if encoding is None:
             encoding = 'ascii'

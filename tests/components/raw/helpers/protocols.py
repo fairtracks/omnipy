@@ -3,6 +3,7 @@ from typing import Protocol
 
 class AssertLineOfOsLinesepSplitCrlfTextFunc(Protocol):
     """Callable protocol for asserting models or plain values."""
+
     def __call__(
         self,
         data: str,

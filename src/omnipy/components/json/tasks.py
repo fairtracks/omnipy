@@ -9,18 +9,22 @@ from omnipy.data.model import Model, obj_or_model_content_isinstance
 
 from ._functions import flatten_outer_level_of_nested_record
 from .constants import ID_KEY
-from .datasets import (JsonDataset,
-                       JsonDictDataset,
-                       JsonListDataset,
-                       JsonListOfDictsDataset,
-                       JsonListOfDictsOfScalarsDataset)
-from .typedefs import (Json,
-                       JsonDict,
-                       JsonDictOfListsOfDicts,
-                       JsonDictOfScalars,
-                       JsonList,
-                       JsonListOfDicts,
-                       JsonListOfDictsOfScalars)
+from .datasets import (
+    JsonDataset,
+    JsonDictDataset,
+    JsonListDataset,
+    JsonListOfDictsDataset,
+    JsonListOfDictsOfScalarsDataset,
+)
+from .typedefs import (
+    Json,
+    JsonDict,
+    JsonDictOfListsOfDicts,
+    JsonDictOfScalars,
+    JsonList,
+    JsonListOfDicts,
+    JsonListOfDictsOfScalars,
+)
 
 
 @TaskTemplate()
@@ -67,19 +71,19 @@ def transpose_dicts_2_lists(dataset: JsonDictDataset, id_key: str = ID_KEY) -> J
 
 @TaskTemplate()
 def _flatten_outer_level_of_all_data_files(
-        dataset: JsonListOfDictsDataset, id_key: str, ref_key: str,
-        default_key: str) -> tuple[JsonListOfDictsOfScalarsDataset, JsonListOfDictsDataset]:
+    dataset: JsonListOfDictsDataset, id_key: str, ref_key: str, default_key: str
+) -> tuple[JsonListOfDictsOfScalarsDataset, JsonListOfDictsDataset]:
     """Flatten one outer nesting level for every record in a dataset.
 
     Returns scalar-only records for the current level together with any remaining nested records.
     """
 
-    data_files_of_scalar_records: defaultdict[str, JsonListOfDictsOfScalars] = \
-        defaultdict(JsonListOfDictsOfScalars)
+    data_files_of_scalar_records: defaultdict[str, JsonListOfDictsOfScalars] = defaultdict(
+        JsonListOfDictsOfScalars
+    )
     data_files_of_any: defaultdict[str, JsonListOfDicts] = defaultdict(JsonListOfDicts)
 
-    dataset_as_data: JsonDictOfListsOfDicts = \
-        cast(JsonDictOfListsOfDicts, dataset.to_data())
+    dataset_as_data: JsonDictOfListsOfDicts = cast(JsonDictOfListsOfDicts, dataset.to_data())
 
     for data_file_title, item in dataset_as_data.items():
         data_file: JsonListOfDicts = item

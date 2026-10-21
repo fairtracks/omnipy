@@ -47,16 +47,14 @@ class WordSplitterModel(Model[list[str] | str]):
 
 
 class CBA:
-    class MyGenericModel(Model[Optional[ChildT]], Generic[ChildT]):
-        ...
+    class MyGenericModel(Model[Optional[ChildT]], Generic[ChildT]): ...
 
 
 MyFwdRefModel: TypeAlias = CBA.MyGenericModel['NumberModel']
 MyNestedFwdRefModel: TypeAlias = CBA.MyGenericModel['str | NumberModel']
 
 
-class NumberModel(Model[int]):
-    ...
+class NumberModel(Model[int]): ...
 
 
 MyFwdRefModel.update_forward_refs(NumberModel=NumberModel)
@@ -111,8 +109,7 @@ class PydanticChildModel(pyd.BaseModel):
 
 
 @mimics(PydanticChildModel)
-class ModelOfPydanticChildModel(Model[PydanticChildModel]):
-    ...
+class ModelOfPydanticChildModel(Model[PydanticChildModel]): ...
 
 
 class PydanticParentModel(pyd.GenericModel, Generic[ChildrenT]):
@@ -120,17 +117,13 @@ class PydanticParentModel(pyd.GenericModel, Generic[ChildrenT]):
     children: ChildrenT = pyd.Field(default_factory=list)
 
 
-class MyPydanticParentModel(Model[PydanticParentModel[ChildrenT]], Generic[ChildrenT]):
-    ...
+class MyPydanticParentModel(Model[PydanticParentModel[ChildrenT]], Generic[ChildrenT]): ...
 
 
-class LiteralFiveModel(Model[Literal[5]]):
-    ...
+class LiteralFiveModel(Model[Literal[5]]): ...
 
 
-class LiteralTextModel(Model[Literal['text']]):
-    ...
+class LiteralTextModel(Model[Literal['text']]): ...
 
 
-class LiteralFiveOrTextModel(Model[Literal[5, 'text']]):
-    ...
+class LiteralFiveOrTextModel(Model[Literal[5, 'text']]): ...

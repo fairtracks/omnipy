@@ -16,8 +16,8 @@ from omnipy.shared.enums.display import PrettyPrinterLib
 
 
 class CompactJsonPrettyPrinter(
-        JsonStatsTighteningPrettyPrinterMixin,
-        ConstraintTighteningPrettyPrinter[object],
+    JsonStatsTighteningPrettyPrinterMixin,
+    ConstraintTighteningPrettyPrinter[object],
 ):
     """Format JSON-like content using the compact-json backend."""
 
@@ -33,10 +33,13 @@ class CompactJsonPrettyPrinter(
     @override
     @classmethod
     def _get_default_constraints_for_draft_panel(
-            cls, draft_panel: DraftPanel[object, AnyFrame]) -> Constraints:
+        cls, draft_panel: DraftPanel[object, AnyFrame]
+    ) -> Constraints:
         return Constraints(
             max_inline_list_or_dict_width_excl=(
-                draft_panel.frame.dims.width or TERMINAL_DEFAULT_WIDTH))
+                draft_panel.frame.dims.width or TERMINAL_DEFAULT_WIDTH
+            )
+        )
 
     @override
     def print_draft_to_str(self, draft_panel: DraftPanel[object, AnyFrame]) -> str:

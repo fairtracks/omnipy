@@ -8,7 +8,8 @@ import pytest
 
 
 def test_no_prefect_console_handler_in_root_logger(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
     """Avoid adding Prefect console handlers to the root logger."""
     import omnipy.components.prefect.lazy_import  # noqa: F401
 
@@ -17,4 +18,5 @@ def test_no_prefect_console_handler_in_root_logger(
     assert logging.root.level == logging.WARN
 
     from prefect.logging.handlers import PrefectConsoleHandler
+
     assert not any(isinstance(handler, PrefectConsoleHandler) for handler in logging.root.handlers)

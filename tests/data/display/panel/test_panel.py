@@ -14,6 +14,7 @@ from omnipy.data._display.panel.base import DimensionsAwarePanel, Panel
 
 class SimplePanel(Panel):
     """Define SimplePanel."""
+
     @override
     def render_next_stage(self) -> 'DimensionsAwarePanel[AnyFrame]':
         return cast(DimensionsAwarePanel[AnyFrame], self)
@@ -34,7 +35,8 @@ def test_panel():
 
     # Test with custom frame without fixed dimensions
     custom_frame_not_fixed = Frame(
-        Dimensions(width=10, height=20), fixed_width=False, fixed_height=False)
+        Dimensions(width=10, height=20), fixed_width=False, fixed_height=False
+    )
     panel = SimplePanel(title='My other panel', frame=custom_frame_not_fixed)
     assert panel.title == 'My other panel'
     assert panel.frame is not custom_frame_not_fixed  # Should be a copy, not the same object

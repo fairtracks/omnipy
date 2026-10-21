@@ -19,6 +19,7 @@ from ..helpers.functions import assert_log_line_from_stream, format_datetime_obj
 def case_my_class_as_regular_log_mixin_subclass() -> Type:
     class MyClass(LogMixin):
         """Define MyClass."""
+
         def __init__(self, foo: int, bar: bool = True, **kwargs: object):
             super().__init__(**kwargs)
             self.foo = foo
@@ -31,6 +32,7 @@ def case_my_class_as_regular_log_mixin_subclass() -> Type:
 def case_my_class_as_dynamic_log_mixin_subclass() -> Type:
     class MyClass(DynamicMixinAcceptor):
         """Define MyClass."""
+
         def __init__(self, foo: int, bar: bool = True, **kwargs: object):
             self.foo = foo
             self.bar = bar

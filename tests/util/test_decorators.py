@@ -5,12 +5,14 @@ from typing import Callable
 import pytest
 
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
-from omnipy.util.decorators import (add_callback_after_call,
-                                    add_callback_if_exception,
-                                    apply_decorator_to_property,
-                                    call_super_if_available,
-                                    class_or_instance_method,
-                                    no_context)
+from omnipy.util.decorators import (
+    add_callback_after_call,
+    add_callback_if_exception,
+    apply_decorator_to_property,
+    call_super_if_available,
+    class_or_instance_method,
+    no_context,
+)
 
 
 def test_exception_callback_with_args() -> None:
@@ -24,16 +26,17 @@ def test_exception_callback_with_args() -> None:
     def defensive_reverse_concatenator(a: list[int], b: list[int]) -> list[int]:
         return list(b) + list(a)
 
-    concatenate_reverse_if_error = add_callback_if_exception(concatenate,
-                                                             defensive_reverse_concatenator)
+    concatenate_reverse_if_error = add_callback_if_exception(
+        concatenate, defensive_reverse_concatenator
+    )
     assert concatenate_reverse_if_error([1, 2], [3, 4]) == [1, 2, 3, 4]
     assert concatenate_reverse_if_error((1, 2), [3, 4]) == [3, 4, 1, 2]  # type: ignore[arg-type]
     assert concatenate_reverse_if_error([42], [3, 4]) == [3, 4, 42]
     assert concatenate_reverse_if_error([666], [3, 4]) == [3, 4, 666]
 
-    concatenate_reverse_if_error = add_callback_if_exception(concatenate,
-                                                             defensive_reverse_concatenator,
-                                                             (TypeError, ValueError))
+    concatenate_reverse_if_error = add_callback_if_exception(
+        concatenate, defensive_reverse_concatenator, (TypeError, ValueError)
+    )
     assert concatenate_reverse_if_error([1, 2], [3, 4]) == [1, 2, 3, 4]
     assert concatenate_reverse_if_error((1, 2), [3, 4]) == [3, 4, 1, 2]  # type: ignore[arg-type]
     assert concatenate_reverse_if_error([42], [3, 4]) == [3, 4, 42]
@@ -55,7 +58,8 @@ def test_callback_after_func_call() -> None:
     my_list = [1, 2, 3]
 
     decorated_my_appender = add_callback_after_call(
-        my_appender, my_callback_after_call, no_context, 5, y=6)
+        my_appender, my_callback_after_call, no_context, 5, y=6
+    )
 
     ret_list = decorated_my_appender(my_list, 4)
     assert ret_list == my_list == [1, 2, 3, 4, 5, 6]
@@ -78,7 +82,8 @@ def test_callback_after_func_call_with_attrib_holder_error_in_func() -> None:
 
     restore_numbers_context = hold_and_reset_prev_attrib_value(my_a, 'numbers', copy_attr=True)
     decorated_my_appender = add_callback_after_call(
-        my_appender, my_callback_after_call, restore_numbers_context, my_a, y=0)
+        my_appender, my_callback_after_call, restore_numbers_context, my_a, y=0
+    )
 
     try:
         decorated_my_appender(my_a, 4)
@@ -108,7 +113,8 @@ def test_callback_after_func_call_with_attrib_holder_error_in_callback_func() ->
 
     restore_numbers_context = hold_and_reset_prev_attrib_value(my_a, 'numbers', copy_attr=True)
     decorated_my_appender = add_callback_after_call(
-        my_appender, my_callback_after_call, restore_numbers_context, my_other_a, y=4)
+        my_appender, my_callback_after_call, restore_numbers_context, my_other_a, y=4
+    )
 
     try:
         decorated_my_appender(my_a, 4)
@@ -149,11 +155,14 @@ def test_apply_decorator_to_property():
         return _inner
 
     MyDataGetter.data = apply_decorator_to_property(  # pyright: ignore
-        MyDataGetter.data, my_decorator)
+        MyDataGetter.data, my_decorator
+    )
     MyDataSetter.data = apply_decorator_to_property(  # pyright: ignore
-        MyDataSetter.data, my_decorator)
+        MyDataSetter.data, my_decorator
+    )
     MyDataDeleter.data = apply_decorator_to_property(  # pyright: ignore
-        MyDataDeleter.data, my_decorator)
+        MyDataDeleter.data, my_decorator
+    )
 
     assert MyDataGetter.data.__doc__ == 'data property documentation'
     assert MyDataSetter.data.__doc__ == 'data property documentation'

@@ -14,10 +14,12 @@ from omnipy.data._display.panel.styling.output import OutputMode, TextCroppingOu
 from omnipy.data._display.panel.typedefs import FrameT
 from omnipy.data._display.styles.dynamic_styles import clean_style_name
 from omnipy.shared.enums.colorstyles import AllColorStyles
-from omnipy.shared.enums.display import (DisplayColorSystem,
-                                         HorizontalOverflowMode,
-                                         SyntaxLanguageSpec,
-                                         VerticalOverflowMode)
+from omnipy.shared.enums.display import (
+    DisplayColorSystem,
+    HorizontalOverflowMode,
+    SyntaxLanguageSpec,
+    VerticalOverflowMode,
+)
 import omnipy.util.pydantic as pyd
 
 
@@ -27,10 +29,11 @@ import omnipy.util.pydantic as pyd
     config=pyd.ConfigDict(extra=pyd.Extra.forbid, validate_all=True),
 )
 class SyntaxStylizedTextPanel(
-        StylizedMonospacedPanel[ReflowedTextDraftPanel, str, FrameT],
-        Generic[FrameT],
+    StylizedMonospacedPanel[ReflowedTextDraftPanel, str, FrameT],
+    Generic[FrameT],
 ):
     """Styled text panel that renders reflowed text with Rich syntax themes."""
+
     @staticmethod
     @lru_cache(maxsize=1024)
     def _get_stylized_content_common(
@@ -123,7 +126,8 @@ class SyntaxStylizedTextPanel(
             horizontal_overflow_mode=self.config.h_overflow,
             # The HTML background color is set for the entire tag/page, so
             # we need to remove the background color for each element
-            remove_bg_color=True)
+            remove_bg_color=True,
+        )
 
     @cached_property
     @override

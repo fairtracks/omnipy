@@ -10,8 +10,9 @@ from .flows import env_monitoring_harmonization_flow, flatten_and_wrangle_as_dat
 from .models import NormalizedBatchesDataset
 
 
-def _build_paginated_source_urls(source_name: str, port: int | None, endpoint: str,
-                                 page_count: int) -> HttpUrlDataset:
+def _build_paginated_source_urls(
+    source_name: str, port: int | None, endpoint: str, page_count: int
+) -> HttpUrlDataset:
     urls = HttpUrlDataset()
 
     for page in range(page_count):
@@ -44,7 +45,8 @@ async def harmonized_batches(
     )
 
     return await env_monitoring_harmonization_flow.run(
-        river_urls=river_urls, wastewater_urls=wastewater_urls)
+        river_urls=river_urls, wastewater_urls=wastewater_urls
+    )
 
 
 async def test_harmonize_water_samples(
@@ -56,14 +58,10 @@ async def test_harmonize_water_samples(
     harmonized_batches.full()
 
     assert harmonized_batches['all_river_batches'].to_data()[0] == {
-        'sample_key':
-            'river-r1',
-        'catchment_id':
-            'glomma-upper',
-        'monitoring_date':
-            '2026-05-03',
-        'location_name':
-            'River Mouth',
+        'sample_key': 'river-r1',
+        'catchment_id': 'glomma-upper',
+        'monitoring_date': '2026-05-03',
+        'location_name': 'River Mouth',
         'measurements': [
             {
                 'type': 'nitrate',
@@ -79,14 +77,10 @@ async def test_harmonize_water_samples(
     }
 
     assert harmonized_batches['all_wastewater_batches'].to_data()[0] == {
-        'sample_key':
-            'ww-9a',
-        'catchment_id':
-            'glomma-upper',
-        'monitoring_date':
-            '2026-05-03',
-        'location_name':
-            'North Works',
+        'sample_key': 'ww-9a',
+        'catchment_id': 'glomma-upper',
+        'monitoring_date': '2026-05-03',
+        'location_name': 'North Works',
         'measurements': [
             {
                 'type': 'ammonium',
@@ -98,7 +92,7 @@ async def test_harmonize_water_samples(
                 'value': 0.15,
                 'unit': 'mg/L',
             },
-        ]
+        ],
     }
 
 

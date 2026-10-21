@@ -7,28 +7,30 @@ from typing_extensions import TypeVar
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
-from .models import (JsonDictModel,
-                     JsonDictOfDictsModel,
-                     JsonDictOfDictsOfScalarsModel,
-                     JsonDictOfListsModel,
-                     JsonDictOfListsOfDictsModel,
-                     JsonDictOfListsOfScalarsModel,
-                     JsonDictOfNestedListsModel,
-                     JsonDictOfScalarsModel,
-                     JsonListModel,
-                     JsonListOfDictsModel,
-                     JsonListOfDictsOfScalarsModel,
-                     JsonListOfListsModel,
-                     JsonListOfListsOfScalarsModel,
-                     JsonListOfNestedDictsModel,
-                     JsonListOfScalarsModel,
-                     JsonListOrDictModel,
-                     JsonModel,
-                     JsonNestedDictsModel,
-                     JsonNestedListsModel,
-                     JsonOnlyDictsModel,
-                     JsonOnlyListsModel,
-                     JsonScalarModel)
+from .models import (
+    JsonDictModel,
+    JsonDictOfDictsModel,
+    JsonDictOfDictsOfScalarsModel,
+    JsonDictOfListsModel,
+    JsonDictOfListsOfDictsModel,
+    JsonDictOfListsOfScalarsModel,
+    JsonDictOfNestedListsModel,
+    JsonDictOfScalarsModel,
+    JsonListModel,
+    JsonListOfDictsModel,
+    JsonListOfDictsOfScalarsModel,
+    JsonListOfListsModel,
+    JsonListOfListsOfScalarsModel,
+    JsonListOfNestedDictsModel,
+    JsonListOfScalarsModel,
+    JsonListOrDictModel,
+    JsonModel,
+    JsonNestedDictsModel,
+    JsonNestedListsModel,
+    JsonOnlyDictsModel,
+    JsonOnlyListsModel,
+    JsonScalarModel,
+)
 
 _JsonModelT = TypeVar('_JsonModelT', bound=Model, default=JsonModel)
 
@@ -51,6 +53,7 @@ class JsonBaseDataset(Dataset[_JsonModelT], Generic[_JsonModelT]):
         >>> tuple(dataset.keys())
         ('item',)
     """
+
     ...
 
 
@@ -71,6 +74,7 @@ class JsonDataset(JsonBaseDataset[JsonModel]):
         >>> dataset['item'].to_data()
         [1, {'a': True}]
     """
+
     ...
 
 
@@ -92,6 +96,7 @@ class JsonListOrDictDataset(JsonBaseDataset[JsonListOrDictModel]):
         >>> dataset['item'].to_data()
         {'a': 1}
     """
+
     ...
 
 
@@ -113,6 +118,7 @@ class JsonScalarDataset(JsonBaseDataset[JsonScalarModel]):
         >>> dataset['answer'].to_data()
         42
     """
+
     ...
 
 
@@ -137,6 +143,7 @@ class JsonListDataset(JsonBaseDataset[JsonListModel]):
         >>> dataset['numbers'].to_data()
         [1, 2, 3]
     """
+
     ...
 
 
@@ -159,6 +166,7 @@ class JsonListOfScalarsDataset(JsonBaseDataset[JsonListOfScalarsModel]):
         >>> dataset['scores'].to_data()
         [1, 2, 3]
     """
+
     ...
 
 
@@ -180,6 +188,7 @@ class JsonListOfListsDataset(JsonBaseDataset[JsonListOfListsModel]):
         >>> dataset['matrix'].to_data()
         [[1], [2, 3]]
     """
+
     ...
 
 
@@ -203,6 +212,7 @@ class JsonListOfListsOfScalarsDataset(JsonBaseDataset[JsonListOfListsOfScalarsMo
         >>> dataset['matrix'].to_data()
         [[1, 2], [3, 4]]
     """
+
     ...
 
 
@@ -224,6 +234,7 @@ class JsonListOfDictsDataset(JsonBaseDataset[JsonListOfDictsModel]):
         >>> dataset['records'].to_data()
         [{'a': 1}, {'a': 2}]
     """
+
     ...
 
 
@@ -247,6 +258,7 @@ class JsonListOfDictsOfScalarsDataset(JsonBaseDataset[JsonListOfDictsOfScalarsMo
         >>> dataset['records'].to_data()
         [{'a': 1}, {'a': 2}]
     """
+
     ...
 
 
@@ -271,6 +283,7 @@ class JsonDictDataset(JsonBaseDataset[JsonDictModel]):
         >>> dataset['obj'].to_data()
         {'a': [1, 2]}
     """
+
     ...
 
 
@@ -294,6 +307,7 @@ class JsonDictOfScalarsDataset(JsonBaseDataset[JsonDictOfScalarsModel]):
         >>> dataset['item'].to_data()
         {'a': 1, 'b': True}
     """
+
     ...
 
 
@@ -316,6 +330,7 @@ class JsonDictOfListsDataset(JsonBaseDataset[JsonDictOfListsModel]):
         >>> dataset['item'].to_data()
         {'a': [1], 'b': [2, 3]}
     """
+
     ...
 
 
@@ -339,6 +354,7 @@ class JsonDictOfListsOfScalarsDataset(JsonBaseDataset[JsonDictOfListsOfScalarsMo
         >>> dataset['item'].to_data()
         {'a': [1], 'b': [2, 3]}
     """
+
     ...
 
 
@@ -360,6 +376,7 @@ class JsonDictOfDictsDataset(JsonBaseDataset[JsonDictOfDictsModel]):
         >>> dataset['item'].to_data()
         {'a': {'x': 1}}
     """
+
     ...
 
 
@@ -383,6 +400,7 @@ class JsonDictOfDictsOfScalarsDataset(JsonBaseDataset[JsonDictOfDictsOfScalarsMo
         >>> dataset['item'].to_data()
         {'a': {'x': 1}}
     """
+
     ...
 
 
@@ -407,6 +425,7 @@ class JsonOnlyListsDataset(JsonBaseDataset[JsonOnlyListsModel]):
         >>> dataset['item'].to_data()
         [1, [2, 3]]
     """
+
     ...
 
 
@@ -428,6 +447,7 @@ class JsonNestedListsDataset(JsonBaseDataset[JsonNestedListsModel]):
         >>> dataset['item'].to_data()
         [[1], [2, [3]]]
     """
+
     ...
 
 
@@ -449,6 +469,7 @@ class JsonOnlyDictsDataset(JsonBaseDataset[JsonOnlyDictsModel]):
         >>> dataset['item'].to_data()
         {'a': {'b': 1}}
     """
+
     ...
 
 
@@ -470,6 +491,7 @@ class JsonNestedDictsDataset(JsonBaseDataset[JsonNestedDictsModel]):
         >>> dataset['item'].to_data()
         {'a': {'b': 1}}
     """
+
     ...
 
 
@@ -496,6 +518,7 @@ class JsonListOfNestedDictsDataset(JsonBaseDataset[JsonListOfNestedDictsModel]):
         >>> dataset['item'].to_data()
         [{'a': {'b': 1}}]
     """
+
     ...
 
 
@@ -519,6 +542,7 @@ class JsonDictOfNestedListsDataset(JsonBaseDataset[JsonDictOfNestedListsModel]):
         >>> dataset['item'].to_data()
         {'a': [[1], [2]]}
     """
+
     ...
 
 
@@ -542,6 +566,7 @@ class JsonDictOfListsOfDictsDataset(JsonBaseDataset[JsonDictOfListsOfDictsModel]
         >>> dataset['item'].to_data()
         {'a': [{'b': 1}]}
     """
+
     ...
 
 

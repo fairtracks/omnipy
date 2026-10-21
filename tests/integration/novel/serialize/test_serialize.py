@@ -13,12 +13,14 @@ from omnipy.components import get_serializer_registry
 from omnipy.components.json.datasets import JsonDataset
 from omnipy.compute.flow import FuncFlowTemplate
 from omnipy.compute.task import TaskTemplate
-from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
-                                     ConfigPersistOutputsOptions,
-                                     ConfigRestoreOutputsOptions,
-                                     OutputStorageProtocolOptions,
-                                     PersistOutputsOptions,
-                                     RestoreOutputsOptions)
+from omnipy.shared.enums.job import (
+    ConfigOutputStorageProtocolOptions,
+    ConfigPersistOutputsOptions,
+    ConfigRestoreOutputsOptions,
+    OutputStorageProtocolOptions,
+    PersistOutputsOptions,
+    RestoreOutputsOptions,
+)
 from omnipy.shared.protocols.compute.job import IsFuncArgJobTemplate
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
@@ -41,8 +43,10 @@ def test_all_properties_runtime_default_config(
 ) -> None:
     runtime = runtime_default_config_with_tmp_dir
 
-    assert runtime.config.job.output_storage.persist_outputs == \
-           ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    assert (
+        runtime.config.job.output_storage.persist_outputs
+        == ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    )
     assert runtime.config.job.output_storage.restore_outputs == ConfigRestoreOutputsOptions.DISABLED
     assert runtime.config.job.output_storage.protocol == ConfigOutputStorageProtocolOptions.LOCAL
 
@@ -58,16 +62,19 @@ def test_all_properties_runtime_default_config(
 
 
 @pc.parametrize_with_cases(
-    'case_task_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_')
+    'case_task_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_'
+)
 @pc.parametrize_with_cases(
-    'case_flow_tmpl', cases='.cases.jobs', has_tag='flow', prefix='case_config_')
+    'case_flow_tmpl', cases='.cases.jobs', has_tag='flow', prefix='case_config_'
+)
 def test_properties_persist_outputs_enable_disable(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case_task_tmpl,
     case_flow_tmpl,
 ) -> None:
     runtime.config.job.output_storage.persist_outputs = (
-        ConfigPersistOutputsOptions.ENABLE_FLOW_OUTPUTS)
+        ConfigPersistOutputsOptions.ENABLE_FLOW_OUTPUTS
+    )
 
     for task_obj in case_task_tmpl, case_task_tmpl.apply():
         assert task_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
@@ -78,7 +85,8 @@ def test_properties_persist_outputs_enable_disable(
         assert flow_obj.will_persist_outputs is PersistOutputsOptions.ENABLED
 
     runtime.config.job.output_storage.persist_outputs = (
-        ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS)
+        ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    )
 
     for job_obj in case_task_tmpl, case_task_tmpl.apply(), case_flow_tmpl, case_flow_tmpl.apply():
         assert job_obj.persist_outputs is PersistOutputsOptions.FOLLOW_CONFIG
@@ -96,8 +104,9 @@ def test_properties_persist_outputs_override_config(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case_tmpl,
 ) -> None:
-    runtime.config.job.output_storage.persist_outputs = \
+    runtime.config.job.output_storage.persist_outputs = (
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    )
 
     case_tmpl_2 = case_tmpl.refine(persist_outputs='disabled')
 
@@ -133,8 +142,9 @@ def test_properties_restore_outputs_enable_disable(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case_tmpl,
 ) -> None:
-    runtime.config.job.output_storage.restore_outputs = \
+    runtime.config.job.output_storage.restore_outputs = (
         ConfigRestoreOutputsOptions.AUTO_ENABLE_IGNORE_PARAMS
+    )
 
     for job_obj in case_tmpl, case_tmpl.apply():
         assert job_obj.restore_outputs is RestoreOutputsOptions.FOLLOW_CONFIG
@@ -184,9 +194,11 @@ def test_properties_restore_outputs_override_config(
 
 
 @pc.parametrize_with_cases(
-    'case_task_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_')
+    'case_task_tmpl', cases='.cases.jobs', has_tag='task', prefix='case_config_'
+)
 @pc.parametrize_with_cases(
-    'case_flow_tmpl', cases='.cases.jobs', has_tag='flow', prefix='case_config_')
+    'case_flow_tmpl', cases='.cases.jobs', has_tag='flow', prefix='case_config_'
+)
 def test_properties_output_storage_protocols(
     runtime: Annotated[IsRuntime, pytest.fixture],
     case_task_tmpl,

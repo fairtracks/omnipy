@@ -13,23 +13,27 @@ import pytest_cases as pc
 from omnipy.components.prefect.engine.prefect import PrefectEngine
 from omnipy.compute._job import JobBase
 from omnipy.compute._job_creator import JobCreator
-from omnipy.config.data import (BrowserUserInterfaceConfig,
-                                ColorConfig,
-                                DataConfig,
-                                HttpConfig,
-                                HttpRequestsConfig,
-                                JupyterUserInterfaceConfig,
-                                LayoutConfig,
-                                ModelConfig,
-                                OverflowConfig,
-                                TerminalUserInterfaceConfig,
-                                TextConfig,
-                                UserInterfaceConfig)
+from omnipy.config.data import (
+    BrowserUserInterfaceConfig,
+    ColorConfig,
+    DataConfig,
+    HttpConfig,
+    HttpRequestsConfig,
+    JupyterUserInterfaceConfig,
+    LayoutConfig,
+    ModelConfig,
+    OverflowConfig,
+    TerminalUserInterfaceConfig,
+    TextConfig,
+    UserInterfaceConfig,
+)
 from omnipy.config.engine import EngineConfig, LocalRunnerConfig, PrefectEngineConfig
-from omnipy.config.job import (JobConfig,
-                               LocalOutputStorageConfig,
-                               OutputStorageConfig,
-                               S3OutputStorageConfig)
+from omnipy.config.job import (
+    JobConfig,
+    LocalOutputStorageConfig,
+    OutputStorageConfig,
+    S3OutputStorageConfig,
+)
 from omnipy.config.root_log import RootLogConfig
 from omnipy.data._data_class_creator import DataClassBase, DataClassCreator
 from omnipy.data._display.integrations.jupyter.helpers import ReactiveConfigCopy, ReactiveObjects
@@ -40,28 +44,36 @@ from omnipy.hub.log._root_log import RootLogObjects
 from omnipy.hub.runtime import RuntimeConfig, RuntimeObjects
 from omnipy.shared.enums.colorstyles import RecommendedColorStyles
 from omnipy.shared.enums.data import BackoffStrategy
-from omnipy.shared.enums.display import (DisplayColorSystem,
-                                         DisplayDimensionsUpdateMode,
-                                         HorizontalOverflowMode,
-                                         Justify,
-                                         MaxTitleHeight,
-                                         PanelDesign,
-                                         PrettyPrinterLib,
-                                         VerticalOverflowMode)
-from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
-                                     ConfigPersistOutputsOptions,
-                                     ConfigRestoreOutputsOptions,
-                                     EngineChoice)
-from omnipy.shared.enums.ui import (JupyterInBrowserUserInterfaceType,
-                                    PlainTerminalUserInterfaceType,
-                                    SpecifiedUserInterfaceType)
+from omnipy.shared.enums.display import (
+    DisplayColorSystem,
+    DisplayDimensionsUpdateMode,
+    HorizontalOverflowMode,
+    Justify,
+    MaxTitleHeight,
+    PanelDesign,
+    PrettyPrinterLib,
+    VerticalOverflowMode,
+)
+from omnipy.shared.enums.job import (
+    ConfigOutputStorageProtocolOptions,
+    ConfigPersistOutputsOptions,
+    ConfigRestoreOutputsOptions,
+    EngineChoice,
+)
+from omnipy.shared.enums.ui import (
+    JupyterInBrowserUserInterfaceType,
+    PlainTerminalUserInterfaceType,
+    SpecifiedUserInterfaceType,
+)
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.runtime import IsRuntime, IsRuntimeConfig
 
-from .helpers.mocks import (MockLocalRunner,
-                            MockLocalRunnerConfig,
-                            MockPrefectEngine,
-                            MockPrefectEngineConfig)
+from .helpers.mocks import (
+    MockLocalRunner,
+    MockLocalRunnerConfig,
+    MockPrefectEngine,
+    MockPrefectEngineConfig,
+)
 
 
 def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
@@ -90,8 +102,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.data.ui.jupyter.dims_mode == DisplayDimensionsUpdateMode.AUTO
     assert isinstance(config.data.ui.jupyter.color, ColorConfig)
     assert config.data.ui.jupyter.color.system is DisplayColorSystem.ANSI_RGB
-    assert config.data.ui.jupyter.color.style \
-           is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+    assert config.data.ui.jupyter.color.style is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
     assert config.data.ui.jupyter.color.dark_background is False
     assert config.data.ui.jupyter.color.solid_background is False
 
@@ -101,18 +112,15 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert not hasattr(config.data.ui.browser, 'dims_mode')
     assert isinstance(config.data.ui.browser.color, ColorConfig)
     assert config.data.ui.browser.color.system is DisplayColorSystem.ANSI_RGB
-    assert config.data.ui.browser.color.style \
-           is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
+    assert config.data.ui.browser.color.style is RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
     assert config.data.ui.browser.color.dark_background is False
     assert config.data.ui.browser.color.solid_background is False
 
     assert isinstance(config.data.ui.text, TextConfig)
 
     assert isinstance(config.data.ui.text.overflow, OverflowConfig)
-    assert config.data.ui.text.overflow.horizontal \
-           is HorizontalOverflowMode.ELLIPSIS
-    assert config.data.ui.text.overflow.vertical \
-           is VerticalOverflowMode.ELLIPSIS_BOTTOM
+    assert config.data.ui.text.overflow.horizontal is HorizontalOverflowMode.ELLIPSIS
+    assert config.data.ui.text.overflow.vertical is VerticalOverflowMode.ELLIPSIS_BOTTOM
 
     assert config.data.ui.text.tab_size == 4
     assert config.data.ui.text.indent_tab_size == 2
@@ -122,10 +130,8 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert isinstance(config.data.ui.layout, LayoutConfig)
 
     assert isinstance(config.data.ui.layout.overflow, OverflowConfig)
-    assert config.data.ui.layout.overflow.horizontal \
-           is HorizontalOverflowMode.ELLIPSIS
-    assert config.data.ui.layout.overflow.vertical \
-           is VerticalOverflowMode.ELLIPSIS_BOTTOM
+    assert config.data.ui.layout.overflow.horizontal is HorizontalOverflowMode.ELLIPSIS
+    assert config.data.ui.layout.overflow.vertical is VerticalOverflowMode.ELLIPSIS_BOTTOM
     assert config.data.ui.layout.panel_design is PanelDesign.TABLE
     assert config.data.ui.layout.panel_title_at_top is True
     assert config.data.ui.layout.max_title_height is MaxTitleHeight.AUTO
@@ -153,11 +159,20 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert isinstance(config.data.http.for_host['some_server.com'], HttpRequestsConfig)
     assert config.data.http.for_host['some_server.com'].requests_per_time_period == 60
     assert config.data.http.for_host['some_server.com'].time_period_in_secs == 60
-    assert config.data.http.for_host['some_server.com'].retry_http_statuses \
-           == (408, 425, 429, 500, 502, 503, 504)
+    assert config.data.http.for_host['some_server.com'].retry_http_statuses == (
+        408,
+        425,
+        429,
+        500,
+        502,
+        503,
+        504,
+    )
     assert config.data.http.for_host['some_server.com'].retry_attempts == 5
-    assert config.data.http.for_host['some_server.com'].retry_backoff_strategy \
-           is BackoffStrategy.EXPONENTIAL
+    assert (
+        config.data.http.for_host['some_server.com'].retry_backoff_strategy
+        is BackoffStrategy.EXPONENTIAL
+    )
 
     # engine
     assert isinstance(config.engine, EngineConfig)
@@ -173,12 +188,12 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert isinstance(config.job, JobConfig)
 
     assert isinstance(config.job.output_storage, OutputStorageConfig)
-    assert config.job.output_storage.persist_outputs is \
-           ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
-    assert config.job.output_storage.restore_outputs is \
-           ConfigRestoreOutputsOptions.DISABLED
-    assert config.job.output_storage.protocol is \
-           ConfigOutputStorageProtocolOptions.LOCAL
+    assert (
+        config.job.output_storage.persist_outputs
+        is ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    )
+    assert config.job.output_storage.restore_outputs is ConfigRestoreOutputsOptions.DISABLED
+    assert config.job.output_storage.protocol is ConfigOutputStorageProtocolOptions.LOCAL
 
     assert isinstance(config.job.output_storage.local, LocalOutputStorageConfig)
     assert config.job.output_storage.local.persist_data_dir_path == str(dir_path / 'outputs')
@@ -192,8 +207,9 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
 
     # root_log
     assert isinstance(config.root_log, RootLogConfig)
-    assert config.root_log.log_format_str \
-           == '[{engine}] {asctime} - {levelname}: {message} ({name})'
+    assert (
+        config.root_log.log_format_str == '[{engine}] {asctime} - {levelname}: {message} ({name})'
+    )
     assert config.root_log.locale[1] == 'UTF-8'  # seems safe to assume this
     assert config.root_log.log_to_stdout is True
     assert config.root_log.log_to_stderr is True
@@ -242,7 +258,8 @@ def test_config_default() -> None:
 
 
 @pytest.mark.parametrize(
-    'ui_type', [PlainTerminalUserInterfaceType.UNKNOWN, JupyterInBrowserUserInterfaceType.JUPYTER])
+    'ui_type', [PlainTerminalUserInterfaceType.UNKNOWN, JupyterInBrowserUserInterfaceType.JUPYTER]
+)
 def test_objects_default(
     ui_type: SpecifiedUserInterfaceType.Literals,
     teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture],
@@ -253,7 +270,8 @@ def test_objects_default(
 
 
 @pytest.mark.parametrize(
-    'ui_type', [PlainTerminalUserInterfaceType.UNKNOWN, JupyterInBrowserUserInterfaceType.JUPYTER])
+    'ui_type', [PlainTerminalUserInterfaceType.UNKNOWN, JupyterInBrowserUserInterfaceType.JUPYTER]
+)
 def test_default_runtime(
     ui_type: SpecifiedUserInterfaceType.Literals,
     runtime_default_config_with_tmp_dir: Annotated[IsRuntime, pytest.fixture],
@@ -271,14 +289,12 @@ def test_default_runtime(
 
 
 def test_data_config_http_config_for_host_default(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    assert runtime.config.data.http.for_host['myserver.com']\
-        .requests_per_time_period == 60
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
+    assert runtime.config.data.http.for_host['myserver.com'].requests_per_time_period == 60
     runtime.config.data.http.defaults.requests_per_time_period = 30
-    assert runtime.config.data.http.for_host['myotherserver.com']\
-        .requests_per_time_period == 30
-    assert runtime.config.data.http.for_host['myserver.com']\
-        .requests_per_time_period == 60
+    assert runtime.config.data.http.for_host['myotherserver.com'].requests_per_time_period == 30
+    assert runtime.config.data.http.for_host['myserver.com'].requests_per_time_period == 60
 
 
 def test_data_config_display_dimensions(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
@@ -305,7 +321,8 @@ def test_data_config_display_dimensions(runtime: Annotated[IsRuntime, pytest.fix
 
 
 def test_init_runtime_config_after_data_class_creator(
-        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
+    runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
+) -> None:
     DataClassBase.data_class_creator.config.model.dynamically_convert_elements_to_models = True
     runtime = runtime_cls()
 
@@ -314,12 +331,15 @@ def test_init_runtime_config_after_data_class_creator(
     runtime.config.reset_to_defaults()
 
     _assert_runtime_config_default(runtime.config, Path.cwd())
-    assert DataClassBase.data_class_creator.config.model.dynamically_convert_elements_to_models \
-           is False
+    assert (
+        DataClassBase.data_class_creator.config.model.dynamically_convert_elements_to_models
+        is False
+    )
 
 
 def test_init_runtime_config_after_job_creator(
-        runtime_cls: Annotated[Type[IsRuntime], pytest.fixture]) -> None:
+    runtime_cls: Annotated[Type[IsRuntime], pytest.fixture],
+) -> None:
     JobBase.job_creator.config.output_storage.persist_outputs = ConfigPersistOutputsOptions.DISABLED
     runtime = runtime_cls()
 
@@ -328,8 +348,10 @@ def test_init_runtime_config_after_job_creator(
     runtime.config.reset_to_defaults()
 
     _assert_runtime_config_default(runtime.config, Path.cwd())
-    assert runtime.config.job.output_storage.persist_outputs \
-           == ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    assert (
+        runtime.config.job.output_storage.persist_outputs
+        == ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
+    )
 
 
 @pc.parametrize(
@@ -443,7 +465,8 @@ def test_init_runtime_config_after_job_creator(
         'objects->reactive => objects->data_class_creator',
         'objects->registry => objects->local',
         'objects->registry => objects->prefect',
-    ])
+    ],
+)
 def test_basic_runtime_subscriptions(  # noqa: C901
     runtime: Annotated[IsRuntime, pytest.fixture],
     publisher_runtime_attr_names: tuple[str, ...],
@@ -525,7 +548,8 @@ def test_basic_runtime_subscriptions(  # noqa: C901
 
 
 def test_job_creator_subscribes_to_selected_engine(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     local_runner = runtime.objects.local
     prefect_engine = runtime.objects.prefect
 
@@ -568,7 +592,8 @@ def test_job_creator_subscribes_to_selected_engine(
         ('local', LocalRunner, LocalRunnerConfig, MockLocalRunner, MockLocalRunnerConfig),
         ('prefect', PrefectEngine, PrefectEngineConfig, MockPrefectEngine, MockPrefectEngineConfig),
     ],
-    ids=['local', 'prefect'])
+    ids=['local', 'prefect'],
+)
 def test_new_engine_object_updates_engine_config_if_needed(
     runtime: Annotated[IsRuntime, pytest.fixture],
     engine_name: str,

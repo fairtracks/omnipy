@@ -5,18 +5,22 @@ from typing import Any
 import pytest
 
 from omnipy.data._display.config import OutputConfig
-from omnipy.shared.enums.colorstyles import (DarkLowContrastColorStyles,
-                                             LightHighContrastColorStyles,
-                                             RecommendedColorStyles)
-from omnipy.shared.enums.display import (DarkBackground,
-                                         DisplayColorSystem,
-                                         HorizontalOverflowMode,
-                                         Justify,
-                                         MaxTitleHeight,
-                                         PanelDesign,
-                                         PrettyPrinterLib,
-                                         SyntaxLanguageSpec,
-                                         VerticalOverflowMode)
+from omnipy.shared.enums.colorstyles import (
+    DarkLowContrastColorStyles,
+    LightHighContrastColorStyles,
+    RecommendedColorStyles,
+)
+from omnipy.shared.enums.display import (
+    DarkBackground,
+    DisplayColorSystem,
+    HorizontalOverflowMode,
+    Justify,
+    MaxTitleHeight,
+    PanelDesign,
+    PrettyPrinterLib,
+    SyntaxLanguageSpec,
+    VerticalOverflowMode,
+)
 from omnipy.shared.enums.ui import UserInterfaceType
 
 
@@ -155,84 +159,32 @@ def test_output_config_hashable() -> None:
     assert hash(config_1) == hash(config_2)
 
     config_settings: list[dict[str, Any]] = [
-        {
-            'tab': 2
-        },
-        {
-            'indent': 4
-        },
-        {
-            'printer': PrettyPrinterLib.DEVTOOLS
-        },
-        {
-            'syntax': SyntaxLanguageSpec.XML
-        },
-        {
-            'freedom': 1.0
-        },
-        {
-            'debug': True
-        },
-        {
-            'ui': UserInterfaceType.JUPYTER
-        },
-        {
-            'system': DisplayColorSystem.ANSI_256
-        },
-        {
-            'style': LightHighContrastColorStyles.XCODE_PYGMENTS
-        },
-        {
-            'dark': DarkBackground.TRUE
-        },
-        {
-            'bg': True
-        },
-        {
-            'fonts': ()
-        },
-        {
-            'font_size': 16
-        },
-        {
-            'font_weight': 400
-        },
-        {
-            'line_height': 1.0
-        },
-        {
-            'h_overflow': HorizontalOverflowMode.ELLIPSIS
-        },
-        {
-            'v_overflow': VerticalOverflowMode.CROP_TOP
-        },
-        {
-            'panel': PanelDesign.PANELS
-        },
-        {
-            'title_at_top': False
-        },
-        {
-            'min_panel_width': 5
-        },
-        {
-            'max_title_height': MaxTitleHeight.ZERO
-        },
-        {
-            'min_crop_width': 20
-        },
-        {
-            'use_min_crop_width': True
-        },
-        {
-            'max_panels_hor': 15
-        },
-        {
-            'max_nesting_depth': 5
-        },
-        {
-            'justify': Justify.RIGHT
-        },
+        {'tab': 2},
+        {'indent': 4},
+        {'printer': PrettyPrinterLib.DEVTOOLS},
+        {'syntax': SyntaxLanguageSpec.XML},
+        {'freedom': 1.0},
+        {'debug': True},
+        {'ui': UserInterfaceType.JUPYTER},
+        {'system': DisplayColorSystem.ANSI_256},
+        {'style': LightHighContrastColorStyles.XCODE_PYGMENTS},
+        {'dark': DarkBackground.TRUE},
+        {'bg': True},
+        {'fonts': ()},
+        {'font_size': 16},
+        {'font_weight': 400},
+        {'line_height': 1.0},
+        {'h_overflow': HorizontalOverflowMode.ELLIPSIS},
+        {'v_overflow': VerticalOverflowMode.CROP_TOP},
+        {'panel': PanelDesign.PANELS},
+        {'title_at_top': False},
+        {'min_panel_width': 5},
+        {'max_title_height': MaxTitleHeight.ZERO},
+        {'min_crop_width': 20},
+        {'use_min_crop_width': True},
+        {'max_panels_hor': 15},
+        {'max_nesting_depth': 5},
+        {'justify': Justify.RIGHT},
     ]
 
     prev_hash = hash(config_1)

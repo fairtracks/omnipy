@@ -12,11 +12,13 @@ from omnipy.data._display.panel.draft.text import ReflowedTextDraftPanel
 from omnipy.data._display.panel.styling.text import SyntaxStylizedTextPanel
 from omnipy.data._display.text.pretty import pretty_repr_of_draft_output
 from omnipy.data.model import is_model_instance
-from omnipy.shared.enums.colorstyles import (DarkHighContrastColorStyles,
-                                             DarkLowContrastColorStyles,
-                                             LightHighContrastColorStyles,
-                                             LightLowContrastColorStyles,
-                                             RecommendedColorStyles)
+from omnipy.shared.enums.colorstyles import (
+    DarkHighContrastColorStyles,
+    DarkLowContrastColorStyles,
+    LightHighContrastColorStyles,
+    LightLowContrastColorStyles,
+    RecommendedColorStyles,
+)
 
 
 class Inputs(NamedTuple):
@@ -38,17 +40,20 @@ inputs = [
         path='../../src/omnipy/data/_display/panel/styling/output.py',
         lexer='python',
         data_type=str,
-        debug=False),
+        debug=False,
+    ),
 ]
 
 styles = []
-for style_enum in (RecommendedColorStyles,
-                   DarkHighContrastColorStyles,
-                   DarkLowContrastColorStyles,
-                   LightHighContrastColorStyles,
-                   LightLowContrastColorStyles):
+for style_enum in (
+    RecommendedColorStyles,
+    DarkHighContrastColorStyles,
+    DarkLowContrastColorStyles,
+    LightHighContrastColorStyles,
+    LightLowContrastColorStyles,
+):
     for style_name in style_enum:
-        styles.append(Styles(group=style_enum.__name__[:-len('ColorStyles')], name=style_name))
+        styles.append(Styles(group=style_enum.__name__[: -len('ColorStyles')], name=style_name))
 
 for input in inputs:
     data: str | JsonModel
@@ -64,8 +69,10 @@ for input in inputs:
         # print(style)
         for solid_background in (True, False):
             transparency_label = 'default_bg' if solid_background else 'style_bg'
-            input_name = (f'{os.path.splitext(os.path.basename(input.path))[0]}'
-                          f'_{input.data_type.__name__.lower()}')
+            input_name = (
+                f'{os.path.splitext(os.path.basename(input.path))[0]}'
+                f'_{input.data_type.__name__.lower()}'
+            )
             dirname = f'{input_name}/{underscore(style.group)}/{transparency_label}'
             os.makedirs(dirname, exist_ok=True)
 
@@ -84,7 +91,7 @@ for input in inputs:
 
             stylized_text_panel = SyntaxStylizedTextPanel(reflowed_text_panel)
 
-            out_base_name = f"{input_name}_{style.name.replace('-', '_')}_{transparency_label}.html"
+            out_base_name = f'{input_name}_{style.name.replace("-", "_")}_{transparency_label}.html'
             out_file_name = f'{dirname}/{out_base_name}'
             print(out_file_name)
 

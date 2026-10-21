@@ -14,10 +14,12 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.exceptions import JobStateException
-from omnipy.shared.protocols.compute.job import (IsDagFlowTemplate,
-                                                 IsFuncArgJobTemplate,
-                                                 IsFuncFlowTemplate,
-                                                 IsLinearFlowTemplate)
+from omnipy.shared.protocols.compute.job import (
+    IsDagFlowTemplate,
+    IsFuncArgJobTemplate,
+    IsFuncFlowTemplate,
+    IsLinearFlowTemplate,
+)
 from omnipy.util.callable_types import CallableType
 
 from ..helpers.functions import assert_func_wrapper
@@ -25,11 +27,13 @@ from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func
 from .helpers.classes import AnyFlowClsTuple, ChildJobListArgFlowClsTuple, FuncArgFlowClsTuple
 from .helpers.functions import assert_flow_or_flow_template
-from .helpers.mocks import (IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
-                            MockFlowTemplateSubclass,
-                            MockJobTemplateSubclass,
-                            MockLocalRunner,
-                            MockTaskTemplateAssertSameTimeOfCurFlowRun)
+from .helpers.mocks import (
+    IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
+    MockFlowTemplateSubclass,
+    MockJobTemplateSubclass,
+    MockLocalRunner,
+    MockTaskTemplateAssertSameTimeOfCurFlowRun,
+)
 
 MockJobClasses = tuple[Type[JobBase], Type[JobTemplateMixin], Type[JobMixin]]
 
@@ -56,14 +60,16 @@ def test_flow_context_mock() -> None:
     job_tmpl_outside: MockJobTemplateSubclass = MockJobTemplateSubclass()
     job_outside = job_tmpl_outside.apply()
 
-    for job_obj in (flow,
-                    flow_tmpl,
-                    job,
-                    job_tmpl,
-                    job_inside,
-                    job_tmpl_inside,
-                    job_outside,
-                    job_tmpl_outside):
+    for job_obj in (
+        flow,
+        flow_tmpl,
+        job,
+        job_tmpl,
+        job_inside,
+        job_tmpl_inside,
+        job_outside,
+        job_tmpl_outside,
+    ):
         assert job_obj.in_flow_context is False
 
 
@@ -139,7 +145,8 @@ def test_init_child_job_list_arg_flow_templates(
         flow_template,
         assert_flow_cls=assert_flow_tmpl_cls,
         assert_func=format_to_string_func,
-        assert_name='format_to_string_func')
+        assert_name='format_to_string_func',
+    )
 
 
 def test_init_func_arg_flow_templates(
@@ -154,17 +161,21 @@ def test_init_func_arg_flow_templates(
         flow_template,
         assert_flow_cls=assert_flow_tmpl_cls,
         assert_func=format_to_string_func,
-        assert_name='format_to_string_func')
+        assert_name='format_to_string_func',
+    )
 
 
-def _run_and_assert_flow_template(flow_template: IsFuncArgJobTemplate,
-                                  assert_flow_cls: type,
-                                  assert_func: Callable,
-                                  assert_name: str) -> None:
+def _run_and_assert_flow_template(
+    flow_template: IsFuncArgJobTemplate,
+    assert_flow_cls: type,
+    assert_func: Callable,
+    assert_name: str,
+) -> None:
     """Apply a flow template and assert basic run behavior."""
     flow = flow_template.apply()
     assert_flow_or_flow_template(
-        flow, assert_flow_cls=assert_flow_cls, assert_func=assert_func, assert_name=assert_name)
+        flow, assert_flow_cls=assert_flow_cls, assert_func=assert_func, assert_name=assert_name
+    )
 
     assert flow_template.run('text', number=1) == 'text: 1'
     assert flow('text', number=1) == 'text: 1'
@@ -183,10 +194,9 @@ def test_apply_run_child_job_list_arg_flow_cls_tuple(
     task_tmpl = TaskTemplate()(format_to_string_func)
     flow_template = flow_tmpl_cls(task_tmpl)(format_to_string_func)
 
-    _run_and_assert_flow_template(flow_template,
-                                  flow_cls,
-                                  format_to_string_func,
-                                  'format_to_string_func')
+    _run_and_assert_flow_template(
+        flow_template, flow_cls, format_to_string_func, 'format_to_string_func'
+    )
 
 
 def test_apply_run_func_arg_flow_cls_tuple(
@@ -197,10 +207,9 @@ def test_apply_run_func_arg_flow_cls_tuple(
 
     flow_template = flow_tmpl_cls()(format_to_string_func)
 
-    _run_and_assert_flow_template(flow_template,
-                                  flow_cls,
-                                  format_to_string_func,
-                                  'format_to_string_func')
+    _run_and_assert_flow_template(
+        flow_template, flow_cls, format_to_string_func, 'format_to_string_func'
+    )
 
 
 def test_refine_child_job_list_arg_flow_cls_tuple(
@@ -216,7 +225,8 @@ def test_refine_child_job_list_arg_flow_cls_tuple(
         flow_template_2,
         assert_flow_cls=assert_flow_tmpl_cls,
         assert_func=empty_dict_func,
-        assert_name='data_import')
+        assert_name='data_import',
+    )
     assert flow_template_2.run() == '{"my_data": [123,234,345,456]}'
 
 
@@ -233,14 +243,17 @@ def test_refine_func_arg_flow_cls_tuple(
         flow_template_2,
         assert_flow_cls=assert_flow_tmpl_cls,
         assert_func=empty_dict_func,
-        assert_name='not_data_import')
+        assert_name='not_data_import',
+    )
     assert flow_template_2.run() == {}
 
 
-def _apply_revise_and_run_and_assert_flow_template(flow_template: IsFuncArgJobTemplate,
-                                                   assert_flow_tmpl_cls: type,
-                                                   assert_func: Callable,
-                                                   assert_name: str) -> None:
+def _apply_revise_and_run_and_assert_flow_template(
+    flow_template: IsFuncArgJobTemplate,
+    assert_flow_tmpl_cls: type,
+    assert_func: Callable,
+    assert_name: str,
+) -> None:
     """Revise a flow and assert the revised template runs."""
     flow = flow_template.apply()
     flow_template_2 = flow.revise()
@@ -249,7 +262,8 @@ def _apply_revise_and_run_and_assert_flow_template(flow_template: IsFuncArgJobTe
         flow_template_2,
         assert_flow_cls=assert_flow_tmpl_cls,
         assert_func=format_to_string_func,
-        assert_name='format_to_string_func')
+        assert_name='format_to_string_func',
+    )
     assert flow_template_2.run('text', 1) == 'text: 1'
 
 
@@ -261,10 +275,9 @@ def test_revise_child_job_list_arg_flow_cls_tuple(
 
     flow_template = flow_tmpl_cls(TaskTemplate()(format_to_string_func))(format_to_string_func)
 
-    _apply_revise_and_run_and_assert_flow_template(flow_template,
-                                                   assert_flow_tmpl_cls,
-                                                   format_to_string_func,
-                                                   'format_to_string_func')
+    _apply_revise_and_run_and_assert_flow_template(
+        flow_template, assert_flow_tmpl_cls, format_to_string_func, 'format_to_string_func'
+    )
 
 
 def test_revise_func_arg_flow_cls_tuple(
@@ -275,15 +288,15 @@ def test_revise_func_arg_flow_cls_tuple(
 
     flow_template = flow_tmpl_cls()(format_to_string_func)
 
-    _apply_revise_and_run_and_assert_flow_template(flow_template,
-                                                   assert_flow_tmpl_cls,
-                                                   format_to_string_func,
-                                                   'format_to_string_func')
+    _apply_revise_and_run_and_assert_flow_template(
+        flow_template, assert_flow_tmpl_cls, format_to_string_func, 'format_to_string_func'
+    )
 
 
 @pc.parametrize_with_cases('case', cases='.cases.flows')
-def test_flow_run_flow_cls_tuple(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-                                 case: FlowCase) -> None:
+def test_flow_run_flow_cls_tuple(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture], case: FlowCase
+) -> None:
     if hasattr(mock_local_runner, 'finished'):
         assert mock_local_runner.finished is False
 
@@ -311,7 +324,8 @@ def test_flow_run_flow_cls_tuple(mock_local_runner: Annotated[MockLocalRunner, p
 
 
 def test_linear_flow_only_first_positional(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def task_tmpl() -> tuple[int, int]:
         return 42, 42
@@ -322,37 +336,38 @@ def test_linear_flow_only_first_positional(
         return number * 2 + plus_number
 
     @LinearFlowTemplate(task_tmpl, my_formula_tmpl)
-    def linear_flow_tmpl() -> int:
-        ...
+    def linear_flow_tmpl() -> int: ...
 
     linear_flow = linear_flow_tmpl.apply()
     assert linear_flow() == 168
 
 
 def test_create_data_class_task_name_examples() -> None:
-    class MyDataset(Dataset[Model[int]]):
-        ...
+    class MyDataset(Dataset[Model[int]]): ...
 
-    class MyModel(Model[int]):
-        ...
+    class MyModel(Model[int]): ...
 
-    assert create_data_class_task_name(
-        MyDataset, from_kwargs=False) == 'create_my_dataset_from_args'
+    assert (
+        create_data_class_task_name(MyDataset, from_kwargs=False) == 'create_my_dataset_from_args'
+    )
     assert create_data_class_task_name(MyModel, from_kwargs=False) == 'create_my_model_from_args'
-    assert create_data_class_task_name(
-        Dataset[Model[int]], from_kwargs=False) == 'create_dataset_model_int_from_args'
-    assert create_data_class_task_name(
-        Model[int | str | float], from_kwargs=True) == 'create_model_int_str_float_from_kwargs'
+    assert (
+        create_data_class_task_name(Dataset[Model[int]], from_kwargs=False)
+        == 'create_dataset_model_int_from_args'
+    )
+    assert (
+        create_data_class_task_name(Model[int | str | float], from_kwargs=True)
+        == 'create_model_int_str_float_from_kwargs'
+    )
 
 
 def test_linear_flow_accepts_dataset_class_child_no_args(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    class MyDataset(Dataset[Model[int]]):
-        ...
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
+    class MyDataset(Dataset[Model[int]]): ...
 
     @LinearFlowTemplate(MyDataset)
-    def linear_flow_tmpl() -> MyDataset:
-        ...
+    def linear_flow_tmpl() -> MyDataset: ...
 
     linear_flow = linear_flow_tmpl.apply()
     child_template = linear_flow.child_job_templates[0]
@@ -365,24 +380,24 @@ def test_linear_flow_accepts_dataset_class_child_no_args(
 
 
 def test_linear_flow_accepts_dataset_class_child_multiple_positional_args(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @LinearFlowTemplate(Dataset[Model[int]])
-    def linear_flow_tmpl(first_pair: tuple[str, float],
-                         second_pair: tuple[str, float]) -> Dataset[Model[int]]:
-        ...
+    def linear_flow_tmpl(
+        first_pair: tuple[str, float], second_pair: tuple[str, float]
+    ) -> Dataset[Model[int]]: ...
 
     created_dataset = linear_flow_tmpl.apply()(('a', 1.23), ('b', 3.6))
     assert created_dataset.to_data() == {'a': 1, 'b': 3}
 
 
 def test_linear_flow_accepts_model_class_child_single_positional_arg(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    class MyModel(Model[int]):
-        ...
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
+    class MyModel(Model[int]): ...
 
     @LinearFlowTemplate(MyModel)
-    def linear_flow_tmpl(number: float) -> MyModel:
-        ...
+    def linear_flow_tmpl(number: float) -> MyModel: ...
 
     created_model = linear_flow_tmpl.apply()(3.6)
     assert isinstance(created_model, MyModel)
@@ -390,17 +405,16 @@ def test_linear_flow_accepts_model_class_child_single_positional_arg(
 
 
 def test_dag_flow_accepts_dataset_class_child_with_dynamic_kwargs_name(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    class MyDataset(Dataset[Model[int]]):
-        ...
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
+    class MyDataset(Dataset[Model[int]]): ...
 
     @TaskTemplate()
     def extract_number(create_my_dataset_from_kwargs: MyDataset) -> int:
         return cast(int, create_my_dataset_from_kwargs['number'].to_data())
 
     @DagFlowTemplate(MyDataset, extract_number)
-    def dag_flow_tmpl(number: int) -> int:
-        ...
+    def dag_flow_tmpl(number: int) -> int: ...
 
     dag_flow = dag_flow_tmpl.apply()
     first_child_template = dag_flow.child_job_templates[0]
@@ -411,23 +425,23 @@ def test_dag_flow_accepts_dataset_class_child_with_dynamic_kwargs_name(
 
 
 def test_dag_flow_accepts_model_class_child_with_dynamic_kwargs_name(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    class MyModel(Model[dict[str, int]]):
-        ...
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
+    class MyModel(Model[dict[str, int]]): ...
 
     @TaskTemplate()
     def extract_number(create_my_model_from_kwargs: MyModel) -> int:
         return cast(dict[str, int], create_my_model_from_kwargs.to_data())['number']
 
     @DagFlowTemplate(MyModel, extract_number)
-    def dag_flow_tmpl(number: int) -> int:
-        ...
+    def dag_flow_tmpl(number: int) -> int: ...
 
     assert dag_flow_tmpl.apply()(number=4) == 4
 
 
 def test_linear_flow_forwards_kwargs_to_later_child_jobs(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def add_one_tmpl(number: int) -> int:
         return number + 1
@@ -437,15 +451,15 @@ def test_linear_flow_forwards_kwargs_to_later_child_jobs(
         return number * factor
 
     @LinearFlowTemplate(add_one_tmpl, multiply_tmpl)
-    def linear_flow_tmpl(number: int, *, factor: int) -> int:
-        ...
+    def linear_flow_tmpl(number: int, *, factor: int) -> int: ...
 
     linear_flow = linear_flow_tmpl.apply()
     assert linear_flow(number=4, factor=3) == 15
 
 
 def test_linear_flow_param_key_map_and_fixed_params(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def identity_tmpl(number: int) -> int:
         return number
@@ -460,15 +474,15 @@ def test_linear_flow_param_key_map_and_fixed_params(
     )
 
     @LinearFlowTemplate(identity_tmpl, transformed_tmpl)
-    def linear_flow_tmpl(number: int, *, step: int, factor: int) -> int:
-        ...
+    def linear_flow_tmpl(number: int, *, step: int, factor: int) -> int: ...
 
     linear_flow = linear_flow_tmpl.apply()
     assert linear_flow(number=3, step=4, factor=10) == 14
 
 
 def test_linear_flow_forwards_all_kwargs_to_child_var_keyword_param(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def add_one_tmpl(number: int) -> int:
         return number + 1
@@ -478,22 +492,23 @@ def test_linear_flow_forwards_all_kwargs_to_child_var_keyword_param(
         return dict(number=number, **all_kwargs)
 
     @LinearFlowTemplate(add_one_tmpl, collect_kwargs_tmpl)
-    def linear_flow_tmpl(number: int, *, factor: int, offset: int) -> dict[str, object]:
-        ...
+    def linear_flow_tmpl(number: int, *, factor: int, offset: int) -> dict[str, object]: ...
 
     linear_flow = linear_flow_tmpl.apply()
     assert linear_flow(number=4, factor=3, offset=2) == {'number': 5, 'factor': 3, 'offset': 2}
 
 
 def test_linear_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_params(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def add_one_tmpl(number: int) -> int:
         return number + 1
 
     @TaskTemplate()
-    def collect_kwargs_tmpl(number: int, add: int, mult: int,
-                            **all_kwargs: object) -> dict[str, object]:
+    def collect_kwargs_tmpl(
+        number: int, add: int, mult: int, **all_kwargs: object
+    ) -> dict[str, object]:
         return dict(number=number, add=add, mult=mult, **all_kwargs)
 
     refined_collect_kwargs_tmpl = collect_kwargs_tmpl.refine(
@@ -502,9 +517,9 @@ def test_linear_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_p
     )
 
     @LinearFlowTemplate(add_one_tmpl, refined_collect_kwargs_tmpl)
-    def linear_flow_tmpl(number: int, *, step: int, factor: int, offset: int,
-                         note: str) -> dict[str, object]:
-        ...
+    def linear_flow_tmpl(
+        number: int, *, step: int, factor: int, offset: int, note: str
+    ) -> dict[str, object]: ...
 
     linear_flow = linear_flow_tmpl.apply()
     assert linear_flow(
@@ -523,41 +538,40 @@ def test_linear_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_p
 
 
 def test_linear_flow_routes_named_positional_capable_args_to_first_child_positionally(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def sum_positional_values_tmpl(*numbers: int) -> int:
         return sum(numbers)
 
     @LinearFlowTemplate(sum_positional_values_tmpl)
-    def linear_flow_tmpl(first: int, second: int) -> int:
-        ...
+    def linear_flow_tmpl(first: int, second: int) -> int: ...
 
     assert linear_flow_tmpl.apply()(4, 3) == 7
     assert linear_flow_tmpl.apply()(first=4, second=3) == 7
 
 
 def test_dag_flow_routes_named_result_to_linear_model_child_positionally(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    class MyModel(Model[int]):
-        ...
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
+    class MyModel(Model[int]): ...
 
     @TaskTemplate()
     def add_one_tmpl(number: int) -> int:
         return number + 1
 
     @LinearFlowTemplate(MyModel)
-    def linear_child_tmpl(number: int) -> MyModel:
-        ...
+    def linear_child_tmpl(number: int) -> MyModel: ...
 
     @DagFlowTemplate(add_one_tmpl.refine(result_key='number'), linear_child_tmpl)
-    def dag_flow_tmpl(number: int) -> MyModel:
-        ...
+    def dag_flow_tmpl(number: int) -> MyModel: ...
 
     assert dag_flow_tmpl.apply()(number=4).to_data() == 5
 
 
 def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def task_tmpl() -> int:
         return 42
@@ -570,16 +584,17 @@ def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
         task_tmpl.refine(result_key='number'),
         task_tmpl.refine(result_key='bumber'),
         task_tmpl,
-        double_tmpl)
-    def dag_flow_tmpl() -> int:
-        ...
+        double_tmpl,
+    )
+    def dag_flow_tmpl() -> int: ...
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow() == 84
 
 
 def test_dynamic_dag_flow_by_returned_dict(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def task_tmpl() -> dict[str, int]:
         return {'number': 42}
@@ -589,15 +604,15 @@ def test_dynamic_dag_flow_by_returned_dict(
         return number * 2
 
     @DagFlowTemplate(task_tmpl, double_tmpl)
-    def dag_flow_tmpl() -> int:
-        ...
+    def dag_flow_tmpl() -> int: ...
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow() == 84
 
 
 def test_dag_flow_consumes_matching_kwargs_by_default(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def first_tmpl(number: int) -> int:
         return number + 1
@@ -607,8 +622,7 @@ def test_dag_flow_consumes_matching_kwargs_by_default(
         return number * 2
 
     @DagFlowTemplate(first_tmpl, second_tmpl)
-    def dag_flow_tmpl(number: int) -> int:
-        ...
+    def dag_flow_tmpl(number: int) -> int: ...
 
     dag_flow = dag_flow_tmpl.apply()
     with pytest.raises(TypeError, match='missing 1 required positional argument'):
@@ -616,7 +630,8 @@ def test_dag_flow_consumes_matching_kwargs_by_default(
 
 
 def test_dag_flow_can_disable_consuming_matching_kwargs(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def first_tmpl(number: int) -> int:
         return number + 1
@@ -626,15 +641,15 @@ def test_dag_flow_can_disable_consuming_matching_kwargs(
         return number * 2
 
     @DagFlowTemplate(first_tmpl, second_tmpl, consume_kwargs_from_results=False)
-    def dag_flow_tmpl(number: int) -> int:
-        ...
+    def dag_flow_tmpl(number: int) -> int: ...
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow(number=4) == 8
 
 
 def test_dag_flow_forwards_later_kwargs_and_respects_mapped_fixed_params(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def identity_tmpl(number: int) -> int:
         return number
@@ -649,15 +664,15 @@ def test_dag_flow_forwards_later_kwargs_and_respects_mapped_fixed_params(
     )
 
     @DagFlowTemplate(identity_tmpl.refine(result_key='number'), transformed_tmpl)
-    def dag_flow_tmpl(number: int, factor: int, offset: int) -> int:
-        ...
+    def dag_flow_tmpl(number: int, factor: int, offset: int) -> int: ...
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow(number=4, factor=10, offset=5) == 17
 
 
 def test_dag_flow_forwards_all_kwargs_to_child_var_keyword_param(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'number': number + 1}
@@ -667,8 +682,7 @@ def test_dag_flow_forwards_all_kwargs_to_child_var_keyword_param(
         return dict(number=number, **all_kwargs)
 
     @DagFlowTemplate(seed_tmpl, collect_kwargs_tmpl)
-    def dag_flow_tmpl(number: int, factor: int, offset: int) -> dict[str, object]:
-        ...
+    def dag_flow_tmpl(number: int, factor: int, offset: int) -> dict[str, object]: ...
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow(
@@ -683,14 +697,16 @@ def test_dag_flow_forwards_all_kwargs_to_child_var_keyword_param(
 
 
 def test_dag_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_params(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'number': number + 1}
 
     @TaskTemplate()
-    def collect_kwargs_tmpl(number: int, add: int, mult: int,
-                            **all_kwargs: object) -> dict[str, object]:
+    def collect_kwargs_tmpl(
+        number: int, add: int, mult: int, **all_kwargs: object
+    ) -> dict[str, object]:
         return dict(number=number, add=add, mult=mult, **all_kwargs)
 
     refined_collect_kwargs_tmpl = collect_kwargs_tmpl.refine(
@@ -699,9 +715,9 @@ def test_dag_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_para
     )
 
     @DagFlowTemplate(seed_tmpl, refined_collect_kwargs_tmpl)
-    def dag_flow_tmpl(number: int, step: int, factor: int, offset: int,
-                      note: str) -> dict[str, object]:
-        ...
+    def dag_flow_tmpl(
+        number: int, step: int, factor: int, offset: int, note: str
+    ) -> dict[str, object]: ...
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow(
@@ -720,7 +736,8 @@ def test_dag_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_para
 
 
 def test_dag_flow_mapped_key_cannot_override_fixed_params(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def multiply_tmpl(number: int, multiplier: int) -> int:
         return number * multiplier
@@ -731,15 +748,15 @@ def test_dag_flow_mapped_key_cannot_override_fixed_params(
     )
 
     @DagFlowTemplate(multiplied_tmpl)
-    def dag_flow_tmpl(number: int, factor: int) -> int:
-        ...
+    def dag_flow_tmpl(number: int, factor: int) -> int: ...
 
     dag_flow = dag_flow_tmpl.apply()
     assert dag_flow(number=4, factor=10) == 12
 
 
 def test_linear_flow_construction_rejects_sync_authored_early_async_child(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> int:
         return number + 1
@@ -755,12 +772,12 @@ def test_linear_flow_construction_rejects_sync_authored_early_async_child(
     with pytest.raises(TypeError, match='linear/dag flow callable type'):
 
         @LinearFlowTemplate(seed_tmpl, async_transform_tmpl, finish_tmpl)
-        def linear_flow_tmpl(number: int) -> int:
-            ...
+        def linear_flow_tmpl(number: int) -> int: ...
 
 
 def test_dag_flow_construction_rejects_sync_authored_early_async_child(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'seed': number + 1}
@@ -780,12 +797,12 @@ def test_dag_flow_construction_rejects_sync_authored_early_async_child(
             async_transform_tmpl.refine(param_key_map={'seed': 'seed'}, result_key='async_value'),
             finish_tmpl,
         )
-        def dag_flow_tmpl(number: int) -> int:
-            ...
+        def dag_flow_tmpl(number: int) -> int: ...
 
 
 def test_linear_flow_construction_accepts_async_authored_early_async_child(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> int:
         return number + 1
@@ -799,15 +816,15 @@ def test_linear_flow_construction_accepts_async_authored_early_async_child(
         return number + 3
 
     @LinearFlowTemplate(seed_tmpl, async_transform_tmpl, finish_tmpl)
-    async def linear_flow_tmpl(number: int) -> int:
-        ...
+    async def linear_flow_tmpl(number: int) -> int: ...
 
     assert linear_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
 
 
 def test_dag_flow_construction_accepts_async_authored_early_async_child(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'seed': number + 1}
@@ -825,15 +842,15 @@ def test_dag_flow_construction_accepts_async_authored_early_async_child(
         async_transform_tmpl.refine(param_key_map={'seed': 'seed'}, result_key='async_value'),
         finish_tmpl,
     )
-    async def dag_flow_tmpl(number: int) -> int:
-        ...
+    async def dag_flow_tmpl(number: int) -> int: ...
 
     assert dag_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
     assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
 
 
 def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_function(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -844,15 +861,15 @@ def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_fu
         return values
 
     @LinearFlowTemplate(emit_async_values, pass_values_through)
-    async def linear_flow_tmpl(number: int) -> AsyncGenerator:
-        ...
+    async def linear_flow_tmpl(number: int) -> AsyncGenerator: ...
 
     assert linear_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
 
 
 def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_function(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -868,15 +885,15 @@ def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_funct
         return values
 
     @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), pass_values_through)
-    async def dag_flow_tmpl(number: int) -> AsyncGenerator:
-        ...
+    async def dag_flow_tmpl(number: int) -> AsyncGenerator: ...
 
     assert dag_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
     assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
 
 
 def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_generator(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -895,7 +912,8 @@ def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_ge
 
 
 def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_generator(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -919,7 +937,8 @@ def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_gener
 
 
 def test_linear_flow_uses_terminal_return_annotation_to_detect_async_generator_passthrough(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -938,7 +957,8 @@ def test_linear_flow_uses_terminal_return_annotation_to_detect_async_generator_p
 
 
 def test_dag_flow_uses_terminal_return_annotation_to_detect_async_generator_passthrough(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -962,7 +982,8 @@ def test_dag_flow_uses_terminal_return_annotation_to_detect_async_generator_pass
 
 
 def test_linear_flow_without_terminal_generator_annotation_falls_back_to_sync_terminal_shape(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -973,15 +994,15 @@ def test_linear_flow_without_terminal_generator_annotation_falls_back_to_sync_te
         return values
 
     @LinearFlowTemplate(emit_async_values, pass_values_through)
-    async def linear_flow_tmpl(number: int) -> AsyncGenerator:
-        ...
+    async def linear_flow_tmpl(number: int) -> AsyncGenerator: ...
 
     assert linear_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
 
 
 def test_linear_flow_uses_terminal_return_annotation_to_detect_sync_generator_passthrough(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def values(number: int) -> Generator:
         for value in range(number, number + 3):
@@ -1000,7 +1021,8 @@ def test_linear_flow_uses_terminal_return_annotation_to_detect_sync_generator_pa
 
 
 def test_linear_flow_refine_rechecks_callable_type_against_child_list(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> int:
         return number + 1
@@ -1018,8 +1040,7 @@ def test_linear_flow_refine_rechecks_callable_type_against_child_list(
         return number + 3
 
     @LinearFlowTemplate(seed_tmpl, sync_middle_tmpl, finish_tmpl)
-    def linear_flow_tmpl(number: int) -> int:
-        ...
+    def linear_flow_tmpl(number: int) -> int: ...
 
     assert linear_flow_tmpl.callable_type is CallableType.SYNC_FUNCTION
 
@@ -1028,7 +1049,8 @@ def test_linear_flow_refine_rechecks_callable_type_against_child_list(
 
 
 def test_dag_flow_refine_rechecks_callable_type_against_child_list(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'seed': number + 1}
@@ -1050,8 +1072,7 @@ def test_dag_flow_refine_rechecks_callable_type_against_child_list(
         sync_middle_tmpl.refine(param_key_map={'seed': 'seed'}, result_key='value'),
         finish_tmpl,
     )
-    def dag_flow_tmpl(number: int) -> int:
-        ...
+    def dag_flow_tmpl(number: int) -> int: ...
 
     assert dag_flow_tmpl.callable_type is CallableType.SYNC_FUNCTION
 
@@ -1065,7 +1086,8 @@ def test_dag_flow_refine_rechecks_callable_type_against_child_list(
 
 
 def test_dag_flow_revise_rechecks_callable_type_against_child_list(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'seed': number + 1}
@@ -1087,8 +1109,7 @@ def test_dag_flow_revise_rechecks_callable_type_against_child_list(
         sync_middle_tmpl.refine(param_key_map={'seed': 'seed'}, result_key='value'),
         finish_tmpl,
     )
-    def dag_flow_tmpl(number: int) -> int:
-        ...
+    def dag_flow_tmpl(number: int) -> int: ...
 
     dag_flow = dag_flow_tmpl.apply()
     revised_children = list(dag_flow.child_job_templates)
@@ -1102,7 +1123,8 @@ def test_dag_flow_revise_rechecks_callable_type_against_child_list(
 
 
 def test_time_of_multi_level_flow_run_flow_cls_tuple(
-        mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+) -> None:
     """Test nested flows share one top-level run time per execution."""
 
     # TaskTemplate
@@ -1121,11 +1143,11 @@ def test_time_of_multi_level_flow_run_flow_cls_tuple(
         return number + 1
 
     @LinearFlowTemplate(task_tmpl, plus_one_tmpl)
-    def linear_flow_tmpl() -> int:
-        ...
+    def linear_flow_tmpl() -> int: ...
 
     _assert_diff_time_of_two_flow_runs(
-        linear_flow_tmpl, assert_result=43, assert_task_tmpl=task_tmpl)
+        linear_flow_tmpl, assert_result=43, assert_task_tmpl=task_tmpl
+    )
 
     # DagFlowTemplate
     @MockTaskTemplateAssertSameTimeOfCurFlowRun()
@@ -1133,8 +1155,7 @@ def test_time_of_multi_level_flow_run_flow_cls_tuple(
         return number * 2
 
     @DagFlowTemplate(linear_flow_tmpl.refine(result_key='number'), double_tmpl)
-    def dag_flow_tmpl() -> int:
-        ...
+    def dag_flow_tmpl() -> int: ...
 
     _assert_diff_time_of_two_flow_runs(dag_flow_tmpl, assert_result=86, assert_task_tmpl=task_tmpl)
 
@@ -1143,7 +1164,8 @@ def test_time_of_multi_level_flow_run_flow_cls_tuple(
         return dag_flow_tmpl() + number
 
     _assert_diff_time_of_two_flow_runs(
-        func_flow_tmpl, 14, assert_result=100, assert_task_tmpl=task_tmpl)
+        func_flow_tmpl, 14, assert_result=100, assert_task_tmpl=task_tmpl
+    )
 
     # FuncFlowTemplate again
     @FuncFlowTemplate()
@@ -1154,14 +1176,16 @@ def test_time_of_multi_level_flow_run_flow_cls_tuple(
         func_flow_2_tmpl()
 
     _assert_diff_time_of_two_flow_runs(
-        func_flow_2_tmpl, assert_result=50, assert_task_tmpl=task_tmpl)
+        func_flow_2_tmpl, assert_result=50, assert_task_tmpl=task_tmpl
+    )
 
 
 def _assert_diff_time_of_two_flow_runs(
-        flow_tmpl: IsLinearFlowTemplate | IsDagFlowTemplate | IsFuncFlowTemplate,
-        *args: object,
-        assert_result: object,
-        assert_task_tmpl: IsMockTaskTemplateAssertSameTimeOfCurFlowRun):
+    flow_tmpl: IsLinearFlowTemplate | IsDagFlowTemplate | IsFuncFlowTemplate,
+    *args: object,
+    assert_result: object,
+    assert_task_tmpl: IsMockTaskTemplateAssertSameTimeOfCurFlowRun,
+):
     """Assert separate flow runs get distinct timestamps."""
     flow = flow_tmpl.apply()
     assert flow(*args) == assert_result

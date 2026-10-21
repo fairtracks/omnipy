@@ -15,15 +15,18 @@ from textwrap import dedent
 
 import pytest
 
-from omnipy.util.docstr_macros import (expand_macros,
-                                       find_macros_in_docstring,
-                                       get_macros_from_env,
-                                       process_content)
+from omnipy.util.docstr_macros import (
+    expand_macros,
+    find_macros_in_docstring,
+    get_macros_from_env,
+    process_content,
+)
 
 
 def _load_expand_docstr_macros_hook_module():
-    hook_path = Path(
-        __file__).resolve().parents[2] / '.pre-commit-hooks' / 'expand_docstr_macros.py'
+    hook_path = (
+        Path(__file__).resolve().parents[2] / '.pre-commit-hooks' / 'expand_docstr_macros.py'
+    )
     spec = importlib.util.spec_from_file_location('expand_docstr_macros_hook', hook_path)
     assert spec and spec.loader
 
@@ -37,20 +40,16 @@ def _load_expand_docstr_macros_hook_module():
 def sample_macros() -> dict[str, str]:
     """Provide sample macro definitions for testing."""
     return {
-        'SHORT_DESCRIPTION':
-            'This is a nice method.',
-        'FULL_DESCRIPTION':
-            dedent("""\
+        'SHORT_DESCRIPTION': 'This is a nice method.',
+        'FULL_DESCRIPTION': dedent("""\
             This is a nice method.
 
             It does many things."""),
-        'COMMON_PARAM':
-            dedent("""\
+        'COMMON_PARAM': dedent("""\
             Args:
                 param1 (str): First parameter
                 param2 (int): Second parameter"""),
-        'COMMON_RETURN':
-            dedent("""\
+        'COMMON_RETURN': dedent("""\
             Returns:
                 dict: A dictionary result"""),
     }
@@ -181,23 +180,29 @@ def test_process_content_first_expansion(sample_macros) -> None:
 
     assert modified
 
-    assert '''\
+    assert (
+        '''\
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     #
     # My function.
     #
     # {{COMMON_PARAM}}
     #
-    """''' in result  # Note: first and last lines are empty to denote line breaks at ends
+    """'''
+        in result
+    )  # Note: first and last lines are empty to denote line breaks at ends
 
-    assert '''\
+    assert (
+        '''\
     """
     My function.
 
     Args:
         param1 (str): First parameter
         param2 (int): Second parameter
-    """''' in result
+    """'''
+        in result
+    )
 
 
 def test_process_content_first_expansion_no_whitespace_at_ends_of_docstr(sample_macros) -> None:
@@ -213,19 +218,25 @@ def test_process_content_first_expansion_no_whitespace_at_ends_of_docstr(sample_
 
     assert modified
 
-    assert '''\
+    assert (
+        '''\
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My function.
     #
     # {{COMMON_PARAM}}
-    """''' in result  # Note: first and last lines are not empty as there are no line breaks at ends
+    """'''
+        in result
+    )  # Note: first and last lines are not empty as there are no line breaks at ends
 
-    assert '''\
+    assert (
+        '''\
     """My function.
 
     Args:
         param1 (str): First parameter
-        param2 (int): Second parameter"""''' in result
+        param2 (int): Second parameter"""'''
+        in result
+    )
 
 
 def test_process_content_no_macros(sample_macros) -> None:
@@ -262,21 +273,27 @@ def test_process_content_reexpansion(sample_macros) -> None:
 
     assert modified
 
-    assert '''\
+    assert (
+        '''\
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     #
     # My function.
     # {{COMMON_PARAM}}
     #
-    """''' in result  # Ensure original comment block is preserved exactly
+    """'''
+        in result
+    )  # Ensure original comment block is preserved exactly
 
-    assert '''\
+    assert (
+        '''\
     """
     My function.
     Args:
         param1 (str): First parameter
         param2 (int): Second parameter
-    """\n''' in result  # Ensure docstring is exactly as before except for expansion
+    """\n'''
+        in result
+    )  # Ensure docstring is exactly as before except for expansion
 
 
 def test_process_content_reexpansion_no_whitespace_at_ends_of_docstr(sample_macros) -> None:
@@ -302,23 +319,29 @@ def test_process_content_reexpansion_no_whitespace_at_ends_of_docstr(sample_macr
 
     assert modified
 
-    assert '''\
+    assert (
+        '''\
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My function.
     #
     # This is my function.
     #
     # {{COMMON_PARAM}}
-    """''' in result  # Ensure original comment block is preserved exactly
+    """'''
+        in result
+    )  # Ensure original comment block is preserved exactly
 
-    assert '''\
+    assert (
+        '''\
     """My function.
 
     This is my function.
 
     Args:
         param1 (str): First parameter
-        param2 (int): Second parameter"""\n''' in result
+        param2 (int): Second parameter"""\n'''
+        in result
+    )
 
 
 def test_process_content_mixed_text_and_macros_repeated(sample_macros) -> None:
@@ -344,7 +367,8 @@ def test_process_content_mixed_text_and_macros_repeated(sample_macros) -> None:
         else:
             assert not modified
 
-        assert '''\
+        assert (
+            '''\
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My custom function.
     #
@@ -355,9 +379,12 @@ def test_process_content_mixed_text_and_macros_repeated(sample_macros) -> None:
     # Returns:
     #     Not sure what.
     #
-    """''' in result
+    """'''
+            in result
+        )
 
-        assert '''\
+        assert (
+            '''\
     """My custom function.
 
     This does something special.
@@ -368,7 +395,9 @@ def test_process_content_mixed_text_and_macros_repeated(sample_macros) -> None:
 
     Returns:
         Not sure what.
-    """\n''' in result
+    """\n'''
+            in result
+        )
 
         source = result
 
@@ -387,21 +416,27 @@ def test_process_content_class_docstring(sample_macros) -> None:
 
     assert modified
 
-    assert '''\
+    assert (
+        '''\
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My class.
     #
     # {{COMMON_PARAM}}
     #
-    """''' in result
+    """'''
+        in result
+    )
 
-    assert '''\
+    assert (
+        '''\
     """My class.
 
     Args:
         param1 (str): First parameter
         param2 (int): Second parameter
-    """\n''' in result
+    """\n'''
+        in result
+    )
 
 
 def test_process_content_multiple_docstrings(sample_macros) -> None:
@@ -424,36 +459,48 @@ def test_process_content_multiple_docstrings(sample_macros) -> None:
 
     assert modified
 
-    assert '''\
+    assert (
+        '''\
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # Class docstring.
     #
     # {{COMMON_PARAM}}
     #
-    """''' in result
+    """'''
+        in result
+    )
 
-    assert '''\
+    assert (
+        '''\
     """Class docstring.
 
     Args:
         param1 (str): First parameter
         param2 (int): Second parameter
-    """\n''' in result
+    """\n'''
+        in result
+    )
 
-    assert '''\
+    assert (
+        '''\
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # Method docstring.
         #
         # {{COMMON_RETURN}}
         #
-        """''' in result  # Correct indentation for method
+        """'''
+        in result
+    )  # Correct indentation for method
 
-    assert '''\
+    assert (
+        '''\
         """Method docstring.
 
         Returns:
             dict: A dictionary result
-        """\n''' in result  # Correct indentation for method
+        """\n'''
+        in result
+    )  # Correct indentation for method
 
 
 def test_process_content_empty_string(sample_macros) -> None:
@@ -477,18 +524,24 @@ def test_process_content_triple_single_quotes(sample_macros) -> None:
 
     assert modified
 
-    assert """\
+    assert (
+        """\
     # %% Original docstring (managed by expand_docstr_macros.py) %%
     # My function.
     #
     # {{COMMON_PARAM}}
     #
-    '''""" in result
+    '''"""
+        in result
+    )
 
-    assert """\
+    assert (
+        """\
     '''My function.
 
     Args:
         param1 (str): First parameter
         param2 (int): Second parameter
-    '''\n""" in result
+    '''\n"""
+        in result
+    )

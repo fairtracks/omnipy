@@ -58,7 +58,8 @@ class Base16Theme(pyd.BaseModel):
 
 
 def get_styles_from_base16_colors(
-        base16_colors: Base16Colors) -> dict[pygments.token._TokenType, str]:
+    base16_colors: Base16Colors,
+) -> dict[pygments.token._TokenType, str]:
     """Build a Pygments token-style mapping from a Base16 palette.
 
     Args:

@@ -15,6 +15,7 @@ from .datasets import PandasDataset
 
 class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
     """Serialize pandas datasets to and from gzipped tar archives."""
+
     @classmethod
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         """Return whether a dataset is a pandas dataset."""
@@ -53,10 +54,9 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=pandas_encode_func)
 
     @classmethod
-    def deserialize(cls,
-                    serialized: bytes,
-                    any_file_suffix=False,
-                    ignore_dirs=False) -> PandasDataset:
+    def deserialize(
+        cls, serialized: bytes, any_file_suffix=False, ignore_dirs=False
+    ) -> PandasDataset:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{DESERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Deserialize a gzipped tar archive back into a dataset."""
@@ -65,6 +65,7 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
 
         def csv_decode_func(file_stream: IO[bytes]) -> 'pd.DataFrame':
             from .lazy_import import pd
+
             return pd.read_csv(file_stream, encoding='utf8')
 
         def python_dictify_object(data_file: str, obj_val: Any) -> dict:
@@ -77,6 +78,7 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
             dictify_object_func=python_dictify_object,
             import_method='from_data',
             any_file_suffix=any_file_suffix,
-            ignore_dirs=ignore_dirs)  # noqa
+            ignore_dirs=ignore_dirs,
+        )  # noqa
 
         return pandas_dataset

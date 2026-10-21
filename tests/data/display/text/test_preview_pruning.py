@@ -9,12 +9,14 @@ from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import Dimensions
 from omnipy.data._display.frame import Frame
 from omnipy.data._display.panel.draft.base import DraftPanel
-from omnipy.data._display.text.preview_pruning import (_build_chunk_plan,
-                                                       _effective_coarseness_threshold,
-                                                       _maybe_prune_draft_panel,
-                                                       _PreviewPruningMemo,
-                                                       _probe_prefix)
 import omnipy.data._display.text.preview_pruning as preview_pruning_module
+from omnipy.data._display.text.preview_pruning import (
+    _build_chunk_plan,
+    _effective_coarseness_threshold,
+    _maybe_prune_draft_panel,
+    _PreviewPruningMemo,
+    _probe_prefix,
+)
 from omnipy.shared.enums.display import PrettyPrinterLib
 
 
@@ -464,7 +466,8 @@ def test_probe_cache_distinguishes_configs_for_same_content_and_frame() -> None:
     memo = _PreviewPruningMemo()
     rich_result = _maybe_prune_draft_panel(rich_panel, probe_render=_probe_render, memo=memo)
     devtools_result = _maybe_prune_draft_panel(
-        devtools_panel, probe_render=_probe_render, memo=memo)
+        devtools_panel, probe_render=_probe_render, memo=memo
+    )
 
     assert isinstance(rich_result.content, list)
     assert isinstance(devtools_result.content, list)
@@ -670,7 +673,8 @@ def test_verbose_log_for_no_reduction_mentions_pruning_probe_step(
 
 
 def test_verbose_log_marks_ellipsis_skip_as_expected_noop_with_context(
-        capsys: pytest.CaptureFixture[str]) -> None:
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     import omnipy.shared.constants as const
 
     panel = DraftPanel(
@@ -687,14 +691,17 @@ def test_verbose_log_marks_ellipsis_skip_as_expected_noop_with_context(
         const.VERBOSE_PRUNE = False
 
     assert out_panel is panel
-    assert ('[PRUNE] Skipping pruning: expected/no-op: ellipsis panel '
-            '(single-char placeholder, unbounded height budget)' in captured.out)
+    assert (
+        '[PRUNE] Skipping pruning: expected/no-op: ellipsis panel '
+        '(single-char placeholder, unbounded height budget)' in captured.out
+    )
     assert "title='…'" in captured.out
     assert 'frame=(width=1, height=None)' in captured.out
 
 
 def test_verbose_granularity_log_uses_readable_json_pointer_like_path(
-        capsys: pytest.CaptureFixture[str]) -> None:
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     import omnipy.shared.constants as const
 
     panel = _FakeDraftPanel(
@@ -731,13 +738,12 @@ def test_verbose_granularity_log_uses_readable_json_pointer_like_path(
 
 
 def test_granularity_pruning_reconstructs_mapping_like_parent_and_logs_pruned(  # noqa: C901
-        capsys: pytest.CaptureFixture[str]) -> None:
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     import omnipy.shared.constants as const
 
     panel = DraftPanel(
-        JsonModel({
-            'dataset': list(range(200)), 'meta': 'x'
-        }),
+        JsonModel({'dataset': list(range(200)), 'meta': 'x'}),
         frame=Frame(Dimensions(width=40, height=9)),
     )
 

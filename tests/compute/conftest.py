@@ -7,28 +7,34 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.compute._job import JobBase
-from omnipy.compute.flow import (DagFlow,
-                                 DagFlowTemplate,
-                                 DagFlowTemplateCore,
-                                 FuncFlow,
-                                 FuncFlowTemplate,
-                                 FuncFlowTemplateCore,
-                                 LinearFlow,
-                                 LinearFlowTemplate,
-                                 LinearFlowTemplateCore)
+from omnipy.compute.flow import (
+    DagFlow,
+    DagFlowTemplate,
+    DagFlowTemplateCore,
+    FuncFlow,
+    FuncFlowTemplate,
+    FuncFlowTemplateCore,
+    LinearFlow,
+    LinearFlowTemplate,
+    LinearFlowTemplateCore,
+)
 
-from .helpers.classes import (AnyFlowClsTuple,
-                              ChildJobListArgFlowClsTuple,
-                              FlowClsTuple,
-                              FuncArgFlowClsTuple,
-                              FuncFlowTemplateCallable,
-                              SingleChildJobDagFlowTemplateCallable,
-                              SingleChildJobLinearFlowTemplateCallable)
-from .helpers.mocks import (IsMockJob,
-                            IsMockJobTemplate,
-                            MockJobSubclass,
-                            MockJobTemplateSubclass,
-                            MockLocalRunner)
+from .helpers.classes import (
+    AnyFlowClsTuple,
+    ChildJobListArgFlowClsTuple,
+    FlowClsTuple,
+    FuncArgFlowClsTuple,
+    FuncFlowTemplateCallable,
+    SingleChildJobDagFlowTemplateCallable,
+    SingleChildJobLinearFlowTemplateCallable,
+)
+from .helpers.mocks import (
+    IsMockJob,
+    IsMockJobTemplate,
+    MockJobSubclass,
+    MockJobTemplateSubclass,
+    MockLocalRunner,
+)
 
 MockJobClasses = tuple[type[IsMockJobTemplate], type[IsMockJob]]
 
@@ -36,13 +42,16 @@ MockJobClasses = tuple[type[IsMockJobTemplate], type[IsMockJob]]
 @pytest.fixture(scope='function')
 def mock_job_classes() -> MockJobClasses:
     """Return mock job template and job classes."""
-    return (cast(type[IsMockJobTemplate], MockJobTemplateSubclass),
-            cast(type[IsMockJob], MockJobSubclass))
+    return (
+        cast(type[IsMockJobTemplate], MockJobTemplateSubclass),
+        cast(type[IsMockJob], MockJobSubclass),
+    )
 
 
 @pytest.fixture(scope='function')
 def mock_local_runner(
-        teardown_reset_job_creator: Annotated[None, pytest.fixture]) -> MockLocalRunner:
+    teardown_reset_job_creator: Annotated[None, pytest.fixture],
+) -> MockLocalRunner:
     """Return a mock runner installed on the shared job creator."""
     mock_local_runner = MockLocalRunner()
     JobBase.job_creator.set_engine(mock_local_runner)
@@ -51,7 +60,8 @@ def mock_local_runner(
 
 @pytest.fixture(scope='function')
 def mock_job_datetime(
-        mock_datetime: Annotated[datetime, pytest.fixture]) -> Generator[datetime, None, None]:
+    mock_datetime: Annotated[datetime, pytest.fixture],
+) -> Generator[datetime, None, None]:
     """Patch job creator time calls with the mock datetime."""
     import omnipy.compute._job_creator
 
@@ -66,8 +76,9 @@ def mock_job_datetime(
 
 
 @pc.fixture(scope='function')
-def linear_flow_cls_tuple(
-) -> FlowClsTuple[type[LinearFlow], SingleChildJobLinearFlowTemplateCallable]:
+def linear_flow_cls_tuple() -> FlowClsTuple[
+    type[LinearFlow], SingleChildJobLinearFlowTemplateCallable
+]:
     return FlowClsTuple(
         flow_cls=LinearFlow,
         flow_tmpl_cls=LinearFlowTemplate,
@@ -97,7 +108,8 @@ def func_flow_cls_tuple() -> FlowClsTuple[type[FuncFlow], FuncFlowTemplateCallab
 @pc.fixture(scope='function')
 @pc.parametrize('flow_cls_tuple', [func_flow_cls_tuple])
 def func_arg_flow_cls_tuple(
-        flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pc.fixture]) -> FuncArgFlowClsTuple:
+    flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pc.fixture],
+) -> FuncArgFlowClsTuple:
     """Provide flow classes that take only callable arguments."""
     return flow_cls_tuple
 
@@ -105,8 +117,8 @@ def func_arg_flow_cls_tuple(
 @pc.fixture(scope='function')
 @pc.parametrize('flow_cls_tuple', [linear_flow_cls_tuple, dag_flow_cls_tuple])
 def child_job_list_arg_flow_cls_tuple(
-    flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple,
-                              pc.fixture]) -> ChildJobListArgFlowClsTuple:
+    flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple, pc.fixture],
+) -> ChildJobListArgFlowClsTuple:
     return flow_cls_tuple
 
 

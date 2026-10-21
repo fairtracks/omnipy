@@ -1,4 +1,5 @@
 """Models for HTTP URLs, URL parts, query strings, and automatic response decoding."""
+
 from pathlib import PurePosixPath
 from typing import Any, cast, TypeGuard
 from urllib.parse import quote, unquote
@@ -11,10 +12,12 @@ from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 import omnipy.util.pydantic as pyd
 
 from ..json.models import AnyJsonListOrDictModel, JsonListOrDictModel
-from ..raw.models import (NestedJoinItemsModel,
-                          NestedSplitToItemsModel,
-                          StrictBytesModel,
-                          StrictStrModel)
+from ..raw.models import (
+    NestedJoinItemsModel,
+    NestedSplitToItemsModel,
+    StrictBytesModel,
+    StrictStrModel,
+)
 
 __all__ = [
     'QueryParamsModel',
@@ -26,10 +29,12 @@ __all__ = [
 from omnipy.data._typing.helpers import mimics
 
 QueryParamsSplitterModel = NestedSplitToItemsModel.adjust(
-    'QueryParamsSplitterModel', delimiters=('&', '='))
+    'QueryParamsSplitterModel', delimiters=('&', '=')
+)
 
 QueryParamsJoinerModel = NestedJoinItemsModel.adjust(
-    'QueryParamsJoinerModel', delimiters=('&', '='))
+    'QueryParamsJoinerModel', delimiters=('&', '=')
+)
 
 
 class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tuple[str, ...] | str]):
@@ -54,12 +59,12 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
-        def __new__(cls, *args: Any, **kwargs: Any) -> 'QueryParamsModel_dict':
-            ...
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'QueryParamsModel_dict': ...
 
     @classmethod
     def _validate_tuple_of_pairs(
-            cls, params_list: list[str | list] | str) -> TypeGuard[list[tuple[str, str]]]:
+        cls, params_list: list[str | list] | str
+    ) -> TypeGuard[list[tuple[str, str]]]:
         """Check that each split query parameter contains exactly two elements.
 
         Args:
@@ -79,22 +84,23 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
     ) -> dict[str, str]:
         """Parse supported query-parameter inputs into a decoded mapping.
 
-        Args:
-            data: Query parameters as a mapping, tuple pairs, or URL query string.
+            Args:
+                data: Query parameters as a mapping, tuple pairs, or URL query string.
 
-        Returns:
-            dict[str, str]: Decoded query parameters.
+            Returns:
+                dict[str, str]: Decoded query parameters.
 
-    Raises:
-        AssertionError: If non-mapping input does not split into key-value pairs.
+        Raises:
+            AssertionError: If non-mapping input does not split into key-value pairs.
         """
         if isinstance(data, dict):
             return data
 
         params_list = QueryParamsSplitterModel(data).content
-        assert cls._validate_tuple_of_pairs(params_list), \
-            (f'Each parameter must have 2 elements only: [key, value]. '
-             f'Incorrect parameter list: {params_list}')
+        assert cls._validate_tuple_of_pairs(params_list), (
+            f'Each parameter must have 2 elements only: [key, value]. '
+            f'Incorrect parameter list: {params_list}'
+        )
 
         return dict((unquote(key), unquote(val)) for key, val in params_list)
 
@@ -111,12 +117,14 @@ class QueryParamsModel(Model[dict[str, str] | tuple[tuple[str, str], ...] | tupl
         Raises:
             AssertionError: If model content is not a dictionary at serialization time.
         """
-        with hold_and_reset_prev_attrib_value(self.config.model,
-                                              'dynamically_convert_elements_to_models'):
+        with hold_and_reset_prev_attrib_value(
+            self.config.model, 'dynamically_convert_elements_to_models'
+        ):
             self.config.model.dynamically_convert_elements_to_models = False
             assert isinstance(self.content, dict)
             url_encoded_content = tuple(
-                (quote(key), quote(val)) for key, val in self.content.items())
+                (quote(key), quote(val)) for key, val in self.content.items()
+            )
             return cast(str, QueryParamsJoinerModel(url_encoded_content).to_data())
 
     def __str__(self) -> str:
@@ -157,21 +165,20 @@ class UrlPathModel(Model[PurePosixPath | str]):
 
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
-        def __new__(cls, *args: Any, **kwargs: Any) -> 'UrlPathModel_PurePosixPath':
-            ...
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'UrlPathModel_PurePosixPath': ...
 
     @classmethod
     def _parse_data(cls, data: PurePosixPath | str) -> PurePosixPath:
         """Normalize path input to a ``PurePosixPath`` instance.
 
-        Args:
-            data: URL path provided as a string or path object.
+            Args:
+                data: URL path provided as a string or path object.
 
-        Returns:
-            PurePosixPath: Normalized path value.
+            Returns:
+                PurePosixPath: Normalized path value.
 
-    Raises:
-        TypeError: If ``data`` is neither ``str`` nor ``PurePosixPath``.
+        Raises:
+            TypeError: If ``data`` is neither ``str`` nor ``PurePosixPath``.
         """
         return PurePosixPath(data) if isinstance(data, str) else data
 
@@ -249,6 +256,7 @@ class UrlDataclassModel(pyd.BaseModel):
         >>> str(parts)
         'https://example.com/'
     """
+
     # Mutable fields
     scheme: str
     username: str | None = None
@@ -313,8 +321,7 @@ class HostUrlModel(Model[UrlDataclassModel | str]):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Any, **kwargs: Any) -> 'HostUrlModel_UrlDataclassModel':
-            ...
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'HostUrlModel_UrlDataclassModel': ...
 
     @classmethod
     def _get_scheme_filter(cls) -> set[str] | None:
@@ -329,15 +336,15 @@ class HostUrlModel(Model[UrlDataclassModel | str]):
     def _parse_data(cls, data: UrlDataclassModel | str) -> UrlDataclassModel:
         """Parse and validate URL data into :class:`UrlDataclassModel`.
 
-        Args:
-            data: URL string or prebuilt URL dataclass model.
+            Args:
+                data: URL string or prebuilt URL dataclass model.
 
-        Returns:
-            UrlDataclassModel: Parsed URL parts with normalized decoded fields.
+            Returns:
+                UrlDataclassModel: Parsed URL parts with normalized decoded fields.
 
-    Raises:
-        AssertionError: If the URL scheme is unsupported.
-        pyd.ValidationError: If the URL cannot be parsed.
+        Raises:
+            AssertionError: If the URL scheme is unsupported.
+            pyd.ValidationError: If the URL cannot be parsed.
         """
         if data == '':
             data = 'http://localhost/'
@@ -364,11 +371,13 @@ class HostUrlModel(Model[UrlDataclassModel | str]):
                 case _:
                     parts[key] = getattr(url_obj, key)
 
-        return UrlDataclassModel(**{
-            key: val  # type: ignore[arg-type]
-            for key, val in parts.items()
-            if val is not None
-        })
+        return UrlDataclassModel(
+            **{
+                key: val  # type: ignore[arg-type]
+                for key, val in parts.items()
+                if val is not None
+            }
+        )
 
     def __add__(self, other: str) -> Self:
         return self.__class__(str(self) + other)
@@ -414,8 +423,7 @@ class HttpUrlModel(HostUrlModel):
 
     if TYPE_CHECKING:
 
-        def __new__(cls, *args: Any, **kwargs: Any) -> 'HttpUrlModel_UrlDataclassModel':
-            ...
+        def __new__(cls, *args: Any, **kwargs: Any) -> 'HttpUrlModel_UrlDataclassModel': ...
 
     @classmethod
     def _get_scheme_filter(cls) -> set[str]:
@@ -458,6 +466,7 @@ class ModelFriendlyMimeType(pyd.BaseModel):
     Raises:
         pyd.ValidationError: If supplied fields do not match expected types.
     """
+
     type: str
     subtype: str
     suffix: str
@@ -477,6 +486,7 @@ class ResponseContentPydModel(pyd.BaseModel):
     Raises:
         pyd.ValidationError: If the MIME type cannot be parsed.
     """
+
     content_type: ModelFriendlyMimeType | str
     response: object
 
@@ -493,14 +503,14 @@ class ResponseContentPydModel(pyd.BaseModel):
     def parse_content_type(cls, content_type: ModelFriendlyMimeType | str) -> ModelFriendlyMimeType:
         """Parse MIME content type strings into ``ModelFriendlyMimeType``.
 
-        Args:
-            content_type: MIME type value to normalize.
+            Args:
+                content_type: MIME type value to normalize.
 
-        Returns:
-            ModelFriendlyMimeType: Parsed MIME type model.
+            Returns:
+                ModelFriendlyMimeType: Parsed MIME type model.
 
-    Raises:
-        ValueError: If MIME parsing fails for a string input.
+        Raises:
+            ValueError: If MIME parsing fails for a string input.
         """
         from .lazy_import import MimeType, parse_mimetype
 
@@ -519,8 +529,9 @@ class ResponseContentPydModel(pyd.BaseModel):
         )
 
 
-class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel | StrictStrModel
-                                     | JsonListOrDictModel]):
+class AutoResponseContentModel(
+    Model[ResponseContentPydModel | StrictBytesModel | StrictStrModel | JsonListOrDictModel]
+):
     """Decode HTTP response content to bytes, text, or JSON from MIME metadata.
 
     Args:
@@ -534,6 +545,7 @@ class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel 
     Raises:
         AssertionError: If wrapped response metadata is missing parsed MIME type data.
     """
+
     class Config(Model.Config):
         """Configure union parsing for automatic response-content decoding.
 
@@ -546,8 +558,9 @@ class AutoResponseContentModel(Model[ResponseContentPydModel | StrictBytesModel 
     @classmethod
     def _parse_data(  # type: ignore[override]
         cls,
-        data: (ResponseContentPydModel | StrictBytesModel | StrictStrModel
-               | AnyJsonListOrDictModel)
+        data: (
+            ResponseContentPydModel | StrictBytesModel | StrictStrModel | AnyJsonListOrDictModel
+        ),
     ) -> StrictBytesModel | StrictStrModel | AnyJsonListOrDictModel:
         """Choose response model type from MIME type and payload.
 

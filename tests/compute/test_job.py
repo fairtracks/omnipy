@@ -12,29 +12,32 @@ from omnipy.shared.exceptions import JobStateException
 
 from ..helpers.functions import assert_func_wrapper
 from .conftest import MockJobClasses
-from .helpers.mocks import (CommandMockJob,
-                            CommandMockJobTemplate,
-                            CommandMockJobTemplateCore,
-                            IsCommandMockJob,
-                            IsCommandMockJobTemplate,
-                            IsMockJob,
-                            IsMockJobTemplate,
-                            mock_cmd_func,
-                            MockJobConfig,
-                            MockLocalRunner,
-                            ParamsType,
-                            PublicPropertyErrorsMockCostMixin,
-                            PublicPropertyErrorsMockJob,
-                            PublicPropertyErrorsMockJobTemplate,
-                            PublicPropertyErrorsMockParamsMixin,
-                            PublicPropertyErrorsMockPowerMixin,
-                            PublicPropertyErrorsMockSpeedMixin,
-                            PublicPropertyErrorsMockStrengthMixin,
-                            PublicPropertyErrorsMockVerboseMixin)
+from .helpers.mocks import (
+    CommandMockJob,
+    CommandMockJobTemplate,
+    CommandMockJobTemplateCore,
+    IsCommandMockJob,
+    IsCommandMockJobTemplate,
+    IsMockJob,
+    IsMockJobTemplate,
+    mock_cmd_func,
+    MockJobConfig,
+    MockLocalRunner,
+    ParamsType,
+    PublicPropertyErrorsMockCostMixin,
+    PublicPropertyErrorsMockJob,
+    PublicPropertyErrorsMockJobTemplate,
+    PublicPropertyErrorsMockParamsMixin,
+    PublicPropertyErrorsMockPowerMixin,
+    PublicPropertyErrorsMockSpeedMixin,
+    PublicPropertyErrorsMockStrengthMixin,
+    PublicPropertyErrorsMockVerboseMixin,
+)
 
 
 class PropertyTest(NamedTuple):
     """Bundle expected property behavior for job tests."""
+
     property: str
     enter_exit: bool
     default_val: object
@@ -68,7 +71,8 @@ def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) 
 
 
 def test_fail_only_jobtemplate_init_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+) -> None:
     JobTemplate, Job = mock_job_classes  # noqa
 
     with pytest.raises(JobStateException):
@@ -79,8 +83,9 @@ def test_fail_only_jobtemplate_init_mock(
 
 
 def test_job_creator_singular_mock(
-        mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
-        teardown_reset_job_creator: Annotated[None, pytest.fixture]) -> None:
+    mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
+    teardown_reset_job_creator: Annotated[None, pytest.fixture],
+) -> None:
     JobTemplate, Job = mock_job_classes  # noqa
 
     assert isinstance(JobBase.job_creator, JobCreator)
@@ -120,44 +125,48 @@ def test_job_creator_properties_mock(
     JobTemplate, Job = mock_job_classes  # noqa
 
     for test in [
-            PropertyTest(
-                property='engine',
-                enter_exit=False,
-                default_val=None,
-                val=mock_local_runner,
-                in_job_base=True,
-                in_job_template=True,
-                in_job=True,
-                at_obj_level=True,
-                set_method='set_engine'),
-            PropertyTest(
-                property='config',
-                enter_exit=False,
-                default_val=JobConfig(),
-                val=mock_job_config,
-                in_job_base=True,
-                in_job_template=True,
-                in_job=True,
-                at_obj_level=True,
-                set_method='set_config'),
-            PropertyTest(
-                property='nested_context_level',
-                enter_exit=True,
-                default_val=0,
-                val=1,
-                in_job_base=True,
-                in_job_template=True,
-                in_job=True,
-                at_obj_level=False),
-            PropertyTest(
-                property='time_of_cur_toplevel_nested_context_run',
-                enter_exit=True,
-                default_val=None,
-                val=mock_job_datetime.now(),
-                in_job_base=False,
-                in_job_template=False,
-                in_job=False,
-                at_obj_level=False)
+        PropertyTest(
+            property='engine',
+            enter_exit=False,
+            default_val=None,
+            val=mock_local_runner,
+            in_job_base=True,
+            in_job_template=True,
+            in_job=True,
+            at_obj_level=True,
+            set_method='set_engine',
+        ),
+        PropertyTest(
+            property='config',
+            enter_exit=False,
+            default_val=JobConfig(),
+            val=mock_job_config,
+            in_job_base=True,
+            in_job_template=True,
+            in_job=True,
+            at_obj_level=True,
+            set_method='set_config',
+        ),
+        PropertyTest(
+            property='nested_context_level',
+            enter_exit=True,
+            default_val=0,
+            val=1,
+            in_job_base=True,
+            in_job_template=True,
+            in_job=True,
+            at_obj_level=False,
+        ),
+        PropertyTest(
+            property='time_of_cur_toplevel_nested_context_run',
+            enter_exit=True,
+            default_val=None,
+            val=mock_job_datetime.now(),
+            in_job_base=False,
+            in_job_template=False,
+            in_job=False,
+            at_obj_level=False,
+        ),
     ]:
         job_tmpl = JobTemplate()
         job = job_tmpl.apply()
@@ -187,11 +196,13 @@ def test_job_creator_properties_mock(
             assert not hasattr(Job, test.set_method)
 
 
-def _assert_prop_getattr_all(mock_job_classes: MockJobClasses,
-                             job_tmpl: IsMockJobTemplate,
-                             job: IsMockJob,
-                             test: PropertyTest,
-                             val: object):
+def _assert_prop_getattr_all(
+    mock_job_classes: MockJobClasses,
+    job_tmpl: IsMockJobTemplate,
+    job: IsMockJob,
+    test: PropertyTest,
+    val: object,
+):
     """Assert one property is exposed consistently across job objects."""
     JobTemplate, Job = mock_job_classes  # noqa
 
@@ -221,12 +232,14 @@ def _assert_prop_getattr_all(mock_job_classes: MockJobClasses,
     )
 
 
-def _assert_prop_getattr_job_subcls(job_cls: type,
-                                    job_obj: IsMockJobTemplate | IsMockJob | None,
-                                    property: str,
-                                    in_job_obj: bool,
-                                    at_obj_level: bool,
-                                    val: object):
+def _assert_prop_getattr_job_subcls(
+    job_cls: type,
+    job_obj: IsMockJobTemplate | IsMockJob | None,
+    property: str,
+    in_job_obj: bool,
+    at_obj_level: bool,
+    val: object,
+):
     """Assert one job class exposes a property as expected."""
 
     job_cls_as_job_base_cls = cast(type[JobBase], job_cls)
@@ -263,11 +276,13 @@ def test_equal_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture])
     my_job_tmpl = JobTemplate()
     my_job_tmpl_2 = JobTemplate()
 
-    for (my_job_obj, my_job_obj_2) in [(my_job_tmpl, my_job_tmpl_2),
-                                       (my_job_tmpl.apply(), my_job_tmpl_2.apply())]:
+    for my_job_obj, my_job_obj_2 in [
+        (my_job_tmpl, my_job_tmpl_2),
+        (my_job_tmpl.apply(), my_job_tmpl_2.apply()),
+    ]:
         assert my_job_obj == my_job_obj_2
 
-    assert my_job_tmpl != "123"  # noqa
+    assert my_job_tmpl != '123'  # noqa
 
 
 def test_subclass_equal() -> None:
@@ -276,22 +291,23 @@ def test_subclass_equal() -> None:
     cmd_tmpl = CommandMockJobTemplate('erase', params=dict(what='all'))(mock_cmd_func)
     cmd_tmpl_2 = CommandMockJobTemplate('erase', params=dict(what='all'))(mock_cmd_func)
 
-    for (cmd_obj, cmd_obj_2) in [(cmd_tmpl, cmd_tmpl_2), (cmd_tmpl.apply(), cmd_tmpl_2.apply())]:
+    for cmd_obj, cmd_obj_2 in [(cmd_tmpl, cmd_tmpl_2), (cmd_tmpl.apply(), cmd_tmpl_2.apply())]:
         assert cmd_obj == cmd_obj_2
 
     cmd_tmpl_3 = CommandMockJobTemplate('restore', params=dict(what='all'))(mock_cmd_func)
 
-    for (cmd_obj, cmd_obj_3) in [(cmd_tmpl, cmd_tmpl_3), (cmd_tmpl.apply(), cmd_tmpl_3.apply())]:
+    for cmd_obj, cmd_obj_3 in [(cmd_tmpl, cmd_tmpl_3), (cmd_tmpl.apply(), cmd_tmpl_3.apply())]:
         assert cmd_obj != cmd_obj_3
 
     cmd_tmpl_4 = CommandMockJobTemplate('erase', params=dict(what='nothing'))(mock_cmd_func)
 
-    for (cmd_obj, cmd_obj_4) in [(cmd_tmpl, cmd_tmpl_4), (cmd_tmpl.apply(), cmd_tmpl_4.apply())]:
+    for cmd_obj, cmd_obj_4 in [(cmd_tmpl, cmd_tmpl_4), (cmd_tmpl.apply(), cmd_tmpl_4.apply())]:
         assert cmd_obj != cmd_obj_4
 
 
 def _assert_immutable_command_mock_job_properties(
-        cmd_obj: IsCommandMockJobTemplate | IsCommandMockJob) -> None:
+    cmd_obj: IsCommandMockJobTemplate | IsCommandMockJob,
+) -> None:
     """Assert command mock properties are immutable."""
 
     with pytest.raises(AttributeError):
@@ -321,8 +337,9 @@ def test_subclass_tmpl() -> None:
 
 
 def test_subclass_apply(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
-    cmd_tmpl = CommandMockJobTemplate(
-        'erase', uppercase=True, params={'what': 'all'})(mock_cmd_func,)
+    cmd_tmpl = CommandMockJobTemplate('erase', uppercase=True, params={'what': 'all'})(
+        mock_cmd_func,
+    )
     assert isinstance(cmd_tmpl, CommandMockJobTemplateCore)
     assert cmd_tmpl.engine_decorator_applied is False
 
@@ -377,9 +394,10 @@ def test_subclass_refine_empty() -> None:
 def test_subclass_refine_scalar() -> None:
     # Job template with id and mapping property 'params' as dict
     all_erased_tmpl = CommandMockJobTemplate(
-        'erase', id='all_erased', params={
-            'what': 'all', 'where': 'everywhere'
-        })(mock_cmd_func,)
+        'erase', id='all_erased', params={'what': 'all', 'where': 'everywhere'}
+    )(
+        mock_cmd_func,
+    )
     all_erased = all_erased_tmpl.apply()
     assert_func_wrapper(all_erased, all_erased_tmpl)
     assert all_erased() == 'all has been erased, everywhere'
@@ -524,7 +542,9 @@ def test_subclass_refine_reset_mapping() -> None:
 
 def test_revise_refine_mappings_are_copied() -> None:
     all_tmpl = CommandMockJobTemplate('erase', params={'what': 'all'})(mock_cmd_func)
-    all_refined_tmpl = all_tmpl.refine(params=dict(where='everywhere'),)
+    all_refined_tmpl = all_tmpl.refine(
+        params=dict(where='everywhere'),
+    )
     assert_func_wrapper(all_refined_tmpl, all_tmpl)
 
     assert len(all_tmpl.params) == 1
@@ -534,7 +554,9 @@ def test_revise_refine_mappings_are_copied() -> None:
     assert_func_wrapper(all_job, all_tmpl)
     all_revised_tmpl = all_job.revise()
     assert_func_wrapper(all_revised_tmpl, all_job)
-    all_revised_refined_tmpl = all_revised_tmpl.refine(params=dict(where='sadly'),)
+    all_revised_refined_tmpl = all_revised_tmpl.refine(
+        params=dict(where='sadly'),
+    )
     assert_func_wrapper(all_revised_refined_tmpl, all_revised_tmpl)
 
     assert len(all_tmpl.params) == 1
@@ -548,16 +570,14 @@ def test_revise_refine_mappings_are_copied() -> None:
 
 
 def test_fail_subclass_refine_first_arg_not_callable() -> None:
-    cmd_tmpl: IsCommandMockJobTemplate = CommandMockJobTemplate('erase')(
-        'mock_cmd_func')  # type: ignore[arg-type]
+    cmd_tmpl: IsCommandMockJobTemplate = CommandMockJobTemplate('erase')('mock_cmd_func')  # type: ignore[arg-type]
 
     with pytest.raises(TypeError):
         cmd_tmpl.refine('restore')  # type: ignore[arg-type]
 
 
 def test_fail_subclass_revise_first_arg_not_callable() -> None:
-    cmd_tmpl: IsCommandMockJobTemplate = CommandMockJobTemplate('erase')(
-        'mock_cmd_func')  # type: ignore[arg-type]
+    cmd_tmpl: IsCommandMockJobTemplate = CommandMockJobTemplate('erase')('mock_cmd_func')  # type: ignore[arg-type]
     cmd = cmd_tmpl.apply()
 
     with pytest.raises(TypeError):

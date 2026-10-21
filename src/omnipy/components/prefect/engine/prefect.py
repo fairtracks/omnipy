@@ -11,10 +11,12 @@ from omnipy.shared.enums.job import JobType
 from omnipy.shared.protocols.config import IsPrefectEngineConfig
 from omnipy.shared.protocols.engine.run_spec import IsFlowRunSpec, IsTaskRunSpec
 from omnipy.shared.typing import TYPE_CHECKING
-from omnipy.util.callable_types import (callable_type_from_flags,
-                                        CallableType,
-                                        decorate_callable_by_type,
-                                        GeneratorCallableType)
+from omnipy.util.callable_types import (
+    callable_type_from_flags,
+    CallableType,
+    decorate_callable_by_type,
+    GeneratorCallableType,
+)
 
 if TYPE_CHECKING:
     from ..lazy_import import CachePolicy, NotSet, PrefectTask
@@ -39,18 +41,19 @@ class FlowKwargs(TypedDict, total=False):
 
 class PrefectEngine(JobRunnerEngine):
     """Job runner engine for Prefect"""
-    supported_job_types = frozenset({
-        JobType.TASK,
-        JobType.LINEAR_FLOW,
-        JobType.DAG_FLOW,
-        JobType.FUNC_FLOW,
-    })
 
-    def _init_engine(self) -> None:
-        ...
+    supported_job_types = frozenset(
+        {
+            JobType.TASK,
+            JobType.LINEAR_FLOW,
+            JobType.DAG_FLOW,
+            JobType.FUNC_FLOW,
+        }
+    )
 
-    def _update_from_config(self) -> None:
-        ...
+    def _init_engine(self) -> None: ...
+
+    def _update_from_config(self) -> None: ...
 
     @classmethod
     def get_config_cls(cls) -> Type[IsPrefectEngineConfig]:
@@ -106,7 +109,8 @@ class PrefectEngine(JobRunnerEngine):
                 'NOTE: Cache-key computation for Prefect tasks traverses task parameters '
                 'and will consume generator inputs. To disable caching of task parameters, set '
                 '`runtime.config.engine.prefect.use_cached_results` to `False`.',
-                level=WARNING)
+                level=WARNING,
+            )
 
         if self._config.use_cached_results:
             omnipy_policy = self._get_omnipy_cache_policy()
@@ -131,8 +135,11 @@ class PrefectEngine(JobRunnerEngine):
         from omnipy.data.dataset import Dataset, is_dataset_instance
         from omnipy.data.model import is_model_instance, Model
 
-        from ..lazy_import import CachePolicy  # RUN_ID,; TASK_SOURCE,
-        from ..lazy_import import Inputs, TaskRunContext
+        from ..lazy_import import (
+            CachePolicy,  # RUN_ID,; TASK_SOURCE,
+            Inputs,
+            TaskRunContext,
+        )
 
         @dataclass
         class OmnipyInputs(CachePolicy):
@@ -165,10 +172,9 @@ class PrefectEngine(JobRunnerEngine):
                 for key, val in inputs.items():
                     transformed_inputs[key] = _model_or_dataset_transform(val)
 
-                key = Inputs(exclude=['retry_client']).compute_key(task_ctx,
-                                                                   transformed_inputs,
-                                                                   flow_parameters,
-                                                                   **kwargs)
+                key = Inputs(exclude=['retry_client']).compute_key(
+                    task_ctx, transformed_inputs, flow_parameters, **kwargs
+                )
                 print(f'OmnipyInputs.compute_key: {key}')
                 return key
 

@@ -14,6 +14,7 @@ from omnipy.shared.enums.display import SyntaxLanguageSpec
 
 class PythonStatsTighteningPrettyPrinter(PrettyPrinter[object], ABC):
     """Printer mixin that treats Python object formatting as the default path."""
+
     @override
     @classmethod
     def is_suitable_content(
@@ -43,6 +44,7 @@ class PythonStatsTighteningPrettyPrinter(PrettyPrinter[object], ABC):
 
 class JsonStatsTighteningPrettyPrinterMixin(PrettyPrinter[object], ABC):
     """Printer mixin that detects JSON-model content and uses JSON defaults."""
+
     @override
     @classmethod
     def is_suitable_content(

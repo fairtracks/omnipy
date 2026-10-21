@@ -11,18 +11,20 @@ import os
 from textwrap import dedent
 from types import GenericAlias, MappingProxyType, MethodType, NotImplementedType, UnionType
 import typing
-from typing import (Annotated,
-                    Any,
-                    cast,
-                    ForwardRef,
-                    Generic,
-                    get_args,
-                    List,
-                    Literal,
-                    Optional,
-                    Type,
-                    TypeAlias,
-                    Union)
+from typing import (
+    Annotated,
+    Any,
+    cast,
+    ForwardRef,
+    Generic,
+    get_args,
+    List,
+    Literal,
+    Optional,
+    Type,
+    TypeAlias,
+    Union,
+)
 
 import pytest
 import pytest_cases as pc
@@ -35,31 +37,33 @@ from omnipy.data.model import create_pydantic_model_subclass_with_wrappers, Mode
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.shared.protocols.typing import IsMapping
-from omnipy.util.pydantic import ValidationError
 import omnipy.util.pydantic as pyd
+from omnipy.util.pydantic import ValidationError
 from omnipy.util.setdeque import SetDeque
 
 from ..helpers.functions import assert_model, assert_val
 from ..helpers.protocols import AssertModelOrValFunc
 from .cases.model_special_methods import ModelValueAssignmentSpec
 from .helpers.classes import MyDict, MyFloatObject, MyList, MyNumberBase, MyPath, MyStrKeyDict
-from .helpers.models import (CBA,
-                             DefaultStrModel,
-                             LiteralFiveModel,
-                             LiteralFiveOrTextModel,
-                             LiteralTextModel,
-                             ModelOfPydanticChildModel,
-                             MyFloatObjModel,
-                             MyFwdRefModel,
-                             MyNestedFwdRefModel,
-                             MyPydanticParentModel,
-                             NumberModel,
-                             ParamUpperStrModel,
-                             PydanticChildModel,
-                             SimplePydanticModel,
-                             SimplePydanticModelWitWrappedField,
-                             UppercaseModel,
-                             WordSplitterModel)
+from .helpers.models import (
+    CBA,
+    DefaultStrModel,
+    LiteralFiveModel,
+    LiteralFiveOrTextModel,
+    LiteralTextModel,
+    ModelOfPydanticChildModel,
+    MyFloatObjModel,
+    MyFwdRefModel,
+    MyNestedFwdRefModel,
+    MyPydanticParentModel,
+    NumberModel,
+    ParamUpperStrModel,
+    PydanticChildModel,
+    SimplePydanticModel,
+    SimplePydanticModelWitWrappedField,
+    UppercaseModel,
+    WordSplitterModel,
+)
 
 T = TypeVar('T', default=object)
 U = TypeVar('U', default=object)
@@ -77,24 +81,22 @@ def test_no_model() -> None:
 
     with pytest.raises(TypeError):
 
-        class ModelSubclass(Model):
-            ...
+        class ModelSubclass(Model): ...
 
         ModelSubclass()
 
 
 def test_init_and_data() -> None:
     model = Model[int]()
-    assert (isinstance(model, Model))
-    assert (model.__class__.__name__ == 'Model[int]')
+    assert isinstance(model, Model)
+    assert model.__class__.__name__ == 'Model[int]'
 
-    class StrModel(Model[str]):
-        ...
+    class StrModel(Model[str]): ...
 
     str_model = StrModel()
-    assert (isinstance(str_model, StrModel))
-    assert (isinstance(str_model, Model))
-    assert (str_model.__class__.__name__ == StrModel.__name__)
+    assert isinstance(str_model, StrModel)
+    assert isinstance(str_model, Model)
+    assert str_model.__class__.__name__ == StrModel.__name__
 
     assert Model[int]().to_data() == 0
     assert Model[str]().to_data() == ''
@@ -112,8 +114,7 @@ def test_init_and_data() -> None:
 def test_generic_model_uses_default_type_vars() -> None:
     IntT = TypeVar('IntT', default=int)
 
-    class GenericListModel(Model[list[IntT]], Generic[IntT]):
-        ...
+    class GenericListModel(Model[list[IntT]], Generic[IntT]): ...
 
     assert GenericListModel.__parameters__ == (IntT,)
 
@@ -126,11 +127,9 @@ def test_generic_model_uses_default_type_vars() -> None:
 def test_generic_model_type_var_defaults_are_resolved_by_update_forward_refs() -> None:
     TargetT = TypeVar('TargetT', default='TargetModel')
 
-    class GenericListModel(Model[list[TargetT]], Generic[TargetT]):
-        ...
+    class GenericListModel(Model[list[TargetT]], Generic[TargetT]): ...
 
-    class TargetModel(Model[int]):
-        ...
+    class TargetModel(Model[int]): ...
 
     GenericListModel.update_forward_refs(TargetModel=TargetModel)
 
@@ -158,14 +157,11 @@ def test_init_converting_model_as_input() -> None:
 
 
 def test_init_converting_model_as_input_after_model_matching() -> None:
-    class CelsiusModel(Model[float]):
-        ...
+    class CelsiusModel(Model[float]): ...
 
-    class FahrenheitModel(Model[float]):
-        ...
+    class FahrenheitModel(Model[float]): ...
 
-    class TemperatureModel(Model[CelsiusModel | FahrenheitModel]):
-        ...
+    class TemperatureModel(Model[CelsiusModel | FahrenheitModel]): ...
 
     assert TemperatureModel(CelsiusModel(20.0)).content == CelsiusModel(20.0)
     assert TemperatureModel(FahrenheitModel(68.0)).content == FahrenheitModel(68.0)
@@ -173,8 +169,10 @@ def test_init_converting_model_as_input_after_model_matching() -> None:
 
 def test_init_converting_dataset_as_input() -> None:
     from omnipy.data.dataset import Dataset
+
     dataset_of_float_objs = Dataset[Model[MyFloatObjModel]](
-        a=MyFloatObject(int_part=4, float_part=0.5))
+        a=MyFloatObject(int_part=4, float_part=0.5)
+    )
     assert Model[dict[str, float]](dataset_of_float_objs).to_data() == {'a': 4.5}
 
 
@@ -183,7 +181,8 @@ def test_init_converting_dataset_as_input() -> None:
     cases='.cases.model_special_methods',
 )
 def test_mimic_setitem_converts_dataset_and_model_values_before_validation(
-        case: ModelValueAssignmentSpec) -> None:
+    case: ModelValueAssignmentSpec,
+) -> None:
     container_model = case.setitem_target_factory()
     container_model['a'] = case.value_factory()  # type: ignore[index]
 
@@ -198,7 +197,8 @@ def test_mimic_setitem_converts_dataset_and_model_values_before_validation(
     cases='.cases.model_special_methods',
 )
 def test_mimic_setattr_converts_dataset_and_model_values_before_validation(
-        case: ModelValueAssignmentSpec) -> None:
+    case: ModelValueAssignmentSpec,
+) -> None:
     holder_model = case.setattr_target_factory()
     holder_model.value = case.value_factory()  # type: ignore[assignment]
 
@@ -224,9 +224,9 @@ def test_error_init() -> None:
 
 
 def test_class_init_forwardref(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    class MyForwardRefNoNameModel(Model[ForwardRef]):
-        ...
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
+    class MyForwardRefNoNameModel(Model[ForwardRef]): ...
 
     with pytest.raises(TypeError, match='Cannot instantiate model'):
         MyForwardRefNoNameModel()
@@ -234,8 +234,7 @@ def test_class_init_forwardref(
     class MyForwardRefModel(Model[ForwardRef('SomeClass')]):  # type: ignore[misc]
         ...
 
-    class MyForwardRefStrModel(Model['SomeClass']):
-        ...
+    class MyForwardRefStrModel(Model['SomeClass']): ...
 
     with pytest.raises(TypeError, match='Cannot instantiate model'):
         MyForwardRefModel()
@@ -243,8 +242,7 @@ def test_class_init_forwardref(
     with pytest.raises(TypeError, match='Cannot instantiate model'):
         MyForwardRefStrModel()
 
-    class SomeClass:
-        ...
+    class SomeClass: ...
 
     with pytest.raises(TypeError, match='Cannot instantiate model'):
         MyForwardRefModel()
@@ -260,9 +258,9 @@ def test_class_init_forwardref(
 
 
 def test_class_init_generic_with_forwardref(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
-    class MyGenericModel(Model[T], Generic[T]):
-        ...
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
+    class MyGenericModel(Model[T], Generic[T]): ...
 
     with pytest.raises(TypeError, match='Cannot instantiate model'):
         MyGenericModel[ForwardRef('SomeClass')]()  # type: ignore[misc, operator]
@@ -270,11 +268,11 @@ def test_class_init_generic_with_forwardref(
     with pytest.raises(TypeError, match='Cannot instantiate model'):
         MyGenericModel['SomeClass']()
 
-    class SomeClass:
-        ...
+    class SomeClass: ...
 
     MyGenericModel[ForwardRef('SomeClass')].update_forward_refs(  # type: ignore[misc]
-        SomeClass=SomeClass)
+        SomeClass=SomeClass
+    )
     MyGenericModel[ForwardRef('SomeClass')]()  # type: ignore[misc, operator]
 
     MyGenericModel['SomeClass'].update_forward_refs(SomeClass=SomeClass)
@@ -282,32 +280,27 @@ def test_class_init_generic_with_forwardref(
 
 
 def test_class_init_recursive_model_through_generic_hack_with_forwardref(
-        skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
+) -> None:
     with pytest.raises(RuntimeError):
 
-        class MyRecursiveModel(Model[list['MyRecursiveModel']]):
-            ...
-
-    with pytest.raises(RuntimeError):
-
-        class MyNewRecursiveModel(Model[list['MyOtherRecursiveModel'] | None]):
-            ...
-
-        class MyOtherRecursiveModel(Model[MyNewRecursiveModel]):
-            ...
+        class MyRecursiveModel(Model[list['MyRecursiveModel']]): ...
 
     with pytest.raises(RuntimeError):
 
-        class MyNewerRecursiveModel(Model[list['MyNewerForwardRefAlias'] | None]):
-            ...
+        class MyNewRecursiveModel(Model[list['MyOtherRecursiveModel'] | None]): ...
+
+        class MyOtherRecursiveModel(Model[MyNewRecursiveModel]): ...
+
+    with pytest.raises(RuntimeError):
+
+        class MyNewerRecursiveModel(Model[list['MyNewerForwardRefAlias'] | None]): ...
 
         MyNewerForwardRefAlias: TypeAlias = MyNewerRecursiveModel  # noqa: F841
 
-    class MyGenericListModel(Model[list[T | None]], Generic[T]):
-        ...
+    class MyGenericListModel(Model[list[T | None]], Generic[T]): ...
 
-    class MyNewestForwardRefModel(MyGenericListModel['MyNewestForwardRefAlias']):
-        ...
+    class MyNewestForwardRefModel(MyGenericListModel['MyNewestForwardRefAlias']): ...
 
     MyNewestForwardRefAlias: TypeAlias = MyNewestForwardRefModel
 
@@ -428,8 +421,7 @@ def test_equality_with_pydantic_not_symmetric() -> None:
     class RootPydanticInt(pyd.BaseModel):
         __root__: int
 
-    class MyInt(Model[int]):
-        ...
+    class MyInt(Model[int]): ...
 
     assert RootPydanticInt(__root__=1) != 1
     assert RootPydanticInt(__root__=1) == {'__root__': 1}
@@ -449,27 +441,22 @@ def test_equality_with_pydantic_as_args() -> None:
 
     assert PydanticModel(a=1) == OtherPydanticModel(a=1)
 
-    class MyModel(Model[PydanticModel]):
-        ...
+    class MyModel(Model[PydanticModel]): ...
 
-    class MyOtherModel(Model[OtherPydanticModel]):
-        ...
+    class MyOtherModel(Model[OtherPydanticModel]): ...
 
     assert MyModel(a=1) == MyModel(a=1)
     assert MyModel(a=1) == MyModel({'a': 1})
     assert MyModel(a=1) != MyModel(a=2)
     assert MyModel(a=1) != MyOtherModel(a=1)
 
-    class EqualPydanticModel(PydanticModel):
-        ...
+    class EqualPydanticModel(PydanticModel): ...
 
-    class MyEqualModel(Model[EqualPydanticModel]):
-        ...
+    class MyEqualModel(Model[EqualPydanticModel]): ...
 
     assert MyModel(a=1) != MyEqualModel(a=1)
 
-    class MyInherited(MyModel):
-        ...
+    class MyInherited(MyModel): ...
 
     assert MyModel(a=1) != MyInherited(a=1)
 
@@ -499,8 +486,7 @@ def test_name_qualname_and_module() -> None:
     DEF_PREFIX = 'test_name_qualname_and_module.<locals>.DEF.'
 
     class ABC:
-        class MyModel(Model[list[T]], Generic[T]):
-            ...
+        class MyModel(Model[list[T]], Generic[T]): ...
 
         assert MyModel.__name__ == 'MyModel'
         assert MyModel.__qualname__ == ABC_PREFIX + 'MyModel'
@@ -514,8 +500,7 @@ def test_name_qualname_and_module() -> None:
         assert MyModel.__module__ == 'tests.data.test_model'
 
     class DEF:
-        class MyTupleModel(ABC.MyModel[tuple[T, U]], Generic[T, U]):
-            ...
+        class MyTupleModel(ABC.MyModel[tuple[T, U]], Generic[T, U]): ...
 
         assert MyTupleModel.__name__ == 'MyTupleModel'
         assert MyTupleModel.__qualname__ == DEF_PREFIX + 'MyTupleModel'
@@ -531,23 +516,31 @@ def test_name_qualname_and_module() -> None:
     assert ABC.MyModel[ABC.MyModel[int]].__name__ == 'MyModel[MyModel[int]]'
     assert ABC.MyModel[ABC.MyModel[int]].__qualname__ == ABC_PREFIX + 'MyModel[MyModel[int]]'
 
-    assert ABC.MyModel[Union[str, ABC.MyModel[str | int]]].__name__ == \
-           'MyModel[str | MyModel[str | int]]'
-    assert ABC.MyModel[Union[str, ABC.MyModel[str | int]]].__qualname__ == \
-           ABC_PREFIX + 'MyModel[str | MyModel[str | int]]'
+    assert (
+        ABC.MyModel[Union[str, ABC.MyModel[str | int]]].__name__
+        == 'MyModel[str | MyModel[str | int]]'
+    )
+    assert (
+        ABC.MyModel[Union[str, ABC.MyModel[str | int]]].__qualname__
+        == ABC_PREFIX + 'MyModel[str | MyModel[str | int]]'
+    )
 
-    assert ABC.MyModel[ABC.MyModel[Union[str, int]] | str].__name__ == \
-           'MyModel[MyModel[str | int] | str]'
-    assert ABC.MyModel[ABC.MyModel[str | int] | str].__qualname__ == \
-           ABC_PREFIX + 'MyModel[MyModel[str | int] | str]'
+    assert (
+        ABC.MyModel[ABC.MyModel[Union[str, int]] | str].__name__
+        == 'MyModel[MyModel[str | int] | str]'
+    )
+    assert (
+        ABC.MyModel[ABC.MyModel[str | int] | str].__qualname__
+        == ABC_PREFIX + 'MyModel[MyModel[str | int] | str]'
+    )
 
     assert DEF.MyTupleModel[int, str].__name__ == 'MyTupleModel[int, str]'
     assert DEF.MyTupleModel[int, str].__qualname__ == DEF_PREFIX + 'MyTupleModel[int, str]'
 
-    assert DEF.MyTupleModel[int, ABC.MyModel[str]].__name__ == \
-           'MyTupleModel[int, MyModel[str]]'
-    assert DEF.MyTupleModel[int, ABC.MyModel[str]].__qualname__ == \
-           (DEF_PREFIX + 'MyTupleModel[int, MyModel[str]]')
+    assert DEF.MyTupleModel[int, ABC.MyModel[str]].__name__ == 'MyTupleModel[int, MyModel[str]]'
+    assert DEF.MyTupleModel[int, ABC.MyModel[str]].__qualname__ == (
+        DEF_PREFIX + 'MyTupleModel[int, MyModel[str]]'
+    )
 
     assert MyFwdRefModel.__name__ == 'MyGenericModel[NumberModel]'
     assert MyFwdRefModel.__qualname__ == 'CBA.MyGenericModel[NumberModel]'
@@ -557,19 +550,29 @@ def test_name_qualname_and_module() -> None:
     assert MyNestedFwdRefModel.__qualname__ == 'CBA.MyGenericModel[str | NumberModel]'
     assert MyNestedFwdRefModel.__module__ == 'tests.data.helpers.models'
 
-    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__name__ ==
-            'MyGenericModel[ABC.MyModel[int]]')
-    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__qualname__ ==
-            'CBA.MyGenericModel[ABC.MyModel[int]]')
-    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__module__ ==
-            'tests.data.helpers.models')
+    assert (
+        CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__name__
+        == 'MyGenericModel[ABC.MyModel[int]]'
+    )
+    assert (
+        CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__qualname__
+        == 'CBA.MyGenericModel[ABC.MyModel[int]]'
+    )
+    assert (
+        CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__module__ == 'tests.data.helpers.models'
+    )
 
-    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__name__ ==
-            'MyGenericModel[Union[str, ABC.MyModel[int]]]')
-    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__qualname__ ==
-            'CBA.MyGenericModel[Union[str, ABC.MyModel[int]]]')
-    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__module__ ==
-            'tests.data.helpers.models')
+    assert (
+        CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__name__
+        == 'MyGenericModel[Union[str, ABC.MyModel[int]]]'
+    )
+    assert (
+        CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__qualname__
+        == 'CBA.MyGenericModel[Union[str, ABC.MyModel[int]]]'
+    )
+    assert (
+        CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__module__ == 'tests.data.helpers.models'
+    )
 
 
 # TODO: Revisit test_name_qualname_reuse_typevar_known_issue with pydantic v2. Expected to change
@@ -588,10 +591,10 @@ in different classes should not be assumed to be the same.
 For now, the only consequence of the bug that we are aware of is that the `__name__` and
 `__qualname__` of the models are slightly incorrect and will not print the TypeVars. However,
 worse consequences might be hidden in the code.
-""")
+""",
+)
 def test_name_qualname_reuse_typevar_known_issue() -> None:
-    class MyModel(Model[T], Generic[T]):
-        ...
+    class MyModel(Model[T], Generic[T]): ...
 
     assert MyModel[T].__name__ == 'MyModel[~T]'
     assert MyModel[T].__qualname__ == 'MyModel[~T]'
@@ -601,19 +604,19 @@ def test_repr() -> None:
     assert repr(Model[int]) == "<class 'omnipy.data.model.Model[int]'>"
     assert repr(Model[int](5)) == 'Model[int](5)'
 
-    assert repr(Model[Model[int]]) \
-           == "<class 'omnipy.data.model.Model[Model[int]]'>"
+    assert repr(Model[Model[int]]) == "<class 'omnipy.data.model.Model[Model[int]]'>"
     assert repr(Model[Model[int]](Model[int](5))) == 'Model[Model[int]](Model[int](5))'
 
-    assert repr(MyFwdRefModel) == \
-           "<class 'tests.data.helpers.models.CBA.MyGenericModel[NumberModel]'>"
-    assert repr(MyFwdRefModel(NumberModel(5))) == \
-           'MyGenericModel[NumberModel](NumberModel(5))'
+    assert (
+        repr(MyFwdRefModel) == "<class 'tests.data.helpers.models.CBA.MyGenericModel[NumberModel]'>"
+    )
+    assert repr(MyFwdRefModel(NumberModel(5))) == 'MyGenericModel[NumberModel](NumberModel(5))'
 
-    assert repr(MyNestedFwdRefModel) == \
-           "<class 'tests.data.helpers.models.CBA.MyGenericModel[str | NumberModel]'>"
-    assert repr(MyNestedFwdRefModel('abc')) == \
-           "MyGenericModel[str | NumberModel]('abc')"
+    assert (
+        repr(MyNestedFwdRefModel)
+        == "<class 'tests.data.helpers.models.CBA.MyGenericModel[str | NumberModel]'>"
+    )
+    assert repr(MyNestedFwdRefModel('abc')) == "MyGenericModel[str | NumberModel]('abc')"
 
 
 def test_repr_pretty() -> None:
@@ -635,7 +638,8 @@ def _issubclass_and_isinstance(model_cls_a: Type[Model], model_cls_b: Type[Model
 
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
-    reason='To be implemented later. Should be issubtype instead')
+    reason='To be implemented later. Should be issubtype instead',
+)
 def test_issubclass_and_isinstance() -> None:
     assert _issubclass_and_isinstance(Model[str], Model[str])
     assert not _issubclass_and_isinstance(Model[int], Model[str])
@@ -645,8 +649,7 @@ def test_issubclass_and_isinstance() -> None:
 
     assert _issubclass_and_isinstance(Model[list[str]], Model[list])
 
-    class MyStrList(Model[list[str]]):
-        ...
+    class MyStrList(Model[list[str]]): ...
 
     assert _issubclass_and_isinstance(MyStrList, Model[list])
 
@@ -673,7 +676,7 @@ def test_issubclass_and_isinstance() -> None:
         'model.copy(deep=False)',
         'model.copy(deep=True)',
         'copy.copy()',
-        'copy.deepcopy()'
+        'copy.deepcopy()',
     ],
 )
 def test_copy(
@@ -795,8 +798,7 @@ def test_fail_parsing_strings_or_bytes_as_iterables() -> None:
 
 
 def test_import_inconvertible_data() -> None:
-    class NumberModel(Model[int]):
-        ...
+    class NumberModel(Model[int]): ...
 
     model = NumberModel()
 
@@ -810,8 +812,7 @@ def test_import_inconvertible_data() -> None:
 
 
 def test_import_inconvertible_data_strict_type() -> None:
-    class StrictNumberModel(Model[pyd.StrictInt]):
-        ...
+    class StrictNumberModel(Model[pyd.StrictInt]): ...
 
     model = StrictNumberModel()
 
@@ -832,8 +833,7 @@ def test_import_inconvertible_data_strict_type() -> None:
 
 
 def test_import_inconvertible_data_nested_type() -> None:
-    class ListOfIntsModel(Model[list[int]]):
-        ...
+    class ListOfIntsModel(Model[list[int]]): ...
 
     model = ListOfIntsModel()
 
@@ -864,8 +864,7 @@ def test_error_invalid_model() -> None:
 
 
 def test_tuple_of_anything() -> None:
-    class TupleModel(Model[tuple]):
-        ...
+    class TupleModel(Model[tuple]): ...
 
     assert TupleModel().to_data() == ()
     assert TupleModel((1, 's', True)).to_data() == (1, 's', True)
@@ -874,8 +873,7 @@ def test_tuple_of_anything() -> None:
 
 
 def test_tuple_of_single_type() -> None:
-    class TupleModel(Model[tuple[int]]):
-        ...
+    class TupleModel(Model[tuple[int]]): ...
 
     assert TupleModel().to_data() == (0,)
     with pytest.raises(ValidationError):
@@ -889,8 +887,7 @@ def test_tuple_of_single_type() -> None:
 
 
 def test_tuple_of_single_type_repeated() -> None:
-    class TupleModel(Model[tuple[int, ...]]):
-        ...
+    class TupleModel(Model[tuple[int, ...]]): ...
 
     assert TupleModel().to_data() == ()
     assert TupleModel((1, 2, 3)).to_data() == (1, 2, 3)
@@ -902,8 +899,7 @@ def test_tuple_of_single_type_repeated() -> None:
 
 
 def test_fixed_tuple_of_different_types() -> None:
-    class TupleModel(Model[tuple[int, str]]):
-        ...
+    class TupleModel(Model[tuple[int, str]]): ...
 
     assert TupleModel().to_data() == (0, '')
     assert TupleModel((123, 'abc')).to_data() == (123, 'abc')
@@ -927,8 +923,7 @@ def test_basic_union() -> None:
     # The requirements for omnipy is Python 3.10, and there have been some hashin issues with mostly
     # the older form of this notation, so the newer should be preferred. The old form are kept
     # several places in this file tests related to the notation.
-    class UnionModel(Model[int | str | list]):
-        ...
+    class UnionModel(Model[int | str | list]): ...
 
     assert UnionModel(15).to_data() == 15
     assert UnionModel('abc').to_data() == 'abc'
@@ -947,79 +942,67 @@ initiation (even though the order of int and str is the opposite). Works when sp
 individual tests. New Union nomenclature introduced in Python 3.10 does not help when nested
 under Annotated. Issue is not present in e.g. List or Dict as the default values of these are
 [] and {}, respectively.
-""")
+""",
+)
 def test_nested_annotated_union_default_not_defined_by_first_type_known_issue() -> None:
-    class IntFirstAnnotatedUnionModel(Model[Annotated[Union[int, str], 'test']]):
-        ...
+    class IntFirstAnnotatedUnionModel(Model[Annotated[Union[int, str], 'test']]): ...
 
     assert IntFirstAnnotatedUnionModel().to_data() == 0
 
-    class StrFirstAnnotatedUnionModel(Model[Annotated[Union[str, int], 'test']]):
-        ...
+    class StrFirstAnnotatedUnionModel(Model[Annotated[Union[str, int], 'test']]): ...
 
     assert StrFirstAnnotatedUnionModel().to_data() == ''
 
-    class IntFirstAnnotatedUnionModelNew(Model[Annotated[int | str, 'test']]):
-        ...
+    class IntFirstAnnotatedUnionModelNew(Model[Annotated[int | str, 'test']]): ...
 
     assert IntFirstAnnotatedUnionModelNew().to_data() == 0
 
-    class StrFirstAnnotatedUnionModelNew(Model[Annotated[str | int, 'test']]):
-        ...
+    class StrFirstAnnotatedUnionModelNew(Model[Annotated[str | int, 'test']]): ...
 
     assert StrFirstAnnotatedUnionModelNew().to_data() == ''
 
 
 def test_nested_annotated_union_default_not_defined_by_first_type() -> None:
-    class IntFirstUnionModel(Model[Union[int, str]]):
-        ...
+    class IntFirstUnionModel(Model[Union[int, str]]): ...
 
     assert IntFirstUnionModel().to_data() == 0
 
-    class StrFirstUnionModel(Model[Union[str, int]]):
-        ...
+    class StrFirstUnionModel(Model[Union[str, int]]): ...
 
     assert StrFirstUnionModel().to_data() == ''
 
-    class IntFirstNewUnionModel(Model[int | str]):
-        ...
+    class IntFirstNewUnionModel(Model[int | str]): ...
 
     assert IntFirstNewUnionModel().to_data() == 0
 
-    class StrFirstNewUnionModel(Model[str | int]):
-        ...
+    class StrFirstNewUnionModel(Model[str | int]): ...
 
     assert StrFirstNewUnionModel().to_data() == ''
 
 
 def test_union_default_value_from_first_callable_type() -> None:
-    class FirstTypeNotInstantiatableUnionModel(Model[Any | str]):
-        ...
+    class FirstTypeNotInstantiatableUnionModel(Model[Any | str]): ...
 
     assert FirstTypeNotInstantiatableUnionModel().to_data() == ''
 
-    class NoTypeInstantiatableUnionModel(Model[Any | Type]):
-        ...
+    class NoTypeInstantiatableUnionModel(Model[Any | Type]): ...
 
     with pytest.raises(TypeError):
         NoTypeInstantiatableUnionModel()
 
 
 def test_union_default_value_if_any_none() -> None:
-    class NoneFirstUnionModel(Model[None | str]):
-        ...
+    class NoneFirstUnionModel(Model[None | str]): ...
 
     assert NoneFirstUnionModel().to_data() is None
 
-    class NoneSecondUnionModel(Model[str | None]):
-        ...
+    class NoneSecondUnionModel(Model[str | None]): ...
 
     assert NoneSecondUnionModel().to_data() is None
 
 
 def test_parsing_independent_on_union_type_order() -> None:
-    class FloatIntUnionModel(Model[Union[float, int]]):
-        ...
+    class FloatIntUnionModel(Model[Union[float, int]]): ...
 
     assert FloatIntUnionModel(2.0).to_data() == 2.0
     assert type(FloatIntUnionModel(2.0).to_data()) is float
@@ -1033,8 +1016,7 @@ def test_parsing_independent_on_union_type_order() -> None:
     assert FloatIntUnionModel('15').to_data() == 15.0
     assert type(FloatIntUnionModel('15').to_data()) is float
 
-    class IntFloatUnionModel(Model[Union[int, float]]):
-        ...
+    class IntFloatUnionModel(Model[Union[int, float]]): ...
 
     assert IntFloatUnionModel(2.0).to_data() == 2.0
     assert type(IntFloatUnionModel(2.0).to_data()) is float
@@ -1048,8 +1030,7 @@ def test_parsing_independent_on_union_type_order() -> None:
     assert IntFloatUnionModel('15').to_data() == 15
     assert type(IntFloatUnionModel('15').to_data()) is int
 
-    class FloatIntStrUnionModel(Model[Union[float, int, str]]):
-        ...
+    class FloatIntStrUnionModel(Model[Union[float, int, str]]): ...
 
     assert FloatIntStrUnionModel(2.0).to_data() == 2.0
     assert type(FloatIntStrUnionModel(2.0).to_data()) is float
@@ -1065,8 +1046,7 @@ def test_parsing_independent_on_union_type_order() -> None:
 
 
 def test_optional() -> None:
-    class OptionalIntModel(Model[Optional[int]]):
-        ...
+    class OptionalIntModel(Model[Optional[int]]): ...
 
     assert OptionalIntModel().to_data() is None
     assert OptionalIntModel(None).to_data() is None
@@ -1081,37 +1061,31 @@ def test_optional() -> None:
 
 
 def test_nested_union_default_value() -> None:
-    class NestedUnion(Model[Union[Union[str, int], float]]):
-        ...
+    class NestedUnion(Model[Union[Union[str, int], float]]): ...
 
     assert NestedUnion().to_data() == ''
 
-    class NestedUnionWithOptional(Model[Union[Union[Optional[str], int], float]]):
-        ...
+    class NestedUnionWithOptional(Model[Union[Union[Optional[str], int], float]]): ...
 
     assert NestedUnionWithOptional().to_data() is None
 
-    class NestedUnionWithSingleTypeTuple(Model[Union[Union[tuple[str], int], float]]):
-        ...
+    class NestedUnionWithSingleTypeTuple(Model[Union[Union[tuple[str], int], float]]): ...
 
     assert NestedUnionWithSingleTypeTuple().to_data() == ('',)
 
 
 def test_nested_annotated_default_value() -> None:
-    class MyIntModel(Model[Annotated[int, 'This is my cool integer model']]):
-        ...
+    class MyIntModel(Model[Annotated[int, 'This is my cool integer model']]): ...
 
     assert MyIntModel().to_data() == 0
 
-    class MyIntListModel(Model[Annotated[list[int], 'This is my awesome integer list model']]):
-        ...
+    class MyIntListModel(Model[Annotated[list[int], 'This is my awesome integer list model']]): ...
 
     assert MyIntListModel().to_data() == []
 
 
 def test_none_allowed() -> None:
-    class NoneModel(Model[None]):
-        ...
+    class NoneModel(Model[None]): ...
 
     assert NoneModel().to_data() is None
     assert NoneModel(None).to_data() is None
@@ -1122,27 +1096,22 @@ def test_none_allowed() -> None:
     with pytest.raises(ValidationError):
         NoneModel('None')
 
-    class MaybeNumberModelOptional(Model[Optional[int]]):
-        ...
+    class MaybeNumberModelOptional(Model[Optional[int]]): ...
 
-    class MaybeNumberModelUnion(Model[Union[int, None]]):
-        ...
+    class MaybeNumberModelUnion(Model[Union[int, None]]): ...
 
-    class MaybeNumberModelUnionNew(Model[int | None]):
-        ...
+    class MaybeNumberModelUnionNew(Model[int | None]): ...
 
-    class MaybeNumberModelSubclass(MaybeNumberModelUnionNew):
-        ...
+    class MaybeNumberModelSubclass(MaybeNumberModelUnionNew): ...
 
-    class MaybeNumberWrapperModel(Model[MaybeNumberModelUnionNew]):
-        ...
+    class MaybeNumberWrapperModel(Model[MaybeNumberModelUnionNew]): ...
 
     for model_cls in [
-            MaybeNumberModelOptional,
-            MaybeNumberModelUnion,
-            MaybeNumberModelUnionNew,
-            MaybeNumberModelSubclass,
-            MaybeNumberWrapperModel,
+        MaybeNumberModelOptional,
+        MaybeNumberModelUnion,
+        MaybeNumberModelUnionNew,
+        MaybeNumberModelSubclass,
+        MaybeNumberWrapperModel,
     ]:
         assert model_cls().to_data() is None
         assert model_cls(None).to_data() is None
@@ -1153,14 +1122,11 @@ def test_none_allowed() -> None:
 
 
 def test_none_not_allowed() -> None:
-    class IntListModel(Model[list[int]]):
-        ...
+    class IntListModel(Model[list[int]]): ...
 
-    class IntDictModel(Model[dict[int, int]]):
-        ...
+    class IntDictModel(Model[dict[int, int]]): ...
 
-    class IntOrFloatModel(Model[int | float]):
-        ...
+    class IntOrFloatModel(Model[int | float]): ...
 
     for model_cls in [IntListModel, IntDictModel, IntOrFloatModel]:
         assert cast(Model, model_cls()).to_data() is not None
@@ -1248,8 +1214,7 @@ def test_fixed_tuple_of_none_variants(
 ) -> None:
     none_variant, none_variant_target_content = none_variant_and_target_content
 
-    class FixedTupleOfNoneModel(Model[tuple[none_variant,
-                                            none_variant]]):  # type: ignore[valid-type]
+    class FixedTupleOfNoneModel(Model[tuple[none_variant, none_variant]]):  # type: ignore[valid-type]
         ...
 
     target_content = (none_variant_target_content, none_variant_target_content)
@@ -1353,9 +1318,7 @@ def test_dict_of_none_variants_as_val_and_key(
     with pytest.raises(ValidationError):
         DictOfNone2NoneModel([None])
 
-    assert DictOfNone2NoneModel({
-        None: None
-    }).content == {
+    assert DictOfNone2NoneModel({None: None}).content == {
         none_variant_target_content: none_variant_target_content
     }
     assert DictOfNone2NoneModel(MappingProxyType({None: None})).content == {
@@ -1422,19 +1385,24 @@ def test_doubly_nested_list_and_dict_of_none_variants_known_issue(
     with pytest.raises(ValidationError):
         ListOfListOfNoneVariant([None])
 
-    assert ListOfListOfNoneVariant([[None]
-                                    ]) == ListOfListOfNoneVariant([[none_variant_target_content]])
+    assert ListOfListOfNoneVariant([[None]]) == ListOfListOfNoneVariant(
+        [[none_variant_target_content]]
+    )
 
     with pytest.raises(ValidationError):
         ListOfListOfNoneVariant([{1: None}])
 
-    class DictOfInt2DictOfInt2NoneVariant(Model[dict[
-            int,
+    class DictOfInt2DictOfInt2NoneVariant(
+        Model[
             dict[
                 int,
-                none_variant_target_content,  # type: ignore[valid-type]
-            ]]]):
-        ...
+                dict[
+                    int,
+                    none_variant_target_content,  # type: ignore[valid-type]
+                ],
+            ]
+        ]
+    ): ...
 
     DictOfInt2DictOfInt2NoneVariant()
 
@@ -1447,8 +1415,9 @@ def test_doubly_nested_list_and_dict_of_none_variants_known_issue(
     with pytest.raises(ValidationError):
         DictOfInt2DictOfInt2NoneVariant({1: None})
 
-    assert DictOfInt2DictOfInt2NoneVariant({1: {2: None}}) == \
-        DictOfInt2DictOfInt2NoneVariant({1: {2: none_variant_target_content}})
+    assert DictOfInt2DictOfInt2NoneVariant({1: {2: None}}) == DictOfInt2DictOfInt2NoneVariant(
+        {1: {2: none_variant_target_content}}
+    )
 
     with pytest.raises(ValidationError):
         DictOfInt2DictOfInt2NoneVariant({1: {'hello': None}})
@@ -1457,23 +1426,17 @@ def test_doubly_nested_list_and_dict_of_none_variants_known_issue(
 # Simpler working test added to illustrate more complex fails related to pydantic issue:
 # https://github.com/pydantic/pydantic/issues/3836
 def test_nested_model_classes_none_as_default() -> None:
-    class MaybeNumberModelOptional(Model[Optional[int]]):
-        ...
+    class MaybeNumberModelOptional(Model[Optional[int]]): ...
 
-    class MaybeNumberModelUnion(Model[Union[int, None]]):
-        ...
+    class MaybeNumberModelUnion(Model[Union[int, None]]): ...
 
-    class MaybeNumberModelUnionNew(Model[int | None]):
-        ...
+    class MaybeNumberModelUnionNew(Model[int | None]): ...
 
-    class OuterMaybeNumberModelOptional(Model[MaybeNumberModelOptional]):
-        ...
+    class OuterMaybeNumberModelOptional(Model[MaybeNumberModelOptional]): ...
 
-    class OuterMaybeNumberModelUnion(Model[MaybeNumberModelUnion]):
-        ...
+    class OuterMaybeNumberModelUnion(Model[MaybeNumberModelUnion]): ...
 
-    class OuterMaybeNumberModelUnionNew(Model[MaybeNumberModelUnionNew]):
-        ...
+    class OuterMaybeNumberModelUnionNew(Model[MaybeNumberModelUnionNew]): ...
 
     assert OuterMaybeNumberModelOptional().content == MaybeNumberModelOptional(None)
 
@@ -1493,29 +1456,23 @@ def test_nested_model_classes_inner_generic_none_as_default(
 
     BaseT = TypeVar('BaseT')
 
-    class BaseModel(Model[BaseT], Generic[BaseT]):
-        ...
+    class BaseModel(Model[BaseT], Generic[BaseT]): ...
 
-    class OuterMaybeNumberModel(BaseModel[none_variant]):
-        ...
+    class OuterMaybeNumberModel(BaseModel[none_variant]): ...
 
     assert OuterMaybeNumberModel().content == none_variant_target_content
 
 
 def test_union_nested_model_classes_inner_optional_generic_none_as_default() -> None:
-    class MaybeNumberModel(Model[Optional[int]]):
-        ...
+    class MaybeNumberModel(Model[Optional[int]]): ...
 
-    class MaybeStringModel(Model[Optional[str]]):
-        ...
+    class MaybeStringModel(Model[Optional[str]]): ...
 
     BaseT = TypeVar('BaseT', default=Union[MaybeNumberModel, MaybeStringModel])
 
-    class BaseModel(Model[BaseT], Generic[BaseT]):
-        ...
+    class BaseModel(Model[BaseT], Generic[BaseT]): ...
 
-    class OuterMaybeNumberModel(BaseModel[Union[MaybeNumberModel, MaybeStringModel]]):
-        ...
+    class OuterMaybeNumberModel(BaseModel[Union[MaybeNumberModel, MaybeStringModel]]): ...
 
     assert OuterMaybeNumberModel().content == MaybeNumberModel(None)
 
@@ -1527,11 +1484,9 @@ def test_union_nested_model_classes_inner_forwardref_generic_list_of_none(
 
     BaseT = TypeVar('BaseT')
 
-    class GenericListModel(Model[list[BaseT]], Generic[BaseT]):
-        ...
+    class GenericListModel(Model[list[BaseT]], Generic[BaseT]): ...
 
-    class ListModel(GenericListModel['FullModel']):
-        ...
+    class ListModel(GenericListModel['FullModel']): ...
 
     FullModel: TypeAlias = Union[none_variant, ListModel]
 
@@ -1552,17 +1507,13 @@ def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_defa
 
     BaseT = TypeVar('BaseT', default=None)
 
-    class BaseModel(Model[BaseT], Generic[BaseT]):
-        ...
+    class BaseModel(Model[BaseT], Generic[BaseT]): ...
 
-    class NoneVariantModel(BaseModel[none_variant]):
-        ...
+    class NoneVariantModel(BaseModel[none_variant]): ...
 
-    class GenericListModel(BaseModel[list[BaseT]], Generic[BaseT]):
-        ...
+    class GenericListModel(BaseModel[list[BaseT]], Generic[BaseT]): ...
 
-    class ListModel(GenericListModel['FullModel']):
-        ...
+    class ListModel(GenericListModel['FullModel']): ...
 
     FullModel: TypeAlias = ListModel | NoneVariantModel
 
@@ -1572,14 +1523,11 @@ def test_union_nested_model_classes_inner_forwardref_double_generic_none_as_defa
 
 
 def test_recursive_list_model_with_none() -> None:
-    class MyMaybeNumbersModel(Model[None | int]):
-        ...
+    class MyMaybeNumbersModel(Model[None | int]): ...
 
-    class MyGenericListModel(Model[list[T]], Generic[T]):
-        ...
+    class MyGenericListModel(Model[list[T]], Generic[T]): ...
 
-    class MyListModel(MyGenericListModel['MyMaybeNumberOrListAlias']):
-        ...
+    class MyListModel(MyGenericListModel['MyMaybeNumberOrListAlias']): ...
 
     MyMaybeNumberOrListAlias: TypeAlias = MyMaybeNumbersModel | MyListModel
 
@@ -1591,7 +1539,8 @@ def test_recursive_list_model_with_none() -> None:
     assert MyListModel([None]).content == [MyMaybeNumbersModel(None)]
 
     assert MyListModel([[None, 3], None]).content == [
-        MyListModel([MyMaybeNumbersModel(None), MyMaybeNumbersModel(3)]), MyMaybeNumbersModel(None)
+        MyListModel([MyMaybeNumbersModel(None), MyMaybeNumbersModel(3)]),
+        MyMaybeNumbersModel(None),
     ]
 
 
@@ -1600,23 +1549,22 @@ def test_recursive_list_model_with_none() -> None:
 
 
 def test_recursive_generic_tuple_model_with_none() -> None:
-    class MyGenericScalarModel(Model[T], Generic[T]):
-        ...
+    class MyGenericScalarModel(Model[T], Generic[T]): ...
 
     class MyGenericOnlyTuplesAndScalarsModel(
-            Model[tuple[TypeVarStore[T]
-                        | ForwardRef('MyGenericOnlyTuplesAndScalarsAlias'), ...]],
-            Generic[T]):
-        ...
+        Model[tuple[TypeVarStore[T] | ForwardRef('MyGenericOnlyTuplesAndScalarsAlias'), ...]],
+        Generic[T],
+    ): ...
 
-    MyGenericOnlyTuplesAndScalarsAlias: TypeAlias = \
+    MyGenericOnlyTuplesAndScalarsAlias: TypeAlias = (
         MyGenericScalarModel[T] | MyGenericOnlyTuplesAndScalarsModel[T]
+    )
 
     MyGenericOnlyTuplesAndScalarsModel.update_forward_refs(
-        MyGenericOnlyTuplesAndScalarsAlias=MyGenericOnlyTuplesAndScalarsAlias)
+        MyGenericOnlyTuplesAndScalarsAlias=MyGenericOnlyTuplesAndScalarsAlias
+    )
 
-    class MyOnlyTuplesAndIntsModel(Model[MyGenericOnlyTuplesAndScalarsModel[int]]):
-        ...
+    class MyOnlyTuplesAndIntsModel(Model[MyGenericOnlyTuplesAndScalarsModel[int]]): ...
 
     with pytest.raises(ValidationError):
         MyOnlyTuplesAndIntsModel(None)
@@ -1627,28 +1575,34 @@ def test_recursive_generic_tuple_model_with_none() -> None:
     with pytest.raises(ValidationError):
         MyOnlyTuplesAndIntsModel([[1, None], 2])
 
-    assert MyOnlyTuplesAndIntsModel([[1, 2], 3]).content == \
-        MyGenericOnlyTuplesAndScalarsModel[int](
-            (MyGenericOnlyTuplesAndScalarsModel[int](
-                (MyGenericScalarModel[int](1),
-                 MyGenericScalarModel[int](2))),
-             MyGenericScalarModel[int](3)))
+    assert MyOnlyTuplesAndIntsModel([[1, 2], 3]).content == MyGenericOnlyTuplesAndScalarsModel[int](
+        (
+            MyGenericOnlyTuplesAndScalarsModel[int](
+                (MyGenericScalarModel[int](1), MyGenericScalarModel[int](2))
+            ),
+            MyGenericScalarModel[int](3),
+        )
+    )
 
-    class MyOnlyTuplesAndNoneModel(Model[MyGenericOnlyTuplesAndScalarsModel[None]]):
-        ...
+    class MyOnlyTuplesAndNoneModel(Model[MyGenericOnlyTuplesAndScalarsModel[None]]): ...
 
     with pytest.raises(ValidationError):
         MyOnlyTuplesAndNoneModel(None)
 
-    assert MyOnlyTuplesAndNoneModel([None]).content == \
-        MyGenericOnlyTuplesAndScalarsModel[None]((MyGenericScalarModel[None](None),))
+    assert MyOnlyTuplesAndNoneModel([None]).content == MyGenericOnlyTuplesAndScalarsModel[None](
+        (MyGenericScalarModel[None](None),)
+    )
 
-    assert MyOnlyTuplesAndNoneModel([[None, None], None]).content == \
-        MyGenericOnlyTuplesAndScalarsModel[None](
-            (MyGenericOnlyTuplesAndScalarsModel[None](
-                (MyGenericScalarModel[None](None),
-                 MyGenericScalarModel[None](None))),
-             MyGenericScalarModel[None](None)))
+    assert MyOnlyTuplesAndNoneModel(
+        [[None, None], None]
+    ).content == MyGenericOnlyTuplesAndScalarsModel[None](
+        (
+            MyGenericOnlyTuplesAndScalarsModel[None](
+                (MyGenericScalarModel[None](None), MyGenericScalarModel[None](None))
+            ),
+            MyGenericScalarModel[None](None),
+        )
+    )
 
 
 def test_import_export_methods() -> None:
@@ -1714,34 +1668,50 @@ def test_import_export_methods() -> None:
     assert model_list.to_data() == [True, 'text', -47.9]
 
     std_description = Model._get_standard_field_description()
-    assert Model[int].to_json_schema() == dedent('''\
+    assert Model[int].to_json_schema() == dedent(
+        '''\
     {
       "title": "Model[int]",
-      "description": "''' + std_description + '''",
+      "description": "'''
+        + std_description
+        + """",
       "type": "integer"
-    }''')  # noqa: Q001
+    }"""
+    )
 
-    assert Model[str].to_json_schema() == dedent('''\
+    assert Model[str].to_json_schema() == dedent(
+        '''\
     {
       "title": "Model[str]",
-      "description": "''' + std_description + '''",
+      "description": "'''
+        + std_description
+        + """",
       "type": "string"
-    }''')  # noqa: Q001
+    }"""
+    )
 
-    assert Model[dict].to_json_schema() == dedent('''\
+    assert Model[dict].to_json_schema() == dedent(
+        '''\
     {
       "title": "Model[dict]",
-      "description": "''' + std_description + '''",
+      "description": "'''
+        + std_description
+        + """",
       "type": "object"
-    }''')  # noqa: Q001
+    }"""
+    )
 
-    assert Model[list].to_json_schema() == dedent('''\
+    assert Model[list].to_json_schema() == dedent(
+        '''\
     {
       "title": "Model[list]",
-      "description": "''' + std_description + '''",
+      "description": "'''
+        + std_description
+        + """",
       "type": "array",
       "items": {}
-    }''')  # noqa: Q001
+    }"""
+    )
 
 
 def test_model_of_pydantic_model():
@@ -1753,7 +1723,8 @@ def test_model_of_pydantic_model():
     assert Model[MyPydanticModel]({'a': 'test', 'b': '12'}).to_data() == {'a': 'test', 'b': 12}
     assert Model[MyPydanticModel](a='test', b='12').to_data() == {'a': 'test', 'b': 12}
     assert Model[MyPydanticModel](MyPydanticModel(a='hello', b=34)).to_data() == {
-        'a': 'hello', 'b': 34
+        'a': 'hello',
+        'b': 34,
     }
 
     class MyPydanticModelNoDefaults(pyd.BaseModel):
@@ -1862,12 +1833,8 @@ def test_create_pydantic_model_subclass_with_wrappers() -> None:
         wrapped_parent(
             child={'value': '1'},
             children=[Child.construct(value='4')],
-            children_by_name={'FIRST': {
-                'value': '2'
-            }},
-            child_tuple=({
-                'value': '3'
-            },),
+            children_by_name={'FIRST': {'value': '2'}},
+            child_tuple=({'value': '3'},),
             numbers=['4', 5],
             metadata={'items': '6'},
             child_or_number=7,
@@ -1877,27 +1844,16 @@ def test_create_pydantic_model_subclass_with_wrappers() -> None:
             count='7',
             enabled=True,
             **{'@title': ' parent '},
-        ))
+        )
+    )
 
     assert model.to_data() == {
-        'child': {
-            'value': 1
-        },
-        'children': [{
-            'value': 4
-        }],
-        'children_by_name': {
-            'first': {
-                'value': 2
-            }
-        },
-        'child_tuple': ({
-            'value': 3
-        },),
+        'child': {'value': 1},
+        'children': [{'value': 4}],
+        'children_by_name': {'first': {'value': 2}},
+        'child_tuple': ({'value': 3},),
         'numbers': [4, 5],
-        'metadata': {
-            'items': 6
-        },
+        'metadata': {'items': 6},
         'child_or_number': 7,
         'optional_child': None,
         'required_optional_child': None,
@@ -1928,9 +1884,7 @@ def test_create_pydantic_model_subclass_with_wrappers_for_inherited_and_generic_
     assert issubclass(wrapped_child_of_parent, ChildOfParent)
     assert Model[ChildOfParent](wrapped_child_of_parent(child={'value': 1})).to_data() == {
         'children': [],
-        'child': {
-            'value': 1
-        },
+        'child': {'value': 1},
     }
     assert Model[GenericParent[list[int]]](wrapped_generic_parent(values=['1', 2])).to_data() == {
         'values': [1, 2]
@@ -1980,8 +1934,7 @@ def test_create_pydantic_model_subclass_with_wrappers_for_inherited_and_generic_
 
 
 def test_bordercase_models() -> None:
-    class MyGeneric(Generic[T]):
-        ...
+    class MyGeneric(Generic[T]): ...
 
     Model[type](list)
     Model[type | GenericAlias](list[int])
@@ -1998,7 +1951,8 @@ def _assert_no_snapshot(model: Model[T]):
 
 
 def test_weakly_referenced_snapshot_after_validation(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     Model.data_class_creator.snapshot_holder.clear()
     assert len(Model.data_class_creator.snapshot_holder._deepcopy_memo) == 0
 
@@ -2025,7 +1979,8 @@ def test_weakly_referenced_snapshot_after_validation(
 
 
 def test_weakly_referenced_snapshot_deepcopy_memo_entry(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     model = Model[list[int]]([123])
     snapshot_holder = model.snapshot_holder
     deepcopy_memo = snapshot_holder._deepcopy_memo
@@ -2078,7 +2033,9 @@ class ModelCase:
     ],
     ids=['Model[list[int]]', 'Model[MyList]'],
 )
-def model_case(case: ModelCase,) -> ModelCase:
+def model_case(
+    case: ModelCase,
+) -> ModelCase:
     """Provide the model case fixture."""
     return case
 
@@ -2122,7 +2079,8 @@ def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
     model.validate_content()
 
     assert len(deepcopy_memo) == (
-        model_case.deepcopy_memo_count if runtime.config.data.model.interactive else 0)
+        model_case.deepcopy_memo_count if runtime.config.data.model.interactive else 0
+    )
 
     if runtime.config.data.model.interactive:
         old_entry_memo_key = tuple(deepcopy_memo.keys())[0]
@@ -2132,7 +2090,8 @@ def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
     model.validate_content()
 
     assert len(deepcopy_memo) == (
-        model_case.deepcopy_memo_count if runtime.config.data.model.interactive else 0)
+        model_case.deepcopy_memo_count if runtime.config.data.model.interactive else 0
+    )
 
     if runtime.config.data.model.interactive:
         entry_memo_key = tuple(deepcopy_memo.keys())[0]
@@ -2145,7 +2104,8 @@ def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
 
 
 def test_snapshot_deepcopy_reuse_objects(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
     def _inner_test_snapshot_deepcopy_reuse_objects() -> None:
         Model.data_class_creator.snapshot_holder.clear()
 
@@ -2160,30 +2120,69 @@ def test_snapshot_deepcopy_reuse_objects(
         # assert len(Model[int]().snapshot_holder) == 3
         # assert len(Model[int]().snapshot_holder._deepcopy_memo) == 3  # type: ignore[attr-defined]
 
-        assert type(outer[1][-1]) is type(middle[-1]) is type(  # type: ignore[index]
-            inner) is Model[list[int]]
+        assert (
+            type(outer[1][-1])
+            is type(middle[-1])
+            is type(  # type: ignore[index]
+                inner
+            )
+            is Model[list[int]]
+        )
         assert id(outer[1][-1]) == id(middle[-1]) == id(inner)  # type: ignore[index]
 
-        assert type(outer.snapshot[1][-1]) is type(  # type: ignore[index]
-            middle.snapshot[-1]) is Model[list[int]]
+        assert (
+            type(outer.snapshot[1][-1])
+            is type(  # type: ignore[index]
+                middle.snapshot[-1]
+            )
+            is Model[list[int]]
+        )
         assert id(outer.snapshot[1][-1]) == id(middle.snapshot[-1])  # type: ignore[index]
 
-        assert type(outer[1][-1].content) is type(  # type: ignore[index]
-            middle[-1].content) is type(  # type: ignore[index]
-                inner.content) is list
-        assert id(outer[1][-1].content) == id(middle[-1].content) == id(  # type: ignore[index]
-            inner.content)
+        assert (
+            type(outer[1][-1].content)
+            is type(  # type: ignore[index]
+                middle[-1].content
+            )
+            is type(  # type: ignore[index]
+                inner.content
+            )
+            is list
+        )
+        assert (
+            id(outer[1][-1].content)
+            == id(middle[-1].content)
+            == id(  # type: ignore[index]
+                inner.content
+            )
+        )
 
-        assert type(outer.snapshot[1][-1].content) is type(  # type: ignore[index]
-            middle.snapshot[-1].content) is type(inner.snapshot) is list
-        assert id(outer.snapshot[1][-1].content) == id(  # type: ignore[index]
-            middle.snapshot[-1].content) == id(inner.snapshot)
+        assert (
+            type(outer.snapshot[1][-1].content)
+            is type(  # type: ignore[index]
+                middle.snapshot[-1].content
+            )
+            is type(inner.snapshot)
+            is list
+        )
+        assert (
+            id(outer.snapshot[1][-1].content)
+            == id(  # type: ignore[index]
+                middle.snapshot[-1].content
+            )
+            == id(inner.snapshot)
+        )
 
         assert type(outer[1].content) is type(middle.content) is list  # type: ignore[index]
         assert id(outer[1].content) == id(middle.content)  # type: ignore[index]
 
-        assert type(outer.snapshot[1].content) is type(  # type: ignore[union-attr]
-            middle.snapshot) is list
+        assert (
+            type(outer.snapshot[1].content)
+            is type(  # type: ignore[union-attr]
+                middle.snapshot
+            )
+            is list
+        )
         assert id(outer.snapshot[1].content) == id(middle.snapshot)  # type: ignore[union-attr]
 
         del outer
@@ -2201,7 +2200,8 @@ def test_snapshot_deepcopy_reuse_objects(
 
 
 def test_snapshot_deepcopy_reuse_ids_crash(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
 
     # for i in range(50):
     #     model_list = []
@@ -2209,8 +2209,7 @@ def test_snapshot_deepcopy_reuse_ids_crash(
     #         model = Model[list[int]]([])
     #         model.validate_content()
     #         model_list.append(model)
-    class MyModel(Model[list[list[int]]]):
-        ...
+    class MyModel(Model[list[list[int]]]): ...
 
     for j in range(50):
         model = MyModel()
@@ -2218,7 +2217,8 @@ def test_snapshot_deepcopy_reuse_ids_crash(
 
 
 def test_lazy_snapshot_not_triggered_by_empty_from_data(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
     model = Model[list[int]]()
     _assert_no_snapshot(model)
 
@@ -2227,7 +2227,8 @@ def test_lazy_snapshot_not_triggered_by_empty_from_data(
 
 
 def test_lazy_snapshot_not_triggered_by_set_content(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2250,7 +2251,8 @@ def test_lazy_snapshot_not_triggered_by_set_content(
 
 
 def test_lazy_snapshot_not_triggered_by_state_keeping_operator(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2264,7 +2266,8 @@ def test_lazy_snapshot_not_triggered_by_state_keeping_operator(
 
 
 def test_lazy_snapshot_triggered_by_state_changing_operator(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2299,7 +2302,8 @@ def test_lazy_snapshot_not_triggered_by_getitem(
 
 
 def test_lazy_snapshot_triggered_by_setitem(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2312,7 +2316,8 @@ def test_lazy_snapshot_triggered_by_setitem(
 
 
 def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2322,7 +2327,8 @@ def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
 
 
 def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2346,19 +2352,16 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
     #     value: Model[list[int]] = pyd.Field(default_factory=list)
 
     @mimics(SimplePydanticModelWitWrappedField)
-    class ModelOfSimplePydanticModel(Model[simple_pydantic_model_cls]):
-        ...
+    class ModelOfSimplePydanticModel(Model[simple_pydantic_model_cls]): ...
 
-    model = ModelOfSimplePydanticModel(
-        simple_pydantic_model_cls(value=[123]))  # type: ignore[arg-type]
+    model = ModelOfSimplePydanticModel(simple_pydantic_model_cls(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
     _assert_no_snapshot(model.content.value)
 
     # Just accessing a field of a pydantic model through __getattr__ is enough to trigger a snapshot
     # of the parent
     res_model = model.value
-    assert model.snapshot == model.content \
-           == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
 
     _assert_no_snapshot(res_model)
     assert res_model.content == [123]
@@ -2373,11 +2376,9 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     simple_pydantic_model_cls: Annotated[type[pyd.BaseModel], pc.fixture],
 ) -> None:
     @mimics(SimplePydanticModelWitWrappedField)
-    class ModelOfSimplePydanticModel(Model[simple_pydantic_model_cls]):
-        ...
+    class ModelOfSimplePydanticModel(Model[simple_pydantic_model_cls]): ...
 
-    model = ModelOfSimplePydanticModel(
-        simple_pydantic_model_cls(value=[123]))  # type: ignore[arg-type]
+    model = ModelOfSimplePydanticModel(simple_pydantic_model_cls(value=[123]))  # type: ignore[arg-type]
     _assert_no_snapshot(model)
 
     # Trying to set the value of a field of a pydantic model also triggers
@@ -2387,8 +2388,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     with pytest.raises(ValidationError):
         model.value = ['abc']
 
-    assert model.snapshot == model.content \
-           == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
 
     # The value of the field of the pydantic model is not changed, so no
     # snapshot is triggered for the child model.
@@ -2403,8 +2403,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     # parent due to the field access)
     with pytest.raises(ValidationError):
         model.value[0] = 'abc'
-    assert model.snapshot == model.content \
-           == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
     assert model.content.value.snapshot == model.content.value.content == [123]
 
     # Here the value of the field of the pydantic model is set to a new
@@ -2412,8 +2411,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     # model to replace the old. The new model does not have a snapshot by
     # default
     model.value = [234]
-    assert model.snapshot == model.content \
-           == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
     assert model.content.value.content == [234]
     _assert_no_snapshot(model.content.value)
 
@@ -2423,8 +2421,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     # incorrect state of the child model
     with pytest.raises(ValidationError):
         model.value.append('abc')
-    assert model.snapshot == model.content \
-           == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
     assert model.content.value.snapshot == model.content.value.content == [234]
 
     # Calling a method on the child model in the field of the pydantic
@@ -2446,8 +2443,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
 
     # Validating the parent model triggers snapshots for the parent, but not the child model.
     model.validate_content()
-    assert model.snapshot == model.content \
-           == simple_pydantic_model_cls(value=[234, 345])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[234, 345])  # type: ignore[arg-type]
     assert model.content.value.content == [234, 345]
     _assert_no_snapshot(model.content.value)
 
@@ -2457,7 +2453,8 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
 
 
 def test_snapshot_with_mimic_special_method(
-        skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture]) -> None:
+    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
+) -> None:
     model = Model[list[int]]([123])
 
     _assert_no_snapshot(model)
@@ -2509,7 +2506,8 @@ def test_snapshot_with_mimic_special_method(
 
 
 def test_repeated_validation_should_not_change_content_or_snapshot(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     model = Model[list[int]]([123])
 
     id_content = None
@@ -2598,7 +2596,8 @@ def test_mimic_callable_with_exception(runtime: Annotated[IsRuntime, pytest.fixt
 
 
 def test_mimic_validation_failure_recovery_with_interactive_mode(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     model = Model[list[int]]([12])
     assert model.content == [12]
 
@@ -2616,8 +2615,9 @@ def test_mimic_validation_failure_recovery_with_interactive_mode(
 
 
 def test_mimic_simple_list_operations(
-        runtime: Annotated[IsRuntime, pytest.fixture],
-        assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
     model = Model[list[int]]()
     assert len(model) == 0
 
@@ -2858,8 +2858,7 @@ def test_mimic_model_as_bool():
     true_model = Model[bool](True)
     assert True if true_model else False
 
-    class MyClass:
-        ...
+    class MyClass: ...
 
     myclass_model = Model[MyClass]()
     assert True if myclass_model else False
@@ -2870,8 +2869,7 @@ def test_mimic_call_method():
 
     assert callable_model(1) == 2
 
-    class MyClass:
-        ...
+    class MyClass: ...
 
     not_callable_class_model = Model[MyClass]()
     with pytest.raises(TypeError):
@@ -2936,27 +2934,33 @@ def test_mimic_sequence_convert_for_concat(
     assert_model(
         my_list_model + my_tuple_model,  # type: ignore[operator]
         list,
-        [1, 2, 3, 4, 5, 6])
+        [1, 2, 3, 4, 5, 6],
+    )
     assert_model(
         my_list_model + my_setdeque_model,  # type: ignore[operator]
         list,
-        [1, 2, 3, 7, 8, 9])
+        [1, 2, 3, 7, 8, 9],
+    )
     assert_model(
         my_tuple_model + my_list_model,  # type: ignore[operator]
         tuple,
-        (4, 5, 6, 1, 2, 3))
+        (4, 5, 6, 1, 2, 3),
+    )
     assert_model(
         my_tuple_model + my_setdeque_model,  # type: ignore[operator]
         tuple,
-        (4, 5, 6, 7, 8, 9))
+        (4, 5, 6, 7, 8, 9),
+    )
     assert_model(
         my_setdeque_model + my_list_model,  # type: ignore[operator]
         SetDeque[int] | list[int],
-        SetDeque((7, 8, 9, 1, 2, 3)))
+        SetDeque((7, 8, 9, 1, 2, 3)),
+    )
     assert_model(
         my_setdeque_model + my_tuple_model,  # type: ignore[operator]
         SetDeque[int] | list[int],
-        SetDeque((7, 8, 9, 4, 5, 6)))
+        SetDeque((7, 8, 9, 4, 5, 6)),
+    )
 
     #
     # Model + raw object concatenation
@@ -2965,21 +2969,25 @@ def test_mimic_sequence_convert_for_concat(
     assert_model(
         my_list_model + my_tuple,  # type: ignore[operator]
         list,
-        [1, 2, 3, 4, 5, 6])
+        [1, 2, 3, 4, 5, 6],
+    )
     assert_model(my_list_model + my_setdeque, list, [1, 2, 3, 7, 8, 9])  # type: ignore[operator]
     assert_model(
         my_tuple_model + my_list,  # type: ignore[operator]
         tuple,
-        (4, 5, 6, 1, 2, 3))
+        (4, 5, 6, 1, 2, 3),
+    )
     assert_model(my_tuple_model + my_setdeque, tuple, (4, 5, 6, 7, 8, 9))  # type: ignore[operator]
     assert_model(
         my_setdeque_model + my_list,  # type: ignore[operator]
         SetDeque[int] | list[int],
-        SetDeque((7, 8, 9, 1, 2, 3)))
+        SetDeque((7, 8, 9, 1, 2, 3)),
+    )
     assert_model(
         my_setdeque_model + my_tuple,  # type: ignore[operator]
         SetDeque[int] | list[int],
-        SetDeque((7, 8, 9, 4, 5, 6)))
+        SetDeque((7, 8, 9, 4, 5, 6)),
+    )
 
     #
     # Raw object + Model concatenation
@@ -2988,19 +2996,23 @@ def test_mimic_sequence_convert_for_concat(
     assert_model(
         my_list + my_tuple_model,  # type: ignore[operator]
         tuple,
-        (1, 2, 3, 4, 5, 6))
+        (1, 2, 3, 4, 5, 6),
+    )
     assert_model(
         my_list + my_setdeque_model,  # type: ignore[operator]
         SetDeque[int] | list[int],
-        SetDeque((1, 2, 3, 7, 8, 9)))
+        SetDeque((1, 2, 3, 7, 8, 9)),
+    )
     assert_model(
         my_tuple + my_list_model,  # type: ignore[operator]
         list,
-        [4, 5, 6, 1, 2, 3])
+        [4, 5, 6, 1, 2, 3],
+    )
     assert_model(
         my_tuple + my_setdeque_model,  # type: ignore[operator]
         SetDeque[int] | list[int],
-        SetDeque((4, 5, 6, 7, 8, 9)))
+        SetDeque((4, 5, 6, 7, 8, 9)),
+    )
     assert_model(my_setdeque + my_list_model, list, [7, 8, 9, 1, 2, 3])  # type: ignore[operator]
     assert_model(my_setdeque + my_tuple_model, tuple, (7, 8, 9, 4, 5, 6))  # type: ignore[operator]
 
@@ -3037,19 +3049,33 @@ def test_mimic_concatenation_for_converted_models(
 
     assert isinstance(stream, WordSplitterModel)
     assert stream.content == [
-        'Can', 'you', 'please', 'help', 'me?', "I've", 'fallen', 'and', 'I', "CAN'T", 'GET', 'UP!'
+        'Can',
+        'you',
+        'please',
+        'help',
+        'me?',
+        "I've",
+        'fallen',
+        'and',
+        'I',
+        "CAN'T",
+        'GET',
+        'UP!',
     ]
 
-    new_stream = ['Someone', 'is', 'shouting:'] + stream + (
-        UppercaseModel('- We should') + ' help them!')
+    new_stream = (
+        ['Someone', 'is', 'shouting:'] + stream + (UppercaseModel('- We should') + ' help them!')
+    )
 
     assert isinstance(new_stream, WordSplitterModel)
     if runtime.config.data.model.dynamically_convert_elements_to_models:
         joined_str = ' '.join(new_stream.content)
     else:
         joined_str = ' '.join(new_stream)
-    assert joined_str == ('Someone is shouting: Can you please help me? '
-                          "I've fallen and I CAN'T GET UP! - WE SHOULD HELP THEM!")
+    assert joined_str == (
+        'Someone is shouting: Can you please help me? '
+        "I've fallen and I CAN'T GET UP! - WE SHOULD HELP THEM!"
+    )
 
     assert_model_if_dyn_conv_else_val(new_stream[5], str, 'please')
 
@@ -3060,15 +3086,17 @@ def test_mimic_concatenation_for_converted_models(
     assert sentence.content == ['Can', 'you', 'pretty', 'please', 'help', 'me?']
 
 
-def test_mimic_concatenation_for_converted_models_with_incompatible_content_except_to_data(
-) -> None:
+def test_mimic_concatenation_for_converted_models_with_incompatible_content_except_to_data() -> (
+    None
+):
     assert not issubclass(MyList, list)
     assert not issubclass(MyList, Sequence)
 
     class MyListOfUppercaseModel(Model[MyList[UppercaseModel] | WordSplitterModel]):
         @classmethod
-        def _parse_data(cls,
-                        data: MyList[UppercaseModel] | WordSplitterModel) -> MyList[UppercaseModel]:
+        def _parse_data(
+            cls, data: MyList[UppercaseModel] | WordSplitterModel
+        ) -> MyList[UppercaseModel]:
             if isinstance(data, WordSplitterModel):
                 return MyList(*(UppercaseModel(word) for word in data.content))
             return data
@@ -3089,7 +3117,8 @@ def test_mimic_concatenation_for_converted_models_with_incompatible_content_exce
 
 
 def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
-        skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture]):
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
+):
     # Only __add__
     class ConcatChallengedStr:
         def __init__(self, data: str = ''):
@@ -3116,8 +3145,7 @@ def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
                 return str_variant_type(data)
             return data
 
-    class NarcissisticStrModel(ConcatChallengedStrModel[NarcissisticStr]):
-        ...
+    class NarcissisticStrModel(ConcatChallengedStrModel[NarcissisticStr]): ...
 
     narcissistic_str_model = NarcissisticStrModel('Me and only me!')
 
@@ -3140,8 +3168,7 @@ def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
         def __radd__(self, other: object) -> 'GrumpyStr':
             raise RuntimeError("Don't stand in front of me!")
 
-    class GrumpyStrModel(ConcatChallengedStrModel[GrumpyStr]):
-        ...
+    class GrumpyStrModel(ConcatChallengedStrModel[GrumpyStr]): ...
 
     grumpy_str_model = GrumpyStrModel('Hrmpf!')
 
@@ -3149,17 +3176,15 @@ def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
         grumpy_str_model + 'Excuse me...'
 
     with pytest.raises(ValueError):
-        grumpy_str_model += ('Sorry, but...')
+        grumpy_str_model += 'Sorry, but...'
 
     with pytest.raises(RuntimeError):
         'I just wondered...?' + grumpy_str_model
 
     # All of __add__, __iadd__ and __radd__
-    class GrumpyNarcissisticStr(GrumpyStr, NarcissisticStr):
-        ...
+    class GrumpyNarcissisticStr(GrumpyStr, NarcissisticStr): ...
 
-    class GrumpyNarcissisticStrModel(ConcatChallengedStrModel[GrumpyNarcissisticStr]):
-        ...
+    class GrumpyNarcissisticStrModel(ConcatChallengedStrModel[GrumpyNarcissisticStr]): ...
 
     grumpy_narcissistic_str_model = GrumpyNarcissisticStrModel('Me and only me! Hmrpf!')
 
@@ -3168,7 +3193,7 @@ def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
     assert new_grumpy_narcissistic_str_model.content == 'Me and only me! Hmrpf!'
 
     with pytest.raises(ValueError):
-        grumpy_narcissistic_str_model += ('Sorry, but...')
+        grumpy_narcissistic_str_model += 'Sorry, but...'
 
     with pytest.raises(RuntimeError):
         'I just wondered...?' + grumpy_narcissistic_str_model
@@ -3180,30 +3205,28 @@ def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
 @pc.parametrize('has_iadd', [False, True], ids=['no_iadd', 'has_iadd'])
 @pc.parametrize('has_radd', [False, True], ids=['no_radd', 'has_radd'])
 @pc.parametrize('has_add', [False, True], ids=['no_add', 'has_add'])
-def all_add_variants(has_add: bool,
-                     has_radd: bool,
-                     has_iadd: bool,
-                     other_type_in: bool,
-                     other_type_out: bool) -> tuple[bool, bool, bool, bool, bool]:
+def all_add_variants(
+    has_add: bool, has_radd: bool, has_iadd: bool, other_type_in: bool, other_type_out: bool
+) -> tuple[bool, bool, bool, bool, bool]:
     """Provide the all add variants fixture."""
     return has_add, has_radd, has_iadd, other_type_in, other_type_out
 
 
 @pc.fixture
 def all_less_than_five_model_add_variants(  # noqa: C901
-        all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],):
+    all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
+):
     """Provide the all less than five model add variants fixture."""
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
 
     ENGLISH_TO_NUMBER = {'one': 1, 'two': 2, 'three': 3, 'four': 4}
     NUMBER_TO_ENGLISH = {1: 'one', 2: 'two', 3: 'three', 4: 'four'}
 
-    class MyNumber(MyNumberBase):
-        ...
+    class MyNumber(MyNumberBase): ...
 
-    def _common_adder(self,
-                      adder_func: Callable[[MyNumber, MyNumber], MyNumber],
-                      other: MyNumber | str) -> MyNumber | str | NotImplementedType:
+    def _common_adder(
+        self, adder_func: Callable[[MyNumber, MyNumber], MyNumber], other: MyNumber | str
+    ) -> MyNumber | str | NotImplementedType:
         ret: MyNumber | str | NotImplementedType
         if isinstance(other, str):
             converted = ENGLISH_TO_NUMBER.get(other)
@@ -3491,8 +3514,10 @@ def test_mimic_nested_list_operations_only_model_at_top(
     with pytest.raises(ValidationError):
         model[0] += ('a',)  # type: ignore[index]
 
-    if not runtime.config.data.model.dynamically_convert_elements_to_models \
-            and not runtime.config.data.model.interactive:
+    if (
+        not runtime.config.data.model.dynamically_convert_elements_to_models
+        and not runtime.config.data.model.interactive
+    ):
         assert_val(model[0], list[int], [0, 2, 'a'])  # type: ignore[index]
         del model[0][-1]
     assert_model_if_dyn_conv_else_val(model[0], list[int], [0, 2])  # type: ignore[index]
@@ -3586,9 +3611,7 @@ def test_mimic_nested_dict_operations_only_model_at_top(
             assert_model_if_dyn_conv_else_val(
                 submodel_a,
                 dict[int, int],
-                {
-                    14: 456, '14': '654', '15': dict(a='b')
-                },
+                {14: 456, '14': '654', '15': dict(a='b')},
             )
             del submodel_a['15']
             assert_model_if_dyn_conv_else_val(submodel_a, dict[int, int], {14: 654})
@@ -3702,15 +3725,11 @@ def test_mimic_list_like_classes(
     'my_dict_model, model_supports_dyn_conv',
     [
         (
-            Model[MyDict[str, int]](MyDict({
-                'a': 0, 'b': 1, 'c': 2
-            })),
+            Model[MyDict[str, int]](MyDict({'a': 0, 'b': 1, 'c': 2})),
             True,
         ),
         (
-            Model[MyDict](MyDict({
-                'a': 0, 'b': 1, 'c': 2
-            })),
+            Model[MyDict](MyDict({'a': 0, 'b': 1, 'c': 2})),
             False,
         ),
         (
@@ -3726,7 +3745,7 @@ def test_mimic_list_like_classes(
         'Model[MyDict[str, int]]',
         'Model[MyDict]',
         'Model[MyStrKeyDict[int]]',
-        'Model[MyStrKeyDict]'
+        'Model[MyStrKeyDict]',
     ],
 )
 def test_mimic_dict_like_classes(
@@ -3799,8 +3818,7 @@ def test_mimic_list_operations_with_model_of_model(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    class MyListDoubleModel(Model[Model[list[int]]]):
-        ...
+    class MyListDoubleModel(Model[Model[list[int]]]): ...
 
     list_double_model = MyListDoubleModel([123])
 
@@ -3830,9 +3848,9 @@ def test_mimic_list_operations_with_model_of_model(
 
     # __add__
     assert_model(list_double_model + [234], Model[list[int]], Model[list[int]]([123, 234]))
-    assert_model(list_double_model + list_double_model,
-                 Model[list[int]],
-                 Model[list[int]]([123, 123]))
+    assert_model(
+        list_double_model + list_double_model, Model[list[int]], Model[list[int]]([123, 123])
+    )
 
     # __radd__
     assert_model([12] + list_double_model, Model[list[int]], Model[list[int]]([12, 123]))
@@ -3865,8 +3883,7 @@ def test_mimic_dict_operations_with_model_of_model(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    class MyDictDoubleModel(Model[Model[dict[str, int]]]):
-        ...
+    class MyDictDoubleModel(Model[Model[dict[str, int]]]): ...
 
     dict_double_model = MyDictDoubleModel({'1': 123})
 
@@ -3879,18 +3896,14 @@ def test_mimic_dict_operations_with_model_of_model(
     assert_model(
         dict_double_model_setitem,
         Model[dict[str, int]],
-        Model[dict[str, int]]({
-            '1': 123, '2': 432
-        }),
+        Model[dict[str, int]]({'1': 123, '2': 432}),
     )
 
     dict_double_model_setitem[2] = '234'
     assert_model(
         dict_double_model_setitem,
         Model[dict[str, int]],
-        Model[dict[str, int]]({
-            '1': 123, '2': 234
-        }),
+        Model[dict[str, int]]({'1': 123, '2': 234}),
     )
 
     # __delitem__
@@ -3899,52 +3912,40 @@ def test_mimic_dict_operations_with_model_of_model(
     assert_model(
         dict_double_model_delitem,
         Model[dict[str, int]],
-        Model[dict[str, int]]({
-            '1': 123
-        }),
+        Model[dict[str, int]]({'1': 123}),
     )
 
     # __or__
     assert_model(
         dict_double_model | {2: '234'},
         Model[dict[str, int]],
-        Model[dict[str, int]]({
-            '1': 123, '2': 234
-        }),
+        Model[dict[str, int]]({'1': 123, '2': 234}),
     )
     assert_model(
-        dict_double_model | Model[dict[int, str]]({
-            2: '234'
-        }),
+        dict_double_model | Model[dict[int, str]]({2: '234'}),
         Model[dict[str, int]],
-        Model[dict[str, int]]({
-            '1': 123, '2': 234
-        }),
+        Model[dict[str, int]]({'1': 123, '2': 234}),
     )
 
     # __ior__
     dict_double_model_ior = dict_double_model.copy()
     dict_double_model_ior |= {2: '234'}
-    assert_model(dict_double_model_ior,
-                 Model[dict[str, int]],
-                 Model[dict[str, int]]({
-                     '1': 123, '2': 234
-                 }))
+    assert_model(
+        dict_double_model_ior, Model[dict[str, int]], Model[dict[str, int]]({'1': 123, '2': 234})
+    )
 
     dict_double_model_ior |= Model[dict[int, str]]({3: '345'})
-    assert_model(dict_double_model_ior,
-                 Model[dict[str, int]],
-                 Model[dict[str, int]]({
-                     '1': 123, '2': 234, '3': 345
-                 }))
+    assert_model(
+        dict_double_model_ior,
+        Model[dict[str, int]],
+        Model[dict[str, int]]({'1': 123, '2': 234, '3': 345}),
+    )
 
     # __ror__
     assert_model(
         {2: '234'} | dict_double_model,
         Model[dict[str, int]],
-        Model[dict[str, int]]({
-            '1': 123, '2': 234
-        }),
+        Model[dict[str, int]]({'1': 123, '2': 234}),
     )
 
     # __contains__
@@ -3972,9 +3973,7 @@ def test_mimic_dict_operations_with_model_of_model(
     assert_model(
         dict_double_model_update,
         Model[dict[str, int]],
-        Model[dict[str, int]]({
-            '1': 123, '2': 234
-        }),
+        Model[dict[str, int]]({'1': 123, '2': 234}),
     )
 
 
@@ -3982,8 +3981,7 @@ def test_mimic_set_operations_with_model_of_model(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    class MySetDoubleModel(Model[Model[set[int]]]):
-        ...
+    class MySetDoubleModel(Model[Model[set[int]]]): ...
 
     set_double_model = MySetDoubleModel({123})
 
@@ -4040,8 +4038,7 @@ def test_mimic_operations_with_model_of_union_of_models(
     runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
-    class MyStrOrIntDoubleModel(Model[Model[int] | Model[str]]):
-        ...
+    class MyStrOrIntDoubleModel(Model[Model[int] | Model[str]]): ...
 
     str_or_int_double_model_str = MyStrOrIntDoubleModel('abc')
     str_or_int_double_model_int = MyStrOrIntDoubleModel(123)
@@ -4065,11 +4062,9 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
 ) -> None:
     # See test_mimic_doubly_nested_dyn_converted_containers_are_copies()
     # Explicit Model containers fixes this issue.
-    class MyListOrIntModel(Model[list[int] | int]):
-        ...
+    class MyListOrIntModel(Model[list[int] | int]): ...
 
-    class MyListModel(Model[list[MyListOrIntModel]]):
-        ...
+    class MyListModel(Model[list[MyListOrIntModel]]): ...
 
     model = MyListModel([123, 234, [345]])
 
@@ -4094,7 +4089,8 @@ def test_mimic_nested_list_operations_with_model_subclass_containers(
 
 
 def test_mimic_nested_dict_operations_with_model_containers(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
 
     # See test_mimic_doubly_nested_dyn_converted_containers_are_copies()
     # Explicit Model containers fixes this issue.
@@ -4150,16 +4146,13 @@ def test_mimic_nested_dict_operations_with_model_containers(
 
     model['a'] |= {'16': {'112': 5432}}  # type: ignore[index]
     content_2 = {
-        'a':
-            Model[SecondLvl]({
+        'a': Model[SecondLvl](
+            {
                 14: 654,
-                15: Model[ThirdLvl]({
-                    111: 4321
-                }),
-                16: Model[ThirdLvl]({
-                    112: 5432
-                }),
-            })
+                15: Model[ThirdLvl]({111: 4321}),
+                16: Model[ThirdLvl]({112: 5432}),
+            }
+        )
     }
     assert_model(model, FirstLvl, content_2)
 
@@ -4177,13 +4170,13 @@ def test_mimic_nested_dict_operations_with_model_containers(
 
     model['a'][15] = []  # type: ignore[index]
     content_3 = {
-        'a': Model[SecondLvl]({
-            14: 654,
-            15: Model[ThirdLvl]({}),
-            16: Model[ThirdLvl]({
-                112: 5432
-            }),
-        })
+        'a': Model[SecondLvl](
+            {
+                14: 654,
+                15: Model[ThirdLvl]({}),
+                16: Model[ThirdLvl]({112: 5432}),
+            }
+        )
     }
     assert_model(model, FirstLvl, content_3)
 
@@ -4236,7 +4229,8 @@ def test_mimic_operations_as_scalars() -> None:
 
     float_model = Model[float](10)
     assert (float_model / 3).content == pytest.approx(  # type: ignore[operator, attr-defined]
-        3.333333)
+        3.333333
+    )
 
     float_model_2 = Model[float](2.5)
     assert floor(float_model_2) == 2  # converting to other basic type removes Model
@@ -4282,21 +4276,17 @@ def test_mimic_operations_on_pydantic_models() -> None:
         b: str = ''
 
     @mimics(ParentPydModel)
-    class ParentModel(Model[ParentPydModel]):
-        ...
+    class ParentModel(Model[ParentPydModel]): ...
 
     @mimics(ChildPydModel)
-    class ChildModel(Model[ChildPydModel]):
-        ...
+    class ChildModel(Model[ChildPydModel]): ...
 
     # mimics() is not compatible with generic pydantic models, so we cannot
     # use it here.
-    class GenericParentModel(Model[GenericParentPydModel[T]], Generic[T]):
-        ...
+    class GenericParentModel(Model[GenericParentPydModel[T]], Generic[T]): ...
 
     @mimics(ChildOfGenericPydModel)
-    class ChildOfGenericModel(ChildOfGenericPydModel):
-        ...
+    class ChildOfGenericModel(ChildOfGenericPydModel): ...
 
     parent_model = ParentModel()
     assert parent_model.a == 0
@@ -4408,16 +4398,19 @@ called on the old instance, and not the new one.
 Conclusion: avoid grafting methods onto models instances. Dynamically grafting methods is in any
 case an advanced operation and does not follow Python best practices. Grafting instance variables
 or unbound methods should work as expected, see test_mimic_dynamically_bound_instance_variable.
-""")
+""",
+)
 def test_mimic_dynamically_bound_instance_method_known_issue(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     class MyClass:
         def __init__(self) -> None:
             self.called = False
 
     my_obj = MyClass()
     my_obj.method = MethodType(  # type: ignore[attr-defined]
-        lambda self: setattr(self, 'called', True), my_obj)
+        lambda self: setattr(self, 'called', True), my_obj
+    )
 
     model = Model[MyClass](my_obj)
     assert model.called is False
@@ -4431,7 +4424,8 @@ def test_mimic_dynamically_bound_instance_method_known_issue(
 
 
 def test_mimic_dynamically_bound_instance_variable(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     class MyClass:
         def toggle_if_available(self) -> None:
             if hasattr(self, 'toggle'):
@@ -4482,8 +4476,7 @@ def test_validation_and_mimic_enum_model() -> None:
         GREEN = 'green'
         BLUE = 'blue'
 
-    class ColorModel(Model[ColorEnum]):
-        ...
+    class ColorModel(Model[ColorEnum]): ...
 
     red_model = ColorModel('red')
 
@@ -4529,14 +4522,15 @@ def test_model_of_nested_pydantic_models(
     # The __init__() of the child model, detects that the input value is
     # another omnipy Model, assumes it is already validated and does not
     # revalidate it
-    model = MyPydanticParentModel[list[child_model_cls]]({
-        '@id': '1', 'children': [
-            {
-                '@id': '10', 'value': 1.23
-            },
-            invalid_child_model,
-        ]
-    })
+    model = MyPydanticParentModel[list[child_model_cls]](
+        {
+            '@id': '1',
+            'children': [
+                {'@id': '10', 'value': 1.23},
+                invalid_child_model,
+            ],
+        }
+    )
 
     assert model.content.id == 1
     assert len(model.content.children) == 2
@@ -4565,14 +4559,11 @@ def test_model_of_nested_pydantic_models(
 
     model.children[0].id = 11
     assert model.to_data() == {
-        '@id': 2, 'children': [
-            {
-                '@id': 11, 'value': 2.46
-            },
-            {
-                '@id': 12, 'value': 2.22
-            },
-        ]
+        '@id': 2,
+        'children': [
+            {'@id': 11, 'value': 2.46},
+            {'@id': 12, 'value': 2.22},
+        ],
     }
 
     with pytest.raises(ValidationError):
@@ -4594,9 +4585,9 @@ def test_model_of_pydantic_model_with_enum() -> None:
         decision: MyEnum
         regrets: MyStrEnum
 
-    my_pydantic_enum_model = Model[MyPydanticModelWithEnum]({
-        'decision': 'yes', 'regrets': MyStrEnum.MAYBE
-    })
+    my_pydantic_enum_model = Model[MyPydanticModelWithEnum](
+        {'decision': 'yes', 'regrets': MyStrEnum.MAYBE}
+    )
 
     # Pydantic models with enum as field by default store the enum member
     # Compare with test_validation_and_mimic_enum_model(). Omnipy always store the enum value
@@ -4624,9 +4615,9 @@ def test_model_of_pydantic_model_with_enum() -> None:
         class Config:
             use_enum_values = True
 
-    my_pydantic_enum_as_value_model = Model[MyPydanticModelWithEnumValues]({
-        'decision': 'maybe', 'regrets': MyStrEnum.YES
-    })
+    my_pydantic_enum_as_value_model = Model[MyPydanticModelWithEnumValues](
+        {'decision': 'maybe', 'regrets': MyStrEnum.YES}
+    )
 
     assert my_pydantic_enum_as_value_model.content.decision == 'maybe'
     assert my_pydantic_enum_as_value_model.content.regrets == 'yes'
@@ -4723,7 +4714,8 @@ In this case, the description of the generic class MyList
 is not available from MyListOfStrings to_json_schema method.
 Any workarounds should best be implemented in pydantic,
 possibly in omnipy if this becomes a real issue.
-""")
+""",
+)
 def test_json_schema_generic_models_known_issue() -> None:
     ListT = TypeVar('ListT', bound=list)
 
@@ -4804,7 +4796,14 @@ def test_nested_model() -> None:
     assert model_1.to_data() == {}
 
     product_factors = {
-        2: [2], 3: [3], 4: [2, 2], 5: [5], 6: [2, 3], 7: [7], 8: [2, 2, 2], 9: [3, 3]
+        2: [2],
+        3: [3],
+        4: [2, 2],
+        5: [5],
+        6: [2, 3],
+        7: [7],
+        8: [2, 2, 2],
+        9: [3, 3],
     }
     model_1.from_data(product_factors)
     assert model_1.to_data() == product_factors
@@ -4819,24 +4818,29 @@ def test_nested_model() -> None:
     model_1.from_data(unloaded_data)
     assert model_1.to_data() == unloaded_data
 
-    assert model_1.to_json(
-        pretty=False) == ('{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
-                          '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}')
+    assert model_1.to_json(pretty=False) == (
+        '{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
+        '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}'
+    )
 
     model_2 = DictToListOfPositiveInts()
-    model_2.from_json('{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
-                      '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}')
-    assert sorted(model_2.to_data()) == sorted({  # type: ignore[call-overload]
-        2: [2],
-        3: [3],
-        4: [2, 2],
-        5: [5],
-        6: [2, 3],
-        7: [7],
-        8: [2, 2, 2],
-        9: [3, 3],
-        10: [2, 5]
-    })
+    model_2.from_json(
+        '{"2": [2], "3": [3], "4": [2, 2], "5": [5], "6": [2, 3], '
+        '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}'
+    )
+    assert sorted(model_2.to_data()) == sorted(
+        {  # type: ignore[call-overload]
+            2: [2],
+            3: [3],
+            4: [2, 2],
+            5: [5],
+            6: [2, 3],
+            7: [7],
+            8: [2, 2, 2],
+            9: [3, 3],
+            10: [2, 5],
+        }
+    )
 
     assert model_1.to_json_schema() == dedent("""\
     {
@@ -4856,6 +4860,7 @@ def test_nested_model() -> None:
 def test_complex_nested_models() -> None:
     class ProductFactorsTuple(Model[tuple[pyd.PositiveInt, list[pyd.PositiveInt]]]):
         """This model maps a single product to its product_factors, including validation"""
+
         @classmethod
         def _parse_data(
             cls, data: tuple[pyd.PositiveInt, list[pyd.PositiveInt]]
@@ -4873,8 +4878,16 @@ def test_complex_nested_models() -> None:
     model = ListOfProductFactorsTuples()
     assert model.to_data() == []
 
-    product_factors_as_tuples = [(2, [2]), (3, [3]), (4, [2, 2]), (5, [5]), (6, [2, 3]), (7, [7]),
-                                 (8, [2, 2, 2]), (9, [3, 3])]
+    product_factors_as_tuples = [
+        (2, [2]),
+        (3, [3]),
+        (4, [2, 2]),
+        (5, [5]),
+        (6, [2, 3]),
+        (7, [7]),
+        (8, [2, 2, 2]),
+        (9, [3, 3]),
+    ]
 
     model.from_data(product_factors_as_tuples)
     assert model.to_data() == product_factors_as_tuples
@@ -4898,6 +4911,7 @@ def test_complex_nested_models() -> None:
     #       the RomanNumeral Model below, given that the if statement where removed.
     class RomanNumeral(Model[str]):
         """A roman numeral"""
+
         @classmethod
         def _parse_data(cls, data: str) -> str:
             if data in roman_numerals:
@@ -4915,15 +4929,18 @@ def test_complex_nested_models() -> None:
     roman_tuple_model = ListOfProductFactorsTuplesRoman(unloaded_data)
     roman_dict_model_1 = ProductFactorDictInRomanNumerals(roman_tuple_model.to_data())
 
-    assert roman_dict_model_1.to_json(
-        pretty=False) == ('{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
-                          '"VI": ["II", "III"], "VII": ["VII"], "VIII": ["II", "II", "II"], '
-                          '"IX": ["III", "III"], "X": ["II", "V"]}')
+    assert roman_dict_model_1.to_json(pretty=False) == (
+        '{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
+        '"VI": ["II", "III"], "VII": ["VII"], "VIII": ["II", "II", "II"], '
+        '"IX": ["III", "III"], "X": ["II", "V"]}'
+    )
 
     roman_dict_model_2 = ProductFactorDictInRomanNumerals()
-    roman_dict_model_2.from_json('{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
-                                 '"VI": ["II", "III"], "VII": ["VII"], "VIII": ["II", "II", "II"], '
-                                 '"IX": ["III", "III"], "X": ["II", "V"]}')
+    roman_dict_model_2.from_json(
+        '{"II": ["II"], "III": ["III"], "IV": ["II", "II"], "V": ["V"], '
+        '"VI": ["II", "III"], "VII": ["VII"], "VIII": ["II", "II", "II"], '
+        '"IX": ["III", "III"], "X": ["II", "V"]}'
+    )
     assert roman_dict_model_2.to_data() == {
         'II': ['II'],
         'III': ['III'],
@@ -4933,7 +4950,7 @@ def test_complex_nested_models() -> None:
         'VII': ['VII'],
         'VIII': ['II', 'II', 'II'],
         'IX': ['III', 'III'],
-        'X': ['II', 'V']
+        'X': ['II', 'V'],
     }
 
     assert roman_dict_model_1.to_json_schema() == dedent("""\
@@ -4957,8 +4974,7 @@ def test_pandas_dataframe_non_builtin_direct() -> None:
     # SetDeque() is a good candidate.
     from omnipy.components.pandas.lazy_import import pd
 
-    class PandasDataFrameModel(Model[pd.DataFrame]):
-        ...
+    class PandasDataFrameModel(Model[pd.DataFrame]): ...
 
     dataframe = pd.DataFrame([[1, 2, 3], [4, 5, 6]])
 

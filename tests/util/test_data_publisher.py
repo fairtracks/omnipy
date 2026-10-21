@@ -4,13 +4,15 @@ from typing import Annotated, Callable
 
 import pytest
 
-from .helpers.mocks import (MockAttrSubscriberCls,
-                            MockConfigSubscriberCls,
-                            MockDataPublisher,
-                            MockDataPublisherGrandParent,
-                            MockDataPublisherParent,
-                            MockFoo,
-                            MockParentConfigSubscriberCls)
+from .helpers.mocks import (
+    MockAttrSubscriberCls,
+    MockConfigSubscriberCls,
+    MockDataPublisher,
+    MockDataPublisherGrandParent,
+    MockDataPublisherParent,
+    MockFoo,
+    MockParentConfigSubscriberCls,
+)
 
 
 def test_subscribe_attr_defaults(
@@ -137,7 +139,8 @@ def test_subscribe_attr_setattr_two_subscribers(
 
 
 def test_subscribe_defaults(
-        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+    config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture],
+) -> None:
     config = MockDataPublisher()
 
     assert config_subscriber.config is not config
@@ -150,7 +153,8 @@ def test_subscribe_defaults(
 
 
 def test_subscribe_init_values(
-        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+    config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture],
+) -> None:
     foo = MockFoo()
     config = MockDataPublisher(foo=foo, text='foobar', number=0)
 
@@ -164,7 +168,8 @@ def test_subscribe_init_values(
 
 
 def test_subscribe_setattr_with_subscriber(
-        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+    config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture],
+) -> None:
     config = MockDataPublisher()
     config.subscribe(config_subscriber.set_config)
 
@@ -183,7 +188,8 @@ def test_subscribe_setattr_with_subscriber(
 
 
 def test_parent_subscribe_attr_defaults(
-        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+    config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture],
+) -> None:
     parent = MockDataPublisherParent()
 
     assert config_subscriber.config.foo is None
@@ -198,7 +204,8 @@ def test_parent_subscribe_attr_defaults(
 
 
 def test_parent_subscribe_attr_with_subscriber(
-        config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture]) -> None:
+    config_subscriber: Annotated[MockConfigSubscriberCls, pytest.fixture],
+) -> None:
     parent = MockDataPublisherParent()
     parent.subscribe_attr('config', config_subscriber.set_config)
 
@@ -217,7 +224,8 @@ def test_parent_subscribe_attr_with_subscriber(
 
 
 def test_nested_parent_subscribe_attr_defaults(
-        parent_config_subscriber: Annotated[MockParentConfigSubscriberCls, pytest.fixture]) -> None:
+    parent_config_subscriber: Annotated[MockParentConfigSubscriberCls, pytest.fixture],
+) -> None:
     grandparent = MockDataPublisherGrandParent()
 
     assert parent_config_subscriber.parent_config is not grandparent.parent_config
@@ -234,26 +242,34 @@ def test_nested_parent_subscribe_attr_defaults(
 
 
 def test_nested_parent_subscribe_attr_with_subscriber(
-        parent_config_subscriber: Annotated[MockParentConfigSubscriberCls, pytest.fixture]) -> None:
+    parent_config_subscriber: Annotated[MockParentConfigSubscriberCls, pytest.fixture],
+) -> None:
     grandparent = MockDataPublisherGrandParent()
     grandparent.subscribe_attr('parent_config', parent_config_subscriber.set_parent_config)
 
     parent_config_subscriber.parent_config = MockDataPublisherParent()
     other_foo = MockFoo()
     parent_config_subscriber.parent_config.config = MockDataPublisher(
-        foo=other_foo, text='foobar', number=0)
+        foo=other_foo, text='foobar', number=0
+    )
 
     foo = MockFoo()
     grandparent.parent_config.config.foo = foo
 
-    assert parent_config_subscriber.parent_config.config.foo \
-           is grandparent.parent_config.config.foo is foo
+    assert (
+        parent_config_subscriber.parent_config.config.foo
+        is grandparent.parent_config.config.foo
+        is foo
+    )
 
     foobar = MockFoo()
     grandparent.parent_config.config.foo = foobar
 
-    assert parent_config_subscriber.parent_config.config.foo \
-           is grandparent.parent_config.config.foo is foobar
+    assert (
+        parent_config_subscriber.parent_config.config.foo
+        is grandparent.parent_config.config.foo
+        is foobar
+    )
 
 
 def test_unsubscribe_all(

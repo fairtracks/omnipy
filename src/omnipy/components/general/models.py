@@ -12,11 +12,13 @@ from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
-from omnipy.util.helpers import (all_type_variants,
-                                 is_iterable,
-                                 is_non_str_byte_iterable,
-                                 is_package_editable,
-                                 is_union)
+from omnipy.util.helpers import (
+    all_type_variants,
+    is_iterable,
+    is_non_str_byte_iterable,
+    is_package_editable,
+    is_union,
+)
 
 if TYPE_CHECKING:
     from omnipy.data._typing.mimic_models import PlainModel
@@ -28,16 +30,20 @@ if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_INPUT'] = 'The input model or dataset type.'
 
     os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_FIRST_INTERMEDIATE'] = (
-        'The first intermediate model or dataset type.')
+        'The first intermediate model or dataset type.'
+    )
 
     os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_SECOND_INTERMEDIATE'] = (
-        'The second intermediate model or dataset type.')
+        'The second intermediate model or dataset type.'
+    )
 
     os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_THIRD_INTERMEDIATE'] = (
-        'The third intermediate model or dataset type.')
+        'The third intermediate model or dataset type.'
+    )
 
     os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_FOURTH_INTERMEDIATE'] = (
-        'The fourth intermediate model or dataset type.')
+        'The fourth intermediate model or dataset type.'
+    )
 
     os.environ['OMNIPY_MACRO_CHAIN_TYPEARG_OUTPUT'] = 'The output model or dataset type.'
 
@@ -77,13 +83,15 @@ class NotIterableExceptStrOrBytesModel(Model[object | None]):
         ``JsonScalarModel`` is a strict submodel because every JSON scalar also satisfies this
         model.
     """
+
     @classmethod
     def _parse_data(cls, data: object) -> object:
         if isinstance(data, NotIterableExceptStrOrBytesModel):
             return data
 
-        assert isinstance(data, str) or isinstance(data, bytes) or not is_iterable(data), \
+        assert isinstance(data, str) or isinstance(data, bytes) or not is_iterable(data), (
             f'Data of type {type(data)} is iterable'
+        )
 
         return data
 
@@ -108,6 +116,7 @@ _KeyT = TypeVar('_KeyT')
 
 class HasOuterType(Protocol):
     """Protocol for generic model classes that expose their outer type form."""
+
     @classmethod
     def outer_type(cls, with_args: bool = False) -> TypeForm:
         """Return the model's declared outer type.
@@ -136,8 +145,9 @@ class _ChainMixin:
         if isinstance(data, all_types[-1]):
             return data
 
-        assert isinstance(data, all_types[0]), \
+        assert isinstance(data, all_types[0]), (
             f'Expected data of type {all_types[0]}, got {type(data)}'
+        )
 
         # Run through the pipeline
         for _type in all_types[1:]:
@@ -197,6 +207,7 @@ if TYPE_CHECKING:
             >>> chain = om.Chain2[om.Model[Iterable[str]], om.Model[list[str]]]
             >>> chain('abc')
             Chain2[Model[Iterable[str]], Model[list[str]]](Model[list[str]](['a', 'b', 'c']))"""
+
         ...
 
     class Chain3(_ChainMixin, Model[_W], Generic[_U, _V, _W]):
@@ -240,6 +251,7 @@ if TYPE_CHECKING:
             W: The output model or dataset type.
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
+
         ...
 
     class Chain4(_ChainMixin, Model[_X], Generic[_U, _V, _W, _X]):
@@ -287,12 +299,13 @@ if TYPE_CHECKING:
             X: The output model or dataset type.
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
+
         ...
 
     class Chain5(
-            _ChainMixin,
-            Model[_Y],
-            Generic[_U, _V, _W, _X, _Y],
+        _ChainMixin,
+        Model[_Y],
+        Generic[_U, _V, _W, _X, _Y],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # Convert data through a five-model chain.
@@ -338,12 +351,13 @@ if TYPE_CHECKING:
             Y: The output model or dataset type.
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
+
         ...
 
     class Chain6(
-            _ChainMixin,
-            Model[_Z],
-            Generic[_U, _V, _W, _X, _Y, _Z],
+        _ChainMixin,
+        Model[_Z],
+        Generic[_U, _V, _W, _X, _Y, _Z],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # Convert data through a six-model chain.
@@ -391,6 +405,7 @@ if TYPE_CHECKING:
             Z: The output model or dataset type.
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
+
         ...
 
 else:
@@ -444,6 +459,7 @@ else:
             >>> chain = om.Chain2[om.Model[Iterable[str]], om.Model[list[str]]]
             >>> chain('abc')
             Chain2[Model[Iterable[str]], Model[list[str]]](Model[list[str]](['a', 'b', 'c']))"""
+
         ...
 
     class Chain3(_ChainMixin, Model[_W | TypeVarStore1[_V] | _U], Generic[_U, _V, _W]):
@@ -487,11 +503,12 @@ else:
             W: The output model or dataset type.
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
+
         ...
 
-    class Chain4(_ChainMixin,
-                 Model[_X | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
-                 Generic[_U, _V, _W, _X]):
+    class Chain4(
+        _ChainMixin, Model[_X | TypeVarStore2[_W] | TypeVarStore1[_V] | _U], Generic[_U, _V, _W, _X]
+    ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # Convert data through a four-model chain.
         #
@@ -536,12 +553,13 @@ else:
             X: The output model or dataset type.
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
+
         ...
 
     class Chain5(
-            _ChainMixin,
-            Model[_Y | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
-            Generic[_U, _V, _W, _X, _Y],
+        _ChainMixin,
+        Model[_Y | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V] | _U],
+        Generic[_U, _V, _W, _X, _Y],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # Convert data through a five-model chain.
@@ -587,13 +605,15 @@ else:
             Y: The output model or dataset type.
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
+
         ...
 
     class Chain6(
-            _ChainMixin,
-            Model[_Z | TypeVarStore4[_Y] | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V]
-                  | _U],
-            Generic[_U, _V, _W, _X, _Y, _Z],
+        _ChainMixin,
+        Model[
+            _Z | TypeVarStore4[_Y] | TypeVarStore3[_X] | TypeVarStore2[_W] | TypeVarStore1[_V] | _U
+        ],
+        Generic[_U, _V, _W, _X, _Y, _Z],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # Convert data through a six-model chain.
@@ -641,6 +661,7 @@ else:
             Z: The output model or dataset type.
 
         See [`Chain2`][omnipy.components.general.models.Chain2] for an example."""
+
         ...
 
 
@@ -662,6 +683,7 @@ class GroupByTypeModel(Chain2[Model[list], Model[dict[type | GenericAlias, list]
         >>> GroupByTypeModel([1, 'a', 2, [3], ['b']]).to_data()
         {<class 'int'>: [1, 2], <class 'str'>: ['a'], list[int]: [[3]], list[str]: [['b']]}
     """
+
     @classmethod
     def _parse_data(cls, data: Model[list]) -> Model[dict[type | GenericAlias, list]]:
         grouped: dict[type, list] = defaultdict(list)
@@ -695,28 +717,23 @@ if TYPE_CHECKING:  # noqa: C901
     class ConverterModel(PlainModel[_ToT], Generic[_FromT, _ToT]):
         @property
         @override
-        def content(self) -> _ToT:
-            ...
+        def content(self) -> _ToT: ...
 
         @content.setter
         @override
-        def content(self, value: _FromT | _ToT) -> None:
-            ...
+        def content(self, value: _FromT | _ToT) -> None: ...
 
         @classmethod
-        def convert(cls, data: _FromT) -> _ToT:
-            ...
+        def convert(cls, data: _FromT) -> _ToT: ...
 
         @classmethod
-        def convert_all(cls, sequence_data: Sequence[_FromT]) -> Iterator[_ToT]:
-            ...
+        def convert_all(cls, sequence_data: Sequence[_FromT]) -> Iterator[_ToT]: ...
 
         @classmethod
         def convert_all_items(
             cls,
             mapping_data: Mapping[_KeyT, _FromT],
-        ) -> Iterator[tuple[_KeyT, _ToT]]:
-            ...
+        ) -> Iterator[tuple[_KeyT, _ToT]]: ...
 else:
 
     class ConverterModel(Model[_FromT | _ToT], ABC, Generic[_FromT, _ToT]):
@@ -733,10 +750,10 @@ else:
                         'Parameterized generics not allowed for FromT: '
                         f'{from_t_variant}. If you want to use a generic '
                         'type, wrap it in a Model subclass instead, e.g.:'
-                        f'Model[{from_t_variant}].',)
+                        f'Model[{from_t_variant}].',
+                    )
                 if from_t_variant == to_t:
-                    raise TypeError('FromT and ToT cannot be the same '
-                                    f'type: {from_t_variant}.')
+                    raise TypeError(f'FromT and ToT cannot be the same type: {from_t_variant}.')
             return super().__class_getitem__(params)  # type: ignore[arg-type]
 
         @property
@@ -752,8 +769,7 @@ else:
 
         @classmethod
         @abstractmethod
-        def _convert(cls, data: _FromT) -> _ToT:
-            ...
+        def _convert(cls, data: _FromT) -> _ToT: ...
 
         @classmethod
         def _parse_data(cls, data: _FromT | _ToT) -> _ToT:

@@ -15,7 +15,8 @@ from omnipy.shared.exceptions import ShouldNotOccurException
 
 
 def get_pretty_printer_from_config_value(
-        pretty_printer: PrettyPrinterLib.Literals) -> PrettyPrinter | None:
+    pretty_printer: PrettyPrinterLib.Literals,
+) -> PrettyPrinter | None:
     """Return an explicit pretty-printer selected by configuration."""
 
     match pretty_printer:
@@ -70,27 +71,30 @@ def get_pretty_printer_from_content(draft_panel: DraftPanel, default: bool) -> P
     """Choose a pretty-printer based on the panel content type."""
 
     for pretty_printer in [
-            CompactJsonPrettyPrinter(),
-            ColumnPrettyPrinter(),
-            HexdumpPrettyPrinter(),
-            CodePrettyPrinter(),
-            RichPrettyPrinter(),
-            DevtoolsPrettyPrinter(),
-            PlainTextPrettyPrinter(),
+        CompactJsonPrettyPrinter(),
+        ColumnPrettyPrinter(),
+        HexdumpPrettyPrinter(),
+        CodePrettyPrinter(),
+        RichPrettyPrinter(),
+        DevtoolsPrettyPrinter(),
+        PlainTextPrettyPrinter(),
     ]:
         if pretty_printer.is_suitable_content(draft_panel.content, default=default):
             return pretty_printer
 
     if default:
-        raise ShouldNotOccurException('No pretty printer found for content, even with '
-                                      'default=True. This should not happen, as a default '
-                                      'pretty printer should be defined for any content.')
+        raise ShouldNotOccurException(
+            'No pretty printer found for content, even with '
+            'default=True. This should not happen, as a default '
+            'pretty printer should be defined for any content.'
+        )
     else:
         return None
 
 
 def get_pretty_printer_from_syntax(
-        syntax: SyntaxLanguageSpec.Literals | str) -> PrettyPrinter | None:
+    syntax: SyntaxLanguageSpec.Literals | str,
+) -> PrettyPrinter | None:
     """Choose a pretty-printer based on the requested syntax language."""
 
     # Note: Python syntax is explicitly not checked for here, as this

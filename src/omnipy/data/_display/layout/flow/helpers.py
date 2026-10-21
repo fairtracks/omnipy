@@ -8,9 +8,11 @@ from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHe
 from omnipy.data._display.frame import AnyFrame, Frame
 from omnipy.data._display.layout.base import Layout
 from omnipy.data._display.panel.base import panel_is_dimensions_aware
-from omnipy.data._display.panel.draft.base import (DimensionsAwareDraftPanel,
-                                                   DimensionsAwareDraftPanelLayout,
-                                                   DraftPanel)
+from omnipy.data._display.panel.draft.base import (
+    DimensionsAwareDraftPanel,
+    DimensionsAwareDraftPanelLayout,
+    DraftPanel,
+)
 from omnipy.data._display.panel.draft.layout import ResizedLayoutDraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameInvT, FrameT
 from omnipy.shared.enums.display import PrettyPrinterLib
@@ -50,8 +52,9 @@ def create_panel_with_updated_frame(
         ),
     )
     if not panel_is_dimensions_aware(new_draft_panel):
-        return cast(DimensionsAwareDraftPanel[ContentT, FrameInvT],
-                    new_draft_panel.render_next_stage())
+        return cast(
+            DimensionsAwareDraftPanel[ContentT, FrameInvT], new_draft_panel.render_next_stage()
+        )
     else:
         return cast(DimensionsAwareDraftPanel[ContentT, FrameInvT], new_draft_panel)
 
@@ -86,6 +89,7 @@ class LayoutFlowContext(Generic[FrameT]):
         dim_aware_layout: Dimensions-aware version of the layout
         keys_of_resizable_panels: Set of panel keys that can be resized
     """
+
     input_layout_panel: DraftPanel[Layout[DraftPanel], FrameT]
     draft_layout: Layout[DraftPanel]
     dim_aware_layout: DimensionsAwareDraftPanelLayout
@@ -107,7 +111,8 @@ class LayoutFlowContext(Generic[FrameT]):
         self._init_keys_of_removed_panels(keys_of_removed_panels)
 
     def _init_dim_aware_layout(
-            self, dim_aware_layout: DimensionsAwareDraftPanelLayout | pyd.UndefinedType) -> None:
+        self, dim_aware_layout: DimensionsAwareDraftPanelLayout | pyd.UndefinedType
+    ) -> None:
         if isinstance(dim_aware_layout, pyd.UndefinedType):
             # Create a dimensions-aware layout from the draft layout
             initial_resized_panel = ResizedLayoutDraftPanel.create_from_draft_panel(
@@ -268,8 +273,9 @@ class LayoutFlowContext(Generic[FrameT]):
         """
         delta_width = self._delta_width
         if delta_width is None:
-            raise ValueError('Extra width is not available. '
-                             'Please check "extra_width_available" first.')
+            raise ValueError(
+                'Extra width is not available. Please check "extra_width_available" first.'
+            )
         return delta_width
 
     @property
@@ -340,16 +346,19 @@ class LayoutFlowContext(Generic[FrameT]):
             List of keys for remaining panels in the layout
         """
         return tuple(
-            key for key in self.dim_aware_layout.keys() if key not in self.keys_of_removed_panels)
+            key for key in self.dim_aware_layout.keys() if key not in self.keys_of_removed_panels
+        )
 
     def changed_since(self, prev_context: 'LayoutFlowContext') -> bool:
         """
         Check if the layout dimensions or set of resizable panels have
         changed in comparison to a previous context.
         """
-        return not (self.layout_dims == prev_context.layout_dims
-                    and self.keys_of_resizable_panels == prev_context.keys_of_resizable_panels
-                    and self.keys_of_removed_panels == prev_context.keys_of_removed_panels)
+        return not (
+            self.layout_dims == prev_context.layout_dims
+            and self.keys_of_resizable_panels == prev_context.keys_of_resizable_panels
+            and self.keys_of_removed_panels == prev_context.keys_of_removed_panels
+        )
 
     def resizable_panel(self, key: str) -> bool:
         """
@@ -411,6 +420,7 @@ class PanelResizeHelper:
         frame_width: Current frame width
         frame_height: Current frame height
     """
+
     draft_panel: DraftPanel
     dim_aware_panel: DimensionsAwareDraftPanel
     frame_width: pyd.NonNegativeInt | None = None
@@ -495,8 +505,11 @@ class PanelResizeHelper:
             True if the new frame width is less than the original frame width,
             False otherwise
         """
-        return (has_width(self.new_frame.dims) and has_width(self.orig_frame.dims)
-                and self.new_frame.dims.width < self.orig_frame.dims.width)
+        return (
+            has_width(self.new_frame.dims)
+            and has_width(self.orig_frame.dims)
+            and self.new_frame.dims.width < self.orig_frame.dims.width
+        )
 
     @cached_property
     def new_resized_panel(self) -> DimensionsAwareDraftPanel:

@@ -79,36 +79,44 @@ if not __all__:
     from omnipy.components.raw.utils import RegexMatch
     from omnipy.components.tables.models import PydanticRecordModel
     from omnipy.compute._job import JobTemplateMixin
-    from omnipy.compute.flow import (DagFlow,
-                                     DagFlowTemplate,
-                                     FuncFlow,
-                                     FuncFlowTemplate,
-                                     LinearFlow,
-                                     LinearFlowTemplate)
+    from omnipy.compute.flow import (
+        DagFlow,
+        DagFlowTemplate,
+        FuncFlow,
+        FuncFlowTemplate,
+        LinearFlow,
+        LinearFlowTemplate,
+    )
     from omnipy.compute.helpers import Void
     from omnipy.compute.task import Task, TaskTemplate
     from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
-    from omnipy.data.model import (is_model_instance,
-                                   is_model_subclass,
-                                   is_non_omnipy_pydantic_model_instance,
-                                   is_pure_pydantic_model_instance,
-                                   Model)
+    from omnipy.data.model import (
+        is_model_instance,
+        is_model_subclass,
+        is_non_omnipy_pydantic_model_instance,
+        is_pure_pydantic_model_instance,
+        Model,
+    )
     from omnipy.data.multi import MultiModelDataset
-    from omnipy.data.param import (bind_adjust_dataset_func,
-                                   bind_adjust_model_func,
-                                   params_dataclass,
-                                   ParamsBase)
+    from omnipy.data.param import (
+        bind_adjust_dataset_func,
+        bind_adjust_model_func,
+        params_dataclass,
+        ParamsBase,
+    )
     from omnipy.hub.runtime import runtime
     from omnipy.hub.ui import setup_jupyter_ui
     from omnipy.shared.enums.data import BackoffStrategy
-    from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
-                                         ConfigPersistOutputsOptions,
-                                         ConfigRestoreOutputsOptions,
-                                         EngineChoice,
-                                         OutputStorageProtocolOptions,
-                                         PersistOutputsOptions,
-                                         RestoreOutputsOptions,
-                                         RunState)
+    from omnipy.shared.enums.job import (
+        ConfigOutputStorageProtocolOptions,
+        ConfigPersistOutputsOptions,
+        ConfigRestoreOutputsOptions,
+        EngineChoice,
+        OutputStorageProtocolOptions,
+        PersistOutputsOptions,
+        RestoreOutputsOptions,
+        RunState,
+    )
     from omnipy.util._placeholder import F, m, x
     from omnipy.util.contexts import print_exception
     from omnipy.util.helpers import recursive_module_import_new
@@ -173,17 +181,21 @@ if not __all__:
                 if attr in _exclude_attrs or not val.__class__.__module__.startswith('omnipy'):
                     continue
 
-                if lenient_issubclass(val, Model) \
-                        or lenient_issubclass(val, Dataset) \
-                        or lenient_isinstance(val, JobTemplateMixin) \
-                        or lenient_issubclass(val, LiteralEnum):
+                if (
+                    lenient_issubclass(val, Model)
+                    or lenient_issubclass(val, Dataset)
+                    or lenient_isinstance(val, JobTemplateMixin)
+                    or lenient_issubclass(val, LiteralEnum)
+                ):
                     print(f'Adding {attr}')
                     _all_element_names.add(attr)
                     globals()[attr] = val
                     __all__.append(attr)
 
     print(f'Missing elements in omnipy.__init__(): {_all_element_names - _omnipy_all}')
-    print(f'Missing elements in hardcoded __all__ in _dynamic_all(): '
-          f'{_omnipy_all - _all_element_names}')
+    print(
+        f'Missing elements in hardcoded __all__ in _dynamic_all(): '
+        f'{_omnipy_all - _all_element_names}'
+    )
 
     del JobTemplateMixin

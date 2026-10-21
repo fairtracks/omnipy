@@ -15,8 +15,10 @@ from unittest import mock
 import pytest
 import pytest_cases as pc
 
-from omnipy.components.prefect.lazy_import import (prefect_test_config_context,
-                                                   prefect_test_harness_context)
+from omnipy.components.prefect.lazy_import import (
+    prefect_test_config_context,
+    prefect_test_harness_context,
+)
 from omnipy.compute._job_creator import JobBaseMeta, JobCreator
 from omnipy.config.data import ModelConfig
 from omnipy.config.root_log import RootLogConfig
@@ -31,6 +33,7 @@ from .helpers.protocols import AssertModelOrValFunc
 
 def pytest_configure(config) -> None:  # noqa
     import omnipy.hub.runtime
+
     omnipy.hub.runtime.runtime = None
 
 
@@ -89,6 +92,7 @@ def runtime_cls(
     teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
 ) -> Type[IsRuntime]:
     from omnipy.hub.runtime import Runtime
+
     return Runtime
 
 
@@ -123,8 +127,10 @@ def runtime(runtime_default_config_with_tmp_dir: Annotated[IsRuntime, pytest.fix
 @pytest.fixture(scope='function')
 def mock_datetime() -> datetime:
     """Provide a datetime object with a stable now() value."""
+
     class MockDatetime(datetime):
         """Datetime subclass that freezes now() per instance."""
+
         def __init__(self, *args: object, **kwargs: object):
             self._now = datetime.now()
 
@@ -136,7 +142,8 @@ def mock_datetime() -> datetime:
 
 @pytest.fixture(scope='function')
 def assert_empty_snapshot_holder_and_deepcopy_memo(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> Callable[[], None]:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> Callable[[], None]:
     """Return a checker that asserts snapshot state is empty."""
     snapshot_holder = runtime.objects.data_class_creator.snapshot_holder
 
@@ -149,13 +156,16 @@ def assert_empty_snapshot_holder_and_deepcopy_memo(
             assert snapshot_holder.all_are_empty()
         except AssertionError:
             try:
-                print(f"\n{NOT_EMPTY_ERROR.format('')}"
-                      f'Running garbage collection and trying again...')
+                print(
+                    f'\n{NOT_EMPTY_ERROR.format("")}Running garbage collection and trying again...'
+                )
                 gc.collect()
                 snapshot_holder.delete_scheduled_deepcopy_content_ids()
             except AssertionError:
-                print(f"\n{NOT_EMPTY_ERROR.format(' still')}"
-                      f'Running garbage collection and trying last time...')
+                print(
+                    f'\n{NOT_EMPTY_ERROR.format(" still")}'
+                    f'Running garbage collection and trying last time...'
+                )
                 gc.collect()
                 snapshot_holder.delete_scheduled_deepcopy_content_ids()
 
@@ -171,7 +181,8 @@ def assert_empty_snapshot_holder_and_deepcopy_memo(
 
 @pytest.fixture(scope='function')
 def assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after(
-        assert_empty_snapshot_holder_and_deepcopy_memo: Callable[[], None]) -> Iterator[None]:
+    assert_empty_snapshot_holder_and_deepcopy_memo: Callable[[], None],
+) -> Iterator[None]:
     """Assert empty snapshot state before and after each test."""
 
     assert_empty_snapshot_holder_and_deepcopy_memo()
@@ -185,8 +196,9 @@ def assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after(
 @pc.parametrize(interactive=[True, False], dyn_convert=[False, True])
 def runtime_data_config_variants(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after: Annotated[Callable[[], None],
-                                                                               pytest.fixture],
+    assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after: Annotated[
+        Callable[[], None], pytest.fixture
+    ],
     interactive: bool,
     dyn_convert: bool,
 ) -> IsRuntime:
@@ -215,7 +227,8 @@ def skip_test_if_not_interactive_mode(runtime: Annotated[IsRuntime, pytest.fixtu
 
 @pytest.fixture(scope='function')
 def skip_test_if_dynamically_convert_elements_to_models(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     """Skip tests when dynamic model conversion is enabled."""
     pass
     if runtime.config.data.model.dynamically_convert_elements_to_models:
@@ -224,7 +237,8 @@ def skip_test_if_dynamically_convert_elements_to_models(
 
 @pytest.fixture(scope='function')
 def skip_test_if_not_dynamically_convert_elements_to_models(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     """Skip tests when dynamic model conversion is disabled."""
     pass
     if not runtime.config.data.model.dynamically_convert_elements_to_models:
@@ -233,18 +247,22 @@ def skip_test_if_not_dynamically_convert_elements_to_models(
 
 @pytest.fixture(scope='function')
 def skip_test_if_not_default_data_config_values(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
     """Skip tests unless runtime data config matches defaults."""
     if any(
-            getattr(runtime.config.data.model, attr) != getattr(ModelConfig(), attr)
-            for attr in ('interactive', 'dynamically_convert_elements_to_models')):
+        getattr(runtime.config.data.model, attr) != getattr(ModelConfig(), attr)
+        for attr in ('interactive', 'dynamically_convert_elements_to_models')
+    ):
         pytest.skip('This test only runs with default data config values')
 
 
 @pytest.fixture(scope='function')
 def assert_model_if_dyn_conv_else_val(
-        runtime: Annotated[IsRuntime, pytest.fixture]) -> AssertModelOrValFunc:
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> AssertModelOrValFunc:
     """Return an assertion helper for model or plain-value access."""
+
     def _assert_model_if_dyn_convert_else_val(
         model_or_val: object,
         target_type: TypeForm,

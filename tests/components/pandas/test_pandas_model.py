@@ -18,15 +18,9 @@ if TYPE_CHECKING:
 def list_of_dicts_data_with_missing() -> Annotated[JsonListOfDictsOfScalars, pytest.fixture]:
     """Return list-of-dict data with missing fields across rows."""
     return [
-        {
-            'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'
-        },
-        {
-            'int': -3, 'bool': False
-        },
-        {
-            'float': 14.3, 'str': 'def'
-        },
+        {'int': 12, 'float': 12.1, 'bool': True, 'str': 'abc'},
+        {'int': -3, 'bool': False},
+        {'float': 14.3, 'str': 'def'},
     ]
 
 
@@ -49,7 +43,7 @@ def dict_of_lists_data_with_nones() -> Annotated[JsonDictOfListsOfScalars, pytes
         'bool': [True, False, None],
         'float': [12.1, None, 14.3],
         'int': [12, -3, None],
-        'str': ['abc', None, 'def']
+        'str': ['abc', None, 'def'],
     }
 
 
@@ -106,8 +100,7 @@ def test_convert_pandas_model_to_dataset() -> None:
     assert dataset.to_data() == pandas_model.to_data()
 
 
-def test_pandas_model_from_json_to_json():
-    ...
+def test_pandas_model_from_json_to_json(): ...
 
 
 def test_operation_pandas():

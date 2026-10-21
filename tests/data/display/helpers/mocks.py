@@ -12,9 +12,11 @@ from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHe
 from omnipy.data._display.frame import AnyFrame, Frame
 from omnipy.data._display.helpers import soft_wrap_words
 from omnipy.data._display.panel.base import OutputVariant
-from omnipy.data._display.panel.draft.base import (DimensionsAwareDraftPanel,
-                                                   DraftPanel,
-                                                   FullyRenderedDraftPanel)
+from omnipy.data._display.panel.draft.base import (
+    DimensionsAwareDraftPanel,
+    DraftPanel,
+    FullyRenderedDraftPanel,
+)
 from omnipy.data._display.panel.styling.output import OutputMode
 import omnipy.util.pydantic as pyd
 
@@ -22,6 +24,7 @@ import omnipy.util.pydantic as pyd
 @pyd.dataclass(init=False, frozen=True)
 class MockPanelBase(DraftPanel[str, AnyFrame]):
     """Define mock Panel Base."""
+
     _dims_aware_panel_cls: ClassVar[type[DimensionsAwareDraftPanel]] = field(init=False)
 
     def __init__(self, content: str = '', frame=None, title='', constraints=None, config=None):
@@ -57,6 +60,7 @@ class MockPanelBase(DraftPanel[str, AnyFrame]):
 @pyd.dataclass(init=False, frozen=True)
 class MockDimsAwarePanelBase(DimensionsAwareDraftPanel[Any, AnyFrame], ABC):
     """Define mock Dims Aware Panel Base."""
+
     _fully_rendered_panel_cls: ClassVar[type[FullyRenderedDraftPanel]] = field(init=False)
 
     @override
@@ -71,8 +75,7 @@ class MockDimsAwarePanelBase(DimensionsAwareDraftPanel[Any, AnyFrame], ABC):
 
     @cached_property
     @abstractmethod
-    def _content_lines(self) -> list[str]:
-        ...
+    def _content_lines(self) -> list[str]: ...
 
     @cached_property
     def dims(self) -> DimensionsWithWidthAndHeight:
@@ -84,6 +87,7 @@ class MockDimsAwarePanelBase(DimensionsAwareDraftPanel[Any, AnyFrame], ABC):
 
 class MockOutputVariantBase(OutputVariant):
     """Define mock Output Variant Base."""
+
     def __init__(
         self,
         content_lines: list[str],
@@ -100,32 +104,29 @@ class MockOutputVariantBase(OutputVariant):
         lines: list[str],
         frame: Frame,
         config: OutputConfig,
-    ) -> list[str]:
-        ...
+    ) -> list[str]: ...
 
 
 @pyd.dataclass(init=False, frozen=True)
 class MockFullyRenderedPanelBase(FullyRenderedDraftPanel[Any, AnyFrame], MockDimsAwarePanelBase):
     """Define mock Fully Rendered Panel Base."""
+
     _output_variant_cls: ClassVar[type[MockOutputVariantBase]] = field(init=False)
 
     @cached_property
     def plain(self) -> OutputVariant:
-        return self._output_variant_cls(self._content_lines,
-                                        self.frame,
-                                        self.config,
-                                        OutputMode.PLAIN)
+        return self._output_variant_cls(
+            self._content_lines, self.frame, self.config, OutputMode.PLAIN
+        )
 
     @cached_property
     def bw_stylized(self) -> OutputVariant:
-        return self._output_variant_cls(self._content_lines,
-                                        self.frame,
-                                        self.config,
-                                        OutputMode.BW_STYLIZED)
+        return self._output_variant_cls(
+            self._content_lines, self.frame, self.config, OutputMode.BW_STYLIZED
+        )
 
     @cached_property
     def colorized(self) -> OutputVariant:
-        return self._output_variant_cls(self._content_lines,
-                                        self.frame,
-                                        self.config,
-                                        OutputMode.COLORIZED)
+        return self._output_variant_cls(
+            self._content_lines, self.frame, self.config, OutputMode.COLORIZED
+        )

@@ -16,62 +16,56 @@ from omnipy.util.callable_types import CallableType
 @runtime_checkable
 class IsJobRunSpec(CanLog, Protocol):
     """Engine-facing metadata and callable adapter for one job execution."""
-    @property
-    def name(self) -> str:
-        ...
 
     @property
-    def unique_name(self) -> str:
-        ...
+    def name(self) -> str: ...
 
     @property
-    def unique_run_slug(self) -> str:
-        ...
+    def unique_name(self) -> str: ...
 
     @property
-    def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]:
-        ...
+    def unique_run_slug(self) -> str: ...
 
     @property
-    def return_type(self) -> type:
-        ...
+    def param_signatures(self) -> MappingProxyType[str, inspect.Parameter]: ...
 
     @property
-    def callable_type(self) -> CallableType.Literals:
-        ...
+    def return_type(self) -> type: ...
 
-    def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None) -> None:
-        ...
+    @property
+    def callable_type(self) -> CallableType.Literals: ...
 
-    def create_default_run_callable(self) -> Callable:
-        ...
+    def log(
+        self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None
+    ) -> None: ...
+
+    def create_default_run_callable(self) -> Callable: ...
 
 
 @runtime_checkable
 class IsTaskRunSpec(IsJobRunSpec, Protocol):
     """Run-spec protocol for applied tasks."""
+
     @property
-    def in_flow_context(self) -> bool:
-        ...
+    def in_flow_context(self) -> bool: ...
 
 
 @runtime_checkable
 class IsFlowRunSpec(IsJobRunSpec, Protocol):
     """Run-spec protocol for applied flows."""
-    @property
-    def flow_context(self) -> IsNestedContext:
-        ...
 
-    def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments:
-        ...
+    @property
+    def flow_context(self) -> IsNestedContext: ...
+
+    def get_bound_args(self, *args: object, **kwargs: object) -> BoundArguments: ...
 
 
 @runtime_checkable
 class IsChildJobListArgFlowRunSpec(IsFlowRunSpec, Protocol):
     """Run-spec protocol for flows defined by ordered child-job templates."""
+
     @property
-    def child_job_templates(self) -> tuple[ChildJobTemplateLike, ...]:
-        ...
+    def child_job_templates(self) -> tuple[ChildJobTemplateLike, ...]: ...
 
 
 @runtime_checkable
@@ -91,5 +85,5 @@ class IsFuncFlowRunSpec(IsFlowRunSpec, Protocol):
 
 class IsJobRunSpecFactory(Protocol):
     """Constructor protocol for run-spec classes selected by job type."""
-    def __call__(self, job: IsFuncArgJob, run_callable: Callable) -> IsJobRunSpec:
-        ...
+
+    def __call__(self, job: IsFuncArgJob, run_callable: Callable) -> IsJobRunSpec: ...

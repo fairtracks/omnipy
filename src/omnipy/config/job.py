@@ -4,12 +4,16 @@ import os
 from pathlib import Path
 
 from omnipy.config import ConfigBase
-from omnipy.shared.enums.job import (ConfigOutputStorageProtocolOptions,
-                                     ConfigPersistOutputsOptions,
-                                     ConfigRestoreOutputsOptions)
-from omnipy.shared.protocols.config import (IsLocalOutputStorageConfig,
-                                            IsOutputStorageConfig,
-                                            IsS3OutputStorageConfig)
+from omnipy.shared.enums.job import (
+    ConfigOutputStorageProtocolOptions,
+    ConfigPersistOutputsOptions,
+    ConfigRestoreOutputsOptions,
+)
+from omnipy.shared.protocols.config import (
+    IsLocalOutputStorageConfig,
+    IsOutputStorageConfig,
+    IsS3OutputStorageConfig,
+)
 import omnipy.util.pydantic as pyd
 
 
@@ -36,10 +40,10 @@ class S3OutputStorageConfig(ConfigBase):
 class OutputStorageConfig(ConfigBase):
     """Policy and backend settings for persisted outputs."""
 
-    persist_outputs: ConfigPersistOutputsOptions.Literals = \
+    persist_outputs: ConfigPersistOutputsOptions.Literals = (
         ConfigPersistOutputsOptions.ENABLE_FLOW_AND_TASK_OUTPUTS
-    restore_outputs: ConfigRestoreOutputsOptions.Literals = \
-        ConfigRestoreOutputsOptions.DISABLED
+    )
+    restore_outputs: ConfigRestoreOutputsOptions.Literals = ConfigRestoreOutputsOptions.DISABLED
     protocol: ConfigOutputStorageProtocolOptions.Literals = ConfigOutputStorageProtocolOptions.LOCAL
     local: IsLocalOutputStorageConfig = pyd.Field(default_factory=LocalOutputStorageConfig)
     s3: IsS3OutputStorageConfig = pyd.Field(default_factory=S3OutputStorageConfig)

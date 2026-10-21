@@ -2,30 +2,34 @@ import asyncio
 import random
 
 import omnipy as om
-from omnipy.shared.enums.colorstyles import (DarkHighContrastColorStyles,
-                                             DarkLowContrastColorStyles,
-                                             LightHighContrastColorStyles,
-                                             LightLowContrastColorStyles,
-                                             RecommendedColorStyles)
+from omnipy.shared.enums.colorstyles import (
+    DarkHighContrastColorStyles,
+    DarkLowContrastColorStyles,
+    LightHighContrastColorStyles,
+    LightLowContrastColorStyles,
+    RecommendedColorStyles,
+)
 
 
 def set_random_style():
     om.runtime.config.root_log.log_to_stdout = False
     om.runtime.config.data.ui.terminal.width = 160
     om.runtime.config.data.ui.terminal.color.style = random.choice(
-        list(DarkHighContrastColorStyles) + list(DarkLowContrastColorStyles)
-        + list(LightHighContrastColorStyles) + list(LightLowContrastColorStyles)
-        + list(RecommendedColorStyles))
+        list(DarkHighContrastColorStyles)
+        + list(DarkLowContrastColorStyles)
+        + list(LightHighContrastColorStyles)
+        + list(LightLowContrastColorStyles)
+        + list(RecommendedColorStyles)
+    )
     om.runtime.config.data.ui.terminal.color.solid_background = True
     print(f'color.style={om.runtime.config.data.ui.terminal.color.style}')
-    print(f'color.solid_background='
-          f'{om.runtime.config.data.ui.terminal.color.solid_background}')
+    print(f'color.solid_background={om.runtime.config.data.ui.terminal.color.solid_background}')
 
 
 # Omnipy tasks
 @om.TaskTemplate()
 def fetch_and_validate_isa_json_files(
-    url_list: om.HttpUrlDataset
+    url_list: om.HttpUrlDataset,
 ) -> 'asyncio.Task[om.Dataset[om.IsaJsonModel]] | om.Dataset[om.IsaJsonModel]':
     return om.IsaJsonDataset.load(url_list, as_mime_type='application/json')
 
@@ -35,9 +39,9 @@ def fetch_and_validate_isa_json_files(
     om.get_github_repo_urls.refine(fixed_params=dict(file_suffix='.json')),
     fetch_and_validate_isa_json_files,
 )
-def download_isa_json_files(owner: str, repo: str, branch: str,
-                            path: str) -> om.JsonListOfDictsDataset:
-    ...
+def download_isa_json_files(
+    owner: str, repo: str, branch: str, path: str
+) -> om.JsonListOfDictsDataset: ...
 
 
 # Run the dataflow

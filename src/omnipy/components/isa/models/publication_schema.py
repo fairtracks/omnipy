@@ -36,6 +36,7 @@ class IsaPublicationSchema(pyd.BaseModel):
         title: Publication title.
         status: Ontology term describing publication status.
     """
+
     class Config:
         """Validation settings for ISA publication schema parsing.
 

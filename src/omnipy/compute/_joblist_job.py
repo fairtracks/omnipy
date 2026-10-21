@@ -10,22 +10,26 @@ from collections.abc import AsyncGenerator, AsyncIterator, Generator, Iterator
 import inspect
 import os
 from textwrap import dedent
-from typing import (Any,
-                    Callable,
-                    ClassVar,
-                    Generic,
-                    get_args,
-                    get_origin,
-                    Literal,
-                    NamedTuple,
-                    ParamSpec)
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Generic,
+    get_args,
+    get_origin,
+    Literal,
+    NamedTuple,
+    ParamSpec,
+)
 
 from typing_extensions import TypeVar
 
-from omnipy.components.general.tasks import (create_dataset_from_args,
-                                             create_dataset_from_kwargs,
-                                             create_model_from_args,
-                                             create_model_from_kwargs)
+from omnipy.components.general.tasks import (
+    create_dataset_from_args,
+    create_dataset_from_kwargs,
+    create_model_from_args,
+    create_model_from_kwargs,
+)
 from omnipy.compute._func_job import FuncArgJobBase
 from omnipy.compute.helpers import create_data_class_task_name, is_func_arg_template_child
 from omnipy.shared._typedefs import _JobT, _JobTemplateT
@@ -247,29 +251,35 @@ if is_package_editable('omnipy'):
             True""")
 
 
-class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT],
-                             Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
+class ChildJobListArgJobBase(
+    FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT],
+    Generic[_JobTemplateT, _JobT, _CallP, _RetT],
+):
     _coerce_data_class_children_from_kwargs: ClassVar[bool] = False
 
     class DataClassAndJobParentInfo(NamedTuple):
         dataset_or_model: Literal['dataset', 'model']
         parent_coerces_from_kwargs: bool
 
-    _data_class_child_to_template_map: ClassVar[dict[
-        DataClassAndJobParentInfo,
-        IsFuncArgJobTemplate,
-    ]] = {
+    _data_class_child_to_template_map: ClassVar[
+        dict[
+            DataClassAndJobParentInfo,
+            IsFuncArgJobTemplate,
+        ]
+    ] = {
         DataClassAndJobParentInfo('dataset', False): create_dataset_from_args,
         DataClassAndJobParentInfo('dataset', True): create_dataset_from_kwargs,
         DataClassAndJobParentInfo('model', False): create_model_from_args,
         DataClassAndJobParentInfo('model', True): create_model_from_kwargs,
     }
 
-    def __init__(self,
-                 job_func: Callable[_CallP, _RetT],
-                 /,
-                 *child_job_templates: ChildJobTemplateLike,
-                 **kwargs: object) -> None:
+    def __init__(
+        self,
+        job_func: Callable[_CallP, _RetT],
+        /,
+        *child_job_templates: ChildJobTemplateLike,
+        **kwargs: object,
+    ) -> None:
         super().__init__(job_func, *child_job_templates, **kwargs)
         self._child_job_templates: tuple[ChildJobTemplateLike, ...] = child_job_templates
         self._validate_callable_type_against_child_job_templates()
@@ -318,8 +328,9 @@ class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT]
         return False
 
     def _effective_callable_type_from_child_job_templates(self) -> CallableType.Literals:
-        assert len(
-            self._child_job_templates) > 0, 'Linear/DAG flows must define child job templates'
+        assert len(self._child_job_templates) > 0, (
+            'Linear/DAG flows must define child job templates'
+        )
 
         terminal_child = self._child_job_templates[-1]
         terminal_child_callable_type = self._child_callable_type(terminal_child)
@@ -328,18 +339,22 @@ class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT]
             CallableType.ASYNC_GENERATOR,
         )
 
-        if (not is_generator and terminal_child_callable_type in (
-                CallableType.SYNC_FUNCTION,
-                CallableType.ASYNC_COROUTINE,
-        )):
+        if not is_generator and terminal_child_callable_type in (
+            CallableType.SYNC_FUNCTION,
+            CallableType.ASYNC_COROUTINE,
+        ):
             is_generator = self._return_annotation_is_generator_like(
-                self._child_return_type(terminal_child))
+                self._child_return_type(terminal_child)
+            )
 
         is_async = any(
-            self._child_callable_type(child_job_template) in (
+            self._child_callable_type(child_job_template)
+            in (
                 CallableType.ASYNC_COROUTINE,
                 CallableType.ASYNC_GENERATOR,
-            ) for child_job_template in self._child_job_templates)
+            )
+            for child_job_template in self._child_job_templates
+        )
 
         return callable_type_from_flags(is_async=is_async, is_generator=is_generator)
 
@@ -351,11 +366,14 @@ class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT]
         actual_callable_type = self.callable_type
 
         if actual_callable_type is not expected_callable_type:
-            raise TypeError('linear/dag flow callable type must match child-job composition: '
-                            f'expected {expected_callable_type!r}, got {actual_callable_type!r}')
+            raise TypeError(
+                'linear/dag flow callable type must match child-job composition: '
+                f'expected {expected_callable_type!r}, got {actual_callable_type!r}'
+            )
 
     def _coerce_class_to_template_for_apply(
-            self, child_job_like_cls: type[IsDataset] | type[IsModel]) -> IsFuncArgJobTemplate:
+        self, child_job_like_cls: type[IsDataset] | type[IsModel]
+    ) -> IsFuncArgJobTemplate:
         from omnipy.data.dataset import is_dataset_subclass
         from omnipy.data.model import is_model_subclass
 
@@ -380,7 +398,8 @@ class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT]
 
         coerced_child_job_templates = tuple(
             self._coerce_class_to_template_for_apply(child) if inspect.isclass(child) else child
-            for child in self._child_job_templates)
+            for child in self._child_job_templates
+        )
 
         coerced_template = self._refine(*coerced_child_job_templates)
         return super(
@@ -388,10 +407,9 @@ class ChildJobListArgJobBase(FuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT]
             coerced_template,  # pyright: ignore[reportArgumentType]
         )._apply()
 
-    def _refine(self,
-                *child_job_templates: ChildJobTemplateLike,
-                update: bool = True,
-                **kwargs: object) -> _JobTemplateT:
+    def _refine(
+        self, *child_job_templates: ChildJobTemplateLike, update: bool = True, **kwargs: object
+    ) -> _JobTemplateT:
 
         refined_template = super()._refine(
             *child_job_templates,

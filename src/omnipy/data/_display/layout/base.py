@@ -6,11 +6,13 @@ from typing import Callable, cast, Generic, Iterable, Iterator, Mapping
 from typing_extensions import TypeIs, TypeVar
 
 from omnipy.data._display.dimensions import Dimensions, DimensionsWithWidthAndHeight
-from omnipy.data._display.panel.base import (DimensionsAwarePanel,
-                                             FullyRenderedPanel,
-                                             Panel,
-                                             panel_is_dimensions_aware,
-                                             panel_is_fully_rendered)
+from omnipy.data._display.panel.base import (
+    DimensionsAwarePanel,
+    FullyRenderedPanel,
+    Panel,
+    panel_is_dimensions_aware,
+    panel_is_fully_rendered,
+)
 from omnipy.shared.enums.display import PanelDesign
 from omnipy.util.helpers import ConsistentUserDict as UserDict
 
@@ -24,6 +26,7 @@ class Grid(Generic[PanelT]):
     The grid provides coordinate-style access for layout rendering code while
     preserving insertion order from the underlying mapping.
     """
+
     def __init__(self, layout: 'Layout[PanelT]'):
         """Initialize a single-row grid wrapper for a panel layout."""
         self._layout = layout
@@ -37,7 +40,8 @@ class Grid(Generic[PanelT]):
             panels exist, otherwise ``0``.
         """
         return DimensionsWithWidthAndHeight(
-            width=len(self._layout), height=1 if len(self._layout) > 0 else 0)
+            width=len(self._layout), height=1 if len(self._layout) > 0 else 0
+        )
 
     def __getitem__(self, key: tuple[int, int]) -> str:
         """Return the panel key located at the given ``(x, y)`` coordinates."""
@@ -68,6 +72,7 @@ class Grid(Generic[PanelT]):
 
 class Layout(UserDict[str, PanelT], Generic[PanelT]):
     """Ordered mapping from panel keys to panel objects."""
+
     def __init__(self, *args, **kwargs):
         """Initialize layout storage and its coordinate-style grid accessor."""
         super().__init__(*args, **kwargs)
@@ -90,7 +95,8 @@ class Layout(UserDict[str, PanelT], Generic[PanelT]):
         return hash((tuple(self.data.keys()), tuple(self.data.values())))
 
     def _render_until_criteria_holds(
-            self, criteria: Callable[[Panel], TypeIs[RenderedPanelT]]) -> dict[str, RenderedPanelT]:
+        self, criteria: Callable[[Panel], TypeIs[RenderedPanelT]]
+    ) -> dict[str, RenderedPanelT]:
         finished_panels: dict[str, RenderedPanelT] = {}
         remaining_panels: dict[str, Panel] = self.data.copy()  # type: ignore[assignment]
 
@@ -252,13 +258,15 @@ class PanelDesignDims:
 
 class DimensionsAwarePanelLayoutMixin:
     """Layout mixin that derives aggregate dimensions from rendered subpanels."""
+
     def _total_dims_over_subpanels(self, dims_property: str) -> DimensionsWithWidthAndHeight:
         self_as_layout = cast(Layout, self)
 
         all_panel_dims = [getattr(panel, dims_property) for panel in self_as_layout.values()]
         return Dimensions(
             width=sum(panel_dims.width for panel_dims in all_panel_dims),
-            height=max((panel_dims.height for panel_dims in all_panel_dims), default=0))
+            height=max((panel_dims.height for panel_dims in all_panel_dims), default=0),
+        )
 
     @property
     def total_subpanel_cropped_dims(self) -> DimensionsWithWidthAndHeight:
@@ -306,10 +314,14 @@ class DimensionsAwarePanelLayoutMixin:
             num_horizontal_panels = len(self_as_layout)
             num_vertical_panels = 1  # Assuming a single row layout for simplicity
             return Dimensions(
-                width=(total_subpanel_dims.width
-                       + panel_design_dims.num_extra_horizontal_chars(num_horizontal_panels)),
-                height=(total_subpanel_dims.height
-                        + panel_design_dims.num_extra_vertical_chars(num_vertical_panels)),
+                width=(
+                    total_subpanel_dims.width
+                    + panel_design_dims.num_extra_horizontal_chars(num_horizontal_panels)
+                ),
+                height=(
+                    total_subpanel_dims.height
+                    + panel_design_dims.num_extra_vertical_chars(num_vertical_panels)
+                ),
             )
         else:
             return Dimensions(width=0, height=1)

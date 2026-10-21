@@ -148,7 +148,8 @@ class NobelPrize(pyd.BaseModel):
     categoryFullName: Optional[Translation] = None
     dateAwarded: Optional[date] = pyd.Field(None, example='2015-11-12')
     prizeAmount: Optional[int] = pyd.Field(
-        None, description='Prize amount given at the year of the award', example=1000000)
+        None, description='Prize amount given at the year of the award', example=1000000
+    )
     prizeAmountAdjusted: Optional[int] = pyd.Field(
         None,
         description='Prize amount adjusted according to Index number yearly average',
@@ -240,7 +241,8 @@ class NobelPrizePerLaureate(pyd.BaseModel):
     prizeStatus: Optional[PrizeStatus] = pyd.Field(None, example='received')
     motivation: Optional[Translation] = None
     prizeAmount: Optional[int] = pyd.Field(
-        None, description='Prize amount given at the year of the award', example=1000000)
+        None, description='Prize amount given at the year of the award', example=1000000
+    )
     prizeAmountAdjusted: Optional[int] = pyd.Field(
         None,
         description='Prize amount adjusted according to Index number yearly average',

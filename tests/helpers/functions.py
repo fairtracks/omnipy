@@ -14,8 +14,9 @@ if sys.version_info >= (3, 14):
 def assert_model(model: object, target_type: TypeForm, content: object):
     """Assert that a value is a model with expected type and content."""
     assert is_model_instance(model)
-    assert model.outer_type(with_args=True) == target_type, \
+    assert model.outer_type(with_args=True) == target_type, (
         f'{model.outer_type(with_args=True)} != {target_type}'
+    )
     assert model.content == content, f'{model.content} != {content}'
 
 
@@ -23,7 +24,8 @@ def assert_val(value: object, target_type: TypeForm, content: object):
     """Assert that a plain value matches the expected type and content."""
     assert not is_model_instance(value)
     assert any(
-        isinstance(value, ensure_plain_type(_type)) for _type in all_type_variants(target_type))
+        isinstance(value, ensure_plain_type(_type)) for _type in all_type_variants(target_type)
+    )
     assert value == content, f'{repr(value)} != {repr(content)}'
 
 

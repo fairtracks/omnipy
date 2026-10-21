@@ -11,9 +11,18 @@ GDC_BASE_URL = 'https://api.gdc.cancer.gov/'
 def encode_api(endpoint='experiments', id=None, limit=None, format='json', frame='object'):
     """Fetch records from the ENCODE API for an endpoint or object id."""
 
-    api_url = ENCODE_BASE_URL + endpoint + '/' + (id if id else '@@listing') + '?' + '&'.join(
-        (['limit=' + limit] if limit else []) + (['format=' + format] if format else [])
-        + (['frame=' + frame] if frame else []))
+    api_url = (
+        ENCODE_BASE_URL
+        + endpoint
+        + '/'
+        + (id if id else '@@listing')
+        + '?'
+        + '&'.join(
+            (['limit=' + limit] if limit else [])
+            + (['format=' + format] if format else [])
+            + (['frame=' + frame] if frame else [])
+        )
+    )
     print(api_url)
     response = requests.get(api_url, headers=ENCODE_HEADERS)
     if response.status_code == 200:
@@ -29,9 +38,17 @@ def encode_api(endpoint='experiments', id=None, limit=None, format='json', frame
 def gdc_api(object_type='projects', starting_point=None, size=None):
     """Fetch records from a GDC collection endpoint."""
 
-    api_url = GDC_BASE_URL + object_type + '/' + '?' + '&'.join(
-        (['from=' + starting_point] if starting_point else []) + (['size=' + size] if size else [])
-        + ([+ 'project'] if object_type == 'cases' else []))
+    api_url = (
+        GDC_BASE_URL
+        + object_type
+        + '/'
+        + '?'
+        + '&'.join(
+            (['from=' + starting_point] if starting_point else [])
+            + (['size=' + size] if size else [])
+            + ([+'project'] if object_type == 'cases' else [])
+        )
+    )
     print(api_url)
     response = requests.get(api_url)
     if response.status_code != 200:
@@ -45,5 +62,5 @@ def gdc_api(object_type='projects', starting_point=None, size=None):
         print(results['warnings'])
         return None
 
-    hits = (results['data']['hits'])
+    hits = results['data']['hits']
     return hits

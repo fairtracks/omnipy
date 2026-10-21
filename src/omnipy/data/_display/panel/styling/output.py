@@ -15,11 +15,15 @@ from typing_extensions import override
 
 from omnipy.data._display.dimensions import has_height, has_width
 from omnipy.data._display.panel.base import OutputVariant
-from omnipy.data._display.panel.cropping import (crop_content_lines_vertically2,
-                                                 replace_ellipsis_lines_with_ellipses)
-from omnipy.data._display.panel.helpers import (calculate_bg_color_triplet_from_color_style,
-                                                calculate_fg_color_triplet_from_color_style,
-                                                ForceAutodetect)
+from omnipy.data._display.panel.cropping import (
+    crop_content_lines_vertically2,
+    replace_ellipsis_lines_with_ellipses,
+)
+from omnipy.data._display.panel.helpers import (
+    calculate_bg_color_triplet_from_color_style,
+    calculate_fg_color_triplet_from_color_style,
+    ForceAutodetect,
+)
 from omnipy.data._display.panel.styling.base import PanelT, StylizedMonospacedPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
 from omnipy.shared.enums.display import HorizontalOverflowMode
@@ -40,8 +44,9 @@ class OutputMode(LiteralEnum[str]):
 class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
     """Shared terminal and HTML export logic for stylized panels."""
 
-    _CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG: ClassVar[str] = ('color: {foreground}; '
-                                                          'background-color: {background}; ')
+    _CSS_COLOR_STYLE_TEMPLATE_FG_AND_BG: ClassVar[str] = (
+        'color: {foreground}; background-color: {background}; '
+    )
 
     _CSS_COLOR_STYLE_TEMPLATE_FG_ONLY: ClassVar[str] = 'color: {foreground}; '
 
@@ -50,14 +55,9 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
     _CSS_FONT_WEIGHT_TEMPLATE: ClassVar[str] = 'font-weight: {font_weight}; '
     _CSS_LINE_HEIGHT_TEMPLATE: ClassVar[str] = 'line-height: {line_height}; '
 
-    _HTML_TAG_TEMPLATE: ClassVar[str] = ('<pre>'
-                                         '<code style="'
-                                         'display: inline-block; '
-                                         '{font_style}'
-                                         '{color_style}">'
-                                         '{code}'
-                                         '</code>'
-                                         '</pre>')
+    _HTML_TAG_TEMPLATE: ClassVar[str] = (
+        '<pre><code style="display: inline-block; {font_style}{color_style}">{code}</code></pre>'
+    )
 
     _HTML_PAGE_TEMPLATE: ClassVar[str] = dedent("""\
         <!DOCTYPE html>
@@ -81,9 +81,11 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         </html>
         """)
 
-    def __init__(self,
-                 output: 'StylizedMonospacedPanel[PanelT, ContentT, FrameT]',
-                 output_mode: OutputMode.Literals) -> None:
+    def __init__(
+        self,
+        output: 'StylizedMonospacedPanel[PanelT, ContentT, FrameT]',
+        output_mode: OutputMode.Literals,
+    ) -> None:
         self._output = output
         self._config = output.config
         self._frame = output.frame
@@ -105,16 +107,17 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
     ) -> rich.console.Console:
         new_console = copy(console)
         with console._record_buffer_lock:
-            new_console._record_buffer = \
-                filter_func(console._record_buffer)  # type: ignore[assignment]
+            new_console._record_buffer = filter_func(console._record_buffer)  # type: ignore[assignment]
         return new_console
 
     def _remove_all_color_from_console_recording(
-            self, console: rich.console.Console) -> rich.console.Console:
+        self, console: rich.console.Console
+    ) -> rich.console.Console:
         return self._apply_filter_to_console_recording(console, rich.segment.Segment.remove_color)
 
     def _remove_styling_from_console_recording(
-            self, console: rich.console.Console) -> rich.console.Console:
+        self, console: rich.console.Console
+    ) -> rich.console.Console:
         return self._apply_filter_to_console_recording(console, rich.segment.Segment.strip_styles)
 
     # Terminal output
@@ -150,19 +153,22 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         font_style = ''
 
         if self._config.fonts:
-            font_style += self._CSS_FONT_FAMILIES_TEMPLATE.format(font_family_str=', '.join(
-                f"'{_}'" for _ in self._config.fonts))
+            font_style += self._CSS_FONT_FAMILIES_TEMPLATE.format(
+                font_family_str=', '.join(f"'{_}'" for _ in self._config.fonts)
+            )
 
         if self._config.font_size:
             font_style += self._CSS_FONT_SIZE_TEMPLATE.format(font_size=self._config.font_size)
 
         if self._config.font_weight:
             font_style += self._CSS_FONT_WEIGHT_TEMPLATE.format(
-                font_weight=self._config.font_weight)
+                font_weight=self._config.font_weight
+            )
 
         if self._config.line_height:
             font_style += self._CSS_LINE_HEIGHT_TEMPLATE.format(
-                line_height=self._config.line_height)
+                line_height=self._config.line_height
+            )
 
         return font_style
 
@@ -176,7 +182,8 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
             css_color_style = ''
 
         html_tag_template = self._HTML_TAG_TEMPLATE.format(
-            font_style=self._prepare_css_font_style(), color_style=css_color_style, code='{code}')
+            font_style=self._prepare_css_font_style(), color_style=css_color_style, code='{code}'
+        )
 
         return html_tag_template
 
@@ -192,7 +199,8 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
         return html_page_template
 
     def _prepare_color_theme_for_html(
-            self, force_autodetect: ForceAutodetect.Literals) -> rich.terminal_theme.TerminalTheme:
+        self, force_autodetect: ForceAutodetect.Literals
+    ) -> rich.terminal_theme.TerminalTheme:
         """
         Prepares the color theme for the HTML export, confusingly called a "terminal theme" in the
         rich library. The "terminal theme" is used to set the foreground and background colors for
@@ -230,10 +238,12 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
 
         return console_html.export_html(
             theme=self._prepare_color_theme_for_html(
-                force_autodetect=ForceAutodetect.IF_NO_BG_COLOR_IN_STYLE),
+                force_autodetect=ForceAutodetect.IF_NO_BG_COLOR_IN_STYLE
+            ),
             clear=False,
             code_format=self._prepare_html_tag_template(),
-            inline_styles=True)
+            inline_styles=True,
+        )
 
     @property
     def _html_page(self) -> str:
@@ -260,10 +270,11 @@ class StylizedItem(NamedTuple):
 
 
 class CroppingOutputVariant(
-        CommonOutputVariant[PanelT, ContentT, FrameT],
-        Generic[PanelT, ContentT, FrameT],
+    CommonOutputVariant[PanelT, ContentT, FrameT],
+    Generic[PanelT, ContentT, FrameT],
 ):
     """Output variant that crops stylized content to the panel frame."""
+
     def _crop_top_level_html(self, html: str) -> str:
         return re.sub(
             r'(<code[^>]*>)([\S\s]*)(</code>)',
@@ -385,8 +396,7 @@ class CroppingOutputVariant(
 
         cropped_lines = []
         for line in lines:
-            cropped_line, more = \
-                self._crop_line_horizontally(line, uncropped_width)
+            cropped_line, more = self._crop_line_horizontally(line, uncropped_width)
             cropped_lines.append(cropped_line)
             if not more:
                 break
@@ -442,10 +452,11 @@ class CroppingOutputVariant(
 
 
 class TextCroppingOutputVariant(
-        CroppingOutputVariant[PanelT, ContentT, FrameT],
-        Generic[PanelT, ContentT, FrameT],
+    CroppingOutputVariant[PanelT, ContentT, FrameT],
+    Generic[PanelT, ContentT, FrameT],
 ):
     """Cropping strategy for text-like panels with line-preserving output."""
+
     @override
     def _crop_lines_vertically(
         self,
@@ -470,16 +481,17 @@ class TextCroppingOutputVariant(
         # crop_content_for_tab_and_double_width_chars(), even in the
         # presence of StylizedMonospacedPanel._apply_console_newline_hack()
         if has_width(crop_dims) and len(line_content) > crop_dims.width:
-            return line_content[:crop_dims.width] + newline, True
+            return line_content[: crop_dims.width] + newline, True
 
         return line, True
 
 
 class TableCroppingOutputVariant(
-        CroppingOutputVariant[PanelT, ContentT, FrameT],
-        Generic[PanelT, ContentT, FrameT],
+    CroppingOutputVariant[PanelT, ContentT, FrameT],
+    Generic[PanelT, ContentT, FrameT],
 ):
     """Cropping strategy for outer layout tables and their border structure."""
+
     @override
     def _crop_lines_vertically(
         self,
@@ -495,7 +507,7 @@ class TableCroppingOutputVariant(
             return [], set()
 
         # Needed for very small tables, e.g. height==2
-        return lines[:crop_dims.height - 1] + [lines[-1]], set()
+        return lines[: crop_dims.height - 1] + [lines[-1]], set()
 
     @override
     def _crop_line_horizontally(
@@ -509,8 +521,12 @@ class TableCroppingOutputVariant(
         # (depending on uncropped_width). Code is placed only here and not
         # in _crop_lines_vertically to simplify logic for cropping of HTML
         # text
-        if (has_width(crop_dims) and crop_dims.width == 1
-                or has_height(crop_dims) and crop_dims.height == 1):
+        if (
+            has_width(crop_dims)
+            and crop_dims.width == 1
+            or has_height(crop_dims)
+            and crop_dims.height == 1
+        ):
             newline = extract_newline(line)
             if uncropped_width >= 1:
                 return '…' + newline, False
@@ -524,5 +540,5 @@ class TableCroppingOutputVariant(
         #       out in the "stylize" stage. Code is kept here for now, but
         #       is seldom, if ever used.
         line_stripped, newline = strip_and_split_newline(line)
-        line_stripped_and_cropped = line_stripped[:crop_dims.width - 1] + line_stripped[-1:]
+        line_stripped_and_cropped = line_stripped[: crop_dims.width - 1] + line_stripped[-1:]
         return line_stripped_and_cropped + newline, True

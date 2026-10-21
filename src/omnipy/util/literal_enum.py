@@ -20,19 +20,17 @@ LiteralInnerTypeT = TypeVar('LiteralInnerTypeT', bound=LiteralEnumInnerTypes)
 
 
 class LiteralEnumMeta(type):
-    """A metaclass for LiteralEnum that contains the logic for iteration.
-    """
-    @overload
-    def __iter__(  # type: ignore[misc]
-        self: 'type[LiteralEnum[LiteralEnumInnerTypes]]'  # Match generic LiteralEnum subtypes
-    ) -> Iterator[LiteralEnumInnerTypes]:
-        ...
+    """A metaclass for LiteralEnum that contains the logic for iteration."""
 
     @overload
     def __iter__(  # type: ignore[misc]
-        self: 'type[LiteralEnum[LiteralInnerTypeT]]'  # Match specialized LiteralEnum subtypes
-    ) -> Iterator[LiteralInnerTypeT]:
-        ...
+        self: 'type[LiteralEnum[LiteralEnumInnerTypes]]',  # Match generic LiteralEnum subtypes
+    ) -> Iterator[LiteralEnumInnerTypes]: ...
+
+    @overload
+    def __iter__(  # type: ignore[misc]
+        self: 'type[LiteralEnum[LiteralInnerTypeT]]',  # Match specialized LiteralEnum subtypes
+    ) -> Iterator[LiteralInnerTypeT]: ...
 
     def __iter__(self) -> Iterator[LiteralEnumInnerTypes]:
         """Iterate over the enum values.
@@ -265,6 +263,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
     Each choice must also be defined as a separate class attribute with a
     Literal type.
     """
+
     def __init_subclass__(cls) -> None:
         """
         This method is called when a subclass of LiteralEnum is created. It
@@ -295,14 +294,16 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         if not hasattr(cls, 'Literals'):
             raise TypeError(f'{cls.__name__} must define a Literals property.')
 
-        assert is_literal_type(cls.Literals), \
+        assert is_literal_type(cls.Literals), (
             f'{cls.__name__}.Literals must be defined as a Literal type.'
+        )
 
         return set(get_args(cls.Literals))
 
     @classmethod
     def _check_literals_inner_types_are_allowed(
-            cls, all_cls_literal_vals: set[LiteralEnumInnerTypes]) -> None:
+        cls, all_cls_literal_vals: set[LiteralEnumInnerTypes]
+    ) -> None:
         """
         Checks that all values in cls.Literals are of the allowed inner
         types. For a generic class, the checks are performed against
@@ -326,8 +327,9 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
             plurality_text = 'value does' if len(non_matching_inner_types) == 1 else 'values do'
             raise TypeError(
                 f'{cls.__name__}: Literal {plurality_text} not match the specialization '
-                f"({', '.join(_.__name__ for _ in specialized_inner_types)}): "
-                + ', '.join(f'{_!r}' for _ in non_matching_inner_types))
+                f'({", ".join(_.__name__ for _ in specialized_inner_types)}): '
+                + ', '.join(f'{_!r}' for _ in non_matching_inner_types)
+            )
 
     @classmethod
     def _get_specialized_literal_inner_types(cls) -> tuple[type, ...]:
@@ -340,16 +342,20 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
             return cast(
                 tuple[type, ...],
                 tuple(
-                    _typ for _typ in all_type_variants(
+                    _typ
+                    for _typ in all_type_variants(
                         get_args(cls.__orig_bases__[lit_enum_idx])[0]  # type: ignore[attr-defined]
-                    )))
+                    )
+                ),
+            )
         except ValueError:
             # Not a specialized LiteralEnum, so return an empty tuple
             return tuple()
 
     @classmethod
     def _check_attributes(
-            cls, all_cls_literal_vals: set[LiteralEnumInnerTypes]) -> set[LiteralEnumInnerTypes]:
+        cls, all_cls_literal_vals: set[LiteralEnumInnerTypes]
+    ) -> set[LiteralEnumInnerTypes]:
         """
         Checks that all public attributes are defined:
         - with an uppercase name
@@ -390,13 +396,15 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         """
         cls_type_hints: dict[str, TypeForm] = get_type_hints(cls)
 
-        assert attr in cls_type_hints and is_literal_type(cls_type_hints[attr]), \
+        assert attr in cls_type_hints and is_literal_type(cls_type_hints[attr]), (
             f'{cls.__name__}.{attr} must be annotated as a Literal type.'
+        )
 
         annotation_args = get_args(cls_type_hints[attr])
-        assert annotation_args == (value,), \
-            (f'The value of the Literal annotation must match the assigned value for '
-             f'{attr}: {annotation_args} != {(value,)}')
+        assert annotation_args == (value,), (
+            f'The value of the Literal annotation must match the assigned value for '
+            f'{attr}: {annotation_args} != {(value,)}'
+        )
 
     @classmethod
     def _check_attr_matches_cls_literals(
@@ -419,7 +427,8 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
             # Check if the attribute is not a reserved public attribute
             and attr not in cls._RESERVED_PUBLIC_ATTRS
             # Check if the attribute is not a method
-            and not cls._is_method(value))
+            and not cls._is_method(value)
+        )
 
     @classmethod
     def _is_method(cls, val: Any) -> bool:
@@ -437,14 +446,20 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
         """
         literal_missing_attrs = all_cls_literal_vals - defined_attrs
         if literal_missing_attrs:
-            raise TypeError(f'Not all choices in {cls.__name__}.Literals are defined as members. '
-                            f'Missing members: {literal_missing_attrs}')
+            raise TypeError(
+                f'Not all choices in {cls.__name__}.Literals are defined as members. '
+                f'Missing members: {literal_missing_attrs}'
+            )
 
     @classmethod
     def _get_all_mro_dicts(cls) -> ChainMap[str, Any]:
-        return ChainMap(*(dict(base.__dict__)
-                          for base in cls.__mro__
-                          if base is not LiteralEnum and issubclass(base, LiteralEnum)))
+        return ChainMap(
+            *(
+                dict(base.__dict__)
+                for base in cls.__mro__
+                if base is not LiteralEnum and issubclass(base, LiteralEnum)
+            )
+        )
 
     @classmethod
     def names(cls) -> Iterator[str]:
@@ -458,8 +473,9 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
                 yield attr_name
 
     @classmethod
-    def name_for_value(cls: 'type[LiteralEnum[LiteralInnerTypeT]]',
-                       value: LiteralInnerTypeT) -> str:
+    def name_for_value(
+        cls: 'type[LiteralEnum[LiteralInnerTypeT]]', value: LiteralInnerTypeT
+    ) -> str:
         """Get the name of the enum attribute for the given value.
 
         Args:
@@ -476,8 +492,7 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
 
     @classmethod
     def random_choice(cls) -> LiteralInnerTypeT:
-        """Select a random choice from all available enum values.
-        """
+        """Select a random choice from all available enum values."""
         exclude_prefixes = [RANDOM_PREFIX, AUTO_VALUE]
         choice = ''
         while choice == '' or any(choice.startswith(_) for _ in exclude_prefixes):
@@ -496,5 +511,8 @@ class LiteralEnum(Generic[LiteralInnerTypeT], metaclass=LiteralEnumMeta):
             True if the value is a valid random choice value for this enum,
             False otherwise.
         """
-        return (isinstance(value, str) and cast(LiteralInnerTypeT, value) in cls
-                and value.startswith(RANDOM_PREFIX))
+        return (
+            isinstance(value, str)
+            and cast(LiteralInnerTypeT, value) in cls
+            and value.startswith(RANDOM_PREFIX)
+        )

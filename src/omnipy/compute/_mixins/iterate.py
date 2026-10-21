@@ -9,10 +9,12 @@ from textwrap import dedent
 from typing import Any, Callable, cast, Coroutine
 
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
-from omnipy.compute._mixins.typedefs import (_InputDatasetT,
-                                             _InputTypeT,
-                                             _ReturnDatasetT,
-                                             IsIterateInnerCallable)
+from omnipy.compute._mixins.typedefs import (
+    _InputDatasetT,
+    _InputTypeT,
+    _ReturnDatasetT,
+    IsIterateInnerCallable,
+)
 from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import is_model_subclass, Model
@@ -35,14 +37,17 @@ if is_package_editable('omnipy'):
 def _check_job_func_parameters(job_func: Callable) -> None:
     params = list(signature(job_func).parameters.values())
 
-    if len(params) == 0 or \
-            params[0].default != Parameter.empty or \
-            params[0].kind not in [Parameter.POSITIONAL_ONLY,
-                                   Parameter.POSITIONAL_OR_KEYWORD]:
-        raise ValueError('Parameter "iterate_over_data_files" is set to True, '
-                         'but the job function has no arguments without default values. '
-                         'Such a first argument will be replaced with a corresponding '
-                         'Dataset arg to be iterated over')
+    if (
+        len(params) == 0
+        or params[0].default != Parameter.empty
+        or params[0].kind not in [Parameter.POSITIONAL_ONLY, Parameter.POSITIONAL_OR_KEYWORD]
+    ):
+        raise ValueError(
+            'Parameter "iterate_over_data_files" is set to True, '
+            'but the job function has no arguments without default values. '
+            'Such a first argument will be replaced with a corresponding '
+            'Dataset arg to be iterated over'
+        )
 
 
 def _create_dataset_cls(data_file_type: _InputTypeT) -> type[IsDataset]:
@@ -66,6 +71,7 @@ def _create_dataset_cls(data_file_type: _InputTypeT) -> type[IsDataset]:
 
 class IterateFuncJobBaseMixin:
     """Adapt a job function to run once per dataset item."""
+
     def __init__(  # noqa: C901
         self,
         *,
@@ -84,20 +90,23 @@ class IterateFuncJobBaseMixin:
         if not isinstance(self.iterate_over_data_files, bool):
             raise ValueError(
                 'Value of "iterate_over_data_files" parameter must be bool (True/False), '
-                f'not "{iterate_over_data_files}"')
+                f'not "{iterate_over_data_files}"'
+            )
 
         if not iterate_over_data_files:
             if output_dataset_param is not None:
-                raise ValueError('Output dataset parameter can only be set when '
-                                 '"iterate_over_data_files" is True')
+                raise ValueError(
+                    'Output dataset parameter can only be set when '
+                    '"iterate_over_data_files" is True'
+                )
             if output_dataset_cls is not None:
                 raise ValueError(
-                    'Output dataset class can only be set when "iterate_over_data_files" is True')
+                    'Output dataset class can only be set when "iterate_over_data_files" is True'
+                )
 
         if iterate_over_data_files:
             job_func = self_as_plain_func_arg_job_base._job_func
             if job_func.__name__ != '_omnipy_iterate_func':
-
                 _check_job_func_parameters(job_func)
                 self._generate_new_signature_for_iteration(job_func)
 
@@ -107,11 +116,11 @@ class IterateFuncJobBaseMixin:
                         *args: object,
                         **kwargs: object,
                     ) -> _ReturnDatasetT:
-                        inner_func: IsIterateInnerCallable = \
-                            cast(IsIterateInnerCallable, call_func)
+                        inner_func: IsIterateInnerCallable = cast(IsIterateInnerCallable, call_func)
 
-                        output_dataset, args, kwargs = \
-                            self._extract_output_dataset(dataset, *args, **kwargs)
+                        output_dataset, args, kwargs = self._extract_output_dataset(
+                            dataset, *args, **kwargs
+                        )
 
                         for title, data_file in dataset.items():
                             data_arg = self._prepare_data_arg(data_file)
@@ -127,11 +136,11 @@ class IterateFuncJobBaseMixin:
                         *args: object,
                         **kwargs: object,
                     ) -> _ReturnDatasetT:
-                        inner_func: IsIterateInnerCallable = \
-                            cast(IsIterateInnerCallable, call_func)
+                        inner_func: IsIterateInnerCallable = cast(IsIterateInnerCallable, call_func)
 
-                        output_dataset, args, kwargs = \
-                            self._extract_output_dataset(dataset, *args, **kwargs)
+                        output_dataset, args, kwargs = self._extract_output_dataset(
+                            dataset, *args, **kwargs
+                        )
 
                         tasks = []
                         for title, data_file in dataset.items():
@@ -150,10 +159,12 @@ class IterateFuncJobBaseMixin:
 
                 if inspect.iscoroutinefunction(job_func):
                     self_as_plain_func_arg_job_base._accept_call_func_decorator(
-                        _async_iterate_over_data_files_decorator)
+                        _async_iterate_over_data_files_decorator
+                    )
                 else:
                     self_as_plain_func_arg_job_base._accept_call_func_decorator(
-                        _sync_iterate_over_data_files_decorator)
+                        _sync_iterate_over_data_files_decorator
+                    )
 
     def _generate_new_signature_for_iteration(self, job_func: Callable) -> None:
         func_signature = signature(job_func)
@@ -176,20 +187,24 @@ class IterateFuncJobBaseMixin:
             self._output_dataset_param_in_func = params.get(self._output_dataset_param, None)
             if inspect.iscoroutinefunction(job_func):
                 if self._output_dataset_param_in_func:
-                    raise ValueError(f'Output dataset parameter "{self._output_dataset_param}" '
-                                     f'found in function signature for asynchronous job '
-                                     f'"{job_func.__name__}". This is not allowed when '
-                                     f'"iterate_over_data_files=True", as changing the dataset '
-                                     f'within an async task in the middle of an async iteration '
-                                     f'can easily cause concurrency issues.')
+                    raise ValueError(
+                        f'Output dataset parameter "{self._output_dataset_param}" '
+                        f'found in function signature for asynchronous job '
+                        f'"{job_func.__name__}". This is not allowed when '
+                        f'"iterate_over_data_files=True", as changing the dataset '
+                        f'within an async task in the middle of an async iteration '
+                        f'can easily cause concurrency issues.'
+                    )
 
             if self._output_dataset_param_in_func:
                 if self._output_dataset_param_in_func.annotation is not output_dataset_cls:
-                    raise ValueError(f'Output dataset parameter "{self._output_dataset_param}" '
-                                     f'found in function signature for synchronous job '
-                                     f'"{job_func.__name__}" does not have the correct type '
-                                     f'annotation. Expected "{output_dataset_cls}", but found '
-                                     f'"{self._output_dataset_param_in_func.annotation}".')
+                    raise ValueError(
+                        f'Output dataset parameter "{self._output_dataset_param}" '
+                        f'found in function signature for synchronous job '
+                        f'"{job_func.__name__}" does not have the correct type '
+                        f'annotation. Expected "{output_dataset_cls}", but found '
+                        f'"{self._output_dataset_param_in_func.annotation}".'
+                    )
             else:
                 output_dataset_param = Parameter(
                     name=self._output_dataset_param,
@@ -219,10 +234,12 @@ class IterateFuncJobBaseMixin:
             if self._output_dataset_param_in_func and self._output_dataset_param not in kwargs:
                 kwargs = kwargs.copy()
                 kwargs[self._output_dataset_param] = cast(
-                    Dataset, self_as_signature_func_job_base_mixin.return_type())
+                    Dataset, self_as_signature_func_job_base_mixin.return_type()
+                )
 
             bound_args = self_as_signature_func_job_base_mixin.get_bound_args(
-                dataset, *args, **kwargs)
+                dataset, *args, **kwargs
+            )
             output_dataset: Dataset | None = bound_args.arguments[self._output_dataset_param]
 
             return_args = bound_args.args[1:]
@@ -278,7 +295,8 @@ class IterateFuncJobBaseMixin:
 
         task = asyncio.create_task(coro)
         done_callback_for_title = functools.partial(
-            _done_callback, output_dataset=output_dataset, title=title)
+            _done_callback, output_dataset=output_dataset, title=title
+        )
         task.add_done_callback(done_callback_for_title)
 
         return task

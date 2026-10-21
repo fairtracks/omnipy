@@ -142,7 +142,8 @@ def decorate_callable_by_type(  # noqa: C901
 
     make_context = context_factory or nullcontext
     signature = inspect.Signature(
-        parameters=tuple(param_signatures.values()), return_annotation=return_type)
+        parameters=tuple(param_signatures.values()), return_annotation=return_type
+    )
 
     if call_type is CallableType.SYNC_FUNCTION:
 
@@ -186,8 +187,10 @@ def decorate_callable_by_type(  # noqa: C901
                     return
 
                 if not isinstance(job_result, AsyncGeneratorType):
-                    raise TypeError('Async generator callable resolved to unsupported result type: '
-                                    f'{type(job_result).__name__}')
+                    raise TypeError(
+                        'Async generator callable resolved to unsupported result type: '
+                        f'{type(job_result).__name__}'
+                    )
 
                 sent = None
                 try:
@@ -204,32 +207,28 @@ def decorate_callable_by_type(  # noqa: C901
 def _decorate_result_with_finished_callback(
     result: Generator[_Y, _S, _GR],
     register_finished: Callable[[], None],
-) -> Generator[_Y, _S, _GR]:
-    ...
+) -> Generator[_Y, _S, _GR]: ...
 
 
 @overload
 def _decorate_result_with_finished_callback(
     result: AsyncGenerator[_Y, _S],
     register_finished: Callable[[], None],
-) -> AsyncGenerator[_Y, _S]:
-    ...
+) -> AsyncGenerator[_Y, _S]: ...
 
 
 @overload
 def _decorate_result_with_finished_callback(
     result: Awaitable[_R],
     register_finished: Callable[[], None],
-) -> Awaitable[_R]:
-    ...
+) -> Awaitable[_R]: ...
 
 
 @overload
 def _decorate_result_with_finished_callback(
     result: _R,
     register_finished: Callable[[], None],
-) -> _R:
-    ...
+) -> _R: ...
 
 
 def _decorate_result_with_finished_callback(

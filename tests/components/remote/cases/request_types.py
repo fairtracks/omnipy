@@ -10,12 +10,14 @@ from omnipy.components.json.models import JsonDictModel, JsonModel
 from omnipy.components.raw.datasets import BytesDataset, StrDataset
 from omnipy.components.raw.models import StrictBytesModel, StrictStrModel
 from omnipy.components.remote.datasets import AutoResponseContentDataset
-from omnipy.components.remote.tasks import (async_load_urls_into_new_dataset,
-                                            get_auto_from_api_endpoint,
-                                            get_bytes_from_api_endpoint,
-                                            get_json_from_api_endpoint,
-                                            get_str_from_api_endpoint,
-                                            load_urls_into_new_dataset)
+from omnipy.components.remote.tasks import (
+    async_load_urls_into_new_dataset,
+    get_auto_from_api_endpoint,
+    get_bytes_from_api_endpoint,
+    get_json_from_api_endpoint,
+    get_str_from_api_endpoint,
+    load_urls_into_new_dataset,
+)
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
@@ -44,20 +46,26 @@ def case_get_auto_from_api_endpoint() -> RequestTypeCase:
 
 @pc.case
 def case_sync_load_urls_into_new_dataset(
-        endpoint: Annotated[EndpointCase, pytest.fixture]) -> RequestTypeCase:
-    return RequestTypeCase(False,
-                           load_urls_into_new_dataset,
-                           dict(dataset_cls=Dataset[endpoint.auto_model_type]),
-                           Dataset[endpoint.auto_model_type])
+    endpoint: Annotated[EndpointCase, pytest.fixture],
+) -> RequestTypeCase:
+    return RequestTypeCase(
+        False,
+        load_urls_into_new_dataset,
+        dict(dataset_cls=Dataset[endpoint.auto_model_type]),
+        Dataset[endpoint.auto_model_type],
+    )
 
 
 @pc.case
 def case_async_load_urls_into_new_dataset(
-        endpoint: Annotated[EndpointCase, pytest.fixture]) -> RequestTypeCase:
-    return RequestTypeCase(True,
-                           async_load_urls_into_new_dataset,
-                           dict(dataset_cls=Dataset[endpoint.auto_model_type]),
-                           Dataset[endpoint.auto_model_type])
+    endpoint: Annotated[EndpointCase, pytest.fixture],
+) -> RequestTypeCase:
+    return RequestTypeCase(
+        True,
+        async_load_urls_into_new_dataset,
+        dict(dataset_cls=Dataset[endpoint.auto_model_type]),
+        Dataset[endpoint.auto_model_type],
+    )
 
 
 @pc.case
@@ -68,19 +76,22 @@ def case_async_load_urls_into_new_dataset(
         (StrictStrModel, 'text/plain'),
         (JsonModel, 'application/json'),
     ],
-    ids=['bytes', 'text', 'json'])
+    ids=['bytes', 'text', 'json'],
+)
 def case_async_load_urls_into_new_dataset_auto_as_mime_type(
     endpoint: Annotated[EndpointCase, pytest.fixture],
     model_cls: type[Model],
     mime_type: str,
 ) -> RequestTypeCase:
-    return RequestTypeCase(True,
-                           async_load_urls_into_new_dataset,
-                           dict(
-                               dataset_cls=Dataset[model_cls],
-                               as_mime_type=mime_type,
-                           ),
-                           Dataset[model_cls])
+    return RequestTypeCase(
+        True,
+        async_load_urls_into_new_dataset,
+        dict(
+            dataset_cls=Dataset[model_cls],
+            as_mime_type=mime_type,
+        ),
+        Dataset[model_cls],
+    )
 
 
 @pc.case
@@ -92,16 +103,20 @@ def case_async_load_urls_into_new_dataset_auto_as_mime_type(
         # (JsonModel, 'application/octet-stream'),
         (JsonDictModel, 'application/octet-stream'),
     ],
-    ids=['bytes', 'text', 'json'])
+    ids=['bytes', 'text', 'json'],
+)
 def case_fail_async_load_urls_into_new_dataset_auto_as_incorrect_mime_type(
     endpoint: Annotated[EndpointCase, pytest.fixture],
     model_cls: type[Model],
     mime_type: str,
 ) -> RequestTypeCase:
-    return RequestTypeCase(True,
-                           async_load_urls_into_new_dataset,
-                           dict(
-                               dataset_cls=Dataset[model_cls],
-                               as_mime_type=mime_type,
-                           ),
-                           Dataset[model_cls], (ValueError, TypeError))
+    return RequestTypeCase(
+        True,
+        async_load_urls_into_new_dataset,
+        dict(
+            dataset_cls=Dataset[model_cls],
+            as_mime_type=mime_type,
+        ),
+        Dataset[model_cls],
+        (ValueError, TypeError),
+    )

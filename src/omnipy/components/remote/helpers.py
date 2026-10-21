@@ -7,12 +7,14 @@ from typing import cast
 
 from omnipy.shared.enums.data import BackoffStrategy
 
-from .lazy_import import (ClientSession,
-                          ExponentialRetry,
-                          FibonacciRetry,
-                          JitterRetry,
-                          RandomRetry,
-                          TraceConfig)
+from .lazy_import import (
+    ClientSession,
+    ExponentialRetry,
+    FibonacciRetry,
+    JitterRetry,
+    RandomRetry,
+    TraceConfig,
+)
 
 
 class RateLimitingClientSession(ClientSession):
@@ -20,8 +22,10 @@ class RateLimitingClientSession(ClientSession):
     A ClientSession that limits the number of requests made per time period, allowing an initial
     burst of requests to go through before rate limiting kicks in for the rest.
     """
-    def __init__(self, requests_per_time_period: float, time_period_in_secs: float, *args,
-                 **kwargs) -> None:
+
+    def __init__(
+        self, requests_per_time_period: float, time_period_in_secs: float, *args, **kwargs
+    ) -> None:
         from .lazy_import import AsyncLimiter
 
         trace_config = TraceConfig()

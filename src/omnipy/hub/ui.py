@@ -15,11 +15,13 @@ import rich.console
 
 from omnipy.shared.constants import DEFAULT_DARK_BACKGROUND
 from omnipy.shared.enums.display import DisplayColorSystem
-from omnipy.shared.enums.ui import (AutoDetectableUserInterfaceType,
-                                    JupyterUserInterfaceType,
-                                    SpecifiedUserInterfaceType,
-                                    TerminalOutputUserInterfaceType,
-                                    UserInterfaceType)
+from omnipy.shared.enums.ui import (
+    AutoDetectableUserInterfaceType,
+    JupyterUserInterfaceType,
+    SpecifiedUserInterfaceType,
+    TerminalOutputUserInterfaceType,
+    UserInterfaceType,
+)
 from omnipy.shared.protocols.config import IsJupyterUserInterfaceConfig
 from omnipy.shared.typing import TYPE_CHECKING
 
@@ -168,7 +170,8 @@ def detect_ui_type() -> AutoDetectableUserInterfaceType.Literals:
 
 
 def detect_display_color_system(
-        ui_type: SpecifiedUserInterfaceType.Literals) -> DisplayColorSystem.Literals:
+    ui_type: SpecifiedUserInterfaceType.Literals,
+) -> DisplayColorSystem.Literals:
     """Detect the display color system available for a specific UI type.
 
     Args:
@@ -294,7 +297,7 @@ def setup_displayhook_if_plain_terminal(ui_type: TerminalOutputUserInterfaceType
         """
 
         if obj is not None:
-            if (is_model_instance(obj) or isinstance(obj, Dataset) or isinstance(obj, ConfigBase)):
+            if is_model_instance(obj) or isinstance(obj, Dataset) or isinstance(obj, ConfigBase):
                 print(obj.default_repr_to_terminal_str(ui_type))
                 builtins._ = obj  # type: ignore[attr-defined]  # part of displayhook contract
             else:
@@ -303,11 +306,13 @@ def setup_displayhook_if_plain_terminal(ui_type: TerminalOutputUserInterfaceType
     sys.displayhook = _omnipy_displayhook
 
 
-def note_mime_bundle(bullet: str,
-                     html_content: str,
-                     plain_text_content: str = '',
-                     styling: str = '',
-                     noscript: bool = False) -> dict[str, str]:
+def note_mime_bundle(
+    bullet: str,
+    html_content: str,
+    plain_text_content: str = '',
+    styling: str = '',
+    noscript: bool = False,
+) -> dict[str, str]:
     """Build a MIME bundle for displaying a note in rich frontends.
 
     Args:
@@ -332,11 +337,15 @@ def note_mime_bundle(bullet: str,
         </div>
         """)
 
-    note_html += dedent(f"""\
+    note_html += (
+        dedent(f"""\
         <div><style>
         {styling}
         </style></div>
-        """) if styling else ''
+        """)
+        if styling
+        else ''
+    )
 
     if noscript:
         note_html = dedent(f"""\
@@ -386,28 +395,34 @@ def display_jupyter_setup_note(detected_ui_type: JupyterUserInterfaceType.Litera
         display(
             note_mime_bundle(
                 bullet='🔌',
-                html_content=('The Jupyter kernel currently runs in '
-                              'embedded mode, e.g. from within PyCharm. '
-                              '<i>(If you are running Jupyter in a web '
-                              'browser, you probably want to restart the '
-                              'kernel by clicking the ↻ icon in the Jupyter '
-                              'toolbar.)</i>')),
+                html_content=(
+                    'The Jupyter kernel currently runs in '
+                    'embedded mode, e.g. from within PyCharm. '
+                    '<i>(If you are running Jupyter in a web '
+                    'browser, you probably want to restart the '
+                    'kernel by clicking the ↻ icon in the Jupyter '
+                    'toolbar.)</i>'
+                ),
+            ),
             raw=True,
         )
     else:
-        assert UserInterfaceType.is_jupyter_in_browser(detected_ui_type), \
-            (f'Unexpected user interface type: {detected_ui_type}. If this '
-             'is shown then there is most probably a bug in Omnipy. Please '
-             'report it on GitHub.')
+        assert UserInterfaceType.is_jupyter_in_browser(detected_ui_type), (
+            f'Unexpected user interface type: {detected_ui_type}. If this '
+            'is shown then there is most probably a bug in Omnipy. Please '
+            'report it on GitHub.'
+        )
 
         display(
             note_mime_bundle(
                 bullet='🌐',
-                html_content=('The Jupyter kernel currently runs in '
-                              'web browser mode. <i>(If you are running '
-                              'Jupyter elsewhere, e.g. from within '
-                              'PyCharm, you probably want to '
-                              'restart the kernel.)</i>'),
+                html_content=(
+                    'The Jupyter kernel currently runs in '
+                    'web browser mode. <i>(If you are running '
+                    'Jupyter elsewhere, e.g. from within '
+                    'PyCharm, you probably want to '
+                    'restart the kernel.)</i>'
+                ),
             ),
             raw=True,
         )
@@ -415,12 +430,14 @@ def display_jupyter_setup_note(detected_ui_type: JupyterUserInterfaceType.Litera
         display(
             note_mime_bundle(
                 bullet='🔧',
-                html_content=('<i>Workaround for '
-                              '<a href="https://github.com/fairtracks/omnipy/issues/244">'
-                              'Jupyter in PyCharm detection issue</a>:</i> '
-                              'immediately after kernel startup, run '
-                              'an empty or unrelated cell before the '
-                              'cell that loads Omnipy.'),
+                html_content=(
+                    '<i>Workaround for '
+                    '<a href="https://github.com/fairtracks/omnipy/issues/244">'
+                    'Jupyter in PyCharm detection issue</a>:</i> '
+                    'immediately after kernel startup, run '
+                    'an empty or unrelated cell before the '
+                    'cell that loads Omnipy.'
+                ),
             ),
             raw=True,
         )
@@ -455,7 +472,8 @@ def setup_jupyter_ui():
             line-height: normal !important;
         }""")
 
-    jupyter_in_browser_styling = dedent("""\
+    jupyter_in_browser_styling = (
+        dedent("""\
         /*
         Improve font rendering
         */
@@ -540,20 +558,25 @@ def setup_jupyter_ui():
             display: inline-block;
         }
 
-        """) + embedded_content_styling
+        """)
+        + embedded_content_styling
+    )
 
-    assert UserInterfaceType.is_jupyter(detected_ui_type), \
-        (f'Unexpected user interface type: {detected_ui_type}. Expected '
-         'a Jupyter variant. If run from a Jupyter session, please '
-         'restart the kernel and try again.')
+    assert UserInterfaceType.is_jupyter(detected_ui_type), (
+        f'Unexpected user interface type: {detected_ui_type}. Expected '
+        'a Jupyter variant. If run from a Jupyter session, please '
+        'restart the kernel and try again.'
+    )
 
     display(
         note_mime_bundle(
             bullet='⚠️',
-            html_content=('This cell was not loaded properly! You probably '
-                          'want to rerun the code cell above (<i>Click in '
-                          'the code cell, and press Shift+Enter '
-                          '<kbd>⇧</kbd>+<kbd>↩</kbd></i>).'),
+            html_content=(
+                'This cell was not loaded properly! You probably '
+                'want to rerun the code cell above (<i>Click in '
+                'the code cell, and press Shift+Enter '
+                '<kbd>⇧</kbd>+<kbd>↩</kbd></i>).'
+            ),
             noscript=True,
         ),
         raw=True,
@@ -565,36 +588,44 @@ def setup_jupyter_ui():
         display(
             note_mime_bundle(
                 bullet='⚙️',
-                html_content=('This cell contains CSS styling to improve '
-                              'display of Omnipy terminal text output in '
-                              'a web browser. This is needed if you load '
-                              'a notebook with saved outputs that were '
-                              'originally generated in embedded mode '
-                              '(e.g. from within PyCharm).'),
-                plain_text_content=('No Omnipy-related CSS styling was '
-                                    'loaded due to plain text output.'),
+                html_content=(
+                    'This cell contains CSS styling to improve '
+                    'display of Omnipy terminal text output in '
+                    'a web browser. This is needed if you load '
+                    'a notebook with saved outputs that were '
+                    'originally generated in embedded mode '
+                    '(e.g. from within PyCharm).'
+                ),
+                plain_text_content=(
+                    'No Omnipy-related CSS styling was loaded due to plain text output.'
+                ),
                 styling=embedded_content_styling,
             ),
             raw=True,
         )
     else:
-        assert UserInterfaceType.is_jupyter_in_browser(detected_ui_type), \
-            (f'Unexpected user interface type: {detected_ui_type}. If this '
-             'is shown then there is most probably a bug in Omnipy. Please '
-             'report it on GitHub.')
+        assert UserInterfaceType.is_jupyter_in_browser(detected_ui_type), (
+            f'Unexpected user interface type: {detected_ui_type}. If this '
+            'is shown then there is most probably a bug in Omnipy. Please '
+            'report it on GitHub.'
+        )
 
         assert isinstance(jupyter_ui_config, IsJupyterUserInterfaceConfig)
 
         display(
             note_mime_bundle(
                 bullet='⚙️',
-                html_content=('This cell contains CSS styling and hidden '
-                              'widgets to allow clean and reactive display '
-                              'of Omnipy outputs when running Jupyter in '
-                              'a web browser.'),
-                plain_text_content=('No Omnipy-related CSS styling or '
-                                    'hidden widgets were loaded due to '
-                                    'plain text output.'),
+                html_content=(
+                    'This cell contains CSS styling and hidden '
+                    'widgets to allow clean and reactive display '
+                    'of Omnipy outputs when running Jupyter in '
+                    'a web browser.'
+                ),
+                plain_text_content=(
+                    'No Omnipy-related CSS styling or '
+                    'hidden widgets were loaded due to '
+                    'plain text output.'
+                ),
                 styling=jupyter_in_browser_styling,
             ),
             raw=True,
@@ -603,8 +634,7 @@ def setup_jupyter_ui():
     display(
         note_mime_bundle(
             bullet='↻',
-            html_content=('<i>Make sure to rerun this cell whenever '
-                          'the kernel is restarted.</i>'),
+            html_content=('<i>Make sure to rerun this cell whenever the kernel is restarted.</i>'),
         ),
         raw=True,
     )
@@ -615,15 +645,17 @@ def setup_jupyter_ui():
         display(
             note_mime_bundle(
                 bullet='🔧',
-                html_content=('<i>Workaround for '
-                              '<a href="https://github.com/jupyterlab/jupyterlab/issues/15968">'
-                              'JupyterLab erratic scrolling issue</a>:</i> '
-                              'set the "Windowing mode" setting under the '
-                              '"Notebook" section of the "Settings Editor" '
-                              '(from the "Settings" menu) to '
-                              '<i>"contentVisibility"</i> (JupyterLab v4.5 '
-                              'onwards) or <i>"defer"</i> (<v4.5) instead '
-                              'of <i>"full"</i>.'),
+                html_content=(
+                    '<i>Workaround for '
+                    '<a href="https://github.com/jupyterlab/jupyterlab/issues/15968">'
+                    'JupyterLab erratic scrolling issue</a>:</i> '
+                    'set the "Windowing mode" setting under the '
+                    '"Notebook" section of the "Settings Editor" '
+                    '(from the "Settings" menu) to '
+                    '<i>"contentVisibility"</i> (JupyterLab v4.5 '
+                    'onwards) or <i>"defer"</i> (<v4.5) instead '
+                    'of <i>"full"</i>.'
+                ),
             ),
             raw=True,
         )
@@ -646,6 +678,8 @@ def setup_jupyter_ui():
         )
         display(size_updater)
 
-        mime_bundle_end = {'text/html': dedent("""\
-                <noscript></noscript>""")}
+        mime_bundle_end = {
+            'text/html': dedent("""\
+                <noscript></noscript>""")
+        }
         display(mime_bundle_end, raw=True)

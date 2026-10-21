@@ -33,6 +33,7 @@ class IsaProtocolParameterSchema(pyd.BaseModel):
         parameterName: Ontology-backed name of the protocol parameter.
         comments: Optional comments attached to the parameter definition.
     """
+
     class Config:
         """Validation settings for ISA protocol-parameter schema parsing.
 
@@ -47,7 +48,7 @@ class IsaProtocolParameterSchema(pyd.BaseModel):
     field_id: Optional[str] = pyd.Field(None, alias='@id')
     field_context: Optional[str] = pyd.Field(None, alias='@context')
     field_type: Optional[FieldType] = pyd.Field(None, alias='@type')
-    parameterName: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = (None)
+    parameterName: Optional[ontology_annotation_schema.IsaOntologyReferenceModel] = None
     comments: Optional[List[comment_schema.IsaCommentModel]] = None
 
 

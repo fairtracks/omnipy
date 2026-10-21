@@ -10,16 +10,13 @@ from omnipy.data.serializer import Serializer, TarFileSerializer
 from omnipy.shared.protocols.data import IsDataset
 
 
-class MockDataset(DataClassBase):
-    ...
+class MockDataset(DataClassBase): ...
 
 
-class MockModel(DataClassBase):
-    ...
+class MockModel(DataClassBase): ...
 
 
-class NumberDataset(Dataset[Model[int]]):
-    ...
+class NumberDataset(Dataset[Model[int]]): ...
 
 
 class MockNumberSerializer(Serializer[NumberDataset]):
@@ -40,10 +37,9 @@ class MockNumberSerializer(Serializer[NumberDataset]):
         return ','.join(':'.join([k, str(v.content)]) for (k, v) in dataset.items()).encode('utf8')
 
     @classmethod
-    def deserialize(cls,
-                    serialized: bytes,
-                    any_file_suffix=False,
-                    ignore_dirs=False) -> NumberDataset:
+    def deserialize(
+        cls, serialized: bytes, any_file_suffix=False, ignore_dirs=False
+    ) -> NumberDataset:
         number_dataset = NumberDataset()
         for key, val in [_.split(':') for _ in serialized.decode('utf8').split(',')]:
             number_dataset[key] = int(val)
@@ -71,10 +67,9 @@ class MockNumberToTarFileSerializer(TarFileSerializer[NumberDataset]):
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=number_encode_func)
 
     @classmethod
-    def deserialize(cls,
-                    serialized: bytes,
-                    any_file_suffix=False,
-                    ignore_dirs=False) -> NumberDataset:
+    def deserialize(
+        cls, serialized: bytes, any_file_suffix=False, ignore_dirs=False
+    ) -> NumberDataset:
         number_dataset = NumberDataset()
 
         def number_decode_func(file_stream: IO[bytes]) -> int:
@@ -89,6 +84,7 @@ class MockNumberToTarFileSerializer(TarFileSerializer[NumberDataset]):
             data_decode_func=number_decode_func,
             dictify_object_func=python_dictify_object,
             any_file_suffix=any_file_suffix,
-            ignore_dirs=ignore_dirs)
+            ignore_dirs=ignore_dirs,
+        )
 
         return number_dataset

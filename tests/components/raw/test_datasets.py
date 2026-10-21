@@ -7,17 +7,19 @@ from typing import Annotated, Iterable
 import pytest
 import pytest_cases as pc
 
-from omnipy.components.raw.datasets import (BytesDataset,
-                                            JoinColumnsToLinesDataset,
-                                            JoinItemsDataset,
-                                            JoinLinesDataset,
-                                            SplitLinesToColumnsDataset,
-                                            SplitToItemsDataset,
-                                            SplitToLinesDataset,
-                                            SplitToLinesNoStripDataset,
-                                            StrDataset,
-                                            StrictBytesDataset,
-                                            StrictStrDataset)
+from omnipy.components.raw.datasets import (
+    BytesDataset,
+    JoinColumnsToLinesDataset,
+    JoinItemsDataset,
+    JoinLinesDataset,
+    SplitLinesToColumnsDataset,
+    SplitToItemsDataset,
+    SplitToLinesDataset,
+    SplitToLinesNoStripDataset,
+    StrDataset,
+    StrictBytesDataset,
+    StrictStrDataset,
+)
 from omnipy.data.model import Model
 from omnipy.util.pydantic import ValidationError
 
@@ -26,26 +28,32 @@ from ...helpers.protocols import AssertModelOrValFunc
 
 def test_bytes_dataset() -> None:
     assert BytesDataset(dict(a=b''))['a'].content == b''
-    assert BytesDataset(
-        dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+    assert (
+        BytesDataset(dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content
+        == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+    )
     assert BytesDataset(dict(a=''))['a'].content == b''
     assert BytesDataset(dict(a='æøå'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
     assert BytesDataset(dict(a='æøå'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
 
     BytesDatasetLatin1 = BytesDataset.adjust(
-        'BytesDatasetLatin1', 'BytesModelLatin1', encoding='latin-1')
+        'BytesDatasetLatin1', 'BytesModelLatin1', encoding='latin-1'
+    )
     assert BytesDatasetLatin1(dict(a='æøå'))['a'].content == b'\xe6\xf8\xe5'
 
     BytesDatasetMyEncoding = BytesDataset.adjust(
-        'BytesDatasetMyEncoding', 'BytesModelMyEncoding', encoding='my-encoding')
+        'BytesDatasetMyEncoding', 'BytesModelMyEncoding', encoding='my-encoding'
+    )
     with pytest.raises(LookupError):
         BytesDatasetMyEncoding(dict(a='æøå'))
 
 
 def test_strict_bytes_dataset() -> None:
     assert StrictBytesDataset(dict(a=b''))['a'].content == b''
-    assert StrictBytesDataset(
-        dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+    assert (
+        StrictBytesDataset(dict(a=b'\xc3\xa6\xc3\xb8\xc3\xa5'))['a'].content
+        == b'\xc3\xa6\xc3\xb8\xc3\xa5'
+    )
 
     with pytest.raises(ValidationError):
         StrictBytesDataset(dict(a=''))
@@ -67,13 +75,15 @@ def test_str_dataset() -> None:
     assert StrDatasetLatin1(dict(a=b'\xe6\xf8\xe5'))['a'].content == 'æøå'
 
     StrDatasetUtf8Sig = StrDataset.adjust(
-        'StrDatasetUtf8Sig', 'StrModelUtf8Sig', encoding='utf-8-sig')
+        'StrDatasetUtf8Sig', 'StrModelUtf8Sig', encoding='utf-8-sig'
+    )
     assert StrDatasetUtf8Sig(dict(a=b'\xef\xbb\xbfsomething'))['a'].content == 'something'
     with pytest.raises(ValidationError):
         StrDatasetUtf8Sig(dict(a=b'\xe6\xf8\xe5'))
 
     StrDatasetMyEncoding = StrDataset.adjust(
-        'StrDatasetMyEncoding', 'StrModelMyEncoding', encoding='my-encoding')
+        'StrDatasetMyEncoding', 'StrModelMyEncoding', encoding='my-encoding'
+    )
     with pytest.raises(LookupError):
         StrDatasetMyEncoding(dict(a=b'\xe6\xf8\xe5'))
 
@@ -112,10 +122,10 @@ def test_split_to_lines_dataset(
     for data_file, lines in lines_stripped.items():
         lines_stripped[data_file] = lines[0:2]
 
-    assert (lines_stripped['last_lines'].content == [
+    assert lines_stripped['last_lines'].content == [
         'abhorred in my imagination it is! my gorge rises at',
-        'it. Here hung those lips that I have kissed I know'
-    ])
+        'it. Here hung those lips that I have kissed I know',
+    ]
 
 
 def test_split_to_lines_no_strip_dataset(
@@ -125,7 +135,8 @@ def test_split_to_lines_no_strip_dataset(
     data = hamlet_text_lf_as_model_or_plain
 
     SplitToLinesNoStripDataset = SplitToLinesDataset.adjust(
-        'SplitToLinesNoStripDataset', 'SplitToLinesNoStripModel', strip=False)
+        'SplitToLinesNoStripDataset', 'SplitToLinesNoStripModel', strip=False
+    )
 
     lines_unstripped = SplitToLinesNoStripDataset(dict(monologue=data))
 
@@ -139,7 +150,8 @@ def test_split_to_lines_no_strip_dataset(
 
 
 def test_join_lines_dataset(
-        hamlet_text_lf_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture]) -> None:
+    hamlet_text_lf_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
+) -> None:
     data = hamlet_text_lf_as_model_or_plain
     lines_stripped = SplitToLinesDataset(dict(monologue=data))
 
@@ -157,7 +169,7 @@ def test_join_lines_dataset(
         abhorred in my imagination it is! my gorge rises at
         it. Here hung those lips that I have kissed I know""")
 
-    assert joined_lines['last_lines'][:joined_lines['last_lines'].index(' ')].content == 'abhorred'
+    assert joined_lines['last_lines'][: joined_lines['last_lines'].index(' ')].content == 'abhorred'
 
 
 def test_join_lines_dataset_of_split_to_lines_dataset(
@@ -172,7 +184,8 @@ def test_join_lines_dataset_of_split_to_lines_dataset(
     }
 
     SplitToLinesNoStripDataset = SplitToLinesDataset.adjust(
-        'SplitToLinesNoStripDataset', 'SplitToLinesNoStripModel', strip=False)
+        'SplitToLinesNoStripDataset', 'SplitToLinesNoStripModel', strip=False
+    )
 
     assert JoinLinesDataset(SplitToLinesNoStripDataset(dict(monologue=data))).to_data() == {
         'monologue': '\n'.join(hamlet_text_lf.splitlines(keepends=True))
@@ -192,21 +205,26 @@ def test_join_lines_by_os_linesep_dataset(
         lines_stripped[data_file] = lines[0:2]
 
     JoinLinesByOsLinesepDataset = JoinLinesDataset.adjust(
-        'JoinLinesByOsLinesepDataset', 'JoinLinesByOsLinesepModel', delimiter=os.linesep)
+        'JoinLinesByOsLinesepDataset', 'JoinLinesByOsLinesepModel', delimiter=os.linesep
+    )
 
     os_linesep_joined_lines = JoinLinesByOsLinesepDataset(lines_stripped)
 
-    assert os_linesep_joined_lines['last_lines'].content == os.linesep.join([
-        'abhorred in my imagination it is! my gorge rises at',
-        'it. Here hung those lips that I have kissed I know'
-    ])
+    assert os_linesep_joined_lines['last_lines'].content == os.linesep.join(
+        [
+            'abhorred in my imagination it is! my gorge rises at',
+            'it. Here hung those lips that I have kissed I know',
+        ]
+    )
 
 
 def test_split_to_lines_datasets_support_mixed_universal_newlines(
-    text_with_mixed_newlines_as_model_or_plain: (Annotated[
-        Model[str] | str,
-        pytest.fixture,
-    ]),
+    text_with_mixed_newlines_as_model_or_plain: (
+        Annotated[
+            Model[str] | str,
+            pytest.fixture,
+        ]
+    ),
 ) -> None:
 
     data = text_with_mixed_newlines_as_model_or_plain
@@ -280,7 +298,8 @@ def test_split_to_items_by_tab_dataset(
 
 
 def test_join_items_dataset(
-        dict_of_item_lists: Annotated[dict[str, list[int]], pytest.fixture]) -> None:
+    dict_of_item_lists: Annotated[dict[str, list[int]], pytest.fixture],
+) -> None:
 
     comma_joined_items = JoinItemsDataset(dict_of_item_lists)
     assert comma_joined_items['start'].content == 'abc,def,ghi,jkl'
@@ -288,7 +307,8 @@ def test_join_items_dataset(
 
 
 def test_join_items_by_comma_space_dataset(
-        dict_of_item_lists: Annotated[dict[str, list[int]], pytest.fixture]) -> None:
+    dict_of_item_lists: Annotated[dict[str, list[int]], pytest.fixture],
+) -> None:
 
     JoinItemsByCommaSpaceDataset = JoinItemsDataset.adjust(
         'JoinItemsByCommaSpaceDataset',
@@ -310,7 +330,8 @@ def test_split_lines_to_columns_dataset(
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     cols_stripped_tab = SplitLinesToColumnsDataset(
-        dict_of_lists_of_texts_with_tabs_as_model_or_plain)
+        dict_of_lists_of_texts_with_tabs_as_model_or_plain
+    )
 
     assert_model_if_dyn_conv_else_val(
         cols_stripped_tab['forward'][0],
@@ -341,7 +362,8 @@ def test_split_lines_to_columns_no_strip_dataset(
     )
 
     cols_unstripped_tab = SplitLinesToColumnsNoStripDataset(
-        dict_of_lists_of_texts_with_tabs_as_model_or_plain)
+        dict_of_lists_of_texts_with_tabs_as_model_or_plain
+    )
 
     assert_model_if_dyn_conv_else_val(
         cols_unstripped_tab['forward'][0],
@@ -372,7 +394,8 @@ def test_split_lines_to_columns_by_comma_dataset(
     )
 
     cols_stripped_comma = SplitLinesToColumnsByCommaDataset(
-        dict_of_lists_of_texts_with_comma_as_model_or_plain)
+        dict_of_lists_of_texts_with_comma_as_model_or_plain
+    )
 
     assert_model_if_dyn_conv_else_val(
         cols_stripped_comma['forward'][0],
@@ -390,8 +413,8 @@ def test_split_lines_to_columns_by_comma_dataset(
 
 
 def test_join_columns_to_lines_dataset(
-        dict_of_list_of_lists_of_items: Annotated[dict[str, list[list[str]]],
-                                                  pytest.fixture]) -> None:
+    dict_of_list_of_lists_of_items: Annotated[dict[str, list[list[str]]], pytest.fixture],
+) -> None:
 
     joined_cols = JoinColumnsToLinesDataset(dict_of_list_of_lists_of_items)
 
@@ -401,8 +424,8 @@ def test_join_columns_to_lines_dataset(
 
 
 def test_join_columns_to_lines_by_comma_dataset(
-        dict_of_list_of_lists_of_items: Annotated[dict[str, list[list[str]]],
-                                                  pytest.fixture]) -> None:
+    dict_of_list_of_lists_of_items: Annotated[dict[str, list[list[str]]], pytest.fixture],
+) -> None:
 
     JoinColumnsToLinesByCommaDataset = JoinColumnsToLinesDataset.adjust(
         'JoinColumnsToLinesByCommaDataset',

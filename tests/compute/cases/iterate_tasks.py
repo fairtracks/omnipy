@@ -6,24 +6,27 @@ from typing import Any, Callable
 
 import pytest_cases as pc
 
-from .raw.functions import (all_int_dataset_plus_int_return_str_dataset_func,
-                            async_all_int_dataset_plus_int_return_str_dataset_func,
-                            async_single_int_model_plus_int_return_str_model_func,
-                            async_single_int_plus_future_int_fail_func,
-                            async_single_int_plus_future_int_return_str_func,
-                            async_single_int_plus_future_return_alphanum_string_func,
-                            async_single_int_plus_int_return_str_func,
-                            async_single_int_plus_int_return_str_model_with_output_str_dataset_func,
-                            single_int_model_plus_default_int_pair_return_str_model_func,
-                            single_int_model_plus_int_return_str_model_func,
-                            single_int_plus_int_return_str_func,
-                            single_int_plus_int_return_str_model_with_output_str_dataset_func,
-                            single_int_plus_int_return_str_with_output_int_dataset_func)
+from .raw.functions import (
+    all_int_dataset_plus_int_return_str_dataset_func,
+    async_all_int_dataset_plus_int_return_str_dataset_func,
+    async_single_int_model_plus_int_return_str_model_func,
+    async_single_int_plus_future_int_fail_func,
+    async_single_int_plus_future_int_return_str_func,
+    async_single_int_plus_future_return_alphanum_string_func,
+    async_single_int_plus_int_return_str_func,
+    async_single_int_plus_int_return_str_model_with_output_str_dataset_func,
+    single_int_model_plus_default_int_pair_return_str_model_func,
+    single_int_model_plus_int_return_str_model_func,
+    single_int_plus_int_return_str_func,
+    single_int_plus_int_return_str_model_with_output_str_dataset_func,
+    single_int_plus_int_return_str_with_output_int_dataset_func,
+)
 
 
 @dataclass
 class IterateDataFilesCase:
     """Bundle reusable iterate-over-data-files task inputs."""
+
     task_func: Callable
     args: tuple[Any, ...]
     kwargs: dict[str, Any]
@@ -82,7 +85,7 @@ def case_async_all_int_dataset_plus_int_return_str_dataset_func() -> IterateData
         'iterate',
         'no_output_dataset',
         'str_output_dataset',
-        'int_output_dataset'
+        'int_output_dataset',
     ],
 )
 def case_sync_single_int_model_plus_int_return_str_model_func() -> IterateDataFilesCase:
@@ -104,11 +107,12 @@ def case_sync_single_int_model_plus_int_return_str_model_func() -> IterateDataFi
         'iterate',
         'no_output_dataset',
         'str_output_dataset',
-        'int_output_dataset'
+        'int_output_dataset',
     ],
 )
-def case_sync_single_int_model_plus_default_int_pair_return_str_model_func(
-) -> IterateDataFilesCase:
+def case_sync_single_int_model_plus_default_int_pair_return_str_model_func() -> (
+    IterateDataFilesCase
+):
     """Provide a sync per-item model case with default pair input."""
     return IterateDataFilesCase(
         task_func=single_int_model_plus_default_int_pair_return_str_model_func,
@@ -127,7 +131,7 @@ def case_sync_single_int_model_plus_default_int_pair_return_str_model_func(
         'iterate',
         'no_output_dataset',
         'str_output_dataset',
-        'int_output_dataset'
+        'int_output_dataset',
     ],
 )
 def case_sync_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
@@ -145,8 +149,9 @@ def case_sync_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
     id='sync_single_int_plus_int_return_str_model_with_output_str_dataset_func',
     tags=['sync', 'function', 'iterate', 'str_output_dataset'],
 )
-def case_sync_single_int_plus_int_return_str_model_with_output_str_dataset_func(
-) -> IterateDataFilesCase:
+def case_sync_single_int_plus_int_return_str_model_with_output_str_dataset_func() -> (
+    IterateDataFilesCase
+):
     """Provide a sync per-item case with string output dataset."""
     return IterateDataFilesCase(
         task_func=single_int_plus_int_return_str_model_with_output_str_dataset_func,
@@ -184,7 +189,7 @@ def case_sync_single_int_plus_int_return_str_with_output_int_dataset_func() -> I
         'iterate',
         'no_output_dataset',
         'str_output_dataset',
-        'int_output_dataset'
+        'int_output_dataset',
     ],
 )
 def case_async_single_int_model_plus_int_return_str_model_func() -> IterateDataFilesCase:
@@ -206,7 +211,7 @@ def case_async_single_int_model_plus_int_return_str_model_func() -> IterateDataF
         'iterate',
         'no_output_dataset',
         'str_output_dataset',
-        'int_output_dataset'
+        'int_output_dataset',
     ],
 )
 def case_async_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
@@ -228,7 +233,7 @@ def case_async_single_int_plus_int_return_str_func() -> IterateDataFilesCase:
         'iterate',
         'no_output_dataset',
         'str_output_dataset',
-        'int_output_dataset'
+        'int_output_dataset',
     ],
 )
 def case_async_single_int_plus_future_return_alphanum_string_func() -> IterateDataFilesCase:
@@ -239,15 +244,17 @@ def case_async_single_int_plus_future_return_alphanum_string_func() -> IterateDa
         kwargs={},
         func_is_async=True,
         iterate_over_data_files=True,
-        fail_parsing_when_output_dataset_is_int=True)
+        fail_parsing_when_output_dataset_is_int=True,
+    )
 
 
 @pc.case(
     id='async_single_int_plus_int_return_str_model_with_output_str_dataset_func',
     tags=['async', 'function', 'iterate'],
 )
-def case_async_single_int_plus_int_return_str_model_with_output_str_dataset_func(
-) -> IterateDataFilesCase:
+def case_async_single_int_plus_int_return_str_model_with_output_str_dataset_func() -> (
+    IterateDataFilesCase
+):
     """Provide an async per-item case with output dataset injection."""
     return IterateDataFilesCase(
         task_func=async_single_int_plus_int_return_str_model_with_output_str_dataset_func,

@@ -30,14 +30,17 @@ class DataPublisher(pyd.BaseModel):
     Subscribers can watch a single public attribute or the whole model. Nested
     ``DataPublisher`` attributes propagate their changes to parent subscribers.
     """
+
     class Config:
         """Pydantic settings for ``DataPublisher`` models."""
+
         arbitrary_types_allowed = True
         validate_assignment = True
 
     _self_subscriptions: list[Callable[..., None]] = pyd.PrivateAttr(default_factory=list)
-    _attr_subscriptions: DefaultDict[str, list[Callable[..., None]]] = \
-        pyd.PrivateAttr(default_factory=_subscribers_factory)
+    _attr_subscriptions: DefaultDict[str, list[Callable[..., None]]] = pyd.PrivateAttr(
+        default_factory=_subscribers_factory
+    )
 
     def subscribe_attr(self, attr_name: str, callback_fun: Callable[..., None]):
         """Subscribe to updates for one public attribute.
@@ -77,7 +80,8 @@ class DataPublisher(pyd.BaseModel):
         self._self_subscriptions.append(callback_fun)
 
         def _get_attr_callback_for_publisher_child(
-                attr_name: str) -> Callable[[DataPublisher], None]:
+            attr_name: str,
+        ) -> Callable[[DataPublisher], None]:
             def _attr_callback_for_publisher_child(value: object) -> None:
                 callback_fun(self)
 
@@ -88,7 +92,8 @@ class DataPublisher(pyd.BaseModel):
                 attr = getattr(self, attr_name)
                 if isinstance(attr, DataPublisher):
                     attr.subscribe(
-                        _get_attr_callback_for_publisher_child(attr_name), do_callback=False)
+                        _get_attr_callback_for_publisher_child(attr_name), do_callback=False
+                    )
 
         if do_callback:
             callback_fun(self)

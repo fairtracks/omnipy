@@ -1,4 +1,5 @@
 """Mixins for assigning stable display names and unique names to jobs."""
+
 import os
 from textwrap import dedent
 from typing import Callable, cast
@@ -14,6 +15,7 @@ if is_package_editable('omnipy'):
 
 class NameJobBaseMixin:
     """Provide base support for job names and generated unique names."""
+
     def __init__(self, *, name: str | None = None):
         self._name: str | None = name
 
@@ -26,7 +28,8 @@ class NameJobBaseMixin:
 
         # TODO: When job state machine is implemented, check using that to see if in job state
         self._unique_run_slug, self._unique_full_job_slug = (
-            self._generate_unique_slugs() if hasattr(self, 'create_job') else (None, None))
+            self._generate_unique_slugs() if hasattr(self, 'create_job') else (None, None)
+        )
 
     @staticmethod
     def _check_not_empty_string(param_name: str, param: str) -> None:
@@ -89,6 +92,7 @@ class NameJobBaseMixin:
 
 class NameJobMixin:
     """Expose public helpers for refreshing generated job names."""
+
     def regenerate_unique_name(self) -> None:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{ISUNIQUELYNAMEDJOB_REGENERATE_UNIQUE_NAME_SUMMARY}}

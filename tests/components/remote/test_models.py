@@ -8,13 +8,15 @@ import pytest_cases as pc
 
 from omnipy.components.json.models import JsonListOrDictModel
 from omnipy.components.raw.models import StrictBytesModel, StrictStrModel
-from omnipy.components.remote.models import (AutoResponseContentModel,
-                                             HostUrlModel,
-                                             HttpUrlModel,
-                                             QueryParamsModel,
-                                             ResponseContentPydModel,
-                                             UrlDataclassModel,
-                                             UrlPathModel)
+from omnipy.components.remote.models import (
+    AutoResponseContentModel,
+    HostUrlModel,
+    HttpUrlModel,
+    QueryParamsModel,
+    ResponseContentPydModel,
+    UrlDataclassModel,
+    UrlPathModel,
+)
 from omnipy.data.model import Model
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.pydantic import ValidationError
@@ -110,8 +112,9 @@ def test_http_url_model_validation_errors():
         HttpUrlModel('file:///abc/def')
 
 
-def test_host_url_model_default_localhost(host_url_model_cls: Annotated[type[HostUrlModel],
-                                                                        pytest.fixture]):
+def test_host_url_model_default_localhost(
+    host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
+):
     url = HttpUrlModel()
 
     assert url.scheme == 'http'
@@ -131,8 +134,9 @@ def test_host_url_model_default_localhost(host_url_model_cls: Annotated[type[Hos
     assert https_url.to_data() == str(https_url) == 'https://localhost/'
 
 
-def test_host_url_model_parse_all_fields(host_url_model_cls: Annotated[type[HostUrlModel],
-                                                                       pytest.fixture]):
+def test_host_url_model_parse_all_fields(
+    host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
+):
     url = host_url_model_cls('https://user:pass@abc.net:8080/def?ghi=jkl#mno')
 
     assert url.scheme == 'https'
@@ -148,15 +152,17 @@ def test_host_url_model_parse_all_fields(host_url_model_cls: Annotated[type[Host
 
 
 def test_host_url_model_parse_international_domains(
-        host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture]):
+    host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
+):
     for domain in ('https://www.example.珠宝/', 'https://www.example.xn--pbt977c/'):
         url = host_url_model_cls(domain)
         assert url.host == 'www.example.珠宝'
         assert url.to_data() == str(url) == 'https://www.example.xn--pbt977c/'
 
 
-def test_host_url_model_url_escape(host_url_model_cls: Annotated[type[HostUrlModel],
-                                                                 pytest.fixture]):
+def test_host_url_model_url_escape(
+    host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
+):
     def _assert_fields(url: UrlDataclassModel):
         assert url.username == 'bø'
         assert url.password == 'bø'
@@ -166,14 +172,21 @@ def test_host_url_model_url_escape(host_url_model_cls: Annotated[type[HostUrlMod
 
     url = host_url_model_cls('https://bø:bø@abc.net/def æ/jkl?mnø=pqr å#vwx yz')
     _assert_fields(url)
-    assert url.to_data() == str(url) \
+    assert (
+        url.to_data()
+        == str(url)
         == 'https://b%C3%B8:b%C3%B8@abc.net/def%20%C3%A6/jkl?mn%C3%B8=pqr%20%C3%A5#vwx%20yz'
+    )
 
     url = host_url_model_cls(
-        'https://b%C3%B8:b%C3%B8@abc.net/def%20%C3%A6/jkl?mn%C3%B8=pqr%20%C3%A5#vwx%20yz')
+        'https://b%C3%B8:b%C3%B8@abc.net/def%20%C3%A6/jkl?mn%C3%B8=pqr%20%C3%A5#vwx%20yz'
+    )
     _assert_fields(url)
-    assert url.to_data() == str(url) \
+    assert (
+        url.to_data()
+        == str(url)
         == 'https://b%C3%B8:b%C3%B8@abc.net/def%20%C3%A6/jkl?mn%C3%B8=pqr%20%C3%A5#vwx%20yz'
+    )
 
 
 def test_host_url_model_modify_direct_fields(
@@ -193,8 +206,11 @@ def test_host_url_model_modify_direct_fields(
 
     url.query |= {'xyz': '123'}
 
-    assert url.to_data() == str(
-        url) == 'https://user:pass@cba.net/def/ghi?jkl=mno&pqr=stu&xyz=123#anchor'
+    assert (
+        url.to_data()
+        == str(url)
+        == 'https://user:pass@cba.net/def/ghi?jkl=mno&pqr=stu&xyz=123#anchor'
+    )
 
     if isinstance(url, HttpUrlModel):
         with pytest.raises(ValidationError):
@@ -203,18 +219,25 @@ def test_host_url_model_modify_direct_fields(
         if not runtime.config.data.model.interactive:
             # Manual reset of invalid modification above
             url.scheme = 'https'
-        assert url.to_data() == str(
-            url) == 'https://user:pass@cba.net/def/ghi?jkl=mno&pqr=stu&xyz=123#anchor'
+        assert (
+            url.to_data()
+            == str(url)
+            == 'https://user:pass@cba.net/def/ghi?jkl=mno&pqr=stu&xyz=123#anchor'
+        )
 
     else:
         url.scheme = 'ftp'
 
-        assert url.to_data() == str(
-            url) == 'ftp://user:pass@cba.net/def/ghi?jkl=mno&pqr=stu&xyz=123#anchor'
+        assert (
+            url.to_data()
+            == str(url)
+            == 'ftp://user:pass@cba.net/def/ghi?jkl=mno&pqr=stu&xyz=123#anchor'
+        )
 
 
-def test_host_url_model_modify_port(host_url_model_cls: Annotated[type[HostUrlModel],
-                                                                  pytest.fixture]):
+def test_host_url_model_modify_port(
+    host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
+):
     url = host_url_model_cls('http://abc.net/def')
     assert url.port == 80
 
@@ -251,8 +274,9 @@ def test_host_url_model_modify_port(host_url_model_cls: Annotated[type[HostUrlMo
 
 
 def test_host_url_model_query_params(
-        host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
-        assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]):
+    host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+):
     url = host_url_model_cls('http://abc.net/def')
 
     # TODO: When type-dependent conversion is implemented, make QueryParamsModel convertible to both
@@ -284,8 +308,9 @@ def test_host_url_model_query_params(
 
 
 def test_host_url_model_add_operator(
-        host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
-        assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture]):
+    host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+):
     url = host_url_model_cls('http://abc.net')
 
     url += 'path/to/file'  # pyright: ignore[reportOperatorIssue]
@@ -297,13 +322,19 @@ def test_host_url_model_add_operator(
 
     new_url += ' is longer'
     assert_model_if_dyn_conv_else_val(new_url.query['query'], str, 'string is longer')
-    assert new_url.to_data() == str(new_url) \
-           == 'http://abc.net/path/to/file?query=string%20is%20longer'
+    assert (
+        new_url.to_data()
+        == str(new_url)
+        == 'http://abc.net/path/to/file?query=string%20is%20longer'
+    )
 
     new_url += '#fragment'
     assert new_url.fragment == 'fragment'
-    assert new_url.to_data() == str(new_url) \
-           == 'http://abc.net/path/to/file?query=string%20is%20longer#fragment'
+    assert (
+        new_url.to_data()
+        == str(new_url)
+        == 'http://abc.net/path/to/file?query=string%20is%20longer#fragment'
+    )
 
     with pytest.raises(TypeError):
         '#fragment' + new_url  # type: ignore[operator]
@@ -314,13 +345,16 @@ def test_host_url_model_add_operator(
 
 def test_auto_response_content_model() -> None:
     model = AutoResponseContentModel(
-        ResponseContentPydModel(content_type='text/plain', response='abc'))
+        ResponseContentPydModel(content_type='text/plain', response='abc')
+    )
     assert model.content == StrictStrModel('abc')
 
     model = AutoResponseContentModel(
-        ResponseContentPydModel(content_type='application/octet-stream', response=b'abc'))
+        ResponseContentPydModel(content_type='application/octet-stream', response=b'abc')
+    )
     assert model.content == StrictBytesModel(b'abc')
 
     model = AutoResponseContentModel(
-        ResponseContentPydModel(content_type='application/json', response=['abc']))
+        ResponseContentPydModel(content_type='application/json', response=['abc'])
+    )
     assert model.content == JsonListOrDictModel(['abc'])

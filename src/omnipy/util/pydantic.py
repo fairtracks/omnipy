@@ -17,6 +17,7 @@ PYDANTIC_V2 = pydantic.__version__.startswith('2')
 
 if TYPE_CHECKING or PYDANTIC_V2:
     import pydantic.v1
+
     pyd = pydantic.v1
 
     import pydantic.v1.error_wrappers as pyd_error_wrappers
@@ -94,7 +95,6 @@ def pydantic_v1_hack():
     import typing
 
     if TYPE_CHECKING or PYDANTIC_V2:
-
         import pydantic.v1.fields
         import pydantic.v1.generics
         import pydantic.v1.typing

@@ -128,18 +128,24 @@ if is_package_editable('omnipy'):
         reusable pieces.""")
 
     _JOB_TEMPLATE_SHARED_KWARG_DOCS = '\n'.join(
-        (os.environ['OMNIPY_MACRO_JOB_TEMPLATE_NAME_ARG_DOC'],
-         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_ITERATE_ARG_DOCS'],
-         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_AUTO_ASYNC_ARG_DOC'],
-         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_RESULT_KEY_ARG_DOC'],
-         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_PARAMS_ARG_DOCS'],
-         os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SERIALIZE_ARG_DOC'],
-         '**kwargs: Additional constructor keyword overrides.'))
+        (
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_NAME_ARG_DOC'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_ITERATE_ARG_DOCS'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_AUTO_ASYNC_ARG_DOC'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_RESULT_KEY_ARG_DOC'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_PARAMS_ARG_DOCS'],
+            os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SERIALIZE_ARG_DOC'],
+            '**kwargs: Additional constructor keyword overrides.',
+        )
+    )
 
-    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_REFINE_COMMON_ARGS'] = dedent("""\
+    os.environ['OMNIPY_MACRO_JOB_TEMPLATE_REFINE_COMMON_ARGS'] = (
+        dedent("""\
             update: Whether omitted values should be inherited from the
                 current template.
-            """) + _JOB_TEMPLATE_SHARED_KWARG_DOCS
+            """)
+        + _JOB_TEMPLATE_SHARED_KWARG_DOCS
+    )
 
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SHARED_KWARG_DOCS'] = _JOB_TEMPLATE_SHARED_KWARG_DOCS
 
@@ -147,15 +153,18 @@ if is_package_editable('omnipy'):
             job_func: Python callable to wrap as a job template.""")
 
 
-class PlainFuncArgJobBase(JobBase[_JobTemplateT, _JobT, _CallP, _RetT],
-                          Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
+class PlainFuncArgJobBase(
+    JobBase[_JobTemplateT, _JobT, _CallP, _RetT], Generic[_JobTemplateT, _JobT, _CallP, _RetT]
+):
     """Store the callable backing a task or function-flow job."""
-    def __init__(self, job_func: Callable[_CallP, _RetT], /, *args: object,
-                 **kwargs: object) -> None:
+
+    def __init__(
+        self, job_func: Callable[_CallP, _RetT], /, *args: object, **kwargs: object
+    ) -> None:
         self._job_func = job_func
 
     def _get_init_args(self) -> tuple[object, ...]:
-        return self._job_func,
+        return (self._job_func,)
 
     @property
     def callable_type(self) -> CallableType.Literals:
@@ -178,8 +187,10 @@ class PlainFuncArgJobBase(JobBase[_JobTemplateT, _JobT, _CallP, _RetT],
 
 
 # Extra level needed for mixins to be able to overload _call_job (and possibly other methods)
-class FuncArgJobBase(PlainFuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT],
-                     Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
+class FuncArgJobBase(
+    PlainFuncArgJobBase[_JobTemplateT, _JobT, _CallP, _RetT],
+    Generic[_JobTemplateT, _JobT, _CallP, _RetT],
+):
     """Provide the callable-based extension point that compute mixins compose onto."""
 
     ...

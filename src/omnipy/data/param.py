@@ -50,8 +50,9 @@ class _ParamsMeta(pyd.ModelMetaclass):
             if default_vals[field.name] is None and not field.allow_none:
                 raise ValueError(f'{model_cls.__name__}.{field.name} must have a default value')
 
-        values, fields_set, validation_error = \
-            pyd.validate_model(model_cls, input_data={k: v for k, v in default_vals.items()})
+        values, fields_set, validation_error = pyd.validate_model(
+            model_cls, input_data={k: v for k, v in default_vals.items()}
+        )
 
         if validation_error:
             raise validation_error
@@ -141,8 +142,10 @@ class ParamsBase(pyd.BaseModel, metaclass=_ParamsMeta):
     objects. Omnipy reads parameter values directly from the class and can clone
     the parameter class with selected defaults overridden.
     """
+
     class Config:
         """Pydantic model configuration: allows arbitrary types and enables smart union matching."""
+
         arbitrary_types_allowed = True
         smart_union = True
 
@@ -182,7 +185,8 @@ class ParamsBase(pyd.BaseModel, metaclass=_ParamsMeta):
             for field_name, field_info in all_field_infos.items()
         }
         return pyd.create_model(  # type: ignore[call-overload]
-            model_name, __base__=ParamsBase, **field_definitions)
+            model_name, __base__=ParamsBase, **field_definitions
+        )
 
 
 def bind_adjust_model_func(
@@ -203,6 +207,7 @@ def bind_adjust_model_func(
         A helper that accepts a new model name and keyword-only parameter
         overrides, then returns the adjusted model class.
     """
+
     def _func(model_name: str, *args: _ParamsP.args, **kwargs: _ParamsP.kwargs) -> type[_ModelT]:
         """Create an adjusted clone of the model class.
 
@@ -222,8 +227,10 @@ def bind_adjust_model_func(
             >>> NewModel = adjust_model('NewModel', retries=2)
         """
         if len(args) > 0:
-            raise AttributeError(f'Positional arguments are not supported for '
-                                 f'{params_cls.__module__}.{params_cls.__name__}')
+            raise AttributeError(
+                f'Positional arguments are not supported for '
+                f'{params_cls.__module__}.{params_cls.__name__}'
+            )
         new_model_cls = clone_model_func(model_name)
         new_model_cls.Params = params_cls.copy_and_adjust(  # type: ignore[attr-defined]
             'Params',
@@ -254,8 +261,10 @@ def bind_adjust_dataset_func(
         A helper that accepts dataset and model names plus keyword-only
         parameter overrides, then returns the adjusted dataset class.
     """
-    def _func(dataset_name: str, model_name: str, *args: _ParamsP.args,
-              **kwargs: _ParamsP.kwargs) -> type[_DatasetT]:
+
+    def _func(
+        dataset_name: str, model_name: str, *args: _ParamsP.args, **kwargs: _ParamsP.kwargs
+    ) -> type[_DatasetT]:
         """Create an adjusted clone of the dataset class.
 
         Args:
@@ -275,8 +284,10 @@ def bind_adjust_dataset_func(
             >>> NewDataset = adjust_dataset('NewDataset', 'NewModel', retries=2)
         """
         if len(args) > 0:
-            raise AttributeError(f'Positional arguments are not supported for '
-                                 f'{params_cls.__module__}.{params_cls.__name__}')
+            raise AttributeError(
+                f'Positional arguments are not supported for '
+                f'{params_cls.__module__}.{params_cls.__name__}'
+            )
         new_model_cls: type[_ModelT] = cast(
             type[_ModelT],
             model_cls.adjust(model_name, **kwargs),  # type: ignore[attr-defined]
@@ -300,6 +311,7 @@ def params_dataclass(cls: type[_ParamsT]) -> type[_ParamsT]:
         The same class wrapped by :func:`dataclasses.dataclass` with
         ``kw_only=True``.
     """
+
     def wrap(cls):
         """Wrap a class using ``dataclass(..., kw_only=True)``.
 

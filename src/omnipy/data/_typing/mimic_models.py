@@ -23,129 +23,122 @@ if TYPE_CHECKING:
     from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
     from omnipy.data.dataset import _ModelOrDatasetT, Dataset
     from omnipy.data.model import Model
-    from omnipy.shared.protocols.content import (IsBoolContent,
-                                                 IsBytesContent,
-                                                 IsDictContent,
-                                                 IsFloatContent,
-                                                 IsIntContent,
-                                                 IsListContent,
-                                                 IsPairTupleContent,
-                                                 IsSameTypeTupleContent,
-                                                 IsSetContent,
-                                                 IsStrContent)
+    from omnipy.shared.protocols.content import (
+        IsBoolContent,
+        IsBytesContent,
+        IsDictContent,
+        IsFloatContent,
+        IsIntContent,
+        IsListContent,
+        IsPairTupleContent,
+        IsSameTypeTupleContent,
+        IsSetContent,
+        IsStrContent,
+    )
     from omnipy.shared.protocols.data import IsDataset
 
     _RootT = TypeVar('_RootT')
 
     class PlainModel(
-            Model[_RootT],
-            Generic[_RootT],
+        Model[_RootT],
+        Generic[_RootT],
     ):
         """Minimal generic stand-in for ``Model[_RootT]`` during type checking."""
 
         if TYPE_CHECKER != 'mypy':
 
-            def __new__(cls, *args: Any, **kwargs: Any) -> Self:
-                ...
+            def __new__(cls, *args: Any, **kwargs: Any) -> Self: ...
 
     class Model_int(PlainModel[int], IsIntContent):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
-        """Typed stand-in for a concrete ``Model[...]`` subclass.
-"""
+        """Typed stand-in for a concrete ``Model[...]`` subclass."""
 
         ...
 
     class Model_float(PlainModel[float], IsFloatContent):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
-        """Typed stand-in for a concrete ``Model[...]`` subclass.
-"""
+        """Typed stand-in for a concrete ``Model[...]`` subclass."""
 
         ...
 
     class Model_bool(PlainModel[bool], IsBoolContent):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
-        """Typed stand-in for a concrete ``Model[...]`` subclass.
-"""
+        """Typed stand-in for a concrete ``Model[...]`` subclass."""
 
         ...
 
     class Model_str(PlainModel[str], IsStrContent):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
-        """Typed stand-in for a concrete ``Model[...]`` subclass.
-"""
+        """Typed stand-in for a concrete ``Model[...]`` subclass."""
 
         ...
 
     class Model_bytes(PlainModel[bytes], IsBytesContent):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
-        """Typed stand-in for a concrete ``Model[...]`` subclass.
-"""
+        """Typed stand-in for a concrete ``Model[...]`` subclass."""
 
         ...
 
     class Model_set(  # type: ignore[misc]
-            PlainModel[set[_ValT]],
-            IsSetContent[_ValT],
-            Generic[_ValT],
+        PlainModel[set[_ValT]],
+        IsSetContent[_ValT],
+        Generic[_ValT],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
-        """Typed stand-in for a concrete ``Model[...]`` subclass.
-"""
+        """Typed stand-in for a concrete ``Model[...]`` subclass."""
 
         ...
 
     class Model_list(  # type: ignore[misc]
-            PlainModel[list[_ValT]],
-            IsListContent[_ValT],
-            Generic[_ValT],
+        PlainModel[list[_ValT]],
+        IsListContent[_ValT],
+        Generic[_ValT],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
-        """Typed stand-in for a concrete ``Model[...]`` subclass.
-"""
+        """Typed stand-in for a concrete ``Model[...]`` subclass."""
 
         ...
 
     class Model_tuple_same_type(  # type: ignore[misc]
-            PlainModel[tuple[_ValT, ...]],
-            IsSameTypeTupleContent[_ValT],
-            Generic[_ValT],
+        PlainModel[tuple[_ValT, ...]],
+        IsSameTypeTupleContent[_ValT],
+        Generic[_ValT],
     ):
         """Typed stand-in for homogeneous tuple models."""
 
         ...
 
     class Model_tuple_pair(  # type: ignore[misc]
-            PlainModel[tuple[_ValT, _ValT2]],
-            IsPairTupleContent[_ValT, _ValT2],
-            Generic[_ValT, _ValT2],
+        PlainModel[tuple[_ValT, _ValT2]],
+        IsPairTupleContent[_ValT, _ValT2],
+        Generic[_ValT, _ValT2],
     ):
         """Typed stand-in for two-element tuple models."""
 
         ...
 
     class Model_dict(  # type: ignore[misc]
-            PlainModel[dict[_KeyT, _ValT]],
-            IsDictContent[_KeyT, _ValT],
-            Generic[_KeyT, _ValT],
+        PlainModel[dict[_KeyT, _ValT]],
+        IsDictContent[_KeyT, _ValT],
+        Generic[_KeyT, _ValT],
     ):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
-        """Typed stand-in for a concrete ``Model[...]`` subclass.
-"""
+        """Typed stand-in for a concrete ``Model[...]`` subclass."""
 
         ...
 
     class Model_Dataset(  # type: ignore[misc]
-            PlainModel[Dataset[_ModelOrDatasetT]],
-            IsDataset[_ModelOrDatasetT],
-            Generic[_ModelOrDatasetT],
+        PlainModel[Dataset[_ModelOrDatasetT]],
+        IsDataset[_ModelOrDatasetT],
+        Generic[_ModelOrDatasetT],
     ):
         """Typed stand-in for dataset-valued models."""
 
