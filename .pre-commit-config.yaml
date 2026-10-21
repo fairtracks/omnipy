@@ -16,38 +16,6 @@ repos:
         args: [-D, mypy]
         name: Validate pyproject.toml
         additional_dependencies: ["validate-pyproject-schema-store[all]"]
-  - repo: https://github.com/google/yapf
-    rev: v0.43.0
-    hooks:
-      - id: yapf
-        name: "yapf"
-        additional_dependencies: [toml]
-        args: [ '--style', 'pyproject.toml', '--parallel', '--in-place' ]
-        stages: [ pre-commit ]
-        types: [ python ]
-      - id: yapf
-        name: "yapf (check)"
-        additional_dependencies: [toml]
-        args: [ '--style', 'pyproject.toml', '--diff' ]
-        stages: [ manual ]
-        types: [ python ]
-  - repo: https://github.com/pycqa/isort
-    rev: 9.0.0a3
-    hooks:
-      - id: isort
-        name: isort
-        stages: [ pre-commit ]
-        types: [ python ]
-      - id: isort
-        name: isort (check)
-        args: [ '--check-only' ]
-        stages: [ manual ]
-        types: [ python ]
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.3.0
-    hooks:
-      - id: flake8
-        additional_dependencies: [flake8-quotes==3.3.2]
   - repo: local
     hooks:
       - id: install-local-package
@@ -64,3 +32,28 @@ repos:
         types: [python]
         stages: [pre-commit]
         entry: python .pre-commit-hooks/expand_docstr_macros.py
+      - id: ruff-check
+        name: ruff check
+        description: "Lint, sort imports and apply safe fixes."
+        entry: uv run ruff check --fix
+        language: system
+        types: [ python ]
+        stages: [ pre-commit ]
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format
+        language: system
+        types: [ python ]
+        stages: [ pre-commit ]
+      - id: ruff-check
+        name: ruff check (check)
+        entry: uv run ruff check
+        language: system
+        types: [ python ]
+        stages: [ manual ]
+      - id: ruff-format
+        name: ruff format (check)
+        entry: uv run ruff format --diff
+        language: system
+        types: [ python ]
+        stages: [ manual ]

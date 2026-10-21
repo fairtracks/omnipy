@@ -97,6 +97,7 @@ dev = [
     "pytest-asyncio>1,<2",
     "pytest-cases<4",
     "tuna>=0.5.11,<1.0.0",
+    "ruff>=0.15.0",
 ]
 docs = [
     "pymdown-extensions>=10.0.1,<11.0.0",
@@ -126,45 +127,40 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/omnipy"]
 
-[tool.yapf]
-allow_split_before_dict_value = true
-based_on_style = "google"
-align_closing_bracket_with_visual_indent = true
-blank_line_before_nested_class_or_def = false
-column_limit = 100
-continuation_indent_width = 4
-indent_dictionary_value = true
-join_multiple_lines = true
-split_all_comma_separated_values = false
-split_all_top_level_comma_separated_values = true
-split_before_expression_after_opening_paren = true
-split_before_bitwise_operator = true
-split_before_logical_operator = true
-split_before_arithmetic_operator = true
-
-[tool.yapfignore]
-ignore_patterns = [
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+extend-exclude = [
   "src/omnipy/shared/protocols/_collections_abc.py",
   "src/omnipy/shared/protocols/_typeshed.py",
+  "src/omnipy/shared/protocols/_typeshed_import",
   "src/omnipy/shared/protocols/builtins.py",
   "src/omnipy/shared/protocols/types.py",
   "src/omnipy/shared/protocols/typing.py",
 ]
 
+[tool.ruff.format]
+quote-style = "single"
 
-[tool.isort]
-profile = "google"
-force_single_line = false
-multi_line_output = 1
-src_paths = ["src/omnipy", "tests"]
-line_length = 100
-skip = [
-  "src/omnipy/shared/protocols/_collections_abc.py",
-  "src/omnipy/shared/protocols/_typeshed.py",
-  "src/omnipy/shared/protocols/builtins.py",
-  "src/omnipy/shared/protocols/types.py",
-  "src/omnipy/shared/protocols/typing.py",
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90", "Q", "UP", "I"]
+ignore = [
+  "E731",  # Lambda assignment
+  "UP042",  # (str, Enum) is used deliberately instead of StrEnum
 ]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.lint.isort]
+# Equivalent of the former isort "google" profile
+force-sort-within-sections = true
+order-by-type = false
+known-first-party = ["omnipy"]
 
 [tool.prefect.flows]
 checkpointing = true

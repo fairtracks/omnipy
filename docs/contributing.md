@@ -167,9 +167,8 @@ Information on how to configure `pyright` for `JupyterLab` will be added here so
 
 #### For automatic formatting and linting
 
-The setup for automatic formatting and linting is rather complex. The main alternative is to use
-black, which is easier to set up, but it does not have as many options and the main omnipy developer
-is opinionated against the default black setup. The yapf config is not fully defined.
+Formatting, import sorting and linting are handled by [ruff](https://docs.astral.sh/ruff/), configured
+in `pyproject.toml`. The formatter follows the Black style, with single quotes and a line length of 100.
 
 - To install git hooks that automagically format and lint before every commit:
   - `pre-commit install`
