@@ -314,15 +314,17 @@ def test_more_dict_methods_with_parsing():
     with pytest.raises(KeyError):
         assert dataset['data_file_3']
 
-    dataset.update({'data_file_2': 456, 'data_file_3': 567})
+    dataset.update({'data_file_2': 456, 'data_file_3': 567})  # pyright: ignore
     assert dataset['data_file_2'].content == '456'
     assert dataset['data_file_3'].content == '567'
 
-    dataset.setdefault('data_file_3', 789)
-    assert dataset.get('data_file_3').content == '567'
+    dataset.setdefault('data_file_3', 789)  # pyright: ignore[reportArgumentType]
+    assert dataset.get(
+        'data_file_3').content == '567'  # pyright: ignore[reportOptionalMemberAccess]
 
-    dataset.setdefault('data_file_4', 789)
-    assert dataset.get('data_file_4').content == '789'
+    dataset.setdefault('data_file_4', 789)  # pyright: ignore[reportArgumentType]
+    assert dataset.get(
+        'data_file_4').content == '789'  # pyright: ignore[reportOptionalMemberAccess]
 
     assert dataset.fromkeys(['data_file_1', 'data_file_2'], 321) == \
         Dataset[Model[str]](data_file_1='321', data_file_2='321')
@@ -336,11 +338,9 @@ def test_more_dict_methods_with_parsing():
     assert len(dataset) == 2
     assert 'data_file_3' not in dataset
 
-    # UserDict() implementation of popitem pops items FIFO contrary of the LIFO specified
-    # in the standard library: https://docs.python.org/3/library/stdtypes.html#dict.popitem
     dataset.popitem()
     assert len(dataset) == 1
-    assert dataset.to_data() == {'data_file_4': '789'}
+    assert dataset.to_data() == {'data_file_2': '456'}
 
     dataset.clear()
     assert len(dataset) == 0
