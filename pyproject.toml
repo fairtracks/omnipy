@@ -174,10 +174,10 @@ checkpointing = true
 
 # General
 
-# Retaining compatibility with python 3.10
-python_version = "3.10"
+# Retaining compatibility with python 3.11
+python_version = "3.11"
 # Needed on python>=3.12 to avoid syntax errors for "type" syntax when
-# python_version = "3.10"
+# python_version = "3.11"
 native_parser = true
 always_true = "TYPE_CHECKER_IS_MYPY"
 mypy_path = "src:tests"

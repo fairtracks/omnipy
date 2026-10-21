@@ -62,12 +62,11 @@ to distributed deployment, meeting the demands of projects large and small.
 
 ## Installing Omnipy
 
-1. Make sure that your Python version is between `3.10` and `3.13` (Python `3.14` is not yet 
-   supported), e.g.:
+1. Make sure that your Python version is between `3.11` and `3.15`, e.g.:
 
     ```bash
     $ python --version
-    Python 3.10.14
+    Python 3.15
     ```
 
 2. Create and activate a virtual environment for your project, e.g.:

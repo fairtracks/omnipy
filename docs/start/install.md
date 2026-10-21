@@ -4,7 +4,7 @@ Install Omnipy in a Python environment and verify it is available.
 
 ## Requirements
 
-- Python **3.10–3.13**
+- Python **3.11–3.15**
 
 ## Quick start install (`pip`)
 
