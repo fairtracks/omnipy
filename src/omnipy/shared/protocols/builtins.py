@@ -83,7 +83,7 @@ from typing import (  # noqa: Y022,UP035
 
 # we can't import `Literal` from typing or mypy crashes: see #11247
 # from typing_extensions import Literal, LiteralString, Self, TypeIs, TypeVarTuple, deprecated, disjoint_base  # noqa: Y023, UP035
-from typing_extensions import Literal, LiteralString, Self, deprecated, TypeVar
+from typing_extensions import Literal, LiteralString, Self, deprecated, TypeVar, disjoint_base
 
 # if sys.version_info >= (3, 14):
 #     from _typeshed import AnnotateFunc
@@ -91,7 +91,7 @@ from typing_extensions import Literal, LiteralString, Self, deprecated, TypeVar
 from omnipy.shared.exceptions import AssumedToBeImplementedException
 from omnipy.shared.protocols._collections_abc import IsDictItems, IsDictKeys, IsDictValues
 from omnipy.shared.protocols._typeshed import (ReadableBuffer, SupportsKeysAndGetItem, SupportsRichComparison, SupportsRichComparisonT)
-from omnipy.shared.protocols.typing import (IsAbstractSet, IsMutableMapping, IsMutableSequence, IsMutableSet, IsItemSequence)
+from omnipy.shared.protocols.typing import (IsAbstractSet, IsMutableMapping, IsMapping, IsMutableSequence, IsMutableSet, IsItemSequence)
 
 _T = TypeVar("_T")
 # _I = TypeVar("_I", default=int)
