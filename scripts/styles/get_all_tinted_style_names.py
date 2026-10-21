@@ -43,7 +43,7 @@ def get_all_tinted_themes() -> ThemesPerVariantType:
 # print(themes_per_variant)
 
 # yapf: disable
-# flake8: noqa: E501
+# ruff: noqa: E501
 # Per Nov 1, 2025, the output of this script is:
 themes_per_variant: ThemesPerVariantType = {
   (True, 'dark'): [

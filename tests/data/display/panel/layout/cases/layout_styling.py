@@ -47,7 +47,7 @@ def case_layout_styling_setup_no_frame(
     # Create stylized output with default config (should use Table grid)
     return StylizedPanelTestCaseSetup(
         case_id=(
-            'no-frame-dark-color' + ('-no-bg' if not solid_background else '') +  # noqa: W504
+            'no-frame-dark-color' + ('-no-bg' if not solid_background else '') +
             ('-show-style' if panel_design is PanelDesign.TABLE_SHOW_STYLE else '')),
         content=layout,
         config=OutputConfig(
@@ -81,7 +81,7 @@ def case_layout_styling_setup_frame_and_title(
     # Create stylized output with default config (should use Table grid)
     return StylizedPanelTestCaseSetup(
         case_id=(
-            'frame-title-light-color' + ('-no-bg' if not solid_background else '') +  # noqa: W504
+            'frame-title-light-color' + ('-no-bg' if not solid_background else '') +
             ('-show-style' if panel_design is PanelDesign.TABLE_SHOW_STYLE else '')),
         content=layout,
         config=OutputConfig(
@@ -113,8 +113,8 @@ def case_layout_styling_setup_small_frame(
     # Create stylized output with default config (should use Table grid)
     return StylizedPanelTestCaseSetup(
         case_id=(
-            'tiny-cropped-table-dark-color' +  # noqa: W504
-            ('-no-bg' if not solid_background else '') +  # noqa: W504
+            'tiny-cropped-table-dark-color' +
+            ('-no-bg' if not solid_background else '') +
             ('-show-style' if panel_design is PanelDesign.TABLE_SHOW_STYLE else '')),
         content=layout,
         frame=Frame(Dimensions(width=2, height=2)),

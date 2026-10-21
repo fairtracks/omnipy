@@ -489,7 +489,7 @@ def is_non_str_byte_iterable(
     Returns:
         ``True`` for non-string, non-bytes iterables.
     """
-    return is_iterable(obj) and not type(obj) in (str, bytes)
+    return is_iterable(obj) and type(obj) not in (str, bytes)
 
 
 def ensure_non_str_byte_iterable(value):

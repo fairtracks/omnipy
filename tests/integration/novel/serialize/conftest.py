@@ -1,6 +1,6 @@
 """Shared fixtures for integration novel serialization tests."""
 
-# flake8: noqa
+# ruff: noqa
 
 from .cases.datasets import (csv_dataset,
                              json_dataset,

@@ -929,7 +929,7 @@ else:
         preserving row ordering.
         """
         @classmethod
-        def _validate_over_all_rows(
+        def _validate_over_all_rows(  # noqa: C901
             cls,
             input_model: ColumnWiseTableWithColNamesModel | RowWiseTableModel,
             output_model: ColumnWiseTableWithColNamesModel,

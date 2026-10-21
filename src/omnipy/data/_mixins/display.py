@@ -2549,7 +2549,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     ) -> None:
         ...
 
-    def _display_according_to_ui_type(
+    def _display_according_to_ui_type(  # noqa: C901
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
         return_output_if_str: bool,

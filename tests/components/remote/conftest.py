@@ -20,7 +20,7 @@ from .helpers.classes import EndpointCase
 
 
 @pc.fixture(scope='function')
-async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:
+async def lyrics_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:  # noqa: C901
     """Provide a test server exposing lyrics endpoints with varied response types."""
     async def _get_lyrics(url: str):
         url_model = HttpUrlModel(url)

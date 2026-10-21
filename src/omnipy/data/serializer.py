@@ -310,7 +310,7 @@ class SerializerRegistry:
                     return to_dataset
                 else:
                     try:
-                        if to_dataset.get_type().inner_type == str:
+                        if to_dataset.get_type().inner_type is str:
                             to_dataset.from_data(auto_dataset.to_json())
                         else:
                             to_dataset.from_json(auto_dataset.to_data())

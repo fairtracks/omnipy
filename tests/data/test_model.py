@@ -339,35 +339,35 @@ def test_data_import_variants() -> None:
 
 def test_get_inner_outer_type() -> None:
     int_model = Model[int]()
-    assert int_model.outer_type() == int
-    assert int_model.inner_type() == int
+    assert int_model.outer_type() is int
+    assert int_model.inner_type() is int
     assert int_model.is_nested_type() is False
 
     list_of_ints_model = Model[list[int]]()
-    assert list_of_ints_model.outer_type() == list
+    assert list_of_ints_model.outer_type() is list
     assert list_of_ints_model.outer_type(with_args=True) == list[int]
-    assert list_of_ints_model.inner_type() == int
-    assert list_of_ints_model.inner_type(with_args=True) == int
+    assert list_of_ints_model.inner_type() is int
+    assert list_of_ints_model.inner_type(with_args=True) is int
     assert list_of_ints_model.is_nested_type() is True
 
     list_of_lists_of_ints_model = Model[list[list[int]]]()
-    assert list_of_lists_of_ints_model.outer_type() == list
+    assert list_of_lists_of_ints_model.outer_type() is list
     assert list_of_lists_of_ints_model.outer_type(with_args=True) == list[list[int]]
-    assert list_of_lists_of_ints_model.inner_type() == list
+    assert list_of_lists_of_ints_model.inner_type() is list
     assert list_of_lists_of_ints_model.inner_type(with_args=True) == list[int]
     assert list_of_lists_of_ints_model.is_nested_type() is True
 
     dict_of_strings_to_list_of_ints_model = Model[dict[str, list[int]]]()
-    assert dict_of_strings_to_list_of_ints_model.outer_type() == dict
+    assert dict_of_strings_to_list_of_ints_model.outer_type() is dict
     assert dict_of_strings_to_list_of_ints_model.outer_type(with_args=True) == dict[str, list[int]]
-    assert dict_of_strings_to_list_of_ints_model.inner_type() == list
+    assert dict_of_strings_to_list_of_ints_model.inner_type() is list
     assert dict_of_strings_to_list_of_ints_model.inner_type(with_args=True) == list[int]
     assert dict_of_strings_to_list_of_ints_model.is_nested_type() is True
 
     tuple_of_different_types_model = Model[tuple[int, str, float]]()
-    assert tuple_of_different_types_model.outer_type() == tuple
+    assert tuple_of_different_types_model.outer_type() is tuple
     assert tuple_of_different_types_model.outer_type(with_args=True) == tuple[int, str, float]
-    assert tuple_of_different_types_model.inner_type() == tuple
+    assert tuple_of_different_types_model.inner_type() is tuple
     assert tuple_of_different_types_model.inner_type(with_args=True) == tuple[int, str, float]
     assert tuple_of_different_types_model.is_nested_type() is False
 
@@ -386,7 +386,7 @@ def test_get_inner_outer_type() -> None:
     assert outer_optional_model.is_nested_type() is False
 
     inner_optional_model = Model[dict[str, Optional[list[int]]]]()
-    assert inner_optional_model.outer_type() == dict
+    assert inner_optional_model.outer_type() is dict
     assert inner_optional_model.outer_type(with_args=True) == dict[str, list[int] | None]
     assert inner_optional_model.inner_type() == UnionType
     assert inner_optional_model.inner_type(with_args=True) == list[int] | None
@@ -557,18 +557,18 @@ def test_name_qualname_and_module() -> None:
     assert MyNestedFwdRefModel.__qualname__ == 'CBA.MyGenericModel[str | NumberModel]'
     assert MyNestedFwdRefModel.__module__ == 'tests.data.helpers.models'
 
-    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__name__ ==  # noqa: W504
+    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__name__ ==
             'MyGenericModel[ABC.MyModel[int]]')
-    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__qualname__ ==  # noqa: W504
+    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__qualname__ ==
             'CBA.MyGenericModel[ABC.MyModel[int]]')
-    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__module__ ==  # noqa: W504
+    assert (CBA.MyGenericModel[ForwardRef('ABC.MyModel[int]')].__module__ ==
             'tests.data.helpers.models')
 
-    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__name__ ==  # noqa: W504
+    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__name__ ==
             'MyGenericModel[Union[str, ABC.MyModel[int]]]')
-    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__qualname__ ==  # noqa: W504
+    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__qualname__ ==
             'CBA.MyGenericModel[Union[str, ABC.MyModel[int]]]')
-    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__module__ ==  # noqa: W504
+    assert (CBA.MyGenericModel['Union[str, ABC.MyModel[int]]'].__module__ ==
             'tests.data.helpers.models')
 
 
@@ -1022,46 +1022,46 @@ def test_parsing_independent_on_union_type_order() -> None:
         ...
 
     assert FloatIntUnionModel(2.0).to_data() == 2.0
-    assert type(FloatIntUnionModel(2.0).to_data()) == float
+    assert type(FloatIntUnionModel(2.0).to_data()) is float
 
     assert FloatIntUnionModel(15).to_data() == 15
-    assert type(FloatIntUnionModel(15).to_data()) == int
+    assert type(FloatIntUnionModel(15).to_data()) is int
 
     assert FloatIntUnionModel('2.0').to_data() == 2.0
-    assert type(FloatIntUnionModel('2.0').to_data()) == float
+    assert type(FloatIntUnionModel('2.0').to_data()) is float
 
     assert FloatIntUnionModel('15').to_data() == 15.0
-    assert type(FloatIntUnionModel('15').to_data()) == float
+    assert type(FloatIntUnionModel('15').to_data()) is float
 
     class IntFloatUnionModel(Model[Union[int, float]]):
         ...
 
     assert IntFloatUnionModel(2.0).to_data() == 2.0
-    assert type(IntFloatUnionModel(2.0).to_data()) == float
+    assert type(IntFloatUnionModel(2.0).to_data()) is float
 
     assert IntFloatUnionModel(15).to_data() == 15
-    assert type(IntFloatUnionModel(15).to_data()) == int
+    assert type(IntFloatUnionModel(15).to_data()) is int
 
     assert IntFloatUnionModel('2.0').to_data() == 2.0
-    assert type(IntFloatUnionModel('2.0').to_data()) == float
+    assert type(IntFloatUnionModel('2.0').to_data()) is float
 
     assert IntFloatUnionModel('15').to_data() == 15
-    assert type(IntFloatUnionModel('15').to_data()) == int
+    assert type(IntFloatUnionModel('15').to_data()) is int
 
     class FloatIntStrUnionModel(Model[Union[float, int, str]]):
         ...
 
     assert FloatIntStrUnionModel(2.0).to_data() == 2.0
-    assert type(FloatIntStrUnionModel(2.0).to_data()) == float
+    assert type(FloatIntStrUnionModel(2.0).to_data()) is float
 
     assert FloatIntStrUnionModel(15).to_data() == 15
-    assert type(FloatIntStrUnionModel(15).to_data()) == int
+    assert type(FloatIntStrUnionModel(15).to_data()) is int
 
     assert FloatIntStrUnionModel('2.0').to_data() == '2.0'
-    assert type(FloatIntStrUnionModel('2.0').to_data()) == str
+    assert type(FloatIntStrUnionModel('2.0').to_data()) is str
 
     assert FloatIntStrUnionModel('15').to_data() == '15'
-    assert type(FloatIntStrUnionModel('15').to_data()) == str
+    assert type(FloatIntStrUnionModel('15').to_data()) is str
 
 
 def test_optional() -> None:

@@ -19,7 +19,7 @@ def test_specialize_record_models_signature_and_return_type_func(
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
             'text': Parameter('text', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
         }
-        assert flow_obj.return_type == str
+        assert flow_obj.return_type is str
 
 
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')

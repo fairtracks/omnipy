@@ -1,4 +1,4 @@
-# flake8: noqa
+# ruff: noqa
 """Re-export placeholder objects used for fluent callable expressions.
 
 This module centralizes Omnipy's imports from the third-party ``placeholder``

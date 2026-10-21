@@ -75,7 +75,7 @@ def test_parse_line_as_elements_of_dict(
     assert parse_line_as_elements_of_dict('"key1": "val1", "key2": "val2"') == {
         'key1': 'val1', 'key2': 'val2'
     }
-    assert parse_line_as_elements_of_dict('":key1": "va:l1", "key\\\"2": "v\\\"al2"') == {
+    assert parse_line_as_elements_of_dict('":key1": "va:l1", "key\\"2": "v\\"al2"') == {
         ':key1': 'va:l1', 'key"2': 'v"al2'
     }
     assert parse_line_as_elements_of_dict('"key": "value",') is pyd.Undefined

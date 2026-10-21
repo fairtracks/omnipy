@@ -79,8 +79,8 @@ def test_ensure_plain_type() -> None:
 
     assert ensure_plain_type(ForwardRef('list[str]')) == ForwardRef('list[str]')  # ForwardRef
     assert ensure_plain_type(T) == T  # TypeVar
-    assert ensure_plain_type(list) == list  # type
-    assert ensure_plain_type(list[str]) == list  # GenericAlias
+    assert ensure_plain_type(list) is list  # type
+    assert ensure_plain_type(list[str]) is list  # GenericAlias
     assert ensure_plain_type(str | int) == UnionType  # UnionType
     assert ensure_plain_type(Any) == Any  # _SpecialForm
     assert ensure_plain_type(Literal[5]) == Literal  # _LiteralGenericAlias
@@ -95,7 +95,7 @@ class MyGlobalClass:
 
 
 def test_evaluate_any_forward_refs_if_possible() -> None:
-    assert evaluate_any_forward_refs_if_possible(ForwardRef('list')) == list
+    assert evaluate_any_forward_refs_if_possible(ForwardRef('list')) is list
     assert evaluate_any_forward_refs_if_possible(ForwardRef('list[str]')) == list[str]
 
     assert evaluate_any_forward_refs_if_possible(ForwardRef('MyGlobalClass')) == MyGlobalClass

@@ -801,7 +801,7 @@ def case_rowwise_from_csv_complex(
     return TableCase(
         model=CsvTableModel,
         data=('firstname,lastname,comment\nJohn,Doe,"With\nnewlines\r\n'
-              '"\nJane,Doe,"With \"\"quotes\"\""\n'),
+              '"\nJane,Doe,"With ""quotes"""\n'),
         assert_func=rowwise_records_assert_func,
         expected=rowwise_data_complex,
     )
@@ -819,7 +819,7 @@ def case_rowwise_from_csv_complex_crlf(
     return TableCase(
         model=CsvTableModel,
         data=('firstname,lastname,comment\r\nJohn,Doe,"With\nnewlines\r\n'
-              '"\r\nJane,Doe,"With \"\"quotes\"\""'),
+              '"\r\nJane,Doe,"With ""quotes"""'),
         assert_func=rowwise_records_assert_func,
         expected=rowwise_data_complex,
     )
@@ -910,7 +910,7 @@ def case_rowwise_pyd_from_csv_complex(
     return TableCase(
         model=CsvRowWiseRecordsTableModel,
         data=('John,Doe,"With\nnewlines\r\n'
-              '"\nJane,Doe,"With \"\"quotes\"\""\n'),
+              '"\nJane,Doe,"With ""quotes"""\n'),
         assert_func=rowwise_pyd_records_assert_func,
         expected=rowwise_data_complex,
     )
@@ -929,7 +929,7 @@ def case_rowwise_pyd_from_csv_complex_crlf(
     return TableCase(
         model=CsvRowWiseRecordsTableModel,
         data=('John,Doe,"With\nnewlines\r\n'
-              '"\r\nJane,Doe,"With \"\"quotes\"\""'),
+              '"\r\nJane,Doe,"With ""quotes"""'),
         assert_func=rowwise_pyd_records_assert_func,
         expected=rowwise_data_complex,
     )

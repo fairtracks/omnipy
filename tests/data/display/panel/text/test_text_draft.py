@@ -249,7 +249,9 @@ def test_reflowed_text_draft_panel_variable_width_chars() -> None:
 #     assert panel.visible_char_coverage() == 6  # 3 double-width chars (2 + 1)
 #
 #     # Test with Asian characters and multiple lines
-#     panel = ReflowedTextDraftPanel('北京欢\n  迎你\n  上海', frame=Frame(Dimensions(width=8, height=2)))
+#     panel = ReflowedTextDraftPanel(
+#         '北京欢\n  迎你\n  上海', frame=Frame(Dimensions(width=8, height=2))
+#     )
 #     assert panel.visible_char_coverage() == 12  # 8 chars (line 1) + 4 chars (line 2)
 #
 #     # Test with mixed content (Asian and English characters)

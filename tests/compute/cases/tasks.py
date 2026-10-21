@@ -95,7 +95,7 @@ def case_sync_data_import_func() -> TaskCase[[], str]:
 
     def assert_param_signature_and_return_type(task_obj: IsTaskTemplate | IsTask):
         assert task_obj.param_signatures == {}
-        assert task_obj.return_type == str
+        assert task_obj.return_type is str
 
     return TaskCase(
         task_func=data_import_func,
@@ -120,7 +120,7 @@ def case_sync_format_to_string_func() -> TaskCase[[str, int], str]:
             'text': Parameter('text', Parameter.POSITIONAL_OR_KEYWORD, annotation=str),
             'number': Parameter('number', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
         }
-        assert task_obj.return_type == str
+        assert task_obj.return_type is str
 
     return TaskCase(
         task_func=format_to_string_func,
@@ -154,7 +154,7 @@ def case_sync_power_m1_func() -> TaskCase[[int, int, bool], int]:
                     default=True,
                 )
         }
-        assert task_obj.return_type == int
+        assert task_obj.return_type is int
 
     return TaskCase(
         task_func=power_m1_func,
@@ -176,7 +176,7 @@ def case_sync_empty_dict_fun() -> TaskCase[[], dict]:
 
     def assert_param_signature_and_return_type(task_obj: IsTaskTemplate | IsTask):
         assert task_obj.param_signatures == {}
-        assert task_obj.return_type == dict
+        assert task_obj.return_type is dict
 
     return TaskCase(
         task_func=empty_dict_func,

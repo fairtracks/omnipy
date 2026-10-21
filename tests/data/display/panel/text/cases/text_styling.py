@@ -305,7 +305,7 @@ def case_syntax_styling_expectations_bw_stylized_terminal(
 
 
 @pc.case(id='colorized-terminal-output', tags=['expectations', 'syntax_text'])
-def case_syntax_styling_expectations_colorized_terminal(
+def case_syntax_styling_expectations_colorized_terminal(  # noqa: C901
     colorized_terminal: Annotated[OutputPropertyType,
                                   pc.fixture]) -> StylizedPanelOutputExpectations:
     def _exp_plain_output_for_case_id(case_id: str) -> str:

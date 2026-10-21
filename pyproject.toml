@@ -132,6 +132,7 @@ line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
 extend-exclude = [
+  "*.ipynb",  # Notebooks were never covered by flake8/yapf/isort
   "src/omnipy/shared/protocols/_collections_abc.py",
   "src/omnipy/shared/protocols/_typeshed.py",
   "src/omnipy/shared/protocols/_typeshed_import",

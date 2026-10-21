@@ -15,7 +15,7 @@ def extract_record_schema_def(table: GeneralTable) -> RecordSchemaDef:
             if field_key not in record_model:
                 record_model[field_key] = type(field_val)
             else:
-                assert record_model[field_key] == type(field_val)
+                assert record_model[field_key] is type(field_val)
 
     return RecordSchemaDef(record_model)
 
