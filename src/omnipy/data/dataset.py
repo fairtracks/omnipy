@@ -6,7 +6,7 @@ dataset instances and subclasses in a lenient way that works with the library's 
 """
 
 import asyncio
-from collections import defaultdict, UserDict
+from collections import defaultdict
 from collections.abc import Iterable, Mapping, MutableMapping
 from contextlib import suppress
 from copy import copy
@@ -42,6 +42,7 @@ from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util._placeholder import F
 from omnipy.util.decorators import call_super_if_available
+from omnipy.util.helpers import ConsistentUserDict as UserDict
 from omnipy.util.helpers import (contains_typevar,
                                  evaluate_any_forward_refs_if_possible,
                                  get_calling_module_name,

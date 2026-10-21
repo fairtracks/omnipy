@@ -1,6 +1,5 @@
 """Core layout objects that compose panels into a single-row arrangement."""
 
-from collections import UserDict
 from dataclasses import dataclass
 from typing import Callable, cast, Generic, Iterable, Iterator, Mapping
 
@@ -13,6 +12,7 @@ from omnipy.data._display.panel.base import (DimensionsAwarePanel,
                                              panel_is_dimensions_aware,
                                              panel_is_fully_rendered)
 from omnipy.shared.enums.display import PanelDesign
+from omnipy.util.helpers import ConsistentUserDict as UserDict
 
 PanelT = TypeVar('PanelT', bound=Panel)
 RenderedPanelT = TypeVar('RenderedPanelT', bound=Panel)

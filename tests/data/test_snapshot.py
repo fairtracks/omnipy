@@ -1,6 +1,6 @@
 """Tests for data snapshots."""
 
-from collections import UserDict, UserList
+from collections import UserList
 from copy import copy
 import gc
 from typing import Generic
@@ -9,6 +9,7 @@ import pytest
 
 from omnipy.data.snapshot import SnapshotHolder, SnapshotWrapper
 from omnipy.shared.protocols.data import ContentT, HasContent, IsSnapshotHolder
+from omnipy.util.helpers import ConsistentUserDict as UserDict
 import omnipy.util.pydantic as pyd
 from omnipy.util.setdeque import SetDeque
 

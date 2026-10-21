@@ -9,6 +9,7 @@ equality results.
 """
 
 import asyncio
+from collections import UserDict
 from collections.abc import Hashable, Iterable
 from dataclasses import asdict
 import functools
@@ -31,6 +32,7 @@ from typing import (_SpecialForm,
                     cast,
                     Concatenate,
                     ForwardRef,
+                    Generic,
                     get_args,
                     get_origin,
                     Literal,
@@ -1010,3 +1012,25 @@ def get_full_job_slug(job_cls_name: str, job_name: str, job_run_slug: str):
         str: Full job-run slug combining the job slug and run slug.
     """
     return f'{get_job_name_slug(job_cls_name, job_name)}-{job_run_slug}'
+
+
+class ConsistentUserDict(UserDict[_KeyT, _ValueT], Generic[_KeyT, _ValueT]):
+    """An UserDict with consistent LIFO popping order across Python versions.
+
+    Python 3.15 changed popitem() popping order from FIFO to LIFO in line
+    with dict(). This class backports the new behavior to earlier supported
+    versions of Python for consistent popping order.
+
+    Example:
+        >>> from omnipy.util.helpers import ConsistentUserDict as UserDict
+        >>> d = UserDict({'a': 1, 'b': 2, 'c': 3})
+        >>> d.popitem()
+        ('c', 3)
+    """
+    def popitem(self) -> tuple[_KeyT, _ValueT]:
+        """
+        D.popitem() -> (k, v), remove and return some (key, value) pair
+           as a 2-tuple; but raise KeyError if D is empty.
+        """
+        # Always use standard dict LIFO behavior
+        return self.data.popitem()

@@ -1,10 +1,11 @@
 """Frozen container helper types and concrete immutable mapping wrapper."""
 
-from collections import UserDict
 from types import MappingProxyType
 from typing import Generic, Hashable, Sequence
 
 from typing_extensions import TypeVar
+
+from omnipy.util.helpers import ConsistentUserDict as UserDict
 
 from ..general.models import NotIterableExceptStrOrBytesModel
 

@@ -138,11 +138,11 @@ def test_layout_insertion_and_deletion(
     third = case.layout.pop('third', third_panel)
     assert third == third_panel
 
-    first = case.layout.popitem()
-    assert first == ('first', case.first_panel)
+    second = case.layout.popitem()
+    assert second == ('second', case.second_panel)
 
-    second = case.layout.pop('second')
-    assert second == case.second_panel
+    first = case.layout.pop('first')
+    assert first == case.first_panel
 
     assert len(case.layout) == 0
 

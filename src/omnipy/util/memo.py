@@ -5,7 +5,7 @@ track copied object ids, keep selected sub-objects alive temporarily, and prune
 memoized entries once their source objects are no longer referenced.
 """
 
-from collections import defaultdict, UserDict
+from collections import defaultdict
 import gc
 import sys
 import traceback
@@ -13,6 +13,7 @@ from typing import Generic
 
 from typing_extensions import TypeVar
 
+from omnipy.util.helpers import ConsistentUserDict as UserDict
 from omnipy.util.setdeque import SetDeque
 
 _ObjT = TypeVar('_ObjT', bound=object)

@@ -1,9 +1,10 @@
 """Tests for weak-reference helpers."""
 
-from collections import UserDict, UserList
+from collections import UserList
 
 import pytest
 
+from omnipy.util.helpers import ConsistentUserDict as UserDict
 from omnipy.util.weak import WeakKeyRefContainer
 
 from .helpers.classes import SomeObject
