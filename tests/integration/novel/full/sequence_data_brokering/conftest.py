@@ -3,7 +3,7 @@ from itertools import count
 
 import pytest
 
-from .models import biosample_vault_sample_id_generator_context
+from .services import biosample_vault_sample_id_generator_context
 
 
 @pytest.fixture(scope='function')
