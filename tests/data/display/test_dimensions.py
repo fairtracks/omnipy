@@ -49,21 +49,21 @@ def _assert_dimensions(
 
     # Static type checkers SHOULD raise errors here
     try:
-        _a: int = dims.width  # type: ignore[assignment]  # noqa: F841
-        _b: int = dims.height  # type: ignore[assignment]  # noqa: F841
+        _a: int = dims.width  # type: ignore[assignment]
+        _b: int = dims.height  # type: ignore[assignment]
     except TypeError:
         pass
 
     # Static type checkers SHOULD NOT raise errors here
     if has_width(dims):
-        _c: int = dims.width  # noqa: F841
+        _c: int = dims.width
 
     if has_height(dims):
-        _d: int = dims.height  # noqa: F841
+        _d: int = dims.height
 
     if has_width_and_height(dims):
-        _e: int = dims.width  # noqa: F841
-        _f: int = dims.height  # noqa: F841
+        _e: int = dims.width
+        _f: int = dims.height
 
 
 def test_dimensions() -> None:

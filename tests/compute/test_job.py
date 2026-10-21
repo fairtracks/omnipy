@@ -61,7 +61,7 @@ def test_init_abstract() -> None:
 
 
 def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     job_tmpl = JobTemplate()
     assert isinstance(job_tmpl, JobTemplate)
@@ -73,7 +73,7 @@ def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) 
 def test_fail_only_jobtemplate_init_mock(
     mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
 ) -> None:
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     with pytest.raises(JobStateException):
         JobBase()  # noqa
@@ -86,7 +86,7 @@ def test_job_creator_singular_mock(
     mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
     teardown_reset_job_creator: Annotated[None, pytest.fixture],
 ) -> None:
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     assert isinstance(JobBase.job_creator, JobCreator)
 
@@ -122,7 +122,7 @@ def test_job_creator_properties_mock(
 ) -> None:
     mock_local_runner = MockLocalRunner()
     mock_job_config = MockJobConfig()
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     for test in [
         PropertyTest(
@@ -204,7 +204,7 @@ def _assert_prop_getattr_all(
     val: object,
 ):
     """Assert one property is exposed consistently across job objects."""
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     _assert_prop_getattr_job_subcls(
         JobBase,
@@ -271,7 +271,7 @@ def _assert_prop_getattr_job(job_obj, in_job_obj, property, val):
 
 
 def test_equal_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
-    JobTemplate, _Job = mock_job_classes  # noqa
+    JobTemplate, _Job = mock_job_classes  # noqa: N806
 
     my_job_tmpl = JobTemplate()
     my_job_tmpl_2 = JobTemplate()

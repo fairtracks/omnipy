@@ -304,7 +304,7 @@ def test_flow_run_flow_cls_tuple(
     assert_func_wrapper(case.flow_template, case.flow_func)
 
     with pytest.raises(TypeError):
-        case.flow_template(*case.args, **case.kwargs)  # noqa
+        case.flow_template(*case.args, **case.kwargs)
 
     flow = case.flow_template.apply()
     assert_func_wrapper(flow, case.flow_func)

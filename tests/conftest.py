@@ -31,7 +31,7 @@ from .helpers.functions import assert_model, assert_val
 from .helpers.protocols import AssertModelOrValFunc
 
 
-def pytest_configure(config) -> None:  # noqa
+def pytest_configure(config) -> None:  # noqa: ARG001
     import omnipy.hub.runtime
 
     omnipy.hub.runtime.runtime = None

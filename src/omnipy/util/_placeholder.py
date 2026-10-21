@@ -1,4 +1,3 @@
-# ruff: noqa
 """Re-export placeholder objects used for fluent callable expressions.
 
 This module centralizes Omnipy's imports from the third-party ``placeholder``
@@ -12,3 +11,5 @@ method-call placeholder expressions.
 #: Functional placeholder exported from the ``placeholder`` package.
 from placeholder import _ as x
 from placeholder import F, m
+
+__all__ = ['F', 'm', 'x']

@@ -40,21 +40,21 @@ def _assert_frame(
 
     # Static type checkers SHOULD raise errors here
     try:
-        _a: int = frame.dims.width  # type: ignore[assignment]  # noqa: F841
-        _b: int = frame.dims.height  # type: ignore[assignment]  # noqa: F841
+        _a: int = frame.dims.width  # type: ignore[assignment]
+        _b: int = frame.dims.height  # type: ignore[assignment]
     except TypeError:
         pass
 
     # Static type checkers SHOULD NOT raise errors here
     if frame_has_width(frame):
-        _c: int = frame.dims.width  # noqa: F841
+        _c: int = frame.dims.width
 
     if frame_has_height(frame):
-        _d: int = frame.dims.height  # noqa: F841
+        _d: int = frame.dims.height
 
     if frame_has_width_and_height(frame):
-        _e: int = frame.dims.width  # noqa: F841
-        _f: int = frame.dims.height  # noqa: F841
+        _e: int = frame.dims.width
+        _f: int = frame.dims.height
 
 
 def test_frame() -> None:

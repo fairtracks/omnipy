@@ -295,7 +295,7 @@ def test_class_init_recursive_model_through_generic_hack_with_forwardref(
 
         class MyNewerRecursiveModel(Model[list['MyNewerForwardRefAlias'] | None]): ...
 
-        MyNewerForwardRefAlias: TypeAlias = MyNewerRecursiveModel  # noqa: F841
+        MyNewerForwardRefAlias: TypeAlias = MyNewerRecursiveModel
 
     class MyGenericListModel(Model[list[T | None]], Generic[T]): ...
 
@@ -323,10 +323,10 @@ def test_data_import_variants() -> None:
     assert Model[int](__root__=-1).to_data() == -1  # for pydantic internals
 
     with pytest.raises(RuntimeError):
-        Model[int](5).__root__ = 12  # noqa
+        Model[int](5).__root__ = 12
 
     with pytest.raises(RuntimeError):
-        Model[int](5).foo = True  # noqa
+        Model[int](5).foo = True
 
 
 def test_get_inner_outer_type() -> None:

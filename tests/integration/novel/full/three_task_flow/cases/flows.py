@@ -18,7 +18,7 @@ AsyncRunTaskAndAssertType = Callable[[IsTask], Awaitable[None]]
 def case_sync_dagflow_pos_square_root() -> FlowCase:
     return FlowCase(
         name='pos_square_root',
-        flow_template=pos_square_root_dag_flow,  # noqa
+        flow_template=pos_square_root_dag_flow,
     )
 
 
@@ -29,5 +29,5 @@ def case_sync_dagflow_pos_square_root() -> FlowCase:
 def case_sync_funcflow_pos_square_root() -> FlowCase:
     return FlowCase(
         name='pos_square_root',
-        flow_template=pos_square_root_func_flow,  # noqa
+        flow_template=pos_square_root_func_flow,
     )

@@ -18,7 +18,7 @@ from .tasks import apply_models_to_dataset, extract_record_schema_def
 )
 def specialize_record_models_dag_flow(  # type: ignore
     tables: Dataset[GeneralTable],
-) -> MultiModelDataset[GeneralTable]:  # noqa
+) -> MultiModelDataset[GeneralTable]:
     """Return specialize record models dag flow."""
     ...
 

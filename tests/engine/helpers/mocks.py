@@ -293,7 +293,7 @@ class MockRunStateRegistry:
     def get_job_state_datetime(self, job: IsJob, state: RunState.Literals) -> datetime:
         return self._job_state_datetime[(job.unique_name, state)]
 
-    def all_jobs(self, state: RunState.Literals | None = None) -> tuple[IsJob, ...]:  # noqa
+    def all_jobs(self, state: RunState.Literals | None = None) -> tuple[IsJob, ...]:  # noqa: ARG002
         return tuple(self._jobs.values())
 
     def set_job_state(self, job: IsJob, state: RunState.Literals) -> None:

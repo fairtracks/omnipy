@@ -949,7 +949,7 @@ def _build_mapping_prefix_from_frozen_keys(
     return type(content)(prefix_mapping)  # type: ignore[call-arg]
 
 
-def _build_mapping_prefix_with_replaced_child(  # noqa: C901
+def _build_mapping_prefix_with_replaced_child(
     *,
     content: object,
     replacement_index: int,

@@ -146,7 +146,7 @@ def case_syntax_styling_wrap_crop_top(
         ),
         exp_plain_output=dedent("""\
             456]})]
-            """),  # noqa: W291
+            """),
         exp_dims=Dimensions(width=7, height=1),
         exp_within_frame=WithinFrameExp(width=True, height=True, both=True),
     )

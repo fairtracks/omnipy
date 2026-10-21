@@ -18,7 +18,7 @@ AsyncRunTaskAndAssertType = Callable[[IsTask], Awaitable[None]]
 def case_sync_dagflow_specialize_record_models() -> FlowCase:
     return FlowCase(
         name='specialize_record_models',
-        flow_template=specialize_record_models_dag_flow,  # noqa
+        flow_template=specialize_record_models_dag_flow,
     )
 
 
@@ -29,5 +29,5 @@ def case_sync_dagflow_specialize_record_models() -> FlowCase:
 def case_sync_funcflow_specialize_record_models() -> FlowCase:
     return FlowCase(
         name='specialize_record_models',
-        flow_template=specialize_record_models_func_flow,  # noqa
+        flow_template=specialize_record_models_func_flow,
     )

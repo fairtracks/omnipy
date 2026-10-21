@@ -62,7 +62,7 @@ _ConcatColumnModelT = TypeVar(
     '_ConcatColumnModelT', bound=IsConcatenableItemSequenceLikeColumnContent
 )
 
-if TYPE_CHECKING:  # noqa: C901
+if TYPE_CHECKING:
 
     class ConcatByAddArrayAdapterModel(
         PlainModel[_ColumnT],
@@ -141,7 +141,7 @@ else:
                 return column_cls(list(data))
 
 
-if TYPE_CHECKING:  # noqa: C901
+if TYPE_CHECKING:
 
     class ColumnModel(
         PlainModel[_ColumnT],
@@ -925,7 +925,7 @@ else:
             return pyd_model(**dict(zip(header_names, data)))
 
 
-if TYPE_CHECKING:  # noqa: C901
+if TYPE_CHECKING:
 
     class IteratingPydanticRecordsModel(
         _ColumnWiseTableWithColNamesMixin,

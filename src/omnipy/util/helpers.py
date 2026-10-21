@@ -208,7 +208,7 @@ def get_datetime_format(locale: LocaleType | None = None) -> str:
     """
     pkg_locale.setlocale(pkg_locale.LC_ALL, locale)
 
-    if hasattr(pkg_locale, 'nl_langinfo'):  # noqa
+    if hasattr(pkg_locale, 'nl_langinfo'):
         datetime_format = pkg_locale.nl_langinfo(pkg_locale.D_T_FMT)
     else:
         datetime_format = '%a %b %e %X %Y'

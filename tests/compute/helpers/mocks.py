@@ -410,7 +410,7 @@ class PublicPropertyErrorsMockJob(
     def _call_job(self, *args: CallP.args, **kwargs: CallP.kwargs) -> RetT: ...
 
 
-def mock_cmd_func(**params: bool) -> Any:  # noqa
+def mock_cmd_func(**params: bool) -> Any:  # noqa: ARG001
     """Provide a placeholder command callable for mock jobs."""
     pass
 

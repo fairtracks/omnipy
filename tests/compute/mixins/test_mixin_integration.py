@@ -174,7 +174,7 @@ def test_refine_task_template_with_other_properties_task() -> None:
     # Refine task template with two properties (update=True)
     my_power_template_2 = my_power_template.refine(
         param_key_map=[('number', 'numb'), ('minus_one', 'min')],
-    )  # noqa
+    )
     assert my_power_template_2 != my_power_template
     for my_power_obj_2 in my_power_template_2, my_power_template_2.apply():
         assert my_power_obj_2.name == 'magic_power'

@@ -120,7 +120,7 @@ class StylizedLayoutPanel(
 
     @staticmethod
     @lru_cache(maxsize=1024)
-    def _get_stylized_layout_common(  # noqa: C901
+    def _get_stylized_layout_common(
         outer_panel: 'StylizedLayoutPanel[FrameInvT]',
         color_system: DisplayColorSystem.Literals,  # Only used for hashing
         force_autodetect_bg_color: ForceAutodetect.Literals,

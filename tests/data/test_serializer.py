@@ -39,7 +39,7 @@ def test_number_dataset_to_tar_file_serializer():
     assert serializer.get_dataset_cls_for_new() is NumberDataset
 
     tarfile_bytes = serializer.serialize(number_data)
-    decode_func = lambda x: int.from_bytes(x, byteorder=sys.byteorder)  # noqa
+    decode_func = lambda x: int.from_bytes(x, byteorder=sys.byteorder)  # noqa: E731
 
     assert_tar_file_content(tarfile_bytes, 'data_file_1', 'num', decode_func, 35)
     assert_tar_file_content(tarfile_bytes, 'data_file_2', 'num', decode_func, 12)

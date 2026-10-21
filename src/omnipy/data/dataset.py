@@ -574,7 +574,7 @@ class Dataset(
             'the excellent Python package named `pydantic`.'
         )
 
-    if TYPE_CHECKING:  # noqa: C901
+    if TYPE_CHECKING:
         # The code below is a hack needed because of a fundamental limitation of the current Python
         # typing syntax. There is no way (that we know of) to tell the type checkers that Model
         # objects can mimic the functionality of their type arguments, say that a Model[list] can
@@ -1320,7 +1320,7 @@ class Dataset(
     def _parse_root_object(
         cls,
         root_obj: dict_t[str, dict_t[str, _ModelOrDatasetT]],
-    ) -> Any:  # noqa
+    ) -> Any:
         """Pre-validate the root dataset object before normal field parsing.
 
         Args:

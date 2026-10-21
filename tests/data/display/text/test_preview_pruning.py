@@ -737,7 +737,7 @@ def test_verbose_granularity_log_uses_readable_json_pointer_like_path(
     assert '[PRUNE] Granularity path selected: /data_set/0' in captured.out
 
 
-def test_granularity_pruning_reconstructs_mapping_like_parent_and_logs_pruned(  # noqa: C901
+def test_granularity_pruning_reconstructs_mapping_like_parent_and_logs_pruned(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
     import omnipy.shared.constants as const

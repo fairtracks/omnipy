@@ -35,10 +35,10 @@ def test_task_template_as_decorator(
     mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_one_template: IsTaskTemplate,
 ) -> None:
-    assert isinstance(plus_one_template, TaskTemplateCore)  # noqa  # Pycharm static type checker bug
-    assert plus_one_template.name == 'plus_one'  # noqa  # Pycharm static type checker bug
+    assert isinstance(plus_one_template, TaskTemplateCore)
+    assert plus_one_template.name == 'plus_one'
 
-    plus_one = plus_one_template.apply()  # noqa  # Pycharm static type checker bug
+    plus_one = plus_one_template.apply()
     assert isinstance(plus_one, Task)
 
     assert plus_one(number=3) == 4

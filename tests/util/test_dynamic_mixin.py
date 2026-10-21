@@ -148,7 +148,7 @@ class MockPosOnlyArgStateMixin:
 
 
 def test_cls_with_mixins_name_and_module(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
 
     mock_plain_obj = MockPlainCls('a', 1, verbose=True)
     assert mock_plain_obj.__class__.__name__ == 'MockPlainClsWithMixins'
@@ -156,7 +156,7 @@ def test_cls_with_mixins_name_and_module(mock_plain_cls):
 
 
 def test_no_mixins(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
 
     mock_plain_obj = MockPlainCls('a', 1, verbose=True)
 
@@ -202,7 +202,7 @@ def _assert_args_and_kwargs(
 
 
 def test_new_method_no_state_mixin(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
 
     MockPlainCls.accept_mixin(MockNewMethodNoStateMixin)
 
@@ -217,7 +217,7 @@ def test_new_method_no_state_mixin(mock_plain_cls):
 
 
 def test_multiple_new_method_no_state_mixins(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
     MockPlainCls.accept_mixin(MockOtherNewMethodNoStateMixin)
     MockPlainCls.accept_mixin(MockNewMethodNoStateMixin)
 
@@ -232,7 +232,7 @@ def test_multiple_new_method_no_state_mixins(mock_plain_cls):
 
 
 def test_override_no_state_mixin(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
     MockPlainCls.accept_mixin(MockOverrideNoStateMixin)
 
     mock_plain_obj = MockPlainCls('a', 1, verbose=True)
@@ -246,7 +246,7 @@ def test_override_no_state_mixin(mock_plain_cls):
 
 
 def test_progressive_multiple_new_method_and_override_no_state_mixins(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
     MockPlainCls.accept_mixin(MockNewMethodNoStateMixin)
 
     mock_plain_obj = MockPlainCls('a', 1, verbose=True)
@@ -271,7 +271,7 @@ def test_progressive_multiple_new_method_and_override_no_state_mixins(mock_plain
 
 
 def test_reset_multiple_no_state_mixins(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
     MockPlainCls.accept_mixin(MockNewMethodNoStateMixin)
     MockPlainCls.accept_mixin(MockOverrideNoStateMixin)
 
@@ -293,7 +293,7 @@ def test_reset_multiple_no_state_mixins(mock_plain_cls):
 
 
 def test_multiple_orig_class_different_no_state_mixins(mock_plain_cls, mock_other_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
     MockPlainCls.accept_mixin(MockNewMethodNoStateMixin)
 
     mock_plain_obj = MockPlainCls('a', 1, verbose=True)
@@ -305,7 +305,7 @@ def test_multiple_orig_class_different_no_state_mixins(mock_plain_cls, mock_othe
     assert mock_plain_obj.new_method() == 'new method'
     assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
-    MockOtherPlainCls = mock_other_plain_cls  # noqa
+    MockOtherPlainCls = mock_other_plain_cls  # noqa: N806
     MockOtherPlainCls.accept_mixin(MockOverrideNoStateMixin)
 
     mock_other_plain_obj = MockOtherPlainCls('a', 1, verbose=True)
@@ -319,7 +319,7 @@ def test_multiple_orig_class_different_no_state_mixins(mock_plain_cls, mock_othe
 
 
 def test_state_mixin(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
     MockPlainCls.accept_mixin(MockKwArgStateMixin)
 
     mock_plain_obj = MockPlainCls('a', 1, verbose=True, my_kwarg_1='value')
@@ -340,7 +340,7 @@ def test_state_mixin(mock_plain_cls):
 
 
 def test_access_orig_cls_member_state_mixin(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
     MockPlainCls.accept_mixin(MockKwArgAccessOrigClsMemberStateMixin)
 
     mock_plain_obj = MockPlainCls('a', 1, verbose=True, my_kwarg='something')
@@ -358,7 +358,7 @@ def test_access_orig_cls_member_state_mixin(mock_plain_cls):
 
 
 def test_fail_missing_kwargs_multiple_state_mixin(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
     MockPlainCls.accept_mixin(MockKwArgStateMixin)
     MockPlainCls.accept_mixin(MockOtherKwArgStateMixin)
 
@@ -373,7 +373,7 @@ def test_fail_missing_kwargs_multiple_state_mixin(mock_plain_cls):
 
 
 def test_progressive_multiple_state_mixins_same_default(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
 
     MockPlainCls.accept_mixin(MockKwArgStateMixin)
 
@@ -435,7 +435,7 @@ def test_progressive_multiple_state_mixins_same_default(mock_plain_cls):
 
 
 def test_reset_multiple_state_mixins(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
 
     MockPlainCls.accept_mixin(MockKwArgStateMixin)
     MockPlainCls.accept_mixin(MockOtherKwArgStateMixin)
@@ -472,7 +472,7 @@ def test_reset_multiple_state_mixins(mock_plain_cls):
 
 
 def test_diff_orig_class_multiple_state_mixins_diff_default(mock_plain_cls, mock_other_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
     MockPlainCls.accept_mixin(MockKwArgStateMixin)
 
     mock_plain_obj = MockPlainCls('a', 1, verbose=True, my_kwarg_1='value')
@@ -491,7 +491,7 @@ def test_diff_orig_class_multiple_state_mixins_diff_default(mock_plain_cls, mock
     assert mock_plain_obj.new_method() == '(value, default value)'
     assert mock_plain_obj.override() == 'overridden by: MockPlainClsWithMixins'
 
-    MockOtherPlainCls = mock_other_plain_cls  # noqa
+    MockOtherPlainCls = mock_other_plain_cls  # noqa: N806
     MockOtherPlainCls.accept_mixin(MockOtherKwArgDiffDefaultStateMixin)
 
     mock_other_plain_obj = MockOtherPlainCls('a', 1, verbose=True, my_other_kwarg_1='other value')
@@ -522,7 +522,7 @@ def test_fail_no_init_method_state_mixin():
 
 
 def test_fail_pos_only_arg_mixin(mock_plain_cls):
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPlainCls = mock_plain_cls  # noqa: N806
 
     with pytest.raises(AttributeError):
         MockPlainCls.accept_mixin(MockPosOnlyArgStateMixin)
@@ -560,7 +560,7 @@ def test_missing_pos_args_init_param_state_mixin():
 def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
     mock_predefined_init_kwargs_cls,
 ):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa: N806
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
@@ -620,7 +620,7 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_same_default(
 def test_predefined_init_kwargs_progressive_multiple_state_mixins_different_withmixin_classes(
     mock_predefined_init_kwargs_cls,
 ):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa: N806
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
@@ -667,8 +667,8 @@ def test_predefined_init_kwargs_progressive_multiple_state_mixins_different_with
 
 
 def test_nested_mixins(mock_predefined_init_kwargs_cls, mock_plain_cls):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
-    MockPlainCls = mock_plain_cls  # noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa: N806
+    MockPlainCls = mock_plain_cls  # noqa: N806
 
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
     MockPlainCls.accept_mixin(MockPredefinedInitKwargsCls)
@@ -692,7 +692,7 @@ def test_nested_mixins(mock_predefined_init_kwargs_cls, mock_plain_cls):
 
 
 def test_nested_mixins_static_outer_inheritance(mock_predefined_init_kwargs_cls):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa: N806
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
     class MockMockPlainCls(MockPredefinedInitKwargsCls):
@@ -723,7 +723,7 @@ def test_nested_mixins_static_outer_inheritance(mock_predefined_init_kwargs_cls)
 
 
 def test_nested_mixins_double_static_outer_inheritance(mock_predefined_init_kwargs_cls):
-    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa
+    MockPredefinedInitKwargsCls = mock_predefined_init_kwargs_cls  # noqa: N806
     MockPredefinedInitKwargsCls.accept_mixin(MockKwArgStateMixin)
 
     class MockMockPlainCls(MockPredefinedInitKwargsCls):
@@ -758,7 +758,7 @@ def test_nested_mixins_double_static_outer_inheritance(mock_predefined_init_kwar
 def test_nested_mixins_static_outer_inheritance_from_generic(
     mock_predefined_init_kwargs_generic_cls,
 ):
-    MockPredefinedInitKwargsGenericCls = mock_predefined_init_kwargs_generic_cls  # noqa
+    MockPredefinedInitKwargsGenericCls = mock_predefined_init_kwargs_generic_cls  # noqa: N806
     MockPredefinedInitKwargsGenericCls.accept_mixin(MockKwArgStateMixin)
 
     class MockMockPlainCls(MockPredefinedInitKwargsGenericCls[int]):

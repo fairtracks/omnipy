@@ -69,7 +69,7 @@ class ResizedLayoutDraftPanel(
         return resized_panel
 
     @pyd.validator('content', pre=True)
-    def render_content_until_dimensions_aware(  # noqa: C901
+    def render_content_until_dimensions_aware(
         cls,
         content: Layout[DraftPanel],
     ) -> DimensionsAwareDraftPanelLayout:
