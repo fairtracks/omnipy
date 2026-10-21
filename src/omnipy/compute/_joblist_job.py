@@ -309,15 +309,21 @@ class ChildJobListArgJobBase(
         if return_annotation is inspect.Signature.empty:
             return False
 
+        # A bare typing alias (typing.Generator) has the collections.abc class
+        # as its origin, while the bare collections.abc class
+        # (collections.abc.Generator) has no origin and is the type itself.
         origin = get_origin(return_annotation)
-        generator_like_origins = {
+        if origin is None:
+            origin = return_annotation
+
+        generator_like_origins = (
             Generator,
             AsyncGenerator,
             Iterator,
             AsyncIterator,
-        }
+        )
 
-        if origin in generator_like_origins:
+        if any(origin is generator_like for generator_like in generator_like_origins):
             return True
 
         for arg in get_args(return_annotation):

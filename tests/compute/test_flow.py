@@ -9,7 +9,7 @@ import pytest_cases as pc
 
 from omnipy.compute._job import JobBase, JobMixin, JobTemplateMixin
 from omnipy.compute.flow import DagFlowTemplate, FuncFlowTemplate, LinearFlowTemplate
-from omnipy.compute.helpers import create_data_class_task_name, is_func_arg_template_child
+from omnipy.compute.helpers import create_data_class_task_name, is_func_arg_template_child, Void
 from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
@@ -25,6 +25,7 @@ from omnipy.util.callable_types import CallableType
 from ..helpers.functions import assert_func_wrapper
 from .cases.flows import FlowCase
 from .cases.raw.functions import data_import_func, empty_dict_func, format_to_string_func
+from .helpers.annotations import GENERATOR_ANNOTATIONS
 from .helpers.classes import AnyFlowClsTuple, ChildJobListArgFlowClsTuple, FuncArgFlowClsTuple
 from .helpers.functions import assert_flow_or_flow_template
 from .helpers.mocks import (
@@ -861,10 +862,12 @@ def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_fu
         return values
 
     @LinearFlowTemplate(emit_async_values, pass_values_through)
-    async def linear_flow_tmpl(number: int) -> AsyncGenerator: ...
+    async def linear_flow_tmpl(number: int) -> AsyncGenerator:
+        async for _ in Void():  # For generator signature only; never run.
+            yield _
 
-    assert linear_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
-    assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
+    assert linear_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
+    assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
 def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_function(
@@ -885,10 +888,12 @@ def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_funct
         return values
 
     @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), pass_values_through)
-    async def dag_flow_tmpl(number: int) -> AsyncGenerator: ...
+    async def dag_flow_tmpl(number: int) -> AsyncGenerator:
+        async for _ in Void():  # For generator signature only; never run.
+            yield _
 
-    assert dag_flow_tmpl.callable_type is CallableType.ASYNC_COROUTINE
-    assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
+    assert dag_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
+    assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
 def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_generator(
@@ -905,7 +910,8 @@ def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_ge
 
     @LinearFlowTemplate(emit_async_values, emit_sync_wrapped_values)
     async def linear_flow_tmpl(number: int) -> AsyncGenerator:
-        yield number
+        async for _ in Void():  # For generator signature only; never run.
+            yield _
 
     assert linear_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
@@ -930,7 +936,8 @@ def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_gener
 
     @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), emit_sync_wrapped_values)
     async def dag_flow_tmpl(number: int) -> AsyncGenerator:
-        yield number
+        async for _ in Void():  # For generator signature only; never run.
+            yield _
 
     assert dag_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
     assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
@@ -950,7 +957,8 @@ def test_linear_flow_uses_terminal_return_annotation_to_detect_async_generator_p
 
     @LinearFlowTemplate(emit_async_values, pass_values_through)
     async def linear_flow_tmpl(number: int) -> AsyncGenerator:
-        yield number
+        async for _ in Void():  # For generator signature only; never run.
+            yield _
 
     assert linear_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
@@ -975,7 +983,8 @@ def test_dag_flow_uses_terminal_return_annotation_to_detect_async_generator_pass
 
     @DagFlowTemplate(async_values_child_flow.refine(result_key='values'), pass_values_through)
     async def dag_flow_tmpl(number: int) -> AsyncGenerator:
-        yield number
+        async for _ in Void():  # For generator signature only; never run.
+            yield _
 
     assert dag_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
     assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
@@ -1013,10 +1022,64 @@ def test_linear_flow_uses_terminal_return_annotation_to_detect_sync_generator_pa
 
     @LinearFlowTemplate(values, pass_values_through)
     def linear_flow_tmpl(number: int) -> Generator:
-        yield number
+        yield from Void()  # For generator signature only; never run.
 
     assert linear_flow_tmpl.callable_type is CallableType.SYNC_GENERATOR
     assert linear_flow_tmpl.apply().callable_type is CallableType.SYNC_GENERATOR
+
+
+@pytest.mark.parametrize(
+    'generator_annotation',
+    GENERATOR_ANNOTATIONS.values(),
+    ids=GENERATOR_ANNOTATIONS.keys(),
+)
+def test_linear_flow_detects_bare_generator_annotation_on_terminal_sync_function(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    generator_annotation: object,
+) -> None:
+    @TaskTemplate()
+    def values(number: int) -> Generator:
+        yield from range(number, number + 3)
+
+    def pass_values_through(values):
+        return values
+
+    pass_values_through.__annotations__['return'] = generator_annotation
+
+    @LinearFlowTemplate(values, TaskTemplate()(pass_values_through))
+    def linear_flow_tmpl(number: int) -> Generator:
+        yield from Void()  # For generator signature only; never run.
+
+    assert linear_flow_tmpl.callable_type is CallableType.SYNC_GENERATOR
+    assert linear_flow_tmpl.apply().callable_type is CallableType.SYNC_GENERATOR
+
+
+@pytest.mark.parametrize(
+    'generator_annotation',
+    GENERATOR_ANNOTATIONS.values(),
+    ids=GENERATOR_ANNOTATIONS.keys(),
+)
+def test_linear_flow_detects_bare_generator_annotation_on_terminal_sync_function_after_async_child(
+    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
+    generator_annotation: object,
+) -> None:
+    @TaskTemplate()
+    async def emit_async_values(number: int) -> AsyncGenerator:
+        for value in range(number, number + 3):
+            yield value
+
+    def pass_values_through(values):
+        return values
+
+    pass_values_through.__annotations__['return'] = generator_annotation
+
+    @LinearFlowTemplate(emit_async_values, TaskTemplate()(pass_values_through))
+    async def linear_flow_tmpl(number: int) -> AsyncGenerator:
+        async for _ in Void():  # For generator signature only; never run.
+            yield _
+
+    assert linear_flow_tmpl.callable_type is CallableType.ASYNC_GENERATOR
+    assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
 def test_linear_flow_refine_rechecks_callable_type_against_child_list(
