@@ -60,7 +60,7 @@ class JobRunnerStateChecker(IsJobRunnerEngine):
 
     @override
     def get_config_cls(self) -> type[IsJobRunnerConfig]:  # type: ignore[override]
-        return self._engine.get_config_cls()  # noqa
+        return self._engine.get_config_cls()
 
     def supports(self, job_type: JobType.Literals) -> bool:
         return self._engine.supports(job_type)
@@ -74,22 +74,22 @@ class JobRunnerStateChecker(IsJobRunnerEngine):
         from .functions import assert_job_state
 
         assert_job_state(task._job, [RunState.INITIALIZED])  # type: ignore[attr-defined]
-        return self._engine._init_task(task)  # noqa
+        return self._engine._init_task(task)
 
     def _run_task(self, state: Any, task: IsTaskRunSpec, *args, **kwargs) -> object:
         from .functions import assert_job_state
 
         assert_job_state(task._job, [RunState.RUNNING])  # type: ignore[attr-defined]
-        return self._engine._run_task(state, task, *args, **kwargs)  # noqa
+        return self._engine._run_task(state, task, *args, **kwargs)
 
     def _init_flow(self, flow: IsFlowRunSpec) -> object:
         from .functions import assert_job_state
 
         assert_job_state(flow._job, [RunState.INITIALIZED])  # type: ignore[attr-defined]
-        return self._engine._init_flow(flow)  # noqa
+        return self._engine._init_flow(flow)
 
     def _run_flow(self, state: Any, flow: IsFlowRunSpec, *args, **kwargs) -> object:
         from .functions import assert_job_state
 
         assert_job_state(flow._job, [RunState.RUNNING])  # type: ignore[attr-defined]
-        return self._engine._run_flow(state, flow, *args, **kwargs)  # noqa
+        return self._engine._run_flow(state, flow, *args, **kwargs)

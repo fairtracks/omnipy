@@ -194,7 +194,7 @@ def _create_docblock_with_expansion(
     return new_docblock, modified
 
 
-def process_content(  # noqa: C901
+def process_content(
     content: str, macros: dict[str, str], verbose: bool = False
 ) -> tuple[str, bool]:
     """

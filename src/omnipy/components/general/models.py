@@ -712,7 +712,7 @@ class GroupByTypeModel(Chain2[Model[list], Model[dict[type | GenericAlias, list]
         return Model[dict[type | GenericAlias, list]](grouped)
 
 
-if TYPE_CHECKING:  # noqa: C901
+if TYPE_CHECKING:
 
     class ConverterModel(PlainModel[_ToT], Generic[_FromT, _ToT]):
         @property

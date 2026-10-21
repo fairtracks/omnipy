@@ -61,7 +61,7 @@ def test_init_abstract() -> None:
 
 
 def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     job_tmpl = JobTemplate()
     assert isinstance(job_tmpl, JobTemplate)
@@ -73,10 +73,10 @@ def test_init_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) 
 def test_fail_only_jobtemplate_init_mock(
     mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
 ) -> None:
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     with pytest.raises(JobStateException):
-        JobBase()  # noqa
+        JobBase()
 
     with pytest.raises(JobStateException):
         Job()
@@ -86,7 +86,7 @@ def test_job_creator_singular_mock(
     mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
     teardown_reset_job_creator: Annotated[None, pytest.fixture],
 ) -> None:
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     assert isinstance(JobBase.job_creator, JobCreator)
 
@@ -122,7 +122,7 @@ def test_job_creator_properties_mock(
 ) -> None:
     mock_local_runner = MockLocalRunner()
     mock_job_config = MockJobConfig()
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     for test in [
         PropertyTest(
@@ -204,7 +204,7 @@ def _assert_prop_getattr_all(
     val: object,
 ):
     """Assert one property is exposed consistently across job objects."""
-    JobTemplate, Job = mock_job_classes  # noqa
+    JobTemplate, Job = mock_job_classes  # noqa: N806
 
     _assert_prop_getattr_job_subcls(
         JobBase,
@@ -271,7 +271,7 @@ def _assert_prop_getattr_job(job_obj, in_job_obj, property, val):
 
 
 def test_equal_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture]) -> None:
-    JobTemplate, _Job = mock_job_classes  # noqa
+    JobTemplate, _Job = mock_job_classes  # noqa: N806
 
     my_job_tmpl = JobTemplate()
     my_job_tmpl_2 = JobTemplate()
@@ -282,7 +282,7 @@ def test_equal_mock(mock_job_classes: Annotated[MockJobClasses, pytest.fixture])
     ]:
         assert my_job_obj == my_job_obj_2
 
-    assert my_job_tmpl != '123'  # noqa
+    assert my_job_tmpl != '123'
 
 
 def test_subclass_equal() -> None:
@@ -372,7 +372,7 @@ def test_subclass_apply_revise() -> None:
     assert cmd_tmpl_revised.params == {'what': 'nothing'}
 
     with pytest.raises(TypeError):
-        cmd_tmpl_revised()  # noqa
+        cmd_tmpl_revised()
 
     _assert_immutable_command_mock_job_properties(cmd_tmpl_revised)
 
@@ -420,7 +420,7 @@ def test_subclass_refine_scalar() -> None:
 
     # Refine job template with id and scalar property 'uppercase' as bool (update=False).
     # Other properties are reset to default.
-    silent_tmpl = shout_tmpl.refine(uppercase=False, update=False)  # noqa
+    silent_tmpl = shout_tmpl.refine(uppercase=False, update=False)
     assert_func_wrapper(silent_tmpl, shout_tmpl)
     assert silent_tmpl != shout_tmpl
     for silent_obj in silent_tmpl, silent_tmpl.apply():
@@ -463,7 +463,7 @@ def test_subclass_refine_mapping() -> None:
 
     # Refine job template with mapping property 'params' as list of tuples (update=True).
     # Other properties are unchanged, as well as other entries in 'params'
-    secret_tmpl = nicer_tmpl.refine(params=[('where', 'but it is a secret')])  # noqa
+    secret_tmpl = nicer_tmpl.refine(params=[('where', 'but it is a secret')])
     assert_func_wrapper(secret_tmpl, nicer_tmpl)
     assert secret_tmpl != nicer_tmpl
     for secret_obj in secret_tmpl, secret_tmpl.apply():

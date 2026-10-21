@@ -15,7 +15,7 @@ from .helpers.mocks import MockDataset, MockModel
 
 def test_init():
     with pytest.raises(TypeError):
-        DataClassCreator('something')  # noqa  # pyright: ignore [reportCallIssue]
+        DataClassCreator('something')  # pyright: ignore [reportCallIssue]
 
     data_class_creator_1 = DataClassCreator()
     data_class_creator_2 = DataClassCreator()

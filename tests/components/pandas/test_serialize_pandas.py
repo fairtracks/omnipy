@@ -28,7 +28,7 @@ def test_pandas_dataset_serializer_to_tar_file():
 
     serializer = PandasDatasetToTarFileSerializer()
     tarfile_bytes = serializer.serialize(pandas_data)
-    decode_func = lambda x: x.decode('utf8')  # noqa
+    decode_func = lambda x: x.decode('utf8')  # noqa: E731
 
     assert_tar_file_content(tarfile_bytes, 'data_file_1', 'csv', decode_func, data_file_1_csv)
     assert_tar_file_content(tarfile_bytes, 'data_file_2', 'csv', decode_func, data_file_2_csv)

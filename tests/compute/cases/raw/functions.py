@@ -14,7 +14,7 @@ def action_func_no_params() -> None:
     return
 
 
-def action_func_with_params(command: str, verbose: bool = False) -> None:  # noqa
+def action_func_with_params(command: str, verbose: bool = False) -> None:  # noqa: ARG001
     # backend.run(command, verbose=verbose)
     """Return action func with parameters."""
     return

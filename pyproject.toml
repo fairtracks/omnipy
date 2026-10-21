@@ -152,7 +152,10 @@ exclude = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "C90", "Q", "UP", "I"]
+select = ["E", "F", "W", "C90", "Q", "UP", "I", "RUF100"]
+# Codes of rules that ruff does not implement, but that tools such as PyCharm read from noqa comments.
+# Keeps RUF100 (unused noqa directive) from flagging them
+external = ["N806", "E731", "ARG001", "ARG002"]
 ignore = [
   "E731",  # Lambda assignment
   "UP042",  # (str, Enum) is used deliberately instead of StrEnum

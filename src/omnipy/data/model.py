@@ -475,7 +475,7 @@ class Model(  # type: ignore[misc]
 
             cls._clean_type_caches()
 
-    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':  # noqa: C901
+    if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
         # mypy currently does not support overloads of __new__()
 
         from omnipy.data._typing.mimic_models import (
@@ -2128,7 +2128,7 @@ class Model(  # type: ignore[misc]
         except TypeError:
             return NotImplemented
 
-    def _call_method(  # noqa: C901
+    def _call_method(
         self,
         method: Callable,
         self_convert_args_if_failure: bool,

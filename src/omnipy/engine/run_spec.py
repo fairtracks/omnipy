@@ -366,7 +366,7 @@ class LinearFlowRunSpec(ChildJobListArgFlowRunSpec):
 class DagFlowRunSpec(ChildJobListArgFlowRunSpec):
     """Run spec for DAG flows that route named results into downstream inputs."""
 
-    def _create_default_run_callable(self) -> Callable:  # noqa: C901
+    def _create_default_run_callable(self) -> Callable:
         def _run_all_dag_child_jobs(
             *args: object,
             **kwargs: object,

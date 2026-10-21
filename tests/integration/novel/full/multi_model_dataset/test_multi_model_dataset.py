@@ -144,4 +144,4 @@ def test_fail_run_specialize_record_models_inconsistent_types(
     old_dataset['b'] = [{'b': 'df', 'c': True}, {'b': False, 'c': 'sg'}]
 
     with pytest.raises(AssertionError):
-        _new_dataset = specialize_record_models(old_dataset)  # noqa: F841
+        _new_dataset = specialize_record_models(old_dataset)

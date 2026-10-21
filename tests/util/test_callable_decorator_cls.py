@@ -122,7 +122,7 @@ def test_plain_decorator_parentheses() -> None:
         return dict(args=args, kwargs=kwargs)
 
     assert type(my_func_2) is NoConfigMockClass
-    _assert_func_decoration(my_func_2)  # noqa
+    _assert_func_decoration(my_func_2)
     _assert_call_func(my_func_2)
 
     assert my_func_2.args == ()

@@ -79,6 +79,6 @@ class PandasDatasetToTarFileSerializer(TarFileSerializer[PandasDataset]):
             import_method='from_data',
             any_file_suffix=any_file_suffix,
             ignore_dirs=ignore_dirs,
-        )  # noqa
+        )
 
         return pandas_dataset

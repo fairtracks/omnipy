@@ -91,7 +91,7 @@ class IsRunStateRegistry(Protocol):
         """
         ...
 
-    def all_jobs(self, state: RunState.Literals | None = None) -> tuple[IsUniquelyNamedJob, ...]:  # noqa
+    def all_jobs(self, state: RunState.Literals | None = None) -> tuple[IsUniquelyNamedJob, ...]:  # noqa: ARG002
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{ISRUNSTATEREGISTRY_ALL_JOBS_SUMMARY}}
         #

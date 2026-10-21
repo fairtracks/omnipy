@@ -1058,18 +1058,15 @@ def test_import_and_export():
         'data_file_3': {'b': '222', 'c': '333'},
     }
 
-    assert (
-        dataset.to_json_schema(pretty=False)
-        == (  # noqa
-            '{"title": "Dataset[Model[dict[str, str]]]", "description": "'
-            + Dataset._get_standard_field_description()
-            + '", "default": {}, "type": "object", "additionalProperties": '
-            '{"$ref": "#/definitions/Model_dict_str__str__"}, "definitions": '
-            '{"Model_dict_str__str__": {"title": "Model[dict[str, str]]", '
-            '"description": "'
-            + Model._get_standard_field_description()
-            + '", "type": "object", "additionalProperties": {"type": "string"}}}}'
-        )
+    assert dataset.to_json_schema(pretty=False) == (
+        '{"title": "Dataset[Model[dict[str, str]]]", "description": "'
+        + Dataset._get_standard_field_description()
+        + '", "default": {}, "type": "object", "additionalProperties": '
+        '{"$ref": "#/definitions/Model_dict_str__str__"}, "definitions": '
+        '{"Model_dict_str__str__": {"title": "Model[dict[str, str]]", '
+        '"description": "'
+        + Model._get_standard_field_description()
+        + '", "type": "object", "additionalProperties": {"type": "string"}}}}'
     )
 
     assert dataset.to_json_schema(pretty=True) == dedent(
@@ -1099,8 +1096,8 @@ def test_import_and_export():
     }"""
     )
 
-    assert dataset.to_json() == dataset.to_json(pretty=True)  # noqa
-    assert dataset.to_json_schema() == dataset.to_json_schema(pretty=True)  # noqa
+    assert dataset.to_json() == dataset.to_json(pretty=True)
+    assert dataset.to_json_schema() == dataset.to_json_schema(pretty=True)
 
 
 @pytest.mark.skipif(
@@ -1117,12 +1114,12 @@ def test_import_export_custom_parser_to_other_type():
     dataset['data_file_1'] = 'And we lived beneath the waves'
     assert dataset['data_file_1'].content == 30
 
-    dataset.from_data({'data_file_2': 'In our yellow submarine'}, update=True)  # noqa
+    dataset.from_data({'data_file_2': 'In our yellow submarine'}, update=True)
     assert dataset['data_file_1'].content == 30
     assert dataset['data_file_2'].content == 23
     assert dataset.to_data() == {'data_file_1': 30, 'data_file_2': 23}
 
-    dataset.from_json({'data_file_2': '"In our yellow submarine!"'}, update=True)  # noqa
+    dataset.from_json({'data_file_2': '"In our yellow submarine!"'}, update=True)
     assert dataset['data_file_1'].content == 30
     assert dataset['data_file_2'].content == 24
     assert dataset.to_json() == {'data_file_1': '30', 'data_file_2': '24'}
@@ -1301,7 +1298,7 @@ def test_complex_models():
     # Generic model subclass
     #
 
-    ListT = TypeVar('ListT', default=list)  # noqa
+    ListT = TypeVar('ListT', default=list)  # noqa: N806
 
     class MyReversedListModel(Model[ListT], Generic[ListT]):
         # Commented out docstring, due to test_json_schema_generic_models_known_issue in test_model
@@ -1326,9 +1323,9 @@ def test_complex_models():
     dataset = MyReversedRangeList()
 
     with pytest.raises(ValidationError):
-        dataset.from_data([(i, [0, i]) for i in range(0, 5)])  # noqa
+        dataset.from_data([(i, [0, i]) for i in range(0, 5)])
 
-    dataset.from_data([(str(i), [1, i]) for i in range(1, 5)])  # noqa
+    dataset.from_data([(str(i), [1, i]) for i in range(1, 5)])
     dataset.snapshot_holder.all_are_empty(debug=True)
     assert dataset['4'].content == [4, 3, 2, 1]
 
