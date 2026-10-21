@@ -143,6 +143,13 @@ extend-exclude = [
 
 [tool.ruff.format]
 quote-style = "single"
+# Hand-laid-out tables of dataclass fields with long type unions, which the formatter makes harder to read
+exclude = [
+  "tests/components/json/cases/json_data.py",
+  "tests/components/frozen/cases/frozen_data.py",
+  # Historical planning documents are kept as written
+  "docs/superpowers/**",
+]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "C90", "Q", "UP", "I"]

@@ -1117,8 +1117,8 @@ def test_column_model_concat_operators_for_adapted_array_content() -> None:
 
     assert IntListLikeColumnModel(a) + b == IntListLikeColumnModel([1, 2, 3, 4])
     assert a + IntListLikeColumnModel(b) == IntListLikeColumnModel([1, 2, 3, 4])
-    assert IntListLikeColumnModel(a) + IntListLikeColumnModel(b) == IntListLikeColumnModel(
-        [1, 2, 3, 4]
+    assert IntListLikeColumnModel(a) + IntListLikeColumnModel(b) == (
+        IntListLikeColumnModel([1, 2, 3, 4])
     )
 
     a_model = IntListLikeColumnModel(a)

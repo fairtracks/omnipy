@@ -197,9 +197,8 @@ def _assert_args_and_kwargs(
     assert tuple(signature(mock_obj.__init__).parameters.keys()) == tuple(non_self_param_keys)
 
     if mock_cls:
-        assert tuple(signature(mock_cls.__init__).parameters.keys()) == tuple(
-            ['self'] + non_self_param_keys
-        )
+        mock_cls_init_params = signature(mock_cls.__init__).parameters  # type: ignore[misc]
+        assert tuple(mock_cls_init_params.keys()) == tuple(['self'] + non_self_param_keys)
 
 
 def test_new_method_no_state_mixin(mock_plain_cls):

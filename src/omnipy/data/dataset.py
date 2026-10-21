@@ -1968,8 +1968,8 @@ class Dataset(
             isinstance(other, Dataset)
             and self.__class__ == other.__class__
             and self.data == other.data
-            and self.to_data() == other.to_data()
-        )  # last is probably unnecessary, but just in case
+            and self.to_data() == other.to_data()  # last is probably unnecessary, but just in case
+        )
 
     def __repr_args__(self):
         """Return key-value pairs used by Pydantic when building ``repr()`` output.

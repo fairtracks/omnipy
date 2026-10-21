@@ -100,13 +100,13 @@ def test_evaluate_any_forward_refs_if_possible() -> None:
 
     assert evaluate_any_forward_refs_if_possible(ForwardRef('MyGlobalClass')) == MyGlobalClass
     assert (
-        evaluate_any_forward_refs_if_possible(list[ForwardRef('MyGlobalClass')])
+        evaluate_any_forward_refs_if_possible(list[ForwardRef('MyGlobalClass')])  # type: ignore[misc]
         == list[MyGlobalClass]
-    )  # type: ignore[misc]
+    )
     assert (
-        evaluate_any_forward_refs_if_possible(list[list[ForwardRef('MyGlobalClass')]])
+        evaluate_any_forward_refs_if_possible(list[list[ForwardRef('MyGlobalClass')]])  # type: ignore[misc]
         == list[list[MyGlobalClass]]
-    )  # type: ignore[misc]
+    )
 
     assert evaluate_any_forward_refs_if_possible(ForwardRef('MyLocalClass')) == ForwardRef(
         'MyLocalClass'
@@ -151,8 +151,8 @@ def test_evaluate_any_forward_refs_if_possible() -> None:
         evaluate_any_forward_refs_if_possible(
             Union[
                 list[ForwardRef('MyLocalClass')],  # type: ignore[misc]
-                tuple[ForwardRef('MyLocalClass')],
-            ],  # type: ignore[misc]
+                tuple[ForwardRef('MyLocalClass')],  # type: ignore[misc]
+            ],
             MyLocalClass=MyLocalClass,
         )
         == Union[list[MyLocalClass], tuple[MyLocalClass]]

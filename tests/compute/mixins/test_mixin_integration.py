@@ -143,14 +143,8 @@ def test_iterate_over_data_files_param() -> None:
     )
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
-    assert single_data_file_plus_str_template.run(
-        data_numbers=dataset,
-    ) == Dataset[Model[str]](
-        {  # type: ignore[call-arg]
-            'a': '7',
-            'b': '0',
-        }
-    )
+    result = single_data_file_plus_str_template.run(data_numbers=dataset)  # type: ignore[call-arg]
+    assert result == Dataset[Model[str]]({'a': '7', 'b': '0'})
 
 
 def test_refine_task_template_with_other_properties_task() -> None:

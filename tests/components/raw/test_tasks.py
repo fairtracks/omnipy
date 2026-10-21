@@ -27,12 +27,8 @@ def test_decode_bytes(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
         ),
     ]
     for case in test_cases:
-        assert (
-            decode_bytes.run(Dataset[Model[bytes]](a=case.bytes_data), encoding=case.encoding)[
-                'a'
-            ].content
-            == case.target_str
-        )
+        result = decode_bytes.run(Dataset[Model[bytes]](a=case.bytes_data), encoding=case.encoding)
+        assert result['a'].content == case.target_str
 
     for case in test_cases:
         assert (

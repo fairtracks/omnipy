@@ -35,25 +35,25 @@ repos:
       - id: ruff-check
         name: ruff check
         description: "Lint, sort imports and apply safe fixes."
-        entry: uv run ruff check --fix
+        entry: uv run ruff check --force-exclude --fix
         language: system
         types: [ python ]
         stages: [ pre-commit ]
       - id: ruff-format
         name: ruff format
-        entry: uv run ruff format
+        entry: uv run ruff format --force-exclude
         language: system
         types: [ python ]
         stages: [ pre-commit ]
       - id: ruff-check
         name: ruff check (check)
-        entry: uv run ruff check
+        entry: uv run ruff check --force-exclude
         language: system
         types: [ python ]
         stages: [ manual ]
       - id: ruff-format
         name: ruff format (check)
-        entry: uv run ruff format --diff
+        entry: uv run ruff format --force-exclude --diff
         language: system
         types: [ python ]
         stages: [ manual ]

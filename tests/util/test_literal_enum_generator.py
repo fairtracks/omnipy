@@ -258,9 +258,7 @@ def test_error_generate_literal_enum_code_invalid_class_name() -> None:
 
 def test_error_generate_literal_enum_code_invalid_value_type() -> None:
     with pytest.raises(ValueError, match='Unsupported value type: dict'):
-        generate_literal_enum_code(
-            ({1: 2},),
-        )  # type: ignore[arg-type]
+        generate_literal_enum_code(({1: 2},))  # type: ignore[arg-type]
 
     with pytest.raises(ValueError, match='is not a valid Python class name'):
         generate_literal_enum_code(

@@ -711,21 +711,15 @@ def test_nested_split_to_items_model_mixed_levels() -> None:
     with pytest.raises(ValidationError):
         VarSpecNestedSplitToItemsModel(['a=1', 'b=2', ['c']])
 
-    assert VarSpecNestedSplitToItemsModel('a=1;b=2;c=3').to_data() == [
-        ['a', '1'],
-        ['b', '2'],
-        ['c', '3'],
-    ]
-    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', 'c=3']).to_data() == [
-        ['a', '1'],
-        ['b', '2'],
-        ['c', '3'],
-    ]
-    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', ['c', '3']]).to_data() == [
-        ['a', '1'],
-        ['b', '2'],
-        ['c', '3'],
-    ]
+    assert VarSpecNestedSplitToItemsModel('a=1;b=2;c=3').to_data() == (
+        [['a', '1'], ['b', '2'], ['c', '3']]
+    )
+    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', 'c=3']).to_data() == (
+        [['a', '1'], ['b', '2'], ['c', '3']]
+    )
+    assert VarSpecNestedSplitToItemsModel(['a=1', 'b=2', ['c', '3']]).to_data() == (
+        [['a', '1'], ['b', '2'], ['c', '3']]
+    )
 
 
 def test_nested_split_to_items_model_parse_to_str() -> None:

@@ -1414,8 +1414,8 @@ def test_doubly_nested_list_and_dict_of_none_variants_known_issue(
     with pytest.raises(ValidationError):
         DictOfInt2DictOfInt2NoneVariant({1: None})
 
-    assert DictOfInt2DictOfInt2NoneVariant({1: {2: None}}) == DictOfInt2DictOfInt2NoneVariant(
-        {1: {2: none_variant_target_content}}
+    assert DictOfInt2DictOfInt2NoneVariant({1: {2: None}}) == (
+        DictOfInt2DictOfInt2NoneVariant({1: {2: none_variant_target_content}})
     )
 
     with pytest.raises(ValidationError):
@@ -1588,8 +1588,8 @@ def test_recursive_generic_tuple_model_with_none() -> None:
     with pytest.raises(ValidationError):
         MyOnlyTuplesAndNoneModel(None)
 
-    assert MyOnlyTuplesAndNoneModel([None]).content == MyGenericOnlyTuplesAndScalarsModel[None](
-        (MyGenericScalarModel[None](None),)
+    assert MyOnlyTuplesAndNoneModel([None]).content == (
+        MyGenericOnlyTuplesAndScalarsModel[None]((MyGenericScalarModel[None](None),))
     )
 
     assert MyOnlyTuplesAndNoneModel(
@@ -2119,69 +2119,31 @@ def test_snapshot_deepcopy_reuse_objects(
         # assert len(Model[int]().snapshot_holder) == 3
         # assert len(Model[int]().snapshot_holder._deepcopy_memo) == 3  # type: ignore[attr-defined]
 
-        assert (
-            type(outer[1][-1])
-            is type(middle[-1])
-            is type(  # type: ignore[index]
-                inner
-            )
-            is Model[list[int]]
-        )
+        assert type(outer[1][-1]) is type(middle[-1]) is type(inner) is Model[list[int]]  # type: ignore[index]
         assert id(outer[1][-1]) == id(middle[-1]) == id(inner)  # type: ignore[index]
 
-        assert (
-            type(outer.snapshot[1][-1])
-            is type(  # type: ignore[index]
-                middle.snapshot[-1]
-            )
-            is Model[list[int]]
-        )
+        assert type(outer.snapshot[1][-1]) is type(middle.snapshot[-1]) is Model[list[int]]  # type: ignore[index]
         assert id(outer.snapshot[1][-1]) == id(middle.snapshot[-1])  # type: ignore[index]
 
-        assert (
-            type(outer[1][-1].content)
-            is type(  # type: ignore[index]
-                middle[-1].content
-            )
-            is type(  # type: ignore[index]
-                inner.content
-            )
-            is list
-        )
-        assert (
-            id(outer[1][-1].content)
-            == id(middle[-1].content)
-            == id(  # type: ignore[index]
-                inner.content
-            )
-        )
+        assert type(outer[1][-1].content) is type(middle[-1].content) is type(inner.content) is list  # type: ignore[index]
+        assert id(outer[1][-1].content) == id(middle[-1].content) == id(inner.content)  # type: ignore[index]
 
         assert (
-            type(outer.snapshot[1][-1].content)
-            is type(  # type: ignore[index]
-                middle.snapshot[-1].content
-            )
+            type(outer.snapshot[1][-1].content)  # type: ignore[index]
+            is type(middle.snapshot[-1].content)  # pyright: ignore[reportAttributeAccessIssue]
             is type(inner.snapshot)
             is list
         )
         assert (
-            id(outer.snapshot[1][-1].content)
-            == id(  # type: ignore[index]
-                middle.snapshot[-1].content
-            )
+            id(outer.snapshot[1][-1].content)  # type: ignore[index]
+            == id(middle.snapshot[-1].content)  # pyright: ignore[reportAttributeAccessIssue]
             == id(inner.snapshot)
         )
 
         assert type(outer[1].content) is type(middle.content) is list  # type: ignore[index]
         assert id(outer[1].content) == id(middle.content)  # type: ignore[index]
 
-        assert (
-            type(outer.snapshot[1].content)
-            is type(  # type: ignore[union-attr]
-                middle.snapshot
-            )
-            is list
-        )
+        assert type(outer.snapshot[1].content) is type(middle.snapshot) is list  # type: ignore[union-attr]
         assert id(outer.snapshot[1].content) == id(middle.snapshot)  # type: ignore[union-attr]
 
         del outer

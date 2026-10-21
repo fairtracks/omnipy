@@ -1427,9 +1427,9 @@ class Model(  # type: ignore[misc]
             ``True`` when the current content is still represented by the stored
             snapshot and does not need re-validation.
         """
-        needs_validation = self.snapshot_differs_from_model(
-            self
-        ) or not self.snapshot_taken_of_same_model(self)
+        needs_validation = self.snapshot_differs_from_model(self) or (
+            not self.snapshot_taken_of_same_model(self)
+        )
         return not needs_validation
 
     def _take_snapshot_of_validated_content(self) -> None:
@@ -2620,9 +2620,8 @@ def is_model_instance(__obj: object | _ModelT) -> 'TypeIs[_ModelT]':
     Returns:
         ``True`` when ``__obj`` is an instance of :class:`Model`.
     """
-    return lenient_isinstance(__obj, Model) and not is_none_type(
-        __obj
-    )  # Consequence of _ModelMetaclass hack
+    # Consequence of _ModelMetaclass hack
+    return lenient_isinstance(__obj, Model) and not is_none_type(__obj)
 
 
 @functools.cache
@@ -2635,9 +2634,8 @@ def is_model_subclass(__cls: TypeForm) -> 'TypeIs[type[Model]]':
     Returns:
         ``True`` when ``__cls`` is a subclass of :class:`Model`.
     """
-    return lenient_issubclass(__cls, Model) and not is_none_type(
-        __cls
-    )  # Consequence of _ModelMetaclass hack
+    # Consequence of _ModelMetaclass hack
+    return lenient_issubclass(__cls, Model) and not is_none_type(__cls)
 
 
 def obj_or_model_content_isinstance(

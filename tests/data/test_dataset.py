@@ -325,8 +325,8 @@ def test_more_dict_methods_with_parsing():
     dataset.setdefault('data_file_4', 789)  # pyright: ignore[reportArgumentType]
     assert dataset.get('data_file_4').content == '789'  # pyright: ignore[reportOptionalMemberAccess]
 
-    assert dataset.fromkeys(['data_file_1', 'data_file_2'], 321) == Dataset[Model[str]](
-        data_file_1='321', data_file_2='321'
+    assert dataset.fromkeys(['data_file_1', 'data_file_2'], 321) == (
+        Dataset[Model[str]](data_file_1='321', data_file_2='321')
     )
 
     assert len(dataset) == 3
@@ -670,8 +670,8 @@ def test_equality() -> None:
 
     assert Dataset[Model[list[int]]]({'1': [1, 2, 3]}) == Dataset[Model[list[int]]]({1: [1, 2, 3]})
 
-    assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3]}) != Dataset[Model[list[float]]](
-        {'data_file_1': [1.0, 2.0, 3.0]}
+    assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3]}) != (
+        Dataset[Model[list[float]]]({'data_file_1': [1.0, 2.0, 3.0]})
     )
 
 
@@ -680,20 +680,20 @@ def test_complex_equality() -> None:
 
     class MyInt(Model[int]): ...
 
-    assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3]}) != Dataset[MyIntList](
-        {'data_file_1': [1, 2, 3]}
+    assert Dataset[Model[list[int]]]({'data_file_1': [1, 2, 3]}) != (
+        Dataset[MyIntList]({'data_file_1': [1, 2, 3]})
     )
 
-    assert Dataset[Model[MyIntList]]({'data_file_1': [1, 2, 3]}) == Dataset[Model[MyIntList]](
-        {'data_file_1': MyIntList([1, 2, 3])}
+    assert Dataset[Model[MyIntList]]({'data_file_1': [1, 2, 3]}) == (
+        Dataset[Model[MyIntList]]({'data_file_1': MyIntList([1, 2, 3])})
     )
 
-    assert Dataset[Model[list[MyInt]]]({'data_file_1': [1, 2, 3]}) == Dataset[Model[list[MyInt]]](
-        {'data_file_1': list[MyInt]([1, 2, 3])}
+    assert Dataset[Model[list[MyInt]]]({'data_file_1': [1, 2, 3]}) == (
+        Dataset[Model[list[MyInt]]]({'data_file_1': list[MyInt]([1, 2, 3])})
     )
 
-    assert Dataset[Model[list[MyInt]]]({'data_file_1': [1, 2, 3]}) != Dataset[Model[List[MyInt]]](
-        {'data_file_1': [1, 2, 3]}
+    assert Dataset[Model[list[MyInt]]]({'data_file_1': [1, 2, 3]}) != (
+        Dataset[Model[List[MyInt]]]({'data_file_1': [1, 2, 3]})
     )
 
     # Had to be set to dict to trigger difference in data content. Validation for some reason
@@ -705,9 +705,9 @@ def test_complex_equality() -> None:
 
     assert as_list_of_myints_dataset != as_myintlist_dataset
 
-    assert Dataset[Model[MyIntList | list[MyInt]]]({'data_file_1': [1, 2, 3]}) == Dataset[
-        Model[Union[MyIntList, list[MyInt]]]
-    ]({'data_file_1': [1, 2, 3]})
+    assert Dataset[Model[MyIntList | list[MyInt]]]({'data_file_1': [1, 2, 3]}) == (
+        Dataset[Model[Union[MyIntList, list[MyInt]]]]({'data_file_1': [1, 2, 3]})
+    )
 
     assert (
         Dataset[Model[MyIntList | list[MyInt]]]({'data_file_1': [1, 2, 3]}).to_data()
@@ -722,13 +722,13 @@ def test_equality_with_pydantic() -> None:
     class EqualPydanticModel(pyd.BaseModel):
         a: int = 0
 
-    assert Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1}}) == Dataset[
-        Model[PydanticModel]
-    ]({'data_file_1': {'a': 1.0}})
+    assert Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1}}) == (
+        Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1.0}})
+    )
 
-    assert Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1}}) != Dataset[
-        Model[EqualPydanticModel]
-    ]({'data_file_1': {'a': 1}})
+    assert Dataset[Model[PydanticModel]]({'data_file_1': {'a': 1}}) != (
+        Dataset[Model[EqualPydanticModel]]({'data_file_1': {'a': 1}})
+    )
 
 
 def test_name_qualname_and_module():
