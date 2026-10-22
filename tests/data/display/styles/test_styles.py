@@ -327,10 +327,10 @@ async def test_fail_import_missing(
         """Provide test fail import missing."""
         with _setup_base16_download_url(my_base16_endpoint_url):
             with pytest.raises(ImportError):
-                from omnipy.data._display.styles.dynamic_styles import TintedBase16MissingStyle  # noqa
+                from omnipy.data._display.styles.dynamic_styles import TintedBase16MissingStyle  # noqa: F401
 
             with pytest.raises(ImportError):
-                from omnipy.data._display.styles.dynamic_styles import something_else  # noqa
+                from omnipy.data._display.styles.dynamic_styles import something_else  # noqa: F401
 
     await run_sync_func(_test_fail_import_missing)
 

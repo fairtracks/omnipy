@@ -1,18 +1,25 @@
+# mypy: disable-error-code="attr-defined"
+# pyright: reportAttributeAccessIssue=false
 import pytest
 import pytest_cases as pc
 
 from ....engine.test_all_engines import (
-    test_flow_matrix_all_production_engines,  # noqa
-    test_flow_matrix_all_production_engines_job_case,  # type: ignore[attr-defined] # noqa
+    test_flow_matrix_all_production_engines,
+    test_flow_matrix_all_production_engines_job_case,
     test_mock_tasks_all_engines_mock_registry,
-    test_mock_tasks_all_engines_mock_registry_job_case,  # type: ignore[attr-defined] # noqa
-    test_nested_flow_semantic_floor_all_production_engines,  # noqa
-    test_nested_flow_semantic_floor_all_production_engines_job_case,  # type: ignore[attr-defined] # noqa
+    test_mock_tasks_all_engines_mock_registry_job_case,
+    test_nested_flow_semantic_floor_all_production_engines,
+    test_nested_flow_semantic_floor_all_production_engines_job_case,
 )
 
-test_mock_tasks_all_engines_mock_registry  # noqa
-test_flow_matrix_all_production_engines  # noqa
-test_nested_flow_semantic_floor_all_production_engines  # noqa
+__all__ = [
+    'test_flow_matrix_all_production_engines',
+    'test_flow_matrix_all_production_engines_job_case',
+    'test_mock_tasks_all_engines_mock_registry',
+    'test_mock_tasks_all_engines_mock_registry_job_case',
+    'test_nested_flow_semantic_floor_all_production_engines',
+    'test_nested_flow_semantic_floor_all_production_engines_job_case',
+]
 
 
 @pc.parametrize(

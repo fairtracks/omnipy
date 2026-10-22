@@ -65,11 +65,27 @@ def prefect_test_harness_context(port: int | None) -> Iterator[None]:
         yield
 
 
-from prefect import cache_policies  # noqa
-from prefect import Flow as PrefectFlow  # noqa
-from prefect import flow as prefect_flow  # noqa
-from prefect import Task as PrefectTask  # noqa
-from prefect import task as prefect_task  # noqa
-from prefect.cache_policies import CachePolicy, Inputs, RUN_ID, TASK_SOURCE  # noqa
-from prefect.context import TaskRunContext  # noqa
-from prefect.utilities.annotations import NotSet  # noqa
+from prefect import cache_policies  # noqa: E402
+from prefect import Flow as PrefectFlow  # noqa: E402
+from prefect import flow as prefect_flow  # noqa: E402
+from prefect import Task as PrefectTask  # noqa: E402
+from prefect import task as prefect_task  # noqa: E402
+from prefect.cache_policies import CachePolicy, Inputs, RUN_ID, TASK_SOURCE  # noqa: E402
+from prefect.context import TaskRunContext  # noqa: E402
+from prefect.utilities.annotations import NotSet  # noqa: E402
+
+__all__ = [
+    'cache_policies',
+    'CachePolicy',
+    'Inputs',
+    'NotSet',
+    'prefect_flow',
+    'prefect_task',
+    'prefect_test_config_context',
+    'prefect_test_harness_context',
+    'PrefectFlow',
+    'PrefectTask',
+    'RUN_ID',
+    'TASK_SOURCE',
+    'TaskRunContext',
+]

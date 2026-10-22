@@ -6,26 +6,52 @@ omnipy_json_dir = project_dir / 'src' / 'omnipy' / 'components' / 'json'
 prev_sys_path = sys.path
 sys.path = [omnipy_json_dir.as_posix()]
 
-from typedefs import Json  # noqa
-from typedefs import JsonDict  # noqa
-from typedefs import JsonDictOfDicts  # noqa
-from typedefs import JsonDictOfDictsOfScalars  # noqa
-from typedefs import JsonDictOfLists  # noqa
-from typedefs import JsonDictOfListsOfDicts  # noqa
-from typedefs import JsonDictOfListsOfScalars  # noqa
-from typedefs import JsonDictOfNestedLists  # noqa
-from typedefs import JsonDictOfScalars  # noqa
-from typedefs import JsonList  # noqa
-from typedefs import JsonListOfDicts  # noqa
-from typedefs import JsonListOfDictsOfScalars  # noqa
-from typedefs import JsonListOfLists  # noqa
-from typedefs import JsonListOfListsOfScalars  # noqa
-from typedefs import JsonListOfNestedDicts  # noqa
-from typedefs import JsonListOfScalars  # noqa
-from typedefs import JsonNestedDicts  # noqa
-from typedefs import JsonNestedLists  # noqa
-from typedefs import JsonOnlyDicts  # noqa
-from typedefs import JsonOnlyLists  # noqa
-from typedefs import JsonScalar  # noqa
+from typedefs import (  # noqa: E402
+    Json,
+    JsonDict,
+    JsonDictOfDicts,
+    JsonDictOfDictsOfScalars,
+    JsonDictOfLists,
+    JsonDictOfListsOfDicts,
+    JsonDictOfListsOfScalars,
+    JsonDictOfNestedLists,
+    JsonDictOfScalars,
+    JsonList,
+    JsonListOfDicts,
+    JsonListOfDictsOfScalars,
+    JsonListOfLists,
+    JsonListOfListsOfScalars,
+    JsonListOfNestedDicts,
+    JsonListOfScalars,
+    JsonNestedDicts,
+    JsonNestedLists,
+    JsonOnlyDicts,
+    JsonOnlyLists,
+    JsonScalar,
+)
+
+__all__ = [
+    'Json',
+    'JsonDict',
+    'JsonDictOfDicts',
+    'JsonDictOfDictsOfScalars',
+    'JsonDictOfLists',
+    'JsonDictOfListsOfDicts',
+    'JsonDictOfListsOfScalars',
+    'JsonDictOfNestedLists',
+    'JsonDictOfScalars',
+    'JsonList',
+    'JsonListOfDicts',
+    'JsonListOfDictsOfScalars',
+    'JsonListOfLists',
+    'JsonListOfListsOfScalars',
+    'JsonListOfNestedDicts',
+    'JsonListOfScalars',
+    'JsonNestedDicts',
+    'JsonNestedLists',
+    'JsonOnlyDicts',
+    'JsonOnlyLists',
+    'JsonScalar',
+]
 
 sys.path = prev_sys_path
