@@ -7,8 +7,6 @@ repos:
       - id: check-toml
         types: [ toml ]
       - id: check-merge-conflict
-      - id: check-ast
-        types: [ python ]
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.25
     hooks:
@@ -46,13 +44,13 @@ repos:
         types_or: [ python, markdown ]
         stages: [ pre-commit ]
       - id: ruff-check
-        name: ruff check (check)
+        name: ruff check (no fix)
         entry: uv run ruff check --force-exclude
         language: system
         types: [ python ]
         stages: [ manual ]
       - id: ruff-format
-        name: ruff format (check)
+        name: ruff format (no changes)
         entry: uv run ruff format --force-exclude --diff
         language: system
         types_or: [ python, markdown ]
