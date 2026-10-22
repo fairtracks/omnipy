@@ -12,7 +12,7 @@ from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 from omnipy.util.callable_types import CallableType
 from omnipy.util.helpers import resolve
 
-from ..helpers.classes import ComposedFlowCase
+from ..helpers.classes import AsyncGenCase, AwaitCase, ComposedFlowCase, GenCase, IntCase
 from ..helpers.functions import (
     apply_job,
     assert_async_generator_result,
@@ -58,7 +58,7 @@ from .raw.tasks import (
     id='linear-flow-sync-function-terminal-child',
     tags=['matrix', 'linear-flow', 'sync', 'function'],
 )
-def case_linear_flow_sync_function_terminal_child() -> ComposedFlowCase[[int], int]:
+def case_linear_flow_sync_function_terminal_child() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -83,7 +83,7 @@ def case_linear_flow_sync_function_terminal_child() -> ComposedFlowCase[[int], i
     id='linear-flow-sync-generator-terminal-child',
     tags=['matrix', 'linear-flow', 'sync', 'generator'],
 )
-def case_linear_flow_sync_generator_terminal_child() -> ComposedFlowCase[[int], Generator]:
+def case_linear_flow_sync_generator_terminal_child() -> GenCase:
     expected_callable_type = CallableType.SYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -109,7 +109,7 @@ def case_linear_flow_sync_generator_terminal_child() -> ComposedFlowCase[[int], 
     id='linear-flow-async-coroutine-terminal-child',
     tags=['matrix', 'linear-flow', 'async', 'coroutine'],
 )
-def case_linear_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[int], Awaitable[int]]:
+def case_linear_flow_async_coroutine_terminal_child() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -134,7 +134,7 @@ def case_linear_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[int],
     id='linear-flow-async-generator-terminal-child',
     tags=['matrix', 'linear-flow', 'async', 'generator'],
 )
-def case_linear_flow_async_generator_terminal_child() -> ComposedFlowCase[[int], AsyncGenerator]:
+def case_linear_flow_async_generator_terminal_child() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -163,7 +163,7 @@ def case_linear_flow_async_generator_terminal_child() -> ComposedFlowCase[[int],
     id='dag-flow-sync-function-terminal-child',
     tags=['matrix', 'dag-flow', 'sync', 'function'],
 )
-def case_dag_flow_sync_function_terminal_child() -> ComposedFlowCase[[int], int]:
+def case_dag_flow_sync_function_terminal_child() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -198,7 +198,7 @@ def case_dag_flow_sync_function_terminal_child() -> ComposedFlowCase[[int], int]
     id='dag-flow-sync-generator-terminal-child',
     tags=['matrix', 'dag-flow', 'sync', 'generator'],
 )
-def case_dag_flow_sync_generator_terminal_child() -> ComposedFlowCase[[int], Generator]:
+def case_dag_flow_sync_generator_terminal_child() -> GenCase:
     expected_callable_type = CallableType.SYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -229,7 +229,7 @@ def case_dag_flow_sync_generator_terminal_child() -> ComposedFlowCase[[int], Gen
     id='dag-flow-async-coroutine-terminal-child',
     tags=['matrix', 'dag-flow', 'async', 'coroutine'],
 )
-def case_dag_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[int], Awaitable[int]]:
+def case_dag_flow_async_coroutine_terminal_child() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -259,7 +259,7 @@ def case_dag_flow_async_coroutine_terminal_child() -> ComposedFlowCase[[int], Aw
     id='dag-flow-async-generator-terminal-child',
     tags=['matrix', 'dag-flow', 'async', 'generator'],
 )
-def case_dag_flow_async_generator_terminal_child() -> ComposedFlowCase[[int], AsyncGenerator]:
+def case_dag_flow_async_generator_terminal_child() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -318,7 +318,7 @@ def case_func_flow_sync_function_body() -> ComposedFlowCase[[int, int], int]:
     id='func-flow-sync-generator-body',
     tags=['matrix', 'func-flow', 'sync', 'generator'],
 )
-def case_func_flow_sync_generator_body() -> ComposedFlowCase[[int], Generator]:
+def case_func_flow_sync_generator_body() -> GenCase:
     expected_callable_type = CallableType.SYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -345,7 +345,7 @@ def case_func_flow_sync_generator_body() -> ComposedFlowCase[[int], Generator]:
     id='func-flow-async-coroutine-body',
     tags=['matrix', 'func-flow', 'async', 'coroutine'],
 )
-def case_func_flow_async_coroutine_body() -> ComposedFlowCase[[int], Awaitable[int]]:
+def case_func_flow_async_coroutine_body() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -372,7 +372,7 @@ def case_func_flow_async_coroutine_body() -> ComposedFlowCase[[int], Awaitable[i
     id='func-flow-async-generator-body',
     tags=['matrix', 'func-flow', 'async', 'generator'],
 )
-def case_func_flow_async_generator_body() -> ComposedFlowCase[[int], AsyncGenerator]:
+def case_func_flow_async_generator_body() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -400,7 +400,7 @@ def case_func_flow_async_generator_body() -> ComposedFlowCase[[int], AsyncGenera
     id='linear-parent-child-with-linear-child',
     tags=['semantic-floor', 'linear-parent', 'linear-child', 'linear-parent-child'],
 )
-def case_linear_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
+def case_linear_parent_with_linear_child() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -429,7 +429,7 @@ def case_linear_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
     id='linear-parent-child-with-dag-child',
     tags=['semantic-floor', 'linear-parent', 'dag-child', 'linear-parent-child'],
 )
-def case_linear_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
+def case_linear_parent_with_dag_child() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -468,7 +468,7 @@ def case_linear_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
     id='linear-parent-child-with-func-child',
     tags=['semantic-floor', 'linear-parent', 'func-child', 'linear-parent-child'],
 )
-def case_linear_parent_with_func_child() -> ComposedFlowCase[[int], int]:
+def case_linear_parent_with_func_child() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -499,7 +499,7 @@ def case_linear_parent_with_func_child() -> ComposedFlowCase[[int], int]:
     id='dag-parent-child-with-linear-child',
     tags=['semantic-floor', 'dag-parent', 'linear-child'],
 )
-def case_dag_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
+def case_dag_parent_with_linear_child() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -542,7 +542,7 @@ def case_dag_parent_with_linear_child() -> ComposedFlowCase[[int], int]:
     id='dag-parent-child-with-dag-child',
     tags=['semantic-floor', 'dag-parent', 'dag-child'],
 )
-def case_dag_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
+def case_dag_parent_with_dag_child() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -592,7 +592,7 @@ def case_dag_parent_with_dag_child() -> ComposedFlowCase[[int], int]:
     id='dag-parent-child-with-func-child',
     tags=['semantic-floor', 'dag-parent', 'func-child'],
 )
-def case_dag_parent_with_func_child() -> ComposedFlowCase[[int], int]:
+def case_dag_parent_with_func_child() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -629,7 +629,7 @@ def case_dag_parent_with_func_child() -> ComposedFlowCase[[int], int]:
     id='dag-parent-child-routing',
     tags=['semantic-floor', 'dag-parent', 'dag-routing'],
 )
-def case_dag_parent_child_routing() -> ComposedFlowCase[[int], int]:
+def case_dag_parent_child_routing() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -690,7 +690,7 @@ def case_dag_parent_child_routing() -> ComposedFlowCase[[int], int]:
     id='dag-parent-child-refine-revise',
     tags=['semantic-floor', 'dag-parent', 'dag-refine-revise'],
 )
-def case_dag_parent_child_refine_revise() -> ComposedFlowCase[[int], int]:
+def case_dag_parent_child_refine_revise() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     # Child Flows
@@ -747,7 +747,7 @@ def case_dag_parent_child_refine_revise() -> ComposedFlowCase[[int], int]:
     id='func-flow-calls-linear-child',
     tags=['semantic-floor', 'func-flow-calls-flow'],
 )
-def case_func_flow_calls_linear_child() -> ComposedFlowCase[[int], int]:
+def case_func_flow_calls_linear_child() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -778,7 +778,7 @@ def case_func_flow_calls_linear_child() -> ComposedFlowCase[[int], int]:
     id='func-flow-mixed-sync-async',
     tags=['semantic-floor', 'func-flow-mixed-async'],
 )
-def case_func_flow_mixed_sync_async() -> ComposedFlowCase[[int], Awaitable[int]]:
+def case_func_flow_mixed_sync_async() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -814,7 +814,7 @@ def case_func_flow_mixed_sync_async() -> ComposedFlowCase[[int], Awaitable[int]]
     id='func-flow-sync-generator-child-sync-function',
     tags=['semantic-floor', 'func-flow-child-sg-parent-sf'],
 )
-def case_func_flow_sync_generator_child_sync_function() -> ComposedFlowCase[[int], int]:
+def case_func_flow_sync_generator_child_sync_function() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -839,9 +839,7 @@ def case_func_flow_sync_generator_child_sync_function() -> ComposedFlowCase[[int
     id='func-flow-async-coroutine-child-async-generator',
     tags=['semantic-floor', 'func-flow-child-ac-parent-ag'],
 )
-def case_func_flow_async_coroutine_child_async_generator() -> ComposedFlowCase[
-    [int], AsyncGenerator
-]:
+def case_func_flow_async_coroutine_child_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -868,9 +866,7 @@ def case_func_flow_async_coroutine_child_async_generator() -> ComposedFlowCase[
     id='func-flow-async-generator-child-async-coroutine',
     tags=['semantic-floor', 'func-flow-child-ag-parent-ac'],
 )
-def case_func_flow_async_generator_child_async_coroutine() -> ComposedFlowCase[
-    [int], Awaitable[int]
-]:
+def case_func_flow_async_generator_child_async_coroutine() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -895,7 +891,7 @@ def case_func_flow_async_generator_child_async_coroutine() -> ComposedFlowCase[
     id='func-flow-async-generator-child-sync-generator',
     tags=['semantic-floor', 'func-flow-child-ag-parent-sg'],
 )
-def case_func_flow_async_generator_child_sync_generator() -> ComposedFlowCase[[int], Generator]:
+def case_func_flow_async_generator_child_sync_generator() -> GenCase:
     expected_callable_type = CallableType.SYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -928,9 +924,7 @@ def case_func_flow_async_generator_child_sync_generator() -> ComposedFlowCase[[i
     id='func-flow-sync-generator-child-async-coroutine',
     tags=['semantic-floor', 'func-flow-child-sg-parent-ac'],
 )
-def case_func_flow_sync_generator_child_async_coroutine() -> ComposedFlowCase[
-    [int], Awaitable[int]
-]:
+def case_func_flow_sync_generator_child_async_coroutine() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -956,9 +950,7 @@ def case_func_flow_sync_generator_child_async_coroutine() -> ComposedFlowCase[
     id='func-flow-sync-generator-child-async-generator',
     tags=['semantic-floor', 'func-flow-child-sg-parent-ag'],
 )
-def case_func_flow_sync_generator_child_async_generator() -> ComposedFlowCase[
-    [int], AsyncGenerator
-]:
+def case_func_flow_sync_generator_child_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -984,7 +976,7 @@ def case_func_flow_sync_generator_child_async_generator() -> ComposedFlowCase[
     id='func-flow-async-coroutine-child-sync-generator',
     tags=['semantic-floor', 'func-flow-child-ac-parent-sg'],
 )
-def case_func_flow_async_coroutine_child_sync_generator() -> ComposedFlowCase[[int], Generator]:
+def case_func_flow_async_coroutine_child_sync_generator() -> GenCase:
     expected_callable_type = CallableType.SYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1015,7 +1007,7 @@ def case_func_flow_async_coroutine_child_sync_generator() -> ComposedFlowCase[[i
     id='func-flow-async-coroutine-child-sync-function',
     tags=['semantic-floor', 'func-flow-child-ac-parent-sf'],
 )
-def case_func_flow_async_coroutine_child_sync_function() -> ComposedFlowCase[[int], int]:
+def case_func_flow_async_coroutine_child_sync_function() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1040,7 +1032,7 @@ def case_func_flow_async_coroutine_child_sync_function() -> ComposedFlowCase[[in
     id='func-flow-async-generator-child-sync-function',
     tags=['semantic-floor', 'func-flow-child-ag-parent-sf'],
 )
-def case_func_flow_async_generator_child_sync_function() -> ComposedFlowCase[[int], int]:
+def case_func_flow_async_generator_child_sync_function() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1070,8 +1062,7 @@ def case_func_flow_async_generator_child_sync_function() -> ComposedFlowCase[[in
     id='linear-flow-early-async-terminal-sync-generator',
     tags=['semantic-floor', 'linear-flow-early-async-generator'],
 )
-def case_linear_flow_early_async_terminal_sync_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_linear_flow_early_async_terminal_sync_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1097,8 +1088,7 @@ def case_linear_flow_early_async_terminal_sync_generator(
     id='linear-flow-early-async-terminal-async-generator',
     tags=['semantic-floor', 'linear-flow-early-async-generator'],
 )
-def case_linear_flow_early_async_terminal_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_linear_flow_early_async_terminal_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1124,8 +1114,7 @@ def case_linear_flow_early_async_terminal_async_generator(
     id='dag-flow-early-async-terminal-sync-generator',
     tags=['semantic-floor', 'dag-flow-early-async-generator'],
 )
-def case_dag_flow_early_async_terminal_sync_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_dag_flow_early_async_terminal_sync_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1156,8 +1145,7 @@ def case_dag_flow_early_async_terminal_sync_generator(
     id='dag-flow-early-async-terminal-async-generator',
     tags=['semantic-floor', 'dag-flow-early-async-generator'],
 )
-def case_dag_flow_early_async_terminal_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_dag_flow_early_async_terminal_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1188,8 +1176,7 @@ def case_dag_flow_early_async_terminal_async_generator(
     id='linear-flow-early-async-generator-terminal-async-coroutine',
     tags=['semantic-floor', 'linear-flow-early-async-generator'],
 )
-def case_linear_flow_early_async_generator_terminal_async_coroutine(
-) -> ComposedFlowCase[[int], Awaitable[int]]:  # fmt: skip
+def case_linear_flow_early_async_generator_terminal_async_coroutine() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1217,8 +1204,7 @@ def case_linear_flow_early_async_generator_terminal_async_coroutine(
     id='linear-flow-early-async-generator-terminal-async-generator',
     tags=['semantic-floor', 'linear-flow-early-async-generator'],
 )
-def case_linear_flow_early_async_generator_terminal_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_linear_flow_early_async_generator_terminal_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1248,8 +1234,7 @@ def case_linear_flow_early_async_generator_terminal_async_generator(
     id='dag-flow-early-async-generator-terminal-async-coroutine',
     tags=['semantic-floor', 'dag-flow-early-async-generator'],
 )
-def case_dag_flow_early_async_generator_terminal_async_coroutine(
-) -> ComposedFlowCase[[int], Awaitable[int]]:  # fmt: skip
+def case_dag_flow_early_async_generator_terminal_async_coroutine() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1273,8 +1258,7 @@ def case_dag_flow_early_async_generator_terminal_async_coroutine(
     id='dag-flow-early-async-generator-terminal-async-generator',
     tags=['semantic-floor', 'dag-flow-early-async-generator'],
 )
-def case_dag_flow_early_async_generator_terminal_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_dag_flow_early_async_generator_terminal_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1302,8 +1286,7 @@ def case_dag_flow_early_async_generator_terminal_async_generator(
     id='linear-flow-early-async-generator-middle-sync-terminal-async-coroutine',
     tags=['semantic-floor', 'linear-flow-early-async-generator'],
 )
-def case_linear_flow_early_async_generator_middle_sync_terminal_async_coroutine(
-) -> ComposedFlowCase[[int], Awaitable[int]]:  # fmt: skip
+def case_linear_flow_early_async_generator_middle_sync_terminal_async_coroutine() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1331,8 +1314,7 @@ def case_linear_flow_early_async_generator_middle_sync_terminal_async_coroutine(
     id='linear-flow-early-async-generator-middle-sync-terminal-async-generator',
     tags=['semantic-floor', 'linear-flow-early-async-generator'],
 )
-def case_linear_flow_early_async_generator_middle_sync_terminal_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_linear_flow_early_async_generator_middle_sync_terminal_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1362,8 +1344,7 @@ def case_linear_flow_early_async_generator_middle_sync_terminal_async_generator(
     id='dag-flow-early-async-generator-independent-sync-terminal-async-coroutine',
     tags=['semantic-floor', 'dag-flow-early-async-generator'],
 )
-def case_dag_flow_early_async_generator_independent_sync_terminal_async_coroutine(
-) -> ComposedFlowCase[[int], Awaitable[int]]:  # fmt: skip
+def case_dag_flow_early_async_generator_independent_sync_terminal_async_coroutine() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1398,8 +1379,7 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_coroutin
     id='linear-flow-early-sync-generator-terminal-sync-generator',
     tags=['semantic-floor', 'linear-flow-early-sync-generator'],
 )
-def case_linear_flow_early_sync_generator_terminal_sync_generator(
-) -> ComposedFlowCase[[int], Generator]:  # fmt: skip
+def case_linear_flow_early_sync_generator_terminal_sync_generator() -> GenCase:
     expected_callable_type = CallableType.SYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1424,8 +1404,7 @@ def case_linear_flow_early_sync_generator_terminal_sync_generator(
     id='dag-flow-early-sync-generator-terminal-sync-generator',
     tags=['semantic-floor', 'dag-flow-early-sync-generator'],
 )
-def case_dag_flow_early_sync_generator_terminal_sync_generator(
-) -> ComposedFlowCase[[int], Generator]:  # fmt: skip
+def case_dag_flow_early_sync_generator_terminal_sync_generator() -> GenCase:
     expected_callable_type = CallableType.SYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1450,8 +1429,7 @@ def case_dag_flow_early_sync_generator_terminal_sync_generator(
     id='dag-flow-early-async-generator-independent-sync-terminal-async-generator',
     tags=['semantic-floor', 'dag-flow-early-async-generator'],
 )
-def case_dag_flow_early_async_generator_independent_sync_terminal_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_dag_flow_early_async_generator_independent_sync_terminal_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1488,8 +1466,7 @@ def case_dag_flow_early_async_generator_independent_sync_terminal_async_generato
     id='linear-flow-early-async-generator-terminal-sync-function',
     tags=['semantic-floor', 'linear-flow-early-async-generator'],
 )
-def case_linear_flow_early_async_generator_terminal_sync_function(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_linear_flow_early_async_generator_terminal_sync_function() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1517,8 +1494,7 @@ def case_linear_flow_early_async_generator_terminal_sync_function(
     id='linear-flow-early-async-generator-terminal-sync-generator',
     tags=['semantic-floor', 'linear-flow-early-async-generator'],
 )
-def case_linear_flow_early_async_generator_terminal_sync_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_linear_flow_early_async_generator_terminal_sync_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1548,8 +1524,7 @@ def case_linear_flow_early_async_generator_terminal_sync_generator(
     id='linear-flow-early-async-terminal-sync-function',
     tags=['semantic-floor', 'linear-flow-early-async-function'],
 )
-def case_linear_flow_early_async_terminal_sync_function(
-) -> ComposedFlowCase[[int], Awaitable[int]]:  # fmt: skip
+def case_linear_flow_early_async_terminal_sync_function() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1573,8 +1548,7 @@ def case_linear_flow_early_async_terminal_sync_function(
     id='linear-flow-early-sync-generator-terminal-sync-function',
     tags=['semantic-floor', 'linear-flow-early-sync-generator'],
 )
-def case_linear_flow_early_sync_generator_terminal_sync_function(
-) -> ComposedFlowCase[[int], int]:  # fmt: skip
+def case_linear_flow_early_sync_generator_terminal_sync_function() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1598,8 +1572,7 @@ def case_linear_flow_early_sync_generator_terminal_sync_function(
     id='linear-flow-early-sync-generator-terminal-async-coroutine',
     tags=['semantic-floor', 'linear-flow-early-sync-generator'],
 )
-def case_linear_flow_early_sync_generator_terminal_async_coroutine(
-) -> ComposedFlowCase[[int], Awaitable[int]]:  # fmt: skip
+def case_linear_flow_early_sync_generator_terminal_async_coroutine() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1625,8 +1598,7 @@ def case_linear_flow_early_sync_generator_terminal_async_coroutine(
     id='linear-flow-early-sync-generator-terminal-async-generator',
     tags=['semantic-floor', 'linear-flow-early-sync-generator'],
 )
-def case_linear_flow_early_sync_generator_terminal_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_linear_flow_early_sync_generator_terminal_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1656,8 +1628,7 @@ def case_linear_flow_early_sync_generator_terminal_async_generator(
     id='dag-flow-early-async-terminal-sync-function',
     tags=['semantic-floor', 'dag-flow-early-async-function'],
 )
-def case_dag_flow_early_async_terminal_sync_function(
-) -> ComposedFlowCase[[int], Awaitable[int]]:  # fmt: skip
+def case_dag_flow_early_async_terminal_sync_function() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1691,8 +1662,7 @@ def case_dag_flow_early_async_terminal_sync_function(
     id='dag-flow-early-sync-generator-terminal-sync-function',
     tags=['semantic-floor', 'dag-flow-early-sync-generator'],
 )
-def case_dag_flow_early_sync_generator_terminal_sync_function(
-) -> ComposedFlowCase[[int], int]:  # fmt: skip
+def case_dag_flow_early_sync_generator_terminal_sync_function() -> IntCase:
     expected_callable_type = CallableType.SYNC_FUNCTION
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1716,8 +1686,7 @@ def case_dag_flow_early_sync_generator_terminal_sync_function(
     id='dag-flow-early-sync-generator-terminal-async-coroutine',
     tags=['semantic-floor', 'dag-flow-early-sync-generator'],
 )
-def case_dag_flow_early_sync_generator_terminal_async_coroutine(
-) -> ComposedFlowCase[[int], Awaitable[int]]:  # fmt: skip
+def case_dag_flow_early_sync_generator_terminal_async_coroutine() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1741,8 +1710,7 @@ def case_dag_flow_early_sync_generator_terminal_async_coroutine(
     id='dag-flow-early-sync-generator-terminal-async-generator',
     tags=['semantic-floor', 'dag-flow-early-sync-generator'],
 )
-def case_dag_flow_early_sync_generator_terminal_async_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_dag_flow_early_sync_generator_terminal_async_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1772,8 +1740,7 @@ def case_dag_flow_early_sync_generator_terminal_async_generator(
     id='dag-flow-early-async-generator-terminal-sync-function',
     tags=['semantic-floor', 'dag-flow-early-async-generator'],
 )
-def case_dag_flow_early_async_generator_terminal_sync_function(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_dag_flow_early_async_generator_terminal_sync_function() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1801,8 +1768,7 @@ def case_dag_flow_early_async_generator_terminal_sync_function(
     id='dag-flow-early-async-generator-terminal-sync-generator',
     tags=['semantic-floor', 'dag-flow-early-async-generator'],
 )
-def case_dag_flow_early_async_generator_terminal_sync_generator(
-) -> ComposedFlowCase[[int], AsyncGenerator]:  # fmt: skip
+def case_dag_flow_early_async_generator_terminal_sync_generator() -> AsyncGenCase:
     expected_callable_type = CallableType.ASYNC_GENERATOR
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1832,9 +1798,7 @@ def case_dag_flow_early_async_generator_terminal_sync_generator(
     id='linear-flow-param-key-map-result-key-async-terminal-child',
     tags=['semantic-floor', 'linear-flow-param-key-map-result-key-async-terminal-child'],
 )
-def case_linear_flow_param_key_map_result_key_async_terminal_child() -> ComposedFlowCase[
-    [int], Awaitable[int]
-]:
+def case_linear_flow_param_key_map_result_key_async_terminal_child() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:
@@ -1873,9 +1837,7 @@ def case_linear_flow_param_key_map_result_key_async_terminal_child() -> Composed
     id='func-flow-async-func-flow-child-async-linear-flow-grandchild',
     tags=['semantic-floor', 'func-flow-async-func-flow-child-async-linear-flow-grandchild'],
 )
-def case_func_flow_async_func_flow_child_async_linear_flow_grandchild() -> ComposedFlowCase[
-    [int], Awaitable[int]
-]:
+def case_func_flow_async_func_flow_child_async_linear_flow_grandchild() -> AwaitCase:
     expected_callable_type = CallableType.ASYNC_COROUTINE
 
     def build_job(engine: IsEngine, registry: IsRunStateRegistry | None) -> IsFuncArgJob:

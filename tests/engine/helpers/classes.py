@@ -1,8 +1,8 @@
 """Helper classes for engine tests."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 from dataclasses import dataclass
-from typing import Any, Generic, ParamSpec, TypeVar
+from typing import Any, Generic, ParamSpec, TypeAlias, TypeVar
 
 from typing_extensions import override
 
@@ -35,6 +35,13 @@ class ComposedFlowCase(Generic[CallP, ReturnT]):
     run_and_assert_results_func: Callable[..., None | Awaitable[None]]
     expected_callable_type: CallableType.Literals
     job: IsFuncArgJob | None = None
+
+
+# Return types of the flow case functions
+AsyncGenCase: TypeAlias = ComposedFlowCase[[int], AsyncGenerator]
+AwaitCase: TypeAlias = ComposedFlowCase[[int], Awaitable[int]]
+IntCase: TypeAlias = ComposedFlowCase[[int], int]
+GenCase: TypeAlias = ComposedFlowCase[[int], Generator]
 
 
 class JobRunnerStateChecker(IsJobRunnerEngine):
