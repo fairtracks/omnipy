@@ -23,11 +23,12 @@ import locale as pkg_locale
 import operator
 import sys
 from types import GenericAlias, ModuleType, NoneType, UnionType
+
+from typing import _AnnotatedAlias  # type: ignore[attr-defined]  # isort: skip
+from typing import _LiteralGenericAlias  # type: ignore[attr-defined]  # isort: skip
+from typing import _UnionGenericAlias  # type: ignore[attr-defined]  # isort: skip
 from typing import (
-    _AnnotatedAlias,  # type: ignore[attr-defined]
-    _LiteralGenericAlias,  # type: ignore[attr-defined]
     _SpecialForm,
-    _UnionGenericAlias,  # type: ignore[attr-defined]
     Any,
     cast,
     Concatenate,

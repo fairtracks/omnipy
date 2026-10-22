@@ -2,11 +2,12 @@
 
 from collections.abc import Callable
 from types import GenericAlias, UnionType
+
+from typing import _AnnotatedAlias  # type: ignore[attr-defined]  # isort: skip
+from typing import _LiteralGenericAlias  # type: ignore[attr-defined]  # isort: skip
+from typing import _UnionGenericAlias  # type: ignore[attr-defined]  # isort: skip
 from typing import (
-    _AnnotatedAlias,  # type: ignore[attr-defined]
-    _LiteralGenericAlias,  # type: ignore[attr-defined]
     _SpecialForm,
-    _UnionGenericAlias,  # type: ignore[attr-defined]
     ForwardRef,
     Generic,
     ParamSpec,

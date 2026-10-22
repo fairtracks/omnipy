@@ -1,13 +1,13 @@
+from ....compute.test_decorators import dag_flow_plus_five_number_  # type: ignore[attr-defined]  # isort: skip
+from ....compute.test_decorators import dag_flow_plus_five_x_  # type: ignore[attr-defined]  # isort: skip
+from ....compute.test_decorators import func_flow_plus_func_x_y_  # type: ignore[attr-defined]  # isort: skip
+from ....compute.test_decorators import func_flow_plus_y_number_y_  # type: ignore[attr-defined]  # isort: skip
+from ....compute.test_decorators import test_dag_flow_template_as_decorator_plus_five_template  # type: ignore[attr-defined]  # isort: skip
+from ....compute.test_decorators import test_func_flow_template_as_decorator_plus_y_template  # type: ignore[attr-defined]  # isort: skip
 from ....compute.test_decorators import (
-    dag_flow_plus_five_number_,  # type: ignore[attr-defined]
-    dag_flow_plus_five_x_,  # type: ignore[attr-defined]
-    func_flow_plus_func_x_y_,  # type: ignore[attr-defined]
-    func_flow_plus_y_number_y_,  # type: ignore[attr-defined]
     test_dag_flow_template_as_decorator,
-    test_dag_flow_template_as_decorator_plus_five_template,  # type: ignore[attr-defined]
     test_fail_func_flow_template_decorator_with_func_argument,
     test_func_flow_template_as_decorator,
-    test_func_flow_template_as_decorator_plus_y_template,  # type: ignore[attr-defined]
     test_task_template_as_decorator,
 )
 
