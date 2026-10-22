@@ -6,17 +6,18 @@ readme = "docs/readme.md"
 requires-python = ">=3.11,<3.16"
 license = { file = "LICENSE" }
 authors = [
-    {name="Sveinung Gundersen"},
-    {name="Joshua Baskaran"},
-    {name="Federico Bianchini"},
-    {name="Jeanne Chèneby"},
-    {name="Ahmed Ghanem"},
-    {name="Pável Vázquez"}
+    { name = "Sveinung Gundersen" },
+    { name = "Joshua Baskaran" },
+    { name = "Federico Bianchini" },
+    { name = "Jeanne Chèneby" },
+    { name = "Ahmed Ghanem" },
+    { name = "Pável Vázquez" }
 ]
-maintainers = [{name="Sveinung Gundersen"}]
+maintainers = [{ name = "Sveinung Gundersen" }]
 keywords = [
     "data wrangling",
-    "metadata", "workflows",
+    "metadata",
+    "workflows",
     "etl",
     "research data",
     "prefect",
@@ -47,8 +48,8 @@ dependencies = [
     "inflection (>=0.5.1,<0.6.0)",
     "pandas (>=2.2)",
     "beartype (>=0.23.0,<1)",  # Python 3.15
-    'sqlalchemy (>=2.0.52,<3)', # Python 3.15
-    'greenlet (>=3.5.6,<4)',  # Python 3.15
+    "sqlalchemy (>=2.0.52,<3)",  # Python 3.15
+    "greenlet (>=3.5.6,<4)",  # Python 3.15
     "prefect (>=3,<4)",
     "fastapi (>=0.119.0,<0.126.0)",  # Support for pydantic v1 namespace
     "typing-extensions (>=4.13,<5)",
@@ -134,22 +135,22 @@ target-version = "py311"
 src = ["src", "tests"]
 force-exclude = true
 extend-exclude = [
-  "src/omnipy/shared/protocols/_collections_abc.py",
-  "src/omnipy/shared/protocols/_typeshed.py",
-  "src/omnipy/shared/protocols/_typeshed_import",
-  "src/omnipy/shared/protocols/builtins.py",
-  "src/omnipy/shared/protocols/types.py",
-  "src/omnipy/shared/protocols/typing.py",
+    "src/omnipy/shared/protocols/_collections_abc.py",
+    "src/omnipy/shared/protocols/_typeshed.py",
+    "src/omnipy/shared/protocols/_typeshed_import",
+    "src/omnipy/shared/protocols/builtins.py",
+    "src/omnipy/shared/protocols/types.py",
+    "src/omnipy/shared/protocols/typing.py",
 ]
 
 [tool.ruff.format]
 quote-style = "single"
 # Hand-laid-out tables of dataclass fields with long type unions, which the formatter makes harder to read
 exclude = [
-  "tests/components/json/cases/json_data.py",
-  "tests/components/frozen/cases/frozen_data.py",
-  # Historical planning documents are kept as written
-  "docs/superpowers/**",
+    "tests/components/json/cases/json_data.py",
+    "tests/components/frozen/cases/frozen_data.py",
+    # Historical planning documents are kept as written
+    "docs/superpowers/**",
 ]
 
 [tool.ruff.lint]
@@ -158,8 +159,8 @@ select = ["E", "F", "W", "C90", "Q", "UP", "I", "RUF100"]
 # Keeps RUF100 (unused noqa directive) from flagging them
 external = ["N806", "E731", "ARG001", "ARG002"]
 ignore = [
-  "E731",  # Lambda assignment
-  "UP042",  # (str, Enum) is used deliberately instead of StrEnum
+    "E731",  # Lambda assignment
+    "UP042",  # (str, Enum) is used deliberately instead of StrEnum
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -206,16 +207,16 @@ ignore_missing_imports = true
 follow_imports = "silent"
 
 # Ensure full coverage
-#disallow_untyped_calls = true
-#disallow_untyped_defs = true
-#disallow_incomplete_defs = true
-#disallow_untyped_decorators = true
-#check_untyped_defs = true
+# disallow_untyped_calls = true
+# disallow_untyped_defs = true
+# disallow_incomplete_defs = true
+# disallow_untyped_decorators = true
+# check_untyped_defs = true
 
 # Restrict dynamic typing
-#disallow_any_generics = true
-#disallow_subclassing_any = true
-#warn_return_any = true
+# disallow_any_generics = true
+# disallow_subclassing_any = true
+# warn_return_any = true
 
 # Know exactly what you're doing
 warn_redundant_casts = true
@@ -230,29 +231,29 @@ no_implicit_optional = true
 # Others
 warn_no_return = false
 disable_error_code = ["empty-body"]
-#show_column_numbers = true
+# show_column_numbers = true
 error_summary = true
 verbosity = 0
-#no_implicit_reexport = true
+# no_implicit_reexport = true
 
-#plugins = [
+# plugins = [
 #  "pydantic.mypy"
-#]
+# ]
 
 [[tool.mypy.overrides]]
 module = "tests.*"
 # pytest decorators are not typed
 disallow_untyped_decorators = false
 
-#[[tool.mypy.overrides]]
-#module = "firstmodule.*"
-#ignore_missing_imports = true
-#follow_imports = "silent"
+# [[tool.mypy.overrides]]
+# module = "firstmodule.*"
+# ignore_missing_imports = true
+# follow_imports = "silent"
 
-#[tool.pydantic-mypy]
-##init_forbid_extra = true
-#init_typed = false
-#warn_required_dynamic_aliases = true
+# [tool.pydantic-mypy]
+## init_forbid_extra = true
+# init_typed = false
+# warn_required_dynamic_aliases = true
 
 [tool.basedpyright]
 typeCheckingMode = "standard"
@@ -260,7 +261,7 @@ reportInvalidCast = "none"
 reportFunctionMemberAccess = "warning"
 reportUnusedExpression = "none"
 reportUnreachable = "none"
-#reportUnnecessaryTypeIgnoreComment = "error"
+# reportUnnecessaryTypeIgnoreComment = "error"
 defineConstant = { TYPE_CHECKER = "basedpyright" }
 
 [tool.pytest.ini_options]
