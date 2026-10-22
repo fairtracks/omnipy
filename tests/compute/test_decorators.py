@@ -1,7 +1,6 @@
 """Test compute decorators for tasks and flows."""
 
 from collections.abc import Callable
-from typing import Annotated
 
 import pytest
 import pytest_cases as pc
@@ -23,16 +22,14 @@ from omnipy.shared.protocols.compute.job import (
     IsTaskTemplate,
 )
 
-from .helpers.mocks import MockLocalRunner
 
-
+@pytest.mark.usefixtures('mock_local_runner')
 @pc.parametrize_with_cases(
     'plus_one_template',
     cases='.cases.decorators',
     has_tag='task',
 )
 def test_task_template_as_decorator(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_one_template: IsTaskTemplate,
 ) -> None:
     assert isinstance(plus_one_template, TaskTemplateCore)
@@ -44,13 +41,13 @@ def test_task_template_as_decorator(
     assert plus_one(number=3) == 4
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 @pc.parametrize_with_cases(
     'plus_five_template',
     cases='.cases.decorators',
     has_tag='linear_flow',
 )
 def test_linear_flow_template_as_decorator(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_five_template: IsLinearFlowTemplate,
 ) -> None:
     """Test linear flow templates work as decorators."""
@@ -64,13 +61,13 @@ def test_linear_flow_template_as_decorator(
     assert plus_five(3) == 8
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 @pc.parametrize_with_cases(
     'plus_five_template',
     cases='.cases.decorators',
     has_tag='dag_flow',
 )
 def test_dag_flow_template_as_decorator(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_five_template: IsDagFlowTemplate,
 ) -> None:
     """Test DAG flow templates work as decorators."""
@@ -89,13 +86,13 @@ def test_dag_flow_template_as_decorator(
     assert val == 8
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 @pc.parametrize_with_cases(
     'plus_y_template',
     cases='.cases.decorators',
     has_tag='func_flow',
 )
 def test_func_flow_template_as_decorator(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_y_template: IsFuncFlowTemplate,
 ) -> None:
     """Test function flow templates work as decorators."""
@@ -120,6 +117,7 @@ def test_fail_task_template_decorator_with_func_argument() -> None:
             return number + 1
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 @pc.parametrize_with_cases(
     'plus_one_template',
     cases='.cases.decorators',
@@ -127,7 +125,6 @@ def test_fail_task_template_decorator_with_func_argument() -> None:
     has_tag='plain',
 )
 def test_fail_func_flow_template_decorator_with_func_argument(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     plus_one_template,
 ) -> None:
     with pytest.raises(TypeError):

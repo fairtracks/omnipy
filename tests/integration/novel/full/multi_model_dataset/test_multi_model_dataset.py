@@ -1,7 +1,6 @@
 import inspect
 from inspect import Parameter
 import os
-from typing import Annotated
 
 import pytest
 import pytest_cases as pc
@@ -17,7 +16,8 @@ from .helpers.models import GeneralTable, MyOtherRecordSchema, MyRecordSchema, T
 
 
 # TODO: After Pydantic v2 support: Add "-> None" to all tests to open up for mypy syntax checking
-def test_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
+@pytest.mark.usefixtures('runtime')
+def test_table_models() -> None:
     GeneralTable([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
 
     TableTemplate[MyRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
@@ -26,7 +26,8 @@ def test_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
         TableTemplate[MyOtherRecordSchema]([{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}])
 
 
-def test_dataset_with_multiple_table_models(runtime: Annotated[None, pytest.fixture]) -> None:
+@pytest.mark.usefixtures('runtime')
+def test_dataset_with_multiple_table_models() -> None:
     my_dataset = MultiModelDataset[GeneralTable]()
 
     my_dataset['a'] = [{'a': 123, 'b': 'ads'}, {'a': 234, 'b': 'acs'}]
@@ -89,9 +90,9 @@ def test_dataset_with_multiple_table_models_json_schema():
     assert 'MyOtherRecordSchema' in my_dataset.data['b'].to_json_schema(pretty=True)
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_specialize_record_models_signature_and_return_type_func(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     case: FlowCase,
 ):
     for flow_obj in case.flow_template, case.flow_template.apply():
@@ -108,9 +109,9 @@ def test_specialize_record_models_signature_and_return_type_func(
 # TODO: Harmonize signature of job object and param_signatures mixin. Should both be used?
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_run_specialize_record_models_consistent_types(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     skip_test_if_dynamically_convert_elements_to_models,
     case: FlowCase,
 ):
@@ -132,9 +133,9 @@ def test_run_specialize_record_models_consistent_types(
     assert_job_state(specialize_record_models, [RunState.FINISHED])
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='specialize_record_models')
 def test_fail_run_specialize_record_models_inconsistent_types(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     case: FlowCase,
 ):
     specialize_record_models = case.flow_template.apply()

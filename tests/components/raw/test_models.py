@@ -1,6 +1,6 @@
 """Tests for raw models and nested split-join behavior."""
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 import datetime
 from enum import Enum
 import os
@@ -220,9 +220,9 @@ def test_split_to_lines_no_strip_model(
     assert_model_if_dyn_conv_else_val(lines_no_strip[-1], str, '        ')
 
 
+@pytest.mark.usefixtures('mock_linesep_variants')
 def test_split_to_lines_by_os_linesep_model(
     hamlet_text_crlf_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
-    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
     assert_line_of_os_linesep_split_crlf_text: (
         Annotated[AssertLineOfOsLinesepSplitCrlfTextFunc, pytest.fixture]
@@ -248,9 +248,9 @@ def test_split_to_lines_by_os_linesep_model(
     assert_model_if_dyn_conv_else_val(lines_split_by_os_linesep[-1], str, last_line_exp)
 
 
+@pytest.mark.usefixtures('mock_linesep_variants')
 def test_split_to_lines_by_os_linesep_no_strip_model(
     hamlet_text_crlf_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
-    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
     assert_line_of_os_linesep_split_crlf_text: (
         Annotated[AssertLineOfOsLinesepSplitCrlfTextFunc, pytest.fixture]
@@ -286,9 +286,9 @@ def test_join_lines_model(last_hamlet_lines_stripped: Annotated[list[str], pytes
     assert joined_lines[: joined_lines.index(' ')].content == 'abhorred'  # type: ignore
 
 
+@pytest.mark.usefixtures('mock_linesep_variants')
 def test_join_lines_by_os_linesep_model(
     last_hamlet_lines_stripped: Annotated[list[str], pytest.fixture],
-    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
 ) -> None:
 
     JoinLinesByOsLinesepModel = JoinLinesModel.adjust(
@@ -305,10 +305,10 @@ def test_join_lines_by_os_linesep_model(
     )
 
 
+@pytest.mark.usefixtures('mock_linesep_variants')
 def test_join_lines_model_of_split_to_lines_model(
     hamlet_text_crlf: Annotated[str, pytest.fixture],
     hamlet_lines_stripped: Annotated[list[str], pytest.fixture],
-    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
 ) -> None:
     assert JoinLinesModel(SplitToLinesModel(hamlet_text_crlf)).content == '\n'.join(
         hamlet_lines_stripped

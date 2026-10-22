@@ -24,7 +24,6 @@ from omnipy.components.json.models import (
     JsonScalarModel,
 )
 from omnipy.components.json.typedefs import JsonScalar
-from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
@@ -130,6 +129,7 @@ def test_error_list_of_single_dict_with_two_elements_known_issue():
 
 
 # TODO: Revisit test_json_known_issue after pydantic v2 is supported.
+@pytest.mark.usefixtures('runtime')
 @pytest.mark.skipif(
     os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
     reason=dedent("""\
@@ -157,7 +157,7 @@ def test_error_list_of_single_dict_with_two_elements_known_issue():
         interoperable parsing as possible, the stricter v2 behavior is in this case preferable.
     """),
 )
-def test_error_dict_with_empty_list_known_issue(runtime: Annotated[IsRuntime, pytest.fixture]):
+def test_error_dict_with_empty_list_known_issue():
     """Document known pydantic v1 empty-list dict behavior."""
     with pytest.raises(ValidationError):
         # A dict value of [] is interpreted by pydantic v1 as an empty dict
@@ -182,8 +182,8 @@ def test_error_dict_with_empty_list_known_issue(runtime: Annotated[IsRuntime, py
 #       with test_model.
 
 
+@pytest.mark.usefixtures('runtime')
 def test_json_model_operations(
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ):
     """Exercise common item access and merge operations."""

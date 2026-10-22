@@ -14,7 +14,8 @@ from .cases.tasks import TaskCase
 from .helpers.mocks import MockLocalRunner
 
 
-def test_init(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_init() -> None:
     task_template = TaskTemplate()(format_to_string_func)
     assert isinstance(task_template, TaskTemplateCore)
     assert_func_wrapper(task_template, format_to_string_func)

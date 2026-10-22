@@ -1,12 +1,10 @@
 """Tests for raw dataset models and split-join behavior."""
 
-from collections.abc import Iterable
 import os
 from textwrap import dedent
 from typing import Annotated
 
 import pytest
-import pytest_cases as pc
 
 from omnipy.components.raw.datasets import (
     BytesDataset,
@@ -193,9 +191,9 @@ def test_join_lines_dataset_of_split_to_lines_dataset(
     }
 
 
+@pytest.mark.usefixtures('mock_linesep_variants')
 def test_join_lines_by_os_linesep_dataset(
     hamlet_text_lf_as_model_or_plain: Annotated[Model[str] | str, pytest.fixture],
-    mock_linesep_variants: Annotated[Iterable[None], pc.fixture],
 ) -> None:
     data = hamlet_text_lf_as_model_or_plain
     lines_stripped = SplitToLinesDataset(dict(monologue=data))

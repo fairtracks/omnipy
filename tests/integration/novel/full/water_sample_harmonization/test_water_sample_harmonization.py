@@ -25,9 +25,9 @@ def _build_paginated_source_urls(
     return urls
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 @pytest.fixture
 async def harmonized_batches(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     river_service: Annotated[TestServer, pytest.fixture],
     wastewater_service: Annotated[TestServer, pytest.fixture],
 ) -> NormalizedBatchesDataset:
@@ -49,8 +49,8 @@ async def harmonized_batches(
     )
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 async def test_harmonize_water_samples(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     harmonized_batches: Annotated[NormalizedBatchesDataset, pytest.fixture],
 ) -> None:
     print()
@@ -96,8 +96,8 @@ async def test_harmonize_water_samples(
     }
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 async def test_flatten_and_wrangle_water_samples_as_dataframe(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     harmonized_batches: Annotated['NormalizedBatchesDataset', pytest.fixture],
 ) -> None:
     flattened_df_dataset = flatten_and_wrangle_as_dataframe.run(harmonized_batches)

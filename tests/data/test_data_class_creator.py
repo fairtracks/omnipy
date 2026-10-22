@@ -1,7 +1,6 @@
 """Tests for data class creation."""
 
 from types import NoneType
-from typing import Annotated
 
 import pytest
 
@@ -55,7 +54,8 @@ def test_set_reactive_objects() -> None:
     assert data_class_creator.reactive_objects == new_reactive_objects
 
 
-def test_singular_mock(teardown_reset_data_class_creator: Annotated[None, pytest.fixture]) -> None:
+@pytest.mark.usefixtures('teardown_reset_data_class_creator')
+def test_singular_mock() -> None:
     assert isinstance(DataClassBase.data_class_creator, DataClassCreator)
 
     with pytest.raises(AttributeError):
@@ -127,9 +127,8 @@ def test_deepcopy_context() -> None:
         assert len(top_level_exit_func_calls) == 2
 
 
-def test_config_property_mutable_from_data_class_creator(
-    teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('teardown_reset_data_class_creator')
+def test_config_property_mutable_from_data_class_creator() -> None:
     _assert_property_is_singularly_mutable(
         property='config',
         property_type=DataConfig,
@@ -139,9 +138,8 @@ def test_config_property_mutable_from_data_class_creator(
     )
 
 
-def test_reactive_objects_property_mutable_from_data_class_creator(
-    teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('teardown_reset_data_class_creator')
+def test_reactive_objects_property_mutable_from_data_class_creator() -> None:
     from omnipy.data._display.integrations.jupyter.helpers import ReactiveObjects
 
     _assert_property_is_singularly_mutable(
@@ -153,9 +151,8 @@ def test_reactive_objects_property_mutable_from_data_class_creator(
     )
 
 
-def test_snapshot_holder_property_immutable(
-    teardown_reset_data_class_creator: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('teardown_reset_data_class_creator')
+def test_snapshot_holder_property_immutable() -> None:
     _assert_property_is_singularly_immutable(
         property='snapshot_holder',
         property_type=SnapshotHolder,

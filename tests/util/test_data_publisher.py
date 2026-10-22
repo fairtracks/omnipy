@@ -96,8 +96,8 @@ def test_subscribe_attr_setattr_no_subscribers(
     assert attr_subscriber.number == 10
 
 
+@pytest.mark.usefixtures('text_list')
 def test_subscribe_attr_setattr_single_subscriber(
-    text_list: Annotated[list[str], pytest.fixture],
     attr_subscriber: Annotated[MockAttrSubscriberCls, pytest.fixture],
     mock_config_publisher_with_attr_subscribers: Annotated[MockDataPublisher, pytest.fixture],
 ) -> None:

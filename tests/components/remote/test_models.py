@@ -112,9 +112,8 @@ def test_http_url_model_validation_errors():
         HttpUrlModel('file:///abc/def')
 
 
-def test_host_url_model_default_localhost(
-    host_url_model_cls: Annotated[type[HostUrlModel], pytest.fixture],
-):
+@pytest.mark.usefixtures('host_url_model_cls')
+def test_host_url_model_default_localhost():
     url = HttpUrlModel()
 
     assert url.scheme == 'http'

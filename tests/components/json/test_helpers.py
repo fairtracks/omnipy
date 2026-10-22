@@ -1,7 +1,5 @@
 """Tests for JSON helper predicates and parsers."""
 
-from typing import Annotated
-
 import pytest
 
 from omnipy.components.json.helpers import (
@@ -15,9 +13,8 @@ from omnipy.components.json.helpers import (
 import omnipy.util.pydantic as pyd
 
 
-def test_is_json_scalar(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-):
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_is_json_scalar():
     """Identify JSON scalar values correctly."""
     assert is_json_scalar('hello') is True
     assert is_json_scalar(42) is True
@@ -30,7 +27,8 @@ def test_is_json_scalar(
     assert is_json_scalar({'key': 'value'}) is False
 
 
-def test_is_json_dict(skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]):
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_is_json_dict():
     """Identify JSON dict values correctly."""
     assert is_json_dict('hello') is False
     assert is_json_dict(42) is False
@@ -43,7 +41,8 @@ def test_is_json_dict(skip_test_if_not_default_data_config_values: Annotated[Non
     assert is_json_dict({'key': 'value'}) is True
 
 
-def test_is_json_list(skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture]):
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_is_json_list():
     """Identify JSON list values correctly."""
     assert is_json_list('hello') is False
     assert is_json_list(42) is False
@@ -56,9 +55,8 @@ def test_is_json_list(skip_test_if_not_default_data_config_values: Annotated[Non
     assert is_json_list({'key': 'value'}) is False
 
 
-def test_parse_str_as_json(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-):
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_parse_str_as_json():
     """Parse complete JSON strings into Python values."""
     assert parse_str_as_json('"hello"') == 'hello'
     assert parse_str_as_json('42') == 42
@@ -72,9 +70,8 @@ def test_parse_str_as_json(
     assert parse_str_as_json('(1, 2, 3)') is pyd.Undefined
 
 
-def test_parse_line_as_elements_of_dict(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-):
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_parse_line_as_elements_of_dict():
     """Parse dict element fragments from a JSON line."""
     assert parse_line_as_elements_of_dict('"key": "value"') == {'key': 'value'}
     assert parse_line_as_elements_of_dict('"key1": "val1", "key2": "val2"') == {
@@ -100,9 +97,8 @@ def test_parse_line_as_elements_of_dict(
     assert parse_line_as_elements_of_dict('(1, 2, 3)') is pyd.Undefined
 
 
-def test_parse_line_as_elements_of_list(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-):
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_parse_line_as_elements_of_list():
     """Parse list element fragments from a JSON line."""
     assert parse_line_as_elements_of_list('"hello"') == ['hello']
     assert parse_line_as_elements_of_list('42, 3.14, true, null, "hi:"') == [

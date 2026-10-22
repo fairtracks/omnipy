@@ -9,12 +9,11 @@ from .flows import broker_sequence_submission_flow
 from .models import SubmissionModel
 
 
+@pytest.mark.usefixtures('runtime_all_engines', 'reset_biosample_vault_sample_id_generator')
 async def test_sequence_submission_brokering(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     samples: Annotated[dict[str, dict[str, str]], pytest.fixture],
     files: Annotated[dict[str, dict[str, str]], pytest.fixture],
     metadata: Annotated[dict[str, str], pytest.fixture],
-    reset_biosample_vault_sample_id_generator: Annotated[None, pytest.fixture],  # noqa
     expected_sequence_depot_submission_payload: Annotated[dict[str, object], pytest.fixture],
 ) -> None:
     submission = SubmissionModel(samples=samples, files=files, metadata=metadata)

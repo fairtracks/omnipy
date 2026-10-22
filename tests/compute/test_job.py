@@ -82,9 +82,9 @@ def test_fail_only_jobtemplate_init_mock(
         Job()
 
 
+@pytest.mark.usefixtures('teardown_reset_job_creator')
 def test_job_creator_singular_mock(
     mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
-    teardown_reset_job_creator: Annotated[None, pytest.fixture],
 ) -> None:
     JobTemplate, Job = mock_job_classes  # noqa: N806
 
@@ -115,9 +115,9 @@ def test_job_creator_singular_mock(
     assert cast(JobBase, job_tmpl_new).__class__.job_creator is job_creator
 
 
+@pytest.mark.usefixtures('teardown_reset_job_creator')
 def test_job_creator_properties_mock(
     mock_job_classes: Annotated[MockJobClasses, pytest.fixture],
-    teardown_reset_job_creator: Annotated[None, pytest.fixture],
     mock_job_datetime: Annotated[datetime, pytest.fixture],
 ) -> None:
     mock_local_runner = MockLocalRunner()
@@ -336,7 +336,8 @@ def test_subclass_tmpl() -> None:
     _assert_immutable_command_mock_job_properties(cmd_tmpl)
 
 
-def test_subclass_apply(mock_local_runner: Annotated[MockLocalRunner, pytest.fixture]) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_subclass_apply() -> None:
     cmd_tmpl = CommandMockJobTemplate('erase', uppercase=True, params={'what': 'all'})(
         mock_cmd_func,
     )

@@ -842,7 +842,8 @@ def test_deepcopy(deepcopy_func: Callable[[Dataset], Dataset]) -> None:
     assert dataset_deepcopy.__fields_set__ == {'data'}
 
 
-def test_basic_validation(runtime: Annotated[IsRuntime, pytest.fixture]):
+@pytest.mark.usefixtures('runtime')
+def test_basic_validation():
     dataset = Dataset[Model[int]](data_file_1=123)
 
     with pytest.raises(ValidationError):
@@ -856,7 +857,8 @@ def test_basic_validation(runtime: Annotated[IsRuntime, pytest.fixture]):
     assert dataset['data_file_1'].content == 345
 
 
-def test_validation_union_and_nested_type(runtime: Annotated[IsRuntime, pytest.fixture]):
+@pytest.mark.usefixtures('runtime')
+def test_validation_union_and_nested_type():
     class UnionDataset(Dataset[Model[int] | Model[str] | Dataset[Model[int]]]): ...
 
     dataset = UnionDataset(
