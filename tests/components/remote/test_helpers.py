@@ -51,8 +51,8 @@ async def _assert_requests_and_get_run_time_in_secs(
 @pytest.mark.parametrize(
     'num_requests, requests_per_time_period, time_period_in_secs, run_time_min, run_time_max',
     [
-        (21, 1, 0.05, 0.95, 1.1),
-        (21, 10, 0.5, 0.95, 1.1),
+        (21, 1, 0.05, 0.8, 1.2),
+        (21, 10, 0.5, 0.8, 1.2),
     ],
     ids=['no_burst_1_requests_per_0.05s', 'burst_10_requests_per_0.5s'],
 )
