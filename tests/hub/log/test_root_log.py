@@ -55,9 +55,8 @@ def test_root_log_config_default() -> None:
     _assert_root_log_config_default(RootLogConfig(), Path.cwd())
 
 
-def test_root_log_objects_default(
-    teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('teardown_rm_default_root_log_dir')
+def test_root_log_objects_default() -> None:
     _assert_root_log_objects(RootLogObjects())
 
 

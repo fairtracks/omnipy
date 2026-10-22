@@ -1,7 +1,6 @@
 """Tests for nested models and datasets."""
 
 from dataclasses import dataclass
-from typing import Annotated
 
 import pytest
 
@@ -141,9 +140,8 @@ def test_nested_dataset_forward_ref_updates_with_table_model_variants() -> None:
 
 
 # Known issue: StructuredNestedDataset incompatibility with dynamic conversion of elements to models
-def test_nested_dataset_lists_and_dicts(
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_dynamically_convert_elements_to_models')
+def test_nested_dataset_lists_and_dicts() -> None:
     """Handle nested datasets containing both lists and dicts."""
     nested_lists_and_dict_data = {
         'id_0': {

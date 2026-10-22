@@ -47,6 +47,7 @@ async def _assert_requests_and_get_run_time_in_secs(
     return (datetime.now() - start_time).total_seconds()
 
 
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
 @pytest.mark.parametrize(
     'num_requests, requests_per_time_period, time_period_in_secs, run_time_min, run_time_max',
     [
@@ -56,7 +57,6 @@ async def _assert_requests_and_get_run_time_in_secs(
     ids=['no_burst_1_requests_per_0.05s', 'burst_10_requests_per_0.5s'],
 )
 async def test_rate_limiting_client_session(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
     my_endpoint_url: Annotated[str, pytest.fixture],
     num_requests: int,
     requests_per_time_period: float,

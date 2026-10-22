@@ -257,12 +257,12 @@ def test_config_default() -> None:
     _assert_runtime_config_default(RuntimeConfig(), Path.cwd())
 
 
+@pytest.mark.usefixtures('teardown_rm_default_root_log_dir')
 @pytest.mark.parametrize(
     'ui_type', [PlainTerminalUserInterfaceType.UNKNOWN, JupyterInBrowserUserInterfaceType.JUPYTER]
 )
 def test_objects_default(
     ui_type: SpecifiedUserInterfaceType.Literals,
-    teardown_rm_default_root_log_dir: Annotated[None, pytest.fixture],
 ) -> None:
     runtime_objects = RuntimeObjects()
     runtime_objects.setup_reactive(ui_type)

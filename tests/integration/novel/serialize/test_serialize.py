@@ -253,9 +253,9 @@ def test_properties_output_storage_protocols_override_config(
         assert job_obj_4.output_storage_protocol_to_use is OutputStorageProtocolOptions.S3
 
 
+@pytest.mark.usefixtures('runtime')
 @pc.parametrize_with_cases('case_tmpl', cases='.cases.jobs', prefix='case_')
 def test_persist_and_restore(
-    runtime: Annotated[IsRuntime, pytest.fixture],
     case_tmpl: Annotated[IsFuncArgJobTemplate, pc.case],
 ) -> None:
     case_persist_tmpl = case_tmpl.refine(persist_outputs='enabled')

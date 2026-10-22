@@ -53,7 +53,8 @@ def simple_layout() -> SimpleLayoutCase:
     )
 
 
-def test_layout_hashable(simple_layout: Annotated[SimpleLayoutCase, pytest.fixture]) -> None:
+@pytest.mark.usefixtures('simple_layout')
+def test_layout_hashable() -> None:
     layout_1: Layout = Layout()
     layout_2: Layout = Layout()
 

@@ -1,7 +1,5 @@
 """Tests for JSON task and flow helpers."""
 
-from typing import Annotated
-
 import pytest
 
 from omnipy.components.json.datasets import (
@@ -16,19 +14,18 @@ from omnipy.components.json.flows import (
     transpose_dicts_of_lists_of_dicts_2_lists_of_dicts,
 )
 from omnipy.components.json.tasks import transpose_dicts_2_lists
-from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 
-def test_transpose_empty_dicts_2_nothing(runtime: Annotated[IsRuntime, pytest.fixture]):
+@pytest.mark.usefixtures('runtime')
+def test_transpose_empty_dicts_2_nothing():
     """Transpose empty dict datasets into empty list datasets."""
     out_dataset = transpose_dicts_2_lists.run(JsonDictDataset(dict(abc={}, bcd={})))
     assert type(out_dataset) is JsonListDataset
     assert out_dataset.to_data() == {}
 
 
-def test_transpose_dict_of_numbers_2_lists_of_numbers(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-):
+@pytest.mark.usefixtures('runtime')
+def test_transpose_dict_of_numbers_2_lists_of_numbers():
     """Transpose numeric dict values into grouped lists."""
 
     in_dataset = JsonDictDataset(dict(abc={'a': 123}, bcd={'a': 456}))
@@ -42,9 +39,8 @@ def test_transpose_dict_of_numbers_2_lists_of_numbers(
     assert out_dataset_2.to_data() == {'a': [123, 456], 'b': [321], 'c': [654]}
 
 
-def test_transpose_dicts_of_various_2_lists_of_various(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-):
+@pytest.mark.usefixtures('runtime')
+def test_transpose_dicts_of_various_2_lists_of_various():
     """Transpose mixed dict values while preserving structure."""
 
     out_dataset = transpose_dicts_2_lists.run(
@@ -74,9 +70,8 @@ def test_transpose_dicts_of_various_2_lists_of_various(
     }
 
 
-def test_transpose_dict_of_dicts_2_list_of_dicts(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-):
+@pytest.mark.usefixtures('runtime')
+def test_transpose_dict_of_dicts_2_list_of_dicts():
     """Transpose nested dict datasets into lists of dicts."""
 
     out_dataset = transpose_dict_of_dicts_2_list_of_dicts.run(
@@ -98,9 +93,8 @@ def test_transpose_dict_of_dicts_2_list_of_dicts(
     }
 
 
-def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-):
+@pytest.mark.usefixtures('runtime')
+def test_transpose_dicts_of_lists_of_dicts_2_lists_of_dicts():
     """Transpose dicts of dict-backed lists into list datasets."""
 
     out_dataset = transpose_dicts_of_lists_of_dicts_2_lists_of_dicts.run(

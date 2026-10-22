@@ -111,8 +111,8 @@ def test_time_of_flow_run_mock() -> None:
     assert flow.time_of_last_run == prev_time_of_last_run
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_fail_init_flow_cls_tuple(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     flow_cls_tuple: Annotated[AnyFlowClsTuple, pytest.fixture],
 ) -> None:
     flow_cls = flow_cls_tuple.flow_cls
@@ -121,8 +121,8 @@ def test_fail_init_flow_cls_tuple(
         flow_cls(format_to_string_func)
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_fail_init_func_arg_flow_classes(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
     flow_cls, flow_tmpl_cls, _ = func_arg_flow_cls_tuple
@@ -133,8 +133,8 @@ def test_fail_init_func_arg_flow_classes(
         flow_tmpl_cls(lambda x: x)(lambda y: y)  # type: ignore[misc, call-arg]
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_init_child_job_list_arg_flow_templates(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     child_job_list_arg_flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple, pytest.fixture],
 ) -> None:
     _, flow_tmpl_cls, assert_flow_tmpl_cls = child_job_list_arg_flow_cls_tuple
@@ -150,8 +150,8 @@ def test_init_child_job_list_arg_flow_templates(
     )
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_init_func_arg_flow_templates(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
     _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
@@ -186,8 +186,8 @@ def _run_and_assert_flow_template(
         flow('text')
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_apply_run_child_job_list_arg_flow_cls_tuple(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     child_job_list_arg_flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple, pytest.fixture],
 ) -> None:
     flow_cls, flow_tmpl_cls, _ = child_job_list_arg_flow_cls_tuple
@@ -200,8 +200,8 @@ def test_apply_run_child_job_list_arg_flow_cls_tuple(
     )
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_apply_run_func_arg_flow_cls_tuple(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
     flow_cls, flow_tmpl_cls, _ = func_arg_flow_cls_tuple
@@ -213,8 +213,8 @@ def test_apply_run_func_arg_flow_cls_tuple(
     )
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_refine_child_job_list_arg_flow_cls_tuple(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     child_job_list_arg_flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple, pytest.fixture],
 ) -> None:
     _, flow_tmpl_cls, assert_flow_tmpl_cls = child_job_list_arg_flow_cls_tuple
@@ -231,8 +231,8 @@ def test_refine_child_job_list_arg_flow_cls_tuple(
     assert flow_template_2.run() == '{"my_data": [123,234,345,456]}'
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_refine_func_arg_flow_cls_tuple(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
     _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
@@ -268,8 +268,8 @@ def _apply_revise_and_run_and_assert_flow_template(
     assert flow_template_2.run('text', 1) == 'text: 1'
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_revise_child_job_list_arg_flow_cls_tuple(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     child_job_list_arg_flow_cls_tuple: Annotated[ChildJobListArgFlowClsTuple, pytest.fixture],
 ) -> None:
     _, flow_tmpl_cls, assert_flow_tmpl_cls = child_job_list_arg_flow_cls_tuple
@@ -281,8 +281,8 @@ def test_revise_child_job_list_arg_flow_cls_tuple(
     )
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 def test_revise_func_arg_flow_cls_tuple(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     func_arg_flow_cls_tuple: Annotated[FuncArgFlowClsTuple, pytest.fixture],
 ) -> None:
     _, flow_tmpl_cls, assert_flow_tmpl_cls = func_arg_flow_cls_tuple
@@ -324,9 +324,8 @@ def test_flow_run_flow_cls_tuple(
 #       - linear flow peculiarities
 
 
-def test_linear_flow_only_first_positional(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_only_first_positional() -> None:
     @TaskTemplate()
     def task_tmpl() -> tuple[int, int]:
         return 42, 42
@@ -362,9 +361,8 @@ def test_create_data_class_task_name_examples() -> None:
     )
 
 
-def test_linear_flow_accepts_dataset_class_child_no_args(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_accepts_dataset_class_child_no_args() -> None:
     class MyDataset(Dataset[Model[int]]): ...
 
     @LinearFlowTemplate(MyDataset)
@@ -380,9 +378,8 @@ def test_linear_flow_accepts_dataset_class_child_no_args(
     assert created_dataset.to_data() == {}
 
 
-def test_linear_flow_accepts_dataset_class_child_multiple_positional_args(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_accepts_dataset_class_child_multiple_positional_args() -> None:
     @LinearFlowTemplate(Dataset[Model[int]])
     def linear_flow_tmpl(
         first_pair: tuple[str, float], second_pair: tuple[str, float]
@@ -392,9 +389,8 @@ def test_linear_flow_accepts_dataset_class_child_multiple_positional_args(
     assert created_dataset.to_data() == {'a': 1, 'b': 3}
 
 
-def test_linear_flow_accepts_model_class_child_single_positional_arg(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_accepts_model_class_child_single_positional_arg() -> None:
     class MyModel(Model[int]): ...
 
     @LinearFlowTemplate(MyModel)
@@ -405,9 +401,8 @@ def test_linear_flow_accepts_model_class_child_single_positional_arg(
     assert created_model.to_data() == 3
 
 
-def test_dag_flow_accepts_dataset_class_child_with_dynamic_kwargs_name(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_accepts_dataset_class_child_with_dynamic_kwargs_name() -> None:
     class MyDataset(Dataset[Model[int]]): ...
 
     @TaskTemplate()
@@ -425,9 +420,8 @@ def test_dag_flow_accepts_dataset_class_child_with_dynamic_kwargs_name(
     assert dag_flow(number=4) == 4
 
 
-def test_dag_flow_accepts_model_class_child_with_dynamic_kwargs_name(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_accepts_model_class_child_with_dynamic_kwargs_name() -> None:
     class MyModel(Model[dict[str, int]]): ...
 
     @TaskTemplate()
@@ -440,9 +434,8 @@ def test_dag_flow_accepts_model_class_child_with_dynamic_kwargs_name(
     assert dag_flow_tmpl.apply()(number=4) == 4
 
 
-def test_linear_flow_forwards_kwargs_to_later_child_jobs(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_forwards_kwargs_to_later_child_jobs() -> None:
     @TaskTemplate()
     def add_one_tmpl(number: int) -> int:
         return number + 1
@@ -458,9 +451,8 @@ def test_linear_flow_forwards_kwargs_to_later_child_jobs(
     assert linear_flow(number=4, factor=3) == 15
 
 
-def test_linear_flow_param_key_map_and_fixed_params(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_param_key_map_and_fixed_params() -> None:
     @TaskTemplate()
     def identity_tmpl(number: int) -> int:
         return number
@@ -481,9 +473,8 @@ def test_linear_flow_param_key_map_and_fixed_params(
     assert linear_flow(number=3, step=4, factor=10) == 14
 
 
-def test_linear_flow_forwards_all_kwargs_to_child_var_keyword_param(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_forwards_all_kwargs_to_child_var_keyword_param() -> None:
     @TaskTemplate()
     def add_one_tmpl(number: int) -> int:
         return number + 1
@@ -499,9 +490,8 @@ def test_linear_flow_forwards_all_kwargs_to_child_var_keyword_param(
     assert linear_flow(number=4, factor=3, offset=2) == {'number': 5, 'factor': 3, 'offset': 2}
 
 
-def test_linear_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_params(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_params() -> None:
     @TaskTemplate()
     def add_one_tmpl(number: int) -> int:
         return number + 1
@@ -538,9 +528,8 @@ def test_linear_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_p
     }
 
 
-def test_linear_flow_routes_named_positional_capable_args_to_first_child_positionally(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_routes_named_positional_capable_args_to_first_child_positionally() -> None:
     @TaskTemplate()
     def sum_positional_values_tmpl(*numbers: int) -> int:
         return sum(numbers)
@@ -552,9 +541,8 @@ def test_linear_flow_routes_named_positional_capable_args_to_first_child_positio
     assert linear_flow_tmpl.apply()(first=4, second=3) == 7
 
 
-def test_dag_flow_routes_named_result_to_linear_model_child_positionally(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_routes_named_result_to_linear_model_child_positionally() -> None:
     class MyModel(Model[int]): ...
 
     @TaskTemplate()
@@ -570,9 +558,8 @@ def test_dag_flow_routes_named_result_to_linear_model_child_positionally(
     assert dag_flow_tmpl.apply()(number=4).to_data() == 5
 
 
-def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_ignore_args_and_non_matched_kwarg_returns() -> None:
     @TaskTemplate()
     def task_tmpl() -> int:
         return 42
@@ -593,9 +580,8 @@ def test_dag_flow_ignore_args_and_non_matched_kwarg_returns(
     assert dag_flow() == 84
 
 
-def test_dynamic_dag_flow_by_returned_dict(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dynamic_dag_flow_by_returned_dict() -> None:
     @TaskTemplate()
     def task_tmpl() -> dict[str, int]:
         return {'number': 42}
@@ -611,9 +597,8 @@ def test_dynamic_dag_flow_by_returned_dict(
     assert dag_flow() == 84
 
 
-def test_dag_flow_consumes_matching_kwargs_by_default(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_consumes_matching_kwargs_by_default() -> None:
     @TaskTemplate()
     def first_tmpl(number: int) -> int:
         return number + 1
@@ -630,9 +615,8 @@ def test_dag_flow_consumes_matching_kwargs_by_default(
         dag_flow(number=4)
 
 
-def test_dag_flow_can_disable_consuming_matching_kwargs(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_can_disable_consuming_matching_kwargs() -> None:
     @TaskTemplate()
     def first_tmpl(number: int) -> int:
         return number + 1
@@ -648,9 +632,8 @@ def test_dag_flow_can_disable_consuming_matching_kwargs(
     assert dag_flow(number=4) == 8
 
 
-def test_dag_flow_forwards_later_kwargs_and_respects_mapped_fixed_params(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_forwards_later_kwargs_and_respects_mapped_fixed_params() -> None:
     @TaskTemplate()
     def identity_tmpl(number: int) -> int:
         return number
@@ -671,9 +654,8 @@ def test_dag_flow_forwards_later_kwargs_and_respects_mapped_fixed_params(
     assert dag_flow(number=4, factor=10, offset=5) == 17
 
 
-def test_dag_flow_forwards_all_kwargs_to_child_var_keyword_param(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_forwards_all_kwargs_to_child_var_keyword_param() -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'number': number + 1}
@@ -697,9 +679,8 @@ def test_dag_flow_forwards_all_kwargs_to_child_var_keyword_param(
     }
 
 
-def test_dag_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_params(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_params() -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'number': number + 1}
@@ -736,9 +717,8 @@ def test_dag_flow_refined_child_var_keyword_param_respects_fixed_and_mapped_para
     }
 
 
-def test_dag_flow_mapped_key_cannot_override_fixed_params(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_mapped_key_cannot_override_fixed_params() -> None:
     @TaskTemplate()
     def multiply_tmpl(number: int, multiplier: int) -> int:
         return number * multiplier
@@ -755,9 +735,8 @@ def test_dag_flow_mapped_key_cannot_override_fixed_params(
     assert dag_flow(number=4, factor=10) == 12
 
 
-def test_linear_flow_construction_rejects_sync_authored_early_async_child(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_construction_rejects_sync_authored_early_async_child() -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> int:
         return number + 1
@@ -776,9 +755,8 @@ def test_linear_flow_construction_rejects_sync_authored_early_async_child(
         def linear_flow_tmpl(number: int) -> int: ...
 
 
-def test_dag_flow_construction_rejects_sync_authored_early_async_child(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_construction_rejects_sync_authored_early_async_child() -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'seed': number + 1}
@@ -801,9 +779,8 @@ def test_dag_flow_construction_rejects_sync_authored_early_async_child(
         def dag_flow_tmpl(number: int) -> int: ...
 
 
-def test_linear_flow_construction_accepts_async_authored_early_async_child(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_construction_accepts_async_authored_early_async_child() -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> int:
         return number + 1
@@ -823,9 +800,8 @@ def test_linear_flow_construction_accepts_async_authored_early_async_child(
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
 
 
-def test_dag_flow_construction_accepts_async_authored_early_async_child(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_construction_accepts_async_authored_early_async_child() -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'seed': number + 1}
@@ -849,9 +825,8 @@ def test_dag_flow_construction_accepts_async_authored_early_async_child(
     assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
 
 
-def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_function(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_function() -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -870,9 +845,8 @@ def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_fu
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
-def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_function(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_function() -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -896,9 +870,8 @@ def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_funct
     assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
-def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_generator(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_generator() -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -917,9 +890,8 @@ def test_linear_flow_construction_accepts_async_generator_early_sync_terminal_ge
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
-def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_generator(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_generator() -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -943,9 +915,10 @@ def test_dag_flow_construction_accepts_async_generator_early_sync_terminal_gener
     assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
-def test_linear_flow_uses_terminal_return_annotation_to_detect_async_generator_passthrough(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_uses_terminal_return_annotation_to_detect_async_generator_passthrough() -> (
+    None
+):
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -964,9 +937,8 @@ def test_linear_flow_uses_terminal_return_annotation_to_detect_async_generator_p
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
-def test_dag_flow_uses_terminal_return_annotation_to_detect_async_generator_passthrough(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_uses_terminal_return_annotation_to_detect_async_generator_passthrough() -> None:
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -990,9 +962,10 @@ def test_dag_flow_uses_terminal_return_annotation_to_detect_async_generator_pass
     assert dag_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
-def test_linear_flow_without_terminal_generator_annotation_falls_back_to_sync_terminal_shape(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_without_terminal_generator_annotation_falls_back_to_sync_terminal_shape() -> (
+    None
+):
     @TaskTemplate()
     async def emit_async_values(number: int) -> AsyncGenerator:
         for value in range(number, number + 3):
@@ -1009,9 +982,8 @@ def test_linear_flow_without_terminal_generator_annotation_falls_back_to_sync_te
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_COROUTINE
 
 
-def test_linear_flow_uses_terminal_return_annotation_to_detect_sync_generator_passthrough(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_uses_terminal_return_annotation_to_detect_sync_generator_passthrough() -> None:
     @TaskTemplate()
     def values(number: int) -> Generator:
         yield from range(number, number + 3)
@@ -1028,13 +1000,13 @@ def test_linear_flow_uses_terminal_return_annotation_to_detect_sync_generator_pa
     assert linear_flow_tmpl.apply().callable_type is CallableType.SYNC_GENERATOR
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 @pytest.mark.parametrize(
     'generator_annotation',
     GENERATOR_ANNOTATIONS.values(),
     ids=GENERATOR_ANNOTATIONS.keys(),
 )
 def test_linear_flow_detects_bare_generator_annotation_on_terminal_sync_function(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     generator_annotation: object,
 ) -> None:
     @TaskTemplate()
@@ -1054,13 +1026,13 @@ def test_linear_flow_detects_bare_generator_annotation_on_terminal_sync_function
     assert linear_flow_tmpl.apply().callable_type is CallableType.SYNC_GENERATOR
 
 
+@pytest.mark.usefixtures('mock_local_runner')
 @pytest.mark.parametrize(
     'generator_annotation',
     GENERATOR_ANNOTATIONS.values(),
     ids=GENERATOR_ANNOTATIONS.keys(),
 )
 def test_linear_flow_detects_bare_generator_annotation_on_terminal_sync_function_after_async_child(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
     generator_annotation: object,
 ) -> None:
     @TaskTemplate()
@@ -1082,9 +1054,8 @@ def test_linear_flow_detects_bare_generator_annotation_on_terminal_sync_function
     assert linear_flow_tmpl.apply().callable_type is CallableType.ASYNC_GENERATOR
 
 
-def test_linear_flow_refine_rechecks_callable_type_against_child_list(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_linear_flow_refine_rechecks_callable_type_against_child_list() -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> int:
         return number + 1
@@ -1110,9 +1081,8 @@ def test_linear_flow_refine_rechecks_callable_type_against_child_list(
         linear_flow_tmpl.refine(seed_tmpl, async_middle_tmpl, finish_tmpl, update=False)
 
 
-def test_dag_flow_refine_rechecks_callable_type_against_child_list(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_refine_rechecks_callable_type_against_child_list() -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'seed': number + 1}
@@ -1147,9 +1117,8 @@ def test_dag_flow_refine_rechecks_callable_type_against_child_list(
         )
 
 
-def test_dag_flow_revise_rechecks_callable_type_against_child_list(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_dag_flow_revise_rechecks_callable_type_against_child_list() -> None:
     @TaskTemplate()
     def seed_tmpl(number: int) -> dict[str, int]:
         return {'seed': number + 1}
@@ -1184,9 +1153,8 @@ def test_dag_flow_revise_rechecks_callable_type_against_child_list(
         dag_flow.revise().refine(*revised_children, update=False)
 
 
-def test_time_of_multi_level_flow_run_flow_cls_tuple(
-    mock_local_runner: Annotated[MockLocalRunner, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('mock_local_runner')
+def test_time_of_multi_level_flow_run_flow_cls_tuple() -> None:
     """Test nested flows share one top-level run time per execution."""
 
     # TaskTemplate

@@ -2,14 +2,12 @@
 
 import logging
 import os
-from typing import Annotated
 
 import pytest
 
 
-def test_no_prefect_console_handler_in_root_logger(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_no_prefect_console_handler_in_root_logger() -> None:
     """Avoid adding Prefect console handlers to the root logger."""
     import omnipy.components.prefect.lazy_import  # noqa: F401
 

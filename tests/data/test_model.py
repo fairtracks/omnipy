@@ -222,9 +222,8 @@ def test_error_init() -> None:
         Model[int](__root__=123, other=234)
 
 
-def test_class_init_forwardref(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_class_init_forwardref() -> None:
     class MyForwardRefNoNameModel(Model[ForwardRef]): ...
 
     with pytest.raises(TypeError, match='Cannot instantiate model'):
@@ -256,9 +255,8 @@ def test_class_init_forwardref(
     MyForwardRefStrModel()
 
 
-def test_class_init_generic_with_forwardref(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_class_init_generic_with_forwardref() -> None:
     class MyGenericModel(Model[T], Generic[T]): ...
 
     with pytest.raises(TypeError, match='Cannot instantiate model'):
@@ -278,9 +276,8 @@ def test_class_init_generic_with_forwardref(
     MyGenericModel['SomeClass']()
 
 
-def test_class_init_recursive_model_through_generic_hack_with_forwardref(
-    skip_test_if_not_default_data_config_values: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_class_init_recursive_model_through_generic_hack_with_forwardref() -> None:
     with pytest.raises(RuntimeError):
 
         class MyRecursiveModel(Model[list['MyRecursiveModel']]): ...
@@ -653,6 +650,7 @@ def test_issubclass_and_isinstance() -> None:
     assert _issubclass_and_isinstance(MyStrList, Model[list])
 
 
+@pytest.mark.usefixtures('skip_test_if_dynamically_convert_elements_to_models')
 @pc.parametrize(
     'model',
     [
@@ -682,7 +680,6 @@ def test_copy(
     model: Model,
     copy_func: Callable[[Model], Model],
     deep_copy: bool,
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ) -> None:
     model_copy = copy_func(model)
 
@@ -2102,9 +2099,8 @@ def test_snapshot_deepcopy_memo_entry_deleted_with_new_content(
     assert model.content == model_case.target_content
 
 
-def test_snapshot_deepcopy_reuse_objects(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_snapshot_deepcopy_reuse_objects() -> None:
     def _inner_test_snapshot_deepcopy_reuse_objects() -> None:
         Model.data_class_creator.snapshot_holder.clear()
 
@@ -2160,9 +2156,8 @@ def test_snapshot_deepcopy_reuse_objects(
     assert len(snapshot_holder._deepcopy_memo) == 0  # type: ignore[attr-defined]
 
 
-def test_snapshot_deepcopy_reuse_ids_crash(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_snapshot_deepcopy_reuse_ids_crash() -> None:
 
     # for i in range(50):
     #     model_list = []
@@ -2177,9 +2172,8 @@ def test_snapshot_deepcopy_reuse_ids_crash(
         model.from_data([[i] for i in range(500)])
 
 
-def test_lazy_snapshot_not_triggered_by_empty_from_data(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_lazy_snapshot_not_triggered_by_empty_from_data() -> None:
     model = Model[list[int]]()
     _assert_no_snapshot(model)
 
@@ -2187,9 +2181,8 @@ def test_lazy_snapshot_not_triggered_by_empty_from_data(
     _assert_no_snapshot(model)
 
 
-def test_lazy_snapshot_not_triggered_by_set_content(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_lazy_snapshot_not_triggered_by_set_content() -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2211,9 +2204,8 @@ def test_lazy_snapshot_not_triggered_by_set_content(
     assert model.snapshot == model.content == [234]
 
 
-def test_lazy_snapshot_not_triggered_by_state_keeping_operator(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_lazy_snapshot_not_triggered_by_state_keeping_operator() -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2226,9 +2218,8 @@ def test_lazy_snapshot_not_triggered_by_state_keeping_operator(
     assert res_model.content == [123, 234]
 
 
-def test_lazy_snapshot_triggered_by_state_changing_operator(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_lazy_snapshot_triggered_by_state_changing_operator() -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2240,10 +2231,10 @@ def test_lazy_snapshot_triggered_by_state_changing_operator(
     assert model.snapshot == model.content == [123, 234]
 
 
-def test_lazy_snapshot_not_triggered_by_getitem(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-    skip_test_if_not_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures(
+    'skip_test_if_not_interactive_mode', 'skip_test_if_not_dynamically_convert_elements_to_models'
+)
+def test_lazy_snapshot_not_triggered_by_getitem() -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2262,9 +2253,8 @@ def test_lazy_snapshot_not_triggered_by_getitem(
     assert res_model.content == 123
 
 
-def test_lazy_snapshot_triggered_by_setitem(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_lazy_snapshot_triggered_by_setitem() -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2276,9 +2266,8 @@ def test_lazy_snapshot_triggered_by_setitem(
     assert model.snapshot == model.content == [234]
 
 
-def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods() -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2287,9 +2276,8 @@ def test_lazy_snapshot_triggered_by_state_keeping_mimicked_methods(
     assert model.snapshot == model.content == [123]
 
 
-def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods() -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
 
@@ -2301,12 +2289,12 @@ def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods(
     assert model.snapshot == model.content == [123, 234]
 
 
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
 @pytest.mark.parametrize(
     'simple_pydantic_model_cls',
     [SimplePydanticModel, SimplePydanticModelWitWrappedField],
 )
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_value_access(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
     simple_pydantic_model_cls: Annotated[type[pyd.BaseModel], pc.fixture],
 ) -> None:
     # class SimplePydanticModel(pyd.BaseModel):
@@ -2328,12 +2316,12 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
     assert res_model.content == [123]
 
 
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
 @pytest.mark.parametrize(
     'simple_pydantic_model_cls',
     [SimplePydanticModel, SimplePydanticModelWitWrappedField],
 )
 def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_value_access(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
     simple_pydantic_model_cls: Annotated[type[pyd.BaseModel], pc.fixture],
 ) -> None:
     @mimics(SimplePydanticModelWitWrappedField)
@@ -2413,9 +2401,8 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     assert model.content.value.snapshot == model.content.value.content == [234, 345]
 
 
-def test_snapshot_with_mimic_special_method(
-    skip_test_if_not_interactive_mode: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_snapshot_with_mimic_special_method() -> None:
     model = Model[list[int]]([123])
 
     _assert_no_snapshot(model)
@@ -2484,9 +2471,9 @@ def test_repeated_validation_should_not_change_content_or_snapshot(
             assert id(model.snapshot) == id_snapshot
 
 
+@pytest.mark.usefixtures('skip_test_if_interactive_mode')
 def test_mimic_special_method(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    skip_test_if_interactive_mode: Annotated[None, pytest.fixture],
 ) -> None:
     model = Model[list[int]]([123])
     _assert_no_snapshot(model)
@@ -2841,10 +2828,8 @@ def test_mimic_call_method():
         not_callable_builtin_model(1)
 
 
-def test_mimic_sequence_convert_for_concat(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('runtime', 'skip_test_if_dynamically_convert_elements_to_models')
+def test_mimic_sequence_convert_for_concat() -> None:
     # SetDeque is used as an example of non-builtin Sequence type. to_data() is needed (for now)
     # to allow model conversion to list/tuple.
 
@@ -2978,10 +2963,8 @@ def test_mimic_sequence_convert_for_concat(
     assert_model(my_setdeque + my_tuple_model, tuple, (7, 8, 9, 4, 5, 6))  # type: ignore[operator]
 
 
-def test_mimic_concatenation_for_strings(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('runtime', 'skip_test_if_dynamically_convert_elements_to_models')
+def test_mimic_concatenation_for_strings() -> None:
     help = UppercaseModel('help')
     assert help.content == 'HELP'
 
@@ -3077,9 +3060,8 @@ def test_mimic_concatenation_for_converted_models_with_incompatible_content_exce
     assert stream.to_data() == ['We', 'will,', 'we', 'will', 'ROCK', 'YOU!']
 
 
-def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined(
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
-):
+@pytest.mark.usefixtures('skip_test_if_dynamically_convert_elements_to_models')
+def test_mimic_str_concat_iadd_and_radd_overrides_add_if_defined():
     # Only __add__
     class ConcatChallengedStr:
         def __init__(self, data: str = ''):
@@ -3245,10 +3227,10 @@ def all_less_than_five_model_add_variants(  # noqa: C901
     return LessThanFiveModel(MyNumber(1))
 
 
+@pytest.mark.usefixtures('skip_test_if_dynamically_convert_elements_to_models')
 def test_mimic_add_concat_all_less_than_five_model_add_variants(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
@@ -3276,10 +3258,10 @@ def test_mimic_add_concat_all_less_than_five_model_add_variants(
             less_than_five_model + ('three' if other_type_in else 3)  # type: ignore[operator]
 
 
+@pytest.mark.usefixtures('skip_test_if_dynamically_convert_elements_to_models')
 def test_mimic_radd_concat_all_less_than_five_model_add_variants(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
@@ -3307,10 +3289,10 @@ def test_mimic_radd_concat_all_less_than_five_model_add_variants(
             ('two' if other_type_in else 2) + less_than_five_model  # type: ignore[operator]
 
 
+@pytest.mark.usefixtures('skip_test_if_dynamically_convert_elements_to_models')
 def test_mimic_iadd_concat_all_less_than_five_model_add_variants(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
@@ -3337,10 +3319,10 @@ def test_mimic_iadd_concat_all_less_than_five_model_add_variants(
 
 
 # Logically covers cases such as `Model[list[int]]([123]) + ['abc']` (and '+' operator variants)
+@pytest.mark.usefixtures('skip_test_if_dynamically_convert_elements_to_models')
 def test_mimic_concat_less_than_five_model_add_variants_with_other_type_in_and_invalid_result(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
@@ -3366,10 +3348,10 @@ def test_mimic_concat_less_than_five_model_add_variants_with_other_type_in_and_i
             less_than_five_model += 'four'  # type: ignore[operator]
 
 
+@pytest.mark.usefixtures('skip_test_if_dynamically_convert_elements_to_models')
 def test_mimic_concat_all_less_than_five_model_add_variants_with_unsupported_input(
     all_add_variants: Annotated[tuple[bool, bool, bool, bool, bool], pytest.fixture],
     all_less_than_five_model_add_variants: Annotated[Model[MyNumberBase], pytest.fixture],
-    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
 ):
     has_add, has_radd, has_iadd, other_type_in, other_type_out = all_add_variants
     less_than_five_model = all_less_than_five_model_add_variants
@@ -3387,10 +3369,8 @@ def test_mimic_concat_all_less_than_five_model_add_variants_with_unsupported_inp
         less_than_five_model += 'five'  # type: ignore[operator]
 
 
-def test_mimic_first_level_operations_on_nested_list(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('runtime', 'assert_model_if_dyn_conv_else_val')
+def test_mimic_first_level_operations_on_nested_list() -> None:
     model = Model[list[int | list[int]]]([123, 234, [345]])
 
     model[-1] = []
@@ -3611,9 +3591,9 @@ def test_mimic_nested_dict_operations_only_model_at_top(
         assert_val(model['a'], dict, {14: 654, 15: 333})
 
 
+@pytest.mark.usefixtures('assert_model_if_dyn_conv_else_val')
 def test_mimic_nested_dict_operations_models_at_all_levels(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     # Compare with `test_mimic_nested_dict_operations_only_model_at_top`. It is recommended to
     # insert a model at every level except the last when working with nested structures.
@@ -3667,8 +3647,8 @@ def test_mimic_list_and_dict_iterators(
         assert tuple(dict_model.items()) == ((0, 'abc'), (1, 'bcd'), (2, 'cde'))
 
 
+@pytest.mark.usefixtures('runtime')
 def test_mimic_list_like_classes(
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     mylist_int_model = Model[MyList[int]](MyList(0, 1, 2))
@@ -3682,6 +3662,7 @@ def test_mimic_list_like_classes(
     assert tuple(mylist_int_model) == (0, 1, 2)
 
 
+@pytest.mark.usefixtures('runtime')
 @pytest.mark.parametrize(
     'my_dict_model, model_supports_dyn_conv',
     [
@@ -3712,7 +3693,6 @@ def test_mimic_list_like_classes(
 def test_mimic_dict_like_classes(
     my_dict_model: Model[IsMapping[str, int]],
     model_supports_dyn_conv: bool,
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     def _assert_val_if_supports_dyn_conv_else_val(
@@ -3775,8 +3755,8 @@ def test_mimic_doubly_nested_dyn_converted_containers_are_copies(
         assert_model(dict_model, dict[int, dict[int, int]], {0: {1: 1, 2: 2}})
 
 
+@pytest.mark.usefixtures('runtime')
 def test_mimic_list_operations_with_model_of_model(
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     class MyListDoubleModel(Model[Model[list[int]]]): ...
@@ -3840,8 +3820,8 @@ def test_mimic_list_operations_with_model_of_model(
     assert_model(list_double_model_append, Model[list[int]], Model[list[int]]([123, 234]))
 
 
+@pytest.mark.usefixtures('runtime')
 def test_mimic_dict_operations_with_model_of_model(
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     class MyDictDoubleModel(Model[Model[dict[str, int]]]): ...
@@ -3938,8 +3918,8 @@ def test_mimic_dict_operations_with_model_of_model(
     )
 
 
+@pytest.mark.usefixtures('runtime')
 def test_mimic_set_operations_with_model_of_model(
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     class MySetDoubleModel(Model[Model[set[int]]]): ...
@@ -3995,10 +3975,8 @@ def test_mimic_set_operations_with_model_of_model(
     assert_model(set_double_model_add, Model[set[int]], Model[set[int]]({123, 234}))
 
 
-def test_mimic_operations_with_model_of_union_of_models(
-    runtime: Annotated[IsRuntime, pytest.fixture],
-    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
-) -> None:
+@pytest.mark.usefixtures('runtime', 'assert_model_if_dyn_conv_else_val')
+def test_mimic_operations_with_model_of_union_of_models() -> None:
     class MyStrOrIntDoubleModel(Model[Model[int] | Model[str]]): ...
 
     str_or_int_double_model_str = MyStrOrIntDoubleModel('abc')
@@ -4017,8 +3995,8 @@ def test_mimic_operations_with_model_of_union_of_models(
     )
 
 
+@pytest.mark.usefixtures('runtime')
 def test_mimic_nested_list_operations_with_model_subclass_containers(
-    runtime: Annotated[IsRuntime, pytest.fixture],
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     # See test_mimic_doubly_nested_dyn_converted_containers_are_copies()

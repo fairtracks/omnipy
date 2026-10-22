@@ -1,16 +1,16 @@
 """Tests for raw component tasks."""
 
-from typing import Annotated, NamedTuple
+from typing import NamedTuple
 
 import pytest
 
 from omnipy.components.raw.tasks import decode_bytes
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
-from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 
-def test_decode_bytes(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
+@pytest.mark.usefixtures('runtime')
+def test_decode_bytes() -> None:
     class DecodeCaseInfo(NamedTuple):
         bytes_data: bytes
         target_str: str

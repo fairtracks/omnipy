@@ -1,5 +1,4 @@
 from inspect import Parameter
-from typing import Annotated
 
 import pytest
 import pytest_cases as pc
@@ -10,9 +9,9 @@ from .....engine.helpers.functions import assert_job_state
 from ..helpers.classes import FlowCase
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')
 def test_specialize_record_models_signature_and_return_type_func(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     case: FlowCase,
 ):
     for flow_obj in case.flow_template, case.flow_template.apply():
@@ -23,9 +22,9 @@ def test_specialize_record_models_signature_and_return_type_func(
         assert flow_obj.return_type is str
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')
 def test_run_three_task_flow(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     case: FlowCase,
 ):
     pos_square_root_tmpl = case.flow_template
@@ -38,9 +37,9 @@ def test_run_three_task_flow(
     assert_job_state(pos_square_root, [RunState.FINISHED])
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')
 def test_refine_three_task_flow(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     case: FlowCase,
 ):
     pos_square_root_tmpl = case.flow_template.refine(
@@ -63,9 +62,9 @@ def test_refine_three_task_flow(
         pos_square_root_tmpl.run(4, 'answer')
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 @pc.parametrize_with_cases('case', cases='.cases.flows', has_tag='pos_square_root')
 def test_revise_refine_three_task_flow(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     case: FlowCase,
 ):
     pos_square_root = case.flow_template.refine(
@@ -87,11 +86,11 @@ def test_revise_refine_three_task_flow(
     assert pos_square_root_new.name == 'pos_sqrt'
 
 
+@pytest.mark.usefixtures('runtime_all_engines')
 @pc.parametrize_with_cases(
     'case', cases='.cases.flows', prefix='case_sync_dagflow_', has_tag='pos_square_root'
 )
 def test_revise_refine_three_task_dagflow_alternative(
-    runtime_all_engines: Annotated[None, pytest.fixture],  # noqa
     case: FlowCase,
 ):
     pos_square_root = case.flow_template.refine(
