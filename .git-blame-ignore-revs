@@ -1,2 +1,5 @@
 # Reformat of the codebase with ruff
 5d25100759e8ec6a6424fb7569bd874c64e042af
+
+# Trim trailing whitespace and fix end-of-file newlines in non-Python files
+4228485b8673eab2d117744d8ff5633174ceee92
