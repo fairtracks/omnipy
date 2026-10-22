@@ -96,7 +96,7 @@ dev = [
     "pytest-asyncio>1,<2",
     "pytest-cases<4",
     "tuna>=0.5.11,<1.0.0",
-    "ruff>=0.15.0",
+    "ruff>=0.17,<0.18",
     "prek>=0.2.0,<1",
 ]
 docs = [
@@ -111,7 +111,7 @@ docs = [
     "markdown-callouts>=0.4.0,<1.0.0",
     "markdown-exec[ansi]>=1.10.0,<2.0.0",
     "griffe>=1.15.0,<2",
-    "ruff>=0.15.0",
+    "ruff>=0.17,<0.18",
 ]
 
 [project.urls]
