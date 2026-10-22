@@ -14,10 +14,12 @@ validation in the flow.
 
 ```pycon exec="1" source="console"
 >>> import omnipy as om
->>> columnar = om.ColumnWiseTableWithColNamesModel({
-...     'sample': ['s1', 's2'],
-...     'count': [10, 20],
-... })
+>>> columnar = om.ColumnWiseTableWithColNamesModel(
+...     {
+...         'sample': ['s1', 's2'],
+...         'count': [10, 20],
+...     }
+... )
 >>> columnar
 {'sample': ['s1', 's2'], 'count': [10, 20]}
 >>> columnar.to(om.RowWiseTableWithColNamesModel)

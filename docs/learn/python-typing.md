@@ -25,12 +25,13 @@ C++ or Java, where the type of an object is specified at compile time. In Python
 object is determined at runtime, allowing a level of dynamics not easily achieved in statically 
 typed languages, e.g.:
 
-```python
-def add(x, y):
-    return x + y
-
-a = add(1, 2)  # type(a) == int; a == 3
-b = add('foo', 'bar')  # type(b) == str; b == 'foobar'
+```pycon exec="1" session="python-typing" source="console"
+>>> def add(x, y):
+...     return x + y
+>>> a = add(1, 2)
+>>> print(type(a), a)
+>>> b = add('foo', 'bar')
+>>> print(type(b), b)
 ```
 
 In the above example, the `add` function is defined to take two arguments and return their sum, 
@@ -52,12 +53,13 @@ understand.
 
 Adding type hints to the `add` function from the previous example could look something like this:
 
-```python
-def add(x: int, y: int) -> int:
-    return x + y
-
-a: int = add(1, 2)  # type(a) == int; a == 3
-b: str = add('foo', 'bar')  # type(b) == str; b == 'foobar'
+```pycon exec="1" session="python-typing" source="console"
+>>> def add(x: int, y: int) -> int:
+...     return x + y
+>>> a: int = add(1, 2)
+>>> print(type(a), a)
+>>> b: str = add('foo', 'bar')
+>>> print(type(b), b)
 ```
 
 In the above example, the `add` function is now annotated to only support integers as input, and to 
@@ -73,16 +75,15 @@ the code. Returning to the `add` function, we can add type hints that specify th
 could take ints or strings as input, but that the `x` and `y` arguments should be of the
 same type. To do this, we need to make use of the concept of _type variables_ in Python, e.g.:
 
-```python
-from typing import TypeVar
-
-IntOrStrT = TypeVar('IntOrStrT', int | str)
-
-def add(x: IntOrStrT, y: IntOrStrT) -> IntOrStrT:
-    return x + y
-
-a: int = add(1, 2)  # type(a) == int; a == 3
-b: str = add('foo', 'bar')  # type(b) == str; b == 'foobar'
+```pycon exec="1" session="python-typing" source="console"
+>>> from typing import TypeVar
+>>> IntOrStrT = TypeVar('IntOrStrT', int, str)
+>>> def add(x: IntOrStrT, y: IntOrStrT) -> IntOrStrT:
+...     return x + y
+>>> a: int = add(1, 2)
+>>> print(type(a), a)
+>>> b: str = add('foo', 'bar')
+>>> print(type(b), b)
 ```
 
 In the above example, the `IntStrOrListT` type variable is defined to accept either `int`  or
@@ -93,46 +94,37 @@ The use of `TypeVar` can be extended to classes through the use of the `Generic`
 `typing` module. This allows for the definition of more complex type annotation the scope of 
 classes, e.g.:
 
-```python
-from typing import TypeVar, Generic
-
-IntOrStrT = TypeVar('IntOrStrT', int | str)
-
-class Pair(Generic[IntOrStrT]):
-    def __init__(self, x: IntOrStrT, y: IntOrStrT):
-        self.x = x
-        self.y = y
-    
-    def add(self) -> IntOrStrT:
-        return self.x + self.y
-
-    def __repr__(self) -> str:
-        return f'Pair({self.x}, {self.y})'
-
-pair_1: Pair[int] = Pair(1, 2)
-pair_2: Pair[str] = Pair('foo', 'bar')
-pairs = [pair_1, pair_2]
-
-for pair in pairs:
-    print(f'{pair_1} added: {pair_1.add()}')
+```pycon exec="1" session="python-typing" source="console"
+>>> from typing import Generic
+>>> class Pair(Generic[IntOrStrT]):
+...     def __init__(self, x: IntOrStrT, y: IntOrStrT):
+...         self.x = x
+...         self.y = y
+...
+...     def add(self) -> IntOrStrT:
+...         return self.x + self.y
+...
+...     def __repr__(self) -> str:
+...         return f'Pair({self.x}, {self.y})'
+>>> pair_1: Pair[int] = Pair(1, 2)
+>>> pair_2: Pair[str] = Pair('foo', 'bar')
+>>> pairs = [pair_1, pair_2]
+>>> for pair in pairs:
+...     print(f'{pair} added: {pair.add()}')
 ```
 
 The code above defines a `Pair` class that takes two arguments of the same type. The `add` method
 returns the sum of the two arguments, and the `__repr__` method returns a string representation of
 the `Pair` object.
 
-The code should not produce any errors in static type checkers. Running the code will output:
-
-```
-Pair(1, 2) added: 3
-Pair(foo, bar) added: foobar
-```
+The code should not produce any errors in static type checkers. Running the code, as shown above,
+outputs the sum of each pair.
 
 However, the code will once more run perfectly fine even if the type hints are not followed. The
 following code will e.g. run without errors, but fail in static type checkers:
 
-```python
-Pair([1, 2], [3, 4]).add()  # returns [1, 2, 3, 4]
+```pycon exec="1" session="python-typing" source="console"
+>>> print(Pair([1, 2], [3, 4]).add())
 ```
 
 ## Pydantic use type hints for data validation at runtime
@@ -145,18 +137,27 @@ and raise an error if the data does not match the model.
 
 A pydantic data model might look something like this:
 
-```python
-import pydantic as pyd
+```pycon exec="1" session="python-typing" source="console"
+>>> import omnipy.util.pydantic as pyd
+>>> class Pair(pyd.BaseModel):
+...     x: int
+...     y: int
+...
+...     def add(self) -> int:
+...         return self.x + self.y
+>>> pair_1 = Pair(x=1, y=2)
+>>> print(pair_1)
+```
 
-class Pair(pyd.BaseModel):
-    x: int
-    y: int
+```pycon
+>>> pair_2 = Pair(x='foo', y='bar')  # This will raise a ValidationError
+```
 
-    def add(self) -> int:
-        return self.x + self.y
-
-pair_1 = Pair(x=1, y=2)
-pair_2 = Pair(x='foo', y='bar')
+```pycon exec="1" session="python-typing" result="console"
+>>> try:
+...     pair_2 = Pair(x='foo', y='bar')
+... except pyd.ValidationError as err:
+...     print(err)
 ```
 
 Here, pair_2 will raise a `ValidationError` at runtime, in contrast to a pure 'type hints'-based 
@@ -168,48 +169,53 @@ a `dataclass`, which fits a record-type data structure, i.e. a data structure wi
 fields, each with a fixed type. In its most general and dynamic form, a `pydantic` model maps to 
 the fully flexible `dict` type in Python, e.g.:
 
-```python
-import pydantic as pyd
-
-class Pair(pyd.BaseModel):
-    x: int
-    y: int
-
-pair_as_dict = {'x': 1, 'y': 2}
-pair = Pair(**pair_as_dict)
-assert pair.dict() == pair_as_dict
+```pycon exec="1" session="python-typing" source="console"
+>>> class Pair(pyd.BaseModel):
+...     x: int
+...     y: int
+>>> pair_as_dict = {'x': 1, 'y': 2}
+>>> pair = Pair(**pair_as_dict)
+>>> print(pair.dict() == pair_as_dict)
 ```
 
 Supporting other basic data types like `list` is more cumbersome, e.g.:
 
-```python
-import pydantic as pyd
-
-class MyListOfInts(pyd.BaseModel):
-    x: list[int]
-
-my_list = MyListOfInts(x=[1, 2, 3])
+```pycon exec="1" session="python-typing" source="console"
+>>> class MyListOfInts(pyd.BaseModel):
+...     x: list[int]
+>>> my_list = MyListOfInts(x=[1, 2, 3])
+>>> print(my_list)
 ```
 
 While `pydantic` validates that the input data is a list of integers, it is designed to be a 
 one-off validation. In a default setup, one can change the contents of the list after the object
 has been validated and still introduce data that does not match the model, e.g.:
 
-```python
-my_list = MyListOfInts(x=[1, 2, 3])
-my_list.x.append('foo')
+```pycon exec="1" session="python-typing" source="console"
+>>> my_list = MyListOfInts(x=[1, 2, 3])
+>>> my_list.x.append('foo')
+>>> print(my_list)
 ```
 
 The above code will not fail at runtime, even though the list of ints now contain a string. The 
 reason for this is that `pydantic` by default needs the user to explicitly re-validate the data
 after changes, e.g.:
 
-```python
-my_list = [1,2,3]
-MyListOfInts.validate({'x': my_list})
+```pycon exec="1" session="python-typing" source="console"
+>>> my_list = [1, 2, 3]
+>>> print(MyListOfInts.validate({'x': my_list}))
+>>> my_list.append('foo')
+```
 
-my_list.append('foo')
-MyListOfInts.validate({'x': my_list})  # raises a ValidationError
+```pycon
+>>> MyListOfInts.validate({'x': my_list})  # This will raise a ValidationError
+```
+
+```pycon exec="1" session="python-typing" result="console"
+>>> try:
+...     MyListOfInts.validate({'x': my_list})
+... except pyd.ValidationError as err:
+...     print(err)
 ```
 
 ## Omnipy builds on Pydantic to seamlessly support static typing at runtime
@@ -224,11 +230,26 @@ record-type data structures.
 
 A list of integers can be defined as follows as a `Model` object in `Omnipy`:
 
-```python
-import omnipy as om
+```pycon exec="1" session="python-typing" source="console"
+>>> import omnipy as om
+--8<-- "_includes/pycon_hidden_runtime_setup.md"
+>>> my_list_of_ints = om.Model[list[int]]([1, 2, 3])
+>>> my_list_of_ints
+```
 
-my_list_of_ints = om.Model[list[int]]([1, 2, 3])
-my_list_of_ints.append('foo')  # raises a ValidationError
+```pycon exec="1" session="python-typing" result="console" html="true"
+>>> print(my_list_of_ints._docs())
+```
+
+```pycon
+>>> my_list_of_ints.append('foo')  # This will raise a ValidationError
+```
+
+```pycon exec="1" session="python-typing" result="console"
+>>> try:
+...     my_list_of_ints.append('foo')
+... except Exception as err:
+...     print(err)
 ```
 
 Notice that the `Model` object is used directly as a list, and that the `append` method from the 

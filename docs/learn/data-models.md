@@ -7,34 +7,40 @@ has several important features:
 To define a data model, you provide a type hint as a type parameter to the Model class.
 For example, to define a data model that represents a list of integers, you would write:
 
-```python
-import omnipy as om
+```pycon exec="1" session="data-models" source="console"
+>>> import omnipy as om
+--8<-- "_includes/pycon_hidden_runtime_setup.md"
+>>> int_list_model = om.Model[list[int]]([1, 2, 3])
+>>> int_list_model
+```
 
-int_list_model = om.Model[list[int]]([1,2,3])
+```pycon exec="1" session="data-models" result="console" html="true"
+>>> print(int_list_model._docs())
 ```
 
 As `Model` are standard python classes, you can easily subclass them to reuse common data models
 and/or define other model-specific functionality, e.g.:
 
-```python
-import omnipy as om
+```pycon exec="1" session="data-models" source="console"
+>>> class IntListModel(om.Model[list[int]]): ...
+>>> int_list_data = IntListModel([-1, 0, 1, 2, 3])
+>>> int_list_data
+```
 
-class IntListModel(om.Model[list[int]]): ...
-
-int_list_data = IntListModel([-1, 0, 1, 2, 3])
-print(int_list_data)  # prints: IntListModel([-1, 0, 1, 2, 3])
+```pycon exec="1" session="data-models" result="console" html="true"
+>>> print(int_list_data._docs())
 ```
 
 As in `Pydantic`, the `Model` class can de defined to contain other `Model` classes, e.g.:
 
-```python
-import omnipy as om
+```pycon exec="1" session="data-models" source="console"
+>>> class NestedModel(om.Model[dict[str, IntListModel]]): ...
+>>> nested_data = NestedModel({'a': [-1, 2, 4], 'b': [-4, 5, 6]})
+>>> nested_data
+```
 
-class NestedModel(om.Model[dict[str, IntListModel]]): ...
-
-nested_data = NestedModel({'a': [-1, 2, 4], 'b': [-4, 5, 6]})
-print(nested_data)  # prints: NestedModel({'a': IntListModel([-1, 2, 4]), 'b': IntListModel([-4, 5, 6])})
-
+```pycon exec="1" session="data-models" result="console" html="true"
+>>> print(nested_data._docs())
 ```
 
 
@@ -49,9 +55,13 @@ about this concept).
 As in the non-strict mode of `pydantic`, the `Model` class will automatically parse input data to 
 comply to the data model, e.g.:
 
-```python
-int_list_data = IntListModel(['-1', 0, '1', 2, '3'])
-print(int_list_data)  # prints: IntListModel([-1, 0, 1, 2, 3])
+```pycon exec="1" session="data-models" source="console"
+>>> int_list_data = IntListModel(['-1', 0, '1', 2, '3'])
+>>> int_list_data
+```
+
+```pycon exec="1" session="data-models" result="console" html="true"
+>>> print(int_list_data._docs())
 ```
 
 Note that some of the data elements in the list above were strings. The `Model` class will
@@ -65,16 +75,17 @@ a guaranteed consistent output.
 More complex parsing can be achieved by overriding the `_parse_data` class method in a subclass of 
 `Model`, e.g.:
 
-```python
-import omnipy as om
+```pycon exec="1" session="data-models" source="console"
+>>> class OnlyPosIntListModel(om.Model[list[int]]):
+...     @classmethod
+...     def _parse_data(cls, data: list[int]) -> list[int]:
+...         return [i for i in data if i > 0]
+>>> pos_int_list_data = OnlyPosIntListModel([-1, 0, 1, 2, 3])
+>>> pos_int_list_data
+```
 
-class OnlyPosIntListModel(om.Model[list[int]]):
-    @classmethod
-    def _parse_data(cls, data: list[int]) -> list[int]:
-        return [i for i in data if i > 0]
-
-pos_int_list_data = OnlyPosIntListModel([-1,0,1,2,3])
-print(pos_int_list_data)  # prints: OnlyPositiveIntListModel([1, 2, 3])
+```pycon exec="1" session="data-models" result="console" html="true"
+>>> print(pos_int_list_data._docs())
 ```
 
 Note that the implementation of parse methods will be simplified in a future version of Omnipy,
@@ -82,7 +93,9 @@ e.g. by using a `@parse` decorator:
 
 ```python
 import omnipy as om
+
 parse = om.parse
+
 
 class OnlyPosIntListModel(om.Model[list[int]]):
     @parse
@@ -97,16 +110,17 @@ the model object is now in an invalid state, Omnipy will automatically roll back
 last validated snapshot. As a consequence, a model object will always contain valid data, even after
 an invalid operation, e.g.:
 
-```python
-import omnipy as om
+```pycon exec="1" session="data-models" source="console"
+>>> int_list_data = IntListModel([1, 2, 3])
+>>> try:
+...     int_list_data[1] = 'abc'
+... except Exception as exc:
+...     print(type(exc).__name__)
+>>> int_list_data  # rolled back to the last validated snapshot
+```
 
-class IntListModel(om.Model[list[int]]): ...
-
-int_list_data = IntListModel([1, 2, 3])
-try:
-    int_list_data[1] = 'abc'  # raises a ValidationError
-except ValidationError:
-    print(int_list_data)  # prints: IntListModel([1, 2, 3])
+```pycon exec="1" session="data-models" result="console" html="true"
+>>> print(int_list_data._docs())
 ```
 
 This functionality is especially useful when users are working with Omnipy in an interactive session

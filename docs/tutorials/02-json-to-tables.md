@@ -13,10 +13,14 @@ to pandas-backed types.
 ## Parse nested JSON
 
 ```pycon exec="1" session="tutorial2" source="console"
->>> nested = om.JsonListOfDictsDataset({'items': [
-...     {'id': 'a', 'meta': {'x': 1, 'y': 2}, 'tags': [{'k': 't', 'v': 1}, {'k': 'u', 'v': 2}]},
-...     {'id': 'b', 'meta': {'x': 3, 'y': 4}, 'tags': []},
-... ]})
+>>> nested = om.JsonListOfDictsDataset(
+...     {
+...         'items': [
+...             {'id': 'a', 'meta': {'x': 1, 'y': 2}, 'tags': [{'k': 't', 'v': 1}, {'k': 'u', 'v': 2}]},
+...             {'id': 'b', 'meta': {'x': 3, 'y': 4}, 'tags': []},
+...         ]
+...     }
+... )
 >>> nested
 ```
 
