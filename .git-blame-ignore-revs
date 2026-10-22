@@ -3,3 +3,6 @@
 
 # Trim trailing whitespace and fix end-of-file newlines in non-Python files
 4228485b8673eab2d117744d8ff5633174ceee92
+
+# Format pyproject.toml with tombi
+43e6b119b36d22c9e0ef20285c7c4be9ab403d66
