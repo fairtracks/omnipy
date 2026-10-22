@@ -245,10 +245,9 @@ def test_split_to_lines_datasets_support_mixed_universal_newlines(
 
 
 def test_split_to_items_dataset(
-    dict_of_text_with_comma_as_model_or_plain: Annotated[
-        dict[str, Model[str] | str],
-        pytest.fixture,
-    ],
+    dict_of_text_with_comma_as_model_or_plain: (
+        Annotated[dict[str, Model[str] | str], pytest.fixture]
+    ),
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     items_stripped_comma = SplitToItemsDataset(dict_of_text_with_comma_as_model_or_plain)
@@ -259,10 +258,9 @@ def test_split_to_items_dataset(
 
 
 def test_split_to_items_no_strip_dataset(
-    dict_of_text_with_comma_as_model_or_plain: Annotated[
-        dict[str, Model[str] | str],
-        pytest.fixture,
-    ],
+    dict_of_text_with_comma_as_model_or_plain: (
+        Annotated[dict[str, Model[str] | str], pytest.fixture]
+    ),
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     SplitToItemsNoStripDataset = SplitToItemsDataset.adjust(
@@ -279,10 +277,9 @@ def test_split_to_items_no_strip_dataset(
 
 
 def test_split_to_items_by_tab_dataset(
-    dict_of_text_with_tabs_as_model_or_plain: Annotated[
-        dict[str, Model[str] | str],
-        pytest.fixture,
-    ],
+    dict_of_text_with_tabs_as_model_or_plain: (
+        Annotated[dict[str, Model[str] | str], pytest.fixture]
+    ),
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     SplitToItemsByTabDataset = SplitToItemsDataset.adjust(
@@ -324,10 +321,9 @@ def test_join_items_by_comma_space_dataset(
 
 
 def test_split_lines_to_columns_dataset(
-    dict_of_lists_of_texts_with_tabs_as_model_or_plain: Annotated[
-        dict[str, list[Model[str]] | list[str]],
-        pytest.fixture,
-    ],
+    dict_of_lists_of_texts_with_tabs_as_model_or_plain: (
+        Annotated[dict[str, list[Model[str]] | list[str]], pytest.fixture]
+    ),
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     cols_stripped_tab = SplitLinesToColumnsDataset(
@@ -350,10 +346,9 @@ def test_split_lines_to_columns_dataset(
 
 
 def test_split_lines_to_columns_no_strip_dataset(
-    dict_of_lists_of_texts_with_tabs_as_model_or_plain: Annotated[
-        dict[str, list[Model[str]] | list[str]],
-        pytest.fixture,
-    ],
+    dict_of_lists_of_texts_with_tabs_as_model_or_plain: (
+        Annotated[dict[str, list[Model[str]] | list[str]], pytest.fixture]
+    ),
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     SplitLinesToColumnsNoStripDataset = SplitLinesToColumnsDataset.adjust(
@@ -382,10 +377,9 @@ def test_split_lines_to_columns_no_strip_dataset(
 
 
 def test_split_lines_to_columns_by_comma_dataset(
-    dict_of_lists_of_texts_with_comma_as_model_or_plain: Annotated[
-        dict[str, list[Model[str]] | list[str]],
-        pytest.fixture,
-    ],
+    dict_of_lists_of_texts_with_comma_as_model_or_plain: (
+        Annotated[dict[str, list[Model[str]] | list[str]], pytest.fixture]
+    ),
     assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
 ) -> None:
     SplitLinesToColumnsByCommaDataset = SplitLinesToColumnsDataset.adjust(

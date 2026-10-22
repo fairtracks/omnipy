@@ -222,12 +222,9 @@ def dag_flow_mock_classes(
 @pc.parametrize('registry', [no_registry], ids=[''])
 def power_mock_jobs_mock_runner_cls_no_verbose_no_reg(
     job_case: JobCase,
-    job_mock_classes: tuple[
-        JobType.Literals,
-        type[IsTaskTemplate],
-        type[IsFlowTemplate],
-        type[IsJobRunnerEngine],
-    ],
+    job_mock_classes: (
+        tuple[JobType.Literals, type[IsTaskTemplate], type[IsFlowTemplate], type[IsJobRunnerEngine]]
+    ),
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
@@ -258,12 +255,9 @@ def power_mock_jobs_mock_runner_cls_no_verbose_no_reg(
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_func_types_mock_jobs_mock_runner_cls_assert_runstate_mock_reg(
     job_case: JobCase,
-    job_mock_classes: tuple[
-        JobType.Literals,
-        type[IsTaskTemplate],
-        type[IsFlowTemplate],
-        type[IsJobRunnerEngine],
-    ],
+    job_mock_classes: (
+        tuple[JobType.Literals, type[IsTaskTemplate], type[IsFlowTemplate], type[IsJobRunnerEngine]]
+    ),
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
 ):
@@ -298,12 +292,9 @@ def all_func_types_mock_jobs_mock_runner_cls_assert_runstate_mock_reg(
 @pc.parametrize('registry', [mock_registry], ids=[''])
 def all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg(
     job_case: JobCase,
-    job_classes: tuple[
-        JobType.Literals,
-        type[IsTaskTemplate],
-        type[IsFlowTemplate],
-        type[IsJobRunnerEngine],
-    ],
+    job_classes: (
+        tuple[JobType.Literals, type[IsTaskTemplate], type[IsFlowTemplate], type[IsJobRunnerEngine]]
+    ),
     engine: IsJobRunnerEngine,
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,

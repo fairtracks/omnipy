@@ -195,11 +195,13 @@ class Dataset(
 
     def __class_getitem__(  # type: ignore[override]
         cls,
-        params: type[_ModelOrDatasetT]
-        | tuple[type[_ModelOrDatasetT]]
-        | tuple[type[_ModelOrDatasetT], Any]
-        | TypeVar
-        | tuple[TypeVar, ...],
+        params: (
+            type[_ModelOrDatasetT]
+            | tuple[type[_ModelOrDatasetT]]
+            | tuple[type[_ModelOrDatasetT], Any]
+            | TypeVar
+            | tuple[TypeVar, ...]
+        ),
     ) -> Self:
         """Specialize the dataset class with a concrete model or nested dataset type.
 
@@ -274,9 +276,9 @@ class Dataset(
 
     def __init__(  # noqa: C901
         self,
-        value: SupportsItems[str, object]
-        | Iterable[tuple[str, object]]
-        | UndefinedType = Undefined,
+        value: (
+            SupportsItems[str, object] | Iterable[tuple[str, object]] | UndefinedType
+        ) = Undefined,
         *,
         data: SupportsItems[str, object] | UndefinedType = Undefined,
         **kwargs: object,

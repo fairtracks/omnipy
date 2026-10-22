@@ -301,10 +301,7 @@ class ChildJobListArgFlowRunSpec(FlowRunSpec, ABC):
 
     def _drive_child_job_run_generator(
         self,
-        run_all_child_jobs_callable: Callable[
-            ...,
-            Generator[object, object, object],
-        ],
+        run_all_child_jobs_callable: Callable[..., Generator[object, object, object]],
     ) -> Callable:
 
         if _has_any_async_coroutine_jobs(self):

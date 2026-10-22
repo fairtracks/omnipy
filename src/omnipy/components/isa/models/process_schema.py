@@ -9,15 +9,12 @@ from typing import Optional
 from omnipy.data.model import Model
 import omnipy.util.pydantic as pyd
 
-from . import (
-    comment_schema,
-    data_schema,
-    material_schema,
-    process_parameter_value_schema,
-    protocol_schema,
-    sample_schema,
-    source_schema,
-)
+from . import comment_schema, protocol_schema
+from .data_schema import IsaDataModel
+from .material_schema import IsaMaterialModel
+from .process_parameter_value_schema import IsaProcessParameterValueModel
+from .sample_schema import IsaSampleModel
+from .source_schema import IsaSourceModel
 from .validators import date_to_iso_format
 
 
@@ -60,30 +57,13 @@ class IsaProcessOrProtocolApplicationSchema(pyd.BaseModel):
     field_type: FieldType | None = pyd.Field(None, alias='@type')
     name: str | None = None
     executesProtocol: protocol_schema.IsaProtocolModel | None = None
-    parameterValues: list[process_parameter_value_schema.IsaProcessParameterValueModel] | None = (
-        None
-    )
+    parameterValues: list[IsaProcessParameterValueModel] | None = None
     performer: str | None = None
     date: datetime.datetime | datetime.date | pyd.constr(max_length=0) | None = None
     previousProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
     nextProcess: Optional['IsaProcessOrProtocolApplicationModel'] = None
-    inputs: (
-        list[
-            source_schema.IsaSourceModel
-            | sample_schema.IsaSampleModel
-            | data_schema.IsaDataModel
-            | material_schema.IsaMaterialModel
-        ]
-        | None
-    ) = None
-    outputs: (
-        list[
-            sample_schema.IsaSampleModel
-            | data_schema.IsaDataModel
-            | material_schema.IsaMaterialModel
-        ]
-        | None
-    ) = None
+    inputs: list[IsaSourceModel | IsaSampleModel | IsaDataModel | IsaMaterialModel] | None = None
+    outputs: list[IsaSampleModel | IsaDataModel | IsaMaterialModel] | None = None
     comments: list[comment_schema.IsaCommentModel] | None = None
 
     _date_to_iso_format = pyd.validator('date', allow_reuse=True)(date_to_iso_format)

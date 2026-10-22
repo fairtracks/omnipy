@@ -770,10 +770,9 @@ def rowwise_pyd_records_optional_last_assert_func() -> Callable[
 
 @pc.case(id='rowwise_from_tsv', tags=['tables'])
 def case_rowwise_from_tsv(
-    rowwise_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a TSV case for plain row-wise table parsing."""
@@ -787,10 +786,9 @@ def case_rowwise_from_tsv(
 
 @pc.case(id='rowwise_from_csv', tags=['tables'])
 def case_rowwise_from_csv(
-    rowwise_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a CSV case for plain row-wise table parsing."""
@@ -804,10 +802,9 @@ def case_rowwise_from_csv(
 
 @pc.case(id='rowwise_from_csv_complex', tags=['tables'])
 def case_rowwise_from_csv_complex(
-    rowwise_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data_complex: Annotated[list[dict[str, str]], pytest.fixture],
 ) -> TableCase:
     """Return a CSV case with quotes for plain row-wise table parsing."""
@@ -824,10 +821,9 @@ def case_rowwise_from_csv_complex(
 
 @pc.case(id='rowwise_from_csv_complex_crlf', tags=['tables'])
 def case_rowwise_from_csv_complex_crlf(
-    rowwise_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data_complex: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a CSV case for plain row-wise table parsing."""
@@ -845,10 +841,9 @@ def case_rowwise_from_csv_complex_crlf(
 @pc.case(id='rowwise_pyd_from_records', tags=['tables'])
 def case_rowwise_pyd_from_records(
     RowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    rowwise_pyd_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_pyd_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from row-wise dictionaries."""
@@ -863,10 +858,9 @@ def case_rowwise_pyd_from_records(
 @pc.case(id='rowwise_pyd_from_list_of_lists_table', tags=['tables'])
 def case_rowwise_pyd_from_list_of_lists_table(
     RowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    rowwise_pyd_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_pyd_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from row-wise lists."""
@@ -881,10 +875,9 @@ def case_rowwise_pyd_from_list_of_lists_table(
 @pc.case(id='rowwise_pyd_from_tsv', tags=['tables'])
 def case_rowwise_pyd_from_tsv(
     RowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    rowwise_pyd_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_pyd_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from TSV text."""
@@ -899,10 +892,9 @@ def case_rowwise_pyd_from_tsv(
 @pc.case(id='rowwise_pyd_from_csv', tags=['tables'])
 def case_rowwise_pyd_from_csv(
     CsvRowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    rowwise_pyd_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_pyd_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data: Annotated[Any, pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from CSV text."""
@@ -917,10 +909,9 @@ def case_rowwise_pyd_from_csv(
 @pc.case(id='rowwise_pyd_from_csv_complex', tags=['tables'])
 def case_rowwise_pyd_from_csv_complex(
     CsvRowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    rowwise_pyd_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_pyd_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data_complex: Annotated[list[dict[str, str]], pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from CSV text."""
@@ -935,10 +926,9 @@ def case_rowwise_pyd_from_csv_complex(
 @pc.case(id='rowwise_pyd_from_csv_complex_crlf', tags=['tables'])
 def case_rowwise_pyd_from_csv_complex_crlf(
     CsvRowWiseRecordsTableModel: Annotated[type[TableOfPydanticRecordsModel], pytest.fixture],
-    rowwise_pyd_records_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    rowwise_pyd_records_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data_complex: Annotated[list[dict[str, str]], pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case from CSV text."""
@@ -952,13 +942,12 @@ def case_rowwise_pyd_from_csv_complex_crlf(
 
 @pc.case(id='rowwise_pyd_from_tsv_optional_field_last', tags=['tables'])
 def case_rowwise_pyd_from_tsv_optional_last(
-    RowWiseRecordsTableOptionalLastModel: Annotated[
-        type[TableOfPydanticRecordsModel], pytest.fixture
-    ],
-    rowwise_pyd_records_optional_last_assert_func: Annotated[
-        Callable[[TableOfPydanticRecordsModel, object], None],
-        pytest.fixture,
-    ],
+    RowWiseRecordsTableOptionalLastModel: (
+        Annotated[type[TableOfPydanticRecordsModel], pytest.fixture]
+    ),
+    rowwise_pyd_records_optional_last_assert_func: (
+        Annotated[Callable[[TableOfPydanticRecordsModel, object], None], pytest.fixture]
+    ),
     rowwise_data_optional_last: Annotated[list[dict[str, str | None | int]], pytest.fixture],
 ) -> TableCase:
     """Return a pydantic-record case with an optional trailing field."""
@@ -988,9 +977,9 @@ def test_fail_table_of_records_model_with_optional_field_not_last() -> None:
 
 
 def test_fail_table_of_records_model_with_optional_fields_incorrect_input(
-    RowWiseRecordsTableOptionalLastModel: Annotated[
-        type[TableOfPydanticRecordsModel], pytest.fixture
-    ],
+    RowWiseRecordsTableOptionalLastModel: (
+        Annotated[type[TableOfPydanticRecordsModel], pytest.fixture]
+    ),
 ) -> None:
     """Test record tables reject malformed optional-field input rows."""
 
