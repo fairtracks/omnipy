@@ -25,6 +25,8 @@ Modifiers let you adapt task/flow templates without rewriting core function bodi
 >>> @om.TaskTemplate()
 ... def plus_other(number: int, other: int) -> int:
 ...     return number + other
->>> plus_one_dict = plus_other.refine(name='plus_one', fixed_params={'other': 1}).refine(result_key='number')
+>>> plus_one_dict = plus_other.refine(name='plus_one', fixed_params={'other': 1}).refine(
+...     result_key='number'
+... )
 >>> plus_one_dict.run(number=10)
 ```

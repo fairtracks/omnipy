@@ -13,8 +13,7 @@
 ... def plus_one(number: int) -> int:
 ...     return number + 1
 >>> @om.LinearFlowTemplate(plus_one, plus_one, plus_one)
-... def plus_three(number: int) -> int:
-...     ...
+... def plus_three(number: int) -> int: ...
 >>> plus_three.run(10)
 ```
 
@@ -26,8 +25,7 @@
 ... def plus_one(number: int) -> int:
 ...     return number + 1
 >>> @om.LinearFlowTemplate(plus_one, plus_one, plus_one)
-... def plus_three(number: int) -> int:
-...     ...
+... def plus_three(number: int) -> int: ...
 >>> flow_job = plus_three.apply()
 >>> flow_job(10)
 ```

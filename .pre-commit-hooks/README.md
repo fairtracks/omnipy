@@ -33,7 +33,6 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
     Returns:
         dict: A dictionary containing results.
     """)
-
 ```
 
 The environment variable `OMNIPY_MACRO_COMMON_PARAM` defines the macro `{{COMMON_PARAM}}`.

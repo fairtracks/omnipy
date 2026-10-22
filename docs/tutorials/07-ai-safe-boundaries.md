@@ -19,14 +19,18 @@ These patterns work well alongside tooling such as Instructor, Marvin, and Pydan
 
 Use a typed model at the boundary where untrusted model output enters your system.
 
-```pycon exec="1" source="console"
+```pycon exec="1" session="ai-safe" source="console"
 >>> import omnipy as om
 >>> import pydantic as pyd
 >>> class LlmAnswer(pyd.v1.BaseModel):
 ...     title: str
 ...     score: int
->>> om.Model[LlmAnswer]({'title': 'Candidate A', 'score': '7'})
-{'title': 'Candidate A', 'score': 7}
+>>> answer = om.Model[LlmAnswer]({'title': 'Candidate A', 'score': '7'})
+>>> answer
+```
+
+```pycon exec="1" session="ai-safe" result="console" html="true"
+>>> print(answer._docs())
 ```
 
 This gives explicit, typed data before any business logic continues.
@@ -35,28 +39,22 @@ This gives explicit, typed data before any business logic continues.
 
 When your downstream contract is strict, reject unknown fields instead of silently accepting them.
 
-```python
-import omnipy as om
-import pydantic as pyd
-
-
-class StrictLlmAnswer(pyd.v1.BaseModel):
-    title: str
-    score: int
-
-    class Config:
-        extra = 'forbid'
-
-
-# Hallucinated key: "confidence_bucket"
-payload = {
-    'title': 'Candidate A',
-    'score': 7,
-    'confidence_bucket': 'high',
-}
-
-# Raises ValidationError (extra fields not permitted)
-om.Model[StrictLlmAnswer](payload)
+```pycon exec="1" session="ai-safe" source="console"
+>>> class StrictLlmAnswer(pyd.v1.BaseModel):
+...     title: str
+...     score: int
+...
+...     class Config:
+...         extra = 'forbid'
+>>> payload = {  # Hallucinated key: "confidence_bucket"
+...     'title': 'Candidate A',
+...     'score': 7,
+...     'confidence_bucket': 'high',
+... }
+>>> try:  # Raises ValidationError (extra fields not permitted)
+...     om.Model[StrictLlmAnswer](payload)
+... except Exception as exc:
+...     print(type(exc).__name__)
 ```
 
 Use this in safety-critical paths where unknown keys should be treated as schema drift.
@@ -65,14 +63,18 @@ Use this in safety-critical paths where unknown keys should be treated as schema
 
 When input quality varies, start permissive and normalize first.
 
-```pycon exec="1" source="console"
+```pycon exec="1" session="ai-safe" source="console"
 >>> import omnipy as om
 >>> import pydantic as pyd
 >>> class ParsedAnswer(pyd.v1.BaseModel):
 ...     score: int
 ...     approved: bool
->>> om.Model[ParsedAnswer]({'score': '7', 'approved': 'true'})
-{'score': 7, 'approved': True}
+>>> parsed_answer = om.Model[ParsedAnswer]({'score': '7', 'approved': 'true'})
+>>> parsed_answer
+```
+
+```pycon exec="1" session="ai-safe" result="console" html="true"
+>>> print(parsed_answer._docs())
 ```
 
 This pattern is useful for inbound parsing layers where downstream tasks require normalized types.
@@ -81,19 +83,21 @@ This pattern is useful for inbound parsing layers where downstream tasks require
 
 For realistic pipelines, parse a batch of responses and then convert to a table-oriented model.
 
-```python
-import omnipy as om
+```pycon exec="1" session="ai-safe" source="console"
+>>> raw_answers = [
+...     {'id': 'a1', 'score': '7', 'approved': 'true'},
+...     {'id': 'a2', 'score': '9', 'approved': 'false'},
+...     {'id': 'a3', 'score': '5', 'approved': 'true'},
+... ]
+>>> cleaned_answers = [om.Model[ParsedAnswer](answer) for answer in raw_answers]
+>>> table = (
+...     om.JsonListOfDictsModel(cleaned_answers).to(om.RowWiseTableWithColNamesModel).to(om.PandasModel)
+... )
+>>> table
+```
 
-raw_answers = [
-    {'id': 'a1', 'score': '7', 'approved': 'true'},
-    {'id': 'a2', 'score': '9', 'approved': 'false'},
-    {'id': 'a3', 'score': '5', 'approved': 'true'},
-]
-
-cleaned_answers = [om.Model[ParsedAnswer](answer) for answer in raw_answers]
-
-table = om.JsonListOfDictsModel(cleaned_answers).to(om.RowWiseTableWithColNamesModel).to(om.PandasModel)
-table
+```pycon exec="1" session="ai-safe" result="console" html="true"
+>>> print(table._docs())
 ```
 
 This pattern keeps AI output handling composable: parse at the boundary, then use familiar
@@ -103,7 +107,7 @@ table tooling for downstream analysis.
 
 Switch specific fields to strict types to reject coercion and force explicit repair logic.
 
-```pycon exec="1" source="console"
+```pycon exec="1" session="ai-safe" source="console"
 >>> import omnipy as om
 >>> import pydantic as pyd
 >>> class StrictAnswer(pyd.v1.BaseModel):
@@ -111,8 +115,7 @@ Switch specific fields to strict types to reject coercion and force explicit rep
 >>> try:
 ...     om.Model[StrictAnswer]({'score': '7'})
 ... except Exception as exc:
-...     type(exc).__name__
-'ValidationError'
+...     print(type(exc).__name__)
 ```
 
 Use this where silent coercion could hide quality issues.
@@ -122,17 +125,14 @@ Use this where silent coercion could hide quality issues.
 Coercion alone is often not enough. Add a repair task that normalizes known LLM failure shapes
 before strict model parsing.
 
-```python
-import omnipy as om
-
-
-@om.TaskTemplate()
-def repair_and_parse_llm_answer(payload: dict[str, object]) -> dict[str, object]:
-    normalized_payload = {
-        'title': str(payload.get('title', '')).strip(),
-        'score': int(payload.get('score', 0)),
-    }
-    return om.Model[StrictLlmAnswer](normalized_payload)
+```pycon exec="1" session="ai-safe" source="console"
+>>> @om.TaskTemplate()
+... def repair_and_parse_llm_answer(payload: dict[str, object]) -> dict[str, object]:
+...     normalized_payload = {
+...         'title': str(payload.get('title', '')).strip(),
+...         'score': int(payload.get('score', 0)),
+...     }
+...     return om.Model[StrictLlmAnswer](normalized_payload)
 ```
 
 Typical repair actions:
@@ -165,14 +165,14 @@ Use this as a copy/paste starter for new AI-boundary pipelines.
 # 1) schema
 class YourSchema(pyd.v1.BaseModel):
     ...
+
     class Config:
         extra = 'forbid'
 
 
 # 2) repair task
 @TaskTemplate()
-def repair_payload(payload: dict[str, object]) -> dict[str, object]:
-    ...
+def repair_payload(payload: dict[str, object]) -> dict[str, object]: ...
 
 
 # 3) strict parse

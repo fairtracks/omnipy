@@ -13,7 +13,7 @@ This tutorial shows BED/GFF-style row parsing using typed model specs.
 
 ```pycon exec="1" source="console"
 >>> import omnipy as om
->>> bed = "chrom\tstart\tend\tname\nchr1\t10\t20\tgeneA\nchr2\t5\t9\tgeneB\n"
+>>> bed = 'chrom\tstart\tend\tname\nchr1\t10\t20\tgeneA\nchr2\t5\t9\tgeneB\n'
 >>> rows = om.TsvTableModel(bed)
 >>> rows
 ```
@@ -39,7 +39,7 @@ This tutorial shows BED/GFF-style row parsing using typed model specs.
 ...     start: int
 ...     end: int
 ...     name: str | None = None
->>> rows = om.TsvTableModel("chrom\tstart\tend\tname\nchr1\t10\t20\tgeneA\n")
+>>> rows = om.TsvTableModel('chrom\tstart\tend\tname\nchr1\t10\t20\tgeneA\n')
 >>> typed_rows = om.Model[list[BedRow]](rows)
 >>> typed_rows
 ```
@@ -54,7 +54,7 @@ This tutorial shows BED/GFF-style row parsing using typed model specs.
 ...     start: int
 ...     end: int
 ...     name: str | None = None
->>> rows = om.TsvTableModel("chrom\tstart\tend\tname\nchr1\t10\t20\tgeneA\n")
+>>> rows = om.TsvTableModel('chrom\tstart\tend\tname\nchr1\t10\t20\tgeneA\n')
 >>> typed_rows = om.Model[list[BedRow]](rows)
 >>> om.RowWiseTableWithColNamesModel(typed_rows).to(om.PandasModel)
 ```

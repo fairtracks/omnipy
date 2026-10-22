@@ -43,7 +43,7 @@ repos:
         name: ruff format
         entry: uv run ruff format --force-exclude
         language: system
-        types: [ python ]
+        types_or: [ python, markdown ]
         stages: [ pre-commit ]
       - id: ruff-check
         name: ruff check (check)
@@ -55,5 +55,5 @@ repos:
         name: ruff format (check)
         entry: uv run ruff format --force-exclude --diff
         language: system
-        types: [ python ]
+        types_or: [ python, markdown ]
         stages: [ manual ]

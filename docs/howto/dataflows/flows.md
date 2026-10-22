@@ -13,8 +13,7 @@
 ... def plus_one(number: int) -> int:
 ...     return number + 1
 >>> @om.LinearFlowTemplate(plus_one, plus_one)
-... def plus_two(number: int) -> int:
-...     ...
+... def plus_two(number: int) -> int: ...
 >>> plus_two.run(10)
 ```
 
@@ -29,9 +28,9 @@ flow still passes its initial values positionally.
 def add_offset(number: int, offset: int) -> int:
     return number + offset
 
+
 @om.LinearFlowTemplate(plus_one, add_offset)
-def plus_one_then_offset(number: int, *, offset: int) -> int:
-    ...
+def plus_one_then_offset(number: int, *, offset: int) -> int: ...
 ```
 
 ## DAG flows
@@ -45,8 +44,7 @@ def plus_one_then_offset(number: int, *, offset: int) -> int:
 ... def double(number: int) -> int:
 ...     return number * 2
 >>> @om.DagFlowTemplate(make_inputs, double)
-... def my_dag() -> int:
-...     ...
+... def my_dag() -> int: ...
 >>> my_dag.run()
 ```
 

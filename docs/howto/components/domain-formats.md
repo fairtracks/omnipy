@@ -11,7 +11,7 @@ Model-based tabular parsing for domain formats follows a stable three-step patte
 
 ```pycon exec="1" source="console"
 >>> import omnipy as om
->>> text = "a\tb\n1\t2\n"
+>>> text = 'a\tb\n1\t2\n'
 >>> om.TsvTableModel(text)
 ```
 
@@ -23,7 +23,7 @@ Model-based tabular parsing for domain formats follows a stable three-step patte
 >>> class Row(pyd.v1.BaseModel):
 ...     a: int
 ...     b: int
->>> om.Model[list[Row]](om.TsvTableModel("a\tb\n1\t2\n"))
+>>> om.Model[list[Row]](om.TsvTableModel('a\tb\n1\t2\n'))
 ```
 
 ## 3) Convert to downstream representation

@@ -46,8 +46,7 @@ pip install omnipy-examples
 ... def plus_one(number: int) -> int:
 ...     return number + 1
 >>> @om.LinearFlowTemplate(plus_one, plus_one)
-... def plus_two(number: int) -> int:
-...     ...
+... def plus_two(number: int) -> int: ...
 >>> plus_two.run(10)
 12
 >>> om.runtime.config.engine.choice = 'local'

@@ -18,8 +18,7 @@
 
 ```pycon exec="1" source="console"
 >>> import omnipy as om
->>> class IntList(om.Model[list[int]]):
-...     ...
+>>> class IntList(om.Model[list[int]]): ...
 >>> IntList(['1', 2, 3.0])
 ```
 
