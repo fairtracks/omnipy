@@ -35,23 +35,23 @@ repos:
         description: "Lint, sort imports and apply safe fixes."
         entry: uv run ruff check --force-exclude --fix
         language: system
-        types: [ python ]
+        types_or: [ python, jupyter ]
         stages: [ pre-commit ]
       - id: ruff-format
         name: ruff format
         entry: uv run ruff format --force-exclude
         language: system
-        types_or: [ python, markdown ]
+        types_or: [ python, jupyter, markdown ]
         stages: [ pre-commit ]
       - id: ruff-check
         name: ruff check (no fix)
         entry: uv run ruff check --force-exclude
         language: system
-        types: [ python ]
+        types_or: [ python, jupyter ]
         stages: [ manual ]
       - id: ruff-format
         name: ruff format (no changes)
         entry: uv run ruff format --force-exclude --diff
         language: system
-        types_or: [ python, markdown ]
+        types_or: [ python, jupyter, markdown ]
         stages: [ manual ]
