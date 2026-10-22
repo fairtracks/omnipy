@@ -169,6 +169,13 @@ Information on how to configure `pyright` for `JupyterLab` will be added here so
 
 Formatting, import sorting and linting are handled by [ruff](https://docs.astral.sh/ruff/), configured
 in `pyproject.toml`. The formatter follows the Black style, with single quotes and a line length of 100.
+Jupyter notebooks are linted and formatted too (source cells only, outputs are left as they are).
+`pyproject.toml` and the other TOML files are formatted with
+[tombi](https://tombi-toml.github.io/tombi/), configured in `tombi.toml`.
+
+The tools are run as [prek](https://prek.j178.dev) hooks, configured in `prek.toml`. The hooks are
+split into two groups: `watch` (docstring macro expansion, ruff, tombi and the whitespace fixers:
+fast and suited for running on every file save) and `commit` (the full set, also run by CI).
 
 - To install git hooks that automagically format and lint before every commit:
   - `uv run prek install`
@@ -176,15 +183,18 @@ in `pyproject.toml`. The formatter follows the Black style, with single quotes a
 - To run all hooks on all files, as CI does:
   - `uv run prek run --all-files`
 
-- To run only the fast hooks that are also suited for running on every file save:
-  - `uv run prek run --group watch --files <file>`
+- To run only the `watch` hooks on given files:
+  - `uv run prek run --group watch --files <file> ...`
 
 - To update the hook repos to their latest versions:
   - `uv run prek update`
 
 - In PyCharm -> File Watchers:
   - Click arrow icon pointing down and to the left
-  - Select `pycharm_file_watchers.xml`
+  - Select `pycharm-file-watchers.xml` in the repository root. This adds one watcher that runs
+    `prek run --group watch --files $FilePath$` on every file save.
+  - Do **not** also enable Settings -> Tools -> Actions on Save -> "Reformat code" for Python:
+    PyCharm's built-in formatter follows other style rules than ruff and will fight with it.
 
 #### Recommended Pycharm plugins
 
@@ -216,3 +226,35 @@ code. To silence them in one place instead of marking individual functions:
   `builtins.object.*` to the "Ignored references" list.
   - A quicker way is to press Alt+Enter on one of the warnings and select "Ignore all unresolved
     attributes of builtins.object".
+
+### Configure VS Code for Omnipy
+
+Run `uv sync --all-groups` first, so that the `.venv` and the tools used below exist.
+
+1. Install the extensions: **Python** (`ms-python.python`), **Ruff** (`charliermarsh.ruff`),
+   **BasedPyright** (`detachhead.basedpyright`), **Mypy Type Checker**
+   (`ms-python.mypy-type-checker`) and a **Tombi** TOML extension (see the
+   [Tombi VS Code extension docs](https://tombi-toml.github.io/tombi/docs/editors/vscode-extension)).
+2. Select the interpreter: Command Palette -> "Python: Select Interpreter" -> choose
+   `.venv/bin/python`.
+3. Set Ruff as the default formatter for Python and enable format on save: Settings -> "Default
+   Formatter" -> **Ruff** for the Python language, then enable "Editor: Format On Save".
+4. Enable Ruff's fix-all and import sorting on save: Settings -> "Code Actions On Save" -> add
+   `source.fixAll.ruff` and `source.organizeImports.ruff`, both set to `explicit`.
+5. Set Tombi as the default formatter for TOML, with format on save, in the same way as step 3.
+6. BasedPyright and the Mypy extension pick up `[tool.basedpyright]` and `[tool.mypy]` from
+   `pyproject.toml`.
+7. Optionally, run the `watch` hooks on save with the **Run on Save** extension
+   (`emeraldwalk.runonsave`), as VS Code has no built-in equivalent of PyCharm's file watchers. Add
+   to your `settings.json` (user or workspace, not committed):
+
+   ```json
+   "emeraldwalk.runonsave": {
+     "commands": [
+       {
+         "match": ".*",
+         "cmd": "uv run prek run --group watch --files ${file}"
+       }
+     ]
+   }
+   ```

@@ -1,58 +1,17 @@
 <TaskOptions>
   <TaskOptions>
-    <option name="arguments" value="run expand-docstr-macros --files $FilePath$" />
+    <option name="arguments" value="run --group watch --files $FilePath$" />
     <option name="checkSyntaxErrors" value="false" />
     <option name="description" />
     <option name="exitCodeBehavior" value="NEVER" />
-    <option name="fileExtension" value="py" />
     <option name="immediateSync" value="false" />
-    <option name="name" value="Pre-commit expand-docstr-macros" />
+    <option name="name" value="prek watch hooks" />
     <option name="output" value="" />
     <option name="outputFilters">
       <array />
     </option>
     <option name="outputFromStdout" value="false" />
-    <option name="program" value="$ProjectFileDir$/.venv/bin/pre-commit" />
-    <option name="runOnExternalChanges" value="false" />
-    <option name="scopeName" value="Project Files" />
-    <option name="trackOnlyRoot" value="false" />
-    <option name="workingDir" value="$ProjectFileDir$" />
-    <envs />
-  </TaskOptions>
-  <TaskOptions>
-    <option name="arguments" value="run ruff-check --files $FilePath$" />
-    <option name="checkSyntaxErrors" value="false" />
-    <option name="description" />
-    <option name="exitCodeBehavior" value="NEVER" />
-    <option name="fileExtension" value="py" />
-    <option name="immediateSync" value="false" />
-    <option name="name" value="Pre-commit ruff check" />
-    <option name="output" value="" />
-    <option name="outputFilters">
-      <array />
-    </option>
-    <option name="outputFromStdout" value="false" />
-    <option name="program" value="$ProjectFileDir$/.venv/bin/pre-commit" />
-    <option name="runOnExternalChanges" value="false" />
-    <option name="scopeName" value="Project Files" />
-    <option name="trackOnlyRoot" value="false" />
-    <option name="workingDir" value="$ProjectFileDir$" />
-    <envs />
-  </TaskOptions>
-  <TaskOptions>
-    <option name="arguments" value="run ruff-format --files $FilePath$" />
-    <option name="checkSyntaxErrors" value="false" />
-    <option name="description" />
-    <option name="exitCodeBehavior" value="NEVER" />
-    <option name="fileExtension" value="py" />
-    <option name="immediateSync" value="false" />
-    <option name="name" value="Pre-commit ruff format" />
-    <option name="output" value="" />
-    <option name="outputFilters">
-      <array />
-    </option>
-    <option name="outputFromStdout" value="false" />
-    <option name="program" value="$ProjectFileDir$/.venv/bin/pre-commit" />
+    <option name="program" value="$ProjectFileDir$/.venv/bin/prek" />
     <option name="runOnExternalChanges" value="false" />
     <option name="scopeName" value="Project Files" />
     <option name="trackOnlyRoot" value="false" />
