@@ -6,34 +6,28 @@ on:
     - cron: '0 0 * * *'
 
 jobs:
-  autoupdate-precommit:
+  autoupdate-prek:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
-
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
 
-      - name: Install pre-commit
-        run: pip install pre-commit
+      - name: Install dependencies
+        run: uv sync --group dev
 
-      - name: Run pre-commit autoupdate
-        run: pre-commit autoupdate
+      - name: Run prek update
+        run: uv run prek update
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.CPR_GITHUB_TOKEN }}
-          branch: update/pre-commit-autoupdate
-          title: Auto-update pre-commit hooks
-          commit-message: Auto-update pre-commit hooks
+          branch: update/prek-autoupdate
+          title: Auto-update prek hooks
+          commit-message: Auto-update prek hooks
           body: |
-            Update versions of tools in pre-commit 
-            configs to latest version
+            Update versions of tools in the prek
+            config to latest version
           labels: dependencies

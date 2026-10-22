@@ -10,14 +10,14 @@
 
 - Full test command: `uv run pytest -v --mypy-pyproject-toml-file=pyproject.toml`
 - Focused pytest runs still need the same mypy-plugin flags, for example: `uv run pytest tests/components/json/test_json_types.yml --mypy-pyproject-toml-file=pyproject.toml`
-- Check-only formatting/lint/import-order validation matches CI with `uv run pre-commit run --hook-stage manual --all-files`.
+- Check-only formatting/lint/import-order validation matches CI with `uv run prek run --all-files`.
 
 ## Formatting And Hooks
 
 - Python formatting, import sorting and linting are all handled by `ruff` (`[tool.ruff]` in `pyproject.toml`); Python line length is 100 with single quotes. Import sorting is the `I` lint rule, so it runs under `ruff check --fix`, not `ruff format`.
 - The ruff hooks also cover Jupyter notebooks (`docs/notebooks/*.ipynb`): only source cells are linted and formatted, outputs and metadata are left as they are. Notebook cells ignore E501 and F401 (`per-file-ignores`).
-- Commit-stage pre-commit mutates Python files via `.pre-commit-hooks/expand_docstr_macros.py`, which runs before the ruff hooks. If you edit macro-managed docstrings or `omnipy.util.docstr_macros`, run that hook or expect rewrites.
-- `pre-commit` stage hooks are mutating (docstring macro expansion, `ruff check --fix`, `ruff format`); `manual` stage hooks are check-only (`ruff check (no fix)`, `ruff format (no changes)`).
+- Hooks are run with `prek` (`prek.toml`). Mutating hooks fix files in place, and `prek run` then fails so that CI catches unformatted files. Commit-time hooks mutate Python files via `.pre-commit-hooks/expand_docstr_macros.py`, which runs before the ruff hooks. If you edit macro-managed docstrings or `omnipy.util.docstr_macros`, run that hook or expect rewrites.
+- Hooks belong to the groups `watch` (docstring macro expansion, `ruff check --fix`, `ruff format`; fast, for running on every save with `uv run prek run --group watch --files <file>`) and `commit` (the full set, also run by CI).
 - The `(str, Enum)` base is used deliberately (not `StrEnum`), and lambda assignment is allowed; both are ignored in the ruff config.
 
 ## Layout And Suppression Conventions

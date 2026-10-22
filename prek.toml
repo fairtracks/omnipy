@@ -1,0 +1,78 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
+
+# Hook groups (run one with `prek run --group <name>`):
+#   watch  - fast, mutating hooks, suitable for running on every file save
+#   commit - the full set, run on `git commit` and in CI
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "expand-docstr-macros"
+name = "Expand docstring macros"
+description = "Expand docstring macros in Python files."
+entry = "python .pre-commit-hooks/expand_docstr_macros.py"
+args = ["--verbose", "v"]
+language = "system"
+types = ["python"]
+groups = ["watch", "commit"]
+
+# Ruff is run through uv to use the version from the dev dependencies in pyproject.toml, so that
+# the hooks, CI and manual runs always agree on formatting and rules (a separately pinned
+# ruff-pre-commit rev can drift out of step). File excludes are set in pyproject.toml.
+[[repos.hooks]]
+id = "ruff-check"
+name = "ruff check"
+description = "Lint, sort imports and apply safe fixes."
+entry = "uv run ruff check --fix"
+language = "system"
+types_or = ["python", "jupyter"]
+groups = ["watch", "commit"]
+
+[[repos.hooks]]
+id = "ruff-format"
+name = "ruff format"
+entry = "uv run ruff format"
+language = "system"
+types_or = ["python", "jupyter", "markdown"]
+groups = ["watch", "commit"]
+
+[[repos.hooks]]
+id = "install-local-package"
+name = "Install Local Package"
+entry = "uv pip install -e . --offline"
+language = "system"
+pass_filenames = false
+types = ["python"]
+groups = ["commit"]
+
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v6.0.0"
+
+[[repos.hooks]]
+id = "check-yaml"
+types = ["yaml"]
+groups = ["commit"]
+
+[[repos.hooks]]
+id = "check-toml"
+types = ["toml"]
+groups = ["commit"]
+
+[[repos.hooks]]
+id = "check-merge-conflict"
+groups = ["commit"]
+
+[[repos]]
+repo = "https://github.com/abravalheri/validate-pyproject"
+rev = "v0.25"
+
+[[repos.hooks]]
+id = "validate-pyproject"
+name = "Validate pyproject.toml"
+args = ["-D", "mypy"]
+additional_dependencies = ["validate-pyproject-schema-store[all]"]
+groups = ["commit"]

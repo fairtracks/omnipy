@@ -23,13 +23,6 @@ jobs:
         run: |
           uv sync --all-groups
 
-      - name: Install pre-commit
+      - name: Run prek hooks
         run: |
-          pip install pre-commit
-
-      - name: Run pre-commit autoupdate
-        run: pre-commit autoupdate
-
-      - name: Run pre-commit hooks with hook-stage "manual" (=checks only)
-        run: |
-          pre-commit run --hook-stage manual --all-files
+          uv run prek run --all-files

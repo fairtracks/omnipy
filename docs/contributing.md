@@ -171,10 +171,16 @@ Formatting, import sorting and linting are handled by [ruff](https://docs.astral
 in `pyproject.toml`. The formatter follows the Black style, with single quotes and a line length of 100.
 
 - To install git hooks that automagically format and lint before every commit:
-  - `pre-commit install`
+  - `uv run prek install`
 
-- To update pre-commit-managed dependencies to the latest repos' versions:
-  - `pre-commit autoupdate`
+- To run all hooks on all files, as CI does:
+  - `uv run prek run --all-files`
+
+- To run only the fast hooks that are also suited for running on every file save:
+  - `uv run prek run --group watch --files <file>`
+
+- To update the hook repos to their latest versions:
+  - `uv run prek update`
 
 - In PyCharm -> File Watchers:
   - Click arrow icon pointing down and to the left
