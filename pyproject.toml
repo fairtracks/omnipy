@@ -132,7 +132,6 @@ line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
 extend-exclude = [
-  "*.ipynb",  # Notebooks were never covered by flake8/yapf/isort
   "src/omnipy/shared/protocols/_collections_abc.py",
   "src/omnipy/shared/protocols/_typeshed.py",
   "src/omnipy/shared/protocols/_typeshed_import",
@@ -169,6 +168,9 @@ ignore = [
 "tests/data/test_dataset.py" = ["UP006", "UP007", "UP035", "UP045"]
 "tests/data/helpers/datasets.py" = ["UP007", "UP045"]
 "tests/data/helpers/models.py" = ["UP007", "UP045"]
+
+# Notebook cells keep long output-oriented lines and boilerplate imports that later cells or readers use
+"*.ipynb" = ["E501", "F401"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10
