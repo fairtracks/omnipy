@@ -196,9 +196,9 @@ def assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after(
 @pc.parametrize(interactive=[True, False], dyn_convert=[False, True])
 def runtime_data_config_variants(
     runtime: Annotated[IsRuntime, pytest.fixture],
-    assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after: Annotated[
-        Callable[[], None], pytest.fixture
-    ],
+    assert_empty_snapshot_holder_and_deepcopy_memo_before_and_after: (
+        Annotated[Callable[[], None], pytest.fixture]
+    ),
     interactive: bool,
     dyn_convert: bool,
 ) -> IsRuntime:

@@ -91,9 +91,14 @@ def run_state_registry(
 @pc.parametrize('registry', [run_state_registry], ids=[''])
 def all_func_types_real_jobs_all_engines_real_reg(
     job_case: JobCase,
-    job_classes: tuple[
-        JobType.Literals, type[IsTaskTemplate], type[IsLinearFlowTemplate], type[IsDagFlowTemplate]
-    ],
+    job_classes: (
+        tuple[
+            JobType.Literals,
+            type[IsTaskTemplate],
+            type[IsLinearFlowTemplate],
+            type[IsDagFlowTemplate],
+        ]
+    ),
     engine: IsJobRunnerEngine,
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,
@@ -146,9 +151,14 @@ all_func_types_mock_jobs_all_engines_assert_runstate_mock_reg = (
 @pc.parametrize('registry', [run_state_registry], ids=[''])
 def base_task_only_real_jobs_all_engines_real_reg(
     job_case: JobCase,
-    job_classes: tuple[
-        JobType.Literals, type[IsTaskTemplate], type[IsLinearFlowTemplate], type[IsDagFlowTemplate]
-    ],
+    job_classes: (
+        tuple[
+            JobType.Literals,
+            type[IsTaskTemplate],
+            type[IsLinearFlowTemplate],
+            type[IsDagFlowTemplate],
+        ]
+    ),
     engine: IsJobRunnerEngine,
     engine_decorator: Callable[[IsJobRunnerEngine], IsJobRunnerEngine] | None,
     registry: IsRunStateRegistry | None,

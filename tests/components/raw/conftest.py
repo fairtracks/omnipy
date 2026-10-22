@@ -164,10 +164,7 @@ def reverse_list_of_texts_with_tabs(use_str_model: bool) -> list[Model[str]] | l
 
 @pc.fixture(scope='function')
 def forward_list_of_texts_with_comma(
-    forward_list_of_texts_with_tabs: Annotated[
-        list[Model[str]] | list[str],
-        pytest.fixture,
-    ],
+    forward_list_of_texts_with_tabs: Annotated[list[Model[str]] | list[str], pytest.fixture],
 ) -> list[Model[str]] | list[str]:
     return [
         text.replace('\t', ',')  # type: ignore[union-attr]
@@ -177,10 +174,7 @@ def forward_list_of_texts_with_comma(
 
 @pc.fixture(scope='function')
 def reverse_list_of_texts_with_comma(
-    reverse_list_of_texts_with_tabs: Annotated[
-        list[Model[str]] | list[str],
-        pytest.fixture,
-    ],
+    reverse_list_of_texts_with_tabs: Annotated[list[Model[str]] | list[str], pytest.fixture],
 ) -> list[Model[str]] | list[str]:
     return [
         text.replace('\t', ',')  # type: ignore[union-attr]

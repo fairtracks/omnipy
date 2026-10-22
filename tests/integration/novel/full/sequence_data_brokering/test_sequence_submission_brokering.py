@@ -15,10 +15,7 @@ async def test_sequence_submission_brokering(
     files: Annotated[dict[str, dict[str, str]], pytest.fixture],
     metadata: Annotated[dict[str, str], pytest.fixture],
     reset_biosample_vault_sample_id_generator: Annotated[None, pytest.fixture],  # noqa
-    expected_sequence_depot_submission_payload: Annotated[
-        dict[str, object],
-        pytest.fixture,
-    ],
+    expected_sequence_depot_submission_payload: Annotated[dict[str, object], pytest.fixture],
 ) -> None:
     submission = SubmissionModel(samples=samples, files=files, metadata=metadata)
 
