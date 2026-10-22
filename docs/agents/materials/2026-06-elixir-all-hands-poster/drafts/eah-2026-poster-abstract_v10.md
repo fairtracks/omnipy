@@ -9,5 +9,3 @@ Enter Omnipy v1.0, developed by ELIXIR Norway. Omnipy is an interactive Python f
 To conceptualize these technical architecture choices, our poster presents an epic, comic-book-style showdown: the "UnFAIR Alliance" of data corruption versus the "Omni-Squad" of data integrity. Attendees will discover how Omnipy's strict type enforcement (*The Endless Schema*) acts as an inevitable cosmic law to banish AI-fabricated keys (*"Honest" HAL Lucinator*), and how elegant declarative dataset mapping (*Master Zen-Batch*) effortlessly slices through the tangled, boilerplate-heavy code of ad-hoc scripts (*The Spaghetti Monster*).
 
 By actively combatting boilerplate, silent type coercion, and schema decay, Omnipy v1.0 guarantees structurally flawless data at every step, providing the hallucination-proof foundation necessary to safely build the next generation of AI-assisted bioinformatics.
-
-

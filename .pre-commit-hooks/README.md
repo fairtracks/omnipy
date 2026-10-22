@@ -42,12 +42,12 @@ The environment variable `OMNIPY_MACRO_COMMON_PARAM` defines the macro `{{COMMON
 ```python
 def example_method(self):
     """Example method with custom text.
-    
+
     This method does something special.
-    
+
     {{COMMON_PARAM}}
     {{COMMON_RETURN}}
-    
+
     Note: Remember this!
     """
     return {}

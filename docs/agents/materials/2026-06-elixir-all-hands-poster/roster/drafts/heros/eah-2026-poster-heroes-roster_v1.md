@@ -29,7 +29,7 @@
 *   **Catchphrase:** "Why loop, when the data can flow?"
 
 ### 5. The Iron Fetch (The Resilient Retriever)
-*   **Nemesis:** The Payload Prankster 
+*   **Nemesis:** The Payload Prankster
 *   **Superpower:** Infinite API stamina, rate-limit absorption, and automatic pagination mastery.
 *   **Backstory:** A heavy-duty, cybernetic courier built to withstand the harshest environments of the deep web. When the Payload Prankster maliciously drops connections at 2:00 AM or imposes 429 Timeouts, Iron Fetch doesn't crash or complain. He just powers up his retry-shields, waits out the timer, and systematically marches through the API endpoints until the exact payload is brought home securely.
 *   **Catchphrase:** "Neither snow, nor rain, nor 429 Timeouts stays this courier."

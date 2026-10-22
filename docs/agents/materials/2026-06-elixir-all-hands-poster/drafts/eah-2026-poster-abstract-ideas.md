@@ -226,7 +226,7 @@ the "You can't fix data you can't see." sentence.
 
 I btw want to come up with another term than 'visualize data' as this typically
 refers to plotting, whereas Omnipy's visualization is more about presenting
-the raw data, either as pretty-printed JSON, as tables, or nested panels, 
+the raw data, either as pretty-printed JSON, as tables, or nested panels,
 making good use of screen estate and syntax coloring.
 
 ### Idea 13: The Rosetta Stone (Focus: Multi-format and Scientific Integrations)
@@ -337,8 +337,8 @@ are as readable as they are powerful.
 
 **Comments:**
 
-This is a great angle! Making the code zen-like is definitely a strong 
-selling point, and the focus on removing boilerplate is a great and 
+This is a great angle! Making the code zen-like is definitely a strong
+selling point, and the focus on removing boilerplate is a great and
 approachable focus! Mixing Zen and comics might not work well though.
 Or perhaps it does, LEGO Ninjago style?
 
@@ -356,8 +356,8 @@ type-safe logic on your laptop, then seamlessly dispatch the exact same
 engine to Prefect or Kubernetes clusters without rewriting your code.
 
 **Comments:**
-Since Prefect/Kubernetes support is not yet fully implemented, this 
-might be a bit of a stretch, but it is definitely a strong selling 
+Since Prefect/Kubernetes support is not yet fully implemented, this
+might be a bit of a stretch, but it is definitely a strong selling
 point for the future!
 
 ### Idea 20: The Universal Adapter (Focus: Ontologies and Model Mapping)

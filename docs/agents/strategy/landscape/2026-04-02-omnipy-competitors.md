@@ -9,7 +9,7 @@ These frameworks orchestrate Python code using `@task` and `@flow` decorators, s
 
 *   **Prefect:**
     *   **What it is:** A highly popular, Python-native workflow orchestration tool. It uses decorators and even utilizes Pydantic under the hood for typing task parameters.
-    *   **Where it overlaps:** Task/flow definitions, retries, rate limiting, and execution. 
+    *   **Where it overlaps:** Task/flow definitions, retries, rate limiting, and execution.
     *   **How Omnipy relates:** Omnipy **integrates** with Prefect rather than competing. Prefect is a compute engine that runs arbitrary code; Omnipy is the data-aware layer on top that enforces strict Pydantic models on the *contents* flowing between those tasks. Prefect doesn't natively care what your data is or how it's structured internally; Omnipy cares deeply.
 *   **Dagster:**
     *   **What it is:** "Data-aware" orchestration. Instead of just organizing tasks, Dagster orchestrates "Software-Defined Assets".
@@ -39,6 +39,6 @@ Tools that specifically handle pulling messy data from APIs and structuring it. 
     *   **Where Omnipy wins:** Pandera only works on DataFrames. Omnipy handles the entire lifecycle: pulling messy nested JSON, validating it strictly via Pydantic, transforming it into Pandas, and then processing it further.
 
 ## Summary Pitch for the Poster: The "Missing Middle"
-Bioinformaticians use **Nextflow/Snakemake** to herd giant files, but use messy, untyped ad-hoc Python scripts to mangle the complex JSON metadata APIs. Software engineers use **Prefect** to orchestrate tasks, but lose the FAIR metadata context. 
+Bioinformaticians use **Nextflow/Snakemake** to herd giant files, but use messy, untyped ad-hoc Python scripts to mangle the complex JSON metadata APIs. Software engineers use **Prefect** to orchestrate tasks, but lose the FAIR metadata context.
 
 **Omnipy fills the "Missing Middle"**: A strongly-typed, data-aware Python orchestration engine built specifically to wrangle, strictly parse, and beautifully visualize complex API data and metadata, seamlessly bridging the gap between nested JSON APIs and tabular machine learning workflows.

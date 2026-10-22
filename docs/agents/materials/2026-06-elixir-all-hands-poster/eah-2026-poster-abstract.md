@@ -22,9 +22,9 @@ To explain this architecture, our poster presents an epic comic-book showdown: t
 * **The Merciless Mimic Mantis vs. The Null Ninja:**
 
   Continuous validation natively embedded in camouflaged Python structures protects Jupyter sandboxes, instantly reverting states the microsecond silent corruption occurs.
- 
+
 * **Visor vs. Count Cryptic:**
-  
+
   Visor shatters unreadable memory pointers by projecting data in its true multi-dimensional form, using auto-scaling nested panels and highly personalized syntax themes.
 
 While The Omnificents are formidable, the war against the UnFAIR Alliance is ongoing. Omnipy is an open, actively evolving framework, and we cannot protect the bioinformatics ecosystem alone. We invite developers, domain experts, and researchers across ELIXIR to join our heroic roster. Collaborate with us to expand domain models, build plugins, and forge the hallucination-proof foundation needed to safely scale the next generation of AI-assisted science.

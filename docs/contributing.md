@@ -5,7 +5,7 @@
 ### Install Python, uv and dependencies
 
 - Make sure that you have Python v3 available from your path. Installation of this depends on your
-  local setup. We recommend using `conda`, `pyenv` or `asdf` to manage Python versions. If you are 
+  local setup. We recommend using `conda`, `pyenv` or `asdf` to manage Python versions. If you are
   using Conda, you can install a Python environment with:
 
   - `conda create -n omnipy python=3.15`
@@ -123,7 +123,7 @@ editor, which is the most popular editor for Python development. The
 Note: Omnipy has now changed the development setup to use `basedpyright`
 instead of `pyright`, but sue of `pyright` is still supported.
 
-From version 2025.3 of PyCharm, support for pyright is included. To set up 
+From version 2025.3 of PyCharm, support for pyright is included. To set up
 just enable Pyright in Settings->Python->Tools->Pyright and specify the path
 to the `basedpyright-langserver` binary, e.g. ``.venv/bin/basedpyright-langserver``.
 

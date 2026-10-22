@@ -51,7 +51,7 @@ As initial use cases for the FAIRtracks project, we will consider the following 
                               "value": ['TCGA_ABCD', 'TCGA_BCDE']
                           }
                       }
-                      
+
                       cases_filter.json:
                       {
                           "op": "in",
@@ -60,7 +60,7 @@ As initial use cases for the FAIRtracks project, we will consider the following 
                               "value": ['1234556', '234567', '3456789', '4567890']
                           }
                       }
-                      
+
                       files_filter.json:
                       {
                           "op": "in",
@@ -69,7 +69,7 @@ As initial use cases for the FAIRtracks project, we will consider the following 
                               "value": ['1234556', '234567', '3456789', '4567890']
                           }
                       }
-                      
+
                       annotations.json
                       {
                           "op": "in",
@@ -97,10 +97,10 @@ As initial use cases for the FAIRtracks project, we will consider the following 
                           "primary_key": "project_id",
                           "fields_divided": [
                               ["field_a", "field_b"],
-                              ["field_c.subfield_a", "field_c.subfield_b", "field_d"]      
+                              ["field_c.subfield_a", "field_c.subfield_b", "field_d"]  
                           ]
                       }
-                      
+
                       (...) # For all endpoints
                       ```
                 * 1C. Download from all endpoints according to the filters and the field divisions.

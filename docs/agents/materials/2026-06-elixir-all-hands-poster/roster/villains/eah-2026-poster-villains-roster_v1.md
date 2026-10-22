@@ -16,7 +16,7 @@
 
 ### 3. The Silent Corruptor (The Null Ninja)
 *   **Superpower:** Bypassing standard validators to cast `NaN`s, `strings`, and malformed dates into integer sequences without throwing an error.
-*   **Backstory:** He lives in the shadows of "loose" validation scripts. Rather than crashing your pipeline today, the Null Ninja rots your flow from the inside out, feeding off the tears of postdocs whose statistical P-values just don't make sense three months later. 
+*   **Backstory:** He lives in the shadows of "loose" validation scripts. Rather than crashing your pipeline today, the Null Ninja rots your flow from the inside out, feeding off the tears of postdocs whose statistical P-values just don't make sense three months later.
 *   **Catchphrase:** "... (He never throws an Error. He just smiles.)"
 
 ### 4. Dr. Final_v3_Real / The Spaghetti Monster (The Jekyll & Hyde of Code)

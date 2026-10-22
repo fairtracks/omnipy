@@ -42,10 +42,10 @@ These are kitchen-sink libraries for building AI apps.
     *   **Omnipy relationship:** Extreme reliability for open-source local models. If Omnipy were to run local LLMs, integrating this approach ensures 100% adherence to Omnipy's data contracts.
 
 ## Summary: Where Omnipy fits
-Most Pydantic-based AI libraries focus on **Extraction** (getting structured text from an LLM) or **Agentic Reasoning** (deciding which tool to call next). 
+Most Pydantic-based AI libraries focus on **Extraction** (getting structured text from an LLM) or **Agentic Reasoning** (deciding which tool to call next).
 
 **Omnipy's unique value proposition in the AI space is:**
-1.  **FAIR Data Orchestration:** Moving millions of structured records reliably, which AI frameworks struggle with. 
+1.  **FAIR Data Orchestration:** Moving millions of structured records reliably, which AI frameworks struggle with.
 2.  **Tabular/Complex Data:** Bridging Pydantic models with Pandas/NumPy natively.
 3.  **Visualization:** Interactive terminal/Jupyter panel-based rich presentation of the nested structures.
 4.  **Resilience:** High-throughput rate-limited API communication for biological databases.

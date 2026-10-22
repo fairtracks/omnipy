@@ -18,4 +18,3 @@ To counter Count Cryptic's monochrome riddles, cryptic pointers, and mocking ell
 *   **Superpower:** Format-wide syntax highlighting, weaponized personalization, and the instantaneous banishment of monochrome gray.
 *   **Backstory:** Captain Chroma believes that staring at raw data shouldn't drain your soul; it should inspire you. She knows that Count Cryptic feeds on the despair of developers trying to find a missing comma in a gray wall of text. To fight back, she wields an arsenal of over 300 distinct color palettes and flawless syntax highlighting heuristics that support a massive variance of data formats. When she arrives on the scene, a boring CSV hidden inside a JSON array is instantly extracted, pretty-printed, and color-coded. She gives data an identity, transforming it from a cryptic chore into an aesthetic masterpiece.
 *   **Catchphrase:** "Your data, your style! Let's hit the Count with the Heavy Metal protocol!"
-

@@ -47,12 +47,12 @@ As in `Pydantic`, the `Model` class can de defined to contain other `Model` clas
 
 ## "Parse, don't validate" with Omnipy Model objects
 
-While `pydantic` is focusing mostly on data validation, Omnipy `Model` objects are designed to 
-be parsers, rather than just validators. (Please read _Technical note #2: "Parse, don't validate"_ 
+While `pydantic` is focusing mostly on data validation, Omnipy `Model` objects are designed to
+be parsers, rather than just validators. (Please read _Technical note #2: "Parse, don't validate"_
 on the [FAIRtracks.net website](https://fairtracks.net/fair/#fair-07-transformation) for more info
 about this concept).
 
-As in the non-strict mode of `pydantic`, the `Model` class will automatically parse input data to 
+As in the non-strict mode of `pydantic`, the `Model` class will automatically parse input data to
 comply to the data model, e.g.:
 
 ```pycon exec="1" session="data-models" source="console"
@@ -66,13 +66,13 @@ comply to the data model, e.g.:
 
 Note that some of the data elements in the list above were strings. The `Model` class will
 automatically parse these strings to integers as long as the string can be converted to
-an integer through builtin Python casting (e.g. `int('-1') == -1`). Instead of failing hard and 
-fast when there is a mismatch between the data type and the guaranteed data model (following the 
+an integer through builtin Python casting (e.g. `int('-1') == -1`). Instead of failing hard and
+fast when there is a mismatch between the data type and the guaranteed data model (following the
 concept of "validation"), standard Python conversions are instead honored if relevant. A parser
 follow the general programming guideline to allow as varied input data as possible, while producing
 a guaranteed consistent output.
 
-More complex parsing can be achieved by overriding the `_parse_data` class method in a subclass of 
+More complex parsing can be achieved by overriding the `_parse_data` class method in a subclass of
 `Model`, e.g.:
 
 ```pycon exec="1" session="data-models" source="console"
@@ -124,8 +124,8 @@ an invalid operation, e.g.:
 ```
 
 This functionality is especially useful when users are working with Omnipy in an interactive session
-such as a [Jupyter notebook](https://jupyter.org/) or in the Python console, where it is easy to 
-make mistakes and cumbersome to rerun code. Hence, the snapshot and rollback feature of Omnipy 
+such as a [Jupyter notebook](https://jupyter.org/) or in the Python console, where it is easy to
+make mistakes and cumbersome to rerun code. Hence, the snapshot and rollback feature of Omnipy
 `Model` objects can be disabled through the interactive configuration, e.g.:
 
 ```python

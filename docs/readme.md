@@ -79,10 +79,10 @@ to distributed deployment, meeting the demands of projects large and small.
     > TIP:
     > - If you need help with setting up a virtual environment, check out the relevant section in
     >   the [FastAPI documentation](https://fastapi.tiangolo.com/virtual-environments/).
-    >   _(Please note that Omnipy does not depend on FastAPI, it is just that their documentation is 
+    >   _(Please note that Omnipy does not depend on FastAPI, it is just that their documentation is
     >   excellent!)_
-    > - If you are using Omnipy in a [Jupyter notebook](https://jupyter.org/), you can most likely 
-    >   skip this step. 
+    > - If you are using Omnipy in a [Jupyter notebook](https://jupyter.org/), you can most likely
+    >   skip this step.
 
 2. Install Omnipy using:
     ```bash
@@ -91,7 +91,7 @@ to distributed deployment, meeting the demands of projects large and small.
 
 ## Getting started
 
-To define an Omnipy data model, simply concretize the generic `Model` class by specifying a 
+To define an Omnipy data model, simply concretize the generic `Model` class by specifying a
 data type in brackets, e.g. `Model[list[int]]`.
 
 The following creates a data model of a list of integers, and parses some data into that model:
@@ -106,9 +106,9 @@ The following creates a data model of a list of integers, and parses some data i
 ```pycon exec="1" session="greet" result="console" html="true"
 >>> print(data_as_list_of_ints._docs())
 ```
- 
-Omnipy Models are self-constraining, meaning that they will always ensure that the data 
-they contain is of the correct type. For example, if you try to append a string to the 
+
+Omnipy Models are self-constraining, meaning that they will always ensure that the data
+they contain is of the correct type. For example, if you try to append a string to the
 list of integers, it will raise an error:
 
 ```pycon
@@ -122,7 +122,7 @@ list of integers, it will raise an error:
 >>>     print(err)
 ```
 
-Importantly, Omnipy models automatically reverts to snapshots after an error occurs, 
+Importantly, Omnipy models automatically reverts to snapshots after an error occurs,
 allowing you to retry the operation without having to re-parse the data, continuing
 from where you left off. This is particularly useful when working with large dataflows,
 as it allows you to handle errors gracefully without losing your progress.
@@ -158,11 +158,11 @@ More to come soon...
 
 ### Output of flow runs
 
-The output will by default appear in the `data` directory, with a timestamp. 
+The output will by default appear in the `data` directory, with a timestamp.
 
-- It is recommended to install a file viewer that are capable of browsing tar.gz files. 
+- It is recommended to install a file viewer that are capable of browsing tar.gz files.
   For instance, the "File Expander" plugin in PyCharm is excellent for this.
-- To unpack the compressed files of a run on the command line 
+- To unpack the compressed files of a run on the command line
   (just make sure to replace the datetime string from this example):
   ```
   for f in $(ls data/2023_02_03-12_51_51/*.tar.gz); do mkdir ${f%.tar.gz}; tar xfzv $f -C ${f%.tar.gz}; done

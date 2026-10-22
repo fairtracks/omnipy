@@ -21,7 +21,7 @@ massive pain point in bioinformatics workflows.
 
 ### 3. The Silent Corruptor (The Null Ninja)
 *   **Superpower:** Bypassing standard validators to cast `NaN`s, `strings`, and malformed dates into integer sequences without throwing an error.
-*   **Backstory:** He lives in the shadows of "loose" validation scripts. Rather than crashing your pipeline today, the Null Ninja rots your flow from the inside out, feeding off the tears of postdocs whose statistical P-values just don't make sense three months later. 
+*   **Backstory:** He lives in the shadows of "loose" validation scripts. Rather than crashing your pipeline today, the Null Ninja rots your flow from the inside out, feeding off the tears of postdocs whose statistical P-values just don't make sense three months later.
 *   **Catchphrase:** "... (He never throws an Error. He just smiles.)"
 
 ### 4. The Spaghetti Monster
@@ -86,7 +86,7 @@ massive pain point in bioinformatics workflows.
 
 ### 1. Converter Prime (The Translator)
 *   **Superpower:** Flawlessly translating the most convoluted, deeply nested REST API responses into sleek, strictly-typed Pandas DataFrames with a single incantation: `.to()`.
-*   **Backstory:** Tired of watching biologists beg software engineers to write custom JSON-parsing scripts, Converter Prime forged a mystical declarative artifact. He serves as the ultimate diplomat between formats, ensuring that any Omnipy model can seamlessly shapeshift to fit the domain required without a drop of data loss. 
+*   **Backstory:** Tired of watching biologists beg software engineers to write custom JSON-parsing scripts, Converter Prime forged a mystical declarative artifact. He serves as the ultimate diplomat between formats, ensuring that any Omnipy model can seamlessly shapeshift to fit the domain required without a drop of data loss.
 *   **Catchphrase:** "Speak whatever format you want; I understand them all."
 
 ### 2. The Sentinel (The Strict Parser)
@@ -147,7 +147,7 @@ massive pain point in bioinformatics workflows.
 
 ### 3. The Orchestrator (Commander of Clusters)
 *   **Superpower:** Symmetrical Scaling. With a single thought, she can duplicate a local metadata task and deploy it across a thousand Kubernetes nodes.
-*   **Backstory:** Dr. Final_v3_Real's worst nightmare. The Orchestrator knows that what works on a laptop needs to run in the cloud. Drawing on Prefect and K8s integrations, she ensures that the exact same type-safe Omnipy code written interactively scales gracefully into heavy batch workloads seamlessly. 
+*   **Backstory:** Dr. Final_v3_Real's worst nightmare. The Orchestrator knows that what works on a laptop needs to run in the cloud. Drawing on Prefect and K8s integrations, she ensures that the exact same type-safe Omnipy code written interactively scales gracefully into heavy batch workloads seamlessly.
 *   **Catchphrase:** "If it runs in the sandbox, it rules the cluster."
 
 ### 4. Chronicler (The FAIR Guardian)

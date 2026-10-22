@@ -1,13 +1,13 @@
 # The Devil's Advocate: Why Users *Don't* Need Omnipy
 
-To find the most robust marketing pitch, we must look at the brutal reality of the current bioinformatics data stack. Developers are inherently lazy and will always prefer the tools they already know over learning a new, overarching framework. 
+To find the most robust marketing pitch, we must look at the brutal reality of the current bioinformatics data stack. Developers are inherently lazy and will always prefer the tools they already know over learning a new, overarching framework.
 
 Here is how a typical bioinformatician or data engineer solves these problems today using the standard Python ecosystem, and why Omnipy's current narratives might face resistance.
 
 ## 1. The "Missing Middle" (Orchestrating Metadata vs. Files)
 **The Omnipy Pitch:** Nextflow/Snakemake just move files. Omnipy intelligently orchestrates the in-memory typed metadata flowing between those files.
-**The Status Quo:** 
-*   **The Solution:** The user writes a standard Python script (`clean_metadata.py`) using `requests` and `json`, saves the output to `cleaned_metadata.json` or `metadata.csv`, and simply adds it as a standard rule in their Snakemake/Nextflow pipeline. 
+**The Status Quo:**
+*   **The Solution:** The user writes a standard Python script (`clean_metadata.py`) using `requests` and `json`, saves the output to `cleaned_metadata.json` or `metadata.csv`, and simply adds it as a standard rule in their Snakemake/Nextflow pipeline.
 *   **The Pushback:** *"Why do I need a 'data orchestrator' framework? My pipeline is already orchestrated by Snakemake. I just need a simple Python script to convert JSON to CSV. Adding Omnipy feels like orchestrator-inception (an orchestrator inside an orchestrator) and adds unnecessary complexity to my pipeline."*
 
 ## 2. Taming the REST API ➔ Pandas Pipeline
@@ -25,7 +25,7 @@ Here is how a typical bioinformatician or data engineer solves these problems to
 ## 4. The Hallucination-Proof Firewall for AI Assistants
 **The Omnipy Pitch:** Omnipy's strict models act as a cosmic law, dissolving hallucinated keys and preventing AI-generated structural rot.
 **The Status Quo:**
-*   **The Solution:** Libraries like `instructor` or `marvin` tie standard `pydantic` directly into the LLM call. Specifically, `instructor` intercepts bad JSON from OpenAI, feeds the validation error back to the LLM automatically, and forces it to fix the output before the user ever sees it. 
+*   **The Solution:** Libraries like `instructor` or `marvin` tie standard `pydantic` directly into the LLM call. Specifically, `instructor` intercepts bad JSON from OpenAI, feeds the validation error back to the LLM automatically, and forces it to fix the output before the user ever sees it.
 *   **The Pushback:** *"Standard Pydantic v2 already does strict validation. If I use `instructor`, the AI is forced to output valid Pydantic models anyway. What does Omnipy add to AI data validation that standard Pydantic v2 doesn't already do?"*
 
 ---
@@ -37,8 +37,8 @@ If the user can just use `requests + tenacity + pandas.json_normalize + standard
 If we market Omnipy as just "easier Python loops" or "better API retries", we will lose to the status quo. Omnipy's true pitch has to be something that the `requests + pandas` stack *fails miserably* at at scale.
 
 **The most likely true pain point (The synthesis):**
-A single script with `pandas` and `requests` works fine for *one* dataset. But in ELIXIR, you are pulling from 15 different European databases, each with completely different, evolving, deeply nested, 10-layer-deep JSON schemas (like ISA-JSON), and trying to harmonize them into a standardized format. 
+A single script with `pandas` and `requests` works fine for *one* dataset. But in ELIXIR, you are pulling from 15 different European databases, each with completely different, evolving, deeply nested, 10-layer-deep JSON schemas (like ISA-JSON), and trying to harmonize them into a standardized format.
 
-Standard `pandas.json_normalize` chokes and dies on deeply hierarchical biological standards like ISA-JSON or RO-Crate. Standard `pydantic` can validate it, but can't elegantly map or transform complex hierarchies in chunks. 
+Standard `pandas.json_normalize` chokes and dies on deeply hierarchical biological standards like ISA-JSON or RO-Crate. Standard `pydantic` can validate it, but can't elegantly map or transform complex hierarchies in chunks.
 
 If this rings true, Omnipy shouldn't be pitched as a general ETL tool. It should be pitched as the **heavy-duty hierarchical harmonizer** for complex bioinformatics standards.

@@ -29,12 +29,12 @@ engine—without fear of permanently corrupting the state.
 At its core, Omnipy focuses on what developers and bioinformaticians need
 today:
 
-* Fluid declarative conversions from nested API JSON directly to Pandas 
+* Fluid declarative conversions from nested API JSON directly to Pandas
   DataFrames.
-* First-class `Dataset` objects that handle batch-processing and 
-  hierarchical blueprints natively, removing the need for boilerplate 
+* First-class `Dataset` objects that handle batch-processing and
+  hierarchical blueprints natively, removing the need for boilerplate
   for-loops.
-* Scalable task execution seamlessly dispatched to local machines, Prefect, 
+* Scalable task execution seamlessly dispatched to local machines, Prefect,
   or Kubernetes clusters.
 
 **The Road Ahead: Building the Engine for Agentic Workflows**

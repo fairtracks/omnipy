@@ -145,4 +145,3 @@ Use `drafts/` only when needed, across any directory type.
 - Only create directories that are already canonical or explicitly requested.
 - Do not add new directories just because a document could fit multiple ways.
 - Except for `strategy/` and `concepts/`, do not create new category subdirectories unless instructed.
-

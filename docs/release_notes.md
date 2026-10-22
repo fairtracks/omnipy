@@ -22,24 +22,24 @@ Typing of models has been significantly strengthened by providing full,
 IDE‑friendly type information and auto-completion for models that mimic
 builtin types and even more complex nested structures.
 
-General structure and formatting of auto-generated documentation is 
+General structure and formatting of auto-generated documentation is
 significantly improved through configuration and new features, such as
 docstring‑macro expansion and dynamic method signature generation.
 
 The toolchain has been modernized by adopting `uv` for dependency management
-and `basedpyright` as the recommended static type checker. `pydantic` has 
+and `basedpyright` as the recommended static type checker. `pydantic` has
 been updated to v2 (code is still dependent on embedded v1 version).
 
 ### New features and changes in v0.23.0
 
 - **Display and pretty printing**
-  - A number of core `Model`/`Dataset` display method parameters now 
-    default to `AUTO`, and the methods now includes a dedicated 
+  - A number of core `Model`/`Dataset` display method parameters now
+    default to `AUTO`, and the methods now includes a dedicated
     auto‑resolution step for e.g. styles and syntax language, previously
     only resolved for global config values. This improves usability with
     manual override of global configs.
   - Added `DarkBackground` enum and `dark` configuration option.
-  - Improved automatic pretty‑printer and syntax‑language selection. 
+  - Improved automatic pretty‑printer and syntax‑language selection.
     Added default syntax languages for pretty printers. Now distinguishes
     better between plain text/code and strings as e.g. Python objects.
   - `debug=True` in display methods now automatically selects the default
@@ -56,7 +56,7 @@ been updated to v2 (code is still dependent on embedded v1 version).
   - Fixed bug to allow nested Datasets to set values using parameters of the
     `Dataset.__init__()` method as keys (e.g. 'self', 'value', 'data').
   - Implemented `JsonListOrDictModel` / `JsonListOrDictDataset` and updated
-    `AutoResponseContentModel` to use them instead of `JsonDataset`, to 
+    `AutoResponseContentModel` to use them instead of `JsonDataset`, to
     cleanly handle text responses as either plain text or serialized JSON,
     not as JSON strings.
   - Added `/` as new operator for `UrlPathModel`
@@ -65,8 +65,8 @@ been updated to v2 (code is still dependent on embedded v1 version).
   - Imported and converted Typeshed stubs into protocols that are used to
     type `Model` instances mimicking builtin classes. This allowed:
   - Full typing for models mimicking all relevant builtins, now including
-    `set`, `str`, `int`, `float`, etc. Also, full typing of component 
-    models such as table- and split/join-models. With `basedpyright` this 
+    `set`, `str`, `int`, `float`, etc. Also, full typing of component
+    models such as table- and split/join-models. With `basedpyright` this
     entails dramatically improved support for auto-completion.
 
 - **Documentation**
@@ -75,14 +75,14 @@ been updated to v2 (code is still dependent on embedded v1 version).
   - Harmonize docstrings for all Model and Dataset display methods with
     macros. Support both static and runtime docstring generation (e.g. both
     `pyright` and `help()`).
-  - Added script to generate dynamic signatures for specified methods 
+  - Added script to generate dynamic signatures for specified methods
     (used for now for display methods).
   - Improved mkdocs configuration, fixed recursion issues in documentation
     builds, and other documentation improvements.
 
 - **Performance and snapshots**
   - Misc speedup of `Model` snapshots, including allowing lazy snapshots for
-    more scenarios (`from_data()` into empty models, read‑only mimic 
+    more scenarios (`from_data()` into empty models, read‑only mimic
     operations).
 
 - **Dependencies, tooling, and other thing**
@@ -98,9 +98,9 @@ _Release date: Jan 8, 2026_
 
 ### New features and bugfixes in v0.22.1
 
-- Initial implementation of to() and do() methods for Models and Datasets, 
+- Initial implementation of to() and do() methods for Models and Datasets,
   including `placeholder` variables `x`, `m`, and `F`.
-- Fixed Dockerfile to install correct versions of Pyright, ipyvue, and 
+- Fixed Dockerfile to install correct versions of Pyright, ipyvue, and
   ipyvuetify.
 
 
@@ -120,10 +120,10 @@ complex nested data structures more intuitive.
 - **Nested Dataset support**
 
   Major architectural enhancement enabling nested datasets:
-  
+
   - `Dataset` objects can now contain other datasets as items, allowing for
-    arbitrarily nested dataset structures, implemented through the new 
-    `NestedDataset` class. `Union` types are also now allowed in `Dataset` 
+    arbitrarily nested dataset structures, implemented through the new
+    `NestedDataset` class. `Union` types are also now allowed in `Dataset`
     type specialization.
   - Implemented configurable limits for controlling display of deeply nested
     structures. Deep nested content automatically falls back to JSON display
@@ -131,14 +131,14 @@ complex nested data structures more intuitive.
   - Enhanced Dataset validation to properly handle iterables as input and
     prevent invalid iterators. Pydantic v1 workaround to prevent unwanted
     coercion of nested structures.
-  - `Model[Dataset]` objects now display as datasets for intuitive 
+  - `Model[Dataset]` objects now display as datasets for intuitive
     interaction
 
 
 - **Enhanced JSON parsing and display**
 
   Comprehensive improvements to JSON handling:
-  
+
   - `JsonModel` now parses all JSON types except JSON strings (e.g., `"hi"`)
   - Helper methods for parsing and serializing JSON outside of models
   - New `json()` display method in `ModelDisplayMixin`
@@ -150,21 +150,21 @@ complex nested data structures more intuitive.
 - **Table model architecture overhaul**
 
   Complete redesign of table models for better performance and flexibility:
-  
+
   - Split table models into `RowWise` and `ColumnWise` types with conversion
-    support, such as `RowWiseTableWithColNamesModel` and 
+    support, such as `RowWiseTableWithColNamesModel` and
     `ColumnWiseTableWithColNamesModel`.
   - Implemented `IteratingPydanticRecordModel` for optimized validation of
     column-wise and row-wise data (with a focus on the former). Will allow
     fast validation of e.g. Pandas DataFrames or Numpy/Bionumpy structured
     arrays in future releases. This feature was implemented on top
-    of feather-light row-wise iteration to 
+    of feather-light row-wise iteration to
     `ColumnWiseTableWithColNamesModel` through `IterRow`
-  - Support for simplified concatenation through addition operator for 
+  - Support for simplified concatenation through addition operator for
     column-wise tables (row-wise tables can already be concatenated this
     way).
   - Added `RowWiseTableModel` implementation
-  - Refactored `SplitLinesToColumnsByCommaModel` and 
+  - Refactored `SplitLinesToColumnsByCommaModel` and
     `JoinColumnsByCommaToLinesModel`, and added `SplitToItemsByTabModel`
     with associated parameters
   - First implementation of table displays!
@@ -173,13 +173,13 @@ complex nested data structures more intuitive.
 - **Comprehensive typing improvements**
 
   Major enhancements to type system and static analysis support:
-  
+
   - Introduced `IsList`, `IsDict`, and other protocols for builtin types
   - Replaced direct subclassing with protocols for mimic typing in `Model`
     and `Dataset`
   - Enhanced type hints in `Dataset` and `Model` classes with additional
     overloads
-  - Improved typing of `ChainX` models with support for `Dataset` and 
+  - Improved typing of `ChainX` models with support for `Dataset` and
     `Union` types
   - Simplified typing of `ColumnWiseTableWithColNamesModel` and other table
     models
@@ -194,7 +194,7 @@ complex nested data structures more intuitive.
 - **Model and Dataset enhancements**
 
   Various improvements to core data structures:
-  
+
   - `JsonScalarModel` is now a proper model subclass
   - Support for enums as values in Omnipy models
   - Expanded general sequence support in `Model` to handle any iterable
@@ -229,7 +229,7 @@ complex nested data structures more intuitive.
   - LiteralEnum checks now only run when in develop mode (editable install)
   - Workaround documented for `Chain2` with `Union` types
   - Updated mypy version
-  - Clean up of inheritance for `Config` classes and protocols with 
+  - Clean up of inheritance for `Config` classes and protocols with
     `IsConfigBase` intermediate
   - Updated IHEC and nobel notebooks
   - Various cleanups and removed unneeded tests. Skipped some tests that are
@@ -245,7 +245,7 @@ _Release date: Nov 3, 2025_
 - Updates to Dockerfile and related README to fix issues with JupyterHub
 - Fixed bug with `browse()` method for `Model` and `Dataset` when local
   cache folder is missing
-- Fixed issue showing style when random style is selected as keyword 
+- Fixed issue showing style when random style is selected as keyword
   argument
 
 
@@ -272,7 +272,7 @@ Docker integration for seamless Jupyter deployment.
 ### New features and changes in v0.21
 
 - **Complete output styling and pretty-printing system (brand new!)**
-  
+
   A comprehensive pretty-printing and layout system has been implemented
   from scratch, wrapping the [Rich](https://github.com/Textualize/rich)
   library while solving complex boundary and dimension challenges:
@@ -290,12 +290,12 @@ Docker integration for seamless Jupyter deployment.
     - New method `browse()` for Models and  Datasets shows the full output
       in new browser tabs for easy scrolling and exploration of large
       contents. Particularly useful for large Datasets.
-  
+
   - **Advanced panel system**: A complete panel system has been implemented
     supporting dynamic pretty-printing of Python objects, compact JSON,
     hexdumps, syntax-highlighted text, and nested layouts, making the most
     of available display space.
-  
+
   - **Intelligent layout and flow engine**: Built sophisticated layout
     optimization with automatic width distribution, proportional sizing,
     cropping (horizontal and vertical) with title and content ellipses.
@@ -303,39 +303,39 @@ Docker integration for seamless Jupyter deployment.
     adjustments to fit content while respecting constraints, while also
     handling edge cases like empty layouts, single panels, and complex
     nested structures.
-  
+
   - **Rich color and syntax highlighting**: Added over 300 color styles,
-    with automatic loading of Base16 themes from the 
-    [Tinted Theming project](https://github.com/tinted-theming), in 
-    addition to the styles from the 
+    with automatic loading of Base16 themes from the
+    [Tinted Theming project](https://github.com/tinted-theming), in
+    addition to the styles from the
     [Pygments library](https://pygments.org/styles/). Color styles support
-    transparent/solid background handling for both terminal and HTML 
-    outputs, and configurable fonts/CSS. Syntax highlighting based on 
+    transparent/solid background handling for both terminal and HTML
+    outputs, and configurable fonts/CSS. Syntax highlighting based on
     [hundreds of Pygments lexers](https://pygments.org/languages/).
     Output as ANSI terminal codes or HTML, with plain text, stylized text
     and colorized output variants.
-  
+
   - **Comprehensive User Interfaces support**: Added support for various UI
     contexts, including terminal ANSI output for the basic Python terminal
     interpreter, the IPython interpreter, the PyCharm console, Jupyter
     notebook and JupyterHub, and HTML export as web pages or embedded tags
     (e.g. for documentation). Autodetection of UI contexts.
-  
+
   - **Configuration system**: Comprehensive configuration of all aspects of
     output presentation, including color styles, fonts, panel and title
     styles, syntax language, background transparency, height and width
     limits, indentation, cropping behavior, and more. Configurable
     globally or per display call.
-  
-  - **Other features**: 
+
+  - **Other features**:
     - Support for variable character widths.
 
 
 - **Jupyter and UI integration**
-  
+
   Seamless integration with Jupyter environments through dynamic resizing
   and reactive components:
-  
+
   - Outputs in Jupyter are reactive, with automatically resizing and
     restyling based on e.g. window size, global config changes and
     selection of dark/light theme.
@@ -346,9 +346,9 @@ Docker integration for seamless Jupyter deployment.
 
 
 - **Performance and caching improvements**
-  
+
   Major performance enhancements through intelligent caching strategies:
-  
+
   - Import of omnipy is now significantly faster due to lazy loading of
     submodules
   - Bounded `lru_cache` for draft panel formatting to prevent unbounded
@@ -358,14 +358,14 @@ Docker integration for seamless Jupyter deployment.
 
 
 - **Dockerfile and container support**
-  
+
   Complete Docker setup for running Omnipy in JupyterLab.
 
 
 - **Documentation overhaul**
-  
+
   Extensive improvements to documentation:
-  
+
   - Added Omnipy logos and overview illustration
   - Complete README rewrite and reorganization into new 'Data models'
     section
@@ -377,7 +377,7 @@ Docker integration for seamless Jupyter deployment.
 
 
 - **Dataset and data loading enhancements**
-  
+
   - API change: `Dataset.load()` → `load_into()`; `Dataset.load()` is now a
     class method
   - Added `as_mime_type` parameter to loading functions
@@ -385,14 +385,14 @@ Docker integration for seamless Jupyter deployment.
 
 
 - **Tests and quality improvements**
-  
+
   - Extensive test coverage for panels, layout flow, cropping, HTML output,
     and color styles
   - Fixed previously non-running tests due to bugs
 
 
 - **Miscellaneous improvements**
-  
+
   - Python 3.13 compatibility
   - Cleanup: removed debug prints, fixed typos, improved docstrings, import
     sorting fixes, and typing fixes across multiple modules
@@ -450,7 +450,7 @@ code to support the basic features needed byOmnipy.
     documentation. This moves the reference documentation from the previous
     confused and unintelligible mess to a clear and understandable
     structure.
-  - As part of the reorganization, the previous `omnipy.modules` submodule 
+  - As part of the reorganization, the previous `omnipy.modules` submodule
     has been renamed to `omnipy.components`, and the `omnipy.api` submodule
     has been renamed to `omnipy.shared`.
   - Auto-generated documentation now supports including inherited members on

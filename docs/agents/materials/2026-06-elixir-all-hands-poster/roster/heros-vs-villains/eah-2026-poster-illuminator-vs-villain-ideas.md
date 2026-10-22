@@ -38,12 +38,12 @@ Here are a few variations for bringing "The Illuminator" (or a spiritual success
 *Focusing on the challenge of navigating deeply nested hierarchies like biological ontologies or ISA-JSON.*
 
 ### The Hero: The Cartographer (The Grand Visualizer)
-*   **Superpower:** Automatic hierarchical mapping and structural simplification. 
+*   **Superpower:** Automatic hierarchical mapping and structural simplification.
 *   **Backstory:** Equipped with the "Lens of Omnipy," an artifact that instantly calculates the depth and breadth of any dataset. The Cartographer projects a perfect, easy-to-read topological map (in the terminal or Jupyter) of even the most labyrinthine nested directories and arrays, allowing the rest of the Omnificents to strike with precision.
 *   **Catchphrase:** "I've mapped the payload. The anomaly is at depth 4, key 'metadata'!"
 
 ### The Villain: The Hierarch (The Nested Nightmare)
-*   **Superpower:** Folding data into maddening, infinitely deep dimensions. 
+*   **Superpower:** Folding data into maddening, infinitely deep dimensions.
 *   **Backstory:** A chaotic entity that believes flat data is boring. He maliciously nests dictionaries within arrays within dictionaries, burying vital biological identifiers 15 layers deep. Without a map, any researcher who tries to manually parse his payloads goes mad from writing `data['items'][0]['attributes']['metadata'][0]`.
 *   **Catchphrase:** "You want the 'geneId'? It's right here... 12 layers down!"
 
