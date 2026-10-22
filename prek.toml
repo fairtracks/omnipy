@@ -52,6 +52,18 @@ groups = ["commit"]
 repo = "https://github.com/pre-commit/pre-commit-hooks"
 rev = "v6.0.0"
 
+# Python files are handled by ruff format, notebooks are left exactly as written
+[[repos.hooks]]
+id = "trailing-whitespace"
+args = ["--markdown-linebreak-ext=md"]
+exclude_types = ["python", "jupyter"]
+groups = ["watch", "commit"]
+
+[[repos.hooks]]
+id = "end-of-file-fixer"
+exclude_types = ["python", "jupyter"]
+groups = ["watch", "commit"]
+
 [[repos.hooks]]
 id = "check-yaml"
 types = ["yaml"]
