@@ -170,10 +170,10 @@ def create_model_from_args(*args: object, model_cls: type[_ModelT]) -> _ModelT:
         A model instance of type ``model_cls``.
     """
     if len(args) == 0:
-        return model_cls()  # type: ignore[call-arg]
+        return model_cls()
     if len(args) == 1:
-        return model_cls(args[0])  # type: ignore[arg-type]
-    return model_cls(args)  # type: ignore[arg-type]
+        return model_cls(args[0])
+    return model_cls(args)
 
 
 @TaskTemplate()
@@ -187,7 +187,7 @@ def create_model_from_kwargs(*, model_cls: type[_ModelT], **data: object) -> _Mo
     Returns:
         A model instance of type ``model_cls``.
     """
-    return model_cls(**data)  # type: ignore[arg-type]
+    return model_cls(**data)
 
 
 def _extract_first_and_other_datasets(

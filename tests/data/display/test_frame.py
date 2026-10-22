@@ -148,19 +148,19 @@ def test_frame_types() -> None:
     any_frame_func(Frame(Dimensions(10, 20)))
 
     # Static type checkers SHOULD raise errors here
-    frame_with_widths_func(Frame(Dimensions(None, None)))  # type: ignore[arg-type]
-    frame_with_heights_func(Frame(Dimensions(None, None)))  # type: ignore[arg-type]
-    frame_with_width_and_height_func(Frame(Dimensions(None, None)))  # type: ignore[arg-type]
+    frame_with_widths_func(Frame(Dimensions(None, None)))  # pyright: ignore[reportArgumentType]
+    frame_with_heights_func(Frame(Dimensions(None, None)))  # pyright: ignore[reportArgumentType]
+    frame_with_width_and_height_func(Frame(Dimensions(None, None)))  # pyright: ignore[reportArgumentType]
 
-    undefined_frame_func(Frame(Dimensions(10, None)))  # type: ignore[arg-type]
-    frame_with_heights_func(Frame(Dimensions(10, None)))  # type: ignore[arg-type]
-    frame_with_width_and_height_func(Frame(Dimensions(10, None)))  # type: ignore[arg-type]
+    undefined_frame_func(Frame(Dimensions(10, None)))  # pyright: ignore[reportArgumentType]
+    frame_with_heights_func(Frame(Dimensions(10, None)))  # pyright: ignore[reportArgumentType]
+    frame_with_width_and_height_func(Frame(Dimensions(10, None)))  # pyright: ignore[reportArgumentType]
 
-    undefined_frame_func(Frame(Dimensions(None, 20)))  # type: ignore[arg-type]
-    frame_with_widths_func(Frame(Dimensions(None, 20)))  # type: ignore[arg-type]
-    frame_with_width_and_height_func(Frame(Dimensions(None, 20)))  # type: ignore[arg-type]
+    undefined_frame_func(Frame(Dimensions(None, 20)))  # pyright: ignore[reportArgumentType]
+    frame_with_widths_func(Frame(Dimensions(None, 20)))  # pyright: ignore[reportArgumentType]
+    frame_with_width_and_height_func(Frame(Dimensions(None, 20)))  # pyright: ignore[reportArgumentType]
 
-    undefined_frame_func(Frame(Dimensions(10, 20)))  # type: ignore[arg-type]
+    undefined_frame_func(Frame(Dimensions(10, 20)))  # pyright: ignore[reportArgumentType]
 
 
 def test_frame_hashable() -> None:
@@ -190,13 +190,13 @@ def test_fail_frame_no_assignments() -> None:
     frame = empty_frame()
 
     with pytest.raises(AttributeError):
-        frame.dims = Dimensions(10, 20)  # type: ignore[misc, arg-type]
+        frame.dims = Dimensions(10, 20)  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        frame.fixed_width = False  # type: ignore[misc]
+        frame.fixed_width = False  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        frame.fixed_height = False  # type: ignore[misc]
+        frame.fixed_height = False  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_fail_frame_if_extra_param() -> None:

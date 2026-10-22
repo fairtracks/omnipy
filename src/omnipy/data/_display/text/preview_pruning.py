@@ -179,7 +179,7 @@ def _set_probe_render_active() -> Any:
 
 def _is_sliceable(content: object) -> bool:
     try:
-        content[:0]  # type: ignore[operator]
+        content[:0]  # pyright: ignore[reportIndexIssue]
         return True
     except (TypeError, KeyError):
         return False
@@ -430,7 +430,7 @@ def _first_eligible_mapping_child_path(
         Tuple ``(child_path, must_fail_open)`` where ``must_fail_open`` is
         ``True`` when lookup or child metadata checks are unsafe.
     """
-    for idx, key in enumerate(content):  # type: ignore[operator]
+    for idx, key in enumerate(content):  # pyright: ignore[reportArgumentType]
         try:
             child = content[key]  # type: ignore[index]
         except Exception:
@@ -830,13 +830,13 @@ def _build_sequence_like_chunk_plan(content: object) -> _ChunkPlan | None:
     """
     try:
         total = len(content)  # type: ignore[arg-type]
-        content[:0]  # type: ignore[operator]
+        content[:0]  # pyright: ignore[reportIndexIssue]
     except (TypeError, KeyError):
         return None
 
     return _ChunkPlan(
         total_chunks=total,
-        prefix_builder=lambda n: content[:n],  # type: ignore[operator]
+        prefix_builder=lambda n: content[:n],  # pyright: ignore[reportIndexIssue]
         cache_discriminator=id(content),
     )
 

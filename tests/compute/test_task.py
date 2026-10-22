@@ -21,7 +21,7 @@ def test_init() -> None:
     assert_func_wrapper(task_template, format_to_string_func)
 
     with pytest.raises(TypeError):
-        TaskTemplate(format_to_string_func)(format_to_string_func)  # type: ignore[misc, arg-type]
+        TaskTemplate(format_to_string_func)(format_to_string_func)  # pyright: ignore[reportCallIssue]
 
     with pytest.raises(JobStateException):
         Task(format_to_string_func)

@@ -17,7 +17,7 @@ def test_constraints_init() -> None:
     assert constraints.max_inline_list_or_dict_width_excl == 36
 
     with pytest.raises(TypeError):
-        Constraints(40)  # type: ignore[misc]
+        Constraints(40)  # pyright: ignore[reportCallIssue]
 
     with pytest.raises(TypeError):
         Constraints(max_inline_container_width_incl=40, extra=123)  # type: ignore[call-arg]
@@ -31,10 +31,10 @@ def test_fail_constraints_it_invalid_params() -> None:
         Constraints(max_inline_list_or_dict_width_excl=-1)
 
     with pytest.raises(ValueError):
-        Constraints(max_inline_container_width_incl='None')  # type: ignore[arg-type]
+        Constraints(max_inline_container_width_incl='None')  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        Constraints(max_inline_list_or_dict_width_excl='None')  # type: ignore[arg-type]
+        Constraints(max_inline_list_or_dict_width_excl='None')  # pyright: ignore[reportArgumentType]
 
 
 def test_constraints_hashable() -> None:
@@ -58,10 +58,10 @@ def test_fail_constraints_no_assignments() -> None:
     constraints = Constraints()
 
     with pytest.raises(AttributeError):
-        constraints.max_inline_container_width_incl = 50  # type: ignore[misc]
+        constraints.max_inline_container_width_incl = 50  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        constraints.max_inline_list_or_dict_width_excl = 50  # type: ignore[misc]
+        constraints.max_inline_list_or_dict_width_excl = 50  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_constraints_satisfaction() -> None:

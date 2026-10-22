@@ -199,7 +199,7 @@ def test_mimic_setattr_converts_dataset_and_model_values_before_validation(
     case: ModelValueAssignmentSpec,
 ) -> None:
     holder_model = case.setattr_target_factory()
-    holder_model.value = case.value_factory()  # type: ignore[assignment]
+    holder_model.value = case.value_factory()
 
     assert holder_model.to_data() == {'value': case.expected_value}
 
@@ -2303,14 +2303,14 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_v
     @mimics(SimplePydanticModelWitWrappedField)
     class ModelOfSimplePydanticModel(Model[simple_pydantic_model_cls]): ...
 
-    model = ModelOfSimplePydanticModel(simple_pydantic_model_cls(value=[123]))  # type: ignore[arg-type]
+    model = ModelOfSimplePydanticModel(simple_pydantic_model_cls(value=[123]))
     _assert_no_snapshot(model)
     _assert_no_snapshot(model.content.value)
 
     # Just accessing a field of a pydantic model through __getattr__ is enough to trigger a snapshot
     # of the parent
     res_model = model.value
-    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])
 
     _assert_no_snapshot(res_model)
     assert res_model.content == [123]
@@ -2327,7 +2327,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     @mimics(SimplePydanticModelWitWrappedField)
     class ModelOfSimplePydanticModel(Model[simple_pydantic_model_cls]): ...
 
-    model = ModelOfSimplePydanticModel(simple_pydantic_model_cls(value=[123]))  # type: ignore[arg-type]
+    model = ModelOfSimplePydanticModel(simple_pydantic_model_cls(value=[123]))
     _assert_no_snapshot(model)
 
     # Trying to set the value of a field of a pydantic model also triggers
@@ -2337,7 +2337,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     with pytest.raises(ValidationError):
         model.value = ['abc']
 
-    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])
 
     # The value of the field of the pydantic model is not changed, so no
     # snapshot is triggered for the child model.
@@ -2352,7 +2352,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     # parent due to the field access)
     with pytest.raises(ValidationError):
         model.value[0] = 'abc'
-    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])
     assert model.content.value.snapshot == model.content.value.content == [123]
 
     # Here the value of the field of the pydantic model is set to a new
@@ -2360,7 +2360,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     # model to replace the old. The new model does not have a snapshot by
     # default
     model.value = [234]
-    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[234])
     assert model.content.value.content == [234]
     _assert_no_snapshot(model.content.value)
 
@@ -2370,7 +2370,7 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     # incorrect state of the child model
     with pytest.raises(ValidationError):
         model.value.append('abc')
-    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[234])
     assert model.content.value.snapshot == model.content.value.content == [234]
 
     # Calling a method on the child model in the field of the pydantic
@@ -2385,14 +2385,14 @@ def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_changing_
     # taken (yet) for the parent model.
 
     model.value.append(345)
-    assert model.content == simple_pydantic_model_cls(value=[234, 345])  # type: ignore[arg-type]
-    assert model.snapshot == simple_pydantic_model_cls(value=[234])  # type: ignore[arg-type]
+    assert model.content == simple_pydantic_model_cls(value=[234, 345])
+    assert model.snapshot == simple_pydantic_model_cls(value=[234])
 
     assert model.content.value.snapshot == model.content.value.content == [234, 345]
 
     # Validating the parent model triggers snapshots for the parent, but not the child model.
     model.validate_content()
-    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[234, 345])  # type: ignore[arg-type]
+    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[234, 345])
     assert model.content.value.content == [234, 345]
     _assert_no_snapshot(model.content.value)
 
@@ -2642,15 +2642,15 @@ def test_mimic_simple_dict_operations(
         assert 'def' in model
         del model['def']
 
-    assert 'cde' in model  # type: ignore[operator]
-    assert 'def' not in model  # type: ignore[operator]
+    assert 'cde' in model
+    assert 'def' not in model
 
     assert len(model) == 3
     assert_model(model, dict[str, int], {'abc': 321, 'bcd': 234, 'cde': 345})
     assert_model_if_dyn_conv_else_val(model['abc'], int, 321)  # type: ignore[index]
 
     model.update({'def': 456, 'efg': 567})
-    assert 'def' in model  # type: ignore[operator]
+    assert 'def' in model
     assert_model_if_dyn_conv_else_val(model['def'], int, 456)  # type: ignore[index]
 
     model |= {'efg': 765, 'ghi': 678}  # type: ignore[operator]
@@ -2736,29 +2736,29 @@ def test_mimic_simple_list_operator_with_auto_convert(
     # model.__getitem__, model[0].__sub__,  model[0].__rsub__
     #
 
-    ret = model[0] - Model[int]('42')  # type: ignore[operator]
+    ret = model[0] - Model[int]('42')
     assert_model(ret, int, 0)
 
     if runtime.config.data.model.dynamically_convert_elements_to_models:
         # model[0] is dynamically converted to a Model[int] instance
-        ret = model[0] - '42'  # type: ignore[operator]
+        ret = model[0] - '42'
         assert_model(ret, int, 0)
 
-        ret = '42' - model[0]  # type: ignore[operator]
+        ret = '42' - model[0]
         assert_model(ret, int, 0)
     else:
         # model[0] is just an int
         with pytest.raises(TypeError):
-            model[0] - '42'  # type: ignore[operator]
+            model[0] - '42'
 
         with pytest.raises(TypeError):
-            '42' - model[0]  # type: ignore[operator]
+            '42' - model[0]
 
     with pytest.raises(TypeError):
-        model[0] - 'abc'  # type: ignore[operator]
+        model[0] - 'abc'
 
     with pytest.raises(TypeError):
-        'abc' - model[0]  # type: ignore[operator]
+        'abc' - model[0]
 
     #
     # model.__add__,  model.__radd__
@@ -2774,10 +2774,10 @@ def test_mimic_simple_list_operator_with_auto_convert(
     assert_model(ret, list[int], [42, 42, 42, 42])
 
     with pytest.raises(TypeError):
-        model + 'abc'  # type: ignore[operator]
+        model + 'abc'
 
     with pytest.raises(TypeError):
-        'abc' + model  # type: ignore[operator]
+        'abc' + model
 
 
 def test_mimic_inplace_operator_returns_self() -> None:
@@ -3246,7 +3246,7 @@ def test_mimic_add_concat_all_less_than_five_model_add_variants(
 
         assert hasattr(less_than_five_model, '__add__')
 
-        res = less_than_five_model + ('three' if other_type_in else 3)  # type: ignore[operator]
+        res = less_than_five_model + ('three' if other_type_in else 3)  # pyright: ignore[reportOperatorIssue]
         if other_type_out:
             assert res == 'four'
         else:
@@ -4452,7 +4452,7 @@ def test_model_of_nested_pydantic_models(
         invalid_child_model = child_model_cls(data)
         # We set the value to a str directly in the content to set up the test.
         # Otherwise, assigning to the "value" attribute triggers validation
-        invalid_child_model.content.value = '2.22'  # type: ignore[assignment]
+        invalid_child_model.content.value = '2.22'  # pyright: ignore[reportAttributeAccessIssue]
     else:
         invalid_child_model = child_model_cls(**data)
         # Since the pydantic model is not configured to validate on assignment.
@@ -4748,12 +4748,12 @@ def test_nested_model() -> None:
     assert model_1.to_data() == product_factors
 
     unloaded_data = model_1.to_data()
-    unloaded_data[10] = [-2, -5]  # type: ignore[index]
+    unloaded_data[10] = [-2, -5]
 
     with pytest.raises(ValidationError):
         model_1.from_data(unloaded_data)
 
-    unloaded_data[10] = [2, 5]  # type: ignore[index]
+    unloaded_data[10] = [2, 5]
     model_1.from_data(unloaded_data)
     assert model_1.to_data() == unloaded_data
 
@@ -4768,7 +4768,7 @@ def test_nested_model() -> None:
         '"7": [7], "8": [2, 2, 2], "9": [3, 3], "10": [2, 5]}'
     )
     assert sorted(model_2.to_data()) == sorted(
-        {  # type: ignore[call-overload]
+        {
             2: [2],
             3: [3],
             4: [2, 2],
@@ -4832,12 +4832,12 @@ def test_complex_nested_models() -> None:
     assert model.to_data() == product_factors_as_tuples
 
     unloaded_data = model.to_data()
-    unloaded_data.append((10, [3, 5]))  # type: ignore[attr-defined]
+    unloaded_data.append((10, [3, 5]))
 
     with pytest.raises(ValidationError):
         model.from_data(unloaded_data)
 
-    unloaded_data[-1] = (10, [2, 5])  # type: ignore[index]
+    unloaded_data[-1] = (10, [2, 5])
     model.from_data(unloaded_data)
 
     assert model.to_data() == unloaded_data

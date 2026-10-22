@@ -508,7 +508,7 @@ def test_set_items_with_immutable_sequence_data() -> None:
     dataset = Dataset[Model[str]](data_file_1='abc', data_file_2='def', data_file_3='ghi')
 
     with pytest.raises(TypeError):
-        dataset[0:1] = 'jkl'  # type: ignore[assignment]
+        dataset[0:1] = 'jkl'
 
     assert len(dataset) == 3
 
@@ -1224,7 +1224,7 @@ def test_generic_dataset_bound_typevar():
 
     # Note that the following override of the TypeVar binding will work in runtime, but mypy will
     # produce an error
-    assert MyListOfIntsOrStringsDataset[list]().to_data() == {}  # type: ignore
+    assert MyListOfIntsOrStringsDataset[list]().to_data() == {}  # pyright: ignore[reportInvalidTypeArguments]
 
 
 def test_generic_dataset_two_typevars():

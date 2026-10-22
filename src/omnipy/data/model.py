@@ -301,7 +301,7 @@ class Model(  # type: ignore[misc]
         if origin_type is ForwardRef or type(origin_type) is ForwardRef:
             raise TypeError(f'Cannot instantiate model "{model}". ')
 
-        return cast(_RootT, origin_type())  # type: ignore[misc]
+        return cast(_RootT, origin_type())  # pyright: ignore[reportCallIssue]
 
     @classmethod
     def _prepare_cls_members_to_mimic_model(  # noqa: C901
@@ -1023,12 +1023,12 @@ class Model(  # type: ignore[misc]
                         validation.
                 """
                 prev_iter = value.__class__.__iter__
-                value.__class__.__iter__ = pyd.GenericModel.__iter__  # type: ignore[method-assign]
+                value.__class__.__iter__ = pyd.GenericModel.__iter__
 
                 try:
                     yield
                 finally:
-                    value.__class__.__iter__ = prev_iter  # type: ignore[method-assign]
+                    value.__class__.__iter__ = prev_iter
 
             with temporary_set_value_iter_to_pydantic_method():
                 return super().validate(value)

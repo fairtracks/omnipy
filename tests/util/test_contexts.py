@@ -219,7 +219,7 @@ def test_print_exception(capsys: pytest.CaptureFixture) -> None:
             - And here are the nitty gritty details...""")
         )
 
-    captured = capsys.readouterr()  # type: ignore
+    captured = capsys.readouterr()
     assert captured.out == 'NotImplementedError: Multi-line error!'
 
 

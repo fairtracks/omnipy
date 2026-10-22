@@ -112,7 +112,7 @@ def test_fail_task_template_decorator_with_func_argument() -> None:
         def myfunc(a: Callable) -> Callable:
             return a
 
-        @TaskTemplate(myfunc)  # type: ignore[misc, arg-type]
+        @TaskTemplate(myfunc)  # pyright: ignore[reportCallIssue]
         def plus_one(number: int) -> int:
             return number + 1
 
@@ -132,6 +132,6 @@ def test_fail_func_flow_template_decorator_with_func_argument(
         def myfunc(a: Callable) -> Callable:
             return a
 
-        @FuncFlowTemplate(myfunc)  # type: ignore[misc, arg-type]
+        @FuncFlowTemplate(myfunc)  # pyright: ignore[reportCallIssue]
         def plus_one(number: int) -> int:
             return plus_one_template(number)

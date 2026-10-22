@@ -106,7 +106,7 @@ def test_iterate_over_data_files() -> None:
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
     assert single_data_file_plus_str_template.run(dataset, number=2) == Dataset[Model[str]](
-        {  # type: ignore[arg-type]
+        {
             'a': '7',
             'b': '0',
         }
@@ -124,7 +124,7 @@ def test_iterate_over_data_files_output_dataset_cls() -> None:
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
     assert single_data_file_plus_str_template.run(dataset, number=2) == CustomStrDataset(
-        {  # type: ignore[arg-type]
+        {
             'a': '7',
             'b': '0',
         }
@@ -143,7 +143,7 @@ def test_iterate_over_data_files_param() -> None:
     )
 
     dataset = Dataset[Model[int]]({'a': 5, 'b': -2})
-    result = single_data_file_plus_str_template.run(data_numbers=dataset)  # type: ignore[call-arg]
+    result = single_data_file_plus_str_template.run(data_numbers=dataset)  # pyright: ignore[reportCallIssue]
     assert result == Dataset[Model[str]]({'a': '7', 'b': '0'})
 
 
@@ -287,7 +287,7 @@ def test_dense_async_task_mixin_stack_with_iterate_auto_async_and_result_key() -
     wrapped_result = async_dense_transform.run(
         dataset,
         step=1,  # type: ignore[call-arg]
-        output_dataset=output_dataset,  # type: ignore[call-arg]
+        output_dataset=output_dataset,  # pyright: ignore[reportCallIssue]
     )
 
     assert isinstance(wrapped_result, dict)

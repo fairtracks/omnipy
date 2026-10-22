@@ -283,7 +283,7 @@ def test_join_lines_model(last_hamlet_lines_stripped: Annotated[list[str], pytes
     assert joined_lines.content == dedent("""\
         abhorred in my imagination it is! my gorge rises at
         it. Here hung those lips that I have kissed I know""")
-    assert joined_lines[: joined_lines.index(' ')].content == 'abhorred'  # type: ignore
+    assert joined_lines[: joined_lines.index(' ')].content == 'abhorred'
 
 
 @pytest.mark.usefixtures('mock_linesep_variants')
@@ -356,7 +356,7 @@ def test_split_to_items_model(
     items_stripped_comma = SplitToItemsModel(first_text_with_comma_as_model_or_plain)
 
     assert items_stripped_comma.content == ['abc', 'def', 'ghi', 'jkl']
-    assert_model_if_dyn_conv_else_val(items_stripped_comma[1], str, 'def')  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(items_stripped_comma[1], str, 'def')
     assert items_stripped_comma[-2:].content == ['ghi', 'jkl']
 
 
@@ -369,8 +369,8 @@ def test_split_to_items_no_strip_model(
     items_unstripped_tab = SplitToItemsNoStripModel(first_text_with_comma_as_model_or_plain)
 
     assert items_unstripped_tab.content == ['abc', ' def ', 'ghi', 'jkl']
-    assert_model_if_dyn_conv_else_val(items_unstripped_tab[1], str, ' def ')  # type: ignore[index]
-    assert items_unstripped_tab[-2:].content == ['ghi', 'jkl']  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(items_unstripped_tab[1], str, ' def ')
+    assert items_unstripped_tab[-2:].content == ['ghi', 'jkl']
 
 
 def test_split_to_items_by_space_and_tab_model(
@@ -387,15 +387,15 @@ def test_split_to_items_by_space_and_tab_model(
     items_stripped_tab = SplitToItemsByTabModel(data_tab)
     assert items_stripped_tab.content == ['abc', 'def', 'ghi', 'jkl']
 
-    assert_model_if_dyn_conv_else_val(items_stripped_tab[1], str, 'def')  # type: ignore[index]
-    assert items_stripped_tab[-2:].content == ['ghi', 'jkl']  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(items_stripped_tab[1], str, 'def')
+    assert items_stripped_tab[-2:].content == ['ghi', 'jkl']
 
 
 def test_join_items_model(first_item_list: Annotated[list[str], pytest.fixture]) -> None:
-    comma_joined_items = JoinItemsModel(first_item_list)  # type: ignore[index]
+    comma_joined_items = JoinItemsModel(first_item_list)
 
     assert comma_joined_items.content == 'abc,def,ghi,jkl'
-    assert comma_joined_items[1:-1].content == 'bc,def,ghi,jk'  # type: ignore[index]
+    assert comma_joined_items[1:-1].content == 'bc,def,ghi,jk'
 
 
 def test_join_items_by_comma_space_model(
@@ -403,9 +403,9 @@ def test_join_items_by_comma_space_model(
 ) -> None:
     JoinItemsByCommaSpaceModel = JoinItemsModel.adjust('JoinItemsByCommaSpaceModel', delimiter=', ')
 
-    comma_space_joined_items = JoinItemsByCommaSpaceModel(first_item_list)  # type: ignore[index]
+    comma_space_joined_items = JoinItemsByCommaSpaceModel(first_item_list)
     assert comma_space_joined_items.content == 'abc, def, ghi, jkl'
-    assert comma_space_joined_items[1:-1].content == 'bc, def, ghi, jk'  # type: ignore[index]
+    assert comma_space_joined_items[1:-1].content == 'bc, def, ghi, jk'
 
 
 def test_split_lines_to_columns_model(
@@ -415,15 +415,15 @@ def test_split_lines_to_columns_model(
     cols_stripped_tab = SplitLinesToColumnsModel(forward_list_of_texts_with_tabs)
 
     assert_model_if_dyn_conv_else_val(
-        cols_stripped_tab[0],  # type: ignore[index]
+        cols_stripped_tab[0],
         list[str],
         ['abc', 'def', 'ghi', 'jkl'],
     )
-    assert_model_if_dyn_conv_else_val(cols_stripped_tab[0][1], str, 'def')  # type: ignore[index]
-    assert cols_stripped_tab[1:2].content == [  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(cols_stripped_tab[0][1], str, 'def')
+    assert cols_stripped_tab[1:2].content == [  # pyright: ignore[reportAttributeAccessIssue]
         ['mno', 'pqr', 'stu', 'vwx']
     ]
-    assert cols_stripped_tab[1:].to_data() == [  # type: ignore[index]
+    assert cols_stripped_tab[1:].to_data() == [  # pyright: ignore[reportAttributeAccessIssue]
         ['mno', 'pqr', 'stu', 'vwx'],
         ['yz'],
     ]
@@ -440,19 +440,19 @@ def test_split_lines_to_columns_no_strip_model(
     cols_unstripped_tab = SplitLinesToColumnsNoStripModel(forward_list_of_texts_with_tabs)
 
     assert_model_if_dyn_conv_else_val(
-        cols_unstripped_tab[0],  # type: ignore[index]
+        cols_unstripped_tab[0],
         list[str],
         ['abc', ' def ', 'ghi', ' jkl'],
     )
     assert_model_if_dyn_conv_else_val(
-        cols_unstripped_tab[0][1],  # type: ignore[index]
+        cols_unstripped_tab[0][1],
         str,
         ' def ',
     )
-    assert cols_unstripped_tab[1:2].content == [  # type: ignore[index]
+    assert cols_unstripped_tab[1:2].content == [  # pyright: ignore[reportAttributeAccessIssue]
         ['mno', ' pqr', 'stu', ' vwx']
     ]
-    assert cols_unstripped_tab[1:].to_data() == [  # type: ignore[index]
+    assert cols_unstripped_tab[1:].to_data() == [  # pyright: ignore[reportAttributeAccessIssue]
         ['mno', ' pqr', 'stu', ' vwx'],
         ['yz'],
     ]
@@ -465,19 +465,19 @@ def test_split_lines_to_columns_by_comma_model(
     cols_stripped_comma = SplitLinesToColumnsByCommaModel(forward_list_of_texts_with_comma)
 
     assert_model_if_dyn_conv_else_val(
-        cols_stripped_comma[0],  # type: ignore[index]
+        cols_stripped_comma[0],
         list[str],
         ['abc', 'def', 'ghi', 'jkl'],
     )
     assert_model_if_dyn_conv_else_val(
-        cols_stripped_comma[0][1],  # type: ignore[index]
+        cols_stripped_comma[0][1],
         str,
         'def',
     )
-    assert cols_stripped_comma[1:2].content == [  # type: ignore[index]
+    assert cols_stripped_comma[1:2].content == [  # pyright: ignore[reportAttributeAccessIssue]
         ['mno', 'pqr', 'stu', 'vwx']
     ]
-    assert cols_stripped_comma[1:].to_data() == [  # type: ignore[index]
+    assert cols_stripped_comma[1:].to_data() == [  # pyright: ignore[reportAttributeAccessIssue]
         ['mno', 'pqr', 'stu', 'vwx'],
         ['yz'],
     ]
@@ -486,10 +486,10 @@ def test_split_lines_to_columns_by_comma_model(
 def test_join_columns_to_lines_model(
     forward_list_of_lists_of_items: Annotated[list[list[str]], pytest.fixture],
 ) -> None:
-    joined_cols = JoinColumnsToLinesModel(forward_list_of_lists_of_items)  # type: ignore[index]
+    joined_cols = JoinColumnsToLinesModel(forward_list_of_lists_of_items)
 
     assert joined_cols.content == ['mno\tpqr\tstu\tvwx', 'yz']
-    assert joined_cols[1:].content == ['yz']  # type: ignore[index]
+    assert joined_cols[1:].content == ['yz']
     assert joined_cols.to_data() == ['mno\tpqr\tstu\tvwx', 'yz']
 
 
@@ -499,7 +499,7 @@ def test_join_columns_to_lines_by_comma_models(
     joined_cols_by_comma = JoinColumnsByCommaToLinesModel(forward_list_of_lists_of_items)
 
     assert joined_cols_by_comma.content == ['mno,pqr,stu,vwx', 'yz']
-    assert joined_cols_by_comma[1:].content == ['yz']  # type: ignore[index]
+    assert joined_cols_by_comma[1:].content == ['yz']
     assert joined_cols_by_comma.to_data() == ['mno,pqr,stu,vwx', 'yz']
 
 
@@ -513,7 +513,7 @@ def test_join_columns_to_lines_by_comma_space_models(
     joined_cols_by_comma_space = JoinColumnsByCommaSpaceToLinesModel(forward_list_of_lists_of_items)
 
     assert joined_cols_by_comma_space.content == ['mno, pqr, stu, vwx', 'yz']
-    assert joined_cols_by_comma_space[1:].content == ['yz']  # type: ignore[index]
+    assert joined_cols_by_comma_space[1:].content == ['yz']
     assert joined_cols_by_comma_space.to_data() == ['mno, pqr, stu, vwx', 'yz']
 
 

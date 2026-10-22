@@ -164,19 +164,19 @@ def test_fail_reflowed_text_draft_panel_no_assignments() -> None:
     reflowed_text_panel = ReflowedTextDraftPanel('Some text')
 
     with pytest.raises(AttributeError):
-        reflowed_text_panel.content = 'Some other text'  # type: ignore[misc]
+        reflowed_text_panel.content = 'Some other text'  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        reflowed_text_panel.title = 'My panel'  # type: ignore[misc]
+        reflowed_text_panel.title = 'My panel'  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        reflowed_text_panel.frame = empty_frame()  # type: ignore[misc]
+        reflowed_text_panel.frame = empty_frame()  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        reflowed_text_panel.constraints = Constraints()  # type: ignore[misc]
+        reflowed_text_panel.constraints = Constraints()  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        reflowed_text_panel.config = OutputConfig()  # type: ignore[misc]
+        reflowed_text_panel.config = OutputConfig()  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @pc.parametrize_with_cases(

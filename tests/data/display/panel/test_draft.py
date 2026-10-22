@@ -102,21 +102,21 @@ def test_fail_draft_panel_no_assignments() -> None:
     draft_panel = DraftPanel('Some text')
 
     with pytest.raises(AttributeError):
-        draft_panel.content = [1, 2, 3]  # type: ignore[misc, assignment]
+        draft_panel.content = [1, 2, 3]  # type: ignore[assignment]  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        draft_panel.title = 'Some title'  # type: ignore[misc]
+        draft_panel.title = 'Some title'  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        draft_panel.frame = Frame(Dimensions(10, 20))  # type: ignore[misc]
+        draft_panel.frame = Frame(Dimensions(10, 20))  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        draft_panel.constraints = Constraints(  # type: ignore[misc]
+        draft_panel.constraints = Constraints(  # pyright: ignore[reportAttributeAccessIssue]
             max_inline_container_width_incl=10
         )
 
     with pytest.raises(AttributeError):
-        draft_panel.config = OutputConfig(indent=4)  # type: ignore[misc]
+        draft_panel.config = OutputConfig(indent=4)  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_draft_panel_constraints_satisfaction() -> None:

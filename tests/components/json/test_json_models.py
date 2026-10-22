@@ -168,7 +168,7 @@ def test_error_dict_with_empty_list_known_issue():
 
     with pytest.raises(ValidationError):
         # Setting an integer value of a nested dict to [] fails validation as expected
-        dict_of_scalars_model['a'] = []  # type: ignore[assignment]
+        dict_of_scalars_model['a'] = []  # pyright: ignore[reportArgumentType]
 
     dict_of_dicts_model = JsonDictOfDictsModel({'a': {'x': 123}})
 
@@ -192,7 +192,7 @@ def test_json_model_operations(
     assert_model_if_dyn_conv_else_val(a[0], int, 1)
 
     b = JsonModel([1, 2, 3])
-    assert_model_if_dyn_conv_else_val(b[0], int, 1)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(b[0], int, 1)
 
     c = JsonDictModel({'a': 1, 'b': 2, 'c': 3})
     assert_model_if_dyn_conv_else_val(c['c'], int, 3)
@@ -203,15 +203,15 @@ def test_json_model_operations(
     assert_model_if_dyn_conv_else_val(c['d'], int, 5)
 
     d = JsonModel({'a': 1, 'b': 2, 'c': 3})
-    assert_model_if_dyn_conv_else_val(d['c'], int, 3)  # type: ignore[index]
+    assert_model_if_dyn_conv_else_val(d['c'], int, 3)
 
-    d |= JsonModel({'b': 4, 'd': 5})  # type: ignore[operator]
+    d |= JsonModel({'b': 4, 'd': 5})
     assert_model_if_dyn_conv_else_val(c['b'], int, 4)
     assert_model_if_dyn_conv_else_val(c['c'], int, 3)
     assert_model_if_dyn_conv_else_val(c['d'], int, 5)
 
     e = JsonScalarModel(1)
-    assert (e + 1).content == 2  # type: ignore[attr-defined, operator]
+    assert (e + 1).content == 2
 
 
 # Note: Since parsing JSON strings is potentially ambiguous (a string can

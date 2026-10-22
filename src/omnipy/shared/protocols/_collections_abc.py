@@ -105,7 +105,7 @@ class IsDictKeys(IsKeysView[_KT_co], Protocol[_KT_co, _VT_co]):  # type: ignore[
 
 # @final
 # class dict_values(ValuesView[_VT_co], Generic[_KT_co, _VT_co]):  # undocumented
-class IsDictValues(IsValuesView[_VT_co], Protocol[_KT_co, _VT_co]):  # type: ignore[misc]
+class IsDictValues(IsValuesView[_VT_co], Protocol[_KT_co, _VT_co]):
     def __reversed__(self) -> Iterator[_VT_co]: raise AssumedToBeImplementedException
 
     @property

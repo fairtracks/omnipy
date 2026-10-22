@@ -82,13 +82,13 @@ def test_output_config() -> None:
     assert config.justify is Justify.RIGHT
 
     config = OutputConfig(
-        tab='2',  # type: ignore[arg-type]
-        indent='4',  # type: ignore[arg-type]
+        tab='2',  # pyright: ignore[reportArgumentType]
+        indent='4',  # pyright: ignore[reportArgumentType]
         printer='rich',
         # Any syntax language string supported by the pygments library should be accepted
         syntax='c++',
-        freedom='3',  # type: ignore[arg-type]
-        debug='yes',  # type: ignore[arg-type]
+        freedom='3',  # pyright: ignore[reportArgumentType]
+        debug='yes',  # pyright: ignore[reportArgumentType]
         ui='terminal',
         system='256',
         # Any color style string supported by the pygments library should be accepted
@@ -96,20 +96,20 @@ def test_output_config() -> None:
         #       thus excluded from the list of valid color styles in Omnipy, but it is still a valid
         #       color style in the Pygments library.
         style='lilypond',
-        dark=1,  # type: ignore[arg-type]
-        bg=1,  # type: ignore[arg-type]
-        fonts=[],  # type: ignore[arg-type]
-        font_size='16',  # type: ignore[arg-type]
-        font_weight='400',  # type: ignore[arg-type]
-        line_height='1',  # type: ignore[arg-type]
+        dark=1,  # pyright: ignore[reportArgumentType]
+        bg=1,  # pyright: ignore[reportArgumentType]
+        fonts=[],  # pyright: ignore[reportArgumentType]
+        font_size='16',  # pyright: ignore[reportArgumentType]
+        font_weight='400',  # pyright: ignore[reportArgumentType]
+        line_height='1',  # pyright: ignore[reportArgumentType]
         h_overflow='ellipsis',
         v_overflow='crop_bottom',
         panel='table',
-        title_at_top=0,  # type: ignore[arg-type]
+        title_at_top=0,  # pyright: ignore[reportArgumentType]
         max_title_height=1,
-        min_panel_width='5',  # type: ignore[arg-type]
-        min_crop_width='20',  # type: ignore[arg-type]
-        use_min_crop_width=1,  # type: ignore[arg-type]
+        min_panel_width='5',  # pyright: ignore[reportArgumentType]
+        min_crop_width='20',  # pyright: ignore[reportArgumentType]
+        use_min_crop_width=1,  # pyright: ignore[reportArgumentType]
         max_panels_hor=None,
         max_nesting_depth=None,
         justify='right',
@@ -203,82 +203,82 @@ def test_fail_output_config_no_assignments() -> None:
     config = OutputConfig()
 
     with pytest.raises(AttributeError):
-        config.tab = 3  # type: ignore[misc]
+        config.tab = 3  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.indent = 3  # type: ignore[misc]
+        config.indent = 3  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.printer = PrettyPrinterLib.DEVTOOLS  # type: ignore[misc]
+        config.printer = PrettyPrinterLib.DEVTOOLS  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.syntax = SyntaxLanguageSpec.XML  # type: ignore[misc]
+        config.syntax = SyntaxLanguageSpec.XML  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.freedom = 3.0  # type: ignore[misc]
+        config.freedom = 3.0  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.debug = False  # type: ignore[misc]
+        config.debug = False  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.ui = UserInterfaceType.JUPYTER  # type: ignore[misc]
+        config.ui = UserInterfaceType.JUPYTER  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.system = DisplayColorSystem.WINDOWS_LEGACY  # type: ignore[misc]
+        config.system = DisplayColorSystem.WINDOWS_LEGACY  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.style = DarkLowContrastColorStyles.GRUVBOX_DARK_PYGMENTS  # type: ignore[misc]
+        config.style = DarkLowContrastColorStyles.GRUVBOX_DARK_PYGMENTS  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.dark = True  # type: ignore[misc]
+        config.dark = True  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.bg = True  # type: ignore[misc]
+        config.bg = True  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.fonts = ('Menlo', 'monospace')  # type: ignore[misc]
+        config.fonts = ('Menlo', 'monospace')  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.font_size = 18  # type: ignore[misc]
+        config.font_size = 18  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.font_weight = 500  # type: ignore[misc]
+        config.font_weight = 500  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.line_height = 1.5  # type: ignore[misc]
+        config.line_height = 1.5  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.h_overflow = HorizontalOverflowMode.ELLIPSIS  # type: ignore[misc]
+        config.h_overflow = HorizontalOverflowMode.ELLIPSIS  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.v_overflow = VerticalOverflowMode.CROP_TOP  # type: ignore[misc]
+        config.v_overflow = VerticalOverflowMode.CROP_TOP  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.panel = PanelDesign.PANELS  # type: ignore[misc]
+        config.panel = PanelDesign.PANELS  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.title_at_top = False  # type: ignore[misc]
+        config.title_at_top = False  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.min_panel_width = 5  # type: ignore[misc]
+        config.min_panel_width = 5  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.max_title_height = MaxTitleHeight.ONE  # type: ignore[misc]
+        config.max_title_height = MaxTitleHeight.ONE  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.min_crop_width = 20  # type: ignore[misc]
+        config.min_crop_width = 20  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.use_min_crop_width = True  # type: ignore[misc]
+        config.use_min_crop_width = True  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.max_panels_hor = 15  # type: ignore[misc]
+        config.max_panels_hor = 15  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.max_nesting_depth = 5  # type: ignore[misc]
+        config.max_nesting_depth = 5  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        config.justify = Justify.RIGHT  # type: ignore[misc]
+        config.justify = Justify.RIGHT  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_fail_output_config_if_invalid_params() -> None:
@@ -286,16 +286,16 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(tab=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(tab=None)  # type: ignore[arg-type]
+        OutputConfig(tab=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
         OutputConfig(indent=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(indent=None)  # type: ignore[arg-type]
+        OutputConfig(indent=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(printer=None)  # type: ignore[arg-type]
+        OutputConfig(printer=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
         OutputConfig(syntax='xyz')
@@ -304,25 +304,25 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(freedom=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(debug=None)  # type: ignore[arg-type]
+        OutputConfig(debug=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(ui=None)  # type: ignore[arg-type]
+        OutputConfig(ui=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(system=None)  # type: ignore[arg-type]
+        OutputConfig(system=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
         OutputConfig(style='red')
 
     with pytest.raises(ValueError):
-        OutputConfig(dark=None)  # type: ignore[arg-type]
+        OutputConfig(dark=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(bg=None)  # type: ignore[arg-type]
+        OutputConfig(bg=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(fonts=None)  # type: ignore[arg-type]
+        OutputConfig(fonts=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
         OutputConfig(font_size=-1)
@@ -334,32 +334,32 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(line_height=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(h_overflow=None)  # type: ignore[arg-type]
+        OutputConfig(h_overflow=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(v_overflow=None)  # type: ignore[arg-type]
+        OutputConfig(v_overflow=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(panel=None)  # type: ignore[arg-type]
+        OutputConfig(panel=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(title_at_top=None)  # type: ignore[arg-type]
+        OutputConfig(title_at_top=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(max_title_height=None)  # type: ignore[arg-type]
+        OutputConfig(max_title_height=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(min_panel_width=None)  # type: ignore[arg-type]
+        OutputConfig(min_panel_width=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
-        OutputConfig(min_crop_width=None)  # type: ignore[arg-type]
+        OutputConfig(min_crop_width=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
         # min_crop_width must be larger or equal to min_panel_width
         OutputConfig(min_panel_width=20, min_crop_width=10)
 
     with pytest.raises(ValueError):
-        OutputConfig(use_min_crop_width=None)  # type: ignore[arg-type]
+        OutputConfig(use_min_crop_width=None)  # pyright: ignore[reportArgumentType]
 
     with pytest.raises(ValueError):
         OutputConfig(max_panels_hor=-1)
@@ -368,7 +368,7 @@ def test_fail_output_config_if_invalid_params() -> None:
         OutputConfig(max_nesting_depth=-1)
 
     with pytest.raises(ValueError):
-        OutputConfig(justify=None)  # type: ignore[arg-type]
+        OutputConfig(justify=None)  # pyright: ignore[reportArgumentType]
 
 
 def test_output_config_default_values() -> None:

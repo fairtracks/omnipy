@@ -330,7 +330,7 @@ def test_iterating_pydantic_record_model_column_wise_data() -> None:
         'age': [30, 25, 19],
         'deceased': [False, False, False],
     }
-    tuple(persons.to_data().keys()) == (  # type: ignore[attr-defined]
+    tuple(persons.to_data().keys()) == (
         'firstname',
         'lastname',
         'age',
@@ -514,7 +514,7 @@ def test_iterating_pydantic_record_model_row_wise_data(
         'age': [30, 25, 19],
         'deceased': [False, False, False],
     }
-    tuple(persons.to_data().keys()) == (  # type: ignore[attr-defined]
+    tuple(persons.to_data().keys()) == (
         'firstname',
         'lastname',
         'age',
@@ -567,7 +567,7 @@ def test_pydantic_record_model_raises_type_error_for_unsupported_input_type() ->
         pass
 
     with pytest.raises(TypeError, match='Unsupported data type'):
-        AnyRecordModel._parse_data(123)  # type: ignore[arg-type]
+        AnyRecordModel._parse_data(123)
 
 
 def test_pydantic_record_model_base_forwards_output_type_to_row_parser() -> None:

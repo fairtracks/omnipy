@@ -118,21 +118,21 @@ def test_syntax_stylized_text_panel_no_assignments() -> None:
     )
 
     with pytest.raises(AttributeError):
-        text_panel.content = '[234, 345, 456]'  # type: ignore[misc]
+        text_panel.content = '[234, 345, 456]'  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        text_panel.title = 'My panel'  # type: ignore[misc]
+        text_panel.title = 'My panel'  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        text_panel.frame = Frame(Dimensions(10, 20))  # type: ignore[misc]
+        text_panel.frame = Frame(Dimensions(10, 20))  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        text_panel.constraints = Constraints(  # type: ignore[misc]
+        text_panel.constraints = Constraints(  # pyright: ignore[reportAttributeAccessIssue]
             max_inline_container_width_incl=10
         )
 
     with pytest.raises(AttributeError):
-        text_panel.config = OutputConfig()  # type: ignore[misc]
+        text_panel.config = OutputConfig()  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @pc.parametrize_with_cases(

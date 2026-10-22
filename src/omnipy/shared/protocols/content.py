@@ -521,7 +521,7 @@ class IsListContent(IsList[_ValT], Protocol[_ValT]):
         raise AssumedToBeImplementedException
 
     @override
-    def __radd__(  # type: ignore [override]
+    def __radd__(  # pyright: ignore[reportGeneralTypeIssues]
         self,
         values: IsItemSequence[_ValT] | Generator[_ValT],
         /,
@@ -660,7 +660,7 @@ class IsSameTypeTupleContent(IsHashable, IsTuple[_ValT], Protocol[_ValT]):
         raise AssumedToBeImplementedException
 
     @override
-    def __radd__(  # type: ignore [override]
+    def __radd__(  # pyright: ignore[reportGeneralTypeIssues]
         self,
         value: IsItemSequence[_ValT] | Generator[_ValT],
         /,
@@ -693,7 +693,7 @@ class IsPairTupleContent(IsHashable, IsTuple[_ValT | _SecondValT], Protocol[_Val
         raise AssumedToBeImplementedException
 
     @override
-    def __radd__(  # type: ignore [override]
+    def __radd__(  # pyright: ignore[reportGeneralTypeIssues]
         self, value: tuple[()], /
     ) -> Self:
         raise AssumedToBeImplementedException

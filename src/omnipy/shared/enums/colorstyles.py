@@ -153,7 +153,7 @@ class RecommendedColorStyles(LiteralEnum[str]):
             case _, True, _:
                 return cls.ANSI_DARK
             case _ as never:
-                assert_never(never)  # type: ignore[arg-type] # Unsure why mypy fails here
+                assert_never(never)
 
 
 _GENERAL_T16_COLOR_STYLE_DOCSTRING = dedent("""\

@@ -558,7 +558,7 @@ class IsStr(IsItemSequence[str], Protocol):
     def center(self: LiteralString, width: SupportsIndex, fillchar: LiteralString = " ", /) -> LiteralString: raise AssumedToBeImplementedException
     @overload
     # def center(self, width: SupportsIndex, fillchar: str = " ", /) -> str: ...  # type: ignore[misc]
-    def center(self, width: SupportsIndex, fillchar: str = " ", /) -> Self: raise AssumedToBeImplementedException  # type: ignore[misc]
+    def center(self, width: SupportsIndex, fillchar: str = " ", /) -> Self: raise AssumedToBeImplementedException
     def center(self, width: SupportsIndex, fillchar: str | LiteralString = ' ', /) -> Self | LiteralString: raise AssumedToBeImplementedException
 
     def count(self, sub: str, start: SupportsIndex | None = None, end: SupportsIndex | None = None, /) -> int: raise AssumedToBeImplementedException
@@ -966,7 +966,7 @@ class IsBytes(IsItemSequence[int], Protocol):
     def __iter__(self) -> Iterator[int]: raise AssumedToBeImplementedException
     def __hash__(self) -> int: raise AssumedToBeImplementedException
 
-    @overload  # type: ignore[override]
+    @overload
     def __getitem__(self, key: SupportsIndex, /) -> int: raise AssumedToBeImplementedException
     @overload
     # def __getitem__(self, key: slice[SupportsIndex | None], /) -> bytes: ...
@@ -1673,7 +1673,7 @@ class IsSet(IsMutableSet[_T], Protocol[_T]):
 
 # @disjoint_base
 # class frozenset(IsAbstractSet[_T_co]):
-class IsFrozenSet(IsAbstractSet[_T_co], Protocol[_T_co]):  # type: ignore[misc]
+class IsFrozenSet(IsAbstractSet[_T_co], Protocol[_T_co]):
     """Protocol for the subset of built-in ``frozenset`` behavior used by Omnipy typing."""
     # @overload
     # def __new__(cls) -> Self:

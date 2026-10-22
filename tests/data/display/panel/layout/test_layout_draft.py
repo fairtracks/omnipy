@@ -137,16 +137,16 @@ def test_fail_resized_layout_draft_panel_no_assignments() -> None:
         resized_layout_panel.content = Layout()  # type: ignore
 
     with pytest.raises(AttributeError):
-        resized_layout_panel.title = 'My panel'  # type: ignore[misc]
+        resized_layout_panel.title = 'My panel'  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        resized_layout_panel.frame = empty_frame()  # type: ignore[misc]
+        resized_layout_panel.frame = empty_frame()  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        resized_layout_panel.constraints = Constraints()  # type: ignore[misc]
+        resized_layout_panel.constraints = Constraints()  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        resized_layout_panel.config = OutputConfig()  # type: ignore[misc]
+        resized_layout_panel.config = OutputConfig()  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @pc.parametrize_with_cases(

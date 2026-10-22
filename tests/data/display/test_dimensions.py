@@ -104,19 +104,19 @@ def test_dimension_types() -> None:
     any_dims_func(Dimensions(10, 20))
 
     # Static type checkers SHOULD raise errors here
-    dims_with_widths_func(Dimensions(None, None))  # type: ignore[arg-type]
-    dims_with_heights_func(Dimensions(None, None))  # type: ignore[arg-type]
-    dims_with_width_and_height_func(Dimensions(None, None))  # type: ignore[arg-type]
+    dims_with_widths_func(Dimensions(None, None))  # pyright: ignore[reportArgumentType]
+    dims_with_heights_func(Dimensions(None, None))  # pyright: ignore[reportArgumentType]
+    dims_with_width_and_height_func(Dimensions(None, None))  # pyright: ignore[reportArgumentType]
 
-    undefined_dims_func(Dimensions(10, None))  # type: ignore[arg-type]
-    dims_with_heights_func(Dimensions(10, None))  # type: ignore[arg-type]
-    dims_with_width_and_height_func(Dimensions(10, None))  # type: ignore[arg-type]
+    undefined_dims_func(Dimensions(10, None))  # pyright: ignore[reportArgumentType]
+    dims_with_heights_func(Dimensions(10, None))  # pyright: ignore[reportArgumentType]
+    dims_with_width_and_height_func(Dimensions(10, None))  # pyright: ignore[reportArgumentType]
 
-    undefined_dims_func(Dimensions(None, 20))  # type: ignore[arg-type]
-    dims_with_widths_func(Dimensions(None, 20))  # type: ignore[arg-type]
-    dims_with_width_and_height_func(Dimensions(None, 20))  # type: ignore[arg-type]
+    undefined_dims_func(Dimensions(None, 20))  # pyright: ignore[reportArgumentType]
+    dims_with_widths_func(Dimensions(None, 20))  # pyright: ignore[reportArgumentType]
+    dims_with_width_and_height_func(Dimensions(None, 20))  # pyright: ignore[reportArgumentType]
 
-    undefined_dims_func(Dimensions(10, 20))  # type: ignore[arg-type]
+    undefined_dims_func(Dimensions(10, 20))  # pyright: ignore[reportArgumentType]
 
 
 def test_fail_dimensions_if_negative() -> None:
@@ -157,10 +157,10 @@ def test_fail_dimensions_no_assignments() -> None:
 
     with pytest.raises(AttributeError):
         # TODO: Check why dims is type narrowed to `Dimensions[None, int]` here in Pyright
-        dims.width = 10  # type: ignore[misc]
+        dims.width = 10  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        dims.height = None  # type: ignore[misc]
+        dims.height = None  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_fail_dimensions_if_extra_param() -> None:

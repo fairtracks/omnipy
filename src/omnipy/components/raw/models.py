@@ -161,7 +161,7 @@ class IsoFormatToDataMixin:
 
 
 @mimics(datetime.time)
-class TimeModel(IsoFormatToDataMixin, Model[datetime.time]):  # type: ignore[override]
+class TimeModel(IsoFormatToDataMixin, Model[datetime.time]):
     """Model representing a time value with isoformat serialization.
 
     Supports the same input types as Pydantic's ``time`` type:
@@ -213,7 +213,7 @@ class TimeDeltaModel(Model[datetime.timedelta]):
 
 
 @mimics(datetime.date)
-class DateModel(IsoFormatToDataMixin, Model[datetime.date]):  # type: ignore[override]
+class DateModel(IsoFormatToDataMixin, Model[datetime.date]):
     """Model representing a calendar date with isoformat serialization.
 
     Supports the same input types as Pydantic's ``date`` type:
@@ -259,7 +259,7 @@ class DateModel(IsoFormatToDataMixin, Model[datetime.date]):  # type: ignore[ove
 
 
 @mimics(datetime.datetime)
-class DateTimeModel(IsoFormatToDataMixin, Model[datetime.datetime]):  # type: ignore[override]
+class DateTimeModel(IsoFormatToDataMixin, Model[datetime.datetime]):
     """Model representing a date and time value with isoformat serialization.
 
     Supports the same input types as Pydantic's ``datetime`` type:

@@ -15,7 +15,7 @@ from .tasks import merge_key_value_into_str, square_root, uppercase
     name='pos_square_root',
     result_key='pos_square_root',
 )
-def pos_square_root_dag_flow(  # type: ignore
+def pos_square_root_dag_flow(
     number: int,  # noqa: ARG001
     text: str,  # noqa: ARG001
 ) -> str:

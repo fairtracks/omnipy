@@ -69,16 +69,16 @@ def test_stylized_layout_panel_immutable_properties() -> None:
     layout_panel = StylizedLayoutPanel(ResizedLayoutDraftPanel(Layout()))
 
     with pytest.raises(AttributeError):
-        layout_panel.content = Layout()  # type: ignore[misc, assignment]
+        layout_panel.content = Layout()  # type: ignore[assignment]  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        layout_panel.frame = empty_frame()  # type: ignore[misc]
+        layout_panel.frame = empty_frame()  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        layout_panel.constraints = Constraints()  # type: ignore[misc]
+        layout_panel.constraints = Constraints()  # pyright: ignore[reportAttributeAccessIssue]
 
     with pytest.raises(AttributeError):
-        layout_panel.config = OutputConfig()  # type: ignore[misc]
+        layout_panel.config = OutputConfig()  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @pc.parametrize_with_cases(
