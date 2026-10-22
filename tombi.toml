@@ -1,0 +1,10 @@
+# Formatter settings for TOML files (pyproject.toml, prek.toml and this file).
+[format.rules]
+indent-style = "space"
+indent-width = 4
+line-width = 100
+
+# Keep keys and array items in the order they are written.
+[schema.format.rules]
+array-values-order.enabled = false
+table-keys-order.enabled = false

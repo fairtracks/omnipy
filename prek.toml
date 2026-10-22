@@ -40,6 +40,14 @@ types_or = ["python", "jupyter", "markdown"]
 groups = ["watch", "commit"]
 
 [[repos.hooks]]
+id = "tombi"
+name = "tombi format"
+entry = "uv run tombi format"
+language = "system"
+types = ["toml"]
+groups = ["watch", "commit"]
+
+[[repos.hooks]]
 id = "install-local-package"
 name = "Install Local Package"
 entry = "uv pip install -e . --offline"
