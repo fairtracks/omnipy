@@ -198,3 +198,15 @@ in `pyproject.toml`. The formatter follows the Black style, with single quotes a
   - "Incorrect type"
   - "Invalid type hints definitions and usages"
   - "Missing type hinting for function definition"
+
+#### Silence PyCharm's unresolved attribute warnings for models
+
+PyCharm's own type checker cannot follow the typing of `Model[...]`, `Model` subclasses and
+`@mimics` models, and infers them as `object`. This gives "Unresolved attribute reference"
+warnings in tests, in doctest examples and elsewhere, even though `pyright` and `mypy` accept the
+code. To silence them in one place instead of marking individual functions:
+
+- In PyCharm Preferences/Settings->Editor->Inspections->Python->"Unresolved references", add
+  `builtins.object.*` to the "Ignored references" list.
+  - A quicker way is to press Alt+Enter on one of the warnings and select "Ignore all unresolved
+    attributes of builtins.object".
