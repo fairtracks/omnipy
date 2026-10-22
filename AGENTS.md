@@ -19,6 +19,25 @@
 - `pre-commit` stage hooks are mutating (docstring macro expansion, `ruff check --fix`, `ruff format`); `manual` stage hooks are check-only (`ruff check (no fix)`, `ruff format (no changes)`).
 - The `(str, Enum)` base is used deliberately (not `StrEnum`), and lambda assignment is allowed; both are ignored in the ruff config.
 
+## Layout And Suppression Conventions
+
+Layout: ruff decides. Shape the code instead of overriding the formatter.
+- No backslash continuations and no `# fmt: skip/off/on`. When ruff's layout is poor, change the code: put parentheses around the right operand (`assert a == (\n    b\n)`, `x = a or (\n    b\n)`; ruff keeps these but removes redundant parentheses around a whole assertion or right-hand side), move a long trailing comment above the statement, use an intermediate variable, drop an unwanted magic trailing comma, or introduce a type alias (e.g. `AsyncGenCase` in `tests/engine/helpers/classes.py`).
+- Ruff keeps a parenthesized *parameter* annotation (`x: (\n    Annotated[...]\n),`) but not a parenthesized return annotation.
+- `tests/components/json/cases/json_data.py` and `tests/components/frozen/cases/frozen_data.py` are excluded from `ruff format` (hand-laid-out tables): lay them out with parentheses, never backslashes.
+- Pitfalls when running ruff by hand: explicit file paths override `format.exclude` unless `--force-exclude` is given, and `ruff check --select X` replaces the configured rules (use `--extend-select`).
+
+Suppressions:
+- Modules that only re-export names list them in `__all__`; do not suppress F401. An import that must follow code gets `# noqa: E402` on the statement.
+- File-level directives must name one rule. For names mypy/pyright cannot see, put `# mypy: disable-error-code="attr-defined"` and `# pyright: reportAttributeAccessIssue=false` at the top of the file (mypy rejects a code-qualified module-level `# type: ignore[...]`).
+- `# type: ignore[code]` (mypy has `warn_unused_ignores`) and `# pyright: ignore[rule]` must sit on the line where the checker reports the error, which a reformat can move. A pyright-only ignore should be `# pyright: ignore[rule]`. The only `# isort: skip` are the three commented private `typing` imports each in `src/omnipy/shared/typedefs.py` and `src/omnipy/util/helpers.py`.
+- `RUF100` rejects `# noqa` comments that suppress nothing. Codes for rules ruff does not implement but PyCharm reads (N806, E731, ARG001, ARG002) are listed in `lint.external`; PyCharm treats every `# noqa` as a general suppression, so those codes are documentation.
+- PyCharm infers `Model` instances as `object`. Add `builtins.object.*` to the ignored references of its "Unresolved references" inspection instead of annotating code.
+
+Tests and docs:
+- A fixture requested only for its side effects is declared with `@pytest.mark.usefixtures('name')`, not as an unused parameter. This does not work on fixture functions, and a parametrized fixture's part of the test ID changes position.
+- Docs examples (`pycon exec` blocks) are run by markdown-exec as a script of the prompt lines: only `print()` output is shown, so display models with `print(x._docs())` in a separate `html="true"` block.
+
 ## Typing
 
 - Do not use `cast(object, ...)` / `cast(object, self)` merely to suppress type-checker warnings about suspicious casts. Treat that pattern as a typing escape hatch to avoid in Omnipy code unless explicitly requested.
