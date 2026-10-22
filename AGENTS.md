@@ -16,7 +16,7 @@
 
 - Python formatting, import sorting and linting are all handled by `ruff` (`[tool.ruff]` in `pyproject.toml`); Python line length is 100 with single quotes. Import sorting is the `I` lint rule, so it runs under `ruff check --fix`, not `ruff format`.
 - Commit-stage pre-commit mutates Python files via `.pre-commit-hooks/expand_docstr_macros.py`, which runs before the ruff hooks. If you edit macro-managed docstrings or `omnipy.util.docstr_macros`, run that hook or expect rewrites.
-- `pre-commit` stage hooks are mutating (docstring macro expansion, `ruff check --fix`, `ruff format`); `manual` stage hooks are check-only (`ruff check (check)`, `ruff format (check)`).
+- `pre-commit` stage hooks are mutating (docstring macro expansion, `ruff check --fix`, `ruff format`); `manual` stage hooks are check-only (`ruff check (no fix)`, `ruff format (no changes)`).
 - The `(str, Enum)` base is used deliberately (not `StrEnum`), and lambda assignment is allowed; both are ignored in the ruff config.
 
 ## Typing
