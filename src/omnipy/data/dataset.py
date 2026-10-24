@@ -1803,6 +1803,41 @@ class Dataset(
             tasks = []
 
             # TODO: Manage ClientConnectionResetError in Dataset._load_http_urls
+
+            # TODO: Share the rate limiting per host across all Dataset loads
+            #       The rate limit is enforced per RateLimitingClientSession, and a new session is
+            #       created per host for each call of Dataset._load_http_urls. Loads that run at the
+            #       same time against the same host thus each get the full rate, so the host can
+            #       receive several times the configured rate. The limiter state should be shared
+            #       per host (e.g. kept by the runtime). Postponed to the planned refactoring of
+            #       Dataset.load().
+
+            # TODO: Detect when a host is down or overloaded, and then fail the whole load
+            #       Each request is retried on its own, and a request whose retries are used up
+            #       ends up as FailedData while the rest of the load continues. If the host itself
+            #       is down or overloaded, every request thus goes through all its retries, adding
+            #       load to the host, and the load ends with all items failed. A circuit breaker
+            #       per host, shared across Dataset loads, should count service failures
+            #       (connection errors, timeouts, 5xx and 429) and fail the load when too many
+            #       recent requests have failed. A 429 response should first be handled by
+            #       following its Retry-After header (not supported by aiohttp_retry) a few
+            #       times, before the circuit breaker trips. Postponed to the planned refactoring
+            #       of Dataset.load().
+            #
+            #       Questions to settle for the circuit breaker:
+            #       - Which failures count as service failures? Probably connection errors,
+            #         timeouts, 5xx and 429, but not other 4xx (e.g. 400 or 404), which point to
+            #         the individual request.
+            #       - When does it trip: after N failures in a row (simple, but one success
+            #         resets it), or when the failure ratio among the last M finished requests
+            #         exceeds a threshold (e.g. at least 80 % of the last 20)?
+            #       - What does tripping do: fail the whole load at once, marking the remaining
+            #         items as failed because the host is unavailable, or first pause, send a
+            #         single probe request after a cool-down and resume if the host has
+            #         recovered ("half-open"), failing the load only if the probe fails?
+            #       - Does every failed attempt count, which detects an outage sooner, or only
+            #         requests whose retries are used up, which is less likely to trip on brief
+            #         hiccups?
             for host in hosts:
                 host_config = self.config.http.for_host[host]
                 async with RateLimitingClientSession(
