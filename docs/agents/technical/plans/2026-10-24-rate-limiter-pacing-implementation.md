@@ -1,6 +1,6 @@
 # Rate limiter pacing: implementation plan
 
-Status: draft for approval (2026-10-24, revised the same day)
+Status: implemented (2026-10-24)
 
 Design: `docs/agents/technical/specs/2026-10-24-rate-limiter-pacing-design.md`
 
