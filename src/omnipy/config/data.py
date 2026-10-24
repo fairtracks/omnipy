@@ -509,13 +509,35 @@ class HttpRequestsConfig(ConfigBase):
     """
 
     # For RateLimitingClientSession helper class
-    requests_per_time_period: float = 60
-    time_period_in_secs: float = 60
+    requests_per_time_period: int = pyd.Field(default=60, ge=1)
+    time_period_in_secs: float = pyd.Field(default=60, gt=0)
+    burst_ratio: float = pyd.Field(default=0.5, gt=0, lt=1)
 
     # For get_*_from_api_endpoint tasks
     retry_http_statuses: tuple[int, ...] = (408, 425, 429, 500, 502, 503, 504)
     retry_attempts: int = 5
     retry_backoff_strategy: BackoffStrategy.Literals = BackoffStrategy.EXPONENTIAL
+
+    @pyd.validator('requests_per_time_period', pre=True)
+    def check_whole_number_of_requests(cls, value: object) -> object:
+        """Reject numbers of requests that are not whole, instead of truncating them.
+
+        Args:
+            value: Candidate value from the input, before conversion to ``int``.
+
+        Returns:
+            object: The unchanged value, for the conversion to ``int``.
+
+        Raises:
+            ValueError: If ``value`` is a float that is not a whole number.
+
+        Examples:
+            >>> HttpRequestsConfig.check_whole_number_of_requests(10.0)
+            10.0
+        """
+        if isinstance(value, float) and not value.is_integer():
+            raise ValueError(f'requests_per_time_period must be a whole number, not {value}')
+        return value
 
 
 class HttpConfig(ConfigBase):

@@ -291,13 +291,16 @@ class IsHttpRequestsConfig(IsConfigBase, Protocol):
     Attributes:
         requests_per_time_period: Maximum requests allowed per time window.
         time_period_in_secs: Length of the throttling window in seconds.
+        burst_ratio: Share of ``requests_per_time_period`` that may start at once (the burst),
+            strictly between 0 and 1.
         retry_http_statuses: HTTP status codes that should trigger retries.
         retry_attempts: Maximum number of retry attempts.
         retry_backoff_strategy: Backoff strategy used between retries.
     """
 
-    requests_per_time_period: float
+    requests_per_time_period: int
     time_period_in_secs: float
+    burst_ratio: float
     retry_http_statuses: tuple[int, ...]
     retry_attempts: int
     retry_backoff_strategy: BackoffStrategy.Literals

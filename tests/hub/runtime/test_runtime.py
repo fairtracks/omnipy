@@ -150,6 +150,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert isinstance(config.data.http.defaults, HttpRequestsConfig)
     assert config.data.http.defaults.requests_per_time_period == 60
     assert config.data.http.defaults.time_period_in_secs == 60
+    assert config.data.http.defaults.burst_ratio == 0.5
     assert config.data.http.defaults.retry_http_statuses == (408, 425, 429, 500, 502, 503, 504)
     assert config.data.http.defaults.retry_attempts == 5
     assert config.data.http.defaults.retry_backoff_strategy is BackoffStrategy.EXPONENTIAL
@@ -159,6 +160,7 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert isinstance(config.data.http.for_host['some_server.com'], HttpRequestsConfig)
     assert config.data.http.for_host['some_server.com'].requests_per_time_period == 60
     assert config.data.http.for_host['some_server.com'].time_period_in_secs == 60
+    assert config.data.http.for_host['some_server.com'].burst_ratio == 0.5
     assert config.data.http.for_host['some_server.com'].retry_http_statuses == (
         408,
         425,

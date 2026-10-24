@@ -1841,7 +1841,9 @@ class Dataset(
             for host in hosts:
                 host_config = self.config.http.for_host[host]
                 async with RateLimitingClientSession(
-                    host_config.requests_per_time_period, host_config.time_period_in_secs
+                    host_config.requests_per_time_period,
+                    host_config.time_period_in_secs,
+                    burst_ratio=host_config.burst_ratio,
                 ) as client_session:
                     async with get_retry_client(
                         client_session=client_session,
