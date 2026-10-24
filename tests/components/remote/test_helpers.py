@@ -5,11 +5,12 @@ from collections.abc import AsyncGenerator
 import random
 from typing import Annotated
 
-from aiohttp import ClientSession, web
+from aiohttp import ClientTimeout, web
 import pytest
 import pytest_cases as pc
 
-from omnipy.components.remote.helpers import RateLimitingClientSession, RequestPacer
+from omnipy.components.remote.helpers import RateLimiter, RateLimitingClientSession, RequestPacer
+from omnipy.components.remote.tasks import get_retry_client
 
 from .helpers.pacing import (
     EPS,
@@ -32,14 +33,6 @@ def create_app() -> web.Application:
     app = web.Application()
     app.router.add_route('GET', '/my_endpoint', my_endpoint)
     return app
-
-
-# The current RateLimitingClientSession can exceed the configured rate after a burst, and starts
-# the requests in groups with pauses in between. To be fixed by the rewrite in
-# docs/agents/technical/specs/2026-10-24-rate-limiter-pacing-design.md
-RATE_LIMITER_PACING_BUG = pytest.mark.xfail(
-    reason='Known rate limiter pacing bug, see the rate limiter pacing design', strict=False
-)
 
 
 @pc.fixture(scope='function')
@@ -76,11 +69,10 @@ async def _assert_requests_and_get_run_time_in_secs(
     ],
     ids=['no_burst_1_requests_per_0.05s', 'burst_10_requests_per_0.5s'],
 )
-@RATE_LIMITER_PACING_BUG
 async def test_rate_limiting_client_session(
     my_endpoint_url: Annotated[str, pytest.fixture],
     num_requests: int,
-    requests_per_time_period: float,
+    requests_per_time_period: int,
     time_period_in_secs: float,
     run_time_min: float,
     run_time_max: float,
@@ -89,7 +81,6 @@ async def test_rate_limiting_client_session(
 
     async with client_session:
         assert client_session.requests_per_second == requests_per_time_period / time_period_in_secs
-        assert isinstance(client_session, ClientSession)
 
         for i in range(2):
             run_time = await _assert_requests_and_get_run_time_in_secs(
@@ -108,9 +99,9 @@ async def test_rate_limiting_client_session(
     'requests_per_time_period, time_period_in_secs, secs_between_requests',
     [
         pytest.param(10, 0.5, 0, id='all_at_once'),
-        pytest.param(10, 0.5, 0.01, id='staggered_100_per_s', marks=RATE_LIMITER_PACING_BUG),
-        pytest.param(10, 0.5, 0.03, id='staggered_33_per_s', marks=RATE_LIMITER_PACING_BUG),
-        pytest.param(1, 0.05, 0.01, id='no_burst_staggered', marks=RATE_LIMITER_PACING_BUG),
+        pytest.param(10, 0.5, 0.01, id='staggered_100_per_s'),
+        pytest.param(10, 0.5, 0.03, id='staggered_33_per_s'),
+        pytest.param(1, 0.05, 0.01, id='no_burst_staggered'),
     ],
 )
 async def test_rate_limiting_client_session_never_exceeds_rate_in_any_time_period(
@@ -123,15 +114,15 @@ async def test_rate_limiting_client_session_never_exceeds_rate_in_any_time_perio
     # The start time of each request is recorded when the session lets the request through. This
     # avoids the varying delays of the network, e.g. for connecting under heavy load
     start_times: list[float] = []
-    limit_request = RateLimitingClientSession._limit_request
+    wait = RateLimiter.wait
 
-    async def recording_limit_request(self: RateLimitingClientSession, *args, **kwargs) -> None:
-        await limit_request(self, *args, **kwargs)
+    async def recording_wait(self: RateLimiter) -> None:
+        await wait(self)
         start_times.append(asyncio.get_running_loop().time())
 
-    monkeypatch.setattr(RateLimitingClientSession, '_limit_request', recording_limit_request)
+    monkeypatch.setattr(RateLimiter, 'wait', recording_wait)
 
-    async def request_after_delay(session: ClientSession, delay: float) -> None:
+    async def request_after_delay(session: RateLimitingClientSession, delay: float) -> None:
         await asyncio.sleep(delay)
         async with session.get(my_endpoint_url) as response:
             assert response.status == 200
@@ -162,6 +153,159 @@ async def test_rate_limiting_client_session_never_exceeds_rate_in_any_time_perio
     if secs_between_requests == 0:
         secs_between_starts = [b - a for a, b in zip(start_times, start_times[1:])]
         assert max(secs_between_starts) < 5 * time_period_in_secs / requests_per_time_period
+
+
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+async def test_rate_limiting_client_session_parameters() -> None:
+    async with RateLimitingClientSession(10, 0.5, burst_ratio=0.3) as session:
+        assert session.requests_per_time_period == 10
+        assert session.time_period_in_secs == 0.5
+        assert session.requests_per_second == 20
+        assert session.burst_size == 3
+    assert session.closed
+
+    async with RateLimitingClientSession(10, 0.5) as session:
+        assert session.burst_size == 5
+
+    with pytest.raises(ValueError):
+        RateLimitingClientSession(10, 0.5, burst_ratio=1.0)
+
+
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+async def test_rate_limiting_client_session_request_methods(aiohttp_server) -> None:
+    async def echo(request: web.Request) -> web.Response:
+        body = await request.json() if request.can_read_body else None
+        return web.json_response(
+            dict(method=request.method, header=request.headers.get('X-Test'), body=body)
+        )
+
+    app = web.Application()
+    app.router.add_route('*', '/echo', echo)
+    url = str((await aiohttp_server(app)).make_url('/echo'))
+
+    # Arguments other than the rate limiting ones are passed on to the aiohttp ClientSession
+    async with RateLimitingClientSession(10, 0.5, headers={'X-Test': 'yes'}) as session:
+        async with session.get(url) as response:
+            assert await response.json() == dict(method='GET', header='yes', body=None)
+
+        async with session.post(url, json=dict(a=1)) as response:
+            assert await response.json() == dict(method='POST', header='yes', body=dict(a=1))
+
+        async with session.request('PUT', url, json=[1, 2]) as response:
+            assert await response.json() == dict(method='PUT', header='yes', body=[1, 2])
+
+        # Requests can also be awaited directly, as aiohttp_retry does
+        response = await session.request('GET', url)
+        assert response.status == 200
+        response.release()
+
+        assert not session.closed
+
+    assert session.closed
+
+
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+async def test_rate_limiting_client_session_timeout_counts_from_start_of_request(
+    aiohttp_server,
+) -> None:
+    # A request that waits for the rate limiter must still time out, counting from its own start
+
+    async def slow_endpoint(request: web.Request) -> web.Response:
+        await asyncio.sleep(1.5)
+        return web.json_response('Too late')
+
+    app = web.Application()
+    app.router.add_route('GET', '/slow', slow_endpoint)
+    url = str((await aiohttp_server(app)).make_url('/slow'))
+
+    loop = asyncio.get_running_loop()
+    async with RateLimitingClientSession(1, 0.4, timeout=ClientTimeout(total=0.3)) as session:
+        start = loop.time()
+
+        async def time_until_timeout() -> float | None:
+            try:
+                async with session.get(url) as response:
+                    await response.text()
+            except TimeoutError:
+                return loop.time() - start
+            return None
+
+        timed_out_after = await asyncio.gather(*[time_until_timeout() for _ in range(3)])
+
+    # The requests start at 0.0, 0.4 and 0.8 s, and each times out 0.3 s later
+    assert None not in timed_out_after
+    assert sorted(t for t in timed_out_after if t is not None) == pytest.approx(
+        [0.3, 0.7, 1.1], abs=0.1
+    )
+
+
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+async def test_rate_limiting_client_session_paces_retries(aiohttp_server) -> None:
+    # Each retry attempt is a request to the host, so it waits for the rate limiter as well
+    loop = asyncio.get_running_loop()
+    arrival_times: list[float] = []
+
+    async def fails_once(request: web.Request) -> web.Response:
+        arrival_times.append(loop.time())
+        if len(arrival_times) == 1:
+            return web.Response(text='Error', status=503)
+        return web.json_response('Recovered')
+
+    app = web.Application()
+    app.router.add_route('GET', '/fails_once', fails_once)
+    url = str((await aiohttp_server(app)).make_url('/fails_once'))
+
+    async with RateLimitingClientSession(1, 0.3) as session:
+        async with get_retry_client(
+            client_session=session,
+            retry_http_statuses=(503,),
+            retry_attempts=2,
+        ) as retry_client:
+            async with retry_client.get(url) as response:
+                assert response.status == 200
+                assert await response.json() == 'Recovered'
+
+    assert len(arrival_times) == 2
+    assert arrival_times[1] - arrival_times[0] >= 0.3 - 0.02
+
+
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+async def test_rate_limiter_starts_waiting_requests_in_order() -> None:
+    limiter = RateLimiter(10, 0.5)
+    loop = asyncio.get_running_loop()
+    start = loop.time()
+    order: list[int] = []
+    start_times: list[float] = []
+
+    async def wait_and_record(i: int) -> None:
+        await limiter.wait()
+        order.append(i)
+        start_times.append(loop.time() - start)
+
+    await asyncio.gather(*[wait_and_record(i) for i in range(21)])
+
+    assert order == list(range(21))
+    expected = [0.0] * 5 + [0.5 / 6 * k for k in range(1, 6)] + [0.5 + 0.05 * k for k in range(11)]
+    assert start_times == pytest.approx(expected, abs=0.05)
+    # Timers never fire early
+    assert all(t >= e - 0.002 for t, e in zip(start_times, expected))
+
+
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+async def test_rate_limiter_cancelled_wait_does_not_delay_the_next_request() -> None:
+    limiter = RateLimiter(1, 0.3)
+    loop = asyncio.get_running_loop()
+    start = loop.time()
+    await limiter.wait()
+
+    waiting = asyncio.create_task(limiter.wait())
+    await asyncio.sleep(0.05)
+    waiting.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await waiting
+
+    await limiter.wait()
+    assert loop.time() - start == pytest.approx(0.3, abs=0.05)
 
 
 # Pacing rule (RequestPacer), without asyncio. See

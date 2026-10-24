@@ -24,6 +24,7 @@ from .datasets import AutoResponseContentDataset, HttpUrlDataset
 from .models import AutoResponseContentModel, HttpUrlModel, ResponseContentPydModel
 
 if TYPE_CHECKING:
+    from .helpers import RateLimitingClientSession
     from .lazy_import import ClientResponse, ClientSession, RetryClient
 
 _JsonDatasetT = TypeVar('_JsonDatasetT', bound=IsDataset)
@@ -78,7 +79,7 @@ def _check_response_status(response: 'ClientResponse') -> None:
 
 
 def get_retry_client(
-    client_session: 'ClientSession | None' = None,
+    client_session: 'ClientSession | RateLimitingClientSession | None' = None,
     retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
     retry_attempts: int = DEFAULT_RETRIES,
     retry_backoff_strategy: BackoffStrategy.Literals = DEFAULT_BACKOFF_STRATEGY,
@@ -86,7 +87,8 @@ def get_retry_client(
     """Build a retry-enabled HTTP client wrapper.
 
     Args:
-        client_session: Existing client session to wrap.
+        client_session: Existing client session to wrap. A RateLimitingClientSession rate limits
+            each retry attempt as well.
         retry_http_statuses: Status codes that should trigger retries.
         retry_attempts: Maximum number of retry attempts.
         retry_backoff_strategy: Backoff strategy identifier.
@@ -112,7 +114,8 @@ def get_retry_client(
         retry_all_server_errors=False,
     )
     return RetryClient(
-        client_session=client_session,
+        # RetryClient only uses request() and close(), which RateLimitingClientSession provides
+        client_session=cast('ClientSession | None', client_session),
         retry_options=retry_options,
     )
 

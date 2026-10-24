@@ -2,12 +2,13 @@
 
 import asyncio
 from collections import deque
-from datetime import datetime
+from collections.abc import Coroutine, Generator
 import math
 from types import TracebackType
-from typing import cast
+from typing import Any
 
 from omnipy.shared.enums.data import BackoffStrategy
+from omnipy.shared.typing import TYPE_CHECKING
 
 from .lazy_import import (
     ClientSession,
@@ -15,8 +16,11 @@ from .lazy_import import (
     FibonacciRetry,
     JitterRetry,
     RandomRetry,
-    TraceConfig,
 )
+
+if TYPE_CHECKING:
+    from aiohttp import ClientResponse
+    from aiohttp.typedefs import StrOrURL
 
 DEFAULT_BURST_RATIO = 0.5
 
@@ -175,72 +179,51 @@ class RequestPacer:
         return spacing, valid_until
 
 
-class RateLimitingClientSession(ClientSession):
+class RateLimiter:
     """
-    A ClientSession that limits the number of requests made per time period, allowing an initial
-    burst of requests to go through before rate limiting kicks in for the rest.
+    Lets rate-limited requests wait for their turn, in the order they arrive.
+
+    The timing follows RequestPacer, using the monotonic clock of the event loop. A wait that is
+    cancelled does not count as a start.
     """
 
     def __init__(
-        self, requests_per_time_period: float, time_period_in_secs: float, *args, **kwargs
+        self,
+        requests_per_time_period: int,
+        time_period_in_secs: float,
+        burst_ratio: float = DEFAULT_BURST_RATIO,
     ) -> None:
-        from .lazy_import import AsyncLimiter
-
-        trace_config = TraceConfig()
-        trace_config.on_request_start.append(self._limit_request)
-        super().__init__(*args, trace_configs=[trace_config], **kwargs)
-
-        self._requests_per_time_period = requests_per_time_period
-        self._time_period_in_secs = time_period_in_secs
-
-        self._limiter = AsyncLimiter(self._requests_per_time_period, self._time_period_in_secs)
-
-        # To allow for an initial burst of requests of size `requests_per_time_period / 2 + 1`
-        # to go through before rate limiting kicks in for the rest
-        self._burst_size = self._requests_per_time_period / 2 + 1
-        self._limiter.max_rate = self._burst_size
-        self._cur_delay_secs: float = 0
-        self._num_requests: int = 0
-        self._first_submit_time: datetime | None = None
-
-    async def _limit_request(self, *args, **kwargs):
-
-        request_num = self._num_requests
-        self._num_requests += 1
-
-        submit_time = datetime.now()
-        if self._first_submit_time is None:
-            self._first_submit_time = submit_time
-
-        await self._limiter.acquire()
-
-        submit_time_delta = (submit_time - self._first_submit_time).total_seconds()
-        if submit_time_delta > self._time_period_in_secs:
-            # Resetting the rate limiter for the next batch of requests
-            self._first_submit_time = submit_time
-            self._cur_delay_secs = 0
-            self._num_requests = 1
-            request_num = 0
-
-        # Adding a delay to compensate for the filling of the leaky bucket, which is not accounted
-        # for in the AsyncLimiter. This is to allow for an initial burst of requests to go through
-        # while not exceeding the rate limit for the first time period
-        if self._burst_size <= request_num <= self._requests_per_time_period:
-            self._cur_delay_secs += 1 / self.requests_per_second
-
-        if self._cur_delay_secs > 0:
-            await asyncio.sleep(self._cur_delay_secs)
-
-        # print(f'Request number: {request_num}, Actual request time: {datetime.now()}')
+        self._pacer = RequestPacer(requests_per_time_period, time_period_in_secs, burst_ratio)
+        self._lock = asyncio.Lock()
 
     @property
-    def requests_per_second(self) -> float:
-        """Return the configured steady-state request rate."""
+    def pacer(self) -> RequestPacer:
+        return self._pacer
 
-        return self._requests_per_time_period / self._time_period_in_secs
+    async def wait(self) -> None:
+        """Wait until the next request may start."""
+        async with self._lock:
+            loop = asyncio.get_running_loop()
+            start = self._pacer.plan_start(loop.time())
+            delay = start - loop.time()
+            if delay > 0:
+                await asyncio.sleep(delay)
+            self._pacer.record_start(max(start, loop.time()))
 
-    async def __aenter__(self) -> 'RateLimitingClientSession':
-        return cast(RateLimitingClientSession, await super().__aenter__())
+
+class _RateLimitedRequest:
+    """A request that can be awaited, or used with ``async with``, like those of aiohttp."""
+
+    def __init__(self, response_coro: Coroutine[Any, Any, 'ClientResponse']) -> None:
+        self._response_coro = response_coro
+        self._response: ClientResponse | None = None
+
+    def __await__(self) -> Generator[Any, None, 'ClientResponse']:
+        return self._response_coro.__await__()
+
+    async def __aenter__(self) -> 'ClientResponse':
+        self._response = await self._response_coro
+        return self._response
 
     async def __aexit__(
         self,
@@ -248,7 +231,81 @@ class RateLimitingClientSession(ClientSession):
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        await super().__aexit__(exc_type, exc_val, exc_tb)
+        assert self._response is not None
+        self._response.release()
+        await self._response.wait_for_close()
+
+
+class RateLimitingClientSession:
+    """
+    An HTTP client session that limits the requests to ``requests_per_time_period`` per
+    ``time_period_in_secs``, allowing an initial burst of requests.
+
+    The session wraps an aiohttp ClientSession, which gets all other arguments. Each request waits
+    for its turn (see RateLimiter and RequestPacer) before aiohttp starts it, so that the timeouts
+    of aiohttp count from the actual start of each request. The session offers what
+    aiohttp_retry.RetryClient uses (``request()`` and ``close()``), so that each retry attempt is
+    rate limited as well, plus ``get()`` and ``post()``.
+    """
+
+    def __init__(
+        self,
+        requests_per_time_period: int,
+        time_period_in_secs: float,
+        *args: Any,
+        burst_ratio: float = DEFAULT_BURST_RATIO,
+        **kwargs: Any,
+    ) -> None:
+        self._limiter = RateLimiter(requests_per_time_period, time_period_in_secs, burst_ratio)
+        self._session = ClientSession(*args, **kwargs)
+
+    @property
+    def requests_per_time_period(self) -> int:
+        return self._limiter.pacer.requests_per_time_period
+
+    @property
+    def time_period_in_secs(self) -> float:
+        return self._limiter.pacer.time_period_in_secs
+
+    @property
+    def burst_size(self) -> int:
+        return self._limiter.pacer.burst_size
+
+    @property
+    def requests_per_second(self) -> float:
+        """Return the configured steady-state request rate."""
+        return self._limiter.pacer.requests_per_second
+
+    @property
+    def closed(self) -> bool:
+        return self._session.closed
+
+    def request(self, method: str, url: 'StrOrURL', **kwargs: Any) -> _RateLimitedRequest:
+        return _RateLimitedRequest(self._request(method, url, **kwargs))
+
+    def get(self, url: 'StrOrURL', **kwargs: Any) -> _RateLimitedRequest:
+        return self.request('GET', url, **kwargs)
+
+    def post(self, url: 'StrOrURL', **kwargs: Any) -> _RateLimitedRequest:
+        return self.request('POST', url, **kwargs)
+
+    async def _request(self, method: str, url: 'StrOrURL', **kwargs: Any) -> 'ClientResponse':
+        await self._limiter.wait()
+        return await self._session.request(method, url, **kwargs)
+
+    async def close(self) -> None:
+        await self._session.close()
+
+    async def __aenter__(self) -> 'RateLimitingClientSession':
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        await self.close()
 
 
 BACKOFF_STRATEGY_2_RETRY_CLS = {
