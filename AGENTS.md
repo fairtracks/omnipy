@@ -66,6 +66,12 @@ Tests and docs:
 - During repo tests, `omnipy.hub.runtime.runtime` is intentionally `None`; `tests/conftest.py:pytest_configure()` disables the import-time singleton for `tests/...` imports.
 - CI installs `de_DE.UTF-8` before running pytest. Reproduce that locale first if locale-sensitive tests fail locally.
 
+## Working Documents
+
+- Plans, specs, reviews and other working documents written by agents go under `docs/agents/`, filed as described in `docs/agents/README.md` (e.g. `docs/agents/technical/plans/` and `docs/agents/technical/specs/`, with a date prefix in the filename).
+- This location overrides the ones that skills or plugins define for such documents, such as `docs/superpowers/plans/` and `docs/superpowers/specs/` from the superpowers skills.
+- `docs/agents/` is excluded from the MkDocs site, and the plans and specs under `docs/agents/technical/` are excluded from `ruff format`, so they are kept as written.
+
 ## Docs
 
 - User-facing README content is `docs/readme.md`, not a root `README.md`.

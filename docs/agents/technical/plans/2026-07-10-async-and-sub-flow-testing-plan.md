@@ -238,7 +238,7 @@ All test cases in `tests/engine/cases/flows.py` must follow these patterns:
 
 ### Task 9: Superseded by the merged standalone integration-test slice plan
 
-**Supersession notice:** Any older Task 9 integration outline in this plan and any earlier draft of the standalone replacement plan are both superseded by `docs/superpowers/plans/2026-07-11-async-and-sub-flow-integration-test-slice-plan.md`.
+**Supersession notice:** Any older Task 9 integration outline in this plan and any earlier draft of the standalone replacement plan are both superseded by `docs/agents/technical/plans/2026-07-11-async-and-sub-flow-integration-test-slice-plan.md`.
 
 Treat that rewritten 2026-07-11 document as the sole canonical implementation authority for:
 - Scenario A: environmental monitoring harmonization
@@ -246,7 +246,7 @@ Treat that rewritten 2026-07-11 document as the sole canonical implementation au
 - Separate callable-type / `refine()` / `revise()` validation coverage
 - Removal of the current superseded async/subflow integration implementation attempt under `tests/integration/novel/full/`
 
-The binding requirements source remains `docs/superpowers/specs/2026-07-09-async-and-sub-flow-testing-schema-design.md`. Any older Task 9 wording, older replacement-plan wording, or superseded integration-test implementation files are retired in favor of the rewritten 2026-07-11 plan.
+The binding requirements source remains `docs/agents/technical/specs/2026-07-09-async-and-sub-flow-testing-schema-design.md`. Any older Task 9 wording, older replacement-plan wording, or superseded integration-test implementation files are retired in favor of the rewritten 2026-07-11 plan.
 
 ### Task 10: Final verification, support-gap audit, and handoff evidence
 

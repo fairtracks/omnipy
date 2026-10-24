@@ -149,8 +149,9 @@ quote-style = "single"
 exclude = [
     "tests/components/json/cases/json_data.py",
     "tests/components/frozen/cases/frozen_data.py",
-    # Historical planning documents are kept as written
-    "docs/superpowers/**",
+    # Plans and specs written by agents are kept as written
+    "docs/agents/technical/plans/**",
+    "docs/agents/technical/specs/**",
 ]
 
 [tool.ruff.lint]

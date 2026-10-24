@@ -14,10 +14,10 @@
 
 - This document is a rewrite of the prior file at the same path.
 - This document merges and supersedes both:
-  - the old Task 9 integration-slice authority in `docs/superpowers/plans/2026-07-10-async-and-sub-flow-testing-plan.md`
+  - the old Task 9 integration-slice authority in `docs/agents/technical/plans/2026-07-10-async-and-sub-flow-testing-plan.md`
   - the earlier replacement-plan draft previously saved at this path
 - This document is now the sole implementation authority for the integration-test slice.
-- The binding requirements source remains `docs/superpowers/specs/2026-07-09-async-and-sub-flow-testing-schema-design.md`.
+- The binding requirements source remains `docs/agents/technical/specs/2026-07-09-async-and-sub-flow-testing-schema-design.md`.
 - This slice must not recreate the engine-harness matrix; it confirms representative user-facing behavior only.
 - If the third test reveals missing construction-time or `refine()` / `revise()` validation behavior, route that gap back to the parent plan's Task 8 instead of inventing a new integration-only production seam.
 

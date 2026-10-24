@@ -8,7 +8,7 @@
 
 **Tech Stack:** Python, pytest, pytest-cases, asyncio/anyio, Omnipy `TaskTemplate` / `FuncFlowTemplate` / `LinearFlowTemplate` / `DagFlowTemplate`, runtime-backed serialization fixtures
 
-**Spec:** `docs/superpowers/specs/2026-08-16-async-compute-mixins-test-extension-design.md`
+**Spec:** `docs/agents/technical/specs/2026-08-16-async-compute-mixins-test-extension-design.md`
 
 **Execution approach:** Subagent-Driven (approved; use `superpowers:subagent-driven-development` during implementation)
 
