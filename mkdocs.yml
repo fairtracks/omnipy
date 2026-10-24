@@ -103,6 +103,7 @@ nav:
   - Python typing: learn/python-typing.md
   - "Omnipy Models: parse and operate on structured data": learn/data-models.md
   - Parse, don't validate: learn/parse-dont-validate.md
+  - Rate limiting of HTTP requests: learn/rate-limiting.md
   - Comparisons: learn/comparisons.md
   - Visual metaphors and story mode: learn/visual-metaphors-story-mode.md
 - Reference:

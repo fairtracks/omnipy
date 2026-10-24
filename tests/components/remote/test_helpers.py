@@ -2,7 +2,10 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+import json
+from pathlib import Path
 import random
+import re
 from typing import Annotated
 
 from aiohttp import ClientTimeout, web
@@ -549,3 +552,28 @@ def test_request_pacer_calculates_spacing_once_per_segment(
     pacer = RequestPacer(requests_per_time_period, time_period_in_secs)
     pacer_start_times(pacer, [0.0] * num_requests)
     assert num_calculations <= num_requests // requests_per_time_period + 2
+
+
+DOCS_SIMULATION_PATH = (
+    Path(__file__).parents[3] / 'docs' / 'learn' / 'rate-limiting-simulation.html'
+)
+
+
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_request_pacer_matches_the_simulation_in_the_docs() -> None:
+    # The simulation in the docs has its own (JavaScript) model of the pacing. It records the
+    # start times it computes, and checks itself against them when the page loads
+    match = re.search(
+        r'<script type="application/json" id="recorded-start-times">\s*(.*?)\s*</script>',
+        DOCS_SIMULATION_PATH.read_text(),
+        re.DOTALL,
+    )
+    assert match is not None
+    recorded = json.loads(match.group(1))
+    assert len(recorded) >= 20
+
+    for entry in recorded:
+        pacer = RequestPacer(10, 0.5, burst_ratio=entry['burst_ratio'])
+        assert pacer.burst_size == entry['burst_size']
+        starts = pacer_start_times(pacer, entry['arrivals'])
+        assert starts == pytest.approx(entry['starts'], abs=EPS), entry['scenario']
