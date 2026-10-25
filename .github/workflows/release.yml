@@ -1,0 +1,91 @@
+name: Publish release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Published release tag to publish (for example, omnipy_v0.24.0)
+        required: true
+        type: string
+
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/omnipy/
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Require a published release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json isDraft --jq '.isDraft')" = false
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dist --pattern '*.tar.gz' --pattern '*.whl'
+      - name: Check release assets
+        run: |
+          test "$(find dist -maxdepth 1 -name '*.tar.gz' | wc -l | tr -d ' ')" = 1
+          test "$(find dist -maxdepth 1 -name '*.whl' | wc -l | tr -d ' ')" = 1
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Lets a rerun after a failed image build pass this step
+          skip-existing: true
+
+  docker-image:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Set version and image tags
+        run: |
+          VERSION="${TAG#omnipy_v}"
+          IMAGE="ghcr.io/$GITHUB_REPOSITORY_OWNER/jupyter_omnipy"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          {
+            echo 'IMAGE_TAGS<<EOF'
+            echo "$IMAGE:$VERSION"
+            # Pre-releases do not move "latest"
+            if ! [[ "$VERSION" =~ (a|b|rc)[0-9]+ ]]; then
+              echo "$IMAGE:latest"
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_ENV"
+      - name: Wait for the release on PyPI
+        run: |
+          for _ in $(seq 60); do
+            if python3 -m pip download --quiet --no-deps --dest "$RUNNER_TEMP/omnipy" "omnipy==$VERSION"; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "omnipy $VERSION did not become available on PyPI." >&2
+          exit 1
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.TAG }}
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: docker/jupyter_omnipy
+          platforms: linux/amd64,linux/arm64
+          build-args: OMNIPY_VERSION=${{ env.VERSION }}
+          push: true
+          tags: ${{ env.IMAGE_TAGS }}

@@ -63,7 +63,8 @@
 
 - The version is derived from the latest release tag (`omnipy_vX.Y.Z`). Between releases, it is a
   development version such as `0.23.2.dev491+g645e8fb4`. Building needs the Git history with
-  tags, so use a full clone, not a shallow one.
+  tags, so use a full clone, not a shallow one. Releases are made by the workflows described in
+  [Releasing](#releasing), not by publishing local builds.
 
 ### Running tests
 
@@ -262,3 +263,45 @@ Run `uv sync --all-groups` first, so that the `.venv` and the tools used below e
      ]
    }
    ```
+
+## Releasing
+
+Release versions are derived from Git tags: a tag `omnipy_vX.Y.Z` produces a package with version
+`X.Y.Z`. Release notes are reviewed as a draft GitHub Release, then the approved release assets are
+published to PyPI using [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (no API
+tokens stored as secrets), and the Jupyter Docker image is built and pushed to the GitHub Container
+Registry. The [GitHub releases](https://github.com/fairtracks/omnipy/releases) are the release
+notes of Omnipy, and the Zenodo integration archives each published release. Release notes from
+before v0.18.0 are archived in `archive/release_notes_before_v0.18.0.md`.
+
+### One-time setup
+
+- On the [PyPI publishing settings](https://pypi.org/manage/project/omnipy/settings/publishing/)
+  page, add a trusted publisher with:
+    - Owner: `fairtracks`
+    - Repository: `omnipy`
+    - Workflow filename: `release.yml`
+    - Environment name: `pypi`
+- After the first image is pushed, make the `jupyter_omnipy` package public in the package
+  settings of the `fairtracks` organization on GitHub (new packages are private).
+
+### Preparing and reviewing a release
+
+1. On GitHub, open **Actions → Prepare release → Run workflow** and select `main`.
+2. Enter the new tag as `omnipy_vX.Y.Z` (for example, `omnipy_v0.24.0`) and run the workflow.
+3. The workflow runs CI, creates the tag locally, builds the tagged version, then pushes the tag and
+   creates a draft GitHub Release with a complete commit list, GitHub-generated pull request and
+   contributor notes, and the wheel and source distribution attached.
+4. For a long commit list, optionally use an LLM manually to draft a concise summary of the main
+   changes; review its output before adding it to the notes.
+5. Open the draft under **Releases**, review and edit its notes, then click **Publish release**.
+6. Publishing the GitHub Release runs `.github/workflows/release.yml`, which uploads the previously
+   validated release assets to PyPI. It then builds the Jupyter Docker image for the release and
+   pushes it as `ghcr.io/fairtracks/jupyter_omnipy:X.Y.Z` (and `:latest`, except for
+   pre-releases).
+
+If preparation fails before the draft release is created, no remote tag or PyPI release is
+created. Fix the issue on `main` and run **Prepare release** again with the same version. If
+publishing fails, rerun the failed job: files that already reached PyPI are skipped. After a
+workflow fix has been merged, use **Actions → Publish release → Run workflow** with the published
+release tag to retry without rebuilding or changing the version.

@@ -1,5 +1,7 @@
 FROM quay.io/jupyterhub/singleuser:5
 
+LABEL org.opencontainers.image.source=https://github.com/fairtracks/omnipy
+
 USER root
 
 RUN apt-get update -y && apt-get install -y tzdata
@@ -18,7 +20,10 @@ SHELL ["conda", "run", "--no-capture-output", "-n", "omnipy", "/bin/bash", "-c"]
 
 RUN mamba install python=3.12 ipykernel ipywidgets git -y && mamba clean -ay
 RUN pip cache purge
-RUN pip install omnipy==0.23.1
+# The released version of Omnipy to install, e.g. --build-arg OMNIPY_VERSION=0.24.0
+ARG OMNIPY_VERSION
+RUN test -n "$OMNIPY_VERSION" || { echo 'Build with --build-arg OMNIPY_VERSION=<version>' >&2; exit 1; }
+RUN pip install "omnipy==$OMNIPY_VERSION"
 RUN pip install itables
 RUN pip install ipy
 

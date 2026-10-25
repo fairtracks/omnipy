@@ -112,7 +112,7 @@ nav:
   - Glossary: reference/glossary.md
   - Code reference: reference/
 - Contributing: contributing.md
-- Release notes: release_notes.md
+- Release notes: https://github.com/fairtracks/omnipy/releases
 - Comics:
   - The Omnificients:
     - Optimus Parse (The Data Transformer): comics/optimus-parse.md

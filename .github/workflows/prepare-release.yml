@@ -1,0 +1,93 @@
+name: Prepare release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (for example, omnipy_v0.24.0)
+        required: true
+        type: string
+
+jobs:
+  validate-request:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require main
+        run: |
+          test "$GITHUB_REF" = "refs/heads/main" || {
+            echo "Prepare releases from main." >&2
+            exit 1
+          }
+
+  ci:
+    needs: validate-request
+    uses: ./.github/workflows/ci.yml
+
+  prepare:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # The commit that CI tested
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10.3.2
+      - name: Configure Git identity
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR_ID+$GITHUB_ACTOR@users.noreply.github.com"
+      - name: Validate release tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! [[ "$TAG" =~ ^omnipy_v[0-9]+\.[0-9]+\.[0-9]+((a|b|rc)[0-9]+)?(\.post[0-9]+)?$ ]]; then
+            echo "Tag must be a PEP 440 release tag such as omnipy_v0.24.0 or omnipy_v1.0.0rc1." >&2
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG"; then
+            echo "Tag $TAG already exists." >&2
+            exit 1
+          fi
+      - name: Create local release tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: git tag --annotate "$TAG" --message "Release $TAG"
+      - name: Build release assets
+        run: uv build
+      - name: Check release assets
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          VERSION="${TAG#omnipy_v}"
+          test "$(find dist -maxdepth 1 -name "omnipy-$VERSION.tar.gz" | wc -l | tr -d ' ')" = 1
+          test "$(find dist -maxdepth 1 -name "omnipy-$VERSION-*.whl" | wc -l | tr -d ' ')" = 1
+      - name: Push tag
+        env:
+          TAG: ${{ inputs.tag }}
+        run: git push origin "$TAG"
+      - name: Generate commit notes
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          printf '## Commits\n\n' > release-notes.md
+          PREVIOUS_TAG="$(git describe --tags --abbrev=0 --match 'omnipy_v*' "$TAG^" 2>/dev/null || true)"
+          if [ -n "$PREVIOUS_TAG" ]; then
+            RANGE="$PREVIOUS_TAG..$TAG"
+          else
+            RANGE="$TAG"
+          fi
+          git log --format="- %s ([%h](https://github.com/$GITHUB_REPOSITORY/commit/%H))" "$RANGE" \
+            >> release-notes.md
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! gh release create "$TAG" dist/* --draft --generate-notes --notes-file release-notes.md --title "Omnipy v${TAG#omnipy_v}" --verify-tag; then
+            gh release delete "$TAG" --yes || true
+            git push origin ":refs/tags/$TAG"
+            exit 1
+          fi

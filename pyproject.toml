@@ -119,7 +119,7 @@ docs = [
 source = "http://github.com/fairtracks/omnipy"
 homepage = "https://fairtracks.net/fair/#fair-07-transformation"
 documentation = "http://omnipy.readthedocs.io/"
-releasenotes = "https://omnipy.readthedocs.io/en/latest/release_notes/"
+releasenotes = "https://github.com/fairtracks/omnipy/releases"
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]
