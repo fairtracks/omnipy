@@ -13,7 +13,8 @@ repo = "local"
 id = "expand-docstr-macros"
 name = "Expand docstring macros"
 description = "Expand docstring macros in Python files."
-entry = "python .pre-commit-hooks/expand_docstr_macros.py"
+# Run with the project environment, as the script imports omnipy and its dependencies
+entry = "uv run python .pre-commit-hooks/expand_docstr_macros.py"
 args = ["--verbose", "v"]
 language = "system"
 types = ["python"]
