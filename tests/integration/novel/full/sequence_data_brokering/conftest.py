@@ -9,13 +9,13 @@ from .services import biosample_vault_sample_id_generator_context
 @pytest.fixture(scope='function')
 def samples() -> dict[str, dict[str, str]]:
     return {
-        'Sample-A': {
+        'sample-a': {
             'local_sample_alias': 'Sample-A',
             'specimen_type': 'wastewater solids',
             'collection_site': 'North Works',
             'sampled_at': '2026-05-03',
         },
-        'Sample-B': {
+        'sample-b': {
             'local_sample_alias': 'Sample-B',
             'specimen_type': 'river grab',
             'collection_site': 'River Mouth',
@@ -130,14 +130,14 @@ def expected_sequence_depot_submission_payload() -> dict[str, object]:
             'submission_checklist_version': 'SQD-paired-reads-checklist-1.2',
         },
         'samples': {
-            'Sample-A': {
+            'sample-a': {
                 'biosample_vault_sample_id': 'BSV:80907461',
                 'collection_site': 'North Works',
                 'local_sample_alias': 'sample-a',
                 'sampled_at': '2026-05-03',
                 'specimen_type': 'wastewater solids',
             },
-            'Sample-B': {
+            'sample-b': {
                 'biosample_vault_sample_id': 'BSV:80907462',
                 'collection_site': 'River Mouth',
                 'local_sample_alias': 'sample-b',

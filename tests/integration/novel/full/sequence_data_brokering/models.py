@@ -130,30 +130,58 @@ class SubmissionRecord(pyd.BaseModel):
     metadata: SubmissionMetadataModel
     status: SubmissionStatusModel = pyd.Field(default_factory=SubmissionStatusModel)
 
+    # TODO: Generalize Dataset primary-key validation for Models of Pydantic records.
+    @pyd.validator('samples')
+    def _sample_dataset_keys_match_local_sample_aliases(
+        cls,
+        samples: SubmissionSamplesDataset,
+    ) -> SubmissionSamplesDataset:
+        for dataset_key, sample in samples.items():
+            if dataset_key != sample.local_sample_alias:
+                raise ValueError(
+                    f"Sample Dataset key '{dataset_key}' must match local_sample_alias "
+                    f"'{sample.local_sample_alias}'")
+        return samples
+
     @pyd.validator('files')
-    def _two_reads_per_sample(
+    def _file_dataset_keys_match_file_ids(
         cls,
         files: SubmissionFilesDataset,
+    ) -> SubmissionFilesDataset:
+        for dataset_key, file in files.items():
+            if dataset_key != file.file_id:
+                raise ValueError(f"File Dataset key '{dataset_key}' must match file_id "
+                                 f"'{file.file_id}'")
+        return files
+
+    @pyd.validator('files')
+    def _samples_have_one_read1_and_one_read2(
+        cls,
+        files: SubmissionFilesDataset,
+        values: _SubmissionRecordDict,
     ) -> SubmissionFilesDataset:
         file_roles_per_sample: defaultdict[str, set[FileRole]] = defaultdict(set)
 
         for file in files.values():
-            key = (file.local_sample_alias, file.file_role)
-            if key in file_roles_per_sample[file.local_sample_alias]:
+            file_roles = file_roles_per_sample[file.local_sample_alias]
+            if file.file_role in file_roles:
                 raise ValueError(
                     f"Duplicate file role '{file.file_role}' for sample '{file.local_sample_alias}'"
                 )
-            file_roles_per_sample[file.local_sample_alias].add(file.file_role)
+            file_roles.add(file.file_role)
 
-        for sample_alias in file_roles_per_sample:
-            assert len(file_roles_per_sample[sample_alias]) == 2, (
-                f"Sample '{sample_alias}' must have exactly two files (read1 and read2)."
+        for sample in values['samples'].values():
+            file_roles = file_roles_per_sample[sample.local_sample_alias]
+            if file_roles != {'read1', 'read2'}:
+                raise ValueError(
+                    f"Sample '{sample.local_sample_alias}' must have exactly two files "
+                    '(read1 and read2).'
             )
 
         return files
 
     # TODO: Consider general support for remote key validation in Models of
-    #       of Pydantic models containing datasets.
+    #       Pydantic models containing datasets.
 
     @pyd.validator('files')
     def _file_sample_aliases_exist(
