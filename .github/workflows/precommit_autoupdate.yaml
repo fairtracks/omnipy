@@ -9,10 +9,9 @@ jobs:
   autoupdate-prek:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v7
 
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - uses: astral-sh/setup-uv@v10.3.2
 
       - name: Install dependencies
         run: uv sync --group dev
@@ -21,7 +20,7 @@ jobs:
         run: uv run prek update
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.CPR_GITHUB_TOKEN }}
           branch: update/prek-autoupdate
