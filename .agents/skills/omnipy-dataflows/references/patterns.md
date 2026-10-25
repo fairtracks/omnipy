@@ -4,6 +4,17 @@ Paths below are relative to the repository root. Check the current implementatio
 when extending these patterns; the examples describe the APIs available when this
 guidance was written.
 
+Read the sections relevant to the current design decision:
+
+| Decision | Sections |
+| --- | --- |
+| Data shape and identity | [Structures and batches](#choose-data-structures-by-their-role), [primary keys and relationships](#identity-and-relationship-contracts), [mutation validation](#validation-through-model-boundaries) |
+| Data reuse and boundaries | [Generic Models/Datasets](#reusable-models-and-datasets), [conversions](#model-transformations), [external APIs](#external-api-contracts) |
+| Execution and composition | [Templates and modifiers](#reusable-jobs-templates-and-modifiers), [routing](#routing-rules-that-matter), [callable types](#callable-types-and-composed-flows), [iteration and ownership](#dataset-iteration-and-ownership) |
+| State and completion | [Status from facts and acknowledgements](#status-from-facts-and-acknowledgements) |
+| Implementation | [Catalog example](#example-publish-a-catalog), [component structure and naming](structure-and-naming.md) |
+| Review and verification | [Readability](#readable-contracts-and-documentation-reuse), [narrative tests](#validation-and-narrative-tests), [source map](#source-map) |
+
 ## Readable contracts and documentation reuse
 
 The dataflow is both executable code and an inspectable contract for agent output.
@@ -159,21 +170,15 @@ but they represent the same identity. An external service's assigned identifier
 can remain a separate attribute; receiving it does not change the chosen primary
 key of the internal record.
 
-In the submission example, `local_sample_alias` is the sample's primary key. Use
-the lowercase Dataset key `sample-a` while retaining raw input
-`local_sample_alias='Sample-A'` to demonstrate Model normalization. After parsing:
-
-```python
-assert submission.samples['sample-a'].local_sample_alias == 'sample-a'
-```
-
-The [input and expected-output fixtures](../../../../tests/integration/novel/full/sequence_data_brokering/conftest.py)
-use matching normalized keys. The
+In the submission example, `local_sample_alias` is the sample's primary key. The
+[input and expected-output fixtures](../../../../tests/integration/novel/full/sequence_data_brokering/conftest.py)
+use the lowercase Dataset key `sample-a` while retaining raw input
+`local_sample_alias='Sample-A'`. Normalization occurs in the item schema, and
+validators on `SubmissionRecord` require Dataset keys to match the normalized
+primary-key fields. This makes agreement part of the input contract. The
 [integration test](../../../../tests/integration/novel/full/sequence_data_brokering/test_sequence_submission_brokering.py)
-checks alias normalization immediately after Model construction and compares the
-full enriched output. The former `Sample-A` Dataset key was an inconsistency to
-correct, not a pattern to preserve. Do not lowercase the raw alias values as well:
-doing so would remove this normalization example.
+constructs the Model through that validation and compares the full enriched output.
+Retain mixed-case raw aliases so the scenario exercises normalization.
 
 The [table primary-key specification](../../../../docs/superpowers/specs/2026-10-16-table-model-architecture-and-conversions.md#primary-keys)
 extends this concept to tables. It defines deterministic serialization, retained
@@ -195,6 +200,10 @@ include:
   the local primary key. `SubmissionFileSchema` constrains file roles, checksum
   format, and URL types; `_extract_file_name_from_source_storage_uri` derives the
   filename within that record.
+- `SubmissionRecord._sample_dataset_keys_match_local_sample_aliases` and
+  `_file_dataset_keys_match_file_ids` validate key/content agreement for samples
+  and files. These top-level validators stand in for future general Dataset
+  primary-key support; keep that TODO separate from remote-key validation.
 - `SubmissionRecord._file_sample_aliases_exist` has access to both sample and file
   Datasets and checks that each file's normalized reference identifies a sample.
 - `SubmissionRecord._samples_have_one_read1_and_one_read2` checks the paired-file
@@ -216,7 +225,8 @@ Check coverage over all required parent records, including those with no childre
 Check duplicate occurrences before reducing children to a set of roles. These
 cases are enforced by the submission example's paired-file validator. Generalize
 the relationship and coverage principles, not this domain's exact number of files
-or role names.
+or role names. The current tests specifically cover duplicate roles and a sample
+without files, the two cases missed by the historical validator.
 
 ## Validation through Model boundaries
 

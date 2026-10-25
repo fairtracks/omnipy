@@ -82,41 +82,27 @@ a table-row schema, and that relative imports within and between components are
 an in-Omnipy guideline supporting potential extraction into separate repositories.
 See [structure and naming](structure-and-naming.md) for the agreed conventions.
 
-Human readability is a primary requirement. Integration scenarios also function
-as tutorials and should be reusable in documentation. Their implementation should
-show Omnipy's declarative syntax, avoidance of explicit processing loops,
-model-defined contracts, mimicking wrappers, Dataset batches, and composition of
-job and callable types. This does not require demonstrating every capability in
-every example; the water-sample tutorial's single Dataset level is a deliberate
-choice of teaching scope.
-
-The produced models and flows also form an inspectable contract for agent output.
-Humans should be able to understand and assess the implementation by reading its
-declarations, relevant validators, and meaningful stages. Readability is therefore
-part of the acceptance criteria, alongside execution and test results. See
+The user made human readability an acceptance criterion: model and flow
+declarations form an inspectable contract for agent output. Integration scenarios
+also serve as tutorials, showing Omnipy's capabilities within a focused lesson. See
 [readability and reuse](patterns.md#readable-contracts-and-documentation-reuse).
 
-Models are working mimicking wrappers, including for non-Pydantic content. Access,
-update, and pass them directly; reserve `.content` and `.to_data()` for consumers
-that require those representations. Converter construction should normally retain
-the resulting Model. The catalog example therefore uses
-`PublicationMapper((record, metadata))` with `@mimics(PublishRequest)`, rather than
-explicitly wrapping its input and then unwrapping its output with `.convert()`.
+The user emphasized Models as working mimicking wrappers, including for
+non-Pydantic content. This motivated the catalog example's direct
+`PublicationMapper((record, metadata))` construction and `@mimics(PublishRequest)`.
+The [conversion guidance](patterns.md#model-transformations) explains the boundary
+between retaining the wrapper and requesting its underlying value.
 
 The user emphasized that the BioSampleVault submission type is the external API
 contract itself, currently named `BioSampleVaultSampleSubmissionSchema`. The
-coroutine in `services.py` is its present implementation in the example; mocked
-API endpoints are a likely future replacement. Internal workflow records must
-be mapped to this external schema rather than the stand-in's signature being
-reshaped around the workflow. `SampleAndMetadataToBioSampleVaultSubmissionMapper`
-mimics that request schema and can be passed in its place. Preserve this boundary
-across changes in transport, with encoding handled where the transport requires
-it. See the [external-contract example](patterns.md#external-api-contracts).
+coroutine in `services.py` is its present implementation; mocked API endpoints
+are a likely replacement. The mapper mimics this request schema and can be passed
+in its place without redefining the service contract. See the
+[external-contract example](patterns.md#external-api-contracts).
 
 Model validation runs on changes made through the Model interface. The user
-identified the important structural exception: mutating a bare inner container
-does not enter the surrounding Model. Insert Models between nested containers
-instead of routinely unpacking, rebuilding, or manually validating them. The
+identified the structural exception: mutating a bare inner container does not enter
+the surrounding Model. The
 [validation examples](patterns.md#validation-through-model-boundaries) include the
 corrected nested-record attribute assignment and the plain nested-list exception.
 Checking the current implementation also established that Pydantic fields such as
@@ -125,51 +111,33 @@ That field declaration therefore does not reproduce the bare-container exception
 in the current checkout. Validation guarantees and rollback/isolation guarantees
 are separate concerns.
 
-For status design, tasks record authoritative facts such as assigned identifiers,
-per-file transfer outcomes, and service acceptance. Validators on the containing
-model derive readiness and aggregate summaries from those facts. Use normal Model
-updates and collection assignments; a separate refresh task or routine manual
-validation would duplicate framework behavior. A prepared transfer URL is not
-evidence of successful transfer, and readiness for final submission is not evidence
-of acceptance. Final completion requires the service's acknowledgement. See the
-[status examples](patterns.md#status-from-facts-and-acknowledgements) for the split
-between recorded outcomes, derived status, and aggregate ownership.
-
-Status placement is use-case dependent. Inline fields, a nested status model, and
-a separate structure are all valid choices when they serve readability, ownership,
-reuse, or the input/output contract. The preferred example's layout is one choice,
-not a requirement to separate status in every flow. The rules about authoritative
-facts, derivation, and acknowledgement apply across those layouts.
+The status discussion established a division between task-recorded facts and
+model-derived summaries, with acknowledgement required for external completion.
+The user clarified that inline, nested, or separate status storage depends on the
+use case. The [status examples](patterns.md#status-from-facts-and-acknowledgements)
+explain these independent choices and the role of Model validation.
 
 Dataset keys are intended to serialize the primary keys of their contents. The
 earlier interpretation of `Sample-A` as a deliberately independent Dataset key
 beside the normalized `sample-a` alias was incorrect. The sample fixtures and
 expected output now use lowercase Dataset keys while retaining mixed-case input
-aliases, so normalization remains visible and tested. External service identifiers
-remain separate from the local primary key used by the sample Dataset.
+aliases, so normalization remains visible and tested. At the user's request,
+top-level validators now enforce key/content agreement for both samples and files,
+replacing the proposed test-only alias assertions.
 
 The [table model specification](../../../../docs/superpowers/specs/2026-10-16-table-model-architecture-and-conversions.md#primary-keys)
-extends this identity invariant to keyed tables and Dataset conversion. Its
-proposed APIs, deterministic composite-key machinery, and automatic re-keying are
-future functionality, not implementation available to use now. The
+extends this identity invariant to keyed tables and Dataset conversion. Its APIs
+and automatic re-keying remain planned functionality. The
 [identity and relationship examples](patterns.md#identity-and-relationship-contracts)
-link the actual fixtures and model validators, and spell out duplicate, missing,
-and invalid-reference cases without treating incomplete validators as correct.
+link the fixtures, validators, and intended failure cases.
 
-An Omnipy processing batch is represented by a Dataset. A collection of actual
-Omnipy batches can use a Dataset of Datasets of Models. A domain group is not
-automatically such a batch: a sample's measurements, a response's records, or a
-table can remain structured content within one item. Identify the operation's
-unit before deciding which groups need Dataset semantics.
-
-The user clarified the main reason: current asynchronous request concurrency and
-result gathering operate across Dataset items through
-`iterate_over_data_files=True`. Dataset is therefore the batch boundary for
-framework-managed execution, not merely a preferred collection format. The
-intended future direction includes parallel execution and async-generator
-streaming while retaining Dataset as the main abstraction for an iterable batch
-of related data. Future API details and implementation coverage are not inferred
-from that direction.
+The user explained why Dataset is the batch abstraction: current async concurrency
+and gathering operate across its items through `iterate_over_data_files=True`.
+Collections of actual batches may therefore need nested Datasets; domain grouping
+alone does not imply that structure. See
+[batch boundaries](patterns.md#choose-data-structures-by-their-role). Parallel
+execution and async-generator streaming are intended extensions of this abstraction;
+their future APIs and implementation coverage are not inferred from that direction.
 
 For task iteration, the agreed future direction is to name the outer dataset
 parameter and identify the inner item parameter by name, instead of requiring it
@@ -192,19 +160,12 @@ the Dataset of requests/responses instead of conflating their grouping levels.
 The existing `sample_key`, `sample_alias`, and final `samples` table make "sample"
 a consistent domain name to use in place of "batch".
 
-The example is intended for introductory tutorials and should not contain
-Datasets of Datasets. Keep the single Dataset level and list-valued Models used
-for fetching, normalization, and flattening. The earlier recommendation to refactor
-this into nested Datasets was based on an overly broad reading of "batch" and is
-withdrawn. A possible historical typing limitation is no longer a reason to
-prescribe a representation change here; the clarified domain and teaching purpose
-are the relevant design criteria.
-
-The general nested-Dataset pattern remains appropriate for actual collections of
-Omnipy processing batches. Core coverage exists in
-`tests/data/test_dataset.py::test_nested_datasets`; that capability need not be
-introduced in every tutorial. Use names that distinguish domain data from the
-framework's processing vocabulary, while preserving real external contracts.
+The user explicitly kept this introductory tutorial to one Dataset level.
+The earlier recommendation to introduce nested Datasets was based on an overly
+broad reading of "batch" and is withdrawn. Commit `28d6cd9d` changes the domain
+terminology to "sample" while retaining list-valued Models. The general
+nested-Dataset capability remains covered in
+`tests/data/test_dataset.py::test_nested_datasets` for actual collections of batches.
 
 ## What this guidance does not infer
 
@@ -218,8 +179,10 @@ framework's processing vocabulary, while preserving real external contracts.
   own model, or have a separate final-submission model in every domain.
 - No expansion into the full engine matrix for each narrative integration test.
 
-The target is an architectural reference, not a validator specification to copy
-verbatim. For example, its duplicate-file-role check tests a tuple against a set
-containing role strings; that does not prove duplicate detection. Its two-role
-loop also visits only samples represented among the files. Preserve the intended
-relationship rules, check their domain scope, and test their actual enforcement.
+The historical target contained two paired-file validation bugs: it compared a
+tuple against a set of role strings and checked only samples represented among
+the files. Commit `42862757` fixes both and adds focused regression cases; the
+current validator checks duplicate roles and visits every declared sample.
+The user explicitly instructed agents to suggest fixing obvious bugs rather than
+treat them as a golden standard. Preserve intended relationships, verify their
+enforcement, and distinguish historical defects from the corrected checkout.

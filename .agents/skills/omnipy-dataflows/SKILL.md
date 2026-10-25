@@ -29,8 +29,9 @@ tutorial need not demonstrate every feature. These are defaults for dataflow wor
 not restrictions on engine implementation or a requirement to turn every Python
 function into a job.
 
-Read [patterns.md](references/patterns.md) when choosing the data shape or wiring
-tasks and flows; it includes an executable example outside the original domain.
+Consult the relevant sections of [patterns.md](references/patterns.md) when choosing
+the data shape or wiring tasks and flows. Its navigation table points to API
+details and an executable example outside the original domain.
 Read [design-rationale.md](references/design-rationale.md) when reviewing why
 these defaults exist or resolving a conflict with the historical test plans.
 
@@ -52,6 +53,10 @@ flows before introducing helpers or assuming a framework capability is missing.
 Historical plans explain intent; their former API limitations are not a reason to
 reimplement capabilities now available.
 
+Treat preferred examples as architectural evidence. Suggest fixes for obvious
+bugs and verify the intended invariant; do not promote implementation mistakes
+into design rules.
+
 ## Keep data typed throughout the workflow
 
 - Use a Pydantic record for a fixed set of named fields and an Omnipy `Model`
@@ -62,21 +67,18 @@ reimplement capabilities now available.
   or payload, including groups of measurements processed together. Choose tables
   when the operations are actually tabular.
 - Reserve "batch" for the Dataset processing abstraction in explanations and
-  tutorial names. Distinguish domain groups (such as a sample's measurements)
-  and transport units (such as response pages) from Omnipy batches. Nest Datasets
-  when the workflow needs a collection of actual batches, not merely because the
-  domain or JSON is nested. Keep introductory examples to the structure needed
-  for their lesson; the water-sample harmonization example should use a single
-  Dataset level, with lists inside its Models.
+  tutorial names. Domain groups and response pages can remain structured items.
+  Nest Datasets for collections of actual batches; keep introductory examples to
+  the structure needed for their lesson. See
+  [data structures and batch boundaries](references/patterns.md#choose-data-structures-by-their-role),
+  including the water-sample example's deliberate single Dataset level.
 - The Dataset boundary also determines the units available to framework-managed
   execution. With `iterate_over_data_files=True`, an async job schedules work
   across the dataset's items and gathers results back under their keys. Keep
   independently scheduled units visible as dataset items instead of burying
-  them in list Models that require manual orchestration. A fetched response's
-  internal measurements do not thereby become separate jobs. The intended
-  extensions are parallel execution and async-generator streaming, with Dataset
-  remaining the central batch abstraction; their future interfaces are not
-  specified here.
+  them in list Models that require manual orchestration. Internal measurements
+  processed together do not thereby become separate jobs. The reference distinguishes
+  current execution from intended parallelism and streaming extensions.
 - Encode normalization and intrinsic validity in types and validators: constrained
   identifiers, dates, URLs, enumerated states, and relationships between records.
   Put a relationship validator on the smallest model containing both sides.
@@ -111,9 +113,9 @@ reimplement capabilities now available.
   `Mapper.convert(source)` when the underlying target value is specifically needed.
 - Keep shared metadata at the appropriate aggregate level. Dataset keys should
   serialize the primary keys of their contents. For a record whose primary key is
-  a normalized string, use that string as its Dataset key. The container key and
-  record field have different uses but must express the same primary-key value;
-  externally assigned identifiers can remain separate fields. See
+  a normalized string, use that string as its Dataset key; external identifiers
+  can remain separate fields. Enforce key/content agreement through model validators
+  where the containing contract is available. See
   [identity and relationship contracts](references/patterns.md#identity-and-relationship-contracts)
   for examples and the future table design. Do not assume automatic key derivation
   or re-keying is implemented by an ordinary Dataset.
@@ -161,9 +163,6 @@ reimplement capabilities now available.
   `child(...)` or `await child(...)`, according to the callable contract. Supply
   templates as children of linear/DAG flows without eagerly applying or running
   them. See the lifecycle example in the same reference.
-- Nested model/dataset types can express structural conversion within a stage.
-  Use Datasets for processing batches and nested lists for an item's payload or
-  intrinsic value structure; mapping nested values does not require nested jobs.
 - Check routing explicitly: parameter-map direction, where each result is stored,
   which inputs remain available, and the last child's output. See the reference
   before relying on DAG retention or async iteration.
@@ -200,10 +199,10 @@ by itself prove every item succeeded.
 
 ## Structure and name reusable components
 
-Use existing `omnipy.components` packages as the template for module responsibilities
-and naming. Grow large modules into same-named packages. Prefer `Schema` for
-Pydantic schemas generally and `Record` primarily for table-row schemas; use
-`Model`, `Dataset`, and `Mapper` to identify those roles. Give tasks and flows
+Use existing `omnipy.components` packages as the template for module
+responsibilities and naming. Grow large modules into same-named packages. Prefer
+`Schema` for Pydantic schemas generally and `Record` primarily for table-row schemas;
+use `Model`, `Dataset`, and `Mapper` to identify those roles. Give tasks and flows
 operation names; when distinguishing applied instances, use `_task` or `_flow`
 rather than `_job`. In Omnipy component code, use relative imports within and
 between components to support potential extraction into separate repositories.
@@ -213,10 +212,6 @@ dependency boundaries, and import conventions.
 
 ## Keep implementations usable outside their test
 
-Put scenario inputs, expected results, and scoped service resets in `conftest.py`
-or established case modules. Keep the reusable implementation in the component-style
-modules described above.
-
 Use these four principles for narrative integration tests and their tutorial reuse:
 
 1. **Keep the execution story visible.** Construct typed input, invoke the flow
@@ -225,10 +220,10 @@ Use these four principles for narrative integration tests and their tutorial reu
    reusable in documentation without depending on pytest. Show the actual tested
    implementation, using repository documentation conventions.
 2. **Keep expectations independent and setup isolated.** Put scenario inputs,
-   independently specified expected results, and service-state resets in fixtures
-   or established case modules. Do not generate expected output with the mapper
-   being tested. Keep fixture-specific values and lifecycle setup out of reusable
-   task and flow bodies.
+   independently specified expected results, and scoped service-state resets in
+   `conftest.py` or established case modules. Do not generate expected output with
+   the mapper being tested. Keep fixture-specific values and lifecycle setup out
+   of reusable task and flow bodies.
 3. **Verify the external contract at its boundary.** Exercise the actual flow and
    its service calls. Assert relevant request fields and returned outcomes through
    tests, spies, or mocked endpoints that implement the declared external API.
