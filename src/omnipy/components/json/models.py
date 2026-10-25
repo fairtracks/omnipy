@@ -10,7 +10,6 @@ from typing import Any, cast, Generic, overload, TypeAlias
 from typing_extensions import TypeVar
 
 from omnipy.data.model import is_model_instance, Model
-from omnipy.shared.protocols.builtins import IsBool, IsDict, IsFloat, IsInt, IsList, IsStr
 from omnipy.shared.protocols.content import (
     IsDictContent,
     IsDictOfDictsContent,
@@ -19,6 +18,7 @@ from omnipy.shared.protocols.content import (
     IsListOfDictsContent,
     IsListOfListsContent,
 )
+from omnipy.shared.protocols.vendored.builtins import IsBool, IsDict, IsFloat, IsInt, IsList, IsStr
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util.helpers import ensure_plain_type
 import omnipy.util.pydantic as pyd

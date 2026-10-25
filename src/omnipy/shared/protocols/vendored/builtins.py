@@ -89,9 +89,9 @@ from typing_extensions import Literal, LiteralString, Self, deprecated, TypeVar,
 #     from _typeshed import AnnotateFunc
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
-from omnipy.shared.protocols._collections_abc import IsDictItems, IsDictKeys, IsDictValues
-from omnipy.shared.protocols._typeshed import (ReadableBuffer, SupportsKeysAndGetItem, SupportsRichComparison, SupportsRichComparisonT)
-from omnipy.shared.protocols.typing import (IsAbstractSet, IsMutableMapping, IsMapping, IsMutableSequence, IsMutableSet, IsItemSequence)
+from omnipy.shared.protocols.vendored._collections_abc import IsDictItems, IsDictKeys, IsDictValues
+from omnipy.shared.protocols.vendored._typeshed import (ReadableBuffer, SupportsKeysAndGetItem, SupportsRichComparison, SupportsRichComparisonT)
+from omnipy.shared.protocols.vendored.typing import (IsAbstractSet, IsMutableMapping, IsMapping, IsMutableSequence, IsMutableSet, IsItemSequence)
 
 _T = TypeVar("_T")
 # _I = TypeVar("_I", default=int)
@@ -282,8 +282,8 @@ _NegativeInteger: TypeAlias = Literal[-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -
 # hand-writing docstrings that duplicate CPython docs, investigate whether
 # docstrings could be generated statically (e.g. via ast/token inspection of
 # typeshed stubs) or dynamically (e.g. at import time from the real stdlib
-# classes).  See also protocols/content.py, protocols/types.py and
-# protocols/typing.py for similar stdlib-derived stubs.
+# classes).  See also protocols/content.py, protocols/vendored/types.py and
+# protocols/vendored/typing.py for similar stdlib-derived stubs.
 #
 
 

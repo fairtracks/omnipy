@@ -1,7 +1,7 @@
 from collections.abc import Iterable, Mapping
 from typing import Protocol
 
-from omnipy.shared.protocols.typing import IsMapping
+from omnipy.shared.protocols.vendored.typing import IsMapping
 
 
 class AssertRowIter(Protocol):

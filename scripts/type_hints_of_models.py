@@ -34,8 +34,8 @@ from omnipy.components.json.models import (
     JsonOnlyListsModel,
     JsonScalarModel,
 )
-from omnipy.shared.protocols.builtins import IsInt
 from omnipy.shared.protocols.data import IsModel
+from omnipy.shared.protocols.vendored.builtins import IsInt
 
 # TODO: Turn type_hints_of_models into tests with typing.assert_type (or similar)
 model = Model[str]('hello')

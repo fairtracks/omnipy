@@ -4,7 +4,7 @@ from typing import Annotated
 import pytest
 
 from omnipy.shared.protocols.hub.runtime import IsRuntime
-from omnipy.shared.protocols.typing import IsMapping
+from omnipy.shared.protocols.vendored.typing import IsMapping
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 
 from .helpers.protocols import AssertColumnWiseMappings, AssertRowIter

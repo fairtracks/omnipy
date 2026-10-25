@@ -51,8 +51,8 @@ from typing import (  # noqa: Y022,Y038,UP035,Y057
 from typing_extensions import TypeVar
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
-from omnipy.shared.protocols.types import IsMappingProxyType
-from omnipy.shared.protocols.typing import IsItemsView, IsKeysView, IsValuesView
+from omnipy.shared.protocols.vendored.types import IsMappingProxyType
+from omnipy.shared.protocols.vendored.typing import IsItemsView, IsKeysView, IsValuesView
 
 # __all__ = [
 #     "Awaitable",

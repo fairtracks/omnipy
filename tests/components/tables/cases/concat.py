@@ -14,7 +14,7 @@ from omnipy.components.tables.models import (
     RowWiseTableWithColNamesModel,
 )
 from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
-from omnipy.shared.protocols.typing import IsMapping
+from omnipy.shared.protocols.vendored.typing import IsMapping
 
 from ..helpers.classes import (
     FloatListLikeColumnWiseTableWithColNamesModel,

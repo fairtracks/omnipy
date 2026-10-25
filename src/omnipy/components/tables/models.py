@@ -31,7 +31,7 @@ from omnipy.shared.protocols.content import (
 )
 from omnipy.shared.protocols.data import HasContent
 from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
-from omnipy.shared.protocols.typing import IsMapping
+from omnipy.shared.protocols.vendored.typing import IsMapping
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import all_type_variants, ensure_plain_type, first_key_in_mapping, is_union
 import omnipy.util.pydantic as pyd

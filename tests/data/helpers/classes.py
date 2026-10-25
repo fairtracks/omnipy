@@ -7,7 +7,7 @@ from typing import Generic
 
 from typing_extensions import TypeVar
 
-from omnipy.shared.protocols._collections_abc import IsDictItems, IsDictKeys, IsDictValues
+from omnipy.shared.protocols.vendored._collections_abc import IsDictItems, IsDictKeys, IsDictValues
 import omnipy.util.pydantic as pyd
 
 T = TypeVar('T')

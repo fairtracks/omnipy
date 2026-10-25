@@ -37,13 +37,13 @@ from omnipy.data.helpers import (
     cleanup_name_qualname_and_module,
 )
 from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
-from omnipy.shared.protocols._typeshed import SupportsItems
 from omnipy.shared.protocols.data import (
     IsHttpUrlDataset,
     IsMultiModelDataset,
     IsPathOrUrl,
     IsPathsOrUrlsOneOrMoreOrNone,
 )
+from omnipy.shared.protocols.vendored._typeshed import SupportsItems
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util._placeholder import F

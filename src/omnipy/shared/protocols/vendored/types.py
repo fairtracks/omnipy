@@ -38,7 +38,7 @@ from typing_extensions import TypeVar
 #     from _typeshed import AnnotateFunc
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
-from omnipy.shared.protocols.typing import IsItemsView, IsKeysView, IsMapping, IsValuesView
+from omnipy.shared.protocols.vendored.typing import IsItemsView, IsKeysView, IsMapping, IsValuesView
 
 # __all__ = [
 #     "FunctionType",

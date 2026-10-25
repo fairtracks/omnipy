@@ -35,7 +35,7 @@ from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import create_pydantic_model_subclass_with_wrappers, Model
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
-from omnipy.shared.protocols.typing import IsMapping
+from omnipy.shared.protocols.vendored.typing import IsMapping
 import omnipy.util.pydantic as pyd
 from omnipy.util.pydantic import ValidationError
 from omnipy.util.setdeque import SetDeque

@@ -28,7 +28,7 @@ from omnipy.shared.protocols.config import (
     IsTextConfig,
 )
 from omnipy.shared.protocols.hub.log import CanLog
-from omnipy.shared.protocols.typing import IsMutableMapping
+from omnipy.shared.protocols.vendored.typing import IsMutableMapping
 from omnipy.util.helpers import is_package_editable
 import omnipy.util.pydantic as pyd
 from omnipy.util.pydantic import Undefined, UndefinedType

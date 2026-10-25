@@ -6,12 +6,13 @@ from typing import Any, Literal, overload, Protocol, Self, SupportsIndex
 from typing_extensions import override, TypeVar
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
-from omnipy.shared.protocols._typeshed import (
+from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
+from omnipy.shared.protocols.vendored._typeshed import (
     ConvertibleToFloat,
     ConvertibleToInt,
     SupportsKeysAndGetItem,
 )
-from omnipy.shared.protocols.builtins import (
+from omnipy.shared.protocols.vendored.builtins import (
     _NegativeInteger,
     _PositiveInteger,
     IsBool,
@@ -24,8 +25,12 @@ from omnipy.shared.protocols.builtins import (
     IsStr,
     IsTuple,
 )
-from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
-from omnipy.shared.protocols.typing import IsAbstractSet, IsHashable, IsItemSequence, IsMapping
+from omnipy.shared.protocols.vendored.typing import (
+    IsAbstractSet,
+    IsHashable,
+    IsItemSequence,
+    IsMapping,
+)
 
 _KeyT = TypeVar('_KeyT')
 _NestedKeyT = TypeVar('_NestedKeyT')

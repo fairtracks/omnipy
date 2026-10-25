@@ -133,14 +133,8 @@ line-length = 100
 target-version = "py311"
 src = ["src", "tests"]
 force-exclude = true
-extend-exclude = [
-    "src/omnipy/shared/protocols/_collections_abc.py",
-    "src/omnipy/shared/protocols/_typeshed.py",
-    "src/omnipy/shared/protocols/_typeshed_import",
-    "src/omnipy/shared/protocols/builtins.py",
-    "src/omnipy/shared/protocols/types.py",
-    "src/omnipy/shared/protocols/typing.py",
-]
+# Modified copies of Typeshed stubs, kept close to the originals
+extend-exclude = ["src/omnipy/shared/protocols/vendored"]
 
 [tool.ruff.format]
 quote-style = "single"
