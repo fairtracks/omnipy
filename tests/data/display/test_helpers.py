@@ -1,22 +1,30 @@
 """Tests for data display helpers."""
 
-from omnipy.data._display.helpers import soft_wrap_words, UnicodeCharWidthMap
+from omnipy.data._display.helpers import char_cell_width, only_single_width_chars, soft_wrap_words
 
 
-def test_unicode_char_width_map() -> None:
-    map = UnicodeCharWidthMap()
-    assert map['\0'] == 0
-    assert map['\x1f'] == 0
-    assert map[' '] == 1
-    assert map['A'] == 1
-    assert map['a'] == 1
-    assert map['1'] == 1
-    assert map['~'] == 1
-    assert map['\x7f'] == 0
-    assert map['\x80'] == 0
-    assert map['\x9f'] == 0
-    assert map['\xa0'] == 1
-    assert map['中'] == 2
+def test_char_cell_width() -> None:
+    assert char_cell_width('\0') == 0
+    assert char_cell_width('\x1f') == 0
+    assert char_cell_width(' ') == 1
+    assert char_cell_width('A') == 1
+    assert char_cell_width('a') == 1
+    assert char_cell_width('1') == 1
+    assert char_cell_width('~') == 1
+    assert char_cell_width('\x7f') == 0
+    assert char_cell_width('\x80') == 0
+    assert char_cell_width('\x9f') == 0
+    assert char_cell_width('\xa0') == 1
+    assert char_cell_width('中') == 2
+
+
+def test_only_single_width_chars() -> None:
+    assert only_single_width_chars('')
+    assert only_single_width_chars(' Abc ~123')
+    assert not only_single_width_chars('a\tb')
+    assert not only_single_width_chars('a\x7fb')
+    assert not only_single_width_chars('æøå')
+    assert not only_single_width_chars('中')
 
 
 def test_soft_wrap_words_no_wrap_needed():

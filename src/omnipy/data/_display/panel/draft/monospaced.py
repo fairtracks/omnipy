@@ -3,12 +3,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from functools import cached_property, lru_cache
-from typing import ClassVar, Generic
+from typing import Generic
 
 from typing_extensions import override
 
 from omnipy.data._display.dimensions import Dimensions
-from omnipy.data._display.helpers import UnicodeCharWidthMap
+from omnipy.data._display.helpers import char_cell_width, only_single_width_chars
 from omnipy.data._display.panel.draft.base import DimensionsAwareDraftPanel, DraftPanel
 from omnipy.data._display.panel.typedefs import ContentT, FrameT
 from omnipy.shared.enums.display import MaxTitleHeight
@@ -26,8 +26,6 @@ class MonospacedDraftPanel(
 ):
     """Dimensions-aware draft panel that measures monospaced text content."""
 
-    _char_width_map: ClassVar[UnicodeCharWidthMap] = UnicodeCharWidthMap()
-
     @cached_property
     @abstractmethod
     def _content_lines(self) -> list[str]: ...
@@ -36,7 +34,6 @@ class MonospacedDraftPanel(
         stats = _calc_line_stats(
             line,
             self.config.tab,
-            self._char_width_map,
         )
         return stats.line_width
 
@@ -85,10 +82,9 @@ class LineStats:
 def _calc_line_stats(
     line: str,
     tab_size: int,
-    char_width_map: UnicodeCharWidthMap,
     width_limit: int | None = None,
 ) -> LineStats:
-    if char_width_map.only_single_width_chars(line):
+    if only_single_width_chars(line):
         return LineStats(
             line_width=len(line),
             char_count=len(line),
@@ -99,7 +95,7 @@ def _calc_line_stats(
             if ch == '\t':
                 char_width = tab_size - (stats.line_width % tab_size)
             else:
-                char_width = char_width_map[ch]
+                char_width = char_cell_width(ch)
 
             if width_limit is not None:
                 if stats.line_width + char_width > width_limit:

@@ -5,7 +5,6 @@ import rich.console
 from omnipy.data._display.config import OutputConfig
 from omnipy.data._display.dimensions import has_width
 from omnipy.data._display.frame import AnyFrame
-from omnipy.data._display.helpers import UnicodeCharWidthMap
 from omnipy.data._display.panel.draft.monospaced import _calc_line_stats
 from omnipy.shared.enums.display import HorizontalOverflowMode, VerticalOverflowMode
 from omnipy.util.helpers import strip_and_split_newline
@@ -176,7 +175,6 @@ def crop_content_with_extra_wide_chars(
     all_content_lines: list[str],
     frame: AnyFrame,
     config: OutputConfig,
-    char_width_map: UnicodeCharWidthMap,
 ) -> list[str]:
     """Crop text using rendered character widths rather than raw code-point counts."""
 
@@ -187,7 +185,6 @@ def crop_content_with_extra_wide_chars(
             stats = _calc_line_stats(
                 line,
                 config.tab,
-                char_width_map,
                 width_limit=frame.dims.width,
             )
 

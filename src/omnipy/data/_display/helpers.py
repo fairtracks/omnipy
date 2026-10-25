@@ -1,49 +1,17 @@
-from typing import cast
-
-from rich._unicode_data import load as load_cell_table
-from rich.cells import _is_single_cell_widths
-
-from omnipy.util.range_lookup import RangeLookup
+from rich.cells import get_character_cell_size
 
 
-class UnicodeCharWidthMap:
-    """Map Unicode characters to display cell widths used by panel layout."""
+def char_cell_width(char: str) -> int:
+    """Return the display cell width (0, 1 or 2) of a character used by panel layout.
 
-    def __init__(self) -> None:
-        width_0_ranges = []
-        width_2_ranges = []
+    Widths are taken from rich, so that panel layout agrees with rich's rendering.
+    """
+    return get_character_cell_size(char)
 
-        cell_widths = cast(list[tuple[int, int, int]], load_cell_table().widths)
 
-        # ASCII cell widths from rich.cells.get_character_cell_size()
-        width_0_ranges.append(range(0, 32))
-        width_0_ranges.append(range(0x07F, 0x0A0))
-
-        for start, stop_inclusive, width in cell_widths:
-            cur_range = range(start, stop_inclusive + 1)
-            if width <= 0:
-                width_0_ranges.append(cur_range)
-            elif width == 2:
-                width_2_ranges.append(cur_range)
-
-        self._chars_with_width_0 = RangeLookup(width_0_ranges)
-        self._chars_with_width_2 = RangeLookup(width_2_ranges)
-
-    def __getitem__(self, char: str) -> int:
-        unicode_index = ord(char)
-        if unicode_index in self._chars_with_width_0:
-            return 0
-        if unicode_index in self._chars_with_width_2:
-            return 2
-        return 1
-
-    @staticmethod
-    def only_single_width_chars(line: str) -> bool:
-        return _is_single_cell_widths(line)
-
-    def __hash__(self) -> int:
-        # No state, so we can use a constant hash
-        return hash('UnicodeCharWidthMap')
+def only_single_width_chars(line: str) -> bool:
+    # All printable ASCII characters are one cell wide (tab is not printable)
+    return line.isascii() and line.isprintable()
 
 
 def soft_wrap_words(words: list[str], max_width: int) -> list[str]:

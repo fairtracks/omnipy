@@ -169,7 +169,6 @@ class ReflowedTextDraftPanel(
             content_lines,
             frame,
             self.config,
-            self._char_width_map,
         )
         return strip_newlines(content_lines)
 
