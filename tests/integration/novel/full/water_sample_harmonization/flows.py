@@ -11,16 +11,14 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsDataset
 
-from .models import (
-    NormalizedBatchesDataset,
-    NormalizedRiverBatchRecordMapper,
-    NormalizedWastewaterBatchRecordMapper,
-)
-from .tasks import create_sample_and_measurements_tables, fetch_batches
+from .models import (NormalizedRiverSampleRecordMapper,
+                     NormalizedSamplesDataset,
+                     NormalizedWastewaterSampleRecordMapper)
+from .tasks import create_sample_and_measurements_tables, fetch_sample_pages
 
 
 @LinearFlowTemplate(
-    fetch_batches,  # takes: batch_page_urls
+    fetch_sample_pages,  # takes: sample_page_urls
     concat_all_vals_in_datasets_as_args,
     create_dataset_from_args.refine(
         param_key_map=dict(
@@ -28,31 +26,31 @@ from .tasks import create_sample_and_measurements_tables, fetch_batches
             key='concat_pages_key',
         )
     ),
-    NormalizedBatchesDataset,
+    NormalizedSamplesDataset,
 )
-async def collect_and_normalize_batches(
+async def collect_and_normalize_samples(
     *,
-    batch_page_urls: HttpUrlDataset,
+    sample_page_urls: HttpUrlDataset,
     mapper_dataset_cls: type[IsDataset],
     concat_pages_key: str,
-) -> NormalizedBatchesDataset: ...
+) -> NormalizedSamplesDataset: ...
 
 
 @DagFlowTemplate(
-    collect_and_normalize_batches.refine(
-        name='collect_and_normalize_river_batches',
-        param_key_map=dict(batch_page_urls='river_urls'),
+    collect_and_normalize_samples.refine(
+        name='collect_and_normalize_river_samples',
+        param_key_map=dict(sample_page_urls='river_urls'),
         fixed_params=dict(
-            mapper_dataset_cls=Dataset[Model[list[NormalizedRiverBatchRecordMapper]]],
-            concat_pages_key='all_river_batches',
+            mapper_dataset_cls=Dataset[Model[list[NormalizedRiverSampleRecordMapper]]],
+            concat_pages_key='all_river_samples',
         ),
     ),
-    collect_and_normalize_batches.refine(
-        name='collect_and_normalize_wastewater_batches',
-        param_key_map=dict(batch_page_urls='wastewater_urls'),
+    collect_and_normalize_samples.refine(
+        name='collect_and_normalize_wastewater_samples',
+        param_key_map=dict(sample_page_urls='wastewater_urls'),
         fixed_params=dict(
-            mapper_dataset_cls=Dataset[Model[list[NormalizedWastewaterBatchRecordMapper]]],
-            concat_pages_key='all_wastewater_batches',
+            mapper_dataset_cls=Dataset[Model[list[NormalizedWastewaterSampleRecordMapper]]],
+            concat_pages_key='all_wastewater_samples',
         ),
     ),
     union_all_datasets_as_kwargs,
@@ -61,15 +59,15 @@ async def env_monitoring_harmonization_flow(
     *,
     river_urls: HttpUrlDataset,
     wastewater_urls: HttpUrlDataset,
-) -> NormalizedBatchesDataset: ...
+) -> NormalizedSamplesDataset: ...
 
 
 @LinearFlowTemplate(
     concat_all_vals_in_datasets_as_args,
     create_dataset_from_args.refine(
         fixed_params=dict(
-            dataset_cls=NormalizedBatchesDataset,
-            key='all_normalized_batches',
+            dataset_cls=NormalizedSamplesDataset,
+            key='all_normalized_samples',
         )
     ),
     flatten_nested_json,
@@ -77,5 +75,5 @@ async def env_monitoring_harmonization_flow(
     create_sample_and_measurements_tables,
 )
 def flatten_and_wrangle_as_dataframe(
-    batches_dataset: 'NormalizedBatchesDataset',
+    samples_dataset: 'NormalizedSamplesDataset',
 ) -> PandasDataset: ...

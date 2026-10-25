@@ -11,7 +11,7 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
     'river': {
         0: [
             {
-                'river_batch_id': 'river-batch-1',
+                'river_sample_id': 'river-sample-1',
                 'catchment': 'glomma-upper',
                 'sampled_at': '2026-05-03',
                 'station': 'River Mouth',
@@ -22,7 +22,7 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
                 ],
             },
             {
-                'river_batch_id': 'river-batch-2',
+                'river_sample_id': 'river-sample-2',
                 'catchment': 'glomma-upper',
                 'sampled_at': '2026-05-10',
                 'station': 'River Mouth',
@@ -34,7 +34,7 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
         ],
         1: [
             {
-                'river_batch_id': 'river-batch-3',
+                'river_sample_id': 'river-sample-3',
                 'catchment': 'glomma-upper',
                 'sampled_at': '2026-05-17',
                 'station': 'Upstream Bend',
@@ -48,7 +48,7 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
     'wastewater': {
         0: [
             {
-                'wastewater_batch_id': 'wastewater-batch-1',
+                'wastewater_sample_id': 'wastewater-sample-1',
                 'catchment_code': 'glomma-upper',
                 'monitoring_date': '2026-05-03',
                 'treatment_plant': 'North Works',
@@ -61,7 +61,7 @@ _MONITORING_PAGES: dict[MonitoringSource, dict[int, list[dict[str, object]]]] = 
         ],
         1: [
             {
-                'wastewater_batch_id': 'wastewater-batch-2',
+                'wastewater_sample_id': 'wastewater-sample-2',
                 'catchment_code': 'glomma-upper',
                 'monitoring_date': '2026-05-10',
                 'treatment_plant': 'North Works',

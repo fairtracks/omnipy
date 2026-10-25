@@ -7,8 +7,9 @@ from omnipy.util.helpers import resolve
 
 
 @TaskTemplate()
-async def fetch_batches(*, batch_page_urls: HttpUrlDataset) -> JsonListOfDictsDataset:
-    return await resolve(JsonListOfDictsDataset.load(batch_page_urls))
+async def fetch_sample_pages(*, sample_page_urls: HttpUrlDataset) -> JsonListOfDictsDataset:
+    """Fetch one response containing a list of samples per URL."""
+    return await resolve(JsonListOfDictsDataset.load(sample_page_urls))
 
 
 @TaskTemplate()
@@ -18,13 +19,13 @@ def create_sample_and_measurements_tables(dataset: PandasDataset) -> PandasDatas
     # Samples
 
     samples_cols_to_keep = ['sample_key', 'catchment_id', 'monitoring_date', 'location_name']
-    out_dataset['samples'] = dataset['all_normalized_batches'][samples_cols_to_keep]  # type: ignore[index]
+    out_dataset['samples'] = dataset['all_normalized_samples'][samples_cols_to_keep]  # type: ignore[index]
 
     # Measurements
 
     measurements_df_model = join_tables(
-        dataset['all_normalized_batches'],
-        dataset['all_normalized_batches.measurements'],
+        dataset['all_normalized_samples'],
+        dataset['all_normalized_samples.measurements'],
         on_cols={'_omnipy_id': '_omnipy_ref'},
     )
     measurements_cols_to_keep = [

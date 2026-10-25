@@ -7,7 +7,7 @@ from omnipy.components.remote.datasets import HttpUrlDataset
 from omnipy.components.remote.models import HttpUrlModel
 
 from .flows import env_monitoring_harmonization_flow, flatten_and_wrangle_as_dataframe
-from .models import NormalizedBatchesDataset
+from .models import NormalizedSamplesDataset
 
 
 def _build_paginated_source_urls(
@@ -27,10 +27,10 @@ def _build_paginated_source_urls(
 
 @pytest.mark.usefixtures('runtime_all_engines')
 @pytest.fixture
-async def harmonized_batches(
+async def harmonized_samples(
     river_service: Annotated[TestServer, pytest.fixture],
     wastewater_service: Annotated[TestServer, pytest.fixture],
-) -> NormalizedBatchesDataset:
+) -> NormalizedSamplesDataset:
     river_urls = _build_paginated_source_urls(
         'river',
         river_service.port,
@@ -51,13 +51,13 @@ async def harmonized_batches(
 
 @pytest.mark.usefixtures('runtime_all_engines')
 async def test_harmonize_water_samples(
-    harmonized_batches: Annotated[NormalizedBatchesDataset, pytest.fixture],
+    harmonized_samples: Annotated[NormalizedSamplesDataset, pytest.fixture],
 ) -> None:
     print()
-    # harmonized_batches.full(syntax='json5')
-    harmonized_batches.full()
+    # harmonized_samples.full(syntax='json5')
+    harmonized_samples.full()
 
-    assert harmonized_batches['all_river_batches'].to_data()[0] == {
+    assert harmonized_samples['all_river_samples'].to_data()[0] == {
         'sample_key': 'river-r1',
         'catchment_id': 'glomma-upper',
         'monitoring_date': '2026-05-03',
@@ -76,7 +76,7 @@ async def test_harmonize_water_samples(
         ],
     }
 
-    assert harmonized_batches['all_wastewater_batches'].to_data()[0] == {
+    assert harmonized_samples['all_wastewater_samples'].to_data()[0] == {
         'sample_key': 'ww-9a',
         'catchment_id': 'glomma-upper',
         'monitoring_date': '2026-05-03',
@@ -98,9 +98,9 @@ async def test_harmonize_water_samples(
 
 @pytest.mark.usefixtures('runtime_all_engines')
 async def test_flatten_and_wrangle_water_samples_as_dataframe(
-    harmonized_batches: Annotated['NormalizedBatchesDataset', pytest.fixture],
+    harmonized_samples: Annotated['NormalizedSamplesDataset', pytest.fixture],
 ) -> None:
-    flattened_df_dataset = flatten_and_wrangle_as_dataframe.run(harmonized_batches)
+    flattened_df_dataset = flatten_and_wrangle_as_dataframe.run(harmonized_samples)
     print()
     flattened_df_dataset['samples'].full()
     flattened_df_dataset['measurements'].full()

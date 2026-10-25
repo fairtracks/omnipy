@@ -25,7 +25,9 @@ class NormalizedMeasurementRecord(pyd.BaseModel):
     unit: Unit
 
 
-class NormalizedBatchRecord(pyd.BaseModel):
+class NormalizedSampleRecord(pyd.BaseModel):
+    """Measurements and shared context for one sample."""
+
     sample_key: str
     catchment_id: str
     monitoring_date: DateModel
@@ -33,7 +35,7 @@ class NormalizedBatchRecord(pyd.BaseModel):
     measurements: list[NormalizedMeasurementRecord]
 
 
-class NormalizedBatchesDataset(Dataset[Model[list[NormalizedBatchRecord]]]): ...
+class NormalizedSamplesDataset(Dataset[Model[list[NormalizedSampleRecord]]]): """Normalized sample lists grouped by source, with one Dataset level."""
 
 
 class RiverMeasurementRecord(pyd.BaseModel):
@@ -57,8 +59,8 @@ RiverMeasurementRecordType: TypeAlias = (
 )
 
 
-class RiverBatchRecord(pyd.BaseModel):
-    river_batch_id: str
+class RiverSampleRecord(pyd.BaseModel):
+    river_sample_id: str
     catchment: str
     sampled_at: str
     station: str
@@ -72,8 +74,8 @@ class WastewaterMeasurementRecord(pyd.BaseModel):
     unit: str
 
 
-class WastewaterBatchRecord(pyd.BaseModel):
-    wastewater_batch_id: str
+class WastewaterSampleRecord(pyd.BaseModel):
+    wastewater_sample_id: str
     catchment_code: str
     monitoring_date: str
     treatment_plant: str
@@ -122,15 +124,15 @@ class NormalizedRiverMeasurementMapper(
                 )
 
 
-class NormalizedRiverBatchRecordMapper(
+class NormalizedRiverSampleRecordMapper(
     ConverterModel[
-        RiverBatchRecord,
-        NormalizedBatchRecord,
+        RiverSampleRecord,
+        NormalizedSampleRecord,
     ]
 ):
     @classmethod
-    def _convert(cls, data: RiverBatchRecord) -> NormalizedBatchRecord:
-        return NormalizedBatchRecord(
+    def _convert(cls, data: RiverSampleRecord) -> NormalizedSampleRecord:
+        return NormalizedSampleRecord(
             sample_key=data.sample_alias.lower(),
             catchment_id=data.catchment,
             monitoring_date=DateModel(data.sampled_at),
@@ -166,15 +168,15 @@ class NormalizedWastewaterMeasurementMapper(
         )
 
 
-class NormalizedWastewaterBatchRecordMapper(
+class NormalizedWastewaterSampleRecordMapper(
     ConverterModel[
-        WastewaterBatchRecord,
-        NormalizedBatchRecord,
+        WastewaterSampleRecord,
+        NormalizedSampleRecord,
     ]
 ):
     @classmethod
-    def _convert(cls, data: WastewaterBatchRecord) -> NormalizedBatchRecord:
-        return NormalizedBatchRecord(
+    def _convert(cls, data: WastewaterSampleRecord) -> NormalizedSampleRecord:
+        return NormalizedSampleRecord(
             sample_key=data.sample_alias.lower(),
             catchment_id=data.catchment_code,
             monitoring_date=DateModel(data.monitoring_date),
