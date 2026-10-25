@@ -60,6 +60,7 @@ This is about settings such as config values and the arguments that internal cod
 - `tests/` broadly mirrors the package structure, with `integration/` separate from faster unit-style areas.
 - Most concrete components under `src/omnipy/components/<name>/` use a predictable split across `models.py`, `datasets.py`, `tasks.py`, optional `flows.py`, plus support modules such as `serializers.py`, `helpers.py`, `constants.py`, `typedefs.py`, or `protocols.py`.
 - Preserve these naming structures across the repo. If a single-file module becomes too complex, convert it into a same-named package and move the implementation into submodules instead of inventing a new top-level name.
+- Within Omnipy component code, use relative imports within a component and between components to ease potential extraction into separate repositories. This is an in-Omnipy guideline, not a general import rule for applications or documentation; imports from Omnipy core can use their defining module paths.
 - Tests usually mirror the source package/module path under `tests/`, and filenames often mirror module names (`test_model.py`, `test_dataset.py`, `test_flow.py`, `test_runtime.py`). Common exceptions use behavior-oriented names such as `test_all_engines.py` or `test_serialize_*.py`. Local `conftest.py`, `cases/`, and `helpers/` folders are shared by tests in the same directory.
 - Mypy plugin coverage also lives alongside component tests as `.yml` files such as `tests/components/json/test_json_types.yml`.
 - `tests/components/conftest.py` autouses `runtime_data_config_variants`, so many component tests run across interactive/non-interactive and dynamic-conversion variants unless they opt out with skip fixtures from `tests/conftest.py`.
@@ -67,6 +68,22 @@ This is about settings such as config values and the arguments that internal cod
 - `src/omnipy/__init__.py` is a large public re-export surface. Changes there affect top-level imports and import-time side effects.
 - Runtime wiring is centralized in `src/omnipy/hub/runtime.py`: it builds the default runtime on import, wires config subscriptions, and registers both local and Prefect engines.
 - Default serializer registration is lazy in `src/omnipy/components/__init__.py`; add/update serializers there if a new dataset type needs automatic registration.
+
+## Dataflow Design
+
+- Before designing, implementing, or reviewing an Omnipy dataflow, read the
+  repository's [omnipy-dataflows skill](.agents/skills/omnipy-dataflows/SKILL.md).
+  It applies across domains, including application flows, component flows, and
+  narrative integration examples.
+- Prefer typed models and datasets, model-based validation/conversion, and
+  reusable task/flow composition. The skill explains when other structures fit,
+  and documents the routing and async details needed to use these defaults.
+- Make model and flow declarations readable as an inspectable contract for the
+  agent's output. Narrative integration tests also serve as tutorials: design
+  their implementations for reuse in documentation and show Omnipy's declarative
+  composition, mimicking Models, and Dataset batch operations clearly.
+- For exhaustive engine/callable behavior tests, keep using the existing engine
+  harness; a domain scenario should remain a readable proof of a real workflow.
 
 ## Test Quirks
 
