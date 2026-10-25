@@ -1,6 +1,6 @@
 [project]
 name = "omnipy"
-version = "0.23.1"
+dynamic = ["version"]
 description = "Omnipy is a type-driven Python library for data conversion, parsing and wrangling; tool and web service interoperability; and scalable dataflow orchestration"
 readme = "docs/readme.md"
 requires-python = ">=3.11,<3.16"
@@ -122,8 +122,19 @@ documentation = "http://omnipy.readthedocs.io/"
 releasenotes = "https://omnipy.readthedocs.io/en/latest/release_notes/"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+# The version comes from the latest release tag, e.g. "omnipy_v0.23.1" gives "0.23.1"
+[tool.hatch.version]
+source = "vcs"
+tag-pattern = "^omnipy_v(?P<version>.+)$"
+# Only release tags count (the repo has other tags, e.g. "run_docs_42")
+raw-options = { scm = { git = { describe_command = "git describe --dirty --tags --long --match 'omnipy_v*'" } } }
+
+[tool.uv]
+# Rebuild the editable install when the commit or the tags change, to update the version
+cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/omnipy"]

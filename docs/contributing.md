@@ -61,6 +61,10 @@
 - Install in editable mode:
   - `uv pip install -e .`
 
+- The version is derived from the latest release tag (`omnipy_vX.Y.Z`). Between releases, it is a
+  development version such as `0.23.2.dev491+g645e8fb4`. Building needs the Git history with
+  tags, so use a full clone, not a shallow one.
+
 ### Running tests
 
 - To run all tests, type:

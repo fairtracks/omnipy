@@ -1,7 +1,6 @@
 """Top-level public API for the Omnipy library."""
 
-__version__ = '0.23.1'
-
+from importlib.metadata import version as _package_version
 import os
 from typing import TYPE_CHECKING
 
@@ -339,6 +338,9 @@ from omnipy.util._placeholder import F, m, x
 from omnipy.util.contexts import print_exception
 from omnipy.util.literal_enum import LiteralEnum
 from omnipy.util.literal_enum_generator import generate_literal_enum_code
+
+# Set from the release tag when the package is built (see [tool.hatch.version] in pyproject.toml)
+__version__ = _package_version('omnipy')
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
