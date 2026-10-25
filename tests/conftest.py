@@ -31,10 +31,26 @@ from .helpers.functions import assert_model, assert_val
 from .helpers.protocols import AssertModelOrValFunc
 
 
+def reset_job_creator() -> None:
+    """Replace the shared job creator with a fresh one."""
+    JobBaseMeta._job_creator_obj = JobCreator()
+
+
+def reset_data_class_creator() -> None:
+    """Replace the shared data class creator with a fresh one."""
+    DataClassBaseMeta._data_class_creator_obj = DataClassCreator()
+
+
 def pytest_configure(config) -> None:  # noqa: ARG001
     import omnipy.hub.runtime
 
     omnipy.hub.runtime.runtime = None
+
+    # Importing omnipy.hub.runtime builds a default runtime, which configures the shared creators
+    # for the detected environment (e.g. the color system of the terminal). Start the tests from
+    # fresh creators instead, as the teardown fixtures below leave them after each test
+    reset_data_class_creator()
+    reset_job_creator()
 
 
 @pytest.fixture(scope='function')
@@ -74,14 +90,14 @@ def tmp_dir_path() -> Iterator[Path]:
 def teardown_reset_job_creator() -> Iterator[None]:
     """Reset the shared job creator after a test."""
     yield None
-    JobBaseMeta._job_creator_obj = JobCreator()
+    reset_job_creator()
 
 
 @pytest.fixture(scope='function')
 def teardown_reset_data_class_creator() -> Iterator[None]:
     """Reset the shared data class creator after a test."""
     yield None
-    DataClassBaseMeta._data_class_creator_obj = DataClassCreator()
+    reset_data_class_creator()
 
 
 @pytest.fixture(scope='function')
