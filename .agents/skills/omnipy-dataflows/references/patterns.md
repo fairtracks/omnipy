@@ -8,10 +8,11 @@ Read the sections relevant to the current design decision:
 
 | Decision | Sections |
 | --- | --- |
-| Data shape and identity | [Structures and batches](#choose-data-structures-by-their-role), [primary keys and relationships](#identity-and-relationship-contracts), [mutation validation](#validation-through-model-boundaries) |
+| Data shape and identity | [Structures and batches](#choose-data-structures-by-their-role), [constrained fields](#constrained-field-contracts), [primary keys and relationships](#identity-and-relationship-contracts), [Dataset validators](#dataset-level-validation), [mutation validation](#validation-through-model-boundaries) |
 | Data reuse and boundaries | [Generic Models/Datasets](#reusable-models-and-datasets), [conversions](#model-transformations), [external APIs](#external-api-contracts) |
+| Static interfaces and HTTP ingestion | [Runtime mimicking and typing](typing.md), [paging URLs and Dataset loading](remote-loading.md) |
 | Execution and composition | [Templates and modifiers](#reusable-jobs-templates-and-modifiers), [routing](#routing-rules-that-matter), [callable types](#callable-types-and-composed-flows), [iteration and ownership](#dataset-iteration-and-ownership) |
-| State and completion | [Status from facts and acknowledgements](#status-from-facts-and-acknowledgements) |
+| State and completion | [Failure inspection](#inspect-current-failure-and-pending-results), [status from facts and acknowledgements](#status-from-facts-and-acknowledgements) |
 | Implementation | [Catalog example](#example-publish-a-catalog), [component structure and naming](structure-and-naming.md) |
 | Review and verification | [Readability](#readable-contracts-and-documentation-reuse), [narrative tests](#validation-and-narrative-tests), [source map](#source-map) |
 
@@ -23,6 +24,19 @@ what the agent has implemented: accepted inputs, validated relationships,
 transformations, external operations, batch boundaries, and expected outputs.
 Make those choices visible in the types, validators, named stages, and routing.
 Tests verify that the implementation fulfills that contract.
+
+Organize code into cohesive groups separated by blank lines: input preparation,
+flow invocation, output comparisons, external-call evidence, and execution state
+are different concerns. Keep assertions about the same concern together. Apply
+the same grouping to schema fields, validators, fixtures, and task bodies where
+it makes their responsibilities easier to see.
+
+Use small functions with a clear responsibility and an intention-revealing name.
+When a block grows complex, repeats, or needs its own explanation, consider
+extracting it into a function, fixture, task, or child flow appropriate to its
+role. Keep the main scenario readable at one level of abstraction. Do not split
+every assertion into a helper or hide the contract in an opaque `check_everything`
+function; the reader should still see what is executed and what is verified.
 
 Integration scenarios also serve as tutorials. Their readability should reveal
 the characteristic Omnipy mechanisms rather than bury them inside general Python
@@ -53,10 +67,12 @@ and directly visible. Moving an orchestration loop into an opaque helper does no
 achieve that aim.
 
 Keep the tested model/task/flow definitions reusable in documentation. Fixture
-setup and expected results can remain test-specific; an example should be able to
-construct its input and invoke the same implementation without depending on pytest.
-Reuse or extract the tested definitions where practical, rather than maintain a
-second implementation for the tutorial. Follow root `AGENTS.md` for documentation
+setup and expected results can remain test-specific; the implementation modules
+should be importable without depending on pytest. For a test deliverable, use the
+pytest scenario as the execution example. Do not generate a standalone demo
+runner to demonstrate reusability. Documentation can reuse or extract the tested
+definitions and invocation without a second execution harness.
+Follow root `AGENTS.md` for documentation
 imports, setup, and output display. Preserve the external API contracts when
 demonstrating their simulated implementations.
 
@@ -161,6 +177,45 @@ interface visible to supported static checkers; it does not enable mimicking or
 perform validation itself. Mypy does not support this typing technique; use the
 configured basedpyright check and avoid dictionary casts as a substitute for
 understanding a typing limitation.
+See [typing examples](typing.md) for built-in collection support, custom typed
+Models and Datasets, and protocols for generic interfaces and reusable consumers.
+
+## Constrained field contracts
+
+Choose the most specific type supported by the actual contract. A currency or
+state with a known set of values belongs in an Enum or Literal; an identifier
+should not accept an empty string when the contract requires an identity. Numeric
+fields should express bounds and whether non-finite values are meaningful.
+Apply these choices to internal records and external request/response schemas,
+preserving each contract's accepted values.
+
+For example, if a service supports exactly NOK and EUR and allows a zero amount:
+
+```python
+from typing import Literal
+
+import omnipy.util.pydantic as pyd
+
+
+class RegistrationRequestSchema(pyd.BaseModel):
+    exhibition: str = pyd.Field(min_length=1)
+    reference: str = pyd.Field(min_length=1)
+    title: str = pyd.Field(min_length=1)
+
+    amount: float = pyd.Field(ge=0, allow_inf_nan=False)
+    currency: Literal['NOK', 'EUR']
+```
+
+Use `NonNegativeFloat` for a simple nonnegative bound, or combine constraints in
+`Field` as above. Use `PositiveFloat` or `gt=0` when zero is invalid; do not weaken
+an explicitly positive-value requirement to nonnegative. Reuse an Enum or named constrained
+type/Model when its semantics recur across contracts. Normalize identifiers
+before validating their canonical form; `min_length=1` alone does not reject
+whitespace-only strings. Add a regex when the domain defines an identifier
+grammar, not merely because the fixture IDs happen to share a prefix or shape.
+A three-uppercase-letter pattern checks currency-code shape, not membership in
+the supported currency set. Do not infer that set from the currencies present in
+one test. Prefer existing domain types where they already encode the contract.
 
 ## Identity and relationship contracts
 
@@ -203,7 +258,9 @@ include:
 - `SubmissionRecord._sample_dataset_keys_match_local_sample_aliases` and
   `_file_dataset_keys_match_file_ids` validate key/content agreement for samples
   and files. These top-level validators stand in for future general Dataset
-  primary-key support; keep that TODO separate from remote-key validation.
+  primary-key support; keep that TODO separate from remote-key validation. Their
+  current placement is historical: for new Dataset-local invariants, prefer
+  validators on the Dataset subclass as described below.
 - `SubmissionRecord._file_sample_aliases_exist` has access to both sample and file
   Datasets and checks that each file's normalized reference identifies a sample.
 - `SubmissionRecord._samples_have_one_read1_and_one_read2` checks the paired-file
@@ -227,6 +284,60 @@ cases are enforced by the submission example's paired-file validator. Generalize
 the relationship and coverage principles, not this domain's exact number of files
 or role names. The current tests specifically cover duplicate roles and a sample
 without files, the two cases missed by the historical validator.
+
+## Dataset-level validation
+
+Prefer a validator on a Dataset subclass when all inputs to the invariant are
+within that Dataset: uniqueness across items or pages, key/content agreement,
+or relationships among its entries. Dataset is already a Pydantic-backed data
+contract. With the current compatibility API, `@pyd.validator('data')` receives
+the parsed mapping of keys to item Models; return that mapping after checking it.
+
+For example, given a `LoanModel` whose schema normalizes `loan_ref`:
+
+```python
+import omnipy as om
+import omnipy.util.pydantic as pyd
+
+
+class LoanPagesDataset(om.Dataset[om.Model[list[LoanModel]]]):
+    @pyd.validator('data')
+    def _loan_references_are_unique(
+        cls,
+        pages: dict[str, om.Model[list[LoanModel]]],
+    ) -> dict[str, om.Model[list[LoanModel]]]:
+        seen: set[str] = set()
+        for page in pages.values():
+            for loan in page:
+                if loan.loan_ref in seen:
+                    raise ValueError(f'Duplicate loan reference: {loan.loan_ref}')
+                seen.add(loan.loan_ref)
+        return pages
+```
+
+This validates across all pages before a later transformation builds a Dataset
+keyed by loan reference, preventing duplicate records from being silently
+overwritten. The flow can use `LoanPagesDataset` directly as its validating
+constructor, and downstream operations can accept that Dataset type. The loops
+express the invariant; they do not schedule per-item work.
+
+Avoid adding a separate `Model[LoanPagesDataset]` solely to use `_parse_data()`.
+An outer Model should have an independent contract or conversion purpose that
+justifies the additional type. A Dataset validator keeps the batch interface
+directly available without another wrapper or `mimics` declaration.
+
+Keep normalization and individual-record constraints in item Models. Keep checks
+that need several Datasets or shared metadata on the containing schema. A
+Dataset-local rule belongs on the reusable Dataset even when a particular flow
+also puts that Dataset inside an aggregate.
+
+The example accepts completed page data. If such a Dataset is used as a live
+async output, design how its validators handle `PendingData` and `FailedData`;
+markers are not page Models. Alternatively, construct the constrained Dataset
+after checking completion as in [failure inspection](#inspect-current-failure-and-pending-results).
+Moving a validator onto a Dataset does not imply automatic re-keying or immediate
+revalidation after every nested item mutation; verify the mutation paths required
+by the contract, as discussed next.
 
 ## Validation through Model boundaries
 
@@ -313,7 +424,13 @@ The rule concerns actual Model boundaries, not the number of brackets in the
 source annotation. Use the current wrapping behavior rather than preserving an
 older limitation in generated schemas. Directly mutating an unwrapped object
 obtained through `.content` can bypass validation; keep updates on the Model
-interface. The `.content` assertions above inspect stored values to demonstrate
+interface. Validation of a mutated item Model does not imply that every containing
+schema's aggregate validators rerun immediately. In particular, changing a
+primary-key field through a Dataset item can leave its outer key inconsistent
+until the containing contract is validated again. Collect returned Datasets
+through typed assignments as described below; do not assume automatic re-keying
+or ancestor validation from item validation alone.
+The `.content` assertions above inspect stored values to demonstrate
 coercion or its absence, rather than extracting data for processing. String inputs
 for integer fields are intentional demonstrations of runtime coercion.
 
@@ -747,7 +864,8 @@ iteration alone does not supply those policies.
 
 Async iteration records exceptions as `FailedData` in the output dataset. A
 successful await is therefore not enough to establish complete success. Check the
-appropriate failed/pending-item API and choose a policy before finalization. A
+APIs in [failure inspection](#inspect-current-failure-and-pending-results) and choose
+a policy before finalization. A
 service-declared failure stored in a record's status/error fields is distinct from
 an exception recorded as `FailedData`; account for whichever forms the workflow
 uses. Do not add a retry policy just because an example is asynchronous.
@@ -759,6 +877,80 @@ within the [Model boundaries described above](#validation-through-model-boundari
 If snapshot isolation is needed, make it explicit instead of serializing/rebuilding
 everything by default.
 
+## Inspect current failure and pending results
+
+Current Dataset APIs expose available results and task markers. Full failure and
+recovery handling is largely future work. These methods let a flow inspect the
+present result; they do not implement retry, rollback, resumption, cancellation,
+or exactly-once external effects.
+
+| API | Current meaning |
+| --- | --- |
+| `dataset.available_data` | Same-type filtered Dataset of available entries, retaining keys |
+| `dataset.failed_data` | Same-type filtered Dataset containing failure markers |
+| `dataset.pending_data` | Same-type filtered Dataset containing pending markers |
+| `dataset.failed_task_details()` | Mapping from keys to failure markers, including `.exception`, `.job_name`, and `.job_unique_name` |
+| `dataset.pending_task_details()` | Mapping from keys to pending markers with producing-job details |
+
+These are filtered copies, not live subscriptions or deep snapshots of the item
+Models. Accessing a failed or pending item normally raises `FailedDataError` or
+`PendingDataError`, including through a filtered marker Dataset. Use `.keys()` to
+inspect their identities and the detail methods to inspect their markers.
+
+For example, after awaiting an iterated operation:
+
+```python
+# `results` is the Dataset returned by the operation.
+successful = results.available_data
+failures = results.failed_task_details()
+pending = results.pending_task_details()
+
+# If a key failed, failures[key].exception contains its underlying exception.
+# Keep `results` or the keyed details alongside `successful` when reporting a
+# partial outcome; filtering must not silently redefine the expected batch.
+```
+
+An all-items-required policy can be a small reusable stage:
+
+```python
+from typing import TypeVar
+
+import omnipy as om
+
+_DatasetT = TypeVar('_DatasetT', bound=om.Dataset)
+
+
+@om.TaskTemplate()
+def require_all_items(dataset: _DatasetT) -> _DatasetT:
+    failed_keys = tuple(dataset.failed_data.keys())
+    pending_keys = tuple(dataset.pending_data.keys())
+    if failed_keys or pending_keys:
+        raise ValueError(f'Incomplete batch: failed={failed_keys}, pending={pending_keys}')
+    return dataset
+```
+
+Put such a guard before stages that require a complete Dataset, including
+collection into an aggregate Model. Current Model attribute assignment may
+convert a Dataset via `to_data()` internally; a Dataset with `FailedData` can
+raise there before a later finalization guard runs. For an all-items-required
+workflow, the order is **iterated operation → require all items → collect →
+finalize**. Inspect or retain the original Dataset before that assignment if
+the caller needs keyed failure details and successful results. The small guard
+above only reports keys; a workflow that needs the result after raising can use
+a dedicated exception carrying that Dataset or an explicit partial-result contract.
+
+A partial-results
+use case may instead pass `available_data` onward while reporting the excluded
+keys. Neither choice proves domain success: a service may return a rejected
+response as ordinary data without raising. Check the required response fields or
+acknowledgements too. Preserve original inputs separately if a deliberately
+designed recovery operation needs them; failure markers are not retry inputs.
+
+Inspect `src/omnipy/data/_mixins/task.py` and
+`tests/data/test_dataset.py` (`test_dataset_pending_and_failed_data*`) for current
+behavior. The remote loader has its own configured HTTP retries; those do not
+constitute a general workflow recovery mechanism.
+
 ## Example: publish a catalog
 
 This compact example shows the pattern outside submission brokering. It is
@@ -769,6 +961,10 @@ are observable results; the final receipt is created only after all items succee
 composite record that combines that dataset with metadata and a receipt.
 Each catalog record's primary key is `record_id`, and its Dataset key is that
 same string. The service-assigned `publication_id` is a separate identifier.
+The example currently expects matching keys without validating that invariant.
+When adapting it, prefer a validator on `CatalogDataset` as described under
+[Dataset-level validation](#dataset-level-validation). A shared
+validator has been proposed; do not assume it is already an available API.
 
 ```python
 import asyncio
@@ -880,6 +1076,10 @@ async def publish_catalog(publication: PublicationModel) -> PublicationModel:
     ...
 ```
 
+This compact example raises on failed/pending items when collecting or checking
+the result. When callers need explicit failure reporting, insert a guard before
+`collect_publication`, as described in [failure inspection](#inspect-current-failure-and-pending-results).
+
 The `publication` input must survive `extract_publication` for `collect_publication`
 to use it. The iterated result replaces `records` in the DAG store. The synchronous last task in
 `publish_catalog` does not make the parent synchronous. An empty catalog produces
@@ -960,8 +1160,9 @@ do not require a second model hierarchy in every workflow.
 
 ## Validation and narrative tests
 
-Assert the authoritative outputs and acknowledgements as well as their derived
-statuses. A test that checks only a task-written `completed` flag can pass without
+Compare the authoritative outputs and acknowledgements against expected fixtures.
+Check derived statuses separately when equality does not include them. A test
+that checks only a task-written `completed` flag can pass without
 proving the required operation happened. Exercise relevant mixed or incomplete
 outcomes to verify the chosen aggregation and finalization policy.
 
@@ -973,11 +1174,45 @@ records that do have children. See the
 intended invariant separate from historical implementation mistakes.
 
 Use independent expected data in fixtures, not the same mapper under test to
-generate the expected result. In the scenario, call the actual flow and service
-adapters; assertions inside fixture-specific tasks cannot substitute for testing
-their observable output. Service spies are useful when transmitted payloads or
-calls are part of the contract. Keep the main narrative short, and add focused
-negative cases for the specific validators or completion policy being introduced.
+generate the expected result. Prefer complete typed expected outputs and request
+collections to a long sequence of assertions on individual fields. When equality
+already checks keys, registration IDs, acceptance fields, and the receipt, do not
+repeat those checks individually. Check what the equality implementation covers:
+computed properties, execution state, and external calls can need separate
+assertions. A comparison against the full expected call list also checks its
+length, so a separate call-count assertion is usually redundant.
+
+For example, after invoking a flow, group its distinct verification concerns:
+
+```python
+assert result == expected_result
+assert result.completed  # A computed property not included in record equality.
+
+assert service.requests == expected_requests
+assert service.finalizations == expected_finalizations
+
+assert extract_job_run_state(reconcile_flow) == RunState.FINISHED
+```
+
+Here the expected values are fixtures, and the service captures real calls.
+Prefer direct typed comparisons where supported; do not routinely serialize or
+build field projections just to assert equality. If asynchronous request order
+is unspecified, compare in a stable order by identity while preserving duplicate
+calls and cardinality; do not convert to a set or keyed dictionary that can hide
+duplicates. Preserve order checks when order is part of the contract.
+
+In the scenario, call the actual flow and service adapters; assertions inside
+fixture-specific tasks cannot substitute for testing their observable output.
+Service spies are useful when transmitted payloads or calls are part of the
+contract. Keep the main narrative short, and add focused negative cases for the
+specific validators or completion policy being introduced.
+
+Use pytest and the existing runtime/engine fixtures for test execution. Mock the
+external services while exercising real Omnipy functionality. For HTTP ingestion,
+use a local fixture endpoint and the actual loader; see
+[HTTP test boundaries](remote-loading.md#test-the-real-loader-against-a-mocked-service).
+A fake `Dataset.load()` can reproduce expected output while bypassing the very
+loading behavior the integration example should demonstrate.
 
 Isolate mutable stub state per test. The reference scenario uses a `ContextVar`
 holding an ID iterator and resets its token in a fixture. Use that pattern when

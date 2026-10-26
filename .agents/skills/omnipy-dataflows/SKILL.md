@@ -11,6 +11,12 @@ also an inspectable contract for the agent's output: a reviewer should be able t
 understand the promised data shapes, constraints, operations, and composition by
 reading their declarations and relevant validators.
 
+Use blank lines to separate groups with distinct purposes in implementations,
+fixtures, and assertions. Extract a cohesive block into a small, clearly named
+function when it has a distinct responsibility, is repeated, or obscures its
+caller. Keep the flow declaration and the test's input → execution → verification
+story visible; helper extraction should improve understanding at both levels.
+
 Reuse is a core selling point. "Omnipy" comes from "omnify": to make universal.
 At each design step, ask: **Is there general functionality here that could be
 omnified for reuse elsewhere?** Search for existing components first. Extract
@@ -81,12 +87,27 @@ into design rules.
   current execution from intended parallelism and streaming extensions.
 - Encode normalization and intrinsic validity in types and validators: constrained
   identifiers, dates, URLs, enumerated states, and relationships between records.
-  Put a relationship validator on the smallest model containing both sides.
+  Prefer specific field contracts to bare `str`/`float`: Enum or Literal for
+  supported currencies/states, nonnegative or positive finite amounts as required,
+  non-empty identifiers, and regex constraints when the identifier has a defined
+  format. Derive constraints from the domain and external contracts, not just the
+  fixture values. See [constrained fields](references/patterns.md#constrained-field-contracts).
+  Put a relationship validator on the smallest data type containing both sides.
   Validation should occur through the data contract, not only in a preparatory task.
+- Prefer validators on the Dataset subclass for invariants within that Dataset,
+  such as uniqueness across items or key/content agreement. Use the current
+  `@pyd.validator('data')` hook; avoid adding a `Model[SomeDataset]` solely to gain
+  `Model._parse_data()`. Keep item rules in item Models and relationships spanning
+  multiple Datasets in their containing schema. See
+  [Dataset-level validation](references/patterns.md#dataset-level-validation).
 - Operate on Models through their mimicked interfaces: attributes, indexing,
   iteration, methods, and supported operators. This applies beyond Pydantic
   records to wrapped containers and other values. `Model` supplies the runtime
-  behavior; `@om.mimics(...)` exposes the interface to supported static checkers.
+  behavior for wrapped classes generally; common scalar/collection shapes have
+  built-in static typing support. Use `@om.mimics(...)` to expose a particular
+  Model's interface and protocols to describe reusable capabilities. See
+  [runtime mimicking and static typing](references/typing.md) for concrete Model
+  and Dataset examples, generic-interface limitations, and checker verification.
   Use `.content` when a consumer specifically needs the underlying object and
   `.to_data()` when a boundary needs a plain-data representation. Neither is
   routine preparation for processing. Avoid dictionary casts and package rebuilds
@@ -114,8 +135,8 @@ into design rules.
 - Keep shared metadata at the appropriate aggregate level. Dataset keys should
   serialize the primary keys of their contents. For a record whose primary key is
   a normalized string, use that string as its Dataset key; external identifiers
-  can remain separate fields. Enforce key/content agreement through model validators
-  where the containing contract is available. See
+  can remain separate fields. Prefer Dataset validators for key/content agreement;
+  existing aggregate validators also enforce it at their containing boundary. See
   [identity and relationship contracts](references/patterns.md#identity-and-relationship-contracts)
   for examples and the future table design. Do not assume automatic key derivation
   or re-keying is implemented by an ordinary Dataset.
@@ -169,6 +190,13 @@ into design rules.
 
 ## Make service and state boundaries visible
 
+For common HTTP ingestion, build paging URLs through `HttpUrlModel`'s structured
+fields, collect them in `HttpUrlDataset`, and load responses with the intended
+Dataset class's `.load(...)` or the existing remote loading templates. Reuse their
+HTTP policies and preserve the distinction between response pages and domain
+items. See [paging URLs and Dataset loading](references/remote-loading.md) for
+sync/async usage and a composed example.
+
 Treat external API contracts as requirements in their own right: request and
 response schemas, field meanings, and operation outcomes. Adapt internal data to
 the service's contract. A convenient local stand-in must not silently redefine
@@ -189,13 +217,20 @@ and flows, and identify simulated I/O as such.
 For independent asynchronous items, update each item's own result and return it;
 aggregate at collection. Shared metadata should be treated as read-only during
 that work. Use the resulting datasets, not assumptions about object identity or
-in-place propagation. Collect them through typed assignments and use model
-validators to maintain derived state. Copy deliberately when ownership or rollback
+in-place propagation. Inspect failed/pending entries before assigning a returned
+Dataset into an aggregate Model: that assignment can raise on task markers.
+Collect accepted results through typed assignments and use model validators to
+maintain derived state. Item validation alone does not imply that a containing
+schema's aggregate validators rerun. Copy deliberately when ownership or rollback
 requires isolation, rather than applying a whole-package cloning convention.
 
 Completion means the required outputs and service acknowledgements exist. Decide
 how incomplete or failed items affect finalization; a coroutine returning does not
-by itself prove every item succeeded.
+by itself prove every item succeeded. Use the current
+[failure inspection APIs](references/patterns.md#inspect-current-failure-and-pending-results)
+to retain successful results and inspect failures by key. Full recovery handling
+is largely future work; do not assume automatic retries or resumable workflows
+from the presence of these inspection methods.
 
 ## Structure and name reusable components
 
@@ -212,6 +247,11 @@ dependency boundaries, and import conventions.
 
 ## Keep implementations usable outside their test
 
+When the requested deliverable is a test, use pytest and the repository's existing
+runtime, engine, and service-fixture machinery. Do not add a standalone `demo.py`
+runner or a parallel execution harness. Reusable implementation modules and a
+clear pytest scenario provide the tutorial material.
+
 Use these four principles for narrative integration tests and their tutorial reuse:
 
 1. **Keep the execution story visible.** Construct typed input, invoke the flow
@@ -221,12 +261,20 @@ Use these four principles for narrative integration tests and their tutorial reu
    implementation, using repository documentation conventions.
 2. **Keep expectations independent and setup isolated.** Put scenario inputs,
    independently specified expected results, and scoped service-state resets in
-   `conftest.py` or established case modules. Do not generate expected output with
-   the mapper being tested. Keep fixture-specific values and lifecycle setup out
-   of reusable task and flow bodies.
+   `conftest.py` or established case modules. Prefer comparing complete typed
+   outputs and service requests with those fixtures over long sequences of
+   field-by-field assertions. Retain separate checks for behavior not covered by
+   equality, such as computed properties, side effects, or job run state. Do not
+   generate expected output with the mapper being tested. Keep fixture-specific
+   values and lifecycle setup out of reusable task and flow bodies.
 3. **Verify the external contract at its boundary.** Exercise the actual flow and
    its service calls. Assert relevant request fields and returned outcomes through
    tests, spies, or mocked endpoints that implement the declared external API.
+   Mock external services, keeping Omnipy's functionality real. For HTTP flows,
+   serve fixture responses from a local test endpoint so `Dataset.load()`, remote
+   tasks, decoding, and model validation run normally. Do not replace Omnipy's
+   loader, tasks, or orchestration with fixture implementations. See
+   [HTTP test boundaries](references/remote-loading.md#test-the-real-loader-against-a-mocked-service).
    An event label or a task-written completion flag alone does not prove the
    operation happened. Keep fixture-specific assertions out of workflow tasks.
 4. **Choose coverage that supports the lesson.** Demonstrate useful combinations
