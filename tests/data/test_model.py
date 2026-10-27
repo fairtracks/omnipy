@@ -115,12 +115,61 @@ def test_generic_model_uses_default_type_vars() -> None:
 
     class GenericListModel(Model[list[IntT]], Generic[IntT]): ...
 
+    class InheritedListModel(GenericListModel): ...
+
     assert GenericListModel.__parameters__ == (IntT,)
 
-    GenericListModel.update_forward_refs()
-
-    assert GenericListModel(['1']).content == [1]
     assert GenericListModel[str]([1]).content == ['1']
+    assert GenericListModel(['1']).content == [1]
+    assert InheritedListModel(['1']).content == [1]
+
+    model = GenericListModel(['2'])
+    model.append('3')  # pyright: ignore[reportArgumentType]
+    assert model.content == [2, 3]
+    with pytest.raises(ValidationError):
+        GenericListModel(['not an integer'])
+
+
+def test_generic_scalar_model_uses_default_type_vars() -> None:
+    IntT = TypeVar('IntT', default=int)
+
+    class GenericScalarModel(Model[IntT], Generic[IntT]): ...
+
+    assert GenericScalarModel().content == 0
+    assert GenericScalarModel('2').content == 2
+    assert (GenericScalarModel('2') + 3).content == 5
+    assert GenericScalarModel[str](2).content == '2'
+
+
+def test_generic_model_uses_concrete_container_type_var_default() -> None:
+    IntListT = TypeVar('IntListT', default=list[int])
+
+    class GenericNestedListModel(Model[list[IntListT]], Generic[IntListT]): ...
+
+    class InheritedModel(GenericNestedListModel): ...
+
+    assert GenericNestedListModel([['1']]).content == [[1]]
+    assert InheritedModel([['2']]).content == [[2]]
+    assert GenericNestedListModel[tuple[str, ...]]([[3]]).content == [('3',)]
+
+    with pytest.raises(ValidationError):
+        InheritedModel([['not an integer']])
+
+
+def test_generic_model_uses_literal_and_annotated_type_var_defaults() -> None:
+    LabelT = TypeVar('LabelT', default=Literal['ready', 'pending'])
+    CountT = TypeVar('CountT', default=Annotated[int, 'count'])
+
+    class LabelsModel(Model[list[LabelT]], Generic[LabelT]): ...
+
+    class CountsModel(Model[list[CountT]], Generic[CountT]): ...
+
+    assert LabelsModel(['ready']).content == ['ready']
+    assert CountsModel(['1']).content == [1]
+    with pytest.raises(ValidationError):
+        LabelsModel(['unknown'])
+    with pytest.raises(ValidationError):
+        CountsModel(['not an integer'])
 
 
 def test_generic_model_type_var_defaults_are_resolved_by_update_forward_refs() -> None:
@@ -128,12 +177,29 @@ def test_generic_model_type_var_defaults_are_resolved_by_update_forward_refs() -
 
     class GenericListModel(Model[list[TargetT]], Generic[TargetT]): ...
 
+    assert GenericListModel[str]([1]).content == ['1']
+
     class TargetModel(Model[int]): ...
 
     GenericListModel.update_forward_refs(TargetModel=TargetModel)
 
     assert GenericListModel([1]).content == [TargetModel(1)]
     assert GenericListModel[str]([1]).content == ['1']
+
+
+def test_generic_model_nested_forwardref_default_is_resolved_explicitly() -> None:
+    TargetListT = TypeVar('TargetListT', default=list['TargetModel'])
+
+    class GenericNestedModel(Model[list[TargetListT]], Generic[TargetListT]): ...
+
+    assert GenericNestedModel[str]([1]).content == ['1']
+
+    class TargetModel(Model[int]): ...
+
+    GenericNestedModel.update_forward_refs(TargetModel=TargetModel)
+
+    assert GenericNestedModel([['1']]).content == [[TargetModel(1)]]
+    assert GenericNestedModel[str]([1]).content == ['1']
 
 
 def test_init_model_as_input() -> None:

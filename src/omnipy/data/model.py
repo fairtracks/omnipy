@@ -153,11 +153,13 @@ class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
 
         type_params = getattr(cls, '__parameters__', ())
         if type_params and not cls._is_root_model_class(bases):
-            # Pydantic only invokes __class_getitem__ when a generic model is
-            # explicitly parameterized. Trigger its generic setup for bare
-            # generic Model subclasses with their unresolved type parameters.
-            # Defaults and forward references must remain unresolved here;
-            # update_forward_refs() resolves them explicitly later.
+            # Pydantic only invokes __class_getitem__ when a generic model
+            # is explicitly parameterized. Trigger its generic setup for
+            # bare generic Model subclasses with their unresolved type
+            # parameters. Concrete TypeVar defaults are applied during
+            # generic setup; TypeVar defaults with forward references must
+            # remain unresolved here; update_forward_refs() resolves them
+            # explicitly later.
             cls[tuple(type_params)]
 
         return cls
@@ -436,6 +438,7 @@ class Model(  # type: ignore[misc]
             created_model._get_root_field().field_info.extra = {'orig_model': orig_model}
 
         created_model._inherit_first_orig_model_in_bases_if_missing()
+        created_model._apply_typevar_defaults_to_root_field(only_if_concrete=True)
 
         cls._recursively_set_allow_none(created_model._get_root_field())
 
@@ -1038,25 +1041,52 @@ class Model(  # type: ignore[misc]
     # TODO: Check if Model._apply_typevar_defaults_to_root_field is still needed in Pydantic v2
 
     @classmethod
-    def _apply_typevar_defaults_to_root_field(cls) -> None:
+    def _apply_typevar_defaults_to_root_field(cls, *, only_if_concrete: bool = False) -> None:
         """Substitute declared TypeVar defaults into the root field.
 
         Pydantic v1 does not apply TypeVar defaults when building a generic
-        model. This is deliberately called from ``update_forward_refs()`` so
-        default values that are forward references stay unresolved until the
-        caller provides the namespace needed to resolve them.
+        model. Generic setup applies defaults only when the resulting type is
+        concrete. ``update_forward_refs()`` also substitutes unresolved defaults
+        before resolving them with the caller's namespace.
         """
         typevar_defaults = cls._get_typevar_defaults(cls.__parameters__)
         if not typevar_defaults:
             return
 
         root_field = cls._get_root_field()
+        if only_if_concrete and not cls._is_concrete_type(root_field.outer_type_, typevar_defaults):
+            return
+
         substituted_type = pyd.pyd_generics.replace_types(root_field.outer_type_, typevar_defaults)
+        if only_if_concrete and substituted_type == root_field.outer_type_:
+            return
+
         root_field.type_ = substituted_type
         root_field.outer_type_ = substituted_type
         root_field.sub_fields = None
         root_field.key_field = None
         root_field.prepare()
+        cls._clean_type_caches()
+
+    @classmethod
+    def _is_concrete_type(
+        cls, type_: TypeForm, typevar_defaults: Mapping[TypeVar, TypeForm]
+    ) -> bool:
+        """Check that default substitution needs no unresolved names or generic classes."""
+        if isinstance(type_, TypeVar):
+            return type_ in typevar_defaults and cls._is_concrete_type(typevar_defaults[type_], {})
+        if isinstance(type_, (str, ForwardRef)):
+            return False
+        if isinstance(type_, type) and getattr(type_, '__parameters__', ()):
+            return False
+        if is_literal_type(type_):
+            return True
+        if get_origin(type_) is Annotated:
+            return cls._is_concrete_type(get_args(type_)[0], typevar_defaults)
+
+        # Callable argument types are represented as a list inside get_args().
+        type_args = type_ if isinstance(type_, (list, tuple)) else get_args(type_)
+        return all(cls._is_concrete_type(type_arg, typevar_defaults) for type_arg in type_args)
 
     @classmethod
     def _get_typevar_defaults(cls, type_params: tuple[TypeVar, ...]) -> dict[TypeVar, TypeForm]:

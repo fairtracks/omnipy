@@ -1201,10 +1201,16 @@ def test_generic_dataset_bound_typevar():
         Dataset[MyListOfIntsOrStringsModel[ModelValT]], Generic[ModelValT]
     ): ...
 
+    # Default type for ModelValT is `int`
     assert MyListOfIntsOrStringsDataset().to_data() == {}
 
-    assert MyListOfIntsOrStringsDataset({'a': (123, 'a')})['a'].content == [123, 'a']
+    assert MyListOfIntsOrStringsDataset({'a': (123, '456')})['a'].content == [123, 456]
     assert MyListOfIntsOrStringsDataset({'a': [True, False]})['a'].content == [1, 0]
+
+    with pytest.raises(ValidationError):
+        MyListOfIntsOrStringsDataset({'a': (123, 'a')})
+
+    assert MyListOfIntsOrStringsDataset[int | str]({'a': (123, 'a')})['a'].content == [123, 'a']
 
     with pytest.raises(ValidationError):
         MyListOfIntsOrStringsDataset({'a': 123})
