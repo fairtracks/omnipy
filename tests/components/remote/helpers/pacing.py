@@ -6,10 +6,7 @@ See docs/agents/technical/specs/2026-10-24-rate-limiter-pacing-design.md
 from collections.abc import Sequence
 import random
 
-from omnipy.components.remote.helpers import RequestPacer
-
-# Tolerance for comparing times that are computed by floating-point arithmetic
-EPS = 1e-9
+from omnipy.components.remote.helpers import FLOAT_TOLERANCE, RequestPacer
 
 
 def per_ball_start_times(
@@ -28,7 +25,9 @@ def per_ball_start_times(
     for arrival in arrivals:
         prev = starts[-1] if starts else None
         ready = arrival if prev is None else max(arrival, prev)
-        in_period = sorted(start for start in starts if start > ready - time_period_in_secs + EPS)
+        in_period = sorted(
+            start for start in starts if start > ready - time_period_in_secs + FLOAT_TOLERANCE
+        )
         if prev is None or len(in_period) < burst_size:
             starts.append(ready)
             continue
@@ -80,7 +79,7 @@ def max_starts_in_any_period(starts: Sequence[float], time_period_in_secs: float
     """The largest number of starts within any half-open window of one time period."""
     ordered = sorted(starts)
     return max(
-        sum(1 for other in ordered[i:] if other < start + time_period_in_secs - EPS)
+        sum(1 for other in ordered[i:] if other < start + time_period_in_secs - FLOAT_TOLERANCE)
         for i, start in enumerate(ordered)
     )
 
@@ -104,6 +103,6 @@ def max_spacing_while_waiting(arrivals: Sequence[float], starts: Sequence[float]
     spacings = [
         starts[i] - starts[i - 1]
         for i in range(1, len(starts))
-        if arrivals[i] <= starts[i - 1] + EPS
+        if arrivals[i] <= starts[i - 1] + FLOAT_TOLERANCE
     ]
     return max(spacings, default=0.0)

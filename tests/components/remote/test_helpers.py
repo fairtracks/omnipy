@@ -13,11 +13,15 @@ from aiohttp import ClientTimeout, web
 import pytest
 import pytest_cases as pc
 
-from omnipy.components.remote.helpers import RateLimiter, RateLimitingClientSession, RequestPacer
+from omnipy.components.remote.helpers import (
+    FLOAT_TOLERANCE,
+    RateLimiter,
+    RateLimitingClientSession,
+    RequestPacer,
+)
 from omnipy.components.remote.tasks import get_retry_client
 
 from .helpers.pacing import (
-    EPS,
     max_leaky_bucket_excess,
     max_spacing_while_waiting,
     max_starts_in_any_period,
@@ -415,7 +419,7 @@ def test_request_pacer_start_times(
     expected_starts: list[float],
 ) -> None:
     pacer = RequestPacer(requests_per_time_period, time_period_in_secs, burst_ratio=burst_ratio)
-    assert pacer_start_times(pacer, arrivals) == pytest.approx(expected_starts, abs=EPS)
+    assert pacer_start_times(pacer, arrivals) == pytest.approx(expected_starts, abs=FLOAT_TOLERANCE)
 
 
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
@@ -452,7 +456,7 @@ def test_request_pacer_border_cases_match_per_ball_calculation(
     expected = per_ball_start_times(
         arrivals, requests_per_time_period, time_period_in_secs, pacer.burst_size
     )
-    assert starts == pytest.approx(expected, abs=EPS)
+    assert starts == pytest.approx(expected, abs=FLOAT_TOLERANCE)
     assert max_starts_in_any_period(starts, time_period_in_secs) <= requests_per_time_period
 
 
@@ -460,7 +464,7 @@ def test_request_pacer_border_cases_match_per_ball_calculation(
 def test_request_pacer_new_burst_after_idle() -> None:
     pacer = RequestPacer(10, 0.5, burst_ratio=0.5)
     starts = pacer_start_times(pacer, [0.0] * 21 + [10.0] * 6)
-    assert starts[21:] == pytest.approx([10.0] * 5 + [10.0 + 0.5 / 6], abs=EPS)
+    assert starts[21:] == pytest.approx([10.0] * 5 + [10.0 + 0.5 / 6], abs=FLOAT_TOLERANCE)
 
 
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
@@ -522,11 +526,14 @@ def test_request_pacer_matches_per_ball_calculation_and_keeps_guarantees(
         assert max_starts_in_any_period(starts, time_period_in_secs) <= requests_per_time_period
 
         # Leaky-bucket bound: at most B + R/P * t starts in any interval t
-        assert max_leaky_bucket_excess(starts, pacer.burst_size, pacer.requests_per_second) <= EPS
+        assert (
+            max_leaky_bucket_excess(starts, pacer.burst_size, pacer.requests_per_second)
+            <= FLOAT_TOLERANCE
+        )
 
         # No gaps: while requests wait, the spacing never exceeds the ramp after a full burst
         max_spacing = time_period_in_secs / (requests_per_time_period - pacer.burst_size + 1)
-        assert max_spacing_while_waiting(arrivals, starts) <= max_spacing + EPS
+        assert max_spacing_while_waiting(arrivals, starts) <= max_spacing + FLOAT_TOLERANCE
 
 
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
@@ -547,7 +554,10 @@ def test_request_pacer_keeps_guarantees_when_requests_start_late(
         starts = pacer_start_times(pacer, arrivals, delays)
 
         assert max_starts_in_any_period(starts, time_period_in_secs) <= requests_per_time_period
-        assert max_leaky_bucket_excess(starts, pacer.burst_size, pacer.requests_per_second) <= EPS
+        assert (
+            max_leaky_bucket_excess(starts, pacer.burst_size, pacer.requests_per_second)
+            <= FLOAT_TOLERANCE
+        )
 
 
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
@@ -599,4 +609,4 @@ def test_request_pacer_matches_the_simulation_in_the_docs() -> None:
         pacer = RequestPacer(10, 0.5, burst_ratio=entry['burst_ratio'])
         assert pacer.burst_size == entry['burst_size']
         starts = pacer_start_times(pacer, entry['arrivals'])
-        assert starts == pytest.approx(entry['starts'], abs=EPS), entry['scenario']
+        assert starts == pytest.approx(entry['starts'], abs=FLOAT_TOLERANCE), entry['scenario']

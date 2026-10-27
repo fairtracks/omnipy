@@ -26,8 +26,10 @@ DEFAULT_BURST_RATIO = 0.5
 
 # Tolerance for comparing times that are computed by floating-point arithmetic. For instance, a
 # start that is planned for the moment an earlier start leaves the time period may come out a
-# fraction of a nanosecond early. Times this close are treated as equal
-_EPS = 1e-9
+# fraction of a nanosecond early. Times this close are treated as equal. The tolerance is absolute,
+# which suits times in seconds from the monotonic clock of the event loop: a tolerance relative to
+# the clock value would grow with the uptime of the system
+FLOAT_TOLERANCE = 1e-9
 
 
 class StartPlan(NamedTuple):
@@ -94,7 +96,9 @@ class RequestPacer:
 
         self._requests_per_time_period = requests_per_time_period
         self._time_period_in_secs = time_period_in_secs
-        self._burst_size = max(1, math.floor(burst_ratio * requests_per_time_period + _EPS))
+        self._burst_size = max(
+            1, math.floor(burst_ratio * requests_per_time_period + FLOAT_TOLERANCE)
+        )
 
         # Starts within the last time period, in order. The latest start is always kept, as the
         # reference for the next one
@@ -134,10 +138,14 @@ class RequestPacer:
             return StartPlan(start=now, prev_start=prev, spacing=None, spacing_valid_until=0.0)
 
         spacing, spacing_valid_until = self._spacing, self._spacing_valid_until
-        if spacing is None or prev >= spacing_valid_until - _EPS or now > prev + spacing + _EPS:
+        if (
+            spacing is None
+            or prev >= spacing_valid_until - FLOAT_TOLERANCE
+            or now > prev + spacing + FLOAT_TOLERANCE
+        ):
             spacing, spacing_valid_until = self._calculate_spacing(now, prev)
 
-        if now > prev + spacing + _EPS:
+        if now > prev + spacing + FLOAT_TOLERANCE:
             # The request was not ready in time, so its start is the new reference point
             return StartPlan(start=now, prev_start=prev, spacing=None, spacing_valid_until=0.0)
 
@@ -157,7 +165,7 @@ class RequestPacer:
         """
         if plan.prev_start != self._last_start:
             raise ValueError('The plan is not based on the latest start. Plan the start again')
-        if start_time < plan.start - _EPS:
+        if start_time < plan.start - FLOAT_TOLERANCE:
             raise ValueError(f'The request started at {start_time}, before its plan ({plan.start})')
 
         self._spacing = plan.spacing
@@ -171,7 +179,7 @@ class RequestPacer:
         return self._starts[-1] if self._starts else None
 
     def _is_in_time_period(self, start: float, now: float) -> bool:
-        return start > now - self._time_period_in_secs + _EPS
+        return start > now - self._time_period_in_secs + FLOAT_TOLERANCE
 
     def _num_starts_in_time_period(self, now: float) -> int:
         num_left = 0
@@ -191,7 +199,7 @@ class RequestPacer:
             leaves = start + self._time_period_in_secs
             candidate = (leaves - prev) / (num_free + m)
             # Among equal candidates, the start that leaves last sets the spacing
-            if candidate >= spacing - _EPS:
+            if candidate >= spacing - FLOAT_TOLERANCE:
                 spacing = max(spacing, candidate)
                 valid_until = leaves
         return spacing, valid_until
