@@ -45,6 +45,14 @@ Tests and docs:
 - Do not use `cast(object, ...)` / `cast(object, self)` merely to suppress type-checker warnings about suspicious casts. Treat that pattern as a typing escape hatch to avoid in Omnipy code unless explicitly requested.
 - The primary static type-checker config is `basedpyright` (`[tool.basedpyright]` in `pyproject.toml`); run it with `uv run basedpyright` when type-checking changes.
 
+## Checking settings and arguments
+
+This is about settings such as config values and the arguments that internal code receives, not about validating data, which is what `Model` is for.
+
+- Check settings where they enter Omnipy, in the config classes (pydantic), not again in the internal code that receives them. Internal classes and functions trust their arguments and do not repeat the checks (e.g. `RequestPacer` relies on `HttpRequestsConfig`).
+- Declare constraints as types, so that the internal code shows them too: pydantic's constrained types via `omnipy.util.pydantic` (e.g. `pyd.PositiveInt`, `pyd.PositiveFloat`), and Omnipy's own in `src/omnipy/shared/typedefs.py` (e.g. `ZeroToOneFloat`). Define a new one as a pydantic constrained type with a plain alias under `TYPE_CHECKING`, as pydantic does, so that type checkers accept plain values.
+- Test invalid values at the boundary (e.g. `tests/config/`), not in the internal code.
+
 ## Architecture
 
 - Core layout: `src/omnipy/` for library code, `tests/` for mirrored tests plus `integration/`, and `docs/` for user docs.
