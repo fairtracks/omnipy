@@ -147,19 +147,21 @@ into design rules.
   [identity and relationship contracts](references/patterns.md#identity-and-relationship-contracts)
   for examples and the future table design. Do not assume automatic key derivation
   or re-keying is implemented by an ordinary Dataset.
-- Tasks record authoritative operation results; model validators derive the
-  statuses implied by those results. Put aggregate derivation on the model that
-  contains its inputs. Changes to wrapped data through the Model interface trigger
+- Tasks record authoritative operation results. When deriving domain status from
+  those results, put the validator on the Model that contains its inputs.
+  Changes to wrapped data through the Model interface trigger
   validation, maintaining derived status at that Model boundary. Readiness to
   submit does not establish service acceptance: record that outcome only after
   acknowledgement. See the
   [status examples](references/patterns.md#status-from-facts-and-acknowledgements).
   Do not maintain duplicate task-written flags or a second dataflow history solely
   to prove that stages ran.
-- Choose status placement for the use case: inline fields, a nested status model,
-  or a separate structure can all fit. Consider readability, ownership, reuse,
-  and input/output contracts. The distinction between recorded and derived status
-  does not prescribe a particular storage layout.
+- Choose status representation for the use case. Dataset `PendingData` and
+  `FailedData` markers can track execution status; explicit typed fields can
+  represent domain outcomes. Use either or both as needed. For explicit status,
+  inline fields, a nested status model, or a separate structure can all fit.
+  Consider readability, ownership, reuse, and input/output contracts. The
+  distinction between recorded and derived status does not prescribe a layout.
 
 ## Compose jobs at the level of the work
 
@@ -228,9 +230,10 @@ it. Replacing one with the other should preserve the declared field meanings and
 operation outcomes. Keep fixture-specific expected values out of tasks and flows,
 and identify simulated I/O as such.
 
-For independent asynchronous items, update each item's own result and return it;
-aggregate at collection. Shared metadata should be treated as read-only during
-that work. Use the resulting datasets, not assumptions about object identity or
+For independent asynchronous items, each task owns its result; aggregate at
+collection. Choose Dataset task markers or explicit domain status updates to
+match the contract. Shared metadata should be treated as read-only during that
+work. Use the resulting datasets, not assumptions about object identity or
 in-place propagation. Inspect failed/pending entries before assigning a returned
 Dataset into an aggregate Model: that assignment can raise on task markers.
 Collect accepted results through typed assignments and use model validators to
@@ -242,9 +245,10 @@ Completion means the required outputs and service acknowledgements exist. Decide
 how incomplete or failed items affect finalization; a coroutine returning does not
 by itself prove every item succeeded. Use the current
 [failure inspection APIs](references/patterns.md#inspect-current-failure-and-pending-results)
-to retain successful results and inspect failures by key. Full recovery handling
-is largely future work; do not assume automatic retries or resumable dataflows
-from the presence of these inspection methods.
+to retain successful results and inspect failures by key. Use the general
+`require_all_items` task before stages requiring all entries to be available.
+Full recovery handling, including atomic rollback of jobs, is largely future
+work; inspection methods do not supply that behavior.
 
 ## Structure and name reusable components
 

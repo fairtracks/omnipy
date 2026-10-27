@@ -149,8 +149,12 @@ development, not a current guarantee.
 The status discussion established a division between task-recorded facts and
 model-derived summaries, with acknowledgement required for external completion.
 The user clarified that inline, nested, or separate status storage depends on the
-use case. The [status examples](patterns.md#status-from-facts-and-acknowledgements)
-explain these independent choices and the role of Model validation.
+use case. Dataset `PendingData` and `FailedData` markers are also an alternative
+to direct record status updates; the use case may require either representation
+or both. The [status examples](patterns.md#status-from-facts-and-acknowledgements)
+explain these choices and the role of Model validation. Atomic rollback of jobs
+is planned future work. The general component's `require_all_items` task supplies
+the current check for failed/pending entries before stages requiring complete data.
 
 Dataset keys are intended to serialize the primary keys of their contents. The
 earlier interpretation of `Sample-A` as a deliberately independent Dataset key

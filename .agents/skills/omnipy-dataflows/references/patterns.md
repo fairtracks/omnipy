@@ -903,9 +903,9 @@ composition rules:
 
 | Mechanism | Meaning |
 | --- | --- |
-| `LinearFlowTemplate(a, b, c)` | After the first child, each child receives the preceding result as one positional argument, including tuple results; the last result is returned. |
-| Linear flow keyword-only inputs | Available by matching name to children. Positional-capable flow arguments are bound and passed positionally to the first child, even if the caller used keyword syntax. Use `*` for shared configuration. |
-| `DagFlowTemplate(...)` | Routes by parameter names from accumulated inputs/results. Children currently execute in declaration order; a DAG declaration does not imply concurrent branches. |
+| `LinearFlowTemplate(a, b, c)` | Passes each child's result to the next child as a positional argument. Tuple results remain one argument; the last child's result is returned. |
+| Linear flow keyword-only inputs | Declare shared configuration after `*` in the flow signature, for example `flow(data, *, suffix)`. This makes `suffix` keyword-only: callers supply `suffix='!'`, and its value remains available to every child accepting that parameter name. |
+| `DagFlowTemplate(...)` | Routes by parameter names from accumulated inputs/results. Children currently execute in declaration order. Concurrent execution of independent branches is future work. |
 | A nonempty dictionary result | Its entries update the DAG's available named results. A plain dictionary is appropriate for this routing purpose; its values can remain typed objects. |
 | Other DAG results | Stored under the child's job name unless explicitly wrapped with `result_key`. The overall return is the last child's result, not the whole result store. |
 | `consume_kwargs_from_results=True` (default) | Removes routed arguments from the DAG result store when consumed. |
@@ -927,7 +927,9 @@ can feed a child accepting `bounds: tuple[int, int]`, whose body starts with
 
 Multiple positional arguments supplied to the flow itself are forwarded
 individually to the **first** child; this is distinct from forwarding a child
-result. Shared keyword-only inputs remain available to children by matching name.
+result. Flow parameters that accept positional arguments are forwarded this way
+even when the caller supplies them by keyword. Shared keyword-only inputs remain
+available to children by matching name.
 These semantics are implemented by `LinearFlowRunSpec` in
 `src/omnipy/engine/run_spec.py` and covered by
 `tests/compute/test_flow.py::test_linear_flow_only_first_positional`.
@@ -960,16 +962,22 @@ another stage awaits I/O, and do not create a generator merely to demonstrate
 streaming.
 
 `LinearFlowTemplate` and `DagFlowTemplate` are different: their outer callable
-declares the public signature while their child list defines the execution. The
-outer callable type is validated when the template is created:
+declares the public signature while their child list defines the execution:
 
-- any async child makes the composed flow asynchronous, even if the terminal
-  collector is synchronous;
-- the terminal child determines whether the result is a single value or a stream;
-  a supported generator-like terminal return annotation can also establish the
-  streaming contract;
-- a mismatch raises `TypeError` when the template is created, rather than leaving
-  callers to discover the wrong calling convention at runtime.
+- The terminal (last) child determines the flow's returned data and return type:
+  a regular value, such as a Model or Dataset, or a stream of values. Declare the
+  flow's return annotation to match that output.
+- Any async child makes the composed flow asynchronous, even if the last child
+  is synchronous. The flow is then a coroutine for a regular result, or an async
+  generator for a stream. An entirely synchronous composition uses a regular
+  function or generator, respectively.
+- A mismatch between the declared callable form and the composition raises
+  `TypeError` when the template is created.
+
+Streaming flow calls return real Python generator or async-generator objects.
+If the last child simply returns an existing generator, its return annotation
+must identify the stream, for example `Iterator[int]` or `AsyncIterator[int]`, so
+Omnipy can determine the flow's callable form.
 
 Thus an async fetch followed by synchronous normalization and collection is still
 an `async def` flow returning one result:
@@ -1041,10 +1049,17 @@ service-declared failure stored in a record's status/error fields is distinct fr
 an exception recorded as `FailedData`; account for whichever forms the dataflow
 uses. Do not add a retry policy just because an example is asynchronous.
 
-Direct typed updates are the preferred expression when a task owns the record it
-enriches. Collect returned datasets back into the aggregate through typed
-assignments, and express derived summaries in validators. Keep nested updates
-within the boundaries described in
+Choose result ownership and status representation for the use case. Updating a
+record's typed status fields is one option; using Dataset `PendingData` and
+`FailedData` markers to track unfinished or failed work is another. Some contracts
+need both execution markers and domain-specific outcomes. See
+[status from facts and acknowledgements](#status-from-facts-and-acknowledgements)
+for these choices.
+
+When a task enriches a record it owns, use Model operations for typed updates.
+When the design calls for collecting returned datasets into an aggregate, use
+typed assignments and derive summaries from the authoritative results. Keep nested
+updates within the boundaries described in
 [Validation through Model boundaries](#validation-through-model-boundaries).
 If snapshot isolation is needed, make it explicit instead of serializing/rebuilding
 everything by default.
@@ -1052,9 +1067,10 @@ everything by default.
 ## Inspect current failure and pending results
 
 Current Dataset APIs expose available results and task markers. Full failure and
-recovery handling is largely future work. These methods let a flow inspect the
-present result; they do not implement retry, rollback, resumption, cancellation,
-or exactly-once external effects.
+recovery handling is largely future work, including planned support for atomic
+rollback of jobs. These methods let a flow inspect the present result; they do
+not implement retry, rollback, resumption, cancellation, or exactly-once external
+effects.
 
 | API | Current meaning |
 | --- | --- |
@@ -1082,33 +1098,32 @@ pending = results.pending_task_details()
 # partial outcome; filtering must not silently redefine the expected batch.
 ```
 
-An all-items-required policy can be a small reusable stage:
+For an all-items-required policy, use the general component's `require_all_items`
+task, also exported as `om.require_all_items`:
 
 ```python
-from typing import TypeVar
-
 import omnipy as om
 
-_DatasetT = TypeVar('_DatasetT', bound=om.Dataset)
-
-
-@om.TaskTemplate()
-def require_all_items(dataset: _DatasetT) -> _DatasetT:
-    failed_keys = tuple(dataset.failed_data.keys())
-    pending_keys = tuple(dataset.pending_data.keys())
-    if failed_keys or pending_keys:
-        raise ValueError(f'Incomplete batch: failed={failed_keys}, pending={pending_keys}')
-    return dataset
+# At an entry point, check the Dataset returned by an operation.
+complete_results = om.require_all_items.run(results)
 ```
 
-Put such a guard before stages that require a complete Dataset, including
-collection into an aggregate Model. Current Model attribute assignment may
+This task returns the original Dataset unchanged when all its entries are
+available, including for an empty Dataset. Otherwise it raises `ValueError` with
+the failed and pending keys. It checks the Dataset's own entries without copying
+it or traversing nested Datasets. It does not check for absent expected keys or
+service-specific success conditions.
+
+Place `om.require_all_items` directly in a linear/DAG child list, or call
+`om.require_all_items(results)` inside an authored flow. Put it before stages
+that require a complete Dataset, including collection into an aggregate Model.
+Current Model attribute assignment may
 convert a Dataset via `to_data()` internally; a Dataset with `FailedData` can
 raise there before a later finalization guard runs. For an all-items-required
 dataflow, the order is **iterated operation → require all items → collect →
 finalize**. Inspect or retain the original Dataset before that assignment if
-the caller needs keyed failure details and successful results. The small guard
-above only reports keys; a dataflow that needs the result after raising can use
+the caller needs keyed failure details and successful results. The task's error
+reports keys; a dataflow that needs the result after raising can use
 a dedicated exception carrying that Dataset or an explicit partial-result contract.
 
 A partial-results
@@ -1264,12 +1279,22 @@ no completion receipt is produced.
 
 ## Status from facts and acknowledgements
 
-Tasks record what an operation established. Models derive the status implied by
-those facts. Distinguish a recorded outcome from a computed summary even when
-both use the same status vocabulary.
+Choose status representation according to the use case. Dataset `PendingData`
+and `FailedData` markers can provide the required execution status without
+updating status fields on each record. Use their inspection APIs to report
+unfinished work, failures, and available results. Explicit typed status fields
+are another option when the domain or consumer needs them; markers and domain
+status can also coexist. Neither approach is a universal default.
 
-Choose where status lives according to the use case. A small record may keep
-`transfer_status` and `error` inline; a record with several related statuses may
+Tasks and the framework record what an operation established. When a summary can
+be derived from domain facts, express that derivation in the relevant Model.
+Distinguish a recorded outcome from a computed summary even when both use the
+same status vocabulary. A returned service rejection is ordinary data unless
+the task raises; it needs the domain-specific checks described in
+[failure inspection](#inspect-current-failure-and-pending-results).
+
+For explicit status data, choose its location according to the use case. A small
+record may keep `transfer_status` and `error` inline; one with several related statuses may
 group them under a typed `status` member. A separate structure can fit when status
 has distinct ownership, reuse, or reporting requirements. These are design options,
 not a rule that item status must be inline or aggregate status must be separate.
@@ -1277,7 +1302,8 @@ Choose the simplest layout that serves the data's consumers and contracts. Where
 the resulting status is stored, its derivation needs access to the authoritative
 inputs; storage placement and validator placement are related but distinct choices.
 
-In the submission example, the registration task stores the returned identifier:
+The submission example uses explicit domain fields. Its registration task stores
+the returned identifier:
 
 ```python
 sample.biosample_vault_sample_id = bsv_submission.biosample_vault_sample_id
