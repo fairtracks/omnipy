@@ -96,9 +96,9 @@ class RequestPacer:
         self._time_period_in_secs = time_period_in_secs
         self._burst_size = max(1, math.floor(burst_ratio * requests_per_time_period + _EPS))
 
-        # Starts within the last time period, in order
+        # Starts within the last time period, in order. The latest start is always kept, as the
+        # reference for the next one
         self._starts: deque[float] = deque()
-        self._last_start: float | None = None
 
         # The current spacing, and the time the start that set it leaves the time period
         self._spacing: float | None = None
@@ -163,9 +163,12 @@ class RequestPacer:
         self._spacing = plan.spacing
         self._spacing_valid_until = plan.spacing_valid_until
         self._starts.append(start_time)
-        self._last_start = start_time
-        while self._starts and not self._is_in_time_period(self._starts[0], start_time):
+        while len(self._starts) > 1 and not self._is_in_time_period(self._starts[0], start_time):
             self._starts.popleft()
+
+    @property
+    def _last_start(self) -> float | None:
+        return self._starts[-1] if self._starts else None
 
     def _is_in_time_period(self, start: float, now: float) -> bool:
         return start > now - self._time_period_in_secs + _EPS
