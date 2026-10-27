@@ -317,6 +317,30 @@ def test_flow_run_flow_cls_tuple(
         assert mock_local_runner.finished is True
 
 
+@pytest.mark.usefixtures('mock_local_runner')
+@pytest.mark.parametrize('child_is_flow', [False, True], ids=['task', 'flow'])
+def test_job_template_run_rejected_inside_flow(child_is_flow: bool) -> None:
+    calls: list[int] = []
+
+    def double(number: int) -> int:
+        calls.append(number)
+        return number * 2
+
+    child = (FuncFlowTemplate() if child_is_flow else TaskTemplate())(double)
+
+    @FuncFlowTemplate()
+    def parent(number: int, *, use_run: bool) -> int:
+        return child.run(number) if use_run else child(number)
+
+    with pytest.raises(JobStateException, match=r'Cannot use \.run\(\) inside a flow'):
+        parent.run(3, use_run=True)
+    assert calls == []
+
+    assert parent.run(3, use_run=False) == 6
+    assert child.run(4) == 8
+    assert calls == [3, 4]
+
+
 # TODO: Tests to add:
 #       - engine not supporting dag_flow_decorator
 #       - engine not supporting func_flow_decorator

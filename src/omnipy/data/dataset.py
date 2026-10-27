@@ -1862,9 +1862,10 @@ class Dataset(
                         #         case 'application/octet-stream' | _:
                         #             fetch_task = get_bytes_from_api_endpoint
 
-                        ret = get_auto_from_api_endpoint.refine(
+                        get_auto_from_api_endpoint_task = get_auto_from_api_endpoint.refine(
                             output_dataset_param='output_dataset'
-                        ).run(
+                        ).apply()
+                        ret = get_auto_from_api_endpoint_task(
                             http_url_dataset[indices],
                             retry_client=retry_client,
                             output_dataset=self,

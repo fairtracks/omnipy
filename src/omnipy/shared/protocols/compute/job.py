@@ -224,15 +224,20 @@ if is_package_editable('omnipy'):
     """)
 
     os.environ['OMNIPY_MACRO_ISJOBTEMPLATE_RUN_SUMMARY'] = (
-        'Apply the template and execute the resulting job immediately.'
+        'Apply the template and execute the resulting job outside a flow context.'
     )
     os.environ['OMNIPY_MACRO_ISJOBTEMPLATE_RUN_DETAILS'] = dedent("""\
+        Inside a flow, call the template directly instead: `template(...)`.
+
         Args:
             *args: Positional arguments passed to the applied job.
             **kwargs: Keyword arguments passed to the applied job.
 
         Returns:
             _RetCovT: Result returned by the applied job.
+
+        Raises:
+            JobStateException: If called inside a flow context.
     """)
 
     os.environ['OMNIPY_MACRO_ISJOBTEMPLATE_APPLY_SUMMARY'] = (
@@ -673,7 +678,9 @@ class IsJobTemplate(
         # {{ISJOBTEMPLATE_RUN_SUMMARY}}
         #
         # {{ISJOBTEMPLATE_RUN_DETAILS}}
-        """Apply the template and execute the resulting job immediately.
+        """Apply the template and execute the resulting job outside a flow context.
+
+        Inside a flow, call the template directly instead: `template(...)`.
 
         Args:
             *args: Positional arguments passed to the applied job.
@@ -681,6 +688,9 @@ class IsJobTemplate(
 
         Returns:
             _RetCovT: Result returned by the applied job.
+
+        Raises:
+            JobStateException: If called inside a flow context.
         """
         ...
 

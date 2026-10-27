@@ -223,10 +223,13 @@ class JobBase(
         raise ShouldNotOccurException()
 
     def _call_job_template(self, *args: _CallP.args, **kwargs: _CallP.kwargs) -> _RetT:
-        self_as_job_template = cast(IsJobTemplate[_JobTemplateT, _JobT, _CallP, _RetT], self)
+        self_as_job_template = cast(
+            IsJobTemplate[_JobTemplateT, IsJob[_JobTemplateT, _JobT, _CallP, _RetT], _CallP, _RetT],
+            self,
+        )
 
         if self.in_flow_context:
-            return self_as_job_template.run(*args, **kwargs)
+            return self_as_job_template.apply()(*args, **kwargs)
 
         raise TypeError(f"'{self.__class__.__name__}' object is not callable. Try .run() method")
 
@@ -286,7 +289,9 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
         # {{ISJOBTEMPLATE_RUN_SUMMARY}}
         #
         # {{ISJOBTEMPLATE_RUN_DETAILS}}
-        """Apply the template and execute the resulting job immediately.
+        """Apply the template and execute the resulting job outside a flow context.
+
+        Inside a flow, call the template directly instead: `template(...)`.
 
         Args:
             *args: Positional arguments passed to the applied job.
@@ -294,9 +299,16 @@ class JobTemplateMixin(Generic[_JobTemplateT, _JobT, _CallP, _RetT]):
 
         Returns:
             _RetCovT: Result returned by the applied job.
+
+        Raises:
+            JobStateException: If called inside a flow context.
         """
-        # TODO: Using JobTemplateMixin.run() inside flows should give error message
-        return self._cast_to_job_tmpl().apply()(*args, **kwargs)
+        job_template = self._cast_to_job_tmpl()
+        if job_template.in_flow_context:
+            raise JobStateException(
+                'Cannot use .run() inside a flow. Call the template directly instead.'
+            )
+        return job_template.apply()(*args, **kwargs)
 
     def apply(self) -> _JobT:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
