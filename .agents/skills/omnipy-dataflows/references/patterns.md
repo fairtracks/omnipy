@@ -91,14 +91,16 @@ conventions, see [structure and naming](structure-and-naming.md).
 | A record with named, constrained fields | Pydantic schema wrapped in `Model[Schema]` | Validation and direct field access |
 | An Omnipy batch of processing items | `Dataset[ItemModel]` | Item identity and dataset operations; an item can be a record, hierarchical data, a response, or a table |
 | A collection of actual Omnipy batches | `Dataset[Dataset[ItemModel]]`, optionally using named subclasses | Use when both batch and item levels need Dataset semantics |
-| Fixed aggregate of different members | Pydantic schema containing typed datasets/models, wrapped in `Model` | Each member has a specific type |
+| Fixed aggregate of different members | Pydantic schema containing typed datasets/models, wrapped in `Model` | Each member has a specific type; typed Dataset blueprints are planned |
 | A sequence intrinsic to one value or an external payload | `Model[list[...]]` or a suitable existing model | Preserve value/payload structure; dataflow batches use datasets |
 | Tabular wrangling | Existing table/Pandas models and datasets | Use the component's operations |
-| Schema translation | `ConverterModel[Source, Target]` | Reusable typed conversion |
+| Type conversion, including schema translation | `ConverterModel[Source, Target]` | Reusable typed conversion of scalars, collections, records, and other supported types |
 
 A heterogeneous dataset is useful when its varying members are genuinely data
-items. It is a poor default for a fixed record whose string keys are being used as
-field names and whose union type forces casts at every access.
+items. With current APIs, it is a poor default for a fixed record whose string keys
+are being used as field names and whose union type forces casts at every access.
+Planned typed Dataset blueprints will give fixed members their own declared types;
+until that functionality is available, use a wrapped Pydantic schema for this role.
 
 Choose an item's boundary from the dataflow operations, not from every collection
 in its schema. A sample may contain several measurements from one time and place.
@@ -148,14 +150,16 @@ at that stage. Dataset boundaries can change between stages to match the work.
 Nested Datasets preserve actual batch boundaries; nesting alone does not request
 recursive scheduling of every level.
 
-The user's intended direction is to extend this batch abstraction to parallel
-execution and streaming through async generators. Keep Dataset central when
-designing batch contracts so those execution models can build on the same
-structure. This is future direction, not a claim that the current iteration
-decorator supplies those modes or that their APIs have been decided.
+Streaming through async generators is already supported by tasks and flows; see
+[callable types and composed flows](#callable-types-and-composed-flows) for the
+current composition rules. Parallel execution remains an intended extension of
+the batch abstraction. Keep Dataset central when designing batch contracts so
+execution models can build on the same structure, while checking the supported
+iteration and callable combinations for the chosen execution mode.
 
 Use existing domain primitives before inventing regex checks in tasks, for example
-`DateModel` and `HostUrlModel` subclasses. A validator can fill a missing value from
+`DateModel` and `HostUrlModel` subclasses, and Pydantic types such as `PositiveInt`,
+`NonNegativeFloat`, and `AnyHttpUrl`. A validator can fill a missing value from
 another field, such as a filename from a source URL. Do not duplicate those rules
 in a normalization task. Honor field order, missing earlier fields, and default
 validation behavior in the repository's Pydantic API.
@@ -189,6 +193,12 @@ fields should express bounds and whether non-finite values are meaningful.
 Apply these choices to internal records and external request/response schemas,
 preserving each contract's accepted values.
 
+Prefer named types for reusable contracts: an Enum, a type alias, a constrained
+Pydantic type, or an Omnipy Model can give the same meaning and constraints to
+fields in several schemas and to task signatures. Define a shared contract once
+and specialize it where a consumer needs different constraints. Field-local
+constraints remain useful for rules specific to one field.
+
 For example, if a service supports exactly NOK and EUR and allows a zero amount:
 
 ```python
@@ -208,8 +218,7 @@ class RegistrationRequestSchema(pyd.BaseModel):
 
 Use `NonNegativeFloat` for a simple nonnegative bound, or combine constraints in
 `Field` as above. Use `PositiveFloat` or `gt=0` when zero is invalid; do not weaken
-an explicitly positive-value requirement to nonnegative. Reuse an Enum or named constrained
-type/Model when its semantics recur across contracts. Normalize identifiers
+an explicitly positive-value requirement to nonnegative. Normalize identifiers
 before validating their canonical form; `min_length=1` alone does not reject
 whitespace-only strings. Add a regex when the domain defines an identifier
 grammar, not merely because the fixture IDs happen to share a prefix or shape.
@@ -260,7 +269,8 @@ include:
   and files. These top-level validators stand in for future general Dataset
   primary-key support; keep that TODO separate from remote-key validation. Their
   validation boundary is the aggregate. For reusable Dataset-local invariants,
-  prefer validators on the Dataset subclass as described below.
+  prefer validators on the Dataset subclass; see
+  [Dataset-level validation](#dataset-level-validation).
 - `SubmissionRecord._file_sample_aliases_exist` has access to both sample and file
   Datasets and checks that each file's normalized reference identifies a sample.
 - `SubmissionRecord._samples_have_one_read1_and_one_read2` checks the paired-file
@@ -287,40 +297,40 @@ or role names. Focused tests cover duplicate roles and a sample without files.
 ## Dataset-level validation
 
 Prefer a validator on a Dataset subclass when all inputs to the invariant are
-within that Dataset: uniqueness across items or pages, key/content agreement,
+within that Dataset: uniqueness across items, key/content agreement,
 or relationships among its entries. Dataset is already a Pydantic-backed data
 contract. With the current compatibility API, `@pyd.validator('data')` receives
 the parsed mapping of keys to item Models; return that mapping after checking it.
 
-For example, given a `LoanModel` whose schema normalizes `loan_ref`:
+For example, given a `LoanModel` whose schema normalizes `loan_ref`, check that
+each Dataset key matches its record's normalized reference:
 
 ```python
 import omnipy as om
 import omnipy.util.pydantic as pyd
 
 
-class LoanPagesDataset(om.Dataset[om.Model[list[LoanModel]]]):
+class LoanDataset(om.Dataset[LoanModel]):
     @pyd.validator('data')
-    def _loan_references_are_unique(
+    def _keys_match_loan_references(
         cls,
-        pages: dict[str, om.Model[list[LoanModel]]],
-    ) -> dict[str, om.Model[list[LoanModel]]]:
-        seen: set[str] = set()
-        for page in pages.values():
-            for loan in page:
-                if loan.loan_ref in seen:
-                    raise ValueError(f'Duplicate loan reference: {loan.loan_ref}')
-                seen.add(loan.loan_ref)
-        return pages
+        loans: dict[str, LoanModel],
+    ) -> dict[str, LoanModel]:
+        for key, loan in loans.items():
+            if key != loan.loan_ref:
+                raise ValueError(
+                    f'Dataset key {key!r} does not match loan reference {loan.loan_ref!r}'
+                )
+        return loans
 ```
 
-This validates across all pages before a later transformation builds a Dataset
-keyed by loan reference, preventing duplicate records from being silently
-overwritten. The flow can use `LoanPagesDataset` directly as its validating
-constructor, and downstream operations can accept that Dataset type. The loops
-express the invariant; they do not schedule per-item work.
+The flow can use `LoanDataset` directly as its validating constructor, and
+downstream operations can accept that Dataset type. The loop expresses the
+invariant; it does not schedule per-item work. Fetching, combining pages, and
+detecting duplicate records before keying belong to the
+[page-to-record stages](remote-loading.md#from-response-pages-to-domain-records).
 
-Avoid adding a separate `Model[LoanPagesDataset]` solely to use `_parse_data()`.
+Avoid adding a separate `Model[LoanDataset]` solely to use `_parse_data()`.
 An outer Model should have an independent contract or conversion purpose that
 justifies the additional type. A Dataset validator keeps the batch interface
 directly available without another wrapper or `mimics` declaration.
@@ -330,21 +340,22 @@ that need several Datasets or shared metadata on the containing schema. A
 Dataset-local rule belongs on the reusable Dataset even when a particular flow
 also puts that Dataset inside an aggregate.
 
-The example accepts completed page data. If such a Dataset is used as a live
+The example accepts completed record data. If such a Dataset is used as a live
 async output, design how its validators handle `PendingData` and `FailedData`;
-markers are not page Models. Alternatively, construct the constrained Dataset
+markers are not record Models. Alternatively, construct the constrained Dataset
 after checking completion as in [failure inspection](#inspect-current-failure-and-pending-results).
-Moving a validator onto a Dataset does not imply automatic re-keying or immediate
-revalidation after every nested item mutation; verify the mutation paths required
-by the contract, as discussed next.
+See [Validation through Model boundaries](#validation-through-model-boundaries)
+for normal updates and guidance on investigating unexpected validation behavior.
 
 ## Validation through Model boundaries
 
-Omnipy Models validate when their content changes through the Model interface.
-This includes supported mutating methods, item assignment, and attribute
-assignment. Treat validation as part of normal typed operations, not an optional
-cleanup step after a task. For example, appending through a list Model validates
-and coerces the new element:
+Rely on Model validation in normal dataflow code. Supported methods, item
+assignment, and attribute assignment through the Model interface maintain valid
+data automatically. The design avoids unnecessary validation by reusing already
+validated Models. Agents generally do not need to track when validation runs or
+add manual revalidation steps.
+
+For example, appending through a list Model validates and coerces the new element:
 
 ```python
 import omnipy as om
@@ -355,18 +366,8 @@ numbers.append('7')
 assert numbers.content == [2, 4, 5, 7]
 ```
 
-The exception is two or more container levels with no Model between them.
-With the default dynamic element conversion disabled, indexing a
-`Model[list[list[int]]]` returns a bare inner list. Calling that list's `append`
-does not pass through the outer Model, so the string remains unvalidated:
-
-```python
-nested = om.Model[list[list[int]]]([[2, 4, 5]])
-nested[0].append('7')
-assert nested.content == [[2, 4, 5, '7']]
-```
-
-Put a Model between the container levels to make inner mutations validate:
+For nested mutable containers declared directly in a Model, put a Model between
+the container levels so that inner updates use the same validated interface:
 
 ```python
 nested = om.Model[list[om.Model[list[int]]]]([[2, 4, 5]])
@@ -374,15 +375,13 @@ nested[0].append('7')
 assert nested[0].content == [2, 4, 5, 7]
 ```
 
-Apply this rule to nested mutable containers generally, including dictionaries.
-Model boundaries belong where mutations need validation; lists of scalar values
-need only the Model around the list. Explicit nested Models also make the intended
-boundaries independent of optional dynamic element conversion. These list examples
-describe value structure, not a change to the Dataset rule for dataflow batches.
+This applies to nested dictionaries too; lists of scalar values need only the
+Model around the list. These list examples describe value structure, not a change
+to the Dataset rule for dataflow batches.
 
-For Models wrapping Pydantic records, Omnipy supplies nested wrappers, so normal
-field access and changes validate throughout the record. Appending a record and
-assigning one of its fields both validate in this example:
+For Models wrapping Pydantic records, Omnipy supplies stored nested wrappers.
+Field and container updates therefore have a Model boundary at which to validate.
+Appending a record and assigning one of its fields both validate in this example:
 
 ```python
 class A(pyd.BaseModel):
@@ -405,7 +404,7 @@ assert record.aa[0].a == 5
 
 The current implementation recursively wraps container types in Pydantic fields,
 too. Consequently, a field declared as `list[list[A]]` has a Model between its
-lists at runtime and does not have the bare-inner-list limitation above:
+lists at runtime, so mutations reach a stored Model:
 
 ```python
 class GroupedB(pyd.BaseModel):
@@ -419,18 +418,100 @@ inner.append({'a': '4', 'b': 123})
 assert inner[1].a == 4
 ```
 
-The rule concerns actual Model boundaries, not the number of brackets in the
-source annotation. Use the current wrapping behavior rather than preserving an
-older limitation in generated schemas. Directly mutating an unwrapped object
-obtained through `.content` can bypass validation; keep updates on the Model
-interface. Validation of a mutated item Model does not imply that every containing
-schema's aggregate validators rerun immediately. In particular, changing a
-primary-key field through a Dataset item can leave its outer key inconsistent
-until the containing contract is validated again. Collect returned Datasets
-through typed assignments as described below; do not assume automatic re-keying
-or ancestor validation from item validation alone.
-The `.content` assertions above inspect stored values to demonstrate
-coercion or its absence, rather than extracting data for processing. String inputs
+These patterns are sufficient for ordinary dataflow development. The details in
+[Troubleshooting unexpected validation behavior](#troubleshooting-unexpected-validation-behavior)
+are for investigating surprising results.
+
+### Troubleshooting unexpected validation behavior
+
+Consult these details when an update does not behave as expected. Local validation
+and reuse of existing Models are intentional ways to avoid unnecessary work.
+The known limitations involving bare nested containers and dynamic element
+conversion are described here; other specific known issues are documented in
+`tests/data/test_model.py`. Use the relevant case when diagnosing an issue rather
+than adding defensive validation to every stage of a dataflow.
+
+#### Bare nested containers and dynamic element conversion
+
+Two or more container levels without a stored Model between them do not provide
+a validation boundary for inner mutations. With dynamic element conversion
+disabled (the default), indexing a `Model[list[list[int]]]` returns a bare inner
+list. Calling that list's `append` does not pass through the outer Model, so the
+string remains unvalidated:
+
+```python
+nested = om.Model[list[list[int]]]([[2, 4, 5]])
+nested[0].append('7')
+assert nested.content == [[2, 4, 5, '7']]
+```
+
+Enabling dynamic element conversion does not fix this structure. `__getitem__()`
+then creates a new Model for the returned inner list, but does not insert it into
+the parent. Mutating that temporary Model validates its own content; the changes
+are not retained in the parent. For example, with conversion enabled,
+`nested[0].append('7')` leaves `nested.content` unchanged. Use stored nested Models
+as shown in [Validation through Model boundaries](#validation-through-model-boundaries).
+Pydantic fields receive these wrappers automatically; the issue concerns actual
+Model boundaries, not the number of brackets in the source annotation.
+
+#### Direct content mutation and validation scope
+
+Directly mutating an unwrapped object obtained through `.content` will bypass
+validation; assigning to `.content` also bypasses it. The following diagnostic
+example deliberately bypasses the normal interface to show which later operations
+validate which levels:
+
+```python
+parent = om.Model[list[om.Model[list[int]]]]([[1, 2, 3], [5, 6, 7]])
+
+parent[0].content.append('4')  # Direct content mutation bypasses validation.
+assert parent.to_data() == [[1, 2, 3, '4'], [5, 6, 7]]
+
+# The second child's method validates that child. Parent indexing is read-only.
+parent[1].append('8')
+assert parent.to_data() == [[1, 2, 3, '4'], [5, 6, 7, 8]]
+
+parent.content += [('9',)]  # Content mutation and assignment both bypass validation.
+assert parent.to_data() == [[1, 2, 3, '4'], [5, 6, 7, 8], ('9',)]
+
+# The parent's method validates the outer list and converts the newly added values.
+parent.append(['10'])
+assert parent.to_data() == [[1, 2, 3, '4'], [5, 6, 7, 8], [9], [10]]
+```
+
+Validation runs at the level of the Model receiving a state-changing operation
+and does not propagate to its parents or siblings. Proxied methods are assumed
+to change state unless recognized as read-only; `__getitem__()` on a parent is
+not a state-changing operation.
+
+The first child already has the required type `Model[list[int]]`, so validation
+of the outer list accepts that existing Model without revalidating its content.
+Reusing a correctly typed Model avoids redundant work in normal use. Here its
+unvalidated `'4'` survives both the sibling's mutation and the parent's method
+call because the example deliberately changed its content outside that validated
+interface. Operation-triggered validation at one Model boundary is not recursive
+revalidation of every existing Model below it.
+
+Validation can also be triggered explicitly with `model.validate_content()`, which
+revalidates that Model's current content in place.
+
+Dataset revalidation happens through its own dict operations, such as assigning
+raw data to an entry. Accessing an item or mutating its content does not revalidate
+the containing Dataset. These mapping operations do not all perform full
+revalidation: an existing item Model of the required type can be reused without
+revalidating it. Changing a primary-key field through a Dataset item can therefore
+leave its outer key inconsistent until the containing contract is validated again.
+Collect returned Datasets through typed assignments as described in
+[Dataset iteration and ownership](#dataset-iteration-and-ownership); item mutation
+does not trigger automatic re-keying or parent and sibling validation.
+
+Automatic revalidation of existing Models at job input and output boundaries is
+not yet implemented. It is planned work intended to add checks at job handoffs
+and further reduce the need to reason about validation scope. Currently, passing
+a Model through a task or flow does not itself revalidate its content.
+
+The `.content` and `.to_data()` assertions inspect stored values to demonstrate
+coercion or its absence; they are not preparation for processing. String inputs
 for integer fields are intentional demonstrations of runtime coercion.
 
 ## Reusable Models and Datasets
@@ -475,8 +556,7 @@ class NonEmptyList(om.Model[list[ItemT]], Generic[ItemT]):
         return data
 
 
-class NonEmptyListsDataset(om.Dataset[NonEmptyList[ItemT]], Generic[ItemT]):
-    ...
+class NonEmptyListsDataset(om.Dataset[NonEmptyList[ItemT]], Generic[ItemT]): ...
 
 
 NumericSeries = NonEmptyListsDataset[float]
@@ -499,6 +579,28 @@ composition such as `om.Dataset[NonEmptyList[float]]` also works. Choose accordi
 to the reusable contract and readability; a new class is not required at every
 composition point. Existing [batch](#choose-data-structures-by-their-role) and
 [mutation](#validation-through-model-boundaries) rules still apply.
+
+Omnipy supports default values for type variables. A generic Model used without
+an explicit specialization uses the declared default type; a Dataset containing
+that Model uses the same default:
+
+```python
+ValueT = TypeVar('ValueT', default=int)
+
+
+class ValuesModel(om.Model[list[ValueT]], Generic[ValueT]): ...
+
+
+assert ValuesModel(['7']).content == [7]
+assert ValuesModel[str]([7]).content == ['7']
+
+values = om.Dataset[ValuesModel]({'sample': ['7']})
+assert values['sample'].content == [7]
+```
+
+Concrete defaults are applied automatically. Defaults that contain forward
+references retain the existing `update_forward_refs()` resolution path once those
+names are available. Explicit specialization overrides the default.
 
 Preserve type relationships across reusable operations. For example, a factory
 accepting `dataset_cls: type[DatasetT]` and constructing that class should return
@@ -579,10 +681,23 @@ fields, and combine item data with shared metadata. The service call belongs in
 the task or service adapter, not in a model validator/converter that may run again
 during validation.
 
-Existing models and dataset classes can be placed directly in linear/DAG child
-lists when construction expresses the conversion. Reuse general collection tasks
-and component flows where appropriate; do not add a one-line task solely to call
-an already suitable model constructor.
+Model and Dataset classes, including mapper classes derived from `ConverterModel`,
+can be placed directly in linear/DAG child lists when construction expresses the
+conversion. For example, use `ItemCountMapper` directly as a linear-flow child:
+
+```python
+@om.LinearFlowTemplate(ItemCountMapper)
+def count_items(items: list[str]) -> ItemCountMapper: ...
+
+
+assert count_items.run(['alpha', 'beta']).content == 2
+```
+
+The result remains a mapper Model wrapping the converted value. Linear flows
+supply positional source values; DAG flows construct data-class children with
+routed keyword arguments, so the mapper's source must accept that input shape.
+Reuse general collection tasks and component flows where appropriate; do not add
+a one-line task solely to call an already suitable Model or mapper constructor.
 
 Structural conversion can also be expressed within nested types. For example,
 `Dataset[RecordMapper]` maps the records in one batch, and
@@ -695,10 +810,9 @@ assert maybe_exclaim.run('hello', enabled=False) == 'hello'
 Inside a flow, **call job templates instead of using their `.run()` method**.
 Use `await child(...)` for coroutine children and the corresponding iteration
 syntax for generators. Direct template calls require a flow context; outside one,
-use `.run(...)` or an applied job. The current implementation internally delegates
-the in-flow call to `.run()` and still permits explicit `.run()` there; the rule
-describes the intended authoring API. In linear/DAG declarations, supply child
-templates directly and let the composition invoke them.
+use `.run(...)` or an applied job. Calling `.run()` inside a flow raises
+`JobStateException` with guidance to call the template directly. In linear/DAG
+declarations, supply child templates directly and let the composition invoke them.
 
 ### Specialization with modifiers
 
@@ -706,7 +820,10 @@ Put behavior intrinsic to a reusable job on its base decorator. Put settings
 specific to its surrounding dataflow in `.refine(...)` at the composition site.
 For example, a job designed to process datasets can declare iteration on its base
 template; a general one-item operation can instead gain iteration in a refinement.
-Use meaningful function names and set `name` for distinct specializations.
+Use meaningful function names, and give refined task and flow templates a
+descriptive `name` in `.refine(name=..., ...)`. Assigning the refined template to a
+new Python variable does not rename the job; without an explicit `name`, refinement
+with the default `update=True` retains the original name.
 
 | Modifier | Contract expressed |
 | --- | --- |
@@ -760,21 +877,33 @@ calling context:
 | Inside a flow | Leaves coroutine handling to the flow; an authored body awaits coroutine children explicitly. |
 
 With `auto_async=False`, the outer caller also handles the coroutine explicitly.
-This modifier does not make synchronous work asynchronous or consume async
-generators. Keep the callable contract and execution context clear instead of
-probing results with `isawaitable()`.
+This modifier does not make synchronous work asynchronous.
+
+**Async-generator jobs remain lazy with either `auto_async` setting.** Calling
+one returns an async generator, both inside and outside flows, whether or not an
+event loop is already running. Consume it with `async for`; do not await the
+generator itself. `auto_async` does not schedule its iteration or collect its
+items. At a synchronous entry point, run an async consumer with `asyncio.run(...)`;
+inside async code, consume the stream directly. If a coroutine job returns an
+async generator, `auto_async` handles the coroutine call as described in the table,
+but the returned stream still needs a consumer. See
+[callable types and composed flows](#callable-types-and-composed-flows) for declaring
+streaming linear/DAG flows. Keep the callable contract and execution context clear
+instead of probing results with `isawaitable()`.
 
 Use persistence and restoration modifiers when the dataflow needs those behaviors;
 inspect their current semantics before promising caching or recovery. DAG-specific
-input retention (`consume_kwargs_from_results`) is covered with routing below.
+input retention (`consume_kwargs_from_results`) is covered in
+[Routing rules that matter](#routing-rules-that-matter).
 
 ## Routing rules that matter
 
-Use the shared modifiers above together with these composition rules:
+Use the [shared modifiers](#specialization-with-modifiers) together with these
+composition rules:
 
 | Mechanism | Meaning |
 | --- | --- |
-| `LinearFlowTemplate(a, b, c)` | After the first child, each child receives the preceding result positionally; the last result is returned. See tuple handling below. |
+| `LinearFlowTemplate(a, b, c)` | After the first child, each child receives the preceding result as one positional argument, including tuple results; the last result is returned. |
 | Linear flow keyword-only inputs | Available by matching name to children. Positional-capable flow arguments are bound and passed positionally to the first child, even if the caller used keyword syntax. Use `*` for shared configuration. |
 | `DagFlowTemplate(...)` | Routes by parameter names from accumulated inputs/results. Children currently execute in declaration order; a DAG declaration does not imply concurrent branches. |
 | A nonempty dictionary result | Its entries update the DAG's available named results. A plain dictionary is appropriate for this routing purpose; its values can remain typed objects. |
@@ -798,7 +927,7 @@ can feed a child accepting `bounds: tuple[int, int]`, whose body starts with
 
 Multiple positional arguments supplied to the flow itself are forwarded
 individually to the **first** child; this is distinct from forwarding a child
-result. Shared keyword-only inputs remain available as described above.
+result. Shared keyword-only inputs remain available to children by matching name.
 These semantics are implemented by `LinearFlowRunSpec` in
 `src/omnipy/engine/run_spec.py` and covered by
 `tests/compute/test_flow.py::test_linear_flow_only_first_positional`.
@@ -850,8 +979,7 @@ import omnipy as om
 
 
 @om.LinearFlowTemplate(fetch_async, normalize, collect)
-async def load_records(source: str) -> list[str]:
-    ...
+async def load_records(source: str) -> list[str]: ...
 ```
 
 For ordinary function and coroutine linear/DAG flows, `...` makes clear that the
@@ -916,7 +1044,8 @@ uses. Do not add a retry policy just because an example is asynchronous.
 Direct typed updates are the preferred expression when a task owns the record it
 enriches. Collect returned datasets back into the aggregate through typed
 assignments, and express derived summaries in validators. Keep nested updates
-within the [Model boundaries described above](#validation-through-model-boundaries).
+within the boundaries described in
+[Validation through Model boundaries](#validation-through-model-boundaries).
 If snapshot isolation is needed, make it explicit instead of serializing/rebuilding
 everything by default.
 
@@ -1024,12 +1153,10 @@ class CatalogSchema(pyd.BaseModel):
 
 
 @om.mimics(CatalogSchema)
-class CatalogModel(om.Model[CatalogSchema]):
-    ...
+class CatalogModel(om.Model[CatalogSchema]): ...
 
 
-class CatalogDataset(om.Dataset[CatalogModel]):
-    ...
+class CatalogDataset(om.Dataset[CatalogModel]): ...
 
 
 class PublicationMetadataSchema(pyd.BaseModel):
@@ -1037,8 +1164,7 @@ class PublicationMetadataSchema(pyd.BaseModel):
 
 
 @om.mimics(PublicationMetadataSchema)
-class MetadataModel(om.Model[PublicationMetadataSchema]):
-    ...
+class MetadataModel(om.Model[PublicationMetadataSchema]): ...
 
 
 class PublicationSchema(pyd.BaseModel):
@@ -1048,8 +1174,7 @@ class PublicationSchema(pyd.BaseModel):
 
 
 @om.mimics(PublicationSchema)
-class PublicationModel(om.Model[PublicationSchema]):
-    ...
+class PublicationModel(om.Model[PublicationSchema]): ...
 
 
 class PublishRequest(pyd.BaseModel):
@@ -1106,17 +1231,19 @@ def create_receipt(publication: PublicationModel) -> PublicationModel:
 # flows.py
 @om.DagFlowTemplate(
     extract_publication,
-    publish_records.refine(param_key_map={'dataset': 'records'}, result_key='records'),
+    publish_records.refine(
+        name='publish_catalog_items',
+        param_key_map={'dataset': 'records'},
+        result_key='records',
+    ),
     collect_publication,
     consume_kwargs_from_results=False,
 )
-async def publish_catalog_records(publication: PublicationModel) -> PublicationModel:
-    ...
+async def publish_catalog_records(publication: PublicationModel) -> PublicationModel: ...
 
 
 @om.LinearFlowTemplate(publish_catalog_records, create_receipt)
-async def publish_catalog(publication: PublicationModel) -> PublicationModel:
-    ...
+async def publish_catalog(publication: PublicationModel) -> PublicationModel: ...
 ```
 
 This compact example raises on failed/pending items when collecting or checking

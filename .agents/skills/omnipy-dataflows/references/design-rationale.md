@@ -82,6 +82,15 @@ templates, modifiers, and executable jobs support that reuse. The corresponding
 specialization of Models and Datasets, preservation of type relationships, and
 the distinction between type parameters and configurable `Params`/`.adjust(...)`.
 
+The user also requested explicit names for refined job templates. Refinement with
+the default `update=True` inherits the original job name unless `name` is supplied;
+a new variable name does not change it. The `.run()` lifecycle rule is now enforced:
+it raises inside flows, where direct template calls apply and execute the child.
+The async execution review confirmed that `auto_async` adapts coroutine functions
+only; async-generator jobs remain lazy streams requiring an async consumer with
+either setting. The [execution guidance](patterns.md#execution-policy) distinguishes
+these callable forms.
+
 Component packages also supply the structural template. The user clarified that
 applied instances should use `_task` or `_flow`, that `Record` primarily denotes
 a table-row schema, and that relative imports within and between components are
@@ -117,6 +126,26 @@ That field declaration therefore does not reproduce the bare-container exception
 in the current checkout. Validation guarantees and rollback/isolation guarantees
 are separate concerns.
 
+The user emphasized that Model validation is robust in normal use and deliberately
+avoids unnecessary validation. Agents should usually rely on the Model interface
+without reasoning about validation timing. The guidance therefore leads with
+ordinary updates and keeps the detailed mechanics in a troubleshooting subsection
+for surprising behavior. Bare nested containers, dynamic element conversion, and
+specific known issues documented in Model tests are the exceptions to investigate
+when relevant, not reasons to add routine defensive validation to dataflows.
+
+The user clarified that dynamic element conversion does not repair a missing
+stored Model boundary. Indexing creates a temporary wrapper that is not inserted
+into the parent, so changes to it are not retained there. Direct `.content`
+mutation bypasses validation. Validation runs at the Model receiving the
+state-changing operation and does not propagate to parents or siblings; an
+existing child Model of the required type can also be accepted without content
+revalidation when its parent validates. The validation reference includes the
+user's nested-list example showing these distinct effects. Dataset revalidation
+belongs to its own dict operations. Automatic revalidation of existing Models
+at job input and output boundaries is future work intended to simplify dataflow
+development, not a current guarantee.
+
 The status discussion established a division between task-recorded facts and
 model-derived summaries, with acknowledgement required for external completion.
 The user clarified that inline, nested, or separate status storage depends on the
@@ -141,9 +170,26 @@ The user explained why Dataset is the batch abstraction: current async concurren
 and gathering operate across its items through `iterate_over_data_files=True`.
 Collections of actual batches may therefore need nested Datasets; domain grouping
 alone does not imply that structure. See
-[batch boundaries](patterns.md#choose-data-structures-by-their-role). Parallel
-execution and async-generator streaming are intended extensions of this abstraction;
-their future APIs and implementation coverage are not inferred from that direction.
+[batch boundaries](patterns.md#choose-data-structures-by-their-role). The user
+subsequently corrected the description of streaming: async-generator streaming is
+already supported. Parallel execution remains an intended extension; future APIs
+and implementation coverage are not inferred from that direction.
+
+The user also clarified that typed Dataset blueprints are planned for fixed
+aggregates with different member types. The current recommendation to use a
+wrapped Pydantic schema applies until that functionality is available. Conversion
+guidance covers scalars, collections, and other supported types as well as Pydantic
+schemas. Existing Pydantic types belong alongside Omnipy's domain primitives, and
+named field types make shared contracts reusable.
+
+The Dataset-validator example previously checked duplicate loan references across
+pages. The user identified pagination as a separate fetching concern: combine
+pages into one container, then validate domain records and collection-wide rules.
+The example now demonstrates key/content agreement on a record Dataset. The
+[fetching guidance](remote-loading.md#from-response-pages-to-domain-records)
+explains preserving duplicate occurrences through concatenation and detecting
+collisions before constructing a mapping keyed by normalized record identity.
+Response validation can still happen during loading.
 
 For task iteration, the agreed future direction is to name the outer dataset
 parameter and identify the inner item parameter by name, instead of requiring it

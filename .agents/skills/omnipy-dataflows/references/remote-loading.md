@@ -12,8 +12,7 @@ import omnipy as om
 
 
 @om.mimics(int)
-class PageNumberModel(om.Model[int]):
-    ...
+class PageNumberModel(om.Model[int]): ...
 
 
 @om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=om.HttpUrlDataset)
@@ -86,15 +85,17 @@ the response Dataset class with a modifier:
 
 ```python
 fetch_pages = om.async_load_urls_into_new_dataset.refine(
+    name='fetch_pages',
     fixed_params={'dataset_cls': om.JsonListOfDictsDataset},
 )
 
 
 @om.LinearFlowTemplate(page_url, fetch_pages)
 async def load_pages(
-    page_numbers: om.Dataset[PageNumberModel], *, endpoint: om.HttpUrlModel,
-) -> om.JsonListOfDictsDataset:
-    ...
+    page_numbers: om.Dataset[PageNumberModel],
+    *,
+    endpoint: om.HttpUrlModel,
+) -> om.JsonListOfDictsDataset: ...
 ```
 
 Use the async template in async composition and the sync template at a synchronous
@@ -105,6 +106,39 @@ contract or operation beyond renaming the loader.
 Check failed/pending results before assuming every page loaded; see
 [current failure inspection](patterns.md#inspect-current-failure-and-pending-results).
 Partial pagination must not silently become a supposedly complete source.
+
+## From response pages to domain records
+
+Pagination describes fetching; page boundaries need not become part of the domain
+contract. For a finite collection whose records are processed together, prefer:
+
+1. Fetch pages into a response Dataset, validating the response shape and checking
+   that the required pages are available.
+2. Extract and concatenate their record sequences into one container that preserves
+   every occurrence. Flatten the page level, preserving each record's own nested
+   structure. Reuse collection tasks such as `concat_all_vals_in_datasets_as_args`
+   for list-valued page Models; response envelopes need their record member extracted
+   first.
+3. Parse the combined records through their domain Models to normalize fields and
+   validate record contents. Validate collection-wide rules on the resulting
+   container, including uniqueness of normalized references when required.
+4. If downstream work is per record, construct a Dataset keyed by those validated
+   references. Enforce key/content agreement on that Dataset as described under
+   [Dataset-level validation](patterns.md#dataset-level-validation).
+
+A list or list Model preserves duplicate references even when they came from
+different pages. Detect collisions before creating a keyed mapping: once a dict
+comprehension has overwritten an earlier occurrence, a Dataset validator cannot
+recover it. Keep the uniqueness rule in the combined container's data contract.
+If the source permits overlapping pages, define how repeated records are reconciled
+and how conflicting contents are handled before constructing the keyed Dataset.
+
+Record validation may already happen during loading when the response type
+includes those Models. Combining pages still supplies the boundary for checks
+spanning all records. Preserve page provenance when diagnostics or the output
+contract need it. For streaming or response-dependent pagination, adapt collection
+to the service's traversal contract and retain the state needed for cross-page
+checks; materializing all pages is not a prerequisite for streaming.
 
 ## Test the real loader against a mocked service
 

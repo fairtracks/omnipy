@@ -85,7 +85,8 @@ into design rules.
   independently scheduled units visible as dataset items instead of burying
   them in list Models that require manual orchestration. Internal measurements
   processed together do not thereby become separate jobs. The reference distinguishes
-  current execution from intended parallelism and streaming extensions.
+  current async concurrency and async-generator streaming from intended parallel
+  execution extensions.
 - Encode normalization and intrinsic validity in types and validators: constrained
   identifiers, dates, URLs, enumerated states, and relationships between records.
   Prefer specific field contracts to bare `str`/`float`: Enum or Literal for
@@ -114,13 +115,15 @@ into design rules.
   routine preparation for processing. Avoid dictionary casts and package rebuilds
   that merely compensate for failing to use the Model interface.
 - Rely on Model validation when changing data through its mimicked interface.
-  The structural exception is nested containers without a Model between them:
-  mutating a bare inner container bypasses the outer Model. Insert Model boundaries
-  between those containers. Current Pydantic-record wrapping inserts them
-  recursively, including for nested container fields. See
+  Normal updates maintain valid data automatically, while reuse of already
+  validated Models avoids unnecessary work. Agents generally do not need to track
+  validation timing or add manual revalidation. Declare stored Models between
+  nested mutable containers; Pydantic-record wrapping supplies them recursively.
+  See the
   [mutation examples](references/patterns.md#validation-through-model-boundaries).
-  Do not add routine serialization/reconstruction or manual validation calls to
-  compensate for overlooking these boundaries.
+  If an update behaves unexpectedly, consult the
+  [troubleshooting details](references/patterns.md#troubleshooting-unexpected-validation-behavior)
+  for known nested-container/dynamic-conversion limitations and validation scope.
 - Specialize existing generic Models and Datasets before writing new components.
   Generalize shared validation/conversion rules by parameterizing the varying
   types, preserving type relationships through Dataset items and job outputs.
@@ -181,7 +184,9 @@ into design rules.
   Do not hand-write dataset loops and scheduling that the decorator already supplies.
 - Reuse and specialize whole child flows as well as tasks. Put stable behavior on
   the base template and dataflow-specific modifiers at the composition site with
-  `.refine(...)`. Modifiers are part of the inspectable job contract. Read
+  `.refine(...)`. Give each refined template a descriptive `name`; a new Python
+  variable name does not rename the job. Modifiers are part of the inspectable job
+  contract. Read
   [reusable jobs, templates, and modifiers](references/patterns.md#reusable-jobs-templates-and-modifiers)
   for their meanings and refinement's merge/reset semantics.
 - A template describes a job; `.apply()` produces an executable job, and
@@ -201,7 +206,8 @@ fields, collect them in `HttpUrlDataset`, and load responses with the intended
 Dataset class's `.load(...)` or the existing remote loading templates. Reuse their
 HTTP policies and preserve the distinction between response pages and domain
 items. See [paging URLs and Dataset loading](references/remote-loading.md) for
-sync/async usage and a composed example.
+sync/async usage, a composed example, and combining pages into validated records
+before constructing a Dataset keyed by record identity.
 
 Treat external API contracts as requirements in their own right: request and
 response schemas, field meanings, and operation outcomes. Adapt internal data to
