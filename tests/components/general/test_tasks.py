@@ -3,8 +3,10 @@
 from typing import Generic
 
 import pytest
+import pytest_cases as pc
 from typing_extensions import TypeVar
 
+from omnipy import require_all_items
 from omnipy.components.general.tasks import (
     concat_all_vals_in_datasets_as_args,
     concat_all_vals_in_datasets_as_kwargs,
@@ -17,7 +19,10 @@ from omnipy.components.general.tasks import (
     union_all_vals_in_datasets_as_args,
     union_all_vals_in_datasets_as_kwargs,
 )
+from omnipy.compute.flow import LinearFlowTemplate
+from omnipy.compute.task import TaskTemplate
 from omnipy.data.dataset import Dataset
+from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import is_model_instance, Model
 from omnipy.data.param import (
     bind_adjust_dataset_func,
@@ -25,6 +30,7 @@ from omnipy.data.param import (
     params_dataclass,
     ParamsBase,
 )
+import omnipy.util.pydantic as pyd
 
 
 class FloatModel(Model[float]): ...
@@ -59,6 +65,16 @@ class FloatDataset(Dataset[FloatModel]): ...
 class IntDataset(Dataset[IntModel]): ...
 
 
+class NonEmptyIntDataset(IntDataset):
+    @pyd.validator('data')
+    def _require_items(
+        cls, data: dict[str, IntModel | PendingData | FailedData]
+    ) -> dict[str, IntModel | PendingData | FailedData]:
+        if not data:
+            raise ValueError('At least one item is required')
+        return data
+
+
 RoundedIntModelT = TypeVar('RoundedIntModelT', bound=Model, default=RoundedIntModel)
 
 
@@ -71,6 +87,62 @@ class RoundedIntDataset(_RoundedIntDataset[RoundedIntModel]):
         RoundedIntModel,
         RoundedIntModel.Params,
     )
+
+
+@pytest.mark.parametrize('data', [{}, {'a': 1, 'b': 2}], ids=['empty', 'complete'])
+def test_require_all_items_preserves_dataset(data: dict[str, int]) -> None:
+    dataset = IntDataset(data)
+    items = dict(dataset.items())
+
+    assert require_all_items.run(dataset) is dataset
+    assert dataset.to_data() == data
+    assert all(dataset[key] is item for key, item in items.items())
+
+
+@pc.parametrize_with_cases('markers, expected_message', cases='.cases.dataset_completion')
+def test_require_all_items_reports_all_incomplete_keys(
+    markers: dict[str, PendingData | FailedData], expected_message: str
+) -> None:
+    dataset = IntDataset({'ready': 1, **markers})
+    original_items = dict(dataset.data)
+
+    with pytest.raises(ValueError) as exc_info:
+        require_all_items.run(dataset)
+
+    assert str(exc_info.value) == expected_message
+    assert tuple(dataset.keys()) == tuple(original_items)
+    assert all(dataset.data[key] is item for key, item in original_items.items())
+
+
+def test_require_all_items_accepts_dataset_requiring_items() -> None:
+    dataset = NonEmptyIntDataset(ready=1)
+    assert require_all_items.run(dataset) is dataset
+
+    dataset['waiting'] = PendingData(job_name='fetch')
+    with pytest.raises(ValueError, match='Incomplete batch'):
+        require_all_items.run(dataset)
+
+
+def test_require_all_items_blocks_downstream_flow_steps() -> None:
+    collected: list[IntDataset] = []
+
+    @TaskTemplate()
+    def collect(dataset: IntDataset) -> IntDataset:
+        collected.append(dataset)
+        return dataset
+
+    @LinearFlowTemplate(require_all_items, collect)
+    def finish(dataset: IntDataset) -> IntDataset: ...
+
+    dataset = IntDataset(ready=1)
+    dataset['waiting'] = PendingData(job_name='fetch')
+    with pytest.raises(ValueError, match='Incomplete batch'):
+        finish.run(dataset)
+    assert collected == []
+
+    dataset['waiting'] = 2
+    assert finish.run(dataset) is dataset
+    assert collected == [dataset]
 
 
 def test_create_dataset_from_args():

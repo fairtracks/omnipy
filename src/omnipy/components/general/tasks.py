@@ -1,4 +1,4 @@
-"""General tasks for splitting, importing, and creating datasets and models."""
+"""General tasks for checking, splitting, importing, and creating datasets and models."""
 
 from _operator import iadd, ior
 from collections.abc import Callable, Iterable, Iterator
@@ -31,6 +31,30 @@ _SupportsIOrT = TypeVar('_SupportsIOrT', bound=SupportsIOr)
 #     for name, item in dataset.items():
 #         out_dataset[name] = cast(cast_model, item.to_data())
 #     return out_dataset
+
+
+@TaskTemplate()
+def require_all_items(dataset: _DatasetT) -> _DatasetT:
+    """Require every entry in a dataset to be available before continuing a dataflow.
+
+    Checks this dataset's own entries for pending and failed task markers without
+    copying or modifying the dataset. Empty datasets are accepted. Nested datasets
+    are not traversed, and service-specific success conditions are not checked.
+
+    Args:
+        dataset: Dataset whose item results must be available.
+
+    Returns:
+        The original dataset, retaining its concrete type and item identities.
+
+    Raises:
+        ValueError: If any entries are failed or pending, listing their keys.
+    """
+    failed_keys = tuple(dataset.failed_task_details())
+    pending_keys = tuple(dataset.pending_task_details())
+    if failed_keys or pending_keys:
+        raise ValueError(f'Incomplete batch: failed={failed_keys}, pending={pending_keys}')
+    return dataset
 
 
 @TaskTemplate()
