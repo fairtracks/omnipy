@@ -5,7 +5,7 @@ from collections import deque
 from collections.abc import Coroutine, Generator
 import math
 from types import TracebackType
-from typing import Any
+from typing import Any, NamedTuple
 
 from omnipy.shared.enums.data import BackoffStrategy
 from omnipy.shared.typing import TYPE_CHECKING
@@ -28,6 +28,18 @@ DEFAULT_BURST_RATIO = 0.5
 # start that is planned for the moment an earlier start leaves the time period may come out a
 # fraction of a nanosecond early. Times this close are treated as equal
 _EPS = 1e-9
+
+
+class StartPlan(NamedTuple):
+    """A start planned by ``RequestPacer.plan_start()``, to be passed to ``record_start()``."""
+
+    start: float
+    # The previous start the plan is based on
+    prev_start: float | None
+    # The spacing for the following requests, and the time the start that set it leaves the time
+    # period. No spacing means that it is calculated anew for the next request
+    spacing: float | None
+    spacing_valid_until: float
 
 
 class RequestPacer:
@@ -54,7 +66,9 @@ class RequestPacer:
     calculated anew at these points. Among starts giving the same spacing, the one that leaves
     the time period last sets it, so that it holds as long as possible.
 
-    The class has no clock: callers pass the times. See
+    The class has no clock: callers pass the times. A start is planned with ``plan_start()``,
+    which changes nothing, and the plan is passed to ``record_start()`` when the request starts.
+    A request that is cancelled before it starts thus leaves no trace. See
     docs/agents/technical/specs/2026-10-24-rate-limiter-pacing-design.md for the design.
     """
 
@@ -90,9 +104,6 @@ class RequestPacer:
         self._spacing: float | None = None
         self._spacing_valid_until = 0.0
 
-        # Whether the planned request was ready only after the spacing allowed it to start
-        self._planned_request_is_late = False
-
     @property
     def requests_per_time_period(self) -> int:
         return self._requests_per_time_period
@@ -110,43 +121,47 @@ class RequestPacer:
         """Return the configured steady-state request rate."""
         return self._requests_per_time_period / self._time_period_in_secs
 
-    def plan_start(self, ready_time: float) -> float:
-        """Return the start time for the next request, which is ready at ``ready_time``.
+    def plan_start(self, ready_time: float) -> StartPlan:
+        """Plan the start of the next request, which is ready at ``ready_time``.
 
-        Planning the same request again gives the same start time, so a request that is cancelled
-        before it starts does not affect the following ones. Report the actual start with
-        ``record_start()``.
+        The pacer is not changed, so a request that is cancelled before it starts does not affect
+        the following ones. Pass the plan to ``record_start()`` when the request starts.
         """
         prev = self._last_start
         now = ready_time if prev is None else max(ready_time, prev)
 
         if prev is None or self._num_starts_in_time_period(now) < self._burst_size:
-            self._spacing = None
-            self._planned_request_is_late = False
-            return now
+            return StartPlan(start=now, prev_start=prev, spacing=None, spacing_valid_until=0.0)
 
-        if (
-            self._spacing is None
-            or prev >= self._spacing_valid_until - _EPS
-            or now > prev + self._spacing + _EPS
-        ):
-            self._spacing, self._spacing_valid_until = self._calculate_spacing(now, prev)
+        spacing, spacing_valid_until = self._spacing, self._spacing_valid_until
+        if spacing is None or prev >= spacing_valid_until - _EPS or now > prev + spacing + _EPS:
+            spacing, spacing_valid_until = self._calculate_spacing(now, prev)
 
-        self._planned_request_is_late = now > prev + self._spacing + _EPS
-        return max(now, prev + self._spacing)
+        if now > prev + spacing + _EPS:
+            # The request was not ready in time, so its start is the new reference point
+            return StartPlan(start=now, prev_start=prev, spacing=None, spacing_valid_until=0.0)
 
-    def record_start(self, start_time: float) -> None:
-        """Record that the planned request has started at ``start_time``.
+        return StartPlan(
+            start=max(now, prev + spacing),
+            prev_start=prev,
+            spacing=spacing,
+            spacing_valid_until=spacing_valid_until,
+        )
+
+    def record_start(self, plan: StartPlan, start_time: float) -> None:
+        """Record that the request planned by ``plan`` has started at ``start_time``.
 
         The start may be a little later than planned, e.g. when the event loop is busy. The
-        current spacing is then kept, which only paces the following requests a little slower
+        planned spacing is then kept, which only paces the following requests a little slower
         than needed.
         """
-        if self._planned_request_is_late:
-            # The request was not ready in time, so its start is the new reference point
-            self._spacing = None
-            self._planned_request_is_late = False
+        if plan.prev_start != self._last_start:
+            raise ValueError('The plan is not based on the latest start. Plan the start again')
+        if start_time < plan.start - _EPS:
+            raise ValueError(f'The request started at {start_time}, before its plan ({plan.start})')
 
+        self._spacing = plan.spacing
+        self._spacing_valid_until = plan.spacing_valid_until
         self._starts.append(start_time)
         self._last_start = start_time
         while self._starts and not self._is_in_time_period(self._starts[0], start_time):
@@ -204,11 +219,11 @@ class RateLimiter:
         """Wait until the next request may start."""
         async with self._lock:
             loop = asyncio.get_running_loop()
-            start = self._pacer.plan_start(loop.time())
-            delay = start - loop.time()
+            plan = self._pacer.plan_start(loop.time())
+            delay = plan.start - loop.time()
             if delay > 0:
                 await asyncio.sleep(delay)
-            self._pacer.record_start(max(start, loop.time()))
+            self._pacer.record_start(plan, max(plan.start, loop.time()))
 
 
 class _RateLimitedRequest:

@@ -53,8 +53,9 @@ def pacer_start_times(
     """
     starts = []
     for i, arrival in enumerate(arrivals):
-        start = pacer.plan_start(arrival) + (delays[i] if delays else 0.0)
-        pacer.record_start(start)
+        plan = pacer.plan_start(arrival)
+        start = plan.start + (delays[i] if delays else 0.0)
+        pacer.record_start(plan, start)
         starts.append(start)
     return starts
 

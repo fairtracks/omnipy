@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
+import copy
 import json
 from pathlib import Path
 import random
@@ -466,10 +467,32 @@ def test_request_pacer_new_burst_after_idle() -> None:
 def test_request_pacer_plan_start_does_not_change_state() -> None:
     # A request that is cancelled after planning its start must not affect the next ones
     pacer = RequestPacer(10, 0.5, burst_ratio=0.5)
+    untouched_pacer = RequestPacer(10, 0.5, burst_ratio=0.5)
     pacer_start_times(pacer, [0.0] * 5)
-    first_plan = pacer.plan_start(0.0)
-    assert pacer.plan_start(0.0) == first_plan
-    assert pacer.plan_start(0.01) == first_plan
+    pacer_start_times(untouched_pacer, [0.0] * 5)
+    state = copy.deepcopy(vars(pacer))
+
+    # Plans calculating a new spacing, and for a request that is not ready in time
+    pacer.plan_start(0.0)
+    pacer.plan_start(0.3)
+    assert vars(pacer) == state
+
+    arrivals = [0.01] + [0.3] * 10
+    assert pacer_start_times(pacer, arrivals) == pacer_start_times(untouched_pacer, arrivals)
+
+
+@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
+def test_request_pacer_rejects_misused_plans() -> None:
+    pacer = RequestPacer(10, 0.5, burst_ratio=0.5)
+    pacer_start_times(pacer, [0.0] * 5)
+
+    plan = pacer.plan_start(0.0)
+    with pytest.raises(ValueError, match='before its plan'):
+        pacer.record_start(plan, plan.start - 0.01)
+
+    pacer.record_start(plan, plan.start)
+    with pytest.raises(ValueError, match='not based on the latest start'):
+        pacer.record_start(plan, plan.start)
 
 
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
