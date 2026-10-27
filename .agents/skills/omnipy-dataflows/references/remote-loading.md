@@ -69,7 +69,7 @@ every job result is awaitable. `load(...)` creates a new Dataset; `load_into(...
 loads into an existing instance. Select the target Dataset for the response
 shape, such as a JSON list of objects per URL. A custom response Dataset can
 validate more specific schemas. Loading does not automatically flatten pages or
-map an external response schema into the workflow's domain schema.
+map an external response schema into the dataflow's domain schema.
 
 HTTP loading uses the remote component's sessions, host configuration, retry
 configuration, and rate limiting. Reuse that behavior before writing a second
@@ -118,8 +118,8 @@ Use this arrangement:
 
 1. A service fixture exposes the API's actual routes, query parameters, response
    payloads, content types, and relevant error responses through a local HTTP
-   test server. Keep fixture data and service state in `conftest.py` or established
-   fixture/case modules.
+   test server. Keep fixture data and service state in `conftest.py` or fixture
+   and `pytest_cases` case modules suited to the scenarios.
 2. Construct `HttpUrlModel` endpoints using that server's host/port and pass them
    into the actual flow. Its normal URL construction and Dataset loading run
    against those endpoints.

@@ -1,3 +1,9 @@
+<style>
+@page {
+    size: letter landscape;
+}
+</style>
+
 # Evidence and limits of the design guidance
 
 This comparison treats the complete trees at these commits as the two designs:

@@ -139,7 +139,7 @@ assert total_capacity({'a': StationSchema(station_id='a', capacity=4)}) == 4
 
 The read-only property expresses what the consumer needs without requiring
 mutable fields of an identical type. The protocol supplies no validation or
-implementation. Keep workflow boundaries typed as the appropriate Model/Dataset
+implementation. Keep dataflow boundaries typed as the appropriate Model/Dataset
 when they must enforce a data contract; use capabilities for reusable operations
 inside or across those boundaries.
 

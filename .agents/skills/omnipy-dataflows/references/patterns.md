@@ -89,10 +89,10 @@ conventions, see [structure and naming](structure-and-naming.md).
 | Role | Default representation | Reason |
 | --- | --- | --- |
 | A record with named, constrained fields | Pydantic schema wrapped in `Model[Schema]` | Validation and direct field access |
-| An Omnipy batch of processing items | `Dataset[ItemModel]` | Item identity and dataset operations; an item can itself contain structured data |
+| An Omnipy batch of processing items | `Dataset[ItemModel]` | Item identity and dataset operations; an item can be a record, hierarchical data, a response, or a table |
 | A collection of actual Omnipy batches | `Dataset[Dataset[ItemModel]]`, optionally using named subclasses | Use when both batch and item levels need Dataset semantics |
 | Fixed aggregate of different members | Pydantic schema containing typed datasets/models, wrapped in `Model` | Each member has a specific type |
-| A sequence intrinsic to one value or an external payload | `Model[list[...]]` or a suitable existing model | Preserve value/payload structure; workflow batches use datasets |
+| A sequence intrinsic to one value or an external payload | `Model[list[...]]` or a suitable existing model | Preserve value/payload structure; dataflow batches use datasets |
 | Tabular wrangling | Existing table/Pandas models and datasets | Use the component's operations |
 | Schema translation | `ConverterModel[Source, Target]` | Reusable typed conversion |
 
@@ -100,7 +100,7 @@ A heterogeneous dataset is useful when its varying members are genuinely data
 items. It is a poor default for a fixed record whose string keys are being used as
 field names and whose union type forces casts at every access.
 
-Choose an item's boundary from the workflow operations, not from every collection
+Choose an item's boundary from the dataflow operations, not from every collection
 in its schema. A sample may contain several measurements from one time and place.
 Those measurements can remain a list inside the sample record when they are
 received and transformed together. A response page can likewise contain several
@@ -124,11 +124,11 @@ distinction; prefer "sample" in authored names. Preserve externally imposed fiel
 names when required by a real service contract, explaining the terminology instead
 of silently changing that contract.
 
-For workflows that actually need batches within a collection, for example,
+For dataflows that actually need batches within a collection, for example,
 `class SampleBatch(Dataset[SampleModel]): ...` and
 `class SampleBatches(Dataset[SampleBatch]): ...` express those two levels. Then
 `batches['batch-1']['sample-A']` accesses a sample Model through their keyed
-boundaries. Use this structure when it serves the workflow; do not introduce it
+boundaries. Use this structure when it serves the dataflow; do not introduce it
 solely to mirror domain grouping or to demonstrate every available feature.
 
 The reason for this batch rule is execution as well as representation. Today an
@@ -259,8 +259,8 @@ include:
   `_file_dataset_keys_match_file_ids` validate key/content agreement for samples
   and files. These top-level validators stand in for future general Dataset
   primary-key support; keep that TODO separate from remote-key validation. Their
-  current placement is historical: for new Dataset-local invariants, prefer
-  validators on the Dataset subclass as described below.
+  validation boundary is the aggregate. For reusable Dataset-local invariants,
+  prefer validators on the Dataset subclass as described below.
 - `SubmissionRecord._file_sample_aliases_exist` has access to both sample and file
   Datasets and checks that each file's normalized reference identifies a sample.
 - `SubmissionRecord._samples_have_one_read1_and_one_read2` checks the paired-file
@@ -282,8 +282,7 @@ Check coverage over all required parent records, including those with no childre
 Check duplicate occurrences before reducing children to a set of roles. These
 cases are enforced by the submission example's paired-file validator. Generalize
 the relationship and coverage principles, not this domain's exact number of files
-or role names. The current tests specifically cover duplicate roles and a sample
-without files, the two cases missed by the historical validator.
+or role names. Focused tests cover duplicate roles and a sample without files.
 
 ## Dataset-level validation
 
@@ -379,7 +378,7 @@ Apply this rule to nested mutable containers generally, including dictionaries.
 Model boundaries belong where mutations need validation; lists of scalar values
 need only the Model around the list. Explicit nested Models also make the intended
 boundaries independent of optional dynamic element conversion. These list examples
-describe value structure, not a change to the Dataset rule for workflow batches.
+describe value structure, not a change to the Dataset rule for dataflow batches.
 
 For Models wrapping Pydantic records, Omnipy supplies nested wrappers, so normal
 field access and changes validate throughout the record. Appending a record and
@@ -510,7 +509,7 @@ that task in a flow; a type variable alone is not a runtime constructor.
 
 State capabilities needed by generic code through appropriate bounds or protocols.
 An unconstrained type parameter does not promise domain fields or methods. Preserve
-concrete specializations at workflow boundaries so the resulting declarations
+concrete specializations at dataflow boundaries so the resulting declarations
 remain inspectable contracts. Verify representative specializations and their
 shared rule, including invalid inputs, and check static typing where it matters
 to callers.
@@ -537,6 +536,31 @@ see `src/omnipy/data/param.py` and the raw Models and Datasets.
 
 ## Model transformations
 
+`ConverterModel[Source, Target]` converts general types, including scalars,
+collections, Omnipy Models, and Pydantic schemas. Neither side has to be a
+Pydantic model. For example, a collection-to-scalar conversion can use the
+wrapped list's ordinary interface:
+
+```python
+import omnipy as om
+
+
+class ItemCountMapper(om.ConverterModel[om.Model[list[str]], int]):
+    @classmethod
+    def _convert(cls, data: om.Model[list[str]]) -> int:
+        return len(data)
+
+
+count = ItemCountMapper(['alpha', 'beta'])
+assert count.content == 2
+```
+
+Parameterized source types such as `list[str]` and `tuple[int, int]` need a Model
+wrapper in the declaration. `Model[list[str]]` supplies that source type without
+requiring callers to construct the wrapper explicitly, as the example shows.
+The current restriction is on parameterized **source** types; it is not a
+requirement that the target be a Pydantic schema.
+
 Implement `_convert()` as a classmethod returning the target type. Prefer
 `Mapper(source)`, which produces a model-wrapped converted value that can mimic
 the target's interface. Decorate the concrete mapper with `@om.mimics(Target)`
@@ -548,9 +572,7 @@ specifically needs that underlying value.
 Several typed inputs can be declared as
 `Model[tuple[ItemModel, MetadataModel]]`. The caller can pass `(item, metadata)`
 directly to the mapper constructor, and `_convert()` can unpack the input Model
-directly. A bare parameterized `tuple[...]` is not a supported `ConverterModel`
-source type; declaring the Model type does not require explicit wrapping at every
-call site.
+directly.
 
 Keep pure mapping separate from I/O. A mapper can translate vocabulary, select
 fields, and combine item data with shared metadata. The service call belongs in
@@ -572,10 +594,11 @@ element. Keep pure structural conversion separate from repeated service operatio
 ## External API contracts
 
 An external service's request/response schemas and operation semantics define
-the boundary the workflow must satisfy. They have significance independently of
-how the service is implemented in a tutorial or test. Preserve the API's field
-names, meanings, validation requirements, and success/failure semantics; a local
-stand-in is not permission to reshape that API around convenient internal data.
+the boundary the dataflow must satisfy. A narrative integration example declares
+that contract in its service types and behavior, and tests the dataflow against
+it. Preserve the API's field names, meanings, validation requirements, and
+success/failure semantics; a local stand-in is not permission to reshape that API
+around convenient internal data.
 
 The BioSampleVault submission type (currently named
 `BioSampleVaultSampleSubmissionSchema`) represents the external service's actual
@@ -596,23 +619,22 @@ sample.biosample_vault_sample_id = response.biosample_vault_sample_id
 ```
 
 The service function's parameter is annotated with the external schema. Keep that
-contract; do not change it to require the workflow's mapper type, sample/metadata
+contract; do not change it to require the dataflow's mapper type, sample/metadata
 tuple, or enclosing submission Model. Runtime mimicking lets the wrapper provide
 the target interface, and `@mimics` exposes that interface to supported static
 checkers. Passing the mapper directly does not require `.convert()`, `.content`,
 or `.to_data()` solely to reach this coroutine boundary.
 
-The current coroutine in `services.py` implements the simulated API operation.
-The user expects it will likely become mocked API endpoints; that is future work,
-not an endpoint implementation already present. Moving to HTTP should preserve
-the external schema and the mapper's role. A client/transport adapter can encode
-the request and parse the response as required by that transport. Direct use of
-a Model by the coroutine does not imply that an HTTP client accepts that Python
+The coroutine in `services.py` implements the simulated API operation. A mocked
+HTTP endpoint can implement the same declared contract. When changing transport,
+preserve the external schema and the mapper's role. A client/transport adapter can
+encode the request and parse the response as required by that transport. Direct
+use of a Model by the coroutine does not imply that an HTTP client accepts that Python
 object without encoding. Use the returned response rather than depending on the
 current stand-in mutating and returning the same request object.
 
 Tests and mocks should exercise the external contract, including relevant request
-fields and returned outcomes, while the internal workflow remains free to use its
+fields and returned outcomes, while the internal dataflow remains free to use its
 own data organization. Existing clients, remote tasks, and loaders may already
 provide the required boundary; add an adapter when it has a concrete responsibility.
 
@@ -681,7 +703,7 @@ templates directly and let the composition invoke them.
 ### Specialization with modifiers
 
 Put behavior intrinsic to a reusable job on its base decorator. Put settings
-specific to its surrounding workflow in `.refine(...)` at the composition site.
+specific to its surrounding dataflow in `.refine(...)` at the composition site.
 For example, a job designed to process datasets can declare iteration on its base
 template; a general one-item operation can instead gain iteration in a refinement.
 Use meaningful function names and set `name` for distinct specializations.
@@ -742,7 +764,7 @@ This modifier does not make synchronous work asynchronous or consume async
 generators. Keep the callable contract and execution context clear instead of
 probing results with `isawaitable()`.
 
-Use persistence and restoration modifiers when the workflow needs those behaviors;
+Use persistence and restoration modifiers when the dataflow needs those behaviors;
 inspect their current semantics before promising caching or recovery. DAG-specific
 input retention (`consume_kwargs_from_results`) is covered with routing below.
 
@@ -752,13 +774,34 @@ Use the shared modifiers above together with these composition rules:
 
 | Mechanism | Meaning |
 | --- | --- |
-| `LinearFlowTemplate(a, b, c)` | Each child receives the preceding child's result; the last result is returned. |
+| `LinearFlowTemplate(a, b, c)` | After the first child, each child receives the preceding result positionally; the last result is returned. See tuple handling below. |
 | Linear flow keyword-only inputs | Available by matching name to children. Positional-capable flow arguments are bound and passed positionally to the first child, even if the caller used keyword syntax. Use `*` for shared configuration. |
 | `DagFlowTemplate(...)` | Routes by parameter names from accumulated inputs/results. Children currently execute in declaration order; a DAG declaration does not imply concurrent branches. |
 | A nonempty dictionary result | Its entries update the DAG's available named results. A plain dictionary is appropriate for this routing purpose; its values can remain typed objects. |
 | Other DAG results | Stored under the child's job name unless explicitly wrapped with `result_key`. The overall return is the last child's result, not the whole result store. |
 | `consume_kwargs_from_results=True` (default) | Removes routed arguments from the DAG result store when consumed. |
 | `consume_kwargs_from_results=False` | Keeps routed arguments available for later children; results can still replace values under the same keys. Use when extraction and later collection both need the aggregate, or several children reuse a value. |
+
+An intermediate result is passed as **one positional argument**,
+including when it is a tuple: returning `(left, right)` supplies that tuple to the
+next child, rather than unpacking it into two arguments. A child can accept the
+tuple and unpack it in its body.
+
+This rule keeps routing simple and preserves tuples as data. Automatically
+unpacking tuple results would make a single tuple-valued parameter ambiguous:
+the framework could not distinguish that value from several positional arguments.
+Multiple values can already travel together in a tuple, with packing and unpacking
+explicit in the child functions. Routing therefore needs no separate convention
+for multiple positional results. For example, a child returning `(lower, upper)`
+can feed a child accepting `bounds: tuple[int, int]`, whose body starts with
+`lower, upper = bounds`.
+
+Multiple positional arguments supplied to the flow itself are forwarded
+individually to the **first** child; this is distinct from forwarding a child
+result. Shared keyword-only inputs remain available as described above.
+These semantics are implemented by `LinearFlowRunSpec` in
+`src/omnipy/engine/run_spec.py` and covered by
+`tests/compute/test_flow.py::test_linear_flow_only_first_positional`.
 
 See [callable types and composed flows](#callable-types-and-composed-flows) for
 how child callable forms determine a linear/DAG flow's outer callable contract.
@@ -835,7 +878,7 @@ async def event_stream(url: str) -> AsyncIterator[str]:
 
 Do not add `isawaitable()` branches to conceal an unclear contract. A narrative
 integration example should use only callable forms that belong naturally to its
-workflow. Exhaustive callable-type × job-type coverage belongs in the framework's
+dataflow. Exhaustive callable-type × job-type coverage belongs in the framework's
 compute test harness.
 
 ## Dataset iteration and ownership
@@ -867,7 +910,7 @@ successful await is therefore not enough to establish complete success. Check th
 APIs in [failure inspection](#inspect-current-failure-and-pending-results) and choose
 a policy before finalization. A
 service-declared failure stored in a record's status/error fields is distinct from
-an exception recorded as `FailedData`; account for whichever forms the workflow
+an exception recorded as `FailedData`; account for whichever forms the dataflow
 uses. Do not add a retry policy just because an example is asynchronous.
 
 Direct typed updates are the preferred expression when a task owns the record it
@@ -933,10 +976,10 @@ Put such a guard before stages that require a complete Dataset, including
 collection into an aggregate Model. Current Model attribute assignment may
 convert a Dataset via `to_data()` internally; a Dataset with `FailedData` can
 raise there before a later finalization guard runs. For an all-items-required
-workflow, the order is **iterated operation → require all items → collect →
+dataflow, the order is **iterated operation → require all items → collect →
 finalize**. Inspect or retain the original Dataset before that assignment if
 the caller needs keyed failure details and successful results. The small guard
-above only reports keys; a workflow that needs the result after raising can use
+above only reports keys; a dataflow that needs the result after raising can use
 a dedicated exception carrying that Dataset or an explicit partial-result contract.
 
 A partial-results
@@ -949,7 +992,7 @@ designed recovery operation needs them; failure markers are not retry inputs.
 Inspect `src/omnipy/data/_mixins/task.py` and
 `tests/data/test_dataset.py` (`test_dataset_pending_and_failed_data*`) for current
 behavior. The remote loader has its own configured HTTP retries; those do not
-constitute a general workflow recovery mechanism.
+constitute a general dataflow recovery mechanism.
 
 ## Example: publish a catalog
 
@@ -1132,10 +1175,10 @@ with no access to them. Iterated tasks update and return individual items; the
 collector assigns the returned Dataset to the aggregate. This separates per-item
 outcomes from the aggregate summary without a shared status counter in async tasks.
 
-Use normal Model operations for these updates. Model validation is part of the
-contract and maintains computed status through the typed interface; no routine
-`validate_content()` call, serialization/reconstruction, or separate "refresh
-status" task is needed. Keep mutable nested containers within the
+Use normal Model operations for these updates. Changing wrapped data through its
+Model interface triggers validation at that boundary, maintaining computed status;
+no routine `validate_content()` call, serialization/reconstruction, or separate
+"refresh status" task is needed. Keep mutable nested containers within the
 [Model boundaries](#validation-through-model-boundaries) already described.
 Derivation should be repeatable and depend on the current facts, including when
 an identifier is absent or an outcome changes. Validators must not perform service
@@ -1144,7 +1187,7 @@ calls or fabricate successful operation results.
 Define aggregate status policy explicitly when it matters. For example, the
 submission's transfer summary gives failure precedence over pending work and uses
 `N/A` for no files. Those are domain choices, not universal semantics for every
-workflow. Account for the Dataset's failed/pending items as well as any recorded
+dataflow. Account for the Dataset's failed/pending items as well as any recorded
 service failures before declaring readiness.
 
 Readiness and confirmed completion are separate. Having the required identifiers
@@ -1156,7 +1199,7 @@ A finished job alone does not prove domain success.
 
 Keep status derivation and service contracts separate. If derived fields must be
 omitted or frozen at a service boundary, select an appropriate outbound schema;
-do not require a second model hierarchy in every workflow.
+do not require a second model hierarchy in every dataflow.
 
 ## Validation and narrative tests
 
@@ -1171,10 +1214,13 @@ representing their serialized values. A uniqueness check must compare like types
 coverage/cardinality rules must consider records with no children as well as
 records that do have children. See the
 [concrete relationship examples](#identity-and-relationship-contracts). Keep the
-intended invariant separate from historical implementation mistakes.
+intended invariant explicit, and fix validators that do not enforce it.
 
 Use independent expected data in fixtures, not the same mapper under test to
-generate the expected result. Prefer complete typed expected outputs and request
+generate the expected result. Organize scenario inputs and expectations in
+`conftest.py` fixtures or `pytest_cases` case modules. New case modules are welcome
+when they make scenarios and their variants easier to read and reuse.
+Prefer complete typed expected outputs and request
 collections to a long sequence of assertions on individual fields. When equality
 already checks keys, registration IDs, acceptance fields, and the receipt, do not
 repeat those checks individually. Check what the equality implementation covers:
@@ -1201,8 +1247,8 @@ is unspecified, compare in a stable order by identity while preserving duplicate
 calls and cardinality; do not convert to a set or keyed dictionary that can hide
 duplicates. Preserve order checks when order is part of the contract.
 
-In the scenario, call the actual flow and service adapters; assertions inside
-fixture-specific tasks cannot substitute for testing their observable output.
+In the scenario, call the actual flow and service adapters. Keep fixture-specific
+assertions in tests, outside both tasks and flows, and verify observable output.
 Service spies are useful when transmitted payloads or calls are part of the
 contract. Keep the main narrative short, and add focused negative cases for the
 specific validators or completion policy being introduced.

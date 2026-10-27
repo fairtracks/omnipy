@@ -12,7 +12,7 @@ package; adopting this layout does not require moving it into Omnipy's library.
 | `models.py` | Data contracts, validation, normalization, and model-based conversions/mappers |
 | `datasets.py` | Named Dataset classes and Dataset-specific behavior |
 | `tasks.py` | Reusable operations exposed as task templates |
-| `flows.py` | Composition of operations into workflows |
+| `flows.py` | Composition of operations into dataflows |
 | `serializers.py` | Serialization formats and Dataset integration when needed |
 | `helpers.py`, `protocols.py`, `typedefs.py`, `constants.py`, `enums.py` | Supporting functionality separated by responsibility when its size and use warrant it |
 
@@ -57,7 +57,7 @@ Use meaningful domain or structural names with established role suffixes:
 
 Preserve semantic stems across related classes. The `Dataset` suffix already
 communicates the collection role; follow established names such as
-`SubmissionSamplesDataset` when working with existing code. Historical names in
+`SubmissionSamplesDataset` when working with existing code. Names in
 an example do not by themselves establish a naming rule for new components.
 
 Tasks and flows use descriptive verbs in `snake_case`, such as
@@ -78,7 +78,7 @@ Private helpers use a leading underscore; constants use uppercase names.
 
 Flows compose tasks and data classes. Tasks use contracts and external-service
 operations. Data validation and conversion remain usable independently of the
-workflow and its tests. Place reusable functionality with the capability it
+dataflow and its tests. Place reusable functionality with the capability it
 belongs to; reuse alone does not make a helper belong in `components/general`
 or the global `util` package. Scenario fixtures and expectations belong in tests.
 

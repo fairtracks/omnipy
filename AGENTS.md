@@ -2,7 +2,7 @@
 
 ## Tooling
 
-- Use `uv`, not raw `pip`, for normal repo workflows.
+- Use `uv`, not raw `pip`, for normal repo commands.
 - Install dev + docs deps with `uv sync --all-groups`.
 - Run repo commands through `uv run ...`.
 
@@ -83,7 +83,7 @@ This is about settings such as config values and the arguments that internal cod
   their implementations for reuse in documentation and show Omnipy's declarative
   composition, mimicking Models, and Dataset batch operations clearly.
 - For exhaustive engine/callable behavior tests, keep using the existing engine
-  harness; a domain scenario should remain a readable proof of a real workflow.
+  harness; a domain scenario should remain a readable proof of a real dataflow.
 
 ## Test Quirks
 
