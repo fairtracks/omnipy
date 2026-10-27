@@ -175,9 +175,6 @@ async def test_rate_limiting_client_session_parameters() -> None:
     async with RateLimitingClientSession(10, 0.5) as session:
         assert session.burst_size == 5
 
-    with pytest.raises(ValueError):
-        RateLimitingClientSession(10, 0.5, burst_ratio=1.0)
-
 
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
 async def test_rate_limiting_client_session_request_methods(aiohttp_server) -> None:
@@ -349,31 +346,6 @@ def test_request_pacer_burst_size(
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
 def test_request_pacer_default_burst_ratio() -> None:
     assert RequestPacer(10, 0.5).burst_size == 5
-
-
-@pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
-@pytest.mark.parametrize(
-    'requests_per_time_period, time_period_in_secs, burst_ratio',
-    [
-        (0, 0.5, 0.5),
-        (-1, 0.5, 0.5),
-        (2.5, 0.5, 0.5),
-        (True, 0.5, 0.5),
-        (10, 0, 0.5),
-        (10, -0.5, 0.5),
-        (10, 0.5, 0),
-        (10, 0.5, 1),
-        (10, 0.5, -0.1),
-        (10, 0.5, 1.5),
-    ],
-)
-def test_request_pacer_rejects_invalid_parameters(
-    requests_per_time_period: int,
-    time_period_in_secs: float,
-    burst_ratio: float,
-) -> None:
-    with pytest.raises(ValueError):
-        RequestPacer(requests_per_time_period, time_period_in_secs, burst_ratio=burst_ratio)
 
 
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')

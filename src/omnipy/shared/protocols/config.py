@@ -24,7 +24,7 @@ from omnipy.shared.enums.job import (
 )
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, TerminalOutputUserInterfaceType
 from omnipy.shared.protocols.util import IsDataPublisher
-from omnipy.shared.typedefs import LocaleType
+from omnipy.shared.typedefs import LocaleType, ZeroToOneFloat
 import omnipy.util.pydantic as pyd
 
 if TYPE_CHECKING:
@@ -298,9 +298,9 @@ class IsHttpRequestsConfig(IsConfigBase, Protocol):
         retry_backoff_strategy: Backoff strategy used between retries.
     """
 
-    requests_per_time_period: int
-    time_period_in_secs: float
-    burst_ratio: float
+    requests_per_time_period: pyd.PositiveInt
+    time_period_in_secs: pyd.PositiveFloat
+    burst_ratio: ZeroToOneFloat
     retry_http_statuses: tuple[int, ...]
     retry_attempts: int
     retry_backoff_strategy: BackoffStrategy.Literals

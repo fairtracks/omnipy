@@ -51,6 +51,7 @@ from omnipy.shared.protocols.config import (
     IsUserInterfaceConfig,
     IsUserInterfaceTypeConfig,
 )
+from omnipy.shared.typedefs import ZeroToOneFloat
 import omnipy.util.pydantic as pyd
 
 
@@ -509,9 +510,9 @@ class HttpRequestsConfig(ConfigBase):
     """
 
     # For RateLimitingClientSession helper class
-    requests_per_time_period: int = pyd.Field(default=60, ge=1)
-    time_period_in_secs: float = pyd.Field(default=60, gt=0)
-    burst_ratio: float = pyd.Field(default=0.5, gt=0, lt=1)
+    requests_per_time_period: pyd.PositiveInt = 60
+    time_period_in_secs: pyd.PositiveFloat = 60
+    burst_ratio: ZeroToOneFloat = 0.5
 
     # For get_*_from_api_endpoint tasks
     retry_http_statuses: tuple[int, ...] = (408, 425, 429, 500, 502, 503, 504)

@@ -43,6 +43,7 @@ AnyUrl = pyd.AnyUrl
 BaseConfig = pyd.BaseConfig
 BaseModel = pyd.BaseModel
 ConfigDict = pyd.ConfigDict
+ConstrainedFloat = pyd.ConstrainedFloat
 conint = pyd.conint
 constr = pyd.constr
 create_model = pyd.create_model
@@ -51,6 +52,7 @@ Extra = pyd.Extra
 Field = pyd.Field
 NonNegativeFloat = pyd.NonNegativeFloat
 NonNegativeInt = pyd.NonNegativeInt
+PositiveFloat = pyd.PositiveFloat
 PositiveInt = pyd.PositiveInt
 PrivateAttr = pyd.PrivateAttr
 Protocol = pyd.Protocol
@@ -119,6 +121,7 @@ __all__ = [
     'BaseModel',
     'ConfigDict',
     'ConfigError',
+    'ConstrainedFloat',
     'conint',
     'constr',
     'create_model',
@@ -128,6 +131,7 @@ __all__ = [
     'NoneIsNotAllowedError',
     'NonNegativeFloat',
     'NonNegativeInt',
+    'PositiveFloat',
     'PositiveInt',
     'PrivateAttr',
     'Protocol',

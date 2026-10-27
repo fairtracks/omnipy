@@ -8,7 +8,9 @@ from types import TracebackType
 from typing import Any, NamedTuple
 
 from omnipy.shared.enums.data import BackoffStrategy
+from omnipy.shared.typedefs import ZeroToOneFloat
 from omnipy.shared.typing import TYPE_CHECKING
+import omnipy.util.pydantic as pyd
 
 from .lazy_import import (
     ClientSession,
@@ -70,30 +72,17 @@ class RequestPacer:
 
     The class has no clock: callers pass the times. A start is planned with ``plan_start()``,
     which changes nothing, and the plan is passed to ``record_start()`` when the request starts.
-    A request that is cancelled before it starts thus leaves no trace. See
+    A request that is cancelled before it starts thus leaves no trace. The parameters are not
+    validated here, but in ``HttpRequestsConfig``, where they are configured. See
     docs/agents/technical/specs/2026-10-24-rate-limiter-pacing-design.md for the design.
     """
 
     def __init__(
         self,
-        requests_per_time_period: int,
-        time_period_in_secs: float,
-        burst_ratio: float = DEFAULT_BURST_RATIO,
+        requests_per_time_period: pyd.PositiveInt,
+        time_period_in_secs: pyd.PositiveFloat,
+        burst_ratio: ZeroToOneFloat = DEFAULT_BURST_RATIO,
     ) -> None:
-        if (
-            isinstance(requests_per_time_period, bool)
-            or not isinstance(requests_per_time_period, int)
-            or requests_per_time_period < 1
-        ):
-            raise ValueError(
-                f'requests_per_time_period must be a positive integer, '
-                f'not {requests_per_time_period!r}'
-            )
-        if not time_period_in_secs > 0:
-            raise ValueError(f'time_period_in_secs must be positive, not {time_period_in_secs!r}')
-        if not 0 < burst_ratio < 1:
-            raise ValueError(f'burst_ratio must be between 0 and 1, not {burst_ratio!r}')
-
         self._requests_per_time_period = requests_per_time_period
         self._time_period_in_secs = time_period_in_secs
         self._burst_size = max(
@@ -215,9 +204,9 @@ class RateLimiter:
 
     def __init__(
         self,
-        requests_per_time_period: int,
-        time_period_in_secs: float,
-        burst_ratio: float = DEFAULT_BURST_RATIO,
+        requests_per_time_period: pyd.PositiveInt,
+        time_period_in_secs: pyd.PositiveFloat,
+        burst_ratio: ZeroToOneFloat = DEFAULT_BURST_RATIO,
     ) -> None:
         self._pacer = RequestPacer(requests_per_time_period, time_period_in_secs, burst_ratio)
         self._lock = asyncio.Lock()
@@ -276,10 +265,10 @@ class RateLimitingClientSession:
 
     def __init__(
         self,
-        requests_per_time_period: int,
-        time_period_in_secs: float,
+        requests_per_time_period: pyd.PositiveInt,
+        time_period_in_secs: pyd.PositiveFloat,
         *args: Any,
-        burst_ratio: float = DEFAULT_BURST_RATIO,
+        burst_ratio: ZeroToOneFloat = DEFAULT_BURST_RATIO,
         **kwargs: Any,
     ) -> None:
         self._limiter = RateLimiter(requests_per_time_period, time_period_in_secs, burst_ratio)

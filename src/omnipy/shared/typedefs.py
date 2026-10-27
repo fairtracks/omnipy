@@ -13,13 +13,28 @@ from typing import (
     ParamSpec,
     Protocol,
     Self,
+    TYPE_CHECKING,
     TypeAlias,
 )
 
 from typing_extensions import TypeVar
 
+import omnipy.util.pydantic as pyd
+
 GeneralDecorator = Callable[[Callable], Callable]
 LocaleType: TypeAlias = str | tuple[str | None, str | None]
+
+# As for the constrained types of pydantic, type checkers see a plain float
+if TYPE_CHECKING:
+    ZeroToOneFloat = float
+else:
+
+    class ZeroToOneFloat(pyd.ConstrainedFloat):
+        """A float strictly between 0 and 1, validated by pydantic."""
+
+        gt = 0
+        lt = 1
+
 
 # TODO: While waiting for https://github.com/python/mypy/issues/9773
 TypeForm: TypeAlias = (
