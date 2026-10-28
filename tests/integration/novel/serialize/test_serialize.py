@@ -366,7 +366,7 @@ async def test_async_func_flow_serialize_then_result_key_in_flow_context(
         persist_outputs='disabled',
     )
     async def outer_flow() -> JsonDataset:
-        wrapped_result = async_inner_flow.run()
+        wrapped_result = async_inner_flow()
         wrapped_value = wrapped_result['flow_wrapped']
 
         assert isawaitable(wrapped_value)
