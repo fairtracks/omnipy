@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Mapping
 from contextvars import ContextVar
 
 from .models import (
@@ -33,9 +33,8 @@ async def register_sample_with_biosamplevault(
     request: BioSampleVaultSampleSubmissionSchema,
 ) -> BioSampleVaultSampleSubmissionSchema:
     await asyncio.sleep(0)
-    request.biosample_vault_sample_id = (
-        f'BSV:{next(biosample_vault_sample_id_generator_context.get())}'
-    )
+    sample_ids_mapping = biosample_vault_ids_mapping.get()
+    request.biosample_vault_sample_id = sample_ids_mapping[request.local_sample_alias]
     return request
 
 
@@ -44,6 +43,4 @@ async def submit_final_submission_to_sequence_depot(submission: FinalSubmissionM
     return True
 
 
-biosample_vault_sample_id_generator_context = ContextVar[Iterator[int]](
-    'biosample_vault_sample_id_generator'
-)
+biosample_vault_ids_mapping = ContextVar[Mapping[str, str]]('biosample_vault_ids')

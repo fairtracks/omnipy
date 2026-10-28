@@ -1,9 +1,8 @@
 from collections.abc import Iterator
-from itertools import count
 
 import pytest
 
-from .services import biosample_vault_sample_id_generator_context
+from .services import biosample_vault_ids_mapping
 
 
 @pytest.fixture(scope='function')
@@ -155,7 +154,11 @@ def expected_sequence_depot_submission_payload() -> dict[str, object]:
 
 
 @pytest.fixture(scope='function')
-def reset_biosample_vault_sample_id_generator() -> Iterator[None]:
-    token = biosample_vault_sample_id_generator_context.set(count(start=80907461))
-    yield
-    biosample_vault_sample_id_generator_context.reset(token)
+def preconfigured_biosample_vault_ids() -> Iterator[None]:
+    token = biosample_vault_ids_mapping.set(
+        {'sample-a': 'BSV:80907461', 'sample-b': 'BSV:80907462'}
+    )
+    try:
+        yield
+    finally:
+        biosample_vault_ids_mapping.reset(token)

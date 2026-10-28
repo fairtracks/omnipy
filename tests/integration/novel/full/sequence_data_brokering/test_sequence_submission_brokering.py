@@ -6,11 +6,13 @@ from omnipy.shared.enums.job import RunState
 
 from .....engine.helpers.functions import assert_job_state
 from .flows import broker_sequence_submission_flow
-from .models import (SubmissionFilesDataset,
-                     SubmissionMetadataModel,
-                     SubmissionModel,
-                     SubmissionRecord,
-                     SubmissionSamplesDataset)
+from .models import (
+    SubmissionFilesDataset,
+    SubmissionMetadataModel,
+    SubmissionModel,
+    SubmissionRecord,
+    SubmissionSamplesDataset,
+)
 
 
 def test_submission_rejects_duplicate_file_role(
@@ -46,8 +48,8 @@ def test_submission_requires_file_pair_for_every_sample(
     }
 
     with pytest.raises(
-            ValueError,
-            match="Sample 'sample-b' must have exactly two files \\(read1 and read2\\).",
+        ValueError,
+        match="Sample 'sample-b' must have exactly two files \\(read1 and read2\\).",
     ):
         SubmissionRecord(
             samples=SubmissionSamplesDataset(samples),
@@ -56,7 +58,7 @@ def test_submission_requires_file_pair_for_every_sample(
         )
 
 
-@pytest.mark.usefixtures('runtime_all_engines', 'reset_biosample_vault_sample_id_generator')
+@pytest.mark.usefixtures('runtime_all_engines', 'preconfigured_biosample_vault_ids')
 async def test_sequence_submission_brokering(
     samples: Annotated[dict[str, dict[str, str]], pytest.fixture],
     files: Annotated[dict[str, dict[str, str]], pytest.fixture],
