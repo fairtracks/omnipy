@@ -1,5 +1,7 @@
 """Models for representing nested datasets and enumerated list structures."""
 
+from typing import Generic
+
 from typing_extensions import TypeVar
 
 from omnipy.data.dataset import Dataset
@@ -12,6 +14,7 @@ if TYPE_CHECKING:
     from .datasets import StructuredNestedDataset  # noqa: F401
 
 DatasetT = TypeVar('DatasetT')
+ItemT = TypeVar('ItemT')
 
 
 class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
@@ -38,7 +41,8 @@ class EnumeratedListOfTuplesModel(Model[list[tuple[int, object]]]):
 
 
 class EnumeratedListModel(
-    Model[EnumeratedListOfTuplesModel | list[object] | list[dict[str, object]]]
+    Model[EnumeratedListOfTuplesModel | Model[list[ItemT]] | list[dict[str, ItemT]]],
+    Generic[ItemT],
 ):
     """A Model for list data before it becomes named Dataset items.
 
@@ -53,7 +57,7 @@ class EnumeratedListModel(
 
     @classmethod
     def _parse_data(
-        cls, data: EnumeratedListOfTuplesModel | list[object] | list[dict[str, object]]
+        cls, data: EnumeratedListOfTuplesModel | Model[list[object]] | list[dict[str, object]]
     ) -> EnumeratedListOfTuplesModel:
         if not isinstance(data, EnumeratedListOfTuplesModel):
             return EnumeratedListOfTuplesModel(list(enumerate(data)))  # pyright: ignore

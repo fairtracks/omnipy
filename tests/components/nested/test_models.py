@@ -45,7 +45,11 @@ def test_enumerated_list_model() -> None:
     """Enumerate plain lists into indexed tuple pairs."""
     data = ['a', 'b', 'c']
     expected = [(0, 'a'), (1, 'b'), (2, 'c')]
-    enumerated = EnumeratedListModel(data)
+
+    with pytest.raises(ValidationError):
+        EnumeratedListModel[int](data)
+
+    enumerated = EnumeratedListModel[str](data)
     assert enumerated.content == EnumeratedListOfTuplesModel(expected)
     assert enumerated.to_data() == expected
 
