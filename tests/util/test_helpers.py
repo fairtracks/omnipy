@@ -1,8 +1,18 @@
 """Tests for utility helper functions."""
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from types import MethodType, NoneType, UnionType
-from typing import Annotated, Any, ForwardRef, Generic, get_args, Literal, Optional, Union
+from typing import (
+    Annotated,
+    Any,
+    assert_type,
+    ForwardRef,
+    Generic,
+    get_args,
+    Literal,
+    Optional,
+    Union,
+)
 
 import pytest
 from typing_extensions import TypeVar
@@ -16,6 +26,7 @@ from omnipy.util.helpers import (
     get_first_item,
     get_parametrized_type,
     has_items,
+    has_items_method,
     is_iterable,
     is_literal_type,
     is_non_str_byte_iterable,
@@ -28,6 +39,8 @@ from omnipy.util.helpers import (
     split_to_union_variants,
     transfer_generic_args_to_cls,
 )
+
+from .helpers.classes import UnavailableIterable
 
 T = TypeVar('T')
 U = TypeVar('U')
@@ -179,6 +192,19 @@ def test_all_type_variants() -> None:
     )
 
 
+def test_has_items_method_type_narrowing() -> None:
+    def check(value: dict[str, int] | None) -> None:
+        if has_items_method(value):
+            assert_type(value, dict[str, int])
+            assert value['one'] == 1
+        else:
+            assert_type(value, None)
+            assert value is None
+
+    check({'one': 1})
+    check(None)
+
+
 def test_is_iterable() -> None:
     assert is_iterable(None) is False
     assert is_iterable(False) is False
@@ -207,6 +233,19 @@ def test_is_iterable() -> None:
     assert is_iterable(MyModernIter()) is True
 
 
+def test_is_iterable_failure_preserves_iterable_type() -> None:
+    def check(value: UnavailableIterable | None) -> bool:
+        if is_iterable(value):
+            return False
+        assert_type(value, UnavailableIterable | None)
+        return True
+
+    unavailable = UnavailableIterable()
+    assert isinstance(unavailable, Iterable)
+    assert check(unavailable)
+    assert check(None)
+
+
 def test_is_non_str_byte_iterable() -> None:
     assert is_non_str_byte_iterable(None) is False
     assert is_non_str_byte_iterable(False) is False
@@ -233,6 +272,19 @@ def test_is_non_str_byte_iterable() -> None:
     assert is_non_str_byte_iterable(MyNonIter()) is False
     assert is_non_str_byte_iterable(MyHistoricIter()) is True
     assert is_non_str_byte_iterable(MyModernIter()) is True
+
+
+def test_is_non_str_byte_iterable_failure_preserves_string_and_bytes_types() -> None:
+    def check(value: Iterable[int] | str | None) -> bool:
+        if is_non_str_byte_iterable(value):
+            return True
+        assert_type(value, Iterable[int] | str | None)
+        return False
+
+    assert check([1, 2])
+    assert not check('abc')
+    assert not check(b'abc')
+    assert not check(None)
 
 
 def test_ensure_non_str_byte_iterable() -> None:

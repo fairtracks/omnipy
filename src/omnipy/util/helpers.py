@@ -45,7 +45,7 @@ from typing import (
 )
 
 from cachebox import cached, LRUCache
-from typing_extensions import NoDefault, TypeVar
+from typing_extensions import NoDefault, TypeIs, TypeVar
 
 from omnipy.shared.protocols.util import IsDataclass
 from omnipy.shared.protocols.vendored._typeshed import SupportsItems
@@ -474,7 +474,7 @@ def is_instance_of_any_type_variant(
     return False
 
 
-def has_items_method(obj: object) -> TypeGuard[SupportsItems[Any, Any]]:
+def has_items_method(obj: object) -> TypeIs[SupportsItems[Any, Any]]:
     """Check for an ``items`` attribute, including dynamically forwarded attributes.
 
     Runtime protocol checks use static attribute lookup on Python 3.12+, which
@@ -502,6 +502,11 @@ def is_iterable(obj: Iterable[_ObjT] | _ObjT) -> TypeGuard[Iterable[_ObjT]]:
     Notes:
         Strings and bytes count as iterables here. Use
         ``is_non_str_byte_iterable()`` when that is undesirable.
+
+        This capability check retains ``TypeGuard``: legacy ``__getitem__``-only
+        objects are accepted without implementing ``Iterable``, and an
+        ``Iterable`` whose ``__iter__`` raises ``TypeError`` returns ``False``.
+        ``TypeIs[Iterable[...]]`` would therefore narrow incorrectly.
     """
     try:
         iter(obj)  # type: ignore[arg-type]
@@ -520,6 +525,11 @@ def is_non_str_byte_iterable(
 
     Returns:
         ``True`` for non-string, non-bytes iterables.
+
+    Notes:
+        This retains ``TypeGuard`` because ``str`` and ``bytes`` are themselves
+        iterables. A negative result must not exclude all ``Iterable`` values,
+        as ``TypeIs[Iterable[...]]`` would do.
     """
     return is_iterable(obj) and type(obj) not in (str, bytes)
 
