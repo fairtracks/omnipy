@@ -1114,6 +1114,10 @@ the failed and pending keys. It checks the Dataset's own entries without copying
 it or traversing nested Datasets. It does not check for absent expected keys or
 service-specific success conditions.
 
+Item-completion policies could also become job modifiers in the future, for
+example to require all items before accepting a job's result. This is a possible
+extension, not an implemented modifier; use the explicit task with current APIs.
+
 Place `om.require_all_items` directly in a linear/DAG child list, or call
 `om.require_all_items(results)` inside an authored flow. Put it before stages
 that require a complete Dataset, including collection into an aggregate Model.
@@ -1140,10 +1144,11 @@ constitute a general dataflow recovery mechanism.
 
 ## Example: publish a catalog
 
-This compact example shows the pattern outside submission brokering. It is
-executable as one module; the comments indicate where to split it in a real
-package. Its service is a deterministic async stand-in. Publication identifiers
-are observable results; the final receipt is created only after all items succeed.
+This example composes typed catalog records, a request mapper, an iterated async
+publishing task, and an extract/publish/collect flow. It is executable as one
+module; the comments indicate where to split it in a real package. Its service is
+a deterministic async stand-in. A Model validator requires every record to have
+a publication identifier before a receipt can be assigned.
 `CatalogDataset` represents the record batch; `PublicationModel` is the surrounding
 composite record that combines that dataset with metadata and a receipt.
 Each catalog record's primary key is `record_id`, and its Dataset key is that
@@ -1186,6 +1191,13 @@ class PublicationSchema(pyd.BaseModel):
     records: CatalogDataset
     metadata: MetadataModel
     receipt: str | None = None
+
+    @pyd.root_validator(skip_on_failure=True)
+    def _receipt_requires_publication_ids(cls, values: dict) -> dict:
+        if values['receipt'] is not None:
+            if not all(record.publication_id for record in values['records'].values()):
+                raise ValueError('Every catalog record needs a publication identifier')
+        return values
 
 
 @om.mimics(PublicationSchema)
@@ -1234,9 +1246,6 @@ def collect_publication(records: CatalogDataset, publication: PublicationModel) 
 
 @om.TaskTemplate()
 def create_receipt(publication: PublicationModel) -> PublicationModel:
-    # Accessing failed/pending items raises; missing identifiers also block completion.
-    if not all(record.publication_id for record in publication.records.values()):
-        raise ValueError('Every catalog record needs a publication identifier')
     publication.receipt = (
         f'{publication.metadata.catalog_name}: {len(publication.records)} records published'
     )
@@ -1249,9 +1258,11 @@ def create_receipt(publication: PublicationModel) -> PublicationModel:
     publish_records.refine(
         name='publish_catalog_items',
         param_key_map={'dataset': 'records'},
-        result_key='records',
     ),
-    collect_publication,
+    collect_publication.refine(
+        name='collect_published_catalog',
+        param_key_map={'records': 'publish_catalog_items'},
+    ),
     consume_kwargs_from_results=False,
 )
 async def publish_catalog_records(publication: PublicationModel) -> PublicationModel: ...
@@ -1261,21 +1272,25 @@ async def publish_catalog_records(publication: PublicationModel) -> PublicationM
 async def publish_catalog(publication: PublicationModel) -> PublicationModel: ...
 ```
 
-This compact example raises on failed/pending items when collecting or checking
-the result. When callers need explicit failure reporting, insert a guard before
-`collect_publication`, as described in [failure inspection](#inspect-current-failure-and-pending-results).
+The receipt requirement belongs to `PublicationSchema`, so `create_receipt` only
+constructs and assigns the receipt. Inputs without publication IDs remain valid
+while `receipt` is `None`; assigning a receipt triggers the relationship validator.
+The example also raises on failed/pending items during collection. When callers
+need explicit failure reporting, insert `require_all_items` before the collector,
+as described in [failure inspection](#inspect-current-failure-and-pending-results).
 
 The `publication` input must survive `extract_publication` for `collect_publication`
-to use it. The iterated result replaces `records` in the DAG store. The synchronous last task in
+to use it. The publisher's Dataset result is stored under its refined job name,
+`publish_catalog_items`. The collector maps its `records` parameter to that key;
+the publisher does not need `result_key`. The synchronous last task in
 `publish_catalog` does not make the parent synchronous. An empty catalog produces
 a zero-item receipt here; decide whether that is appropriate in the actual domain.
 
 The repository-test shape is `completed = await publish_catalog.apply()(publication)`
-under the existing runtime fixture, followed by expected enriched-output and
-relevant run-state assertions. Use Dataset keys equal to the records' `record_id`
-values, with distinct IDs and titles so accidental item swapping is visible. A
-failure-path check can replace the service with a raising stand-in and verify that
-no completion receipt is produced.
+under the existing runtime fixture, followed by a comparison with the expected
+published data, for example through `completed.to_data()`. Use Dataset keys equal
+to the records' `record_id` values. The receipt validator already enforces the
+identifier requirement; the scenario test need not repeat it as per-record asserts.
 
 ## Status from facts and acknowledgements
 
@@ -1354,69 +1369,63 @@ Keep status derivation and service contracts separate. If derived fields must be
 omitted or frozen at a service boundary, select an appropriate outbound schema;
 do not require a second model hierarchy in every dataflow.
 
+Model validators already enforce the declared status relationships during normal
+operations. Scenario tests need not restate straightforward rules as assertions;
+use focused tests for complex derivation, such as precedence among mixed outcomes.
+
 ## Validation and narrative tests
 
-Compare the authoritative outputs and acknowledgements against expected fixtures.
-Check derived statuses separately when equality does not include them. A test
-that checks only a task-written `completed` flag can pass without
-proving the required operation happened. Exercise relevant mixed or incomplete
-outcomes to verify the chosen aggregation and finalization policy.
+Model validation reduces the assertions needed in dataflow tests. Straightforward
+constraints, such as required fields, valid values, or a receipt requiring
+publication IDs, already act as executable assertions when the Model validates.
+Do not repeat them as per-field checks in every scenario. Test complex validators
+and their meaningful edge cases directly, especially cross-record relationships,
+cardinality rules, or mixed-status aggregation. See the
+[relationship examples](#identity-and-relationship-contracts) for validations
+whose logic warrants focused tests.
 
-Validate relationships using the declared primary keys, with Dataset keys
-representing their serialized values. A uniqueness check must compare like types;
-coverage/cardinality rules must consider records with no children as well as
-records that do have children. See the
-[concrete relationship examples](#identity-and-relationship-contracts). Keep the
-intended invariant explicit, and fix validators that do not enforce it.
-
-Use independent expected data in fixtures, not the same mapper under test to
-generate the expected result. Organize scenario inputs and expectations in
-`conftest.py` fixtures or `pytest_cases` case modules. New case modules are welcome
-when they make scenarios and their variants easier to read and reuse.
-Prefer complete typed expected outputs and request
-collections to a long sequence of assertions on individual fields. When equality
-already checks keys, registration IDs, acceptance fields, and the receipt, do not
-repeat those checks individually. Check what the equality implementation covers:
-computed properties, execution state, and external calls can need separate
-assertions. A comparison against the full expected call list also checks its
-length, so a separate call-count assertion is usually redundant.
-
-For example, after invoking a flow, group its distinct verification concerns:
+Keep a narrative test centered on its scenario's observable result. Comparing
+`to_data()`-serialized output with an expected payload is often appropriate:
 
 ```python
-assert result == expected_result
-assert result.completed  # A computed property not included in record equality.
-
-assert service.requests == expected_requests
-assert service.finalizations == expected_finalizations
-
-assert extract_job_run_state(reconcile_flow) == RunState.FINISHED
+assert result.to_data() == expected_payload
 ```
 
-Here the expected values are fixtures, and the service captures real calls.
-Prefer direct typed comparisons where supported; do not routinely serialize or
-build field projections just to assert equality. If asynchronous request order
-is unspecified, compare in a stable order by identity while preserving duplicate
-calls and cardinality; do not convert to a set or keyed dictionary that can hide
-duplicates. Preserve order checks when order is part of the contract.
+Direct Model comparisons are also useful when their equality semantics match the
+contract. Choose the representation that expresses what the test needs to check.
+Outside the JSON component's own tests, a hierarchical Model's plain-data output
+usually suffices; there is little reason to assert the exact nested JSON Model
+classes. Assert wrapper types or structure when those are the behavior under test.
+Add separate checks for computed properties, external calls, or execution state
+only when they matter to the scenario and are not already covered.
 
-In the scenario, call the actual flow and service adapters. Keep fixture-specific
-assertions in tests, outside both tasks and flows, and verify observable output.
-Service spies are useful when transmitted payloads or calls are part of the
-contract. Keep the main narrative short, and add focused negative cases for the
-specific validators or completion policy being introduced.
+Keep expected data independent of the mapper or conversion being tested. Put
+inputs and expectations in `conftest.py` fixtures or `pytest_cases` case modules.
+A complete expected payload or request-list comparison can replace many individual
+assertions. If request order is unspecified, compare in a stable order by identity
+while preserving duplicates; check order only when it is part of the contract.
 
-Use pytest and the existing runtime/engine fixtures for test execution. Mock the
-external services while exercising real Omnipy functionality. For HTTP ingestion,
-use a local fixture endpoint and the actual loader; see
-[HTTP test boundaries](remote-loading.md#test-the-real-loader-against-a-mocked-service).
-A fake `Dataset.load()` can reproduce expected output while bypassing the very
-loading behavior the integration example should demonstrate.
+Call the actual flow and use the existing runtime/engine fixtures. Mock external
+services while exercising real Omnipy functionality. Check transmitted requests
+when they are part of the scenario's contract; a spy is not required for every
+service call. For HTTP ingestion, use a local fixture endpoint and the actual
+loader; see [HTTP test boundaries](remote-loading.md#test-the-real-loader-against-a-mocked-service).
+Keep fixture-specific assertions outside tasks and flows. Choose focused failure
+cases for the behavior being introduced instead of expanding every narrative
+example into a comprehensive validation suite.
 
-Isolate mutable stub state per test. The reference scenario uses a `ContextVar`
-holding an ID iterator and resets its token in a fixture. Use that pattern when
-async contexts need it; a stateless stub needs no context machinery. Avoid relying
-on concurrent service-call order to correlate returned IDs with input records.
+Isolate service-stub configuration per test. The brokering reference sets and
+resets a `ContextVar` containing a mapping from normalized sample alias to ID.
+Its service looks up IDs by request identity, so the expected payload remains
+stable when registration order changes.
+
+When exact fixture IDs matter, use such a deterministic mapping. Sequential ID
+allocation can assign different IDs to requests when waits before allocation or
+HTTP arrival order change, even though each response still belongs to the correct
+input. Waiting only after allocation changes completion order without changing
+assigned IDs. If IDs are intentionally allocated dynamically, capture
+request/response associations and check the required relationships without assuming
+allocation order. Stateless stubs need no context machinery.
 
 ## Source map
 

@@ -247,6 +247,8 @@ by itself prove every item succeeded. Use the current
 [failure inspection APIs](references/patterns.md#inspect-current-failure-and-pending-results)
 to retain successful results and inspect failures by key. Use the general
 `require_all_items` task before stages requiring all entries to be available.
+Item-completion policies could later be expressed as job modifiers; that API is
+not implemented.
 Full recovery handling, including atomic rollback of jobs, is largely future
 work; inspection methods do not supply that behavior.
 
@@ -273,22 +275,21 @@ clear pytest scenario provide the tutorial material.
 Use these four principles for narrative integration tests and their tutorial reuse:
 
 1. **Keep the execution story visible.** Construct typed input, invoke the flow
-   according to its declared callable contract, and assert meaningful output and
-   relevant run state. Keep the models, tasks, and flow declarations readable and
+   according to its declared callable contract, and compare the meaningful output.
+   Check run state when it matters to the scenario. Keep declarations readable and
    reusable in documentation without depending on pytest. Show the actual tested
    implementation, using repository documentation conventions.
 2. **Keep expectations independent and setup isolated.** Put scenario inputs,
    independently specified expected results, and scoped service-state resets in
    `conftest.py` or `pytest_cases` case modules. Create new case modules when they
-   help organize the scenarios. Prefer comparing complete typed
-   outputs and service requests with those fixtures over long sequences of
-   field-by-field assertions. Retain separate checks for behavior not covered by
-   equality, such as computed properties, side effects, or job run state. Do not
-   generate expected output with the mapper being tested. Keep fixture-specific
+   help organize the scenarios. Compare complete outputs or service requests using
+   Model equality or `to_data()`-serialized values, whichever expresses the test's
+   contract. Add separate checks only for relevant behavior not already covered.
+   Do not generate expected output with the mapper being tested. Keep fixture-specific
    values and lifecycle setup out of reusable task and flow bodies.
-3. **Verify the external contract at its boundary.** Exercise the actual flow and
-   its service calls. Assert relevant request fields and returned outcomes through
-   tests, spies, or mocked endpoints that implement the declared external API.
+3. **Verify relevant external behavior at its boundary.** Exercise the actual flow.
+   Check requests and returned outcomes when they are part of the scenario's
+   contract, using spies or mocked endpoints as needed.
    Mock external services, keeping Omnipy's functionality real. For HTTP flows,
    serve fixture responses from a local test endpoint so `Dataset.load()`, remote
    tasks, decoding, and model validation run normally. Do not replace Omnipy's
@@ -298,10 +299,11 @@ Use these four principles for narrative integration tests and their tutorial reu
    operation happened. Keep fixture-specific assertions out of tasks and flows.
 4. **Choose coverage that supports the lesson.** Demonstrate useful combinations
    of models, datasets, jobs, and callable types through a coherent scenario.
-   Add focused normalization, relationship, and failure cases that protect its
-   contract, such as a failed transfer preventing final submission. Reuse existing
-   engine fixtures; keep exhaustive engine/callable combinations in the framework
-   harness. Verify domain success as well as job execution state.
+   Straightforward Model validations already act as executable assertions; do not
+   restate them as field checks in every test. Test complex validators and relevant
+   failure policies with focused cases. Check wrapper structure only when it is
+   the behavior under test. Reuse existing engine fixtures; keep exhaustive
+   engine/callable combinations in the framework harness.
 
 See [readability and reuse](references/patterns.md#readable-contracts-and-documentation-reuse)
 and [test details](references/patterns.md#validation-and-narrative-tests).
@@ -314,7 +316,8 @@ Before handing over a dataflow, check that:
   unnecessary unpacking, processing loops, and manual orchestration;
 - task and service boundaries could be reused with different input records;
 - the narrative implementation can be reused as documentation/tutorial code;
-- output identity, required enrichment, and failure/completion semantics are tested;
+- tests demonstrate the scenario's outcome and complex behavior without repeating
+  straightforward Model validations as assertions;
 - the code uses the current framework rather than compensating for old limitations.
 
 Use root `AGENTS.md` for repository tooling, verification, and documentation rules.

@@ -155,6 +155,26 @@ or both. The [status examples](patterns.md#status-from-facts-and-acknowledgement
 explain these choices and the role of Model validation. Atomic rollback of jobs
 is planned future work. The general component's `require_all_items` task supplies
 the current check for failed/pending entries before stages requiring complete data.
+Item-completion policies could later become job modifiers; no such modifier API
+is currently implemented.
+
+The user clarified that straightforward Model validations already act as
+executable assertions and reduce the need for separate test assertions. Narrative
+tests should demonstrate the scenario's outcome; focused cases remain useful for
+complex validation logic. Plain-data comparisons through `to_data()` are often
+appropriate, especially when nested JSON Model structure is not under test.
+
+The brokering example previously used a sequential service ID counter isolated per
+test, allocating IDs after an async yield. Its expected payload fixes IDs to particular
+samples, so changing the relative waits or HTTP request order can change those
+assignments. This concerns the fixture's allocation policy, not Omnipy's
+association of each task result with its Dataset key.
+A controlled 20 ms wait for `sample-a` before allocation in the actual brokering
+flow reversed the two sample IDs while preserving their request/response associations.
+The service now looks up IDs in a per-test mapping keyed by normalized sample
+alias. An event-controlled check during development made `sample-b` register before
+`sample-a` and verified the same expected submission payload. The user removed
+that temporary regression test and its fixture from the final implementation.
 
 Dataset keys are intended to serialize the primary keys of their contents. The
 earlier interpretation of `Sample-A` as a deliberately independent Dataset key
