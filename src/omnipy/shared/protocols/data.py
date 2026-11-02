@@ -27,6 +27,7 @@ from omnipy.shared.protocols.config import (
     IsLayoutConfig,
     IsTextConfig,
 )
+from omnipy.shared.protocols.display import IsBaseDisplayMixin, IsDatasetDisplayMixin
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.shared.protocols.vendored.typing import IsMutableMapping
 from omnipy.util.helpers import is_package_editable
@@ -118,7 +119,7 @@ class HasContent(Protocol[ContentT]):
 
 
 @runtime_checkable
-class IsModel(HasContent[_RootT], Protocol[_RootT]):
+class IsModel(HasContent[_RootT], IsBaseDisplayMixin, Protocol[_RootT]):
     """Single-value data wrapper with typed content and conversion support."""
 
     @classmethod
@@ -132,7 +133,9 @@ class IsModel(HasContent[_RootT], Protocol[_RootT]):
 
 
 @runtime_checkable
-class IsDataset(IsMutableMapping[str, _ModelOrDatasetT], Protocol[_ModelOrDatasetT]):
+class IsDataset(
+    IsMutableMapping[str, _ModelOrDatasetT], IsDatasetDisplayMixin, Protocol[_ModelOrDatasetT]
+):
     """Dictionary-like collection of named models or nested datasets.
 
     Datasets expose conversion helpers for plain data, JSON, and file-based
