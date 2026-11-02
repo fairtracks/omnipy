@@ -740,21 +740,22 @@ else:
         @override
         def __class_getitem__(  # pyright: ignore[reportIncompatibleMethodOverride]
             cls,
-            params: tuple[type[_ToT], type[_FromT]],
+            params: tuple[type[_FromT], type[_ToT]],
         ) -> type[Model[_FromT | _ToT]]:
-            from_t, to_t = params
-            for from_t_variant in all_type_variants(from_t):
-                if isinstance(from_t_variant, GenericAlias):
-                    # Reject things like list[int], dict[str, int]
-                    raise TypeError(
-                        'Parameterized generics not allowed for FromT: '
-                        f'{from_t_variant}. If you want to use a generic '
-                        'type, wrap it in a Model subclass instead, e.g.:'
-                        f'Model[{from_t_variant}].',
-                    )
-                if from_t_variant == to_t:
-                    raise TypeError(f'FromT and ToT cannot be the same type: {from_t_variant}.')
-            return super().__class_getitem__(params)  # type: ignore[arg-type]
+            if cls is __class__:  # Only perform checks for the base class, not subclasses
+                from_t, to_t = params
+                for from_t_variant in all_type_variants(from_t):
+                    if isinstance(from_t_variant, GenericAlias):
+                        # Reject things like list[int], dict[str, int]
+                        raise TypeError(
+                            'Parameterized generics not allowed for FromT: '
+                            f'{from_t_variant}. If you want to use a generic '
+                            'type, wrap it in a Model subclass instead, e.g.:'
+                            f'Model[{from_t_variant}].',
+                        )
+                    if from_t_variant == to_t:
+                        raise TypeError(f'FromT and ToT cannot be the same type: {from_t_variant}.')
+            return super().__class_getitem__(params)
 
         @property
         @override
