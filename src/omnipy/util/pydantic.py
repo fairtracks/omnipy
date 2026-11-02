@@ -50,6 +50,7 @@ create_model = pyd.create_model
 EmailStr = pyd.EmailStr
 Extra = pyd.Extra
 Field = pyd.Field
+HttpUrl = pyd.HttpUrl
 NonNegativeFloat = pyd.NonNegativeFloat
 NonNegativeInt = pyd.NonNegativeInt
 PositiveFloat = pyd.PositiveFloat
@@ -128,6 +129,7 @@ __all__ = [
     'EmailStr',
     'Extra',
     'Field',
+    'HttpUrl',
     'NoneIsNotAllowedError',
     'NonNegativeFloat',
     'NonNegativeInt',
