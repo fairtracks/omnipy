@@ -10,6 +10,7 @@ from omnipy.components.json.datasets import JsonDataset
 from omnipy.components.remote import helpers
 from omnipy.components.remote.datasets import HttpUrlDataset
 from omnipy.components.remote.helpers import RateLimitingClientSession
+from omnipy.data.model import Model
 
 from ...helpers.protocols import AssertModelOrValFunc
 
@@ -65,3 +66,41 @@ async def test_dataset_load_rate_limits_with_the_host_config(
     assert sessions[0].requests_per_time_period == 7
     assert sessions[0].time_period_in_secs == 0.5
     assert sessions[0].burst_size == 2
+
+
+@pytest.mark.parametrize(
+    'wrapper_cls',
+    [dict, Model[dict[str, str]], Model[Model[HttpUrlDataset]]],
+)
+@pytest.mark.parametrize('empty', [False, True])
+async def test_dataset_load_into_preserves_keys_from_wrapped_urls(
+    aiohttp_server, wrapper_cls: type, empty: bool
+) -> None:
+    async def endpoint(request: web.Request) -> web.Response:
+        return web.json_response(dict(value=request.match_info['name']))
+
+    app = web.Application()
+    app.router.add_get('/data/{name}', endpoint)
+    server = await aiohttp_server(app)
+
+    url_data = (
+        {}
+        if empty
+        else {
+            'first_page': str(server.make_url('/data/one')),
+            'second_page': str(server.make_url('/data/two')),
+        }
+    )
+    urls = wrapper_cls(url_data)
+    dataset = JsonDataset(existing={'value': 'original'})
+
+    load_task = dataset.load_into(urls)
+    assert isinstance(load_task, asyncio.Task)
+    loaded = await load_task
+
+    expected = {'existing': {'value': 'original'}}
+    if not empty:
+        expected |= {'first_page': {'value': 'one'}, 'second_page': {'value': 'two'}}
+    assert loaded is dataset
+    assert dataset.to_data() == expected
+    assert list(dataset) == list(expected)

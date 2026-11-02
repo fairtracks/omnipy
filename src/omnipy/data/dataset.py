@@ -55,6 +55,7 @@ from omnipy.util.helpers import (
     get_calling_module_name,
     get_default_if_typevar,
     get_event_loop_and_check_if_loop_is_running,
+    has_items_method,
     is_iterable,
     remove_forward_ref_notation,
     split_to_union_variants,
@@ -363,9 +364,9 @@ class Dataset(
                     super_kwargs[DATA_KEY], model_or_dataset_as_input = (
                         _validate_any_models_or_datasets(_input_data.dict().items())
                     )
-                case SupportsItems():
+                case _ if has_items_method(input_data):
                     super_kwargs[DATA_KEY], model_or_dataset_as_input = (
-                        _validate_any_models_or_datasets(cast(SupportsItems, input_data).items())
+                        _validate_any_models_or_datasets(input_data.items())
                     )
                 case Iterable():
                     try:
@@ -1740,7 +1741,7 @@ class Dataset(
                     )
                 return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
 
-            case Mapping():
+            case _ if has_items_method(paths_or_urls):
                 try:
                     http_url_dataset = HttpUrlDataset(paths_or_urls)
                 except ValidationError as exp:

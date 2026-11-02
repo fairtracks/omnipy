@@ -48,6 +48,7 @@ from cachebox import cached, LRUCache
 from typing_extensions import NoDefault, TypeVar
 
 from omnipy.shared.protocols.util import IsDataclass
+from omnipy.shared.protocols.vendored._typeshed import SupportsItems
 from omnipy.shared.typedefs import LocaleType, TypeForm
 import omnipy.util.pydantic as pyd
 
@@ -471,6 +472,22 @@ def is_instance_of_any_type_variant(
         except TypeError:
             continue
     return False
+
+
+def has_items_method(obj: object) -> TypeGuard[SupportsItems[Any, Any]]:
+    """Check for an ``items`` attribute, including dynamically forwarded attributes.
+
+    Runtime protocol checks use static attribute lookup on Python 3.12+, which
+    misses methods exposed through ``__getattr__`` by mimicking Models.
+
+    Args:
+        obj: Candidate mapping-like object.
+
+    Returns:
+        ``True`` when ``hasattr(obj, 'items')`` succeeds. The attribute's
+        callability and signature are not checked.
+    """
+    return hasattr(obj, 'items')
 
 
 def is_iterable(obj: Iterable[_ObjT] | _ObjT) -> TypeGuard[Iterable[_ObjT]]:

@@ -323,6 +323,8 @@ class Model(  # type: ignore[misc]
         """
         from omnipy.data._typing.helpers import all_model_type_variants
 
+        # TODO: Consider generating ordinary-method proxies too, so Python 3.12+
+        #       runtime protocol checks using getattr_static() can see mimicked methods.
         outer_types = all_model_type_variants(created_model)
 
         def _type_supports_method(_type: type | GenericAlias, _method_name: str) -> bool:

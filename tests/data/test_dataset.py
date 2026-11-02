@@ -192,12 +192,27 @@ def test_init_pure_pydantic_model_as_data_input() -> None:
     assert wrapped_dataset.to_data() == {'a': 4, 'b': 5}
 
 
-def test_init_model_wrapped_mapping_as_data_input() -> None:
-    wrapped_mapping = Model[dict[str, object]]({'a': 4.5, 'b': '5'})
+@pytest.mark.parametrize(
+    'wrapper_cls',
+    [
+        Model[dict[str, object]],
+        Model[Model[dict[str, object]]],
+        Model[Model[Dataset[Model[object]]]],
+    ],
+)
+@pytest.mark.parametrize('data', [{}, {'a': 4.5, 'b': '5'}])
+def test_init_model_wrapped_mapping_as_data_input(
+    wrapper_cls: type, data: dict[str, object]
+) -> None:
+    wrapped_mapping = wrapper_cls(data)
 
     dataset = Dataset[Model[int]](wrapped_mapping)
+    dataset_from_keyword = Dataset[Model[int]](data=wrapped_mapping)
 
-    assert dataset.to_data() == {'a': 4, 'b': 5}
+    expected = {'a': 4, 'b': 5} if data else {}
+    assert dataset.to_data() == expected
+    assert dataset_from_keyword.to_data() == expected
+    assert wrapped_mapping.to_data() == data
 
 
 @pytest.mark.parametrize(
