@@ -35,7 +35,7 @@ if TYPE_CHECKING:
         IsSetContent,
         IsStrContent,
     )
-    from omnipy.shared.protocols.data import IsDataset
+    from omnipy.shared.protocols.data import IsDataset, IsModel
 
     _RootT = TypeVar('_RootT')
 
@@ -132,6 +132,15 @@ if TYPE_CHECKING:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         # {{MIMIC_MODEL_TYPED_STANDIN_SUMMARY}}
         """Typed stand-in for a concrete ``Model[...]`` subclass."""
+
+        ...
+
+    class Model_Dataset_Model(  # type: ignore[misc]
+        PlainModel[Dataset[PlainModel[_ValT]]],
+        IsDataset[IsModel[_ValT]],
+        Generic[_ValT],
+    ):
+        """Typed stand-in for a concrete Model[Dataset[Model[...]]]."""
 
         ...
 

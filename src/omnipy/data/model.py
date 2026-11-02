@@ -485,6 +485,7 @@ class Model(  # type: ignore[misc]
             Model_bool,
             Model_bytes,
             Model_Dataset,
+            Model_Dataset_Model,
             Model_dict,
             Model_float,
             Model_int,
@@ -664,6 +665,24 @@ class Model(  # type: ignore[misc]
 
             Returns:
                 Model_dict[_KeyT, _ValT]: A statically narrowed dict model
+                    instance.
+            """
+            ...
+
+        @overload
+        def __new__(
+            cls: 'type[Model[Dataset[Model[_ValT]]]]',
+            *args: Any,
+            **kwargs: Any,
+        ) -> 'Model_Dataset_Model[_ValT]':
+            """Type-check construction of dataset-backed models.
+
+            Args:
+                *args: Positional arguments forwarded to runtime construction.
+                **kwargs: Keyword arguments forwarded to runtime construction.
+
+            Returns:
+                Model_Dataset[Model[_ValT]]: A statically narrowed dataset model
                     instance.
             """
             ...
