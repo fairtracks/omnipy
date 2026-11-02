@@ -20,6 +20,7 @@
 - Hooks are run with `prek` (`prek.toml`). Mutating hooks fix files in place, and `prek run` then fails so that CI catches unformatted files. Commit-time hooks mutate Python files via `.pre-commit-hooks/expand_docstr_macros.py`, which runs before the ruff hooks. If you edit macro-managed docstrings or `omnipy.util.docstr_macros`, run that hook or expect rewrites.
 - Hooks belong to the groups `watch` (docstring macro expansion, `ruff check --fix`, `ruff format`; fast, for running on every save with `uv run prek run --group watch --files <file>`) and `commit` (the full set, also run by CI).
 - The `(str, Enum)` base is used deliberately (not `StrEnum`), and lambda assignment is allowed; both are ignored in the ruff config.
+- Avoid unnecessary comments. Use comments to explain complex logic and docstrings to document behavior.
 
 ## Layout And Suppression Conventions
 
@@ -85,11 +86,29 @@ This is about settings such as config values and the arguments that internal cod
 - For exhaustive engine/callable behavior tests, keep using the existing engine
   harness; a domain scenario should remain a readable proof of a real dataflow.
 
+## Test Organization
+
+- Put reusable pytest-cases case functions in a sibling `cases/` package, not in `helpers/`.
+- Split `cases/` modules by topic or function, especially when cases are reused across test modules.
+- Put reusable helper classes in adjacent `helpers/classes.py` modules and helper functions in `helpers/functions.py`.
+- Keep test modules focused on assertions and wiring; move reusable setup data and helper types out.
+- Prefer `pytest_cases.parametrize_with_cases()` for shared case data instead of duplicating inline parametrization.
+
 ## Test Quirks
 
 - `tests/conftest.py` reorders collection to run ordinary tests first, then `pytest-mypy-plugins` cases, then integration tests.
 - During repo tests, `omnipy.hub.runtime.runtime` is intentionally `None`; `tests/conftest.py:pytest_configure()` disables the import-time singleton for `tests/...` imports. It also resets the shared data class and job creators, which building that runtime configured for the detected environment (e.g. the terminal color system), so tests do not depend on the terminal or on test order.
 - CI installs `de_DE.UTF-8` before running pytest. Reproduce that locale first if locale-sensitive tests fail locally.
+
+## Commit Messages
+
+- Describe concrete technical changes. Include intent only when it explains specific technical reasons, not general improvements.
+- Do not use the word "refactor" when functional changes are made.
+- Name the main public classes or functions affected when one or two are central to the change. For private implementation details, name the nearest affected public class or function instead.
+- Separate distinct changes with periods rather than commas.
+- Several small changes can be summarized as "cleanup", "misc fixes", or "typing improvements".
+
+For example: "Cleanup ConfigBase display methods. Misc fixes in BaseDisplayMixin."
 
 ## Working Documents
 
