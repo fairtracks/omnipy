@@ -380,6 +380,17 @@ class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_Json
 
         return '[{'
 
+    @pyd.root_validator(pre=True)
+    def _parse_json_str_before_field_validation(
+        cls, root_obj: dict[str, object]
+    ) -> dict[str, object]:
+        # The list/dict root type rejects str input during field validation, before
+        # _parse_data() is called from the post root validator
+        value = root_obj.get(ROOT_KEY)
+        if isinstance(value, str):
+            return {**root_obj, ROOT_KEY: cls._parse_data(value)}
+        return root_obj
+
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
 
         @overload

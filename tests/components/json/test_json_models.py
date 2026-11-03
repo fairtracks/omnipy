@@ -20,6 +20,7 @@ from omnipy.components.json.models import (
     JsonDictOfScalarsModel,
     JsonListModel,
     JsonListOfScalarsModel,
+    JsonListOrDictModel,
     JsonModel,
     JsonScalarModel,
 )
@@ -316,6 +317,25 @@ def test_json_model_from_json_parses_standard_json(json_content: str, expected_d
     model = JsonModel()
     model.from_json(json_content)
     assert model.to_data() == expected_data
+
+
+@pc.parametrize(
+    'json_string, expected_data',
+    [
+        ('[1, 2]', [1, 2]),
+        ('{"a": [1, "x"]}', {'a': [1, 'x']}),
+    ],
+)
+def test_json_list_or_dict_model_parses_json_strings(json_string: str, expected_data: Any) -> None:
+    """Parse JSON strings into lists and dicts, despite the list/dict root type."""
+    assert JsonListOrDictModel(json_string).to_data() == expected_data
+
+
+@pc.parametrize('json_string', ['123', '"[1, 2]"', 'sample', ' [1]'])
+def test_json_list_or_dict_model_rejects_other_strings(json_string: str) -> None:
+    """Reject strings that do not parse as a JSON list or dict."""
+    with pytest.raises(ValidationError):
+        JsonListOrDictModel(json_string)
 
 
 @pc.parametrize('json_content', ['hello', '"unterminated', ''])
