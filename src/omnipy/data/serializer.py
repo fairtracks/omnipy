@@ -210,12 +210,6 @@ class SerializerRegistry:
         #     new_dataset = new_dataset_cls(dataset)
         #     return new_dataset
 
-        def _to_data_from_json(dataset: IsDataset, serializer: IsSerializer):
-            new_dataset_cls = serializer.get_dataset_cls_for_new()
-            new_dataset = new_dataset_cls()
-            new_dataset.from_json(dataset.to_data())
-            return new_dataset
-
         def _to_data_from_data(dataset: IsDataset, serializer: IsSerializer):
             new_dataset_cls = serializer.get_dataset_cls_for_new()
             new_dataset = new_dataset_cls()
@@ -232,7 +226,7 @@ class SerializerRegistry:
         #     new_dataset.from_json(dataset.to_json())
         #     return new_dataset
 
-        for func in (_to_data_from_data_if_direct, _to_data_from_json, _to_data_from_data):
+        for func in (_to_data_from_data_if_direct, _to_data_from_data):
             for serializer in serializers:
                 try:
                     new_dataset = func(dataset, serializer)
@@ -291,7 +285,8 @@ class SerializerRegistry:
             ignore_dirs: Whether to skip directory entries inside archives/directories.
 
         Returns:
-            The populated destination dataset, an auto-created dataset if conversion fails, or
+            ``to_dataset`` populated directly if its type matches the deserialized dataset,
+            otherwise the deserialized dataset itself, for the caller to absorb into its target.
             ``None`` when no unique serializer can be determined.
         """
 
@@ -336,15 +331,7 @@ class SerializerRegistry:
                 if to_dataset.get_type() is auto_dataset.get_type():
                     cast(HasData, to_dataset).data = cast(HasData, auto_dataset).data
                     return to_dataset
-                else:
-                    try:
-                        if to_dataset.get_type().inner_type is str:
-                            to_dataset.from_data(auto_dataset.to_json())
-                        else:
-                            to_dataset.from_json(auto_dataset.to_data())
-                        return to_dataset
-                    except Exception:
-                        return auto_dataset
+                return auto_dataset
 
     def load_from_tar_file_path_based_on_dataset_cls(
         self,

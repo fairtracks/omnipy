@@ -11,7 +11,10 @@ from omnipy.components.json.serializers import JsonDatasetToTarFileSerializer
 from omnipy.components.pandas.datasets import PandasDataset
 from omnipy.components.pandas.serializers import PandasDatasetToTarFileSerializer
 from omnipy.components.raw.datasets import StrDataset
-from omnipy.components.raw.serializers import RawStrDatasetToTarFileSerializer
+from omnipy.components.raw.serializers import (
+    RawBytesDatasetToTarFileSerializer,
+    RawStrDatasetToTarFileSerializer,
+)
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
@@ -134,3 +137,44 @@ def test_dataset_load_into_keeps_existing_entries(tmp_path: Path, by_file_suffix
 
     dataset.load_into(str(tar_path), by_file_suffix=by_file_suffix)
     assert dataset.to_data() == {'existing': 7, 'first': [1, 2]}
+
+
+@pytest.mark.usefixtures('runtime')
+@pytest.mark.parametrize(
+    'value, expected_serializer',
+    [
+        ('123', RawStrDatasetToTarFileSerializer),
+        ('"quoted"', RawStrDatasetToTarFileSerializer),
+        (b'123', RawBytesDatasetToTarFileSerializer),
+        ([1, 2], JsonDatasetToTarFileSerializer),
+    ],
+)
+def test_serializer_registry_auto_detect_keeps_untyped_values(
+    value: object, expected_serializer: type
+) -> None:
+    registry = SerializerRegistry()
+    for serializer_cls in (
+        RawStrDatasetToTarFileSerializer,
+        RawBytesDatasetToTarFileSerializer,
+        JsonDatasetToTarFileSerializer,
+        PandasDatasetToTarFileSerializer,
+    ):
+        registry.register(serializer_cls)
+
+    dataset, serializer = registry.auto_detect_tar_file_serializer(Dataset[Model[object]](a=value))
+    assert serializer is expected_serializer
+    assert dataset is not None
+    assert dataset.to_data() == {'a': value}
+
+
+def test_serializer_registry_load_by_file_suffix_keeps_text(
+    registry: Annotated[IsSerializerRegistry, pytest.fixture],
+    tmp_path: Path,
+) -> None:
+    tar_path = write_tar_gz(tmp_path / 'text.tar.gz', {'a.txt': b'"quoted"'})
+
+    loaded = registry.load_from_tar_file_path_based_on_file_suffix(
+        _SILENT_LOG, str(tar_path), Dataset[Model[object]]()
+    )
+    assert loaded is not None
+    assert loaded.to_data() == {'a': '"quoted"'}

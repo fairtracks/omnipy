@@ -63,6 +63,9 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
         def json_dictify_object(data_file: str, obj_val: str) -> dict[str, str]:
             return {f'{data_file}': f'{obj_val}'}
 
+        # TODO: Parse each file with the Model's from_json() when Dataset.from_json() is changed
+        #       This relies on Dataset.from_json() taking a dict of JSON texts, one per entry. It
+        #       is planned to parse a single JSON document for the whole dataset instead.
         cls.create_dataset_from_tarfile(
             json_dataset,
             serialized,
