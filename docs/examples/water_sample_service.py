@@ -1,11 +1,12 @@
 """Serve the README's example river responses without contacting an external API."""
 
+import asyncio
 from collections.abc import Iterator
 from contextlib import contextmanager
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-import json
-from threading import Thread
-from urllib.parse import parse_qs, urlparse
+import threading
+
+from aiohttp import web
+from aiohttp.test_utils import TestServer
 
 # The river pages from the water_sample_harmonization integration scenario.
 RIVER_SAMPLE_PAGES = {
@@ -47,32 +48,38 @@ RIVER_SAMPLE_PAGES = {
 }
 
 
+def _create_river_service_app() -> web.Application:
+    async def _samples_endpoint(request: web.Request) -> web.Response:
+        page = int(request.query.get('page', '-1'))
+        if page not in RIVER_SAMPLE_PAGES:
+            raise web.HTTPNotFound()
+        return web.json_response(RIVER_SAMPLE_PAGES[page])
+
+    app = web.Application()
+    app.router.add_route('GET', '/samples', _samples_endpoint)
+    return app
+
+
 @contextmanager
 def water_sample_service() -> Iterator[str]:
     """Yield a local base URL serving `/samples?page=N`; keep Omnipy's loading code real."""
+    loop = asyncio.new_event_loop()
+    server = TestServer(_create_river_service_app(), loop=loop)
+    server_started = threading.Event()
 
-    class Handler(BaseHTTPRequestHandler):
-        def do_GET(self) -> None:
-            url = urlparse(self.path)
-            page = int(parse_qs(url.query).get('page', ['-1'])[0])
-            if url.path != '/samples' or page not in RIVER_SAMPLE_PAGES:
-                self.send_error(404)
-                return
-            payload = json.dumps(RIVER_SAMPLE_PAGES[page]).encode()
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(payload)))
-            self.end_headers()
-            self.wfile.write(payload)
+    def _run_loop() -> None:
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(server.start_server(loop=loop))
+        server_started.set()
+        loop.run_forever()
 
-        def log_message(self, format: str, *args: object) -> None:
-            pass
+    thread = threading.Thread(target=_run_loop, daemon=True)
+    thread.start()
+    server_started.wait()
 
-    with ThreadingHTTPServer(('127.0.0.1', 0), Handler) as server:
-        thread = Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        try:
-            yield f'http://127.0.0.1:{server.server_port}'
-        finally:
-            server.shutdown()
-            thread.join()
+    try:
+        yield f'http://127.0.0.1:{server.port}'
+    finally:
+        asyncio.run_coroutine_threadsafe(server.close(), loop).result()
+        loop.call_soon_threadsafe(loop.stop)
+        thread.join()
