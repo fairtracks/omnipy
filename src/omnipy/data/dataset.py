@@ -1918,7 +1918,7 @@ class Dataset(
 
             if by_file_suffix:
                 loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                    self, tar_gz_file_path, self, ignore_dirs=ignore_dirs
+                    self, tar_gz_file_path, self.__class__(), ignore_dirs=ignore_dirs
                 )
             else:
                 loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_dataset_cls(

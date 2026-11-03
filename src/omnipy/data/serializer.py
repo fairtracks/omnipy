@@ -302,7 +302,13 @@ class SerializerRegistry:
             log = print
 
         with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
-            file_suffixes = set(fn.split('.')[-1] for fn in tarfile_obj.getnames())
+            file_suffixes = {
+                member.name.split('.')[-1]
+                for member in tarfile_obj.getmembers()
+                if not (ignore_dirs and member.isdir())
+            }
+        if not file_suffixes:
+            return to_dataset
         if len(file_suffixes) != 1:
             log(
                 f'Tar archive contains files with different or '

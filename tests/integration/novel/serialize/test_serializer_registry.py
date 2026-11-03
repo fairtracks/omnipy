@@ -1,5 +1,7 @@
 """Tests for serializer registry."""
 
+from pathlib import Path
+from types import SimpleNamespace
 from typing import Annotated
 
 import pytest
@@ -15,6 +17,10 @@ from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
 from omnipy.shared.protocols.data import IsSerializerRegistry
 from omnipy.shared.protocols.hub.runtime import IsRuntime
+
+from .helpers.functions import write_tar_gz
+
+_SILENT_LOG = SimpleNamespace(log=lambda _msg: None)
 
 
 @pytest.fixture
@@ -91,3 +97,40 @@ def test_serializer_registry_auto_detect_python_dataset(
 ):
     dataset, serializer = registry.auto_detect_tar_file_serializer(python_dataset)
     assert serializer is None
+
+
+def test_serializer_registry_load_by_file_suffix_ignores_directory_members(
+    registry: Annotated[IsSerializerRegistry, pytest.fixture],
+    tmp_path: Path,
+) -> None:
+    tar_path = write_tar_gz(tmp_path / 'data.tar.gz', {'folder': None, 'first.json': b'[1, 2]'})
+
+    loaded = registry.load_from_tar_file_path_based_on_file_suffix(
+        _SILENT_LOG, str(tar_path), JsonDataset(), ignore_dirs=True
+    )
+    assert loaded is not None
+    assert loaded.to_data() == {'first': [1, 2]}
+
+
+def test_serializer_registry_load_by_file_suffix_empty_archive(
+    registry: Annotated[IsSerializerRegistry, pytest.fixture],
+    tmp_path: Path,
+) -> None:
+    tar_path = write_tar_gz(tmp_path / 'empty.tar.gz', {})
+    to_dataset = JsonDataset()
+
+    loaded = registry.load_from_tar_file_path_based_on_file_suffix(
+        _SILENT_LOG, str(tar_path), to_dataset
+    )
+    assert loaded is to_dataset
+    assert loaded.to_data() == {}
+
+
+@pytest.mark.usefixtures('runtime')
+@pytest.mark.parametrize('by_file_suffix', [False, True])
+def test_dataset_load_into_keeps_existing_entries(tmp_path: Path, by_file_suffix: bool) -> None:
+    tar_path = write_tar_gz(tmp_path / 'data.tar.gz', {'first.json': b'[1, 2]'})
+    dataset = JsonDataset(existing=7)
+
+    dataset.load_into(str(tar_path), by_file_suffix=by_file_suffix)
+    assert dataset.to_data() == {'existing': 7, 'first': [1, 2]}
