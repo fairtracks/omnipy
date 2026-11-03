@@ -1677,6 +1677,13 @@ class Model(  # type: ignore[misc]
         """
         self.from_data(other.to_data())
 
+    # TODO: Handle bytes consistently in Model.to_json()
+    #       Pydantic's JSON encoder decodes bytes as UTF-8, so b'123' is silently exported as the
+    #       string "123", while bytes that are not valid UTF-8 raise UnicodeDecodeError. Either
+    #       refuse bytes with a clear error, or encode them deliberately (e.g. base64).
+    # TODO: Avoid non-standard JSON for NaN and infinite floats in Model.to_json()
+    #       These are exported as NaN, Infinity and -Infinity, which Python reads back but strict
+    #       JSON parsers reject.
     def to_json(self, pretty=True, **kwargs: Any) -> str:
         """Serialize the model to JSON.
 

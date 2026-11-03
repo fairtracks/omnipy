@@ -262,7 +262,7 @@ class IsDataset(
             paths_or_urls: Source path, URL, or collection of sources to load.
             by_file_suffix: Whether serializer lookup should prefer file suffixes.
             as_mime_type: Explicit MIME type override, if any.
-            ignore_dirs:  Whether to skip directory entries inside archives/directories.å
+            ignore_dirs:  Whether to skip directory entries inside archives/directories.
             kwargs: Additional named path or URL sources.
 
         Returns:
