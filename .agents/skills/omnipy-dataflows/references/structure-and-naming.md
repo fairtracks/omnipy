@@ -2,6 +2,7 @@
 
 Use existing `src/omnipy/components/` packages as the template when organizing
 reusable dataflow code. A package should represent a coherent capability or domain.
+This file structure will be the basis of Omnipy's future plugin architecture.
 The same responsibilities can organize an application or narrative integration
 package; adopting this layout does not require moving it into Omnipy's library.
 

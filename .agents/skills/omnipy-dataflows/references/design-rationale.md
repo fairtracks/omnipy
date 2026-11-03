@@ -95,6 +95,8 @@ Component packages also supply the structural template. The user clarified that
 applied instances should use `_task` or `_flow`, that `Record` primarily denotes
 a table-row schema, and that relative imports within and between components are
 an in-Omnipy guideline supporting potential extraction into separate repositories.
+The component file structure will also be the basis of Omnipy's future plugin
+architecture.
 See [structure and naming](structure-and-naming.md) for the agreed conventions.
 
 The user made human readability an acceptance criterion: model and flow
@@ -107,6 +109,21 @@ non-Pydantic content. This motivated the catalog example's direct
 `PublicationMapper((record, metadata))` construction and `@mimics(PublishRequest)`.
 The [conversion guidance](patterns.md#model-transformations) explains the boundary
 between retaining the wrapper and requesting its underlying value.
+
+The typing review clarified that agents should assume correct runtime mimicking,
+including for explicitly annotated Models. Report discrepancies and/or suggest
+fixes rather than working around them. Static checker limitations are separate;
+an Omnipy mypy plugin is future work. The user clarified that `StationListModel`
+should inherit `IsListContent[StationModel]`, following `SplitToItemsModelBase`,
+not introduce nested lists. The [typing guidance](typing.md) now compares explicit
+protocol inheritance in a `TYPE_CHECKING` facade with `mimics`: the former supports
+mypy but requires aligned static/runtime declarations; the latter is shorter but
+does not support mypy. The user prefers mypy support for additions to Omnipy
+library code; examples, tutorials, and tests may instead prefer `mimics` for
+readability unless mypy compatibility is part of their purpose. Both options are
+documented. The guidance also prefers
+targeted `type: ignore` or pyright suppressions over catch-all dictionary or `Any`
+casts when a checker cannot express a valid runtime operation.
 
 The user emphasized that the BioSampleVault submission type is the external API
 contract itself, currently named `BioSampleVaultSampleSubmissionSchema`. The

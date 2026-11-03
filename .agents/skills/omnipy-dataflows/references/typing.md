@@ -27,15 +27,25 @@ assert_type(counts['station-a'][0], int)
 ```
 
 The typing machinery specializes constructor results and Dataset item access.
-Do not assume an explicit annotation such as a function parameter `Model[int]`
-exposes every mimicked operation just because `Model[int](1)` is inferred with
-those operations. Check the actual usage; a concrete `mimics`-decorated Model or
-a capability protocol can supply the missing interface.
+Assume a Model correctly mimics its wrapped type, including when explicitly
+annotated as a function parameter such as `Model[int]`. If runtime behavior does
+not match, report the discrepancy and/or suggest a fix rather than designing
+around it. A checker failing to expose that interface is a separate static-typing
+limitation; a concrete `mimics`-decorated Model or a capability protocol can make
+the interface visible.
 
 `assert_type` checks the inferred type when run through the type checker; running
 the Python file alone does not check that assertion. Use the repository's
 `uv run basedpyright` configuration. Mypy does not support the `mimics` technique;
-its separate plugin coverage does not establish that these examples type-check.
+an Omnipy mypy plugin is future work. The repository's `pytest-mypy-plugins` test
+coverage does not establish that the `mimics` examples type-check with mypy.
+Explicit protocol inheritance is an alternative for interfaces that need mypy
+support, as shown below.
+
+Prefer mypy support for additions to Omnipy library code, including components;
+use mypy-compatible typing facades where the built-in support is insufficient.
+For examples, tutorials, and tests, the shorter `mimics` variant may be preferred
+for readability, unless mypy compatibility is part of their purpose.
 
 ## Expose the interface of a particular Model
 
@@ -52,12 +62,10 @@ class StationSchema(pyd.BaseModel):
 
 
 @om.mimics(StationSchema)
-class StationModel(om.Model[StationSchema]):
-    ...
+class StationModel(om.Model[StationSchema]): ...
 
 
-class StationDataset(om.Dataset[StationModel]):
-    ...
+class StationDataset(om.Dataset[StationModel]): ...
 
 
 station = StationModel({'station_id': 'a', 'capacity': 4})
@@ -78,36 +86,89 @@ target schema: decorate the concrete mapper with `mimics(TargetSchema)`.
 
 ## Bind a parameterized interface with a protocol
 
-The current `mimics` implementation does not preserve generic arguments passed
-directly to it. Do not rely on `@om.mimics(list[StationModel])` for typed list
-elements. When a concrete wrapper needs an explicit parameterized interface,
-give that interface a non-parameterized name:
+Use the existing content protocols when they describe the required behavior:
+they account for Model operations that preserve wrappers, such as list slicing.
+For an ordinary `Model[list[int]]`, the built-in support already suffices. When
+a concrete wrapper needs an explicit parameterized interface, there are two
+approaches.
+
+### Inherit the protocol in a type-checking facade
+
+For mypy-compatible list typing, follow `SplitToItemsModelBase` in
+`src/omnipy/components/raw/models.py`: inherit from `PlainModel` and
+`IsListContent[StationModel]` under `TYPE_CHECKING`, retaining the ordinary
+Model subclass at runtime.
 
 ```python
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
 
 from omnipy.shared.protocols.content import IsListContent
 
 
-class IsStationList(IsListContent[StationModel], Protocol):
-    ...
+if TYPE_CHECKING:
+    from omnipy.data._typing.mimic_models import PlainModel
 
+    class StationListModel(  # type: ignore[misc]
+        PlainModel[list[StationModel]], IsListContent[StationModel]
+    ): ...
+else:
 
-@om.mimics(IsStationList)
-class StationListModel(om.Model[list[StationModel]]):
-    ...
+    class StationListModel(om.Model[list[StationModel]]): ...
 
 
 station_list = StationListModel([station])
+assert_type(station_list[0], StationModel)
+assert_type(station_list[:], StationListModel)
+```
+
+The protocol is inherited by the Model's static facade, not merely defined as a
+separate interface. Keep it out of the runtime bases: content protocols contain
+placeholder methods, while the actual behavior and validation come from Model.
+`PlainModel` is an internal, type-checking-only facade that avoids the specialized
+constructor inference of `Model.__new__`.
+In the current checkout, mypy reports conflicting inherited `json` signatures
+from `BaseDisplayMixin` and Pydantic's `BaseModel` on this facade. This is a known
+Pydantic v1 issue, expected to be resolved in v2. The targeted
+`type: ignore[misc]` suppresses that conflict, not the list operations; remove it
+once the issue is resolved.
+
+This gives mypy and basedpyright the list interface and its element type without
+`mimics`. It does not make the earlier `mimics`-decorated `StationModel`'s schema
+attributes visible to mypy; typing `station_list[0].capacity` there also requires
+a mypy-visible interface for the item Model.
+
+### Expose a named protocol with `mimics`
+
+When mypy support is not required, `mimics` keeps a single Model declaration.
+The current implementation does not preserve generic arguments passed directly
+to it: do not rely on `@om.mimics(list[StationModel])` for typed elements.
+Instead, give the parameterized interface a non-parameterized name. This is an
+alternative definition of `StationListModel`, not an additional wrapper:
+
+```python
+class IsStationList(IsListContent[StationModel], Protocol): ...
+
+
+@om.mimics(IsStationList)
+class StationListModel(om.Model[list[StationModel]]): ...
+
+
+station_list = StationListModel([station])
+assert_type(station_list[0], StationModel)
 assert_type(station_list[0].capacity, int)
 ```
 
-Use the existing content protocols when they describe the required behavior:
-they account for Model operations that preserve wrappers, such as list slicing.
-For an ordinary `Model[list[int]]`, the built-in support already suffices; the
-extra protocol is useful when specializing an interface the checker cannot infer.
-This list illustrates an item's structured content, not a replacement for a
-Dataset batch.
+| Approach | Advantages | Trade-offs |
+| --- | --- | --- |
+| Protocol inheritance under `TYPE_CHECKING` | Explicit generic arguments; supports mypy and basedpyright; leaves runtime inheritance unchanged. | Separate static/runtime declarations must stay aligned; uses the internal `PlainModel` facade; currently needs a targeted mypy suppression for the known Pydantic v1 `json` issue. |
+| `mimics` with a named protocol | One Model declaration; concise; no runtime behavior or inheritance changes. | Not supported by mypy; parameterized interfaces need a named protocol because decorator arguments lose generic parameters. |
+
+For additions to Omnipy library code, prefer the mypy-compatible protocol
+inheritance approach when an explicit interface is needed. In examples,
+tutorials, and tests, `mimics` may be preferable for its shorter declaration;
+retain mypy support where it is part of the example or test's purpose. Both
+describe existing runtime mimicking, not new behavior. This list illustrates an
+item's structured content, not a replacement for a Dataset batch.
 
 ## Describe the capabilities a reusable consumer needs
 
@@ -120,13 +181,11 @@ from collections.abc import Iterable
 
 class HasCapacity(Protocol):
     @property
-    def capacity(self) -> int:
-        ...
+    def capacity(self) -> int: ...
 
 
 class HasCapacityValues(Protocol):
-    def values(self) -> Iterable[HasCapacity]:
-        ...
+    def values(self) -> Iterable[HasCapacity]: ...
 
 
 def total_capacity(stations: HasCapacityValues) -> int:
@@ -143,10 +202,13 @@ implementation. Keep dataflow boundaries typed as the appropriate Model/Dataset
 when they must enforce a data contract; use capabilities for reusable operations
 inside or across those boundaries.
 
-Protocols and `mimics` have complementary roles: a protocol describes an
-interface; `mimics` exposes an existing wrapped interface on a concrete Model to
-the checker. Neither should claim methods that the runtime object does not have.
+Protocols describe interfaces. Inheriting one in a type-checking facade or using
+`mimics` can expose an existing wrapped interface on a concrete Model to the
+checker. Neither should claim methods that the runtime object does not have.
 Avoid casts to dictionaries or `Any` just to silence an unresolved interface.
+When a checker cannot express a valid runtime operation, prefer a targeted
+`# type: ignore[code]` or `# pyright: ignore[rule]` on the reported line rather
+than casting the problem away with catch-all types.
 
 For framework/component maintenance that needs richer typing, existing code also
 uses `TYPE_CHECKING`-only facades and constructor/item-access overloads. Inspect

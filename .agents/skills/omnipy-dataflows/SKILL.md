@@ -106,8 +106,13 @@ into design rules.
   iteration, methods, and supported operators. This applies beyond Pydantic
   records to wrapped containers and other values. `Model` supplies the runtime
   behavior for wrapped classes generally; common scalar/collection shapes have
-  built-in static typing support. Use `@om.mimics(...)` to expose a particular
-  Model's interface and protocols to describe reusable capabilities. See
+  built-in static typing support. Assume runtime mimicking works correctly,
+  including for explicitly annotated Models; report discrepancies and/or suggest
+  fixes rather than designing around them. Expose a particular Model's interface
+  with mypy-compatible typing, such as a protocol-inheriting `TYPE_CHECKING`
+  facade, in additions to Omnipy library code. In examples, tutorials, and tests,
+  `@om.mimics(...)` may be preferred for readability unless mypy support is part
+  of their purpose. Use protocols to describe reusable capabilities. See
   [runtime mimicking and static typing](references/typing.md) for concrete Model
   and Dataset examples, generic-interface limitations, and checker verification.
   Use `.content` when a consumer specifically needs the underlying object and
@@ -255,7 +260,8 @@ work; inspection methods do not supply that behavior.
 ## Structure and name reusable components
 
 Use existing `omnipy.components` packages as the template for module
-responsibilities and naming. Grow large modules into same-named packages. Prefer
+responsibilities and naming. This file structure will be the basis of Omnipy's
+future plugin architecture. Grow large modules into same-named packages. Prefer
 `Schema` for Pydantic schemas generally and `Record` primarily for table-row schemas;
 use `Model`, `Dataset`, and `Mapper` to identify those roles. Give tasks and flows
 operation names; when distinguishing applied instances, use `_task` or `_flow`
