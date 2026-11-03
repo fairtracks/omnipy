@@ -207,6 +207,23 @@ and automatic re-keying remain planned functionality. The
 [identity and relationship examples](patterns.md#identity-and-relationship-contracts)
 link the fixtures, validators, and intended failure cases.
 
+The user subsequently preferred a Dataset-native feature over the proposed shared
+Model validator, with a dedicated type parameter for primary-key declarations.
+The [revised proposal](../../../../docs/agents/technical/specs/2026-10-25-dataset-primary-key-validation-proposal.md)
+covers Datasets of dicts or Pydantic records, iterators of key/value pairs or
+Pydantic records, and key checks/derivation after item parsing without losing
+duplicate occurrences. Rekeying and continuous key maintenance are now in scope,
+not a deferred extension. The implemented
+[`PrimaryKeyDatasetModel`](../../../../src/omnipy/components/nested/models.py)
+supplies the intermediate conversion approach, using shared declarations and
+serialization from [`data.primary_keys`](../../../../src/omnipy/data/primary_keys.py).
+It supersedes the example-local prototype's first-field-only conversion and
+overwrite behavior: composite keys and serialized-key collision rejection are
+implemented and covered by
+[component tests](../../../../tests/components/nested/test_models.py). Key
+recomputation occurs during conversion; continuous maintenance and the broader
+Dataset-native input contract remain planned.
+
 The user explained why Dataset is the batch abstraction: current async concurrency
 and gathering operate across its items through `iterate_over_data_files=True`.
 Collections of actual batches may therefore need nested Datasets; domain grouping

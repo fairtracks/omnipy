@@ -256,6 +256,25 @@ Use the identity invariant now while constructing keys explicitly with current
 APIs. Changing or normalizing a primary key must preserve agreement with the
 Dataset key and must not silently collapse records with colliding keys.
 
+The [Dataset primary-key proposal](../../../../docs/agents/technical/specs/2026-10-25-dataset-primary-key-validation-proposal.md)
+places the declaration on Dataset through a dedicated primary-key type parameter,
+not a shared validator on containing Models. Its scope includes dict and Pydantic
+record items, keyed-pair and record iterators, post-parse key validation/derivation,
+explicit rekeying, and continuous maintenance through supported mutations. This
+is planned functionality, not a current Dataset API.
+
+Until then, `PrimaryKeyDatasetModel` in
+[`omnipy.components.nested.models`](../../../../src/omnipy/components/nested/models.py) supplies intermediate
+conversion from a Dataset or list Model of Pydantic records to a Dataset keyed
+by record fields. Declare ordered fields with `PrimaryKey[Literal['field'], ...]`
+from [`omnipy.data.primary_keys`](../../../../src/omnipy/data/primary_keys.py).
+The converter supports composite keys and rejects serialized-key collisions
+before constructing the result. It recomputes input Dataset keys without changing
+the source mapping; it does not continuously maintain keys after conversion.
+Dict-valued item Models and direct iterator input are part of the planned
+Dataset-native feature, not guarantees of this converter. See the
+[component tests](../../../../tests/components/nested/test_models.py) for current behavior.
+
 Place relationship validation where its inputs are available. Concrete examples
 in the [submission models](../../../../tests/integration/novel/full/sequence_data_brokering/models.py)
 include:

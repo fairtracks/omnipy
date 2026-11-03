@@ -151,7 +151,12 @@ into design rules.
   existing aggregate validators also enforce it at their containing boundary. See
   [identity and relationship contracts](references/patterns.md#identity-and-relationship-contracts)
   for examples and the future table design. Do not assume automatic key derivation
-  or re-keying is implemented by an ordinary Dataset.
+  or re-keying is implemented by an ordinary Dataset. Dataset-native primary-key
+  typing, rekeying, and continuous key maintenance are planned together. The
+  implemented `PrimaryKeyDatasetModel` in `omnipy.components.nested.models`
+  supplies interim conversion of Pydantic records, including composite keys and
+  collision rejection. It recomputes keys at conversion, not continuously; see
+  the reference for defining-module imports and supported inputs.
 - Tasks record authoritative operation results. When deriving domain status from
   those results, put the validator on the Model that contains its inputs.
   Changes to wrapped data through the Model interface trigger

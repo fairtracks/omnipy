@@ -1,165 +1,167 @@
 # Shared Dataset primary-key validation
 
-Status: proposal for discussion; the APIs below are not implemented in Omnipy.
+Status: revised proposal for discussion. Dataset-native primary-key declarations,
+rekeying, and continuous key maintenance below are not implemented in Omnipy.
+
+## Direction and interim support
 
 The sequence-submission example repeats the same key/content check for samples
-and files. The catalog example needs it too. Extract the invariant once and make
-each containing schema declare which fields form the primary key. Keep the
-declaration visible in the schema, as in the existing top-level validators.
+and files. The catalog example needs it too. Make primary-key handling a Dataset
+feature, rather than a shared validator attached to containing Models. A Dataset
+must enforce its own identity contract both standalone and inside an aggregate.
+Foreign-key and paired-file relationships spanning Datasets remain on the type
+that contains their inputs.
 
-## Proposed use
+This supersedes the earlier proposal for `dataset_primary_key_validator()` and
+a shared Model-validator module. The implemented
+[`PrimaryKeyDatasetModel`](../../../../src/omnipy/components/nested/models.py)
+provides the intermediate conversion approach until Dataset-native support lands.
+It accepts a Dataset of wrapped Pydantic records or a list Model of Pydantic
+records and constructs a Dataset keyed from record fields. Import it from
+`omnipy.components.nested.models`, and `PrimaryKey` from
+`omnipy.data.primary_keys`; these are available in the current checkout, not
+top-level `omnipy` exports.
 
-```python
-# Proposed API, not an available import yet.
-from omnipy.data.validators import dataset_primary_key_validator
+The converter handles all declared key fields in order, validates field names,
+and rejects duplicate serialized keys before constructing the output Dataset.
+It recomputes supplied Dataset keys rather than rejecting mismatches, without
+renaming keys in the source Dataset. The
+[component tests](../../../../tests/components/nested/test_models.py) cover
+composite escaping, serialized-key collisions, and recomputation. Unlike the
+earlier example-local prototype, it does not silently overwrite duplicate keys.
+It remains a conversion boundary, not a continuously maintained Dataset invariant;
+dict-valued item Models and direct iterator input remain in the native feature's
+planned scope below.
 
+## Dataset primary-key declaration
 
-class PublicationSchema(pyd.BaseModel):
-    records: CatalogDataset
-    metadata: MetadataModel
-    receipt: str | None = None
+Add a dedicated primary-key type parameter, separate from the item Model type.
+Use a `PrimaryKeyT` TypeVar exclusively for the ordered key-field declaration,
+building on `PrimaryKey[Literal['field'], ...]` from the interim model and planned
+table architecture. Do not encode the declaration in a union of possible item
+types or require a wrapper Model merely to retain it.
 
-    _record_keys = dataset_primary_key_validator('records', key_fields=('record_id',))
-```
+An illustrative specialization is
+`Dataset[CatalogRecordModel, PrimaryKey[Literal['record_id']]]`; samples would
+declare `local_sample_alias`, files `file_id`, and measurements could declare
+`PrimaryKey[Literal['station_id'], Literal['measured_at']]`. This syntax is
+proposed, not an available API; finalize parameter placement and the no-key
+default while preserving existing `Dataset[ItemModel]` behavior. Ordinary
+Datasets must remain usable without a primary-key declaration.
 
-The sequence-submission schema would replace its two repeated validator bodies
-with:
+Validate the declaration at specialization: one or more distinct, nonempty string
+field names in a fixed order. Preserve the declaration through subclassing,
+copying, serialization/loading into the declared Dataset type, and typed Dataset
+operations. Prefer mypy-compatible typing for this library feature and verify
+basedpyright support too. Share declaration semantics and serialization with the
+table work without requiring implementation of the entire table API.
 
-```python
-_sample_keys = dataset_primary_key_validator(
-    'samples', key_fields=('local_sample_alias',))
-_file_keys = dataset_primary_key_validator('files', key_fields=('file_id',))
-```
+## Supported records and input forms
 
-A composite key uses the same declaration:
+Support both dict-valued item Models and Models wrapping Pydantic records. Read
+selected fields by mapping lookup for dicts and attribute access for records,
+through the Model interface in each case. Item Models own normalization and
+intrinsic validity; derive or check keys from their parsed values, not raw input.
+Do not serialize or rebuild whole records just to access key fields.
 
-```python
-_measurement_keys = dataset_primary_key_validator(
-    'measurements', key_fields=('station_id', 'measured_at'))
-```
+| Input | Required behavior |
+| --- | --- |
+| Existing Dataset or mapping whose values are dicts or Pydantic records, including their Models | Parse values through the declared item Model, then validate supplied outer keys against normalized primary keys. Preserve available entries and task markers. |
+| Iterator/iterable of `(key, value)` pairs | Preserve each occurrence until its value is parsed and its supplied key and uniqueness are checked. Do not collapse pairs into a dict first. Values may be dicts, Pydantic records, or their Models. |
+| Iterator/iterable of Pydantic records, including their Models | Parse records, derive serialized keys from their normalized fields, reject collisions, then store them in the Dataset. Do not require callers to invent temporary keys. |
 
-These are schema declarations, not workflow jobs. Item schemas still own
-normalization and field validity. Key validation runs after those schemas have
-parsed their values. It checks outer keys against normalized content and rejects
-mismatches rather than silently changing identities.
+Consume one-shot iterators once. Dataset parsing may first produce parsed records
+and then validate/derive their keys, provided duplicate occurrences survive until
+the collision check. A post-parse validator cannot recover entries lost during
+earlier mapping construction. For explicitly supplied keys, ordinary construction
+rejects mismatches; intentional canonicalization belongs to rekeying rather than
+silently overriding caller identities.
 
-## Implementation shape
+## Shared key serialization and errors
 
-Use three small pieces:
+Reuse the implemented `serialize_primary_key(components) -> str` in
+[`omnipy.data.primary_keys`](../../../../src/omnipy/data/primary_keys.py), shared
+with the interim converter, for Dataset and the planned table architecture. Model
+components use `to_data()` here because this is a serialization boundary. Follow
+the [table key-serialization contract](2026-10-16-table-model-architecture-and-conversions.md#key-serialization):
 
-1. `serialize_primary_key(components) -> str`: one serialization implementation
-   shared with the planned table architecture. Model components use `to_data()`
-   here because this is explicitly a serialization boundary. Follow the
-   [table key-serialization contract](2026-10-16-table-model-architecture-and-conversions.md#key-serialization):
-   preserve single-component strings, escape `%` and `|` in composite components,
-   join with `|`, and reject default address-based object representations.
-2. `validate_dataset_primary_keys(dataset, *, key_fields)`: a generic validator
-   returning the same Dataset object/type after checking its available records.
-   Extract named attributes through the record Models' interfaces; do not
-   serialize/rebuild whole records. Report the offending outer key, expected
-   serialized key, and selected fields. An empty Dataset is valid for this
-   invariant; minimum cardinality is a separate rule.
-3. `dataset_primary_key_validator(field, *, key_fields)`: a thin Pydantic adapter
-   that registers the reusable check on the containing schema. The current
-   compatibility API uses `pyd.validator(field, allow_reuse=True)`. A future v2
-   migration changes this adapter, leaving the serializer and invariant intact.
+- Preserve single-component strings; stringify other supported components.
+- Escape `%` and `|` in composite components and join them with `|`.
+- Reject unstable default address-based object representations.
+- Reject collisions of serialized strings, even for different typed values such
+  as `1` and `'1'`; never append generated uniqueness suffixes.
+- Keep key fields visible in the record. Never recover them by parsing outer keys.
 
-Proposed location: `src/omnipy/data/validators.py` for the shared check and adapter,
-with a dependency-neutral key serializer shared by Dataset and table code. The
-first implementation needs record attributes; table code can extract its own
-logical cells and call the same serializer. It does not need a universal record
-access abstraction yet.
+Report missing fields, invalid components, key mismatches, and collisions with
+the input position or outer key, selected fields, and expected serialized key.
+Retain field-local locations when a Dataset is used in a Pydantic schema. Empty
+Datasets satisfy this invariant; minimum cardinality remains a separate rule.
 
-The essential adapter and check would look like this; the serializer is specified
-separately above:
+## Rekeying and continuous maintenance
 
-```python
-from typing import TypeVar
+Rekeying and continuous key maintenance are part of this work, not a deferred
+extension. They apply to Datasets with an explicit primary-key declaration.
 
-from omnipy.data.dataset import Dataset
-import omnipy.util.pydantic as pyd
+- Provide an explicit rekeying operation that recomputes keys from parsed record
+  fields, including when converting an existing Dataset with arbitrary keys.
+  Plan the complete target mapping before replacing it: detect all collisions
+  before any record can be overwritten. Finalize the operation's public name and
+  return/in-place contract during API design.
+- Maintain key/content agreement after construction, item insertion/replacement,
+  bulk updates, and successful changes to stored records' key fields through
+  supported Model/Dataset interfaces. Pydantic attribute assignments, dict-item
+  assignments, and mutations of mutable key components must all be covered.
+- A normalized primary-key change moves the existing item from its old Dataset
+  key to its new serialized key. Remove the old lookup, retain the record and
+  non-key fields, and preserve the item's relative iteration position. A change
+  normalizing to the same serialized key does not create another entry.
+- Reject conflicting or invalid changes atomically: both the record's data and
+  the Dataset mapping must remain unchanged, including through held Model
+  references. Bulk rekeying checks the final key set, so key swaps do not fail
+  merely because of an intermediate ordering. This is local mutation atomicity,
+  not transactional rollback of whole jobs.
+- Track changes through held references to stored item Models, not only
+  `dataset[key]` expressions or assignments of the whole Dataset to a parent.
+  Specify ownership/subscriptions for shared Models, copies, replacement, and
+  removal; detached records must not keep updating their former Dataset. Resolve
+  the policy for an item shared across Datasets before promising the invariant.
+- Direct mutation of raw `.content` or an external unwrapped object bypasses
+  Model validation; do not promise interception of arbitrary external writes.
+  Explicit rekeying must detect or reconcile such stale keys without data loss.
+- Pending/failed markers have no record fields to inspect. Preserve their keys
+  and status, reserve those occupied slots during collision checks, and enforce
+  the invariant when a record replaces a marker. Primary-key validity does not
+  certify completion or make aggregate assignment accept markers automatically.
 
-_DatasetT = TypeVar('_DatasetT', bound=Dataset)
-
-
-def validate_dataset_primary_keys(
-    dataset: _DatasetT, *, key_fields: tuple[str, ...],
-) -> _DatasetT:
-    if not key_fields or len(set(key_fields)) != len(key_fields):
-        raise ValueError('Specify one or more distinct primary-key fields')
-    for dataset_key, record in dataset.available_data.items():
-        try:
-            components = tuple(getattr(record, name) for name in key_fields)
-        except AttributeError as error:
-            raise ValueError(
-                f'Missing primary-key field in Dataset entry {dataset_key!r}') from error
-        expected = serialize_primary_key(components)
-        if dataset_key != expected:
-            raise ValueError(
-                f'Dataset key {dataset_key!r} must match primary key {expected!r} '
-                f'from {key_fields!r}')
-    return dataset
-
-
-def dataset_primary_key_validator(field: str, *, key_fields: tuple[str, ...]):
-    def validate(cls, dataset):
-        return validate_dataset_primary_keys(dataset, key_fields=key_fields)
-
-    return pyd.validator(field, allow_reuse=True)(validate)
-```
-
-Validate the declaration itself when building the adapter, too: a nonempty tuple
-of distinct nonempty field names. Preserve Pydantic's field-local error reporting.
-Do not add guards for unrelated missing fields; this validator depends only on
-its own Dataset field. Keep foreign-key and paired-file validators separate.
-
-## Behavior that must stay explicit
-
-- Pending and failed entries have no current record whose primary key can be
-  checked. Validate available records and leave the task markers intact. This
-  does not certify that a batch is complete; completion checks own that policy.
-  The pure check can inspect a Dataset containing markers, but the adapter does
-  not make every aggregate assignment accept them: current Model assignment may
-  call Dataset `to_data()` and raise first. Inspect failures before collection.
-- A mapping with unique outer keys that all equal the serialized primary keys
-  necessarily has unique serialized keys. When deriving a Dataset from a sequence,
-  check collisions before constructing the mapping: a validator cannot recover
-  entries already overwritten by a dictionary comprehension.
-- Reusing this schema adapter does not attach a primary-key declaration to every
-  standalone instance of the Dataset class. The containing Model is the chosen
-  validation boundary. Moving the invariant into a reusable keyed Dataset type
-  is a later extension, sharing the same check and serializer.
-- Automatic re-keying is outside this change. Do not imply that changing a
-  record's primary key renames the Dataset key. Verify how mutation reaches the
-  containing Model's validators, including held references, before promising
-  continuously maintained aggregate invariants. Primary-key changes should be
-  explicit operations with collision checks and atomic behavior.
-- Keep the future table API's `PrimaryKey[Literal[...]]` declaration distinct from
-  this value-level validator configuration. The serializer and semantics should
-  converge; this proposal does not implement the table API or require its generic
-  machinery as a prerequisite.
+Dataset-level validation after parsing supplies the construction boundary, but
+does not by itself implement ongoing maintenance. A previous Model-validator
+prototype accepted normalized construction and rejected mismatches, yet a change
+through `group.records['a'].local_id = 'b'` left outer key `'a'` unchanged until
+whole-Dataset reassignment. Use this as a regression case for the new feature,
+not evidence that containing Model validators maintain Dataset identities.
 
 ## Focused verification before landing
 
-Cover normalized scalar IDs, matching and mismatching keys, composite escaping,
-missing fields, invalid declarations, empty Datasets, and stable/nonstable key
-components. Check wrapped scalar components (including integers) and collisions
-such as `1` and `'1'` at the sequence-to-Dataset boundary. Verify same-type return,
-preserved pending/failed markers, and error locations under the containing field.
-
-Exercise construction, whole-Dataset replacement, item insertion, and nested
-primary-key mutation through the containing Model. Inspect resulting data after
-failed mutations: immediate rejection and atomic rollback must be demonstrated,
-not inferred from successful construction tests.
-
-A temporary prototype on the current checkout accepted a normalized key and
-rejected mismatches on construction. Changing a contained item's primary key
-through `group.records['a'].local_id = 'b'` did not immediately invoke the
-containing key validator: the serialized aggregate retained outer key `'a'` and
-inner key `'b'`. Assigning the Dataset through `group.records = ...` then rejected
-the mismatch. This is why the proposed adapter consolidates boundary validation
-without claiming continuous key maintenance.
+1. Cover Dataset/mapping inputs with dict and Pydantic items, key/value iterators,
+   and record-only iterators, including one-shot generators and wrapped items.
+   Verify normalization precedes key checks/derivation and no input is silently
+   dropped or consumed twice.
+2. Cover scalar and composite keys, escaping, wrapped scalar components,
+   mismatches, missing fields, invalid declarations, empty Datasets, unstable
+   components, duplicate supplied keys, and serialized collisions such as `1`
+   versus `'1'`. Test collisions before any mapping reduction can hide them.
+3. Exercise explicit rekeying, whole-Dataset replacement, insertion, bulk update,
+   direct dict-key and Pydantic-field mutation, and nested mutable key components.
+   Check held references, normalized no-op changes, key swaps, iteration order,
+   copies, shared ownership, removal, and serialization of the resulting keys.
+4. Verify rollback of both record values and outer keys on every failing mutation
+   path; test pending/failed slot collisions and completion with parsed records.
+   Keep foreign-key validation and batch-completion policy separate.
+5. Verify the default preserves existing unkeyed Dataset behavior, specialized
+   item types and key declarations survive operations, and mypy/basedpyright
+   see the intended constructor and item-access contracts.
 
 After agreement and implementation, replace the repeated sequence validators
-and add the catalog declaration using this helper. Keep generated dataflows on
-current APIs until then; the skill should not teach this proposal as available.
+and interim `PrimaryKeyDatasetModel` conversions where Dataset-native support
+applies. Until then, keep generated dataflows on current APIs and distinguish
+the implemented intermediate converter from this planned Dataset feature.
