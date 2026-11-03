@@ -144,7 +144,145 @@ as it allows you to handle errors gracefully without losing your progress.
 >>> print(data_as_list_of_ints._docs())
 ```
 
-More to come soon...
+### Tutorial: Harmonize water samples from two APIs
+
+The [water-sample harmonization integration test](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/test_water_sample_harmonization.py)
+is a complete, tested dataflow: fetch paginated river and wastewater observations,
+normalize their different record formats, and optionally flatten the result into
+Pandas tables. The example uses local mock HTTP services, so it exercises real
+Omnipy loading and orchestration without depending on external APIs.
+
+**Define the output contract.** Each source produces lists of samples with the
+same fields and typed measurements. The Dataset's two keys identify source
+collections, not individual samples; `sample_key` identifies a sample *within*
+each list. These excerpts use the actual types from the
+[models module](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/models.py):
+
+```python
+from enum import Enum
+from typing import Literal
+
+import omnipy as om
+import pydantic as pyd
+
+MeasurementType = Literal['ammonium', 'nitrate', 'phosphorus', 'temperature']
+
+
+class Unit(str, Enum):
+    CELSIUS = 'deg_C'
+    MGL = 'mg/L'
+
+
+class NormalizedMeasurementRecord(pyd.BaseModel):
+    class Config:
+        use_enum_values = True
+
+    type: MeasurementType
+    value: float
+    unit: Unit
+
+
+class NormalizedSampleRecord(pyd.BaseModel):
+    sample_key: str
+    catchment_id: str
+    monitoring_date: om.DateModel
+    location_name: str
+    measurements: list[NormalizedMeasurementRecord]
+
+
+class NormalizedSamplesDataset(om.Dataset[om.Model[list[NormalizedSampleRecord]]]): ...
+```
+
+The source-specific mappers normalize measurement names and convert river
+concentrations from µg/L to mg/L where needed.
+
+**Compose reusable stages.** The
+[flows module](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/flows.py)
+defines one `LinearFlowTemplate` to fetch pages, concatenate their records,
+apply a source-specific mapper Dataset, and construct the common output Dataset:
+
+```python
+from omnipy.shared.protocols.data import IsDataset
+
+
+@om.LinearFlowTemplate(
+    fetch_sample_pages,
+    om.concat_all_vals_in_datasets_as_args,
+    om.create_dataset_from_args.refine(
+        param_key_map=dict(dataset_cls='mapper_dataset_cls', key='concat_pages_key')
+    ),
+    NormalizedSamplesDataset,
+)
+async def collect_and_normalize_samples(
+    *,
+    sample_page_urls: om.HttpUrlDataset,
+    mapper_dataset_cls: type[IsDataset],
+    concat_pages_key: str,
+) -> NormalizedSamplesDataset: ...
+```
+
+The [fetch task](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/tasks.py)
+loads each URL into a `JsonListOfDictsDataset`. The flow reuses the same
+fetch/concatenate/map sequence for both sources by refining its mapper type,
+output key, and URL input. A `DagFlowTemplate` combines the two results:
+
+```python
+@om.DagFlowTemplate(
+    collect_and_normalize_samples.refine(
+        name='collect_and_normalize_river_samples',
+        param_key_map=dict(sample_page_urls='river_urls'),
+        fixed_params=dict(
+            mapper_dataset_cls=om.Dataset[om.Model[list[NormalizedRiverSampleRecordMapper]]],
+            concat_pages_key='all_river_samples',
+        ),
+    ),
+    collect_and_normalize_samples.refine(
+        name='collect_and_normalize_wastewater_samples',
+        param_key_map=dict(sample_page_urls='wastewater_urls'),
+        fixed_params=dict(
+            mapper_dataset_cls=om.Dataset[om.Model[list[NormalizedWastewaterSampleRecordMapper]]],
+            concat_pages_key='all_wastewater_samples',
+        ),
+    ),
+    om.union_all_datasets_as_kwargs,
+)
+async def env_monitoring_harmonization_flow(
+    *, river_urls: om.HttpUrlDataset, wastewater_urls: om.HttpUrlDataset
+) -> NormalizedSamplesDataset: ...
+```
+
+**Run and inspect.** In the integration test, `_build_paginated_source_urls`
+constructs `HttpUrlDataset` inputs for two pages per service. The
+[service fixtures](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/conftest.py)
+provide the `river_service` and `wastewater_service` HTTP endpoints:
+
+```python
+river_urls = _build_paginated_source_urls('river', river_service.port, 'samples', 2)
+wastewater_urls = _build_paginated_source_urls(
+    'wastewater', wastewater_service.port, 'retrieve_samples', 2
+)
+harmonized_samples = await env_monitoring_harmonization_flow.run(
+    river_urls=river_urls, wastewater_urls=wastewater_urls
+)
+print(harmonized_samples['all_river_samples']._docs())
+```
+
+The test verifies, for example, that river sample `River-R1` becomes `river-r1`
+and its phosphorus measurement becomes `0.12 mg/L` from `120 µg/L`. It then
+passes the same Dataset to `flatten_and_wrangle_as_dataframe`, a second linear
+flow producing `samples` and `measurements` tables:
+
+```python
+tables = flatten_and_wrangle_as_dataframe.run(harmonized_samples)
+print(tables['samples']._docs())
+print(tables['measurements']._docs())
+```
+
+The snippets above are excerpts from the integration example, not a standalone
+script: the test supplies the source-specific mappers and local service fixtures.
+To run the complete scenario from a repository checkout with development
+dependencies installed (`uv sync --all-groups`), use
+`uv run pytest tests/integration/novel/full/water_sample_harmonization/test_water_sample_harmonization.py --mypy-pyproject-toml-file=pyproject.toml`.
 
 ## Running example scripts
 - Install `omnipy-examples`:
