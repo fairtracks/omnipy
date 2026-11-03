@@ -5,11 +5,13 @@ models to specialized list/dict containers and generic custom container models.
 """
 
 from collections.abc import Mapping, Sequence
+import json
 from typing import Any, cast, Generic, overload, TypeAlias
 
 from typing_extensions import TypeVar
 
 from omnipy.data.model import is_model_instance, Model
+from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.protocols.content import (
     IsDictContent,
     IsDictOfDictsContent,
@@ -160,8 +162,10 @@ _JsonNestedDictsM.update_forward_refs()
 
 # Note: Since parsing JSON strings is potentially ambiguous (a string can
 #       be a valid JSON string, but also a string representing JSON
-#       entities), strings starting with a quote are not parsed as JSON
-#       entities.
+#       entities), a complete JSON string literal (e.g. '"abc"') is only
+#       decoded if the decoded string would not itself be parsed. Otherwise
+#       (e.g. '"123"') the quoted form is kept, representing the decoded
+#       string.
 
 AnyJsonScalarModel: TypeAlias = Model[None] | Model[int] | Model[float] | Model[str] | Model[bool]
 
@@ -178,7 +182,10 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
 
     Classes using this mixin can transparently accept serialized JSON in string
     form and convert it into parsed model content before the regular validation
-    pipeline runs.
+    pipeline runs. A complete JSON string literal is decoded, except when the
+    decoded string would itself be parsed. Such literals keep their quoted form,
+    in a single spelling (e.g. both ``'"123"'`` and ``'"12\\u0033"'`` become
+    ``'"123"'``).
     """
 
     @classmethod
@@ -212,8 +219,92 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
                     if isinstance(parsed_json, str):
                         return cast(_RootT, parsed_json)
                     return cls_as_model(parsed_json).content
+            elif cls._is_quoted(data):
+                # Decode a JSON string literal, unless the decoded string would be parsed further,
+                # which would make the content change on revalidation. In that case, keep the
+                # quoted form, normalized to a single spelling (e.g. '"123"' -> '"123"').
+                parsed_json = parse_str_as_json(data)
+                if isinstance(parsed_json, str):
+                    if cls._is_kept_as_str(parsed_json):
+                        return cast(_RootT, parsed_json)
+                    return cast(_RootT, json.dumps(parsed_json, ensure_ascii=False))
 
         return cast(_RootT, data)
+
+    @staticmethod
+    def _is_quoted(value: str) -> bool:
+        """Return whether ``value`` starts and ends with a double quote."""
+
+        return len(value) >= 2 and value[0] == value[-1] == '"'
+
+    @classmethod
+    def _is_kept_as_str(cls, value: str) -> bool:
+        """Return whether JSON-string pre-parsing leaves ``value`` unchanged."""
+
+        parsed = cls._parse_data(value)
+        return isinstance(parsed, str) and parsed == value
+
+    @classmethod
+    def _is_json_text_of_str_not_kept_as_str(cls, value: str) -> bool:
+        """Return whether ``value`` is the JSON text of a string that pre-parsing would change.
+
+        Such strings (e.g. ``'123'``) cannot be model content, so the quoted form (``'"123"'``) is
+        used as content instead.
+        """
+
+        if not cls._is_quoted(value):
+            return False
+        parsed_json = parse_str_as_json(value)
+        return isinstance(parsed_json, str) and not cls._is_kept_as_str(parsed_json)
+
+    def from_json(self, json_content: str) -> None:
+        """Parse standard JSON text into this model instance.
+
+        A top-level JSON string is decoded, e.g. ``"hello"`` becomes ``'hello'``. A decoded string
+        that pre-parsing would change, e.g. the ``'123'`` from ``"123"``, keeps its quoted form
+        ``'"123"'``. This matches direct loading, except that the text must be valid JSON and may
+        have surrounding whitespace, and that ``NaN`` and ``Infinity`` are parsed as floats.
+
+        Args:
+            json_content: JSON document to parse.
+
+        Raises:
+            ValidationError: If ``json_content`` is not valid JSON or does not match the model type.
+        """
+
+        cls = type(self)
+        cls_as_model = cast(type[Model[_RootT]], cls)
+        try:
+            parsed_json = json.loads(json_content)
+        except json.JSONDecodeError as exc:
+            raise pyd.ValidationError([pyd.ErrorWrapper(exc, loc=ROOT_KEY)], cls_as_model) from exc
+
+        if isinstance(parsed_json, str) and not cls._is_kept_as_str(parsed_json):
+            parsed_json = json_content.strip(' \t\n\r')
+
+        cast(Model[_RootT], self).content = cls_as_model(parsed_json).content
+
+    def to_json(self, pretty: bool = True, **kwargs: Any) -> str:
+        """Serialize the model to JSON text that parses back unchanged.
+
+        Both ``from_json()`` and direct loading parse the output back to the same content, except
+        that direct loading reads the ``NaN`` and ``Infinity`` output for floats as strings. Content
+        in the quoted form of a string that pre-parsing would change, e.g. ``'"123"'``, is already
+        JSON text for that string and is returned as is.
+
+        Args:
+            pretty: When ``True``, return indented human-readable JSON.
+            kwargs: Additional keyword arguments passed to the Pydantic ``BaseModel.json()``
+                method.
+
+        Returns:
+            JSON representation of the model content.
+        """
+
+        content = cast(Model[_RootT], self).content
+        if isinstance(content, str) and type(self)._is_json_text_of_str_not_kept_as_str(content):
+            return content
+        return super().to_json(pretty=pretty, **kwargs)  # type: ignore[misc]
 
 
 class JsonModel(ParseStrAsJsonMixin[_JsonAnyUnion], Model[_JsonAnyUnion]):

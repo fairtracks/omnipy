@@ -216,8 +216,9 @@ def test_json_model_operations(
 
 # Note: Since parsing JSON strings is potentially ambiguous (a string can
 #       be a valid JSON string, but also a string representing JSON
-#       entities), strings starting with a quote are not parsed as JSON
-#       entities.
+#       entities), a JSON string literal is only decoded if the decoded
+#       string would not itself be parsed as JSON entities. Otherwise
+#       (e.g. '"12"') the quoted form is kept.
 
 
 @pc.parametrize(
@@ -226,9 +227,12 @@ def test_json_model_operations(
         ('{"a": 1, "b": 2}', {'a': 1, 'b': 2}),
         ('[1, 2, 3]', [1, 2, 3]),
         ('{"a": [1, -2.5, null, true]}', {'a': [1, -2.5, None, True]}),
-        ('"A simple JSON string"', '"A simple JSON string"'),
+        ('"A simple JSON string"', 'A simple JSON string'),
+        ('"\\"A simple JSON string\\""', '"\\"A simple JSON string\\""'),
+        ('"Hello": 234', '"Hello": 234'),
         ('12', 12),
         ('"12"', '"12"'),
+        ('"1\\u0032"', '"12"'),
         ('0.25', 0.25),
         ('"0.25"', '"0.25"'),
         ('null', None),
@@ -246,6 +250,78 @@ def test_json_parsing_of_json_strings(json_string: str, expected_data: Any) -> N
     else:
         assert JsonModel(json_string) == JsonModel(expected_data)
 
-    # This would fail if strings starting with a quote were parsed as
-    # JSON entities
+    # This would fail if decoded JSON string literals were parsed further
     assert JsonModel(JsonModel(json_string)).to_data() == expected_data
+
+
+# Note: Strings that JSON-string parsing would change (e.g. '123', which is
+#       parsed as an int) cannot be JsonModel content. Their quoted form
+#       (e.g. '"123"') is used instead, which to_json() exports as the JSON
+#       text for the unquoted string.
+
+
+@pc.parametrize(
+    'data, expected_json',
+    [
+        ('"123"', '"123"'),
+        ('"true"', '"true"'),
+        ('"[1, 2]"', '"[1, 2]"'),
+        ('"12\\u0033"', '"123"'),
+        ('"[\\"\\u00e6\\"]"', '"[\\"æ\\"]"'),
+        ('"\\"x\\""', '"\\"x\\""'),
+        ('"A simple JSON string"', '"A simple JSON string"'),
+        ('"Hello": 234', '"\\"Hello\\": 234"'),
+        ('line1\nline2', '"line1\\nline2"'),
+        (' "123"', '" \\"123\\""'),
+        ('hello', '"hello"'),
+        ('123 apples', '"123 apples"'),
+        ('', '""'),
+        ('"unterminated', '"\\"unterminated"'),
+        (123, '123'),
+        (None, 'null'),
+        ([1, '2', '"3"'], '[\n  1,\n  "2",\n  "\\"3\\""\n]'),
+        ({'k': '123'}, '{\n  "k": "123"\n}'),
+    ],
+)
+def test_json_model_to_json_round_trip(data: Any, expected_json: str) -> None:
+    """Export JSON text that from_json() and direct loading parse back to the same content."""
+    model = JsonModel(data)
+    assert model.to_json() == expected_json
+
+    loaded = JsonModel()
+    loaded.from_json(model.to_json())
+    assert loaded.to_data() == model.to_data()
+    assert JsonModel(loaded.to_data()).to_data() == model.to_data()
+
+    assert JsonModel(model.to_json()).to_data() == model.to_data()
+
+
+@pc.parametrize(
+    'json_content, expected_data',
+    [
+        ('"hello"', 'hello'),
+        ('"A simple JSON string"', 'A simple JSON string'),
+        ('"\\"x\\""', '"\\"x\\""'),
+        ('"123"', '"123"'),
+        ('"12\\u0033"', '"123"'),
+        ('"123"\n', '"123"'),
+        (' "hello" ', 'hello'),
+        ('123', 123),
+        ('[1, "2"]', [1, '2']),
+        ('{"k": "123"}', {'k': '123'}),
+    ],
+)
+def test_json_model_from_json_parses_standard_json(json_content: str, expected_data: Any) -> None:
+    """Decode standard JSON once, keeping the quoted form only where needed."""
+    model = JsonModel()
+    model.from_json(json_content)
+    assert model.to_data() == expected_data
+
+
+@pc.parametrize('json_content', ['hello', '"unterminated', ''])
+def test_json_model_from_json_invalid_json(json_content: str) -> None:
+    """Reject text that is not JSON, unlike direct loading."""
+    model = JsonModel([1])
+    with pytest.raises(ValidationError):
+        model.from_json(json_content)
+    assert model.to_data() == [1]
