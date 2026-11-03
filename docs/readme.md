@@ -107,182 +107,176 @@ The following creates a data model of a list of integers, and parses some data i
 >>> print(data_as_list_of_ints._docs())
 ```
 
-Omnipy Models are self-constraining, meaning that they will always ensure that the data
-they contain is of the correct type. For example, if you try to append a string to the
-list of integers, it will raise an error:
+### Load some water-sample data
+
+Let's work with a river sample from the
+[water-sample harmonization example](https://github.com/fairtracks/omnipy/tree/main/tests/integration/novel/full/water_sample_harmonization).
+The URL below is illustrative: the documentation serves its example JSON from a
+local mock HTTP service. Substitute your own endpoint when trying this in a
+Python console.
+
+A Model can load the response from a single URL. Here, the response is a JSON
+list of sample records, so we use `JsonListOfDictsModel`:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> import omnipy as om
+--8<-- "_includes/pycon_hidden_runtime_setup.md"
+>>> from runpy import run_path  # markdown-exec: hide
+>>> _fixture_path = 'docs/examples/water_sample_service.py'  # markdown-exec: hide
+>>> _service = run_path(_fixture_path)['water_sample_service']()  # markdown-exec: hide
+>>> river_url = 'https://water.example/samples?page=0'
+>>> river_url = _service.__enter__()  # markdown-exec: hide
+>>> page = om.JsonListOfDictsModel.load(river_url)
+>>> page
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(page._docs())
+```
+
+For a batch of responses, use a Dataset instead. Its keys name the responses;
+each item is still a Model containing a list of samples. We can start with just
+one named response from the same URL:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> pages = om.JsonListOfDictsDataset.load(river=river_url)
+>>> pages
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(pages._docs())
+```
+
+These are synchronous console calls. In a notebook or other running event loop,
+use `await` with `.load()`.
+
+### Give a measurement a type
+
+Models mimic their wrapped values, so we can index the loaded JSON directly.
+The second measurement in the first sample is phosphorus, reported in µg/L:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> raw_measurement = pages['river'][0]['measurements'][1]
+>>> raw_measurement
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(raw_measurement._docs())
+```
+
+JSON types alone do not describe what a measurement means. A Pydantic record
+gives its fields a contract, and an Omnipy Model keeps that contract active while
+we work. This uses the current [Pydantic v1 compatibility API](howto/models/pydantic-compatibility.md).
+`mimics` also makes the wrapped record's interface visible to supported editors
+and type checkers; runtime field access works through the Model itself.
+
+```pycon exec="1" session="water-samples" source="console"
+>>> import pydantic.v1 as pyd
+>>> class RiverUgConcMeasurementRecord(pyd.BaseModel):
+...     name: str
+...     value_ug_l: float
+>>> @om.mimics(RiverUgConcMeasurementRecord)
+... class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...
+>>> phosphorus = RiverUgConcMeasurementModel(raw_measurement)
+>>> phosphorus
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(phosphorus._docs())
+```
+
+### Edit safely, without unpacking
+
+Omnipy Models are self-constraining: assigning through the mimicked interface
+parses the new value against its field type. An invalid concentration raises a
+validation error:
 
 ```pycon
->>> data_as_list_of_ints.append('abc')  # This will raise an error
+>>> phosphorus.value_ug_l = 'not a number'
 ```
 
-```pycon exec="1" session="greet" result="console"
+```pycon exec="1" session="water-samples" result="console"
 >>> try:
->>>     data_as_list_of_ints.append('abc')
->>> except Exception as err:
->>>     print(err)
+...     phosphorus.value_ug_l = 'not a number'
+... except pyd.ValidationError as err:
+...     print(err)
 ```
 
-Importantly, Omnipy models automatically reverts to snapshots after an error occurs,
-allowing you to retry the operation without having to re-parse the data, continuing
-from where you left off. This is particularly useful when working with large dataflows,
-as it allows you to handle errors gracefully without losing your progress.
+In interactive mode, the failed edit is rolled back to the last valid snapshot.
+The measurement is still `120.0 µg/L`; we do not need to reload the response:
 
-```pycon exec="1" session="greet" source="console"
->>> data_as_list_of_ints
+```pycon exec="1" session="water-samples" source="console"
+>>> phosphorus
 ```
 
-```pycon exec="1" session="greet" result="console" html="true"
->>> print(data_as_list_of_ints._docs())
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(phosphorus._docs())
 ```
 
-```pycon exec="1" session="greet" source="console"
->>> data_as_list_of_ints.append('456')
->>> data_as_list_of_ints
+A numeric string, on the other hand, can be parsed as a float. Let's correct the
+reading to `150.0 µg/L`:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> phosphorus.value_ug_l = '150.0'
+>>> phosphorus
 ```
 
-```pycon exec="1" session="greet" result="console" html="true"
->>> print(data_as_list_of_ints._docs())
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(phosphorus._docs())
 ```
 
-### Tutorial: Harmonize water samples from two APIs
+### Convert to a common representation
 
-The [water-sample harmonization integration test](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/test_water_sample_harmonization.py)
-is a complete, tested dataflow: fetch paginated river and wastewater observations,
-normalize their different record formats, and optionally flatten the result into
-Pandas tables. The example uses local mock HTTP services, so it exercises real
-Omnipy loading and orchestration without depending on external APIs.
+Other sources use different field names and units. A `ConverterModel` makes a
+conversion reusable and validates its output. For this concentration measurement,
+let's normalize the name and convert µg/L to mg/L:
 
-**Define the output contract.** Each source produces lists of samples with the
-same fields and typed measurements. The Dataset's two keys identify source
-collections, not individual samples; `sample_key` identifies a sample *within*
-each list. These excerpts use the actual types from the
-[models module](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/models.py):
-
-```python
-from enum import Enum
-from typing import Literal
-
-import omnipy as om
-import pydantic as pyd
-
-MeasurementType = Literal['ammonium', 'nitrate', 'phosphorus', 'temperature']
-
-
-class Unit(str, Enum):
-    CELSIUS = 'deg_C'
-    MGL = 'mg/L'
-
-
-class NormalizedMeasurementRecord(pyd.BaseModel):
-    class Config:
-        use_enum_values = True
-
-    type: MeasurementType
-    value: float
-    unit: Unit
-
-
-class NormalizedSampleRecord(pyd.BaseModel):
-    sample_key: str
-    catchment_id: str
-    monitoring_date: om.DateModel
-    location_name: str
-    measurements: list[NormalizedMeasurementRecord]
-
-
-class NormalizedSamplesDataset(om.Dataset[om.Model[list[NormalizedSampleRecord]]]): ...
+```pycon exec="1" session="water-samples" source="console"
+>>> from typing import Literal
+>>> class NormalizedConcentrationRecord(pyd.BaseModel):
+...     type: Literal['ammonium', 'nitrate', 'phosphorus']
+...     value: float
+...     unit: Literal['mg/L']
+>>> @om.mimics(NormalizedConcentrationRecord)
+... class MicrogramsToMilligramsMapper(
+...     om.ConverterModel[RiverUgConcMeasurementRecord, NormalizedConcentrationRecord]
+... ):
+...     @classmethod
+...     def _convert(cls, data: RiverUgConcMeasurementRecord) -> NormalizedConcentrationRecord:
+...         return NormalizedConcentrationRecord(
+...             type=data.name.lower(), value=data.value_ug_l / 1000, unit='mg/L'
+...         )
+>>> normalized = MicrogramsToMilligramsMapper(phosphorus)
+>>> normalized
 ```
 
-The source-specific mappers normalize measurement names and convert river
-concentrations from µg/L to mg/L where needed.
-
-**Compose reusable stages.** The
-[flows module](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/flows.py)
-defines one `LinearFlowTemplate` to fetch pages, concatenate their records,
-apply a source-specific mapper Dataset, and construct the common output Dataset:
-
-```python
-from omnipy.shared.protocols.data import IsDataset
-
-
-@om.LinearFlowTemplate(
-    fetch_sample_pages,
-    om.concat_all_vals_in_datasets_as_args,
-    om.create_dataset_from_args.refine(
-        param_key_map=dict(dataset_cls='mapper_dataset_cls', key='concat_pages_key')
-    ),
-    NormalizedSamplesDataset,
-)
-async def collect_and_normalize_samples(
-    *,
-    sample_page_urls: om.HttpUrlDataset,
-    mapper_dataset_cls: type[IsDataset],
-    concat_pages_key: str,
-) -> NormalizedSamplesDataset: ...
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(normalized._docs())
 ```
 
-The [fetch task](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/tasks.py)
-loads each URL into a `JsonListOfDictsDataset`. The flow reuses the same
-fetch/concatenate/map sequence for both sources by refining its mapper type,
-output key, and URL input. A `DagFlowTemplate` combines the two results:
+The corrected reading is now `0.15 mg/L`. The same mapper can be the item type
+of a Dataset, so conversion applies to each named measurement without a manual
+processing loop:
 
-```python
-@om.DagFlowTemplate(
-    collect_and_normalize_samples.refine(
-        name='collect_and_normalize_river_samples',
-        param_key_map=dict(sample_page_urls='river_urls'),
-        fixed_params=dict(
-            mapper_dataset_cls=om.Dataset[om.Model[list[NormalizedRiverSampleRecordMapper]]],
-            concat_pages_key='all_river_samples',
-        ),
-    ),
-    collect_and_normalize_samples.refine(
-        name='collect_and_normalize_wastewater_samples',
-        param_key_map=dict(sample_page_urls='wastewater_urls'),
-        fixed_params=dict(
-            mapper_dataset_cls=om.Dataset[om.Model[list[NormalizedWastewaterSampleRecordMapper]]],
-            concat_pages_key='all_wastewater_samples',
-        ),
-    ),
-    om.union_all_datasets_as_kwargs,
-)
-async def env_monitoring_harmonization_flow(
-    *, river_urls: om.HttpUrlDataset, wastewater_urls: om.HttpUrlDataset
-) -> NormalizedSamplesDataset: ...
+```pycon exec="1" session="water-samples" source="console"
+>>> concentrations = om.Dataset[MicrogramsToMilligramsMapper]({'river-r1': phosphorus})
+>>> concentrations
 ```
 
-**Run and inspect.** In the integration test, `_build_paginated_source_urls`
-constructs `HttpUrlDataset` inputs for two pages per service. The
-[service fixtures](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/conftest.py)
-provide the `river_service` and `wastewater_service` HTTP endpoints:
-
-```python
-river_urls = _build_paginated_source_urls('river', river_service.port, 'samples', 2)
-wastewater_urls = _build_paginated_source_urls(
-    'wastewater', wastewater_service.port, 'retrieve_samples', 2
-)
-harmonized_samples = await env_monitoring_harmonization_flow.run(
-    river_urls=river_urls, wastewater_urls=wastewater_urls
-)
-print(harmonized_samples['all_river_samples']._docs())
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(concentrations._docs())
 ```
 
-The test verifies, for example, that river sample `River-R1` becomes `river-r1`
-and its phosphorus measurement becomes `0.12 mg/L` from `120 µg/L`. It then
-passes the same Dataset to `flatten_and_wrangle_as_dataframe`, a second linear
-flow producing `samples` and `measurements` tables:
-
-```python
-tables = flatten_and_wrangle_as_dataframe.run(harmonized_samples)
-print(tables['samples']._docs())
-print(tables['measurements']._docs())
+```pycon exec="1" session="water-samples" result="console"
+>>> _service.__exit__(None, None, None)
 ```
 
-The snippets above are excerpts from the integration example, not a standalone
-script: the test supplies the source-specific mappers and local service fixtures.
-To run the complete scenario from a repository checkout with development
-dependencies installed (`uv sync --all-groups`), use
-`uv run pytest tests/integration/novel/full/water_sample_harmonization/test_water_sample_harmonization.py --mypy-pyproject-toml-file=pyproject.toml`.
+This is a small slice of the full example. The
+[integration scenario](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/test_water_sample_harmonization.py)
+extends it to paginated river and wastewater data, reusable child flows, and
+Pandas tables of samples and measurements. Its
+[models](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/models.py)
+also handle temperature readings and source-specific measurement names.
 
 ## Running example scripts
 - Install `omnipy-examples`:
