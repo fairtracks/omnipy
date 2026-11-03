@@ -63,6 +63,7 @@ from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyl
 from omnipy.shared.enums.display import (
     DarkBackground,
     DisplayColorSystem,
+    DocsDisplayMethod,
     HorizontalOverflowMode,
     Justify,
     MaxTitleHeight,
@@ -87,7 +88,7 @@ from omnipy.shared.protocols.display import (
     IsDatasetDisplayMixin,
     IsDisplayMethodMaybeReturnElement,
     IsDisplayMethodReturnNone,
-    IsDisplayMethodReturnStr,
+    IsDocsDisplayMethod,
 )
 from omnipy.shared.typedefs import Method
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
@@ -2033,13 +2034,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     @abstractmethod
     def _browse(self, **kwargs) -> None: ...
 
-    @takes_input_params_from(IsDisplayMethodReturnNone.__call__)
+    @takes_input_params_from(IsDocsDisplayMethod.__call__)
     def _docs(self, *args, **kwargs) -> str:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         #
         # Displays a preview of the model or dataset for the documentation.
         #
         # {{DISPLAY_METHOD_ARGS}}
+        #     method (DocsDisplayMethod.Literals):
+        #         Display method whose panel is rendered. The default
+        #         is `default`, which renders the default panel of the
+        #         Model or Dataset (for Datasets, the summary list).
         #
         # Returns:
         #     A string containing the HTML-formatted preview of the model or
@@ -2193,20 +2198,31 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             justify (Justify.Literals):
                 Justification mode for the panel if inside a layout
                 panel. This is only used for the panel content.
+            method (DocsDisplayMethod.Literals):
+                Display method whose panel is rendered. The default
+                is `default`, which renders the default panel of the
+                Model or Dataset (for Datasets, the summary list).
 
         Returns:
             A string containing the HTML-formatted preview of the model or
             dataset, suitable for inclusion in documentation.
         """
         kwargs = self._prepare_kwargs_for_docs(kwargs)
+        output_method = {
+            DocsDisplayMethod.DEFAULT: self._default_panel,
+            DocsDisplayMethod.PEEK: self._peek,
+            DocsDisplayMethod.FULL: self._full,
+            DocsDisplayMethod.JSON: self._json,
+        }[kwargs.pop('method', DocsDisplayMethod.DEFAULT)]
+
         return self._display_according_to_ui_type(
             ui_type=kwargs['ui'],
             return_output_if_str=True,
-            output_method=self._default_panel,
+            output_method=output_method,
             **kwargs,
         )
 
-    _docs.__signature__ = signature(IsDisplayMethodReturnStr.__call__)  # type: ignore[attr-defined]
+    _docs.__signature__ = signature(IsDocsDisplayMethod.__call__)  # type: ignore[attr-defined]
 
     def __str__(self) -> str:
         return repr(self)

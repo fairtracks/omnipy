@@ -417,3 +417,21 @@ class Justify(LiteralEnum[str]):
     LEFT: Literal['left'] = 'left'
     CENTER: Literal['center'] = 'center'
     RIGHT: Literal['right'] = 'right'
+
+
+class DocsDisplayMethod(LiteralEnum[str]):
+    """Display methods whose panel can be rendered by `_docs()`.
+
+    The display methods are:
+    - `DEFAULT`: The default panel of the Model or Dataset.
+    - `PEEK`: The `peek()` panel.
+    - `FULL`: The `full()` panel.
+    - `JSON`: The `json()` panel.
+    """
+
+    Literals = Literal['default', 'peek', 'full', 'json']
+
+    DEFAULT: Literal['default'] = 'default'
+    PEEK: Literal['peek'] = 'peek'
+    FULL: Literal['full'] = 'full'
+    JSON: Literal['json'] = 'json'

@@ -14,6 +14,7 @@ from omnipy.shared.enums.colorstyles import AllColorStyles, RecommendedColorStyl
 from omnipy.shared.enums.display import (
     DarkBackground,
     DisplayColorSystem,
+    DocsDisplayMethod,
     HorizontalOverflowMode,
     Justify,
     MaxTitleHeight,
@@ -240,11 +241,12 @@ class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
     ) -> None: ...
 
 
-class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
-    """Display callback protocol for methods returning terminal/browser text.
+class IsDocsDisplayMethod(IsDisplayMethod, Protocol):
+    """Display callback protocol for the ``_docs()`` method.
 
     Args:
-        Same keyword-only arguments as :class:`IsDisplayMethod`.
+        Same keyword-only arguments as :class:`IsDisplayMethod`, plus
+        ``method`` to select which display method's panel is rendered.
 
     Returns:
         Rendered textual output as a ``str``.
@@ -296,6 +298,7 @@ class IsDisplayMethodReturnStr(IsDisplayMethod, Protocol):
         max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
         max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
+        method: 'DocsDisplayMethod.Literals' = DocsDisplayMethod.DEFAULT,
     ) -> str: ...
 
 
@@ -322,7 +325,7 @@ class IsBaseDisplayMixin(Protocol):
     full: IsDisplayMethodMaybeReturnElement
     json: IsDisplayMethodMaybeReturnElement
     browse: IsDisplayMethodReturnNone
-    _docs: IsDisplayMethodReturnStr
+    _docs: IsDocsDisplayMethod
 
 
 class IsDatasetDisplayMixin(IsBaseDisplayMixin, Protocol):
