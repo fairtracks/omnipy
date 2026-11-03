@@ -60,10 +60,25 @@ if is_package_editable('omnipy'):
             config: Data configuration object to store for related models and datasets.
     """)
 
-IsPathOrUrl: TypeAlias = 'str | IsHttpUrlModel'
-IsPathsOrUrls: TypeAlias = 'Iterable[str] | IsHttpUrlDataset | Mapping[str, IsPathOrUrl]'
+IsPathOrUrl: TypeAlias = 'str | os.PathLike[str] | IsHttpUrlModel'
+IsPathsOrUrls: TypeAlias = (
+    'Iterable[str | os.PathLike[str]] | IsHttpUrlDataset | Mapping[str, IsPathOrUrl]'
+)
 IsPathsOrUrlsOneOrMore: TypeAlias = 'IsPathOrUrl | IsPathsOrUrls'
 IsPathsOrUrlsOneOrMoreOrNone: TypeAlias = 'IsPathsOrUrlsOneOrMore | None'
+
+
+class SupportsLoadInto(Protocol):
+    """An instance that can load paths or URLs into itself."""
+
+    def load_into(
+        self,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        by_file_suffix: bool = False,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
 
 
 @runtime_checkable
@@ -119,8 +134,20 @@ class HasContent(Protocol[ContentT]):
 
 
 @runtime_checkable
-class IsModel(HasContent[_RootT], IsBaseDisplayMixin, Protocol[_RootT]):
+class IsModel(HasContent[_RootT], IsBaseDisplayMixin, SupportsLoadInto, Protocol[_RootT]):
     """Single-value data wrapper with typed content and conversion support."""
+
+    @classmethod
+    def load(
+        cls,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        by_file_suffix: bool = False,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
+
+    def save(self, path: str | os.PathLike[str]) -> None: ...
 
     @classmethod
     def full_type(cls) -> type[_RootT]:
@@ -217,7 +244,7 @@ class IsDataset(
         """
         ...
 
-    def save(self, path: str) -> None:
+    def save(self, path: str | os.PathLike[str]) -> None:
         """Persist the dataset to a filesystem path.
 
         Args:
@@ -262,7 +289,7 @@ class IsDataset(
             paths_or_urls: Source path, URL, or collection of sources to load.
             by_file_suffix: Whether serializer lookup should prefer file suffixes.
             as_mime_type: Explicit MIME type override, if any.
-            ignore_dirs:  Whether to skip directory entries inside archives/directories.å
+            ignore_dirs:  Whether to skip directory entries inside archives/directories.
             kwargs: Additional named path or URL sources.
 
         Returns:

@@ -23,6 +23,8 @@ from typing_extensions import override, TypeIs, TypeVar
 
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin
+from omnipy.data._mixins.load import LoadMixin
+from omnipy.data._mixins.save import SaveMixin
 from omnipy.data._mixins.task import TaskDatasetMixin
 from omnipy.data._selector import (
     create_updated_mapping,
@@ -40,8 +42,6 @@ from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
 from omnipy.shared.protocols.data import (
     IsHttpUrlDataset,
     IsMultiModelDataset,
-    IsPathOrUrl,
-    IsPathsOrUrlsOneOrMoreOrNone,
 )
 from omnipy.shared.protocols.vendored._typeshed import SupportsItems
 from omnipy.shared.typedefs import TypeForm
@@ -129,6 +129,8 @@ class _DatasetMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
 
 class Dataset(
     DatasetDisplayMixin,
+    LoadMixin,
+    SaveMixin,
     TaskDatasetMixin,
     DataClassBase,
     pyd.GenericModel,
@@ -1621,156 +1623,6 @@ class Dataset(
         """
         return json.dumps(json_content, indent=2)
 
-    def save(self, path: str):
-        """Serialize the dataset to a ``.tar.gz`` archive and extract a directory copy.
-
-        Args:
-            path: Destination path with or without the ``.tar.gz`` suffix.
-        """
-        serializer_registry = self._get_serializer_registry()
-
-        parsed_dataset, serializer = serializer_registry.auto_detect_tar_file_serializer(self)
-
-        if serializer is None:
-            print(
-                f'Unable to find a serializer for dataset with data type "{type(self)}". '
-                f'Will abort saving...'
-            )
-        else:
-            if not path.endswith('.tar.gz'):
-                out_tar_gz_path = f'{path}.tar.gz'
-
-            print(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(out_tar_gz_path)}"')
-
-            with open(out_tar_gz_path, 'wb') as out_tar_gz_file:
-                out_tar_gz_file.write(serializer.serialize(parsed_dataset))
-
-            directory = os.path.abspath(out_tar_gz_path[:-7])
-            os.makedirs(directory, exist_ok=True)
-
-            tar = tarfile.open(out_tar_gz_path)
-            print(f'Extracting content to directory "{os.path.abspath(out_tar_gz_path[:-7])}"')
-            tar.extractall(path=directory)
-            tar.close()
-
-    @classmethod
-    def load(
-        cls,
-        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
-        by_file_suffix: bool = False,
-        as_mime_type: None | str = None,
-        ignore_dirs: bool = False,
-        **kwargs: IsPathOrUrl,
-    ) -> Self | asyncio.Task[Self]:
-        """Create a dataset and load serialized contents into it.
-
-        Args:
-            paths_or_urls: Path, URL, iterable of paths or URLs, or dataset/model of HTTP URLs to
-                load from.
-            by_file_suffix: Whether serializer lookup should prefer file-suffix detection.
-            as_mime_type: Optional MIME type hint for HTTP loading.
-            ignore_dirs:  Whether to skip directory entries inside archives/directories.
-            **kwargs: Alternate keyed path or URL arguments when ``paths_or_urls`` is omitted.
-
-        Returns:
-            A loaded dataset, or an ``asyncio.Task`` when called inside a running event loop.
-        """
-        dataset = cls()
-        return dataset.load_into(
-            paths_or_urls,
-            by_file_suffix=by_file_suffix,
-            as_mime_type=as_mime_type,
-            ignore_dirs=ignore_dirs,
-            **kwargs,
-        )
-
-    def load_into(
-        self,
-        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
-        by_file_suffix: bool = False,
-        as_mime_type: None | str = None,
-        ignore_dirs: bool = False,
-        **kwargs: IsPathOrUrl,
-    ) -> Self | asyncio.Task[Self]:
-        """Load serialized contents into this dataset instance.
-
-        Args:
-            paths_or_urls: Path, URL, iterable of paths or URLs, or dataset/model of HTTP URLs to
-                load from.
-            by_file_suffix: Whether serializer lookup should prefer file-suffix detection.
-            as_mime_type: Optional MIME type hint for HTTP loading.
-            ignore_dirs:  Whether to skip directory entries inside archives/directories.
-            **kwargs: Alternate keyed path or URL arguments when ``paths_or_urls`` is omitted.
-
-        Returns:
-            This dataset instance after loading, or an ``asyncio.Task`` when called inside a
-            running event loop.
-
-        Raises:
-            AssertionError: If the input forms are combined incorrectly.
-            TypeError: If ``paths_or_urls`` has an unsupported type.
-            NotImplementedError: If keyed local-path loading is requested.
-        """
-        from omnipy.components.remote.datasets import HttpUrlDataset
-        from omnipy.components.remote.models import HttpUrlModel
-
-        if paths_or_urls is None:
-            assert len(kwargs) > 0, 'No paths or urls specified'
-            paths_or_urls = kwargs
-        else:
-            assert len(kwargs) == 0, 'No keyword arguments allowed when paths_or_urls is specified'
-
-        match paths_or_urls:
-            case HttpUrlDataset():
-                return self._load_http_urls(paths_or_urls, as_mime_type=as_mime_type)
-
-            case HttpUrlModel():
-                return self._load_http_urls(
-                    HttpUrlDataset({str(paths_or_urls): paths_or_urls}),
-                    as_mime_type=as_mime_type,
-                )
-
-            case str():
-                try:
-                    http_url_dataset = HttpUrlDataset({paths_or_urls: paths_or_urls})
-                except ValidationError:
-                    return self._load_paths(
-                        [paths_or_urls],
-                        by_file_suffix,
-                        ignore_dirs=ignore_dirs,
-                    )
-                return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
-
-            case _ if has_items_method(paths_or_urls):
-                try:
-                    http_url_dataset = HttpUrlDataset(paths_or_urls)
-                except ValidationError as exp:
-                    raise NotImplementedError(
-                        'Loading files with specified keys is not yet '
-                        'implemented, as only tar.gz file import is '
-                        'supported until serializers have been refactored.'
-                    ) from exp
-                return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
-
-            case Iterable():
-                path_or_url_iterable = paths_or_urls
-                try:
-                    http_url_dataset = HttpUrlDataset(
-                        zip(path_or_url_iterable, path_or_url_iterable)
-                    )
-                except ValidationError:
-                    return self._load_paths(
-                        path_or_url_iterable,
-                        by_file_suffix,
-                        ignore_dirs=ignore_dirs,
-                    )
-                return self._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
-            case _:
-                raise TypeError(
-                    f'"paths_or_urls" argument is of incorrect type. Type '
-                    f'{type(paths_or_urls)} is not supported.'
-                )
-
     def _load_http_urls(
         self,
         http_url_dataset: IsHttpUrlDataset,
@@ -1918,7 +1770,7 @@ class Dataset(
 
             if by_file_suffix:
                 loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                    self, tar_gz_file_path, self, ignore_dirs=ignore_dirs
+                    self, tar_gz_file_path, self.__class__(), ignore_dirs=ignore_dirs
                 )
             else:
                 loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_dataset_cls(

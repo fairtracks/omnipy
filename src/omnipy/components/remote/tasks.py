@@ -12,8 +12,9 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.data.model import Model
 from omnipy.shared.enums.data import BackoffStrategy
 from omnipy.shared.exceptions import ShouldNotOccurException
-from omnipy.shared.protocols.data import IsDataset
+from omnipy.shared.protocols.data import SupportsLoadInto
 from omnipy.shared.typing import TYPE_CHECKING
+from omnipy.util.helpers import resolve
 
 from ..json.datasets import JsonDataset, JsonListOfDictsDataset
 from ..json.models import JsonModel
@@ -27,7 +28,7 @@ if TYPE_CHECKING:
     from .helpers import RateLimitingClientSession
     from .lazy_import import ClientResponse, ClientSession, RetryClient
 
-_JsonDatasetT = TypeVar('_JsonDatasetT', bound=IsDataset)
+_LoadableT = TypeVar('_LoadableT', bound=SupportsLoadInto)
 
 
 async def _call_get(
@@ -342,18 +343,18 @@ async def get_auto_from_api_endpoint(
 @TaskTemplate()
 def load_urls_into_new_dataset(
     urls: HttpUrlDataset,
-    dataset_cls: type[_JsonDatasetT] = JsonDataset,
+    dataset_cls: type[_LoadableT] = JsonDataset,
     as_mime_type: str | None = None,
-) -> _JsonDatasetT:
+) -> _LoadableT | asyncio.Task[_LoadableT]:
     """Load remote URLs into a newly created dataset instance.
 
     Args:
         urls: Dataset containing the URLs to load.
-        dataset_cls: Dataset type to populate from the fetched content.
+        dataset_cls: Dataset or mimicking Model type with an instance ``load_into()`` method.
         as_mime_type: Optional MIME type override for response decoding.
 
     Returns:
-        A newly loaded dataset of type ``dataset_cls``.
+        A newly loaded instance of ``dataset_cls``, or a task inside an event loop.
 
     Raises:
         TypeError: If fetched data cannot be parsed by ``dataset_cls``.
@@ -363,20 +364,29 @@ def load_urls_into_new_dataset(
         >>> isinstance(loaded, JsonDataset)
         >>> True
     """
-    return dataset_cls.load(urls, as_mime_type=as_mime_type)  # type: ignore[return-value]
+    dataset = dataset_cls()
+    loaded = dataset.load_into(urls, as_mime_type=as_mime_type)
+    if isinstance(loaded, asyncio.Task):
+
+        async def return_dataset() -> _LoadableT:
+            await loaded
+            return dataset
+
+        return asyncio.get_running_loop().create_task(return_dataset())
+    return dataset
 
 
 @TaskTemplate()
 async def async_load_urls_into_new_dataset(
     urls: HttpUrlDataset,
-    dataset_cls: type[_JsonDatasetT] = JsonDataset,
+    dataset_cls: type[_LoadableT] = JsonDataset,
     as_mime_type: str | None = None,
-) -> _JsonDatasetT:
+) -> _LoadableT:
     """Asynchronously load remote URLs into a newly created dataset instance.
 
     Args:
         urls: Dataset containing the URLs to load.
-        dataset_cls: Dataset type to populate from the fetched content.
+        dataset_cls: Dataset or mimicking Model type with an instance ``load_into()`` method.
         as_mime_type: Optional MIME type override for response decoding.
 
     Returns:
@@ -392,7 +402,9 @@ async def async_load_urls_into_new_dataset(
         >>> # isinstance(loaded, JsonDataset)
         >>> # True
     """
-    return await dataset_cls.load(urls, as_mime_type=as_mime_type)  # type: ignore[misc]
+    dataset = dataset_cls()
+    await resolve(dataset.load_into(urls, as_mime_type=as_mime_type))
+    return dataset
 
 
 @dataclass
