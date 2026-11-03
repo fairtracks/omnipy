@@ -109,14 +109,15 @@ The following creates a data model of a list of integers, and parses some data i
 
 ### Load some water-sample data
 
-Let's work with a river sample from the
+Let's work with river samples from the
 [water-sample harmonization example](https://github.com/fairtracks/omnipy/tree/main/tests/integration/novel/full/water_sample_harmonization).
-The URL below is illustrative: the documentation serves its example JSON from a
+The URLs below are illustrative: the documentation serves its example JSON from a
 local mock HTTP service. Substitute your own endpoint when trying this in a
 Python console.
 
-A Model can load the response from a single URL. Here, the response is a JSON
-list of sample records, so we use `JsonListOfDictsModel`:
+A Model can load the response from a single URL. The API returns the samples
+in pages. Each response is a JSON list of sample records, so we load the first
+page with `JsonListOfDictsModel`:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> import omnipy as om
@@ -124,9 +125,12 @@ list of sample records, so we use `JsonListOfDictsModel`:
 >>> from runpy import run_path  # markdown-exec: hide
 >>> _fixture_path = 'docs/examples/water_sample_service.py'  # markdown-exec: hide
 >>> _service = run_path(_fixture_path)['water_sample_service']()  # markdown-exec: hide
->>> river_url = 'https://water.example/samples?page=0'
->>> river_url = _service.__enter__()  # markdown-exec: hide
->>> page = om.JsonListOfDictsModel.load(river_url)
+
+>>> water_api = 'https://water.example'
+>>> water_api = _service.__enter__()  # markdown-exec: hide
+>>> river_url_0 = f'{water_api}/samples?page=0'
+
+>>> page = om.JsonListOfDictsModel.load(river_url_0)
 >>> page
 ```
 
@@ -135,16 +139,28 @@ list of sample records, so we use `JsonListOfDictsModel`:
 ```
 
 For a batch of responses, use a Dataset instead. Its keys name the responses;
-each item is still a Model containing a list of samples. We can start with just
-one named response from the same URL:
+each item is still a Model containing a list of samples. Let's load both pages
+of river samples:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> pages = om.JsonListOfDictsDataset.load(river=river_url)
+>>> river_url_1 = f'{water_api}/samples?page=1'
+
+>>> pages = om.JsonListOfDictsDataset.load(river_page_0=river_url_0, river_page_1=river_url_1)
 >>> pages
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
 >>> print(pages._docs())
+```
+
+A dataset's `peek()` shows the contents of its items side by side:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> pages.peek()
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(pages.peek(ui='browser-tag'))
 ```
 
 These are synchronous console calls. In a notebook or other running event loop,
@@ -156,7 +172,7 @@ Models mimic their wrapped values, so we can index the loaded JSON directly.
 The second measurement in the first sample is phosphorus, reported in µg/L:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> raw_measurement = pages['river'][0]['measurements'][1]
+>>> raw_measurement = pages['river_page_0'][0]['measurements'][1]
 >>> raw_measurement
 ```
 
@@ -166,17 +182,19 @@ The second measurement in the first sample is phosphorus, reported in µg/L:
 
 JSON types alone do not describe what a measurement means. A Pydantic record
 gives its fields a contract, and an Omnipy Model keeps that contract active while
-we work. This uses the current [Pydantic v1 compatibility API](howto/models/pydantic-compatibility.md).
-`mimics` also makes the wrapped record's interface visible to supported editors
+we work. `mimics` also makes the wrapped record's interface visible to supported editors
 and type checkers; runtime field access works through the Model itself.
 
 ```pycon exec="1" session="water-samples" source="console"
->>> import pydantic.v1 as pyd
+>>> import omnipy.util.pydantic as pyd
+
 >>> class RiverUgConcMeasurementRecord(pyd.BaseModel):
 ...     name: str
 ...     value_ug_l: float
+
 >>> @om.mimics(RiverUgConcMeasurementRecord)
 ... class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...
+
 >>> phosphorus = RiverUgConcMeasurementModel(raw_measurement)
 >>> phosphorus
 ```
@@ -218,6 +236,7 @@ reading to `150.0 µg/L`:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> phosphorus.value_ug_l = '150.0'
+
 >>> phosphorus
 ```
 
@@ -233,10 +252,12 @@ let's normalize the name and convert µg/L to mg/L:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> from typing import Literal
+
 >>> class NormalizedConcentrationRecord(pyd.BaseModel):
 ...     type: Literal['ammonium', 'nitrate', 'phosphorus']
 ...     value: float
 ...     unit: Literal['mg/L']
+
 >>> @om.mimics(NormalizedConcentrationRecord)
 ... class MicrogramsToMilligramsMapper(
 ...     om.ConverterModel[RiverUgConcMeasurementRecord, NormalizedConcentrationRecord]
@@ -244,8 +265,11 @@ let's normalize the name and convert µg/L to mg/L:
 ...     @classmethod
 ...     def _convert(cls, data: RiverUgConcMeasurementRecord) -> NormalizedConcentrationRecord:
 ...         return NormalizedConcentrationRecord(
-...             type=data.name.lower(), value=data.value_ug_l / 1000, unit='mg/L'
+...             type=data.name.lower(),
+...             value=data.value_ug_l / 1000,
+...             unit='mg/L',
 ...         )
+
 >>> normalized = MicrogramsToMilligramsMapper(phosphorus)
 >>> normalized
 ```
