@@ -60,8 +60,10 @@ if is_package_editable('omnipy'):
             config: Data configuration object to store for related models and datasets.
     """)
 
-IsPathOrUrl: TypeAlias = 'str | IsHttpUrlModel'
-IsPathsOrUrls: TypeAlias = 'Iterable[str] | IsHttpUrlDataset | Mapping[str, IsPathOrUrl]'
+IsPathOrUrl: TypeAlias = 'str | os.PathLike[str] | IsHttpUrlModel'
+IsPathsOrUrls: TypeAlias = (
+    'Iterable[str | os.PathLike[str]] | IsHttpUrlDataset | Mapping[str, IsPathOrUrl]'
+)
 IsPathsOrUrlsOneOrMore: TypeAlias = 'IsPathOrUrl | IsPathsOrUrls'
 IsPathsOrUrlsOneOrMoreOrNone: TypeAlias = 'IsPathsOrUrlsOneOrMore | None'
 
@@ -217,7 +219,7 @@ class IsDataset(
         """
         ...
 
-    def save(self, path: str) -> None:
+    def save(self, path: str | os.PathLike[str]) -> None:
         """Persist the dataset to a filesystem path.
 
         Args:
