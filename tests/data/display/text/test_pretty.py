@@ -841,6 +841,25 @@ def test_pretty_repr_of_draft_multi_line_if_nested_known_issue(
     )
 
 
+@pc.parametrize(
+    'data, exp_plain_output',
+    [
+        ('"123"', '"123"'),
+        ('"12\\u0033"', '"123"'),
+        ('"Hello": 234', '"\\"Hello\\": 234"'),
+        ('hello', '"hello"'),
+        ('"\\"x\\""', '"\\"x\\""'),
+    ],
+)
+def test_json_model_str_pretty_print_matches_to_json(data: str, exp_plain_output: str) -> None:
+    """Display top-level JsonModel strings as the JSON text that to_json() exports."""
+    model = JsonModel(data)
+    assert model.to_json() == exp_plain_output
+
+    out_draft_panel = pretty_repr_of_draft_output(DraftPanel(model, frame=DEFAULT_FRAME))
+    assert out_draft_panel.content == exp_plain_output
+
+
 def test_plain_str_pretty_print() -> None:
     str_data = 'This is a plain string that should not be formatted in any way'
 

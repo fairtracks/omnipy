@@ -1,6 +1,7 @@
 """Mixin printers that classify Python-like and JSON-like panel content."""
 
 from abc import ABC
+import json
 
 from typing_extensions import override
 
@@ -63,6 +64,11 @@ class JsonStatsTighteningPrettyPrinterMixin(PrettyPrinter[object], ABC):
     @classmethod
     def _get_content_for_draft_panel(cls, draft_panel: DraftPanel[object, AnyFrame]) -> object:
         if is_model_instance(draft_panel.content):
-            return draft_panel.content.to_data()
+            data = draft_panel.content.to_data()
+            if isinstance(data, str):
+                # Top-level string content may be the quoted form of a string that JSON models
+                # cannot hold (e.g. '"123"' for '123'). Display the string that to_json() exports.
+                return json.loads(draft_panel.content.to_json())
+            return data
         else:
             return draft_panel.content
