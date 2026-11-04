@@ -10,7 +10,8 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.components.json.datasets import JsonDataset
-from omnipy.components.raw.datasets import StrictStrDataset
+from omnipy.components.raw.datasets import StrDataset, StrictStrDataset
+from omnipy.components.raw.models import StrModel
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.enums.data import SelectSerializerBy
@@ -200,3 +201,22 @@ def test_loading_non_utf8_content_as_text_fails_validation(
 
     with pytest.raises(ValidationError, match='first'):
         target_cls.load(path, select_serializer_by='type')
+
+
+@pytest.mark.parametrize('as_archive', [False, True])
+def test_non_utf8_text_loads_as_bytes_into_str_models_with_matching_encoding(
+    tmp_path: Path, as_archive: bool
+) -> None:
+    content = 'blåbær'.encode('latin-1')
+    if as_archive:
+        path = write_tar_gz(tmp_path / 'data.tar.gz', {'first.bytes': content})
+    else:
+        path = tmp_path / 'first.bytes'
+        path.write_bytes(content)
+    str_dataset_latin1 = StrDataset.adjust('StrDatasetLatin1', 'StrModelLatin1', encoding='latin-1')
+
+    loaded = str_dataset_latin1.load(path, select_serializer_by='suffix')
+    assert loaded.to_data() == {'first': 'blåbær'}
+    if not as_archive:
+        str_model_latin1 = StrModel.adjust('StrModelLatin1', encoding='latin-1')
+        assert str_model_latin1.load(path, select_serializer_by='suffix').to_data() == 'blåbær'
