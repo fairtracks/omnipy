@@ -16,7 +16,7 @@ from omnipy.shared.protocols.data import HasData, IsDataset, IsSerializer, IsTar
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 from omnipy.util.helpers import is_package_editable
-from omnipy.util.pydantic import ValidationError
+from omnipy.util.pydantic import BaseModel, ErrorWrapper, ValidationError
 
 _DatasetT = TypeVar('_DatasetT', bound=IsDataset)
 
@@ -134,9 +134,16 @@ class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
                 if not any_file_suffix:
                     assert filename.endswith(f'.{cls.get_output_file_suffix()}')
                 data_file_name = os.path.basename('.'.join(filename.split('.')[:-1]))
-                getattr(dataset, import_method)(
-                    dictify_object_func(data_file_name, data_decode_func(data_file))
-                )
+                try:
+                    decoded_data = data_decode_func(data_file)
+                except UnicodeDecodeError as exc:
+                    # File content not valid for the dataset, same as for validation failures.
+                    # Datasets are pydantic models, which the IsDataset protocol does not show.
+                    dataset_cls = cast(type[BaseModel], type(dataset))
+                    raise ValidationError(
+                        [ErrorWrapper(exc, loc=data_file_name)], dataset_cls
+                    ) from exc
+                getattr(dataset, import_method)(dictify_object_func(data_file_name, decoded_data))
 
 
 def _get_log_func(log_obj: object) -> Callable[[str], object]:
