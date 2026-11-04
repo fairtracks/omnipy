@@ -6,6 +6,7 @@ from typing import Annotated
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 import pytest
+from pytest_aiohttp import AiohttpServer
 import pytest_cases as pc
 
 from omnipy.shared.protocols.hub.runtime import IsRuntime
@@ -17,7 +18,7 @@ def configure_runtime(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
 
 
 @pc.fixture(scope='function')
-async def load_content_server(aiohttp_server) -> AsyncGenerator[TestServer, None]:
+async def load_content_server(aiohttp_server: AiohttpServer) -> AsyncGenerator[TestServer, None]:
     """Serve the response formats supported by the shared Model/Dataset loader."""
 
     async def content(request: web.Request) -> web.Response:

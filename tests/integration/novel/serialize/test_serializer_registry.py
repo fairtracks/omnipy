@@ -1,7 +1,6 @@
 """Tests for serializer registry."""
 
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Annotated
 
 import pytest
@@ -18,12 +17,14 @@ from omnipy.components.raw.serializers import (
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import SerializerRegistry
+from omnipy.shared.enums.data import SelectSerializerBy
 from omnipy.shared.protocols.data import IsSerializerRegistry
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
+from .helpers.classes import SilentLog
 from .helpers.functions import write_tar_gz
 
-_SILENT_LOG = SimpleNamespace(log_message=lambda _msg: None)
+_SILENT_LOG = SilentLog()
 
 
 @pytest.fixture
@@ -126,13 +127,13 @@ def test_serializer_registry_load_by_file_suffix_empty_archive(
         _SILENT_LOG, str(tar_path), to_dataset
     )
     assert loaded is to_dataset
-    assert loaded.to_data() == {}
+    assert to_dataset.to_data() == {}
 
 
 @pytest.mark.usefixtures('runtime')
 @pytest.mark.parametrize('select_serializer_by', ['type', 'suffix'])
 def test_dataset_load_into_keeps_existing_entries(
-    tmp_path: Path, select_serializer_by: str
+    tmp_path: Path, select_serializer_by: SelectSerializerBy.Literals
 ) -> None:
     tar_path = write_tar_gz(tmp_path / 'data.tar.gz', {'first.json': b'[1, 2]'})
     dataset = JsonDataset(existing=7)

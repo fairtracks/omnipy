@@ -1,10 +1,12 @@
 """Load remote content through the shared Model and Dataset entry points."""
 
 import asyncio
+from typing import Literal
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 import pytest
+from pytest_aiohttp import AiohttpServer
 import pytest_cases as pc
 
 from omnipy.components.json.datasets import JsonDataset
@@ -22,7 +24,7 @@ from omnipy.shared.exceptions import FailedDataError
 from omnipy.util.helpers import resolve
 from omnipy.util.pydantic import ValidationError
 
-from .helpers.functions import expected_for
+from .cases.urls import UrlCase
 
 
 @pytest.mark.parametrize(
@@ -35,7 +37,11 @@ from .helpers.functions import expected_for
 )
 @pytest.mark.parametrize('mode', ['instance', 'class', 'sync_instance', 'sync_class'])
 async def test_model_load_single_response(
-    load_content_server: TestServer, kind: str, model_cls: type[Model], expected, mode: str
+    load_content_server: TestServer,
+    kind: str,
+    model_cls: type[Model],
+    expected: object,
+    mode: str,
 ) -> None:
     url = HttpUrlModel(str(load_content_server.make_url(f'/{kind}')))
     if mode == 'instance':
@@ -57,7 +63,7 @@ async def test_model_load_single_response(
     assert model.to_data() == expected
 
 
-@pytest.mark.parametrize('wrapper_cls', [HttpUrlDataset, Model[Model[HttpUrlDataset]], dict])
+@pytest.mark.parametrize('wrapper_cls', [HttpUrlDataset, Model[HttpUrlDataset], dict])
 @pytest.mark.parametrize('count', [0, 1, 2])
 async def test_model_load_keyed_collection(
     load_content_server: TestServer, wrapper_cls: type, count: int
@@ -109,7 +115,7 @@ async def test_model_loading_failure_preserves_contents(
 
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
 async def test_dataset_load_rate_limits_with_the_host_config(
-    aiohttp_server,
+    aiohttp_server: AiohttpServer,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     async def endpoint(request: web.Request) -> web.Response:
@@ -152,7 +158,7 @@ async def test_dataset_load_rate_limits_with_the_host_config(
 )
 @pytest.mark.parametrize('empty', [False, True])
 async def test_dataset_load_into_preserves_keys_from_wrapped_urls(
-    aiohttp_server, wrapper_cls: type, empty: bool
+    aiohttp_server: AiohttpServer, wrapper_cls: type, empty: bool
 ) -> None:
     async def endpoint(request: web.Request) -> web.Response:
         return web.json_response(dict(value=request.match_info['name']))
@@ -184,18 +190,48 @@ async def test_dataset_load_into_preserves_keys_from_wrapped_urls(
     assert list(dataset) == list(expected)
 
 
-@pc.parametrize_with_cases('load_kwargs, expected_model, expected_dataset', cases='.cases.urls')
+@pc.parametrize_with_cases('case', cases='.cases.urls')
 @pytest.mark.parametrize('target_cls', [Model[object], Dataset[Model[object]], Model[JsonDataset]])
 @pytest.mark.parametrize('entry_point', ['load', 'load_into'])
 async def test_model_and_dataset_http_inputs(
-    load_kwargs, expected_model, expected_dataset, target_cls, entry_point
+    case: UrlCase,
+    target_cls: type[Model] | type[Dataset],
+    entry_point: Literal['load', 'load_into'],
 ) -> None:
     if entry_point == 'load':
-        result = await resolve(target_cls.load(**load_kwargs))
+        result = await resolve(target_cls.load(case.urls))
     else:
         result = target_cls()
-        assert await resolve(result.load_into(**load_kwargs)) is result
-    assert result.to_data() == expected_for(result, expected_model, expected_dataset)
+        assert await resolve(result.load_into(case.urls)) is result
+    expected = case.expected_model if target_cls is Model[object] else case.expected_dataset
+    assert result.to_data() == expected
+
+
+@pytest.mark.parametrize('target_cls', [Model[object], Dataset[Model[object]], Model[JsonDataset]])
+@pytest.mark.parametrize('entry_point', ['load', 'load_into'])
+@pytest.mark.parametrize('count', [1, 2])
+async def test_model_and_dataset_http_keyword_inputs(
+    load_content_server: TestServer,
+    target_cls: type[Model] | type[Dataset],
+    entry_point: Literal['load', 'load_into'],
+    count: int,
+) -> None:
+    first = HttpUrlModel(str(load_content_server.make_url('/json?item=first')))
+    second = HttpUrlModel(str(load_content_server.make_url('/json?item=second')))
+
+    if entry_point == 'load':
+        if count == 1:
+            result = await resolve(target_cls.load(first=first))
+        else:
+            result = await resolve(target_cls.load(first=first, second=second))
+    else:
+        result = target_cls()
+        if count == 1:
+            assert await resolve(result.load_into(first=first)) is result
+        else:
+            assert await resolve(result.load_into(first=first, second=second)) is result
+    expected = {'first': [1, 2], 'second': [1, 2]} if count == 2 else {'first': [1, 2]}
+    assert result.to_data() == expected
 
 
 @pytest.mark.parametrize('target_cls', [JsonDataset, Model[dict[str, list[int]]]])
