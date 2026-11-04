@@ -13,8 +13,15 @@ from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 
 @pytest.fixture(autouse=True)
-def configure_runtime(runtime: Annotated[IsRuntime, pytest.fixture]) -> None:
-    """Exercise the shared I/O entry points under each Model configuration."""
+def configure_runtime(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    skip_test_if_dynamically_convert_elements_to_models: Annotated[None, pytest.fixture],
+) -> None:
+    """Exercise the shared I/O entry points in interactive and non-interactive mode.
+
+    Loading and saving do not depend on dynamic conversion of elements to models, as the
+    serializers and model parsing turn it off.
+    """
 
 
 @pc.fixture(scope='function')
