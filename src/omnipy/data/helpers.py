@@ -5,6 +5,7 @@ from contextlib import AbstractContextManager, suppress
 from dataclasses import dataclass
 from enum import IntEnum
 import os
+import re
 import sys
 from textwrap import dedent
 from typing import Any, ForwardRef, Generic, get_args, get_origin, NamedTuple
@@ -371,3 +372,56 @@ class FailedData:
     job_name: str
     job_unique_name: str = ''
     exception: BaseException
+
+
+_SINGLE_VALUE_KEY_REGEX = re.compile(r'^__\w+__$')
+
+
+def get_single_value_key(model_cls: type) -> str:
+    """Return the data file name used when saving a single Model value.
+
+    The name is derived from the Model class name, e.g. ``__model_list_int__`` for
+    ``Model[list[int]]``, and is recognized by ``is_single_value_key()`` when loading.
+
+    Args:
+        model_cls: Model class of the value to save.
+
+    Returns:
+        A file-name-safe key, starting and ending with two underscores.
+    """
+    import inflection
+
+    slug = re.sub(r'[^0-9a-z]+', '_', inflection.underscore(model_cls.__name__)).strip('_')
+    return f'__{slug}__'
+
+
+def is_single_value_key(key: str) -> bool:
+    """Return whether a data file name marks an archive holding a single Model value."""
+    return _SINGLE_VALUE_KEY_REGEX.match(key) is not None
+
+
+def get_wrapped_dataset(model: Any) -> Any:
+    """Return the Dataset wrapped by a Model, possibly through nested Models.
+
+    Whether a Model wraps a Dataset is decided by its type, e.g. ``Model[JsonDataset]`` or
+    ``Model[Model[JsonDataset]]``, not by the type of its current content.
+
+    Args:
+        model: Model instance to inspect.
+
+    Returns:
+        The wrapped Dataset instance, or ``None`` if the Model type does not wrap a Dataset.
+    """
+    from omnipy.data.dataset import is_dataset_subclass
+    from omnipy.data.model import is_model_instance, is_model_subclass
+
+    outer_type = type(model).outer_type()
+    while is_model_subclass(outer_type):
+        outer_type = outer_type.outer_type()
+    if not is_dataset_subclass(outer_type):
+        return None
+
+    content = model.content
+    while is_model_instance(content):
+        content = content.content
+    return content

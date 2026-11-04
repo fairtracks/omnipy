@@ -1,7 +1,36 @@
 """Values whose serialized representation must survive save/load round trips."""
 
+import pytest_cases as pc
+
 from omnipy.components.json.datasets import JsonDataset
 from omnipy.components.raw.datasets import StrictBytesDataset, StrictStrDataset
+from omnipy.data.model import Model
+
+
+@pc.parametrize('values', [[], [1, 2]])
+def case_model_list(values):
+    return Model[list[int]](values), {'__model_list_int__'}
+
+
+def case_model_mapping():
+    return Model[dict[str, int]]({'first': 1, 'second': 2}), {'__model_dict_str_int__'}
+
+
+def case_model_wrapping_dataset():
+    return Model[JsonDataset](first=[1, 2], second=[3, 4]), {'first', 'second'}
+
+
+def case_model_string():
+    return Model[str]('"quoted"'), {'__model_str__'}
+
+
+def case_model_bytes():
+    return Model[bytes](b'\x00\xff\x01'), {'__model_bytes__'}
+
+
+@pc.parametrize('value', ['123', '"quoted"', b'123'])
+def case_model_object(value):
+    return Model[object](value), {'__model_object__'}
 
 
 def case_dataset_single_entry():

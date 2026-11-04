@@ -69,6 +69,19 @@ IsPathsOrUrlsOneOrMore: TypeAlias = 'IsPathOrUrl | IsPathsOrUrls'
 IsPathsOrUrlsOneOrMoreOrNone: TypeAlias = 'IsPathsOrUrlsOneOrMore | None'
 
 
+class SupportsLoadInto(Protocol):
+    """An instance that can load paths or URLs into itself."""
+
+    def load_into(
+        self,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
+
+
 @runtime_checkable
 @dataclass(frozen=True, kw_only=True)
 class IsPendingData(Protocol):
@@ -122,8 +135,20 @@ class HasContent(Protocol[ContentT]):
 
 
 @runtime_checkable
-class IsModel(HasContent[_RootT], IsBaseDisplayMixin, Protocol[_RootT]):
+class IsModel(HasContent[_RootT], IsBaseDisplayMixin, SupportsLoadInto, Protocol[_RootT]):
     """Single-value data wrapper with typed content and conversion support."""
+
+    @classmethod
+    def load(
+        cls,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
+
+    def save(self, path: str | os.PathLike[str]) -> None: ...
 
     @classmethod
     def full_type(cls) -> type[_RootT]:

@@ -32,7 +32,7 @@ def case_local_source(tmp_path, kind, count):
             for path in directory.iterdir():
                 archive.write(path, arcname=path.name)
 
-    model_expected = [0, 1] if count == 1 else expected
+    model_expected = [0, 1] if kind == 'file' and count == 1 else expected
     return source, model_expected, expected
 
 
@@ -61,3 +61,9 @@ def case_empty_archive(tmp_path):
     with tarfile.open(path, 'w:gz'):
         pass
     return path, {}, {}
+
+
+def case_single_file_list(tmp_path):
+    path = tmp_path / 'first.json'
+    path.write_text('[1, 2]')
+    return [str(path)], {'first': [1, 2]}, {'first': [1, 2]}
