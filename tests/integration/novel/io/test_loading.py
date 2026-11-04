@@ -154,7 +154,7 @@ async def test_dataset_load_rate_limits_with_the_host_config(
 
 @pytest.mark.parametrize(
     'wrapper_cls',
-    [dict, Model[dict[str, str]], Model[Model[HttpUrlDataset]]],
+    [dict, Model[dict[str, str]], Model[HttpUrlDataset]],
 )
 @pytest.mark.parametrize('empty', [False, True])
 async def test_dataset_load_into_preserves_keys_from_wrapped_urls(
