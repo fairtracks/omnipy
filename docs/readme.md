@@ -104,7 +104,7 @@ The following creates a data model of a list of integers, and parses some data i
 ```
 
 ```pycon exec="1" session="greet" result="console" html="true"
->>> print(data_as_list_of_ints._docs(width=114))
+>>> print(data_as_list_of_ints._docs())
 ```
 
 ### Load some water-sample data
@@ -121,6 +121,7 @@ page with `JsonListOfDictsModel`:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> import omnipy as om
+>>> om.runtime.config.data.ui.browser.color.style = om.DarkHighContrastColorStyles.WOODLAND_T16
 --8<-- "_includes/pycon_hidden_runtime_setup.md"
 >>> from runpy import run_path  # markdown-exec: hide
 >>> _fixture_path = 'docs/examples/water_sample_service.py'  # markdown-exec: hide
@@ -135,7 +136,7 @@ page with `JsonListOfDictsModel`:
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(page._docs(width=114))
+>>> print(page._docs())
 ```
 
 For a batch of responses, use a Dataset instead. Its keys name the responses;
@@ -150,7 +151,7 @@ of river samples:
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(pages._docs(width=114))
+>>> print(pages._docs())
 ```
 
 A dataset's `peek()` shows the contents of its items side by side:
@@ -160,7 +161,7 @@ A dataset's `peek()` shows the contents of its items side by side:
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(pages._docs(width=114, method='peek'))
+>>> print(pages._docs(, method='peek'))
 ```
 
 These are synchronous console calls. In a notebook or other running event loop,
@@ -177,7 +178,7 @@ The second measurement in the first sample is phosphorus, reported in µg/L:
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(raw_measurement._docs(width=114))
+>>> print(raw_measurement._docs())
 ```
 
 JSON types alone do not describe what a measurement means. A Pydantic record
@@ -200,7 +201,7 @@ and type checkers; runtime field access works through the Model itself.
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(phosphorus._docs(width=114))
+>>> print(phosphorus._docs())
 ```
 
 ### Edit safely, without unpacking
@@ -228,7 +229,7 @@ The measurement is still `120.0 µg/L`; we do not need to reload the response:
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(phosphorus._docs(width=114))
+>>> print(phosphorus._docs())
 ```
 
 A numeric string, on the other hand, can be parsed as a float. Let's correct the
@@ -241,7 +242,7 @@ reading to `150.0 µg/L`:
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(phosphorus._docs(width=114))
+>>> print(phosphorus._docs())
 ```
 
 ### Convert to a common representation
@@ -275,7 +276,7 @@ let's normalize the name and convert µg/L to mg/L:
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(normalized._docs(width=114))
+>>> print(normalized._docs())
 ```
 
 The corrected reading is now `0.15 mg/L`. The same mapper can be the item type
@@ -288,7 +289,7 @@ processing loop:
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(concentrations._docs(width=114))
+>>> print(concentrations._docs())
 ```
 
 ```pycon exec="1" session="water-samples" result="console"
