@@ -7,7 +7,6 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import TarFileSerializer
 from omnipy.shared.protocols.data import IsDataset
-from omnipy.util.pydantic import lenient_issubclass
 
 from .datasets import StrictBytesDataset, StrictStrDataset
 
@@ -20,7 +19,7 @@ class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
         """Return whether a dataset stores raw strings."""
 
         type_variants = all_dataset_type_variants(dataset)
-        return len(type_variants) > 0 and lenient_issubclass(type_variants[0], str)
+        return len(type_variants) > 0 and type_variants[0] is str
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> type[IsDataset]:
@@ -86,7 +85,7 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
         """Return whether a dataset stores raw bytes."""
 
         type_variants = all_dataset_type_variants(dataset)
-        return len(type_variants) > 0 and lenient_issubclass(type_variants[0], bytes)
+        return len(type_variants) > 0 and type_variants[0] is bytes
 
     @classmethod
     def get_dataset_cls_for_new(cls) -> type[IsDataset]:
