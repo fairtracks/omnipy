@@ -340,61 +340,61 @@ async def get_auto_from_api_endpoint(
 
 
 @TaskTemplate()
-def load_urls_into_new_dataset(
+def load_urls(
     urls: HttpUrlDataset,
-    dataset_cls: type[_LoadableT] = JsonDataset,
+    data_cls: type[_LoadableT] = JsonDataset,
     as_mime_type: str | None = None,
 ) -> _LoadableT:
     """Load remote URLs into a newly created dataset or model instance.
 
     Args:
         urls: Dataset containing the URLs to load.
-        dataset_cls: Dataset or Model type to populate from the fetched content. A Model
+        data_cls: Dataset or Model type to populate from the fetched content. A Model
             receives the contents as a mapping keyed by the URL names.
         as_mime_type: Optional MIME type override for response decoding.
 
     Returns:
-        A newly loaded instance of ``dataset_cls``.
+        A newly loaded instance of ``data_cls``.
 
     Raises:
-        TypeError: If fetched data cannot be parsed by ``dataset_cls``.
+        TypeError: If fetched data cannot be parsed by ``data_cls``.
 
     Examples:
-        >>> loaded = load_urls_into_new_dataset(HttpUrlDataset({'a': 'https://example.com'}))
+        >>> loaded = load_urls(HttpUrlDataset({'a': 'https://example.com'}))
         >>> isinstance(loaded, JsonDataset)
         >>> True
     """
-    return dataset_cls.load(urls, as_mime_type=as_mime_type)  # type: ignore[return-value]
+    return data_cls.load(urls, as_mime_type=as_mime_type)  # type: ignore[return-value]
 
 
 @TaskTemplate()
-async def async_load_urls_into_new_dataset(
+async def async_load_urls(
     urls: HttpUrlDataset,
-    dataset_cls: type[_LoadableT] = JsonDataset,
+    data_cls: type[_LoadableT] = JsonDataset,
     as_mime_type: str | None = None,
 ) -> _LoadableT:
     """Asynchronously load remote URLs into a newly created dataset or model instance.
 
     Args:
         urls: Dataset containing the URLs to load.
-        dataset_cls: Dataset or Model type to populate from the fetched content. A Model
+        data_cls: Dataset or Model type to populate from the fetched content. A Model
             receives the contents as a mapping keyed by the URL names.
         as_mime_type: Optional MIME type override for response decoding.
 
     Returns:
-        A newly loaded instance of ``dataset_cls``.
+        A newly loaded instance of ``data_cls``.
 
     Raises:
-        TypeError: If fetched data cannot be parsed by ``dataset_cls``.
+        TypeError: If fetched data cannot be parsed by ``data_cls``.
 
     Examples:
-        >>> # loaded = await async_load_urls_into_new_dataset(
+        >>> # loaded = await async_load_urls(
         >>> #     HttpUrlDataset({'a': 'https://example.com'}),
         >>> # )
         >>> # isinstance(loaded, JsonDataset)
         >>> # True
     """
-    return await dataset_cls.load(urls, as_mime_type=as_mime_type)  # type: ignore[misc]
+    return await data_cls.load(urls, as_mime_type=as_mime_type)  # type: ignore[misc]
 
 
 @dataclass

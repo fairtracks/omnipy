@@ -59,7 +59,7 @@ must be awaited. Its annotation covers both sync and async outcomes; the existin
 from omnipy.util.helpers import resolve
 
 
-async def load_urls(urls: om.HttpUrlDataset) -> om.JsonListOfDictsDataset:
+async def load_page_urls(urls: om.HttpUrlDataset) -> om.JsonListOfDictsDataset:
     return await resolve(om.JsonListOfDictsDataset.load(urls))
 ```
 
@@ -80,13 +80,13 @@ and recovery requirements require inspecting the current component API.
 ## Compose the existing loading tasks
 
 When loading is a flow stage, first consider the reusable
-`load_urls_into_new_dataset` and `async_load_urls_into_new_dataset` templates. Bind
+`load_urls` and `async_load_urls` templates. Bind
 the response Dataset class with a modifier:
 
 ```python
-fetch_pages = om.async_load_urls_into_new_dataset.refine(
+fetch_pages = om.async_load_urls.refine(
     name='fetch_pages',
-    fixed_params={'dataset_cls': om.JsonListOfDictsDataset},
+    fixed_params={'data_cls': om.JsonListOfDictsDataset},
 )
 
 

@@ -15,8 +15,8 @@ from omnipy.components.remote.datasets import HttpUrlDataset
 from omnipy.components.remote.helpers import RateLimitingClientSession
 from omnipy.components.remote.models import HttpUrlModel
 from omnipy.components.remote.tasks import (
-    async_load_urls_into_new_dataset,
-    load_urls_into_new_dataset,
+    async_load_urls,
+    load_urls,
 )
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
@@ -235,15 +235,13 @@ async def test_model_and_dataset_http_keyword_inputs(
 
 
 @pytest.mark.parametrize('target_cls', [JsonDataset, Model[dict[str, list[int]]]])
-async def test_load_urls_into_new_dataset_tasks(
-    load_content_server: TestServer, target_cls: type
-) -> None:
+async def test_load_urls_tasks(load_content_server: TestServer, target_cls: type) -> None:
     urls = HttpUrlDataset(first=str(load_content_server.make_url('/json')))
 
-    loaded = await resolve(load_urls_into_new_dataset.run(urls, dataset_cls=target_cls))
+    loaded = await resolve(load_urls.run(urls, data_cls=target_cls))
     assert isinstance(loaded, target_cls)
     assert loaded.to_data() == {'first': [1, 2]}
 
-    loaded = await async_load_urls_into_new_dataset.run(urls, dataset_cls=target_cls)
+    loaded = await async_load_urls.run(urls, data_cls=target_cls)
     assert isinstance(loaded, target_cls)
     assert loaded.to_data() == {'first': [1, 2]}
