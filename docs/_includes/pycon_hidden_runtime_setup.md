@@ -4,4 +4,5 @@
 >>> om.runtime.config.job.output_storage.persist_outputs = 'disabled'  # markdown-exec: hide
 >>> om.runtime.config.data.model.interactive = True  # markdown-exec: hide
 >>> om.runtime.config.data.ui.browser.color.style = 'omnipy-selenized-white'  # markdown-exec: hide
+>>> om.runtime.config.data.ui.browser.font.size = 15  # markdown-exec: hide
 >>> om.runtime.config.data.ui.browser.width = 114  # markdown-exec: hide
