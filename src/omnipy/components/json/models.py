@@ -316,15 +316,14 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
             ValidationError: If ``json_content`` is not valid JSON or does not match the model type.
         """
 
-        cls = type(self)
-        cls_as_model = cast(type[Model[_RootT]], cls)
+        cls_as_model = cast(type[Model[_RootT]], type(self))
         try:
             parsed_json = json.loads(json_content)
         except json.JSONDecodeError as exc:
             raise pyd.ValidationError([pyd.ErrorWrapper(exc, loc=ROOT_KEY)], cls_as_model) from exc
 
         if isinstance(parsed_json, str):
-            parsed_json = cls._str_to_content(parsed_json)
+            parsed_json = self._str_to_content(parsed_json)
 
         cast(Model[_RootT], self).content = cls_as_model(parsed_json).content
 
