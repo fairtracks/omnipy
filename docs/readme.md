@@ -162,7 +162,7 @@ A dataset's `peek()` shows the contents of its items side by side:
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(pages._docs(, method='peek'))
+>>> print(pages._docs(method='peek'))
 ```
 
 These are synchronous console calls. In a notebook or other running event loop,
