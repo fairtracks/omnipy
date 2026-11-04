@@ -255,23 +255,17 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
         return cls._is_quoted(value) and isinstance(parse_str_as_json(value), str)
 
     @classmethod
-    def _is_kept_as_str(cls, value: str) -> bool:
-        """Return whether JSON-string pre-parsing leaves ``value`` unchanged."""
-
-        return not cls._is_parsed_as_json(value)
-
-    @classmethod
-    def _is_json_text_of_str_not_kept_as_str(cls, value: str) -> bool:
-        """Return whether ``value`` is the JSON text of a string that pre-parsing would change.
+    def _is_quoted_form(cls, content: str) -> bool:
+        """Return whether ``content`` is the quoted form of a string that pre-parsing would change.
 
         Such strings (e.g. ``'123'``) cannot be model content, so the quoted form (``'"123"'``) is
         used as content instead.
         """
 
-        if not cls._is_quoted(value):
+        if not cls._is_quoted(content):
             return False
-        parsed_json = parse_str_as_json(value)
-        return isinstance(parsed_json, str) and not cls._is_kept_as_str(parsed_json)
+        parsed_json = parse_str_as_json(content)
+        return isinstance(parsed_json, str) and cls._is_parsed_as_json(parsed_json)
 
     @classmethod
     def _str_to_content(cls, value: str) -> str:
@@ -281,7 +275,17 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
         ``'"123"'`` for ``'123'``).
         """
 
-        return value if cls._is_kept_as_str(value) else json.dumps(value, ensure_ascii=False)
+        return json.dumps(value, ensure_ascii=False) if cls._is_parsed_as_json(value) else value
+
+    @classmethod
+    def _content_to_str(cls, content: str) -> str:
+        """Return the string that ``content`` represents, i.e. the inverse of _str_to_content().
+
+        This is the decoded string for content in the quoted form (e.g. ``'123'`` for
+        ``'"123"'``), otherwise ``content`` itself.
+        """
+
+        return json.loads(content) if cls._is_quoted_form(content) else content
 
     @classmethod
     def from_str_value(cls, value: str) -> Model[_RootT]:
@@ -342,7 +346,7 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
         """
 
         content = cast(Model[_RootT], self).content
-        if isinstance(content, str) and self._is_json_text_of_str_not_kept_as_str(content):
+        if isinstance(content, str) and self._is_quoted_form(content):
             return content
         return super().to_json(pretty=pretty, **kwargs)  # type: ignore[misc]
 
@@ -387,8 +391,8 @@ class JsonModel(ParseStrAsJsonMixin[_JsonAnyUnion], Model[_JsonAnyUnion]):
         displayed as that string ('123'). Other content is returned as by to_data().
         """
         content = self.content
-        if isinstance(content, str) and self._is_json_text_of_str_not_kept_as_str(content):
-            return json.loads(content)
+        if isinstance(content, str):
+            return self._content_to_str(content)
         else:
             return self.to_data()
 
