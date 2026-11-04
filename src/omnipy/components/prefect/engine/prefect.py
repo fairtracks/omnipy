@@ -106,7 +106,7 @@ class PrefectEngine(JobRunnerEngine):
         task_kwargs = TaskKwargs(name=task.name)
 
         if self._config.use_cached_results and task.callable_type in GeneratorCallableType:
-            task.log(
+            task.log_message(
                 'NOTE: Cache-key computation for Prefect tasks traverses task parameters '
                 'and will consume generator inputs. To disable caching of task parameters, set '
                 '`runtime.config.engine.prefect.use_cached_results` to `False`.',

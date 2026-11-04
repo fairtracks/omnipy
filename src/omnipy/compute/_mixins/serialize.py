@@ -87,7 +87,7 @@ class SerializerFuncJobBaseMixin:
 
     def _log(self, msg: str) -> None:
         self_as_job_base = cast(IsJobBase, self)
-        self_as_job_base.log(msg)
+        self_as_job_base.log_message(msg)
 
     @property
     def _return_type(self) -> type[object]:

@@ -41,7 +41,7 @@ class SaveMixin:
         parsed_dataset, serializer = serializer_registry.auto_detect_tar_file_serializer(dataset)
 
         if serializer is None:
-            print(
+            dataset.log_message(
                 f'Unable to find a serializer for data with type "{type(self)}". '
                 f'Will abort saving...'
             )
@@ -49,12 +49,14 @@ class SaveMixin:
             path = os.fspath(path)
             out_tar_gz_path = path if path.endswith('.tar.gz') else f'{path}.tar.gz'
 
-            print(f'Writing data as a gzipped tarpack to "{os.path.abspath(out_tar_gz_path)}"')
+            dataset.log_message(
+                f'Writing data as a gzipped tarpack to "{os.path.abspath(out_tar_gz_path)}"'
+            )
             with open(out_tar_gz_path, 'wb') as out_tar_gz_file:
                 out_tar_gz_file.write(serializer.serialize(parsed_dataset))
 
             directory = os.path.abspath(out_tar_gz_path[:-7])
             os.makedirs(directory, exist_ok=True)
-            print(f'Extracting content to directory "{directory}"')
+            dataset.log_message(f'Extracting content to directory "{directory}"')
             with tarfile.open(out_tar_gz_path) as tar:
                 tar.extractall(path=directory)

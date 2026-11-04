@@ -36,7 +36,7 @@ class IsJobRunSpec(CanLog, Protocol):
     @property
     def callable_type(self) -> CallableType.Literals: ...
 
-    def log(
+    def log_message(
         self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None
     ) -> None: ...
 

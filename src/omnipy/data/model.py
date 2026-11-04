@@ -45,6 +45,7 @@ from omnipy.data.helpers import (
     validate_cls_counts,
     YesNoMaybe,
 )
+from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.exceptions import OmnipyNoneIsNotAllowedError
 from omnipy.shared.protocols.data import IsModel, IsSnapshotWrapper
@@ -183,6 +184,7 @@ class Model(  # type: ignore[misc]
     ModelDisplayMixin,
     LoadMixin,
     SaveMixin,
+    LogMixin,
     DataClassBase[_RootT],
     pyd.GenericModel,
     Generic[_RootT],

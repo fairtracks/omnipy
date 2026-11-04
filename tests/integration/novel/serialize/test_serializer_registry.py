@@ -23,7 +23,7 @@ from omnipy.shared.protocols.hub.runtime import IsRuntime
 
 from .helpers.functions import write_tar_gz
 
-_SILENT_LOG = SimpleNamespace(log=lambda _msg: None)
+_SILENT_LOG = SimpleNamespace(log_message=lambda _msg: None)
 
 
 @pytest.fixture

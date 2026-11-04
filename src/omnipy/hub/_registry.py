@@ -141,7 +141,7 @@ class RunStateRegistry(LogMixin):
         log_template = getattr(RunStateLogMessages, RunState.name_for_value(state))
         log_msg = log_template.format(job.unique_name)
         datetime_obj = self.get_job_state_datetime(job, state)
-        self.log(log_msg, datetime_obj=datetime_obj)
+        self.log_message(log_msg, datetime_obj=datetime_obj)
 
     def _raise_job_error(self, job: IsUniquelyNamedJob, msg: str) -> None:
         raise ValueError(f'Error in job "{job.unique_name}": {msg}')

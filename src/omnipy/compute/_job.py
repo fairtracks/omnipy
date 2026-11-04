@@ -413,7 +413,7 @@ class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT
         try:
             return self_as_job_base._call_job(*args, **kwargs)
         except Exception as e:
-            self_as_job_base.log(str(e), level=logging.ERROR)
+            self_as_job_base.log_message(str(e), level=logging.ERROR)
             raise
 
 

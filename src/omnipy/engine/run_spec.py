@@ -200,20 +200,21 @@ class JobRunSpec(ABC):
         """
         return self._job.callable_type
 
-    @property
-    def logger(self) -> Logger:
+    def get_logger(self) -> Logger:
         """Proxies to the wrapped job's logger.
 
-        See [`CanLog.logger`][omnipy.shared.protocols.hub.log.CanLog.logger].
+        See [`CanLog.get_logger`][omnipy.shared.protocols.hub.log.CanLog.get_logger].
         """
-        return self._job.logger
+        return self._job.get_logger()
 
-    def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None) -> None:
+    def log_message(
+        self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None
+    ) -> None:
         """Proxies log messages to the wrapped job.
 
-        See [`CanLog.log`][omnipy.shared.protocols.hub.log.CanLog.log].
+        See [`CanLog.log_message`][omnipy.shared.protocols.hub.log.CanLog.log_message].
         """
-        self._job.log(log_msg, level=level, datetime_obj=datetime_obj)
+        self._job.log_message(log_msg, level=level, datetime_obj=datetime_obj)
 
     @abstractmethod
     def create_default_run_callable(self) -> Callable:

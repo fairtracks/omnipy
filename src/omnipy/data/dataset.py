@@ -38,6 +38,7 @@ from omnipy.data.helpers import (
     build_own_module_and_global_namespace_for_forward_refs,
     cleanup_name_qualname_and_module,
 )
+from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
 from omnipy.shared.enums.data import SelectSerializerBy
 from omnipy.shared.protocols.data import (
@@ -132,6 +133,7 @@ class Dataset(
     DatasetDisplayMixin,
     LoadMixin,
     SaveMixin,
+    LogMixin,
     TaskDatasetMixin,
     DataClassBase,
     pyd.GenericModel,

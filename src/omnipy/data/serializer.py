@@ -139,6 +139,12 @@ class TarFileSerializer(Serializer[_DatasetT], Generic[_DatasetT]):
                 )
 
 
+def _get_log_func(log_obj: object) -> Callable[[str], object]:
+    """Return the ``log_message()`` method of ``log_obj`` if it has one, otherwise ``print()``."""
+    log_message = getattr(log_obj, 'log_message', None)
+    return log_message if callable(log_message) else print
+
+
 class SerializerRegistry:
     """Registry and auto-detection helper for the serializers available to Omnipy."""
 
@@ -280,11 +286,7 @@ class SerializerRegistry:
             ``None`` when no unique serializer can be determined.
         """
 
-        log: Callable
-        if hasattr(log_obj, 'log'):
-            log = log_obj.log
-        else:
-            log = print
+        log = _get_log_func(log_obj)
 
         file_suffixes = self._get_file_suffixes(tar_file_path, ignore_dirs)
         if not file_suffixes:
@@ -339,11 +341,7 @@ class SerializerRegistry:
             The first dataset produced by a compatible serializer, or ``None`` if none match.
         """
 
-        log: Callable
-        if hasattr(log_obj, 'log'):
-            log = log_obj.log
-        else:
-            log = print
+        log = _get_log_func(log_obj)
 
         serializers = self.detect_tar_file_serializers_from_dataset_cls(to_dataset)
         if len(serializers) == 0:
@@ -437,11 +435,7 @@ class SerializerRegistry:
         tar_file_path: str,
         ignore_dirs: bool,
     ) -> IsDataset | None:
-        log: Callable
-        if hasattr(log_obj, 'log'):
-            log = log_obj.log
-        else:
-            log = print
+        log = _get_log_func(log_obj)
 
         serializers = self.detect_tar_file_serializers_from_file_suffix('bytes')
         if len(serializers) == 0:

@@ -54,7 +54,7 @@ def test_default_log(
     now = datetime.now()
 
     for i in range(2):
-        my_obj.log(f'Log message {i}', level=logging.INFO, datetime_obj=now)
+        my_obj.log_message(f'Log message {i}', level=logging.INFO, datetime_obj=now)
 
         assert_log_line_from_stream(
             my_stdout,

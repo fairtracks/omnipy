@@ -9,18 +9,18 @@ from typing import Protocol
 from omnipy.util.helpers import is_package_editable
 
 if is_package_editable('omnipy'):
-    os.environ['OMNIPY_MACRO_CANLOG_LOGGER_SUMMARY'] = (
+    os.environ['OMNIPY_MACRO_CANLOG_GET_LOGGER_SUMMARY'] = (
         'Return the logger bound to the concrete instance type.'
     )
-    os.environ['OMNIPY_MACRO_CANLOG_LOGGER_DETAILS'] = dedent("""\
+    os.environ['OMNIPY_MACRO_CANLOG_GET_LOGGER_DETAILS'] = dedent("""\
         Returns:
             Logger: Logger used by the object for Omnipy log messages.
     """)
 
-    os.environ['OMNIPY_MACRO_CANLOG_LOG_SUMMARY'] = (
+    os.environ['OMNIPY_MACRO_CANLOG_LOG_MESSAGE_SUMMARY'] = (
         'Emit a log message, optionally using an explicit event timestamp.'
     )
-    os.environ['OMNIPY_MACRO_CANLOG_LOG_DETAILS'] = dedent("""\
+    os.environ['OMNIPY_MACRO_CANLOG_LOG_MESSAGE_DETAILS'] = dedent("""\
         Args:
             log_msg: Message text to send to the logger.
             level: Standard library logging level.
@@ -31,12 +31,11 @@ if is_package_editable('omnipy'):
 class CanLog(Protocol):
     """Protocol for objects that expose a logger and log helper."""
 
-    @property
-    def logger(self) -> Logger:
+    def get_logger(self) -> Logger:
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CANLOG_LOGGER_SUMMARY}}
+        # {{CANLOG_GET_LOGGER_SUMMARY}}
         #
-        # {{CANLOG_LOGGER_DETAILS}}
+        # {{CANLOG_GET_LOGGER_DETAILS}}
         """Return the logger bound to the concrete instance type.
 
         Returns:
@@ -44,11 +43,11 @@ class CanLog(Protocol):
         """
         ...
 
-    def log(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None):
+    def log_message(self, log_msg: str, level: int = INFO, datetime_obj: datetime | None = None):
         # %% Original docstring (managed by expand_docstr_macros.py) %%
-        # {{CANLOG_LOG_SUMMARY}}
+        # {{CANLOG_LOG_MESSAGE_SUMMARY}}
         #
-        # {{CANLOG_LOG_DETAILS}}
+        # {{CANLOG_LOG_MESSAGE_DETAILS}}
         """Emit a log message, optionally using an explicit event timestamp.
 
         Args:

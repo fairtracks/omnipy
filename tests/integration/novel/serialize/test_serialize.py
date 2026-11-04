@@ -281,7 +281,7 @@ def _new_persisted_tar_files(runtime: IsRuntime, before_files: set[Path]) -> lis
 
 def _restore_json_dataset_from_tar_file(tar_file_path: Path) -> JsonDataset:
     restored_dataset = get_serializer_registry().load_from_tar_file_path_based_on_file_suffix(
-        log_obj=SimpleNamespace(log=lambda _msg: None),
+        log_obj=SimpleNamespace(log_message=lambda _msg: None),
         tar_file_path=str(tar_file_path),
         to_dataset=JsonDataset(),
     )
