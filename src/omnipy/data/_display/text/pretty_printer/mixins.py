@@ -1,11 +1,13 @@
 """Mixin printers that classify Python-like and JSON-like panel content."""
 
 from abc import ABC
-import json
 
 from typing_extensions import override
 
-from omnipy.components.json.models import is_json_model_instance_hack
+from omnipy.components.json.models import (
+    is_json_model_instance_hack,
+    JsonModel,
+)
 from omnipy.data._display.frame import AnyFrame
 from omnipy.data._display.panel.draft.base import DraftPanel
 from omnipy.data._display.text.pretty_printer.base import PrettyPrinter
@@ -63,12 +65,9 @@ class JsonStatsTighteningPrettyPrinterMixin(PrettyPrinter[object], ABC):
     @override
     @classmethod
     def _get_content_for_draft_panel(cls, draft_panel: DraftPanel[object, AnyFrame]) -> object:
-        if is_model_instance(draft_panel.content):
-            data = draft_panel.content.to_data()
-            if isinstance(data, str):
-                # Top-level string content may be the quoted form of a string that JSON models
-                # cannot hold (e.g. '"123"' for '123'). Display the string that to_json() exports.
-                return json.loads(draft_panel.content.to_json())
-            return data
+        if isinstance(draft_panel.content, JsonModel):
+            return draft_panel.content.to_display_data()
+        elif is_model_instance(draft_panel.content):
+            return draft_panel.content.to_data()
         else:
             return draft_panel.content

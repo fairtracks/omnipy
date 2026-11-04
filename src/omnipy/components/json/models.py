@@ -235,7 +235,8 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
     def _is_quoted(value: str) -> bool:
         """Return whether ``value`` starts and ends with a double quote."""
 
-        return len(value) >= 2 and value[0] == value[-1] == '"'
+        value_stripped = value.strip()
+        return len(value_stripped) >= 2 and value_stripped[0] == value_stripped[-1] == '"'
 
     @classmethod
     def _is_kept_as_str(cls, value: str) -> bool:
@@ -302,7 +303,7 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
         """
 
         content = cast(Model[_RootT], self).content
-        if isinstance(content, str) and type(self)._is_json_text_of_str_not_kept_as_str(content):
+        if isinstance(content, str) and self._is_json_text_of_str_not_kept_as_str(content):
             return content
         return super().to_json(pretty=pretty, **kwargs)  # type: ignore[misc]
 
@@ -339,6 +340,18 @@ class JsonModel(ParseStrAsJsonMixin[_JsonAnyUnion], Model[_JsonAnyUnion]):
         def __new__(cls, value: IsStr | object) -> AnyJsonModel: ...
 
         def __new__(cls, value: _JsonAnyUnionContent | object) -> AnyJsonModel: ...
+
+    def to_display_data(self) -> object:
+        """Return the content as data to display, i.e. the data that to_json() encodes.
+
+        Content in the quoted form of a string that pre-parsing would change (e.g. '"123"') is
+        displayed as that string ('123'). Other content is returned as by to_data().
+        """
+        content = self.content
+        if isinstance(content, str) and self._is_json_text_of_str_not_kept_as_str(content):
+            return json.loads(content)
+        else:
+            return self.to_data()
 
 
 class JsonListOrDictModel(ParseStrAsJsonMixin[_JsonListOfDictUnion], Model[_JsonListOfDictUnion]):
