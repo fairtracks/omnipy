@@ -22,20 +22,18 @@ from .cases.files import FileCase
 @pc.parametrize_with_cases('case', cases='.cases.files')
 @pytest.mark.parametrize('target_cls', [Model[object], JsonDataset, Model[JsonDataset]])
 @pytest.mark.parametrize('entry_point', ['load', 'load_into'])
-@pytest.mark.parametrize('select_serializer_by', ['type', 'suffix'])
 def test_file_inputs(
     case: FileCase,
     target_cls: type[Model] | type[Dataset],
     entry_point: Literal['load', 'load_into'],
-    select_serializer_by: SelectSerializerBy.Literals,
 ) -> None:
     if entry_point == 'load':
-        result = target_cls.load(case.source, select_serializer_by=select_serializer_by)
+        result = target_cls.load(case.source)
         # Local paths given as str are loaded synchronously, even if typed as possibly URLs
         assert not isinstance(result, asyncio.Task)
     else:
         result = target_cls()
-        assert result.load_into(case.source, select_serializer_by=select_serializer_by) is result
+        assert result.load_into(case.source) is result
     expected = case.expected_model if target_cls is Model[object] else case.expected_dataset
     assert result.to_data() == expected
 
@@ -79,6 +77,9 @@ def test_keyed_local_paths_remain_unsupported(
         ({'a.json': b'[1, 2]'}, Dataset[Model[list[int]]], {'a': [1, 2]}),
         ({'a.json': b'[1, 2]'}, Dataset[Model[object]], {'a': [1, 2]}),
         ({'a.txt': b'"quoted"'}, Dataset[Model[object]], {'a': '"quoted"'}),
+        ({'a.csv': b'x,y\n1,2\n'}, Dataset[Model[object]], {'a': {'x': [1], 'y': [2]}}),
+        ({'a.bytes': b'\x00\xff'}, Dataset[Model[object]], {'a': b'\x00\xff'}),
+        ({'a.md': b'# x'}, Dataset[Model[object]], {'a': b'# x'}),
         ({'a.png': b'\x89PNG'}, Dataset[Model[object]], {'a': b'\x89PNG'}),
         ({'a.png': b'\x89PNG'}, Dataset[Model[bytes]], {'a': b'\x89PNG'}),
     ],
@@ -94,6 +95,38 @@ def test_serializer_selection_falls_back_to_file_suffix_and_raw_bytes(
     path = write_tar_gz(tmp_path / 'data.tar.gz', members)
     result = target_cls.load(path, select_serializer_by=select_serializer_by)
     assert result.to_data() == expected
+
+
+@pc.parametrize(
+    'file_name, content, expected_by_suffix',
+    [
+        ('first.txt', b'hello', 'hello'),
+        ('first.csv', b'x,y\n1,2\n', {'x': [1], 'y': [2]}),
+        ('first.md', b'# x', '# x'),
+    ],
+)
+@pytest.mark.parametrize('target_cls', [JsonDataset, Model[JsonDataset]])
+@pytest.mark.parametrize('as_archive', [False, True])
+def test_serializer_selection_of_json_dataset_for_other_file_suffixes(
+    tmp_path: Path,
+    file_name: str,
+    content: bytes,
+    expected_by_suffix: object,
+    target_cls: type[Dataset] | type[Model],
+    as_archive: bool,
+) -> None:
+    if as_archive:
+        path = write_tar_gz(tmp_path / 'data.tar.gz', {file_name: content})
+    else:
+        path = tmp_path / file_name
+        path.write_bytes(content)
+
+    assert target_cls.load(path, select_serializer_by='suffix').to_data() == {
+        'first': expected_by_suffix
+    }
+    # Selecting by type uses the JSON serializer, regardless of the file suffix
+    with pytest.raises(ValidationError):
+        target_cls.load(path, select_serializer_by='type')
 
 
 def test_serializer_selection_by_type_overrides_file_suffix(tmp_path: Path) -> None:
