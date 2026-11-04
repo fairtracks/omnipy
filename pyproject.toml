@@ -275,6 +275,11 @@ testpaths = [
 ]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    # pytest-cases inspects all classes with "Case" in their names for case methods, including
+    # the NamedTuples and dataclasses that case functions return
+    "ignore:cannot collect (test|cases) class '\\w*Case\\w*' because it has a __(init|new)__ constructor:pytest_cases.CasesCollectionWarning",
+]
 
 [project.entry-points."pygments.styles"]
 "omnipy-selenized-black" = "omnipy.data._display.styles.omnipy_selenized:OmnipySelenizedBlackStyle"
