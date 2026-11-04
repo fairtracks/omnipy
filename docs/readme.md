@@ -123,6 +123,7 @@ page with `JsonListOfDictsModel`:
 >>> import omnipy as om
 --8<-- "_includes/pycon_hidden_runtime_setup.md"
 >>> om.runtime.config.data.ui.browser.color.style = om.DarkHighContrastColorStyles.WOODLAND_T16
+>>> om.runtime.config.data.ui.browser.color.solid_background = False
 >>> from runpy import run_path  # markdown-exec: hide
 >>> _fixture_path = 'docs/examples/water_sample_service.py'  # markdown-exec: hide
 >>> _service = run_path(_fixture_path)['water_sample_service']()  # markdown-exec: hide
