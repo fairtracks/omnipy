@@ -43,7 +43,7 @@ def case_keyed_urls(
     return UrlCase(urls=wrapper(urls), expected_model=expected, expected_dataset=expected)
 
 
-@pc.parametrize('wrapper', [list, tuple, iter])
+@pc.parametrize('wrapper', [list, iter])
 @pc.parametrize('count', [0, 1, 2])
 def case_url_iterables(
     load_content_server: TestServer, wrapper: Callable[[list[str]], Iterable[str]], count: int

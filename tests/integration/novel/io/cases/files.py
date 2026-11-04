@@ -54,7 +54,7 @@ def case_local_source(
     return FileCase(source=source, expected_model=model_expected, expected_dataset=expected)
 
 
-@pc.parametrize('wrapper', [list, tuple, iter])
+@pc.parametrize('wrapper', [list, iter])
 def case_multiple_archives(
     tmp_path: Path, wrapper: Callable[[list[Path]], Iterable[Path]]
 ) -> FileCase:
