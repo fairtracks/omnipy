@@ -5,10 +5,11 @@ from collections.abc import Callable, Iterable
 import os
 from os import fspath, PathLike
 import tarfile
-from typing import cast, Literal, Self, TypeVar
+from typing import cast, Literal, overload, Self, TypeVar
 
 from omnipy.shared.enums.data import SelectSerializerBy
 from omnipy.shared.protocols.data import (
+    IsLocalPaths,
     IsPathOrUrl,
     IsPathsOrUrlsOneOrMore,
     IsPathsOrUrlsOneOrMoreOrNone,
@@ -21,6 +22,27 @@ _T = TypeVar('_T')
 
 class LoadMixin:
     """Load serialized contents from local paths or HTTP URLs into Models and Datasets."""
+
+    @overload
+    @classmethod
+    def load(
+        cls,
+        paths_or_urls: IsLocalPaths,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+    ) -> Self: ...
+
+    @overload
+    @classmethod
+    def load(
+        cls,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
 
     @classmethod
     def load(
@@ -56,6 +78,25 @@ class LoadMixin:
             ignore_dirs=ignore_dirs,
             **kwargs,
         )
+
+    @overload
+    def load_into(
+        self,
+        paths_or_urls: IsLocalPaths,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+    ) -> Self: ...
+
+    @overload
+    def load_into(
+        self,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
 
     def load_into(
         self,

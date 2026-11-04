@@ -67,10 +67,31 @@ IsPathsOrUrls: TypeAlias = (
 )
 IsPathsOrUrlsOneOrMore: TypeAlias = 'IsPathOrUrl | IsPathsOrUrls'
 IsPathsOrUrlsOneOrMoreOrNone: TypeAlias = 'IsPathsOrUrlsOneOrMore | None'
+# Local paths, which are always loaded synchronously (unlike str, which may also be a URL)
+IsLocalPaths: TypeAlias = 'os.PathLike[str] | Iterable[os.PathLike[str]]'
 
 
 class SupportsLoadInto(Protocol):
     """An instance that can load paths or URLs into itself."""
+
+    @overload
+    def load_into(
+        self,
+        paths_or_urls: IsLocalPaths,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+    ) -> Self: ...
+
+    @overload
+    def load_into(
+        self,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
 
     def load_into(
         self,
@@ -137,6 +158,27 @@ class HasContent(Protocol[ContentT]):
 @runtime_checkable
 class IsModel(HasContent[_RootT], IsBaseDisplayMixin, SupportsLoadInto, Protocol[_RootT]):
     """Single-value data wrapper with typed content and conversion support."""
+
+    @overload
+    @classmethod
+    def load(
+        cls,
+        paths_or_urls: IsLocalPaths,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+    ) -> Self: ...
+
+    @overload
+    @classmethod
+    def load(
+        cls,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: str | None = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
 
     @classmethod
     def load(
@@ -253,6 +295,27 @@ class IsDataset(
         """
         ...
 
+    @overload
+    @classmethod
+    def load(
+        cls,
+        paths_or_urls: IsLocalPaths,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: None | str = None,
+        ignore_dirs: bool = False,
+    ) -> Self: ...
+
+    @overload
+    @classmethod
+    def load(
+        cls,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: None | str = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
+
     @classmethod
     def load(
         cls,
@@ -279,6 +342,25 @@ class IsDataset(
             Self | asyncio.Task[Self]: Loaded dataset or asynchronous load task.
         """
         ...
+
+    @overload
+    def load_into(
+        self,
+        paths_or_urls: IsLocalPaths,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: None | str = None,
+        ignore_dirs: bool = False,
+    ) -> Self: ...
+
+    @overload
+    def load_into(
+        self,
+        paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        as_mime_type: None | str = None,
+        ignore_dirs: bool = False,
+        **kwargs: IsPathOrUrl,
+    ) -> Self | asyncio.Task[Self]: ...
 
     def load_into(
         self,
