@@ -11,6 +11,7 @@ from typing import Any, cast, Generic, IO
 
 from typing_extensions import TypeVar
 
+from omnipy.shared.enums.data import SelectSerializerBy
 from omnipy.shared.protocols.data import HasData, IsDataset, IsSerializer, IsTarFileSerializer
 from omnipy.shared.protocols.hub.log import CanLog
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
@@ -239,24 +240,13 @@ class SerializerRegistry:
     def detect_tar_file_serializers_from_dataset_cls(
         self, dataset: IsDataset
     ) -> tuple[type[IsTarFileSerializer], ...]:
-        """Return tar-file serializers that can load data into ``dataset``.
+        """Return tar-file serializers that directly support the type of ``dataset``."""
 
-        If no direct match exists, serializers using the generic ``bytes`` suffix are returned as a
-        fallback.
-        """
-
-        serializers = tuple(
+        return tuple(
             serializer_cls
             for serializer_cls in self.tar_file_serializers
             if serializer_cls.is_dataset_directly_supported(dataset)
         )
-        if len(serializers) == 0:
-            serializers = tuple(
-                serializer_cls
-                for serializer_cls in self.tar_file_serializers
-                if serializer_cls.get_output_file_suffix() == 'bytes'
-            )
-        return serializers
 
     def detect_tar_file_serializers_from_file_suffix(
         self, file_suffix: str
@@ -296,12 +286,7 @@ class SerializerRegistry:
         else:
             log = print
 
-        with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
-            file_suffixes = {
-                member.name.split('.')[-1]
-                for member in tarfile_obj.getmembers()
-                if not (ignore_dirs and member.isdir())
-            }
+        file_suffixes = self._get_file_suffixes(tar_file_path, ignore_dirs)
         if not file_suffixes:
             return to_dataset
         if len(file_suffixes) != 1:
@@ -362,7 +347,7 @@ class SerializerRegistry:
 
         serializers = self.detect_tar_file_serializers_from_dataset_cls(to_dataset)
         if len(serializers) == 0:
-            log(f'No serializer for Dataset with type "{type(to_dataset)}" can be determined.')
+            log(f'No serializer directly supports the Dataset type "{type(to_dataset)}".')
         else:
             for serializer in serializers:
                 log(
@@ -379,3 +364,95 @@ class SerializerRegistry:
                     )
 
                 return out_dataset
+
+    def load_from_tar_file_path(
+        self,
+        log_obj: CanLog,
+        tar_file_path: str,
+        to_dataset: IsDataset,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
+        ignore_dirs: bool = False,
+    ) -> IsDataset | None:
+        """Load a tar archive, selecting serializers by target type, file suffix, or raw bytes.
+
+        With ``select_serializer_by='type'``, serializers that directly support the type of
+        ``to_dataset`` are tried first, reading all files regardless of their suffixes. Otherwise,
+        or if no serializer supports the type, serializers are selected by the file suffixes. If
+        no serializer supports the file suffix, the files are read as raw bytes. As a single
+        serializer is selected for all files, files with different suffixes raise an error.
+
+        Args:
+            log_obj: Logger-like object used for status and failure messages.
+            tar_file_path: Path to the gzipped tar archive.
+            to_dataset: Empty dataset instance of the target type, which may be populated.
+            select_serializer_by: Whether to select serializers by target type or by file suffix
+                first.
+            ignore_dirs: Whether to skip directory entries inside archives/directories.
+
+        Returns:
+            The loaded dataset, for the caller to absorb into its target, or ``None`` if no raw
+            bytes serializer is registered.
+
+        Raises:
+            ValueError: If a serializer is to be selected by file suffix, but the files have
+                different suffixes.
+        """
+
+        if select_serializer_by == SelectSerializerBy.TYPE:
+            loaded_dataset = self.load_from_tar_file_path_based_on_dataset_cls(
+                log_obj, tar_file_path, to_dataset, any_file_suffix=True, ignore_dirs=ignore_dirs
+            )
+            if loaded_dataset is not None:
+                return loaded_dataset
+
+        file_suffixes = self._get_file_suffixes(tar_file_path, ignore_dirs)
+        if len(file_suffixes) > 1:
+            raise ValueError(
+                f'The files in "{os.path.abspath(tar_file_path)}" have different file suffixes '
+                f'({", ".join(sorted(file_suffixes))}), so a serializer cannot be selected by '
+                f'file suffix. To read the files as raw bytes, load them into a bytes target, '
+                f"selecting serializers by type (select_serializer_by='type')."
+            )
+
+        loaded_dataset = self.load_from_tar_file_path_based_on_file_suffix(
+            log_obj, tar_file_path, to_dataset, ignore_dirs=ignore_dirs
+        )
+        if loaded_dataset is not None:
+            return loaded_dataset
+
+        return self._load_from_tar_file_path_as_raw_bytes(log_obj, tar_file_path, ignore_dirs)
+
+    @staticmethod
+    def _get_file_suffixes(tar_file_path: str, ignore_dirs: bool) -> set[str]:
+        with tarfile.open(tar_file_path, 'r:gz') as tarfile_obj:
+            return {
+                member.name.split('.')[-1]
+                for member in tarfile_obj.getmembers()
+                if not (ignore_dirs and member.isdir())
+            }
+
+    def _load_from_tar_file_path_as_raw_bytes(
+        self,
+        log_obj: CanLog,
+        tar_file_path: str,
+        ignore_dirs: bool,
+    ) -> IsDataset | None:
+        log: Callable
+        if hasattr(log_obj, 'log'):
+            log = log_obj.log
+        else:
+            log = print
+
+        serializers = self.detect_tar_file_serializers_from_file_suffix('bytes')
+        if len(serializers) == 0:
+            log('No serializer for raw bytes is registered. Aborting load.')
+            return None
+
+        log(
+            f'Reading all files in the gzipped tarpack at "{os.path.abspath(tar_file_path)}" '
+            f'as raw bytes, as no serializer supports their file suffix.'
+        )
+        with open(tar_file_path, 'rb') as tarfile_binary:
+            return serializers[0].deserialize(
+                tarfile_binary.read(), any_file_suffix=True, ignore_dirs=ignore_dirs
+            )

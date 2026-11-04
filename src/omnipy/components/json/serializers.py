@@ -16,6 +16,13 @@ class JsonDatasetToTarFileSerializer(TarFileSerializer[JsonBaseDataset]):
     def is_dataset_directly_supported(cls, dataset: IsDataset) -> bool:
         """Return whether a dataset can be serialized as JSON files."""
 
+        # TODO: Consider supporting datasets of JSON-compatible typed models directly
+        #       Only JSON datasets are supported directly. Loading by type therefore reads all
+        #       files as JSON for e.g. JsonDataset, while datasets of JSON-compatible typed models
+        #       (e.g. Dataset[Model[list[int]]]) fall back to selecting serializers by file
+        #       suffix, and cannot read JSON from files with other suffixes. Planned to be
+        #       revisited as part of the serialization rewrite.
+
         from ..isa.datasets import IsaJsonDataset
 
         return isinstance(dataset, JsonBaseDataset) or isinstance(dataset, IsaJsonDataset)

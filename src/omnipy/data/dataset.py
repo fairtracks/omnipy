@@ -39,6 +39,7 @@ from omnipy.data.helpers import (
     cleanup_name_qualname_and_module,
 )
 from omnipy.shared.constants import ASYNC_LOAD_SLEEP_TIME, DATA_KEY
+from omnipy.shared.enums.data import SelectSerializerBy
 from omnipy.shared.protocols.data import (
     IsHttpUrlDataset,
     IsMultiModelDataset,
@@ -1749,14 +1750,15 @@ class Dataset(
     def _load_paths(
         self,
         path_or_urls: Iterable[str],
-        by_file_suffix: bool,
+        select_serializer_by: SelectSerializerBy.Literals,
         ignore_dirs: bool = False,
     ) -> Self:
         """Load dataset contents from local tar files or directories.
 
         Args:
             path_or_urls: Iterable of local filesystem paths to load from.
-            by_file_suffix: Whether serializer selection should use file-suffix detection.
+            select_serializer_by: Whether to select serializers by type or by file suffix first.
+            ignore_dirs: Whether to skip directory entries inside archives/directories.
 
         Returns:
             This dataset instance after all paths have been loaded.
@@ -1768,14 +1770,13 @@ class Dataset(
             serializer_registry = self._get_serializer_registry()
             tar_gz_file_path = self._ensure_tar_gz_file(path_or_url)
 
-            if by_file_suffix:
-                loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                    self, tar_gz_file_path, self.__class__(), ignore_dirs=ignore_dirs
-                )
-            else:
-                loaded_dataset = serializer_registry.load_from_tar_file_path_based_on_dataset_cls(
-                    self, tar_gz_file_path, self, any_file_suffix=True, ignore_dirs=ignore_dirs
-                )
+            loaded_dataset = serializer_registry.load_from_tar_file_path(
+                self,
+                tar_gz_file_path,
+                self.__class__(),
+                select_serializer_by=select_serializer_by,
+                ignore_dirs=ignore_dirs,
+            )
             if loaded_dataset is not None:
                 self.absorb(loaded_dataset)
                 continue

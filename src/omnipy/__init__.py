@@ -287,7 +287,7 @@ from omnipy.shared.enums.colorstyles import (
     RecommendedColorStyles,
     TintedThemingBase16ColorStyles,
 )
-from omnipy.shared.enums.data import BackoffStrategy
+from omnipy.shared.enums.data import BackoffStrategy, SelectSerializerBy
 from omnipy.shared.enums.display import (
     DarkBackground,
     DisplayColorSystem,
@@ -353,6 +353,7 @@ __all__ = [
     'setup_jupyter_ui',
     'AllColorStyles',
     'BackoffStrategy',
+    'SelectSerializerBy',
     'ConfigOutputStorageProtocolOptions',
     'ConfigPersistOutputsOptions',
     'ConfigRestoreOutputsOptions',

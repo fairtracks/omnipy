@@ -106,7 +106,7 @@ if not __all__:
     )
     from omnipy.hub.runtime import runtime
     from omnipy.hub.ui import setup_jupyter_ui
-    from omnipy.shared.enums.data import BackoffStrategy
+    from omnipy.shared.enums.data import BackoffStrategy, SelectSerializerBy
     from omnipy.shared.enums.job import (
         ConfigOutputStorageProtocolOptions,
         ConfigPersistOutputsOptions,
@@ -149,6 +149,7 @@ if not __all__:
         'ConfigRestoreOutputsOptions',
         'PersistOutputsOptions',
         'BackoffStrategy',
+        'SelectSerializerBy',
         'OutputStorageProtocolOptions',
         'ConfigPersistOutputsOptions',
         'ConfigOutputStorageProtocolOptions',

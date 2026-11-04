@@ -1,4 +1,4 @@
-"""Data-related literal enums for retry and backoff behavior."""
+"""Data-related literal enums for retry and backoff behavior and serializer selection."""
 
 from typing import Literal
 
@@ -14,3 +14,19 @@ class BackoffStrategy(LiteralEnum[str]):
     JITTER: Literal['jitter'] = 'jitter'
     FIBONACCI: Literal['fibonacci'] = 'fibonacci'
     RANDOM: Literal['random'] = 'random'
+
+
+class SelectSerializerBy(LiteralEnum[str]):
+    """How to select serializers when loading local files.
+
+    With ``TYPE``, serializers are first selected by the type of the target, reading all files
+    regardless of their suffixes. If no serializer supports the target type, selection falls
+    back to ``SUFFIX``. With ``SUFFIX``, serializers are selected by the file suffixes. If no
+    serializer supports the file suffix, the files are read as raw bytes. As a single serializer
+    is selected for all files, files with different suffixes raise an error.
+    """
+
+    Literals = Literal['type', 'suffix']
+
+    TYPE: Literal['type'] = 'type'
+    SUFFIX: Literal['suffix'] = 'suffix'

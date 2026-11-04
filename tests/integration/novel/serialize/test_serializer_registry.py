@@ -130,12 +130,14 @@ def test_serializer_registry_load_by_file_suffix_empty_archive(
 
 
 @pytest.mark.usefixtures('runtime')
-@pytest.mark.parametrize('by_file_suffix', [False, True])
-def test_dataset_load_into_keeps_existing_entries(tmp_path: Path, by_file_suffix: bool) -> None:
+@pytest.mark.parametrize('select_serializer_by', ['type', 'suffix'])
+def test_dataset_load_into_keeps_existing_entries(
+    tmp_path: Path, select_serializer_by: str
+) -> None:
     tar_path = write_tar_gz(tmp_path / 'data.tar.gz', {'first.json': b'[1, 2]'})
     dataset = JsonDataset(existing=7)
 
-    dataset.load_into(str(tar_path), by_file_suffix=by_file_suffix)
+    dataset.load_into(str(tar_path), select_serializer_by=select_serializer_by)
     assert dataset.to_data() == {'existing': 7, 'first': [1, 2]}
 
 

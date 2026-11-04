@@ -5,6 +5,7 @@ from collections.abc import Iterable
 from os import fspath, PathLike
 from typing import cast, Self
 
+from omnipy.shared.enums.data import SelectSerializerBy
 from omnipy.shared.protocols.data import (
     IsPathOrUrl,
     IsPathsOrUrlsOneOrMore,
@@ -21,7 +22,7 @@ class LoadMixin:
     def load(
         cls,
         paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
-        by_file_suffix: bool = False,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
         as_mime_type: str | None = None,
         ignore_dirs: bool = False,
         **kwargs: IsPathOrUrl,
@@ -31,7 +32,11 @@ class LoadMixin:
         Args:
             paths_or_urls: Path, URL, iterable of paths or URLs, or dataset/model of HTTP URLs to
                 load from.
-            by_file_suffix: Whether serializer lookup should prefer file-suffix detection.
+            select_serializer_by: For local files, select serializers by the target type
+                (``'type'``, falling back to file suffixes) or by file suffix (``'suffix'``).
+                Files are read as raw bytes if no serializer supports their file
+                suffix. Files with different suffixes raise an error, unless
+                selected by type.
             as_mime_type: Optional MIME type hint for HTTP loading.
             ignore_dirs:  Whether to skip directory entries inside archives/directories.
             **kwargs: Alternate keyed path or URL arguments when ``paths_or_urls`` is omitted.
@@ -42,7 +47,7 @@ class LoadMixin:
         instance = cls()
         return instance.load_into(
             paths_or_urls,
-            by_file_suffix=by_file_suffix,
+            select_serializer_by=select_serializer_by,
             as_mime_type=as_mime_type,
             ignore_dirs=ignore_dirs,
             **kwargs,
@@ -51,7 +56,7 @@ class LoadMixin:
     def load_into(
         self,
         paths_or_urls: IsPathsOrUrlsOneOrMoreOrNone = None,
-        by_file_suffix: bool = False,
+        select_serializer_by: SelectSerializerBy.Literals = SelectSerializerBy.TYPE,
         as_mime_type: str | None = None,
         ignore_dirs: bool = False,
         **kwargs: IsPathOrUrl,
@@ -61,7 +66,11 @@ class LoadMixin:
         Args:
             paths_or_urls: Path, URL, iterable of paths or URLs, or dataset/model of HTTP URLs to
                 load from.
-            by_file_suffix: Whether serializer lookup should prefer file-suffix detection.
+            select_serializer_by: For local files, select serializers by the target type
+                (``'type'``, falling back to file suffixes) or by file suffix (``'suffix'``).
+                Files are read as raw bytes if no serializer supports their file
+                suffix. Files with different suffixes raise an error, unless
+                selected by type.
             as_mime_type: Optional MIME type hint for HTTP loading.
             ignore_dirs:  Whether to skip directory entries inside archives/directories.
             **kwargs: Alternate keyed path or URL arguments when ``paths_or_urls`` is omitted.
@@ -83,7 +92,7 @@ class LoadMixin:
 
         return self._load_paths_or_urls(
             paths_or_urls,
-            by_file_suffix=by_file_suffix,
+            select_serializer_by=select_serializer_by,
             as_mime_type=as_mime_type,
             ignore_dirs=ignore_dirs,
         )
@@ -91,7 +100,7 @@ class LoadMixin:
     def _load_paths_or_urls(
         self,
         paths_or_urls: IsPathsOrUrlsOneOrMore,
-        by_file_suffix: bool,
+        select_serializer_by: SelectSerializerBy.Literals,
         as_mime_type: str | None,
         ignore_dirs: bool,
     ) -> Self | asyncio.Task[Self]:
@@ -120,7 +129,7 @@ class LoadMixin:
                 loaded = self._load_http_urls_or_paths(
                     {paths_or_urls: paths_or_urls},
                     [paths_or_urls],
-                    by_file_suffix=by_file_suffix,
+                    select_serializer_by=select_serializer_by,
                     as_mime_type=as_mime_type,
                     ignore_dirs=ignore_dirs,
                 )
@@ -144,7 +153,7 @@ class LoadMixin:
                 loaded = self._load_http_urls_or_paths(
                     zip(path_or_url_tuple, path_or_url_tuple),
                     path_or_url_tuple,
-                    by_file_suffix=by_file_suffix,
+                    select_serializer_by=select_serializer_by,
                     as_mime_type=as_mime_type,
                     ignore_dirs=ignore_dirs,
                 )
@@ -161,7 +170,7 @@ class LoadMixin:
         self,
         keys_and_urls: Iterable[tuple[str, str]] | dict[str, str],
         paths: Iterable[str],
-        by_file_suffix: bool,
+        select_serializer_by: SelectSerializerBy.Literals,
         as_mime_type: str | None,
         ignore_dirs: bool,
     ) -> Self | asyncio.Task[Self]:
@@ -174,7 +183,7 @@ class LoadMixin:
         try:
             http_url_dataset = HttpUrlDataset(keys_and_urls)
         except ValidationError:
-            loaded = dataset._load_paths(paths, by_file_suffix, ignore_dirs=ignore_dirs)
+            loaded = dataset._load_paths(paths, select_serializer_by, ignore_dirs=ignore_dirs)
         else:
             loaded = dataset._load_http_urls(http_url_dataset, as_mime_type=as_mime_type)
         return cast(Self | asyncio.Task[Self], loaded)
