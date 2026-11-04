@@ -176,16 +176,19 @@ AnyJsonModel: TypeAlias = AnyJsonScalarModel | AnyJsonListOrDictModel
 
 _RootT = TypeVar('_RootT')
 
+_JSON_WHITESPACE = ' \t\n\r'
+
 
 class ParseStrAsJsonMixin(Generic[_RootT]):
     """Provide JSON-string pre-parsing behavior for model classes.
 
     Classes using this mixin can transparently accept serialized JSON in string
     form and convert it into parsed model content before the regular validation
-    pipeline runs. A complete JSON string literal is decoded, except when the
-    decoded string would itself be parsed. Such literals keep their quoted form,
-    in a single spelling (e.g. both ``'"123"'`` and ``'"12\\u0033"'`` become
-    ``'"123"'``).
+    pipeline runs. JSON whitespace around the JSON text is ignored, e.g. the
+    trailing newline of a loaded file. A complete JSON string literal is decoded,
+    except when the decoded string would itself be parsed. Such literals keep
+    their quoted form, in a single spelling (e.g. both ``'"123"'`` and
+    ``'"12\\u0033"'`` become ``'"123"'``).
     """
 
     @classmethod
@@ -212,7 +215,7 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
 
         cls_as_model = cast(type[Model[_RootT]], cls)
         if isinstance(data, str):
-            if len(data) > 0 and data[0] in cls.start_chars_for_json_content():
+            if cls._starts_with_json_content_char(data):
                 # Potentially a string representing JSON entities.
                 parsed_json = parse_str_as_json(data)
                 if not isinstance(parsed_json, pyd.UndefinedType):
@@ -225,25 +228,37 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
                 # quoted form, normalized to a single spelling (e.g. '"123"' -> '"123"').
                 parsed_json = parse_str_as_json(data)
                 if isinstance(parsed_json, str):
-                    if cls._is_kept_as_str(parsed_json):
-                        return cast(_RootT, parsed_json)
-                    return cast(_RootT, json.dumps(parsed_json, ensure_ascii=False))
+                    return cast(_RootT, cls._str_to_content(parsed_json))
 
         return cast(_RootT, data)
 
+    @classmethod
+    def _starts_with_json_content_char(cls, value: str) -> bool:
+        """Return whether ``value`` starts with a JSON content char, after any JSON whitespace."""
+
+        stripped = value.lstrip(_JSON_WHITESPACE)
+        return len(stripped) > 0 and stripped[0] in cls.start_chars_for_json_content()
+
     @staticmethod
     def _is_quoted(value: str) -> bool:
-        """Return whether ``value`` starts and ends with a double quote."""
+        """Return whether ``value`` is enclosed in double quotes, ignoring JSON whitespace."""
 
-        value_stripped = value.strip()
-        return len(value_stripped) >= 2 and value_stripped[0] == value_stripped[-1] == '"'
+        stripped = value.strip(_JSON_WHITESPACE)
+        return len(stripped) >= 2 and stripped[0] == stripped[-1] == '"'
+
+    @classmethod
+    def _is_parsed_as_json(cls, value: str) -> bool:
+        """Return whether JSON-string pre-parsing reads ``value`` as JSON text."""
+
+        if cls._starts_with_json_content_char(value):
+            return not isinstance(parse_str_as_json(value), pyd.UndefinedType)
+        return cls._is_quoted(value) and isinstance(parse_str_as_json(value), str)
 
     @classmethod
     def _is_kept_as_str(cls, value: str) -> bool:
         """Return whether JSON-string pre-parsing leaves ``value`` unchanged."""
 
-        parsed = cls._parse_data(value)
-        return isinstance(parsed, str) and parsed == value
+        return not cls._is_parsed_as_json(value)
 
     @classmethod
     def _is_json_text_of_str_not_kept_as_str(cls, value: str) -> bool:
@@ -258,13 +273,23 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
         parsed_json = parse_str_as_json(value)
         return isinstance(parsed_json, str) and not cls._is_kept_as_str(parsed_json)
 
+    @classmethod
+    def _str_to_content(cls, value: str) -> str:
+        """Return the content that represents the string ``value``.
+
+        This is ``value`` itself, or the quoted form if pre-parsing would change ``value`` (e.g.
+        ``'"123"'`` for ``'123'``).
+        """
+
+        return value if cls._is_kept_as_str(value) else json.dumps(value, ensure_ascii=False)
+
     def from_json(self, json_content: str) -> None:
         """Parse standard JSON text into this model instance.
 
         A top-level JSON string is decoded, e.g. ``"hello"`` becomes ``'hello'``. A decoded string
         that pre-parsing would change, e.g. the ``'123'`` from ``"123"``, keeps its quoted form
-        ``'"123"'``. This matches direct loading, except that the text must be valid JSON and may
-        have surrounding whitespace, and that ``NaN`` and ``Infinity`` are parsed as floats.
+        ``'"123"'``. This matches direct loading, except that the text must be valid JSON and that
+        ``NaN`` and ``Infinity`` are parsed as floats.
 
         Args:
             json_content: JSON document to parse.
@@ -280,8 +305,8 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
         except json.JSONDecodeError as exc:
             raise pyd.ValidationError([pyd.ErrorWrapper(exc, loc=ROOT_KEY)], cls_as_model) from exc
 
-        if isinstance(parsed_json, str) and not cls._is_kept_as_str(parsed_json):
-            parsed_json = json_content.strip(' \t\n\r')
+        if isinstance(parsed_json, str):
+            parsed_json = cls._str_to_content(parsed_json)
 
         cast(Model[_RootT], self).content = cls_as_model(parsed_json).content
 

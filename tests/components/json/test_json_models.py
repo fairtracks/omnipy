@@ -240,6 +240,12 @@ def test_json_model_operations(
         ('"null"', '"null"'),
         ('false', False),
         ('"false"', '"false"'),
+        ('123\n', 123),
+        (' 123', 123),
+        ('\n[1]\n', [1]),
+        (' "hello" ', 'hello'),
+        ('"123"\n', '"123"'),
+        ('\xa0"hello"', '\xa0"hello"'),
     ],
 )
 def test_json_parsing_of_json_strings(json_string: str, expected_data: Any) -> None:
@@ -273,7 +279,9 @@ def test_json_parsing_of_json_strings(json_string: str, expected_data: Any) -> N
         ('"A simple JSON string"', '"A simple JSON string"'),
         ('"Hello": 234', '"\\"Hello\\": 234"'),
         ('line1\nline2', '"line1\\nline2"'),
-        (' "123"', '" \\"123\\""'),
+        (' "123"', '"123"'),
+        ('"\\"123\\""', '"\\"123\\""'),
+        ('"\\"null\\""', '"\\"null\\""'),
         ('hello', '"hello"'),
         ('123 apples', '"123 apples"'),
         ('', '""'),
@@ -307,6 +315,7 @@ def test_json_model_to_json_round_trip(data: Any, expected_json: str) -> None:
         ('"12\\u0033"', '"123"'),
         ('"123"\n', '"123"'),
         (' "hello" ', 'hello'),
+        ('"\\"123\\""', '"\\"123\\""'),
         ('123', 123),
         ('[1, "2"]', [1, '2']),
         ('{"k": "123"}', {'k': '123'}),
@@ -324,6 +333,7 @@ def test_json_model_from_json_parses_standard_json(json_content: str, expected_d
     [
         ('[1, 2]', [1, 2]),
         ('{"a": [1, "x"]}', {'a': [1, 'x']}),
+        (' [1]\n', [1]),
     ],
 )
 def test_json_list_or_dict_model_parses_json_strings(json_string: str, expected_data: Any) -> None:
@@ -331,7 +341,7 @@ def test_json_list_or_dict_model_parses_json_strings(json_string: str, expected_
     assert JsonListOrDictModel(json_string).to_data() == expected_data
 
 
-@pc.parametrize('json_string', ['123', '"[1, 2]"', 'sample', ' [1]'])
+@pc.parametrize('json_string', ['123', '"[1, 2]"', 'sample', '\xa0[1]'])
 def test_json_list_or_dict_model_rejects_other_strings(json_string: str) -> None:
     """Reject strings that do not parse as a JSON list or dict."""
     with pytest.raises(ValidationError):
