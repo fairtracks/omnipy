@@ -12,7 +12,7 @@ from omnipy.compute.task import TaskTemplate
 from omnipy.data.model import Model
 from omnipy.shared.enums.data import BackoffStrategy
 from omnipy.shared.exceptions import ShouldNotOccurException
-from omnipy.shared.protocols.data import IsDataset
+from omnipy.shared.protocols.data import IsDataset, IsModel
 from omnipy.shared.typing import TYPE_CHECKING
 
 from ..json.datasets import JsonDataset, JsonListOfDictsDataset
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
     from .helpers import RateLimitingClientSession
     from .lazy_import import ClientResponse, ClientSession, RetryClient
 
-_JsonDatasetT = TypeVar('_JsonDatasetT', bound=IsDataset)
+_LoadableT = TypeVar('_LoadableT', bound=IsDataset | IsModel)
 
 
 async def _call_get(
@@ -342,18 +342,19 @@ async def get_auto_from_api_endpoint(
 @TaskTemplate()
 def load_urls_into_new_dataset(
     urls: HttpUrlDataset,
-    dataset_cls: type[_JsonDatasetT] = JsonDataset,
+    dataset_cls: type[_LoadableT] = JsonDataset,
     as_mime_type: str | None = None,
-) -> _JsonDatasetT:
-    """Load remote URLs into a newly created dataset instance.
+) -> _LoadableT:
+    """Load remote URLs into a newly created dataset or model instance.
 
     Args:
         urls: Dataset containing the URLs to load.
-        dataset_cls: Dataset type to populate from the fetched content.
+        dataset_cls: Dataset or Model type to populate from the fetched content. A Model
+            receives the contents as a mapping keyed by the URL names.
         as_mime_type: Optional MIME type override for response decoding.
 
     Returns:
-        A newly loaded dataset of type ``dataset_cls``.
+        A newly loaded instance of ``dataset_cls``.
 
     Raises:
         TypeError: If fetched data cannot be parsed by ``dataset_cls``.
@@ -369,18 +370,19 @@ def load_urls_into_new_dataset(
 @TaskTemplate()
 async def async_load_urls_into_new_dataset(
     urls: HttpUrlDataset,
-    dataset_cls: type[_JsonDatasetT] = JsonDataset,
+    dataset_cls: type[_LoadableT] = JsonDataset,
     as_mime_type: str | None = None,
-) -> _JsonDatasetT:
-    """Asynchronously load remote URLs into a newly created dataset instance.
+) -> _LoadableT:
+    """Asynchronously load remote URLs into a newly created dataset or model instance.
 
     Args:
         urls: Dataset containing the URLs to load.
-        dataset_cls: Dataset type to populate from the fetched content.
+        dataset_cls: Dataset or Model type to populate from the fetched content. A Model
+            receives the contents as a mapping keyed by the URL names.
         as_mime_type: Optional MIME type override for response decoding.
 
     Returns:
-        A newly loaded dataset of type ``dataset_cls``.
+        A newly loaded instance of ``dataset_cls``.
 
     Raises:
         TypeError: If fetched data cannot be parsed by ``dataset_cls``.
