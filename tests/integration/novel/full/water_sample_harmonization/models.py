@@ -35,7 +35,8 @@ class NormalizedSampleRecord(pyd.BaseModel):
     measurements: list[NormalizedMeasurementRecord]
 
 
-class NormalizedSamplesDataset(Dataset[Model[list[NormalizedSampleRecord]]]): """Normalized sample lists grouped by source, with one Dataset level."""
+class NormalizedSamplesDataset(Dataset[Model[list[NormalizedSampleRecord]]]):
+    """Normalized sample lists grouped by source, with one Dataset level."""
 
 
 class RiverMeasurementRecord(pyd.BaseModel):

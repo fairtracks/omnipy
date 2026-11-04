@@ -140,7 +140,8 @@ class SubmissionRecord(pyd.BaseModel):
             if dataset_key != sample.local_sample_alias:
                 raise ValueError(
                     f"Sample Dataset key '{dataset_key}' must match local_sample_alias "
-                    f"'{sample.local_sample_alias}'")
+                    f"'{sample.local_sample_alias}'"
+                )
         return samples
 
     @pyd.validator('files')
@@ -150,8 +151,9 @@ class SubmissionRecord(pyd.BaseModel):
     ) -> SubmissionFilesDataset:
         for dataset_key, file in files.items():
             if dataset_key != file.file_id:
-                raise ValueError(f"File Dataset key '{dataset_key}' must match file_id "
-                                 f"'{file.file_id}'")
+                raise ValueError(
+                    f"File Dataset key '{dataset_key}' must match file_id '{file.file_id}'"
+                )
         return files
 
     @pyd.validator('files')
@@ -176,7 +178,7 @@ class SubmissionRecord(pyd.BaseModel):
                 raise ValueError(
                     f"Sample '{sample.local_sample_alias}' must have exactly two files "
                     '(read1 and read2).'
-            )
+                )
 
         return files
 

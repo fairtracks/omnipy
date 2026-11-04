@@ -11,9 +11,11 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsDataset
 
-from .models import (NormalizedRiverSampleRecordMapper,
-                     NormalizedSamplesDataset,
-                     NormalizedWastewaterSampleRecordMapper)
+from .models import (
+    NormalizedRiverSampleRecordMapper,
+    NormalizedSamplesDataset,
+    NormalizedWastewaterSampleRecordMapper,
+)
 from .tasks import create_sample_and_measurements_tables, fetch_sample_pages
 
 
