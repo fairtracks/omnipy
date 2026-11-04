@@ -101,11 +101,12 @@ code.doc-symbol-module::after {
 }
 
 /* markdown-exec `html="true"` blocks render Omnipy's `_docs()` output directly as
-   `<pre><code style="display: inline-block; ...">`, bypassing the `.highlight` wrapper that
-   pymdownx uses for normal code blocks. The inline `display: inline-block` makes the `<code>`
-   box shrink-wrap its content instead of clipping it, so Material's `pre>code { overflow: auto }`
-   rule has nothing to scroll. Scroll the `<pre>` itself instead. */
-.md-typeset pre:has(> code[style*="display: inline-block"]) {
+   `<pre class="omnipy-html-output"><code style="display: inline-block; ...">`, bypassing the
+   `.highlight` wrapper that pymdownx uses for normal code blocks. The inline `display:
+   inline-block` makes the `<code>` box shrink-wrap its content instead of clipping it, so
+   Material's `pre>code { overflow: auto }` rule has nothing to scroll. Scroll the `<pre>` itself
+   instead. */
+.md-typeset pre.omnipy-html-output {
   overflow-x: auto;
 }
 

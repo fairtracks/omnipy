@@ -189,7 +189,9 @@ def _get_font_style_by_case_id(case_id: str | None) -> str:
 
 def fill_html_tag_template(data: str, color_style: str = '', case_id: str | None = None) -> str:
     HTML_TAG_TEMPLATE = (
-        '<pre><code style="{display_style}{font_style}{color_style}">{data}\n</code></pre>'
+        '<pre class="omnipy-html-output">'
+        '<code style="{display_style}{font_style}{color_style}">{data}\n</code>'
+        '</pre>'
     )
 
     return HTML_TAG_TEMPLATE.format(
@@ -214,7 +216,7 @@ def fill_html_page_template(style: str, data: str, case_id: str | None = None) -
             </style>
           </head>
           <body>
-            <pre><code style="{display_style}{font_style}">{data}
+            <pre class="omnipy-html-output"><code style="{display_style}{font_style}">{data}
         </code></pre>
           </body>
         </html>

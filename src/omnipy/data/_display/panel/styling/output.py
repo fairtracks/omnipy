@@ -57,7 +57,9 @@ class CommonOutputVariant(OutputVariant, Generic[PanelT, ContentT, FrameT]):
     _CSS_LINE_HEIGHT_TEMPLATE: ClassVar[str] = 'line-height: {line_height}; '
 
     _HTML_TAG_TEMPLATE: ClassVar[str] = (
-        '<pre><code style="display: inline-block; {font_style}{color_style}">{code}</code></pre>'
+        '<pre class="omnipy-html-output">'
+        '<code style="display: inline-block; {font_style}{color_style}">{code}</code>'
+        '</pre>'
     )
 
     _HTML_PAGE_TEMPLATE: ClassVar[str] = dedent("""\
