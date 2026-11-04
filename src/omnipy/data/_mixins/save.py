@@ -22,17 +22,17 @@ class SaveMixin:
         Args:
             path: Destination path with or without the ``.tar.gz`` suffix.
         """
-        from omnipy.data.dataset import Dataset, is_dataset_instance
-        from omnipy.data.helpers import get_single_value_key, get_wrapped_dataset
+        from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
+        from omnipy.data.helpers import get_single_value_key
         from omnipy.data.model import Model
 
         if is_dataset_instance(self):
             dataset = self
         else:
             model = cast(Model, self)
-            wrapped_dataset = get_wrapped_dataset(model)
-            if wrapped_dataset is not None:
-                dataset = wrapped_dataset
+            # Whether a Model wraps a Dataset is decided by its type, not by its current content
+            if is_dataset_subclass(model.outer_type()):
+                dataset = cast(Dataset, model.content)
             else:
                 model_cls = type(model)
                 dataset = Dataset[model_cls]({get_single_value_key(model_cls): model})  # type: ignore[valid-type]

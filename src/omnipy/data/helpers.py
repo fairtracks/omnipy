@@ -398,30 +398,3 @@ def get_single_value_key(model_cls: type) -> str:
 def is_single_value_key(key: str) -> bool:
     """Return whether a data file name marks an archive holding a single Model value."""
     return _SINGLE_VALUE_KEY_REGEX.match(key) is not None
-
-
-def get_wrapped_dataset(model: Any) -> Any:
-    """Return the Dataset wrapped by a Model, possibly through nested Models.
-
-    Whether a Model wraps a Dataset is decided by its type, e.g. ``Model[JsonDataset]`` or
-    ``Model[Model[JsonDataset]]``, not by the type of its current content.
-
-    Args:
-        model: Model instance to inspect.
-
-    Returns:
-        The wrapped Dataset instance, or ``None`` if the Model type does not wrap a Dataset.
-    """
-    from omnipy.data.dataset import is_dataset_subclass
-    from omnipy.data.model import is_model_instance, is_model_subclass
-
-    outer_type = type(model).outer_type()
-    while is_model_subclass(outer_type):
-        outer_type = outer_type.outer_type()
-    if not is_dataset_subclass(outer_type):
-        return None
-
-    content = model.content
-    while is_model_instance(content):
-        content = content.content
-    return content

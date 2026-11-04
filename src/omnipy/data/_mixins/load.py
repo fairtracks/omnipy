@@ -132,14 +132,14 @@ class LoadMixin:
         ignore_dirs: bool,
     ) -> Self | asyncio.Task[Self]:
         """Load into a Model through a Dataset, as described in ``load_into()``."""
-        from omnipy.data.dataset import Dataset
-        from omnipy.data.helpers import get_wrapped_dataset
+        from omnipy.data.dataset import Dataset, is_dataset_subclass
         from omnipy.data.model import Model
 
         model = cast(Model, self)
 
-        wrapped_dataset = get_wrapped_dataset(model)
-        if wrapped_dataset is not None:
+        # Whether a Model wraps a Dataset is decided by its type, not by its current content
+        if is_dataset_subclass(model.outer_type()):
+            wrapped_dataset = cast(Dataset, model.content)
             # TODO: Make Models wrapping a Dataset hold failed and pending entries like the Dataset
             #       A Dataset can hold failed and pending data entries, e.g. from failed HTTP
             #       requests, but validating a Model wrapping it raises FailedDataError or
