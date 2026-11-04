@@ -10,6 +10,7 @@ import pytest
 import pytest_cases as pc
 
 from omnipy.components.json.datasets import JsonDataset
+from omnipy.components.raw.datasets import StrictStrDataset
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.shared.enums.data import SelectSerializerBy
@@ -184,3 +185,18 @@ def test_serializer_selection_by_file_suffix_rejects_mixed_suffixes(
         'a': b'[1]',
         'b': b'# x',
     }
+
+
+@pytest.mark.parametrize('target_cls', [JsonDataset, StrictStrDataset])
+@pytest.mark.parametrize('as_archive', [False, True])
+def test_loading_non_utf8_content_as_text_fails_validation(
+    tmp_path: Path, target_cls: type[Dataset], as_archive: bool
+) -> None:
+    if as_archive:
+        path = write_tar_gz(tmp_path / 'data.tar.gz', {'first.bytes': b'\x00\xff'})
+    else:
+        path = tmp_path / 'first.bytes'
+        path.write_bytes(b'\x00\xff')
+
+    with pytest.raises(ValidationError, match='first'):
+        target_cls.load(path, select_serializer_by='type')
