@@ -283,6 +283,20 @@ class ParseStrAsJsonMixin(Generic[_RootT]):
 
         return value if cls._is_kept_as_str(value) else json.dumps(value, ensure_ascii=False)
 
+    @classmethod
+    def from_str_value(cls, value: str) -> Model[_RootT]:
+        """Create a model holding the string ``value``, without parsing it as JSON text.
+
+        Args:
+            value: String to hold, e.g. ``'123'``, which is held as the string ``'123'`` and not
+                parsed as the integer ``123``.
+
+        Returns:
+            A new model instance representing the string ``value``.
+        """
+
+        return cast(type[Model[_RootT]], cls)(cls._str_to_content(value))
+
     def from_json(self, json_content: str) -> None:
         """Parse standard JSON text into this model instance.
 

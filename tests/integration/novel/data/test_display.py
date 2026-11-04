@@ -230,3 +230,11 @@ def test_characterize_dataset_list_framing_and_rows() -> None:
         ╰────┴────────────────┴──────────────────┴────────┴──────────────────╯
         """)
     )
+
+
+def test_json_of_str_model_displays_string_not_parsed_json() -> None:
+    for value, exp_line in [('123', '"123"'), ('"123"', '"\\"123\\""'), ('hello', '"hello"')]:
+        output = render_panel_to_plain_terminal(
+            Model[str](value)._json(width=30, height=8, ui=UserInterfaceType.TERMINAL)
+        )
+        assert output.splitlines()[3] == f'│ {exp_line:<9} │'

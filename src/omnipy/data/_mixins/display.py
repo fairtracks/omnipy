@@ -2026,7 +2026,11 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         from omnipy.components.json.models import JsonModel
 
         self_as_dataset_or_model = cast('Dataset | Model', self)
-        return JsonModel(self_as_dataset_or_model.to_data())
+        data = self_as_dataset_or_model.to_data()
+        if isinstance(data, str):
+            # The data is a string, not JSON text to parse (e.g. '123' is not the integer 123)
+            return JsonModel.from_str_value(data)
+        return JsonModel(data)
 
     def _json(self, **kwargs) -> DraftPanel:
         return self._get_self_as_json_model()._peek(**self._prepare_kwargs_for_json(kwargs))

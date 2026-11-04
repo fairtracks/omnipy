@@ -1,6 +1,7 @@
 """Case-driven and focused tests for JSON models."""
 
 from dataclasses import fields
+import json
 import os
 from textwrap import dedent
 from typing import Annotated, Any, TypeAlias
@@ -326,6 +327,27 @@ def test_json_model_from_json_parses_standard_json(json_content: str, expected_d
     model = JsonModel()
     model.from_json(json_content)
     assert model.to_data() == expected_data
+
+
+@pc.parametrize(
+    'value, expected_content',
+    [
+        ('hello', 'hello'),
+        ('123', '"123"'),
+        ('true', '"true"'),
+        ('[1]', '"[1]"'),
+        ('"hello"', '"\\"hello\\""'),
+        ('"123"', '"\\"123\\""'),
+        (' 123 ', '" 123 "'),
+        ('', ''),
+    ],
+)
+def test_json_model_from_str_value(value: str, expected_content: str) -> None:
+    """Hold a string as itself, or in its quoted form, without parsing it as JSON text."""
+    model = JsonModel.from_str_value(value)
+    assert model.content == expected_content
+    assert model.to_display_data() == value
+    assert json.loads(model.to_json()) == value
 
 
 @pc.parametrize(
