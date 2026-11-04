@@ -59,4 +59,4 @@ class SaveMixin:
             os.makedirs(directory, exist_ok=True)
             dataset.log_message(f'Extracting content to directory "{directory}"')
             with tarfile.open(out_tar_gz_path) as tar:
-                tar.extractall(path=directory)
+                tar.extractall(path=directory, filter='data')
