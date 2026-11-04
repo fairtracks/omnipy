@@ -830,8 +830,6 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _prepare_kwargs_for_docs(cls, kwargs):
         """Normalize kwargs for documentation-friendly HTML output."""
         kwargs_copy = kwargs.copy()
-        if 'style' not in kwargs_copy:
-            kwargs_copy['style'] = RecommendedColorStyles.OMNIPY_SELENIZED_WHITE
         kwargs_copy['ui'] = kwargs.get('ui', UserInterfaceType.BROWSER_TAG)
         return kwargs_copy
 
