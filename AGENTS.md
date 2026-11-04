@@ -44,6 +44,9 @@ Tests and docs:
 ## Typing
 
 - Do not use `cast(object, ...)` / `cast(object, self)` merely to suppress type-checker warnings about suspicious casts. Treat that pattern as a typing escape hatch to avoid in Omnipy code unless explicitly requested.
+- Annotate all parameters and return types, also in tests (test functions, fixtures and pytest-cases case functions). Case functions that return several values return a `NamedTuple` or a dataclass with typed fields, created with keyword arguments for readability, which tests take as one argument (e.g. `@pc.parametrize_with_cases('case', cases=...)`).
+- Avoid `Any`. Use precise types, protocols or `object` instead.
+- Access classmethods and other class attributes through the instance (`model.outer_type()`), not through `type(model)` (`type(model).outer_type()`). Use `type(x)` only where the class itself is needed, e.g. as a type argument (`Dataset[type(model)]`) or to create a new instance.
 - The primary static type-checker config is `basedpyright` (`[tool.basedpyright]` in `pyproject.toml`); run it with `uv run basedpyright` when type-checking changes.
 
 ## Checking settings and arguments
