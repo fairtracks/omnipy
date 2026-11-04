@@ -19,6 +19,21 @@ def autouse_runtime_data_config_variants(
     return runtime
 
 
+@pytest.fixture(scope='function', autouse=True)
+def autouse_clear_color_terminal_env_vars(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Remove TERM/COLORTERM so color-system auto-detection is deterministic.
+
+    `DisplayColorSystem.AUTO` is resolved by Rich's `Console` based on the
+    real `TERM`/`COLORTERM` environment variables of the host running the
+    tests. Clearing them makes Rich fall back to the standard 16-color
+    system consistently, regardless of the environment the tests run in.
+    """
+    monkeypatch.delenv('TERM', raising=False)
+    monkeypatch.delenv('COLORTERM', raising=False)
+
+
 @pc.fixture(scope='function')
 @pc.parametrize(
     'frame_variant',
