@@ -10,6 +10,7 @@ from omnipy.shared.protocols.data import IsDataset
 from omnipy.util.pydantic import lenient_issubclass
 
 from .datasets import StrictBytesDataset, StrictStrDataset
+from .models import StrictBytesModel
 
 
 class RawStrDatasetToTarFileSerializer(TarFileSerializer[StrictStrDataset]):
@@ -110,8 +111,8 @@ class RawBytesDatasetToTarFileSerializer(TarFileSerializer[StrictBytesDataset]):
         # {{SERIALIZE_GZIPPED_TAR_SUMMARY}}
         """Serialize a dataset into a gzipped tar archive."""
 
-        def raw_encode_func(content: bytes) -> bytes:
-            return content
+        def raw_encode_func(content: StrictBytesModel) -> bytes:
+            return content.content
 
         return cls.create_tarfile_from_dataset(dataset, data_encode_func=raw_encode_func)
 
