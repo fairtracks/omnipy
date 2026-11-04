@@ -77,7 +77,9 @@ class LoadMixin:
         - Other archives or directories, mappings, Datasets of URLs, iterables and keyword
           arguments give a mapping of named values, also with one entry or none
 
-        Such Models are left unchanged if loading fails.
+        Such Models are left unchanged if loading fails. On Models, ``load_into()`` hides a
+        method of the same name on the content; call ``model.content.load_into()`` followed by
+        ``model.validate_content()`` to use that instead.
 
         Args:
             paths_or_urls: Path, URL, iterable of paths or URLs, or dataset/model of HTTP URLs to
@@ -138,6 +140,10 @@ class LoadMixin:
 
         wrapped_dataset = get_wrapped_dataset(model)
         if wrapped_dataset is not None:
+            # TODO: Make Models wrapping a Dataset hold failed and pending entries like the Dataset
+            #       A Dataset can hold failed and pending data entries, e.g. from failed HTTP
+            #       requests, but validating a Model wrapping it raises FailedDataError or
+            #       PendingDataError instead. To be resolved as part of updated failure handling.
             loaded = wrapped_dataset._load_paths_or_urls(
                 paths_or_urls,
                 select_serializer_by=select_serializer_by,

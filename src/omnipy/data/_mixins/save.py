@@ -15,7 +15,9 @@ class SaveMixin:
         ``Model[JsonDataset]``) save the wrapped Dataset in the same way. Other Models save their
         complete contents as a single file, named after the Model class (e.g.
         ``__model_list_int__.json`` for ``Model[list[int]]``), which ``load()`` reads back as a
-        single value. The serializer supplies the file suffix.
+        single value. The serializer supplies the file suffix. On Models, ``save()`` hides a
+        method of the same name on the content; call ``model.content.save()`` followed by
+        ``model.validate_content()`` to use that instead.
 
         Args:
             path: Destination path with or without the ``.tar.gz`` suffix.

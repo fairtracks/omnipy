@@ -47,6 +47,21 @@ use mypy-compatible typing facades where the built-in support is insufficient.
 For examples, tutorials, and tests, the shorter `mimics` variant may be preferred
 for readability, unless mypy compatibility is part of their purpose.
 
+## Methods hidden by Model
+
+Mimicking forwards attributes that `Model` does not define itself. Methods that
+`Model` defines, such as `load()`, `load_into()`, `save()`, `to_data()` and the
+display methods (`peek()`, `full()`, ...), take precedence over methods with the
+same name on the wrapped object. To call such a method of the wrapped object, call
+it on `.content`, and then revalidate if the method changed the content:
+
+```python
+report.content.save()
+report.validate_content()
+```
+
+This is a general limitation of overloaded names, not specific to any Model type.
+
 ## Expose the interface of a particular Model
 
 Use `@om.mimics(SomeClass)` on a concrete Model when the checker needs the wrapped

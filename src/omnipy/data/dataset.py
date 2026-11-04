@@ -1766,6 +1766,12 @@ class Dataset(
         Raises:
             RuntimeError: If no serializer can load one of the provided paths.
         """
+        # TODO: Handle failures when loading local files consistently with HTTP loading
+        #       Each path is absorbed as soon as it is loaded, so if loading a later path fails,
+        #       the entries from the earlier paths remain in the dataset. Loading from HTTP URLs
+        #       instead records failed requests as failed-data entries. Failed-data entries for
+        #       file reads, and harmonizing the handling of failed loads in general, are future
+        #       work as part of the loading refactor and the general handling of failed data.
         for path_or_url in path_or_urls:
             serializer_registry = self._get_serializer_registry()
             tar_gz_file_path = self._ensure_tar_gz_file(path_or_url)

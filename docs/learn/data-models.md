@@ -151,3 +151,13 @@ elements in the list are, in fact, integers; the object can also be operated as 
 `.append()`, `.insert()` and concatenation with the `+` operator; and furthermore: if you append an
 unparseable element, say `"abc"` instead of `"123"`, it will roll back the contents to the previously
 validated snapshot.
+
+Methods that `Model` itself defines take precedence over methods with the same name on the modelled
+class. This includes `load()`, `load_into()` and `save()`, as well as display methods such as
+`peek()`. To call such a method of the content, call it on `.content`, and then validate the
+content with `.validate_content()` if the method changed it:
+
+```python
+model.content.save()
+model.validate_content()
+```

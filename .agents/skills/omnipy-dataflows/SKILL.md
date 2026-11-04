@@ -115,6 +115,9 @@ into design rules.
   of their purpose. Use protocols to describe reusable capabilities. See
   [runtime mimicking and static typing](references/typing.md) for concrete Model
   and Dataset examples, generic-interface limitations, and checker verification.
+  Methods that `Model` itself defines, such as `load()`, `save()` and `peek()`,
+  hide content methods of the same name; see
+  [methods hidden by Model](references/typing.md#methods-hidden-by-model).
   Use `.content` when a consumer specifically needs the underlying object and
   `.to_data()` when a boundary needs a plain-data representation. Neither is
   routine preparation for processing. Avoid dictionary casts and package rebuilds
