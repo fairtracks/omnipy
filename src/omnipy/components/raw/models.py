@@ -116,6 +116,11 @@ else:
             if isinstance(data, str):
                 return data
 
+            # TODO: After serialization is reimplemented, auto-detect the encoding when decoding
+            #       as UTF-8 fails (reusing the chardet detection in decode_bytes()). Also load
+            #       text files into StrModels as bytes, so that they are decoded with the encoding
+            #       of the model, also for '.txt' files and when selecting serializers by type.
+            #       Needs separate Params from BytesModel, which should keep a fixed encoding.
             return data.decode(cls.Params.encoding)
 
 
