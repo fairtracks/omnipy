@@ -188,7 +188,7 @@ gives its fields a contract, and an Omnipy Model keeps that contract active whil
 we work. `mimics` also makes the wrapped record's interface visible to supported editors
 and type checkers; runtime field access works through the Model itself.
 
-```pycon exec="1" session="water-samples" result="console" html="true"
+```python exec="1" session="water-samples" result="console" html="true"
 import omnipy as om
 from textwrap import dedent
 
@@ -205,8 +205,8 @@ code = dedent("""\
     @om.mimics(RiverUgConcMeasurementRecord)
     class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...""")
 
->>> exec(code, globals(), locals())
->>> print(
+exec(code, globals(), locals())
+print(
     om.StrModel(code)._docs(
         method='full',
         width=None,
