@@ -30,6 +30,8 @@ import omnipy.util.pydantic as pyd
 if TYPE_CHECKING:
     from reacton.core import Element
 
+    from omnipy.data._display.panel.draft.base import DraftPanel
+
 
 class IsDisplayMethod(Protocol):
     """Protocol for Omnipy display entry points with shared keyword arguments.
@@ -124,13 +126,15 @@ class IsDisplayMethod(Protocol):
 
 
 class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
-    """Display callback protocol for methods returning HTML element or ``None``.
+    """Display callback protocol for methods that can return a draft panel.
 
     Args:
-        Same keyword-only arguments as :class:`IsDisplayMethod`.
+        Same keyword-only arguments as :class:`IsDisplayMethod`, plus
+        ``return_draft_panel`` to return the panel without rendering.
 
     Returns:
-        ``Element | None`` depending on UI backend and execution context.
+        A ``DraftPanel`` when requested; otherwise ``Element | None``
+        depending on UI backend and execution context.
 
     Raises:
         NotImplementedError: Raised by concrete implementations when this
@@ -179,7 +183,61 @@ class IsDisplayMethodMaybeReturnElement(IsDisplayMethod, Protocol):
         max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
         max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
-    ) -> 'Element | None': ...
+        return_draft_panel: bool = False,
+    ) -> 'DraftPanel | Element | None': ...
+
+
+class IsPreviewDisplayMethod(IsDisplayMethodMaybeReturnElement, Protocol):
+    """Display callback for previews with optional inner panel titles.
+
+    Args:
+        Same keyword-only arguments as :class:`IsDisplayMethodMaybeReturnElement`,
+        plus ``inner_titles`` to override first-level panel titles.
+    """
+
+    @override
+    def __call__(
+        self,
+        *,
+        width: 'pyd.NonNegativeInt | None' = None,
+        height: 'pyd.NonNegativeInt | None' = None,
+        tab: 'pyd.NonNegativeInt' = 4,
+        indent: 'pyd.NonNegativeInt' = 2,
+        printer: 'PrettyPrinterLib.Literals' = PrettyPrinterLib.AUTO,
+        syntax: 'SyntaxLanguageSpec.Literals | str' = SyntaxLanguageSpec.AUTO,
+        freedom: 'pyd.NonNegativeFloat | None' = 2.5,
+        debug: bool = False,
+        ui: 'UserInterfaceType.Literals' = UserInterfaceType.AUTO,
+        system: 'DisplayColorSystem.Literals' = DisplayColorSystem.AUTO,
+        style: 'AllColorStyles.Literals | str' = RecommendedColorStyles.AUTO,
+        dark: DarkBackground.Literals = DarkBackground.AUTO,
+        bg: bool = False,
+        fonts: tuple[str, ...] = (
+            'Menlo',
+            'DejaVu Sans Mono',
+            'Consolas',
+            'Courier New',
+            'monospace',
+        ),
+        font_size: 'pyd.NonNegativeFloat | None' = 14,
+        font_weight: 'pyd.NonNegativeInt | None' = 400,
+        line_height: 'pyd.NonNegativeFloat | None' = 1.25,
+        h_overflow: 'HorizontalOverflowMode.Literals' = HorizontalOverflowMode.ELLIPSIS,
+        v_overflow: 'VerticalOverflowMode.Literals' = VerticalOverflowMode.ELLIPSIS_BOTTOM,
+        panel: 'PanelDesign.Literals' = PanelDesign.TABLE,
+        title_at_top: bool = True,
+        max_title_height: 'MaxTitleHeight.Literals' = MaxTitleHeight.AUTO,
+        min_panel_width: 'pyd.NonNegativeInt' = MIN_PANEL_WIDTH,
+        min_crop_width: 'pyd.NonNegativeInt' = MIN_CROP_WIDTH,
+        use_min_crop_width: bool = False,
+        max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
+        max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
+        justify: 'Justify.Literals' = Justify.LEFT,
+        inner_titles: list[str] | tuple[str, ...] | None = None,
+        return_draft_panel: bool = False,
+    ) -> 'DraftPanel | Element | None':
+        """Display a preview, optionally overriding its first-level panel titles."""
+        ...
 
 
 class IsDisplayMethodReturnNone(IsDisplayMethod, Protocol):
@@ -246,10 +304,11 @@ class IsDocsDisplayMethod(IsDisplayMethod, Protocol):
 
     Args:
         Same keyword-only arguments as :class:`IsDisplayMethod`, plus
-        ``method`` to select which display method's panel is rendered.
+        ``method`` to select the panel and ``return_draft_panel`` to return
+        it without rendering.
 
     Returns:
-        Rendered textual output as a ``str``.
+        A ``DraftPanel`` when requested; otherwise rendered output as a ``str``.
 
     Raises:
         NotImplementedError: Raised by concrete implementations when this
@@ -299,7 +358,9 @@ class IsDocsDisplayMethod(IsDisplayMethod, Protocol):
         max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
         justify: 'Justify.Literals' = Justify.LEFT,
         method: 'DocsDisplayMethod.Literals' = DocsDisplayMethod.DEFAULT,
-    ) -> str: ...
+        inner_titles: list[str] | tuple[str, ...] | None = None,
+        return_draft_panel: bool = False,
+    ) -> 'str | DraftPanel': ...
 
 
 class IsBaseDisplayMixin(Protocol):
@@ -321,9 +382,9 @@ class IsBaseDisplayMixin(Protocol):
         ...     data.peek()
     """
 
-    peek: IsDisplayMethodMaybeReturnElement
-    full: IsDisplayMethodMaybeReturnElement
-    json: IsDisplayMethodMaybeReturnElement
+    peek: IsPreviewDisplayMethod
+    full: IsPreviewDisplayMethod
+    json: IsPreviewDisplayMethod
     browse: IsDisplayMethodReturnNone
     _docs: IsDocsDisplayMethod
 

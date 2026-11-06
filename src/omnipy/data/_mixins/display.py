@@ -89,6 +89,7 @@ from omnipy.shared.protocols.display import (
     IsDisplayMethodMaybeReturnElement,
     IsDisplayMethodReturnNone,
     IsDocsDisplayMethod,
+    IsPreviewDisplayMethod,
 )
 from omnipy.shared.typedefs import Method
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
@@ -338,10 +339,21 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
 
     os.environ['OMNIPY_MACRO_DISPLAY_METHOD_RETURNS'] = dedent("""\
             Returns:
-                If the UI type is Jupyter running in browser, the
-                method returns a ReactivelyResizingHtml element which
-                is a Jupyter widget to display HTML output in the
-                browser. Otherwise, the method returns None.""")
+                If `return_draft_panel` is True, the draft panel before
+                rendering. Otherwise, if the UI type is Jupyter running
+                in a browser, a ReactivelyResizingHtml element. Otherwise,
+                None.
+            """)
+
+    os.environ['OMNIPY_MACRO_INNER_TITLES_ARG'] = dedent("""\
+        inner_titles (list[str] | tuple[str, ...] | None):
+            Override first-level panel titles in order. Missing titles
+            retain their defaults; extra titles raise ValueError. An
+            empty string removes a title.""")
+
+    os.environ['OMNIPY_MACRO_RETURN_DRAFT_PANEL_ARG'] = dedent("""\
+        return_draft_panel (bool):
+            Return the draft panel without rendering or displaying it.""")
 
     os.environ['OMNIPY_MACRO_DISPLAY_METHOD_NOTE'] = dedent("""\
             Note:
@@ -436,13 +448,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
             max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
             justify: 'Justify.Literals' = Justify.LEFT,
-        ) -> 'Element | None':
+            inner_titles: list[str] | tuple[str, ...] | None = None,
+            return_draft_panel: bool = False,
+        ) -> 'DraftPanel | Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{PEEK_SUMMARY}}
             #
             # {{PEEK_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
+            #     {{INNER_TITLES_ARG}}
+            #     {{RETURN_DRAFT_PANEL_ARG}}
             #
             # {{DISPLAY_METHOD_NOTE}}
             #
@@ -599,6 +615,12 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 justify (Justify.Literals):
                     Justification mode for the panel if inside a layout
                     panel. This is only used for the panel content.
+                inner_titles (list[str] | tuple[str, ...] | None):
+                    Override first-level panel titles in order. Missing titles
+                    retain their defaults; extra titles raise ValueError. An
+                    empty string removes a title.
+                return_draft_panel (bool):
+                    Return the draft panel without rendering or displaying it.
 
             Note:
                 Any default argument value is overridden by the
@@ -607,13 +629,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             """
     else:
 
-        def peek(self, **kwargs) -> 'Element | None':
+        def peek(
+            self, *, return_draft_panel: bool = False, **kwargs
+        ) -> 'DraftPanel | Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{PEEK_SUMMARY}}
             #
             # {{PEEK_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
+            #     {{INNER_TITLES_ARG}}
+            #     {{RETURN_DRAFT_PANEL_ARG}}
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
@@ -772,26 +798,33 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 justify (Justify.Literals):
                     Justification mode for the panel if inside a layout
                     panel. This is only used for the panel content.
+                inner_titles (list[str] | tuple[str, ...] | None):
+                    Override first-level panel titles in order. Missing titles
+                    retain their defaults; extra titles raise ValueError. An
+                    empty string removes a title.
+                return_draft_panel (bool):
+                    Return the draft panel without rendering or displaying it.
 
             Returns:
-                If the UI type is Jupyter running in browser, the
-                method returns a ReactivelyResizingHtml element which
-                is a Jupyter widget to display HTML output in the
-                browser. Otherwise, the method returns None.
+                If `return_draft_panel` is True, the draft panel before
+                rendering. Otherwise, if the UI type is Jupyter running
+                in a browser, a ReactivelyResizingHtml element. Otherwise,
+                None.
+
 
             Note:
                 Any default argument value is overridden by the
                 corresponding value in the relevant subsection of the
                 UserInterfaceConfig.
             """
-            return self._display_according_to_ui_type(
+            return self._display_or_return_draft(
+                self._peek,
                 ui_type=self._extract_ui_type(**kwargs),
-                return_output_if_str=False,
-                output_method=self._peek,
+                return_draft_panel=return_draft_panel,
                 **kwargs,
             )
 
-        peek.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
+        peek.__signature__ = signature(IsPreviewDisplayMethod.__call__)
 
     def _extract_ui_type(self, **kwargs) -> SpecifiedUserInterfaceType.Literals:
         """Resolve the explicit or auto-detected UI type for a display call.
@@ -830,7 +863,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _prepare_kwargs_for_docs(cls, kwargs):
         """Normalize kwargs for documentation-friendly HTML output."""
         kwargs_copy = kwargs.copy()
+
         kwargs_copy['ui'] = kwargs.get('ui', UserInterfaceType.BROWSER_TAG)
+
+        # To not send inner_titles=None to list() method for Datasets
+        if kwargs_copy.get('inner_titles') is None:
+            kwargs_copy.pop('inner_titles', None)
+
         return kwargs_copy
 
     if TYPE_CHECKING:
@@ -872,13 +911,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
             max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
             justify: 'Justify.Literals' = Justify.LEFT,
-        ) -> 'Element | None':
+            inner_titles: list[str] | tuple[str, ...] | None = None,
+            return_draft_panel: bool = False,
+        ) -> 'DraftPanel | Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{FULL_SUMMARY}}
             #
             # {{FULL_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
+            #     {{INNER_TITLES_ARG}}
+            #     {{RETURN_DRAFT_PANEL_ARG}}
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
@@ -1036,12 +1079,19 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 justify (Justify.Literals):
                     Justification mode for the panel if inside a layout
                     panel. This is only used for the panel content.
+                inner_titles (list[str] | tuple[str, ...] | None):
+                    Override first-level panel titles in order. Missing titles
+                    retain their defaults; extra titles raise ValueError. An
+                    empty string removes a title.
+                return_draft_panel (bool):
+                    Return the draft panel without rendering or displaying it.
 
             Returns:
-                If the UI type is Jupyter running in browser, the
-                method returns a ReactivelyResizingHtml element which
-                is a Jupyter widget to display HTML output in the
-                browser. Otherwise, the method returns None.
+                If `return_draft_panel` is True, the draft panel before
+                rendering. Otherwise, if the UI type is Jupyter running
+                in a browser, a ReactivelyResizingHtml element. Otherwise,
+                None.
+
 
             Note:
                 Any default argument value is overridden by the
@@ -1051,13 +1101,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             """
     else:
 
-        def full(self, **kwargs) -> 'Element | None':
+        def full(
+            self, *, return_draft_panel: bool = False, **kwargs
+        ) -> 'DraftPanel | Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{FULL_SUMMARY}}
             #
             # {{FULL_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
+            #     {{INNER_TITLES_ARG}}
+            #     {{RETURN_DRAFT_PANEL_ARG}}
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
@@ -1215,12 +1269,19 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 justify (Justify.Literals):
                     Justification mode for the panel if inside a layout
                     panel. This is only used for the panel content.
+                inner_titles (list[str] | tuple[str, ...] | None):
+                    Override first-level panel titles in order. Missing titles
+                    retain their defaults; extra titles raise ValueError. An
+                    empty string removes a title.
+                return_draft_panel (bool):
+                    Return the draft panel without rendering or displaying it.
 
             Returns:
-                If the UI type is Jupyter running in browser, the
-                method returns a ReactivelyResizingHtml element which
-                is a Jupyter widget to display HTML output in the
-                browser. Otherwise, the method returns None.
+                If `return_draft_panel` is True, the draft panel before
+                rendering. Otherwise, if the UI type is Jupyter running
+                in a browser, a ReactivelyResizingHtml element. Otherwise,
+                None.
+
 
             Note:
                 Any default argument value is overridden by the
@@ -1228,14 +1289,14 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 UserInterfaceConfig.
 
             """
-            return self._display_according_to_ui_type(
+            return self._display_or_return_draft(
+                self._full,
                 ui_type=self._extract_ui_type(**kwargs),
-                return_output_if_str=False,
-                output_method=self._full,
+                return_draft_panel=return_draft_panel,
                 **kwargs,
             )
 
-        full.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
+        full.__signature__ = signature(IsPreviewDisplayMethod.__call__)
 
     if TYPE_CHECKING:
 
@@ -1276,13 +1337,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
             max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
             justify: 'Justify.Literals' = Justify.LEFT,
-        ) -> 'Element | None':
+            inner_titles: list[str] | tuple[str, ...] | None = None,
+            return_draft_panel: bool = False,
+        ) -> 'DraftPanel | Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{JSON_SUMMARY}}
             #
             # {{JSON_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
+            #     {{INNER_TITLES_ARG}}
+            #     {{RETURN_DRAFT_PANEL_ARG}}
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
@@ -1444,12 +1509,19 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 justify (Justify.Literals):
                     Justification mode for the panel if inside a layout
                     panel. This is only used for the panel content.
+                inner_titles (list[str] | tuple[str, ...] | None):
+                    Override first-level panel titles in order. Missing titles
+                    retain their defaults; extra titles raise ValueError. An
+                    empty string removes a title.
+                return_draft_panel (bool):
+                    Return the draft panel without rendering or displaying it.
 
             Returns:
-                If the UI type is Jupyter running in browser, the
-                method returns a ReactivelyResizingHtml element which
-                is a Jupyter widget to display HTML output in the
-                browser. Otherwise, the method returns None.
+                If `return_draft_panel` is True, the draft panel before
+                rendering. Otherwise, if the UI type is Jupyter running
+                in a browser, a ReactivelyResizingHtml element. Otherwise,
+                None.
+
 
             Note:
                 Any default argument value is overridden by the
@@ -1458,13 +1530,17 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             """
     else:
 
-        def json(self, **kwargs) -> None:
+        def json(
+            self, *, return_draft_panel: bool = False, **kwargs
+        ) -> 'DraftPanel | Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{JSON_SUMMARY}}
             #
             # {{JSON_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
+            #     {{INNER_TITLES_ARG}}
+            #     {{RETURN_DRAFT_PANEL_ARG}}
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
@@ -1626,26 +1702,33 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 justify (Justify.Literals):
                     Justification mode for the panel if inside a layout
                     panel. This is only used for the panel content.
+                inner_titles (list[str] | tuple[str, ...] | None):
+                    Override first-level panel titles in order. Missing titles
+                    retain their defaults; extra titles raise ValueError. An
+                    empty string removes a title.
+                return_draft_panel (bool):
+                    Return the draft panel without rendering or displaying it.
 
             Returns:
-                If the UI type is Jupyter running in browser, the
-                method returns a ReactivelyResizingHtml element which
-                is a Jupyter widget to display HTML output in the
-                browser. Otherwise, the method returns None.
+                If `return_draft_panel` is True, the draft panel before
+                rendering. Otherwise, if the UI type is Jupyter running
+                in a browser, a ReactivelyResizingHtml element. Otherwise,
+                None.
+
 
             Note:
                 Any default argument value is overridden by the
                 corresponding value in the relevant subsection of the
                 UserInterfaceConfig.
             """
-            return self._display_according_to_ui_type(
+            return self._display_or_return_draft(
+                self._json,
                 ui_type=self._extract_ui_type(**kwargs),
-                return_output_if_str=False,
-                output_method=self._json,
+                return_draft_panel=return_draft_panel,
                 **kwargs,
             )
 
-        json.__signature__ = signature(IsDisplayMethodMaybeReturnElement.__call__)
+        json.__signature__ = signature(IsPreviewDisplayMethod.__call__)
 
     if TYPE_CHECKING:
 
@@ -2037,7 +2120,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
     def _browse(self, **kwargs) -> None: ...
 
     @takes_input_params_from(IsDocsDisplayMethod.__call__)
-    def _docs(self, *args, **kwargs) -> str:
+    def _docs(
+        self,
+        *args,
+        method: 'DocsDisplayMethod.Literals' = DocsDisplayMethod.DEFAULT,
+        return_draft_panel: bool = False,
+        **kwargs,
+    ) -> 'str | DraftPanel':
         # %% Original docstring (managed by expand_docstr_macros.py) %%
         #
         # Displays a preview of the model or dataset for the documentation.
@@ -2047,10 +2136,19 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         #         Display method whose panel is rendered. The default
         #         is `default`, which renders the default panel of the
         #         Model or Dataset (for Datasets, the summary list).
+        #     {{INNER_TITLES_ARG}}
+        #
+        #         The "inner_titles" parameter is supported for both
+        #         Models and Datasets with `peek`, `full`, and `json`.
+        #         With `default`, it is supported only for Models whose
+        #         content is not a Dataset: Datasets and Models wrapping
+        #         Datasets default to a summary list, which does not
+        #         support inner titles.
+        #     {{RETURN_DRAFT_PANEL_ARG}}
         #
         # Returns:
-        #     A string containing the HTML-formatted preview of the model or
-        #     dataset, suitable for inclusion in documentation.
+        #     If `return_draft_panel` is True, the draft panel before rendering.
+        #     Otherwise, a string containing the HTML-formatted preview.
         #
         """
         Displays a preview of the model or dataset for the documentation.
@@ -2204,10 +2302,23 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 Display method whose panel is rendered. The default
                 is `default`, which renders the default panel of the
                 Model or Dataset (for Datasets, the summary list).
+            inner_titles (list[str] | tuple[str, ...] | None):
+                Override first-level panel titles in order. Missing titles
+                retain their defaults; extra titles raise ValueError. An
+                empty string removes a title.
+
+                The "inner_titles" parameter is supported for both
+                Models and Datasets with `peek`, `full`, and `json`.
+                With `default`, it is supported only for Models whose
+                content is not a Dataset: Datasets and Models wrapping
+                Datasets default to a summary list, which does not
+                support inner titles.
+            return_draft_panel (bool):
+                Return the draft panel without rendering or displaying it.
 
         Returns:
-            A string containing the HTML-formatted preview of the model or
-            dataset, suitable for inclusion in documentation.
+            If `return_draft_panel` is True, the draft panel before rendering.
+            Otherwise, a string containing the HTML-formatted preview.
         """
         kwargs = self._prepare_kwargs_for_docs(kwargs)
         output_method = {
@@ -2215,12 +2326,13 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             DocsDisplayMethod.PEEK: self._peek,
             DocsDisplayMethod.FULL: self._full,
             DocsDisplayMethod.JSON: self._json,
-        }[kwargs.pop('method', DocsDisplayMethod.DEFAULT)]
+        }[method]
 
-        return self._display_according_to_ui_type(
+        return self._display_or_return_draft(
+            output_method,
             ui_type=kwargs['ui'],
             return_output_if_str=True,
-            output_method=output_method,
+            return_draft_panel=return_draft_panel,
             **kwargs,
         )
 
@@ -2270,6 +2382,53 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         )
 
     @overload
+    def _display_or_return_draft(
+        self,
+        output_method: Callable[..., DraftPanel],
+        *,
+        ui_type: SpecifiedUserInterfaceType.Literals,
+        return_output_if_str: Literal[False] = False,
+        return_draft_panel: bool = False,
+        **kwargs: object,
+    ) -> 'DraftPanel | Element | None': ...
+
+    @overload
+    def _display_or_return_draft(
+        self,
+        output_method: Callable[..., DraftPanel],
+        *,
+        ui_type: TerminalOutputUserInterfaceType.Literals | BrowserUserInterfaceType.Literals,
+        return_output_if_str: Literal[True],
+        return_draft_panel: bool = False,
+        **kwargs: object,
+    ) -> 'DraftPanel | str': ...
+
+    def _display_or_return_draft(
+        self,
+        output_method: Callable[..., DraftPanel],
+        *,
+        ui_type: SpecifiedUserInterfaceType.Literals,
+        return_output_if_str: bool = False,
+        return_draft_panel: bool = False,
+        **kwargs: object,
+    ) -> 'DraftPanel | str | Element | None':
+        """Display a panel or return its draft without rendering it."""
+
+        if not isinstance(return_draft_panel, bool):
+            raise TypeError('return_draft_panel must be a bool')
+
+        if return_draft_panel:
+            self._normalize_display_kwargs(kwargs)
+            return output_method(**kwargs)
+
+        return self._display_according_to_ui_type(
+            ui_type=ui_type,
+            return_output_if_str=return_output_if_str,
+            output_method=output_method,
+            **kwargs,
+        )
+
+    @overload
     def _display_according_to_ui_type(
         self,
         ui_type: TerminalOutputUserInterfaceType.Literals | BrowserUserInterfaceType.Literals,
@@ -2299,6 +2458,16 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         **kwargs: P.kwargs,
     ) -> None: ...
 
+    @overload
+    def _display_according_to_ui_type(
+        self,
+        ui_type: SpecifiedUserInterfaceType.Literals,
+        return_output_if_str: bool,
+        output_method: Method[P, DraftPanel],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> 'str | Element | None': ...
+
     def _display_according_to_ui_type(  # noqa: C901
         self,
         ui_type: SpecifiedUserInterfaceType.Literals,
@@ -2323,6 +2492,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             requested, a Jupyter element for browser-backed notebook output, or
             ``None`` when the method writes directly to the active frontend.
         """
+
+        self._normalize_display_kwargs(kwargs)
 
         def _render_panel(
             ui_type: SpecifiedUserInterfaceType.Literals,
@@ -2415,6 +2586,42 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 else:
                     print(output)
 
+    @staticmethod
+    @pyd.validate_arguments
+    def _normalize_inner_titles(
+        inner_titles: list[str] | tuple[str, ...] | None,
+    ) -> list[str]:
+        """Validate and normalize title overrides to a list of strings.
+
+        ``None`` becomes an empty list. Pydantic may coerce compatible input
+        values before normalization.
+        """
+        if inner_titles is None:
+            return []
+
+        return list(inner_titles)
+
+    @classmethod
+    def _normalize_display_kwargs(cls, kwargs: dict[str, object]) -> None:
+        """Normalize supported display-specific arguments in place.
+
+        Normalizing titles before rendering keeps their values available for
+        subsequent Jupyter re-renders.
+        """
+        if 'inner_titles' in kwargs:
+            kwargs['inner_titles'] = cls._normalize_inner_titles(
+                cast('list[str] | tuple[str, ...] | None', kwargs['inner_titles'])
+            )
+
+    @staticmethod
+    def _validate_inner_title_count(inner_titles: list[str], panel_count: int) -> None:
+        """Reject title overrides exceeding the number of inner panels."""
+        if len(inner_titles) > panel_count:
+            raise ValueError(
+                f'The "inner_titles" argument has {len(inner_titles)} '
+                f'titles for {panel_count} inner panels.'
+            )
+
     def _peek_nested_content(
         self,
         nested_content: dict[str, 'Model | Dataset'],
@@ -2440,6 +2647,9 @@ class BaseDisplayMixin(metaclass=ABCMeta):
         from omnipy.data.dataset import Dataset, is_dataset_instance
         from omnipy.data.model import is_model_instance
 
+        inner_titles = cast(list[str], kwargs.pop('inner_titles', []))
+        self._validate_inner_title_count(inner_titles, len(nested_content))
+
         ui_type = self._extract_ui_type(**kwargs)
         config, config_kwargs, frame = self._initial_config_setup(
             ui_type, kwargs, use_min_crop_width=True, frame=frame, level=level
@@ -2449,7 +2659,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
         layout: Layout[DraftPanel] = Layout()
 
-        for i, (inner_title, model_or_dataset) in enumerate(nested_content.items()):
+        for i, (cur_inner_title, model_or_dataset) in enumerate(nested_content.items()):
             if max_num_panels_in_frame is not None and i >= max_num_panels_in_frame:
                 # If the number of panels exceeds the maximum number of
                 # panels that can possibly fit in the frame based on the
@@ -2467,18 +2677,19 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             )
             is_ellipsis_panel = config.max_panels_hor is not None and i == config.max_panels_hor
             not_too_deep = config.max_nesting_depth and level < config.max_nesting_depth - 1
+            display_title = inner_titles[i] if i < len(inner_titles) else cur_inner_title
 
             if config.debug:
-                layout[inner_title] = self._create_inner_panel_for_model(
+                layout[cur_inner_title] = self._create_inner_panel_for_model(
                     config,
-                    model_or_dataset,  # type: ignore
-                    inner_title,
-                    **config_kwargs,
+                    model_or_dataset,  # type: ignore[arg-type]
+                    display_title,
+                    **config_kwargs,  # type: ignore[arg-type]
                 )
 
             elif is_dataset and not is_ellipsis_panel and not_too_deep:
-                layout[inner_title] = cast(Dataset, model_or_dataset)._peek_dataset_models(
-                    inner_title,
+                layout[cur_inner_title] = cast(Dataset, model_or_dataset)._peek_dataset_models(
+                    display_title,
                     empty_frame(),
                     level + 1,
                     **config_kwargs,
@@ -2488,19 +2699,20 @@ class BaseDisplayMixin(metaclass=ABCMeta):
 
                 if is_dataset_instance(model_or_dataset):
                     model = model_or_dataset._get_self_as_json_model()
+
                     inner_kwargs = self._prepare_kwargs_for_json(inner_kwargs)
                 else:  # Model
                     model = model_or_dataset
 
-                layout[inner_title] = self._create_inner_panel_for_model(
+                layout[cur_inner_title] = self._create_inner_panel_for_model(
                     config,
-                    model,
-                    inner_title,
-                    **inner_kwargs,
+                    model,  # type: ignore[arg-type]
+                    display_title,
+                    **inner_kwargs,  # type: ignore[arg-type]
                 )
 
                 if is_ellipsis_panel:
-                    layout[inner_title] = create_ellipsis_panel(layout[inner_title])
+                    layout[cur_inner_title] = create_ellipsis_panel(layout[cur_inner_title])
 
         config = self._update_config_with_overflow_modes(config, 'layout', **config_kwargs)
         return DraftPanel(layout, title=title, frame=frame, config=config)
@@ -2813,6 +3025,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             JsonMaxLevel1ColumnWiseTableWithColNamesModel,
             PrintableTable,
         )
+        from omnipy.data.model import is_model_instance
 
         config = self._update_config_with_overflow_modes(config, 'text', **config_kwargs)
         content = model
@@ -2821,6 +3034,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             model = model.content
 
         if isinstance(model, PrintableTable):
+            assert is_model_instance(model)
             try:
                 if isinstance(model, ColumnWiseTableWithColNamesModel):
                     column_wise_table = model
@@ -3220,13 +3434,15 @@ class DatasetDisplayMixin(BaseDisplayMixin):
             max_panels_hor: 'pyd.NonNegativeInt | None' = MAX_PANELS_HORIZONTALLY,
             max_nesting_depth: 'pyd.NonNegativeInt | None' = MAX_PANEL_NESTING_DEPTH,
             justify: 'Justify.Literals' = Justify.LEFT,
-        ) -> 'Element | None':
+            return_draft_panel: bool = False,
+        ) -> 'DraftPanel | Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{LIST_SUMMARY}}
             #
             # {{LIST_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
+            #     {{RETURN_DRAFT_PANEL_ARG}}
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
@@ -3384,12 +3600,15 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 justify (Justify.Literals):
                     Justification mode for the panel if inside a layout
                     panel. This is only used for the panel content.
+                return_draft_panel (bool):
+                    Return the draft panel without rendering or displaying it.
 
             Returns:
-                If the UI type is Jupyter running in browser, the
-                method returns a ReactivelyResizingHtml element which
-                is a Jupyter widget to display HTML output in the
-                browser. Otherwise, the method returns None.
+                If `return_draft_panel` is True, the draft panel before
+                rendering. Otherwise, if the UI type is Jupyter running
+                in a browser, a ReactivelyResizingHtml element. Otherwise,
+                None.
+
 
             Note:
                 Any default argument value is overridden by the
@@ -3399,13 +3618,16 @@ class DatasetDisplayMixin(BaseDisplayMixin):
 
     else:
 
-        def list(self, **kwargs) -> 'Element | None':
+        def list(
+            self, *, return_draft_panel: bool = False, **kwargs
+        ) -> 'DraftPanel | Element | None':
             # %% Original docstring (managed by expand_docstr_macros.py) %%
             # {{LIST_SUMMARY}}
             #
             # {{LIST_DESCRIPTION}}
             #
             # {{DISPLAY_METHOD_ARGS}}
+            #     {{RETURN_DRAFT_PANEL_ARG}}
             #
             # {{DISPLAY_METHOD_RETURNS}}
             #
@@ -3563,12 +3785,15 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 justify (Justify.Literals):
                     Justification mode for the panel if inside a layout
                     panel. This is only used for the panel content.
+                return_draft_panel (bool):
+                    Return the draft panel without rendering or displaying it.
 
             Returns:
-                If the UI type is Jupyter running in browser, the
-                method returns a ReactivelyResizingHtml element which
-                is a Jupyter widget to display HTML output in the
-                browser. Otherwise, the method returns None.
+                If `return_draft_panel` is True, the draft panel before
+                rendering. Otherwise, if the UI type is Jupyter running
+                in a browser, a ReactivelyResizingHtml element. Otherwise,
+                None.
+
 
             Note:
                 Any default argument value is overridden by the
@@ -3576,10 +3801,10 @@ class DatasetDisplayMixin(BaseDisplayMixin):
                 UserInterfaceConfig.
             """
 
-            return self._display_according_to_ui_type(
+            return self._display_or_return_draft(
+                self._list,
                 ui_type=self._extract_ui_type(**kwargs),
-                return_output_if_str=False,
-                output_method=self._list,
+                return_draft_panel=return_draft_panel,
                 **kwargs,
             )
 
