@@ -189,29 +189,31 @@ we work. `mimics` also makes the wrapped record's interface visible to supported
 and type checkers; runtime field access works through the Model itself.
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> import omnipy as om
->>> from textwrap import dedent
+import omnipy as om
+from textwrap import dedent
 
->>> code = dedent("""\
-...     import omnipy as om
-...     import omnipy.util.pydantic as pyd
-...
-...
-...     class RiverUgConcMeasurementRecord(pyd.BaseModel):
-...         name: str
-...         value_ug_l: float
-...
-...
-...     @om.mimics(RiverUgConcMeasurementRecord)
-...     class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...""")
+code = dedent("""\
+    import omnipy as om
+    import omnipy.util.pydantic as pyd
 
+
+    class RiverUgConcMeasurementRecord(pyd.BaseModel):
+        name: str
+        value_ug_l: float
+
+
+    @om.mimics(RiverUgConcMeasurementRecord)
+    class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...""")
+
+>>> exec(code, globals(), locals())
 >>> print(
-...     om.StrModel(code).full(
-...         width=None,
-...         syntax='python',
-...         style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
-...     )
-... )
+    om.StrModel(code)._docs(
+        method='full',
+        width=None,
+        syntax='python',
+        style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
+    )
+)
 ```
 
 ```pycon exec="1" session="water-samples" source="console"
@@ -270,36 +272,40 @@ Other sources use different field names and units. A `ConverterModel` makes a
 conversion reusable and validates its output. For this concentration measurement,
 let's normalize the name and convert µg/L to mg/L:
 
-```pycon exec="1" session="water-samples" result="console" html="true"
->>> import omnipy as om
->>> from textwrap import dedent
+```python exec="1" session="water-samples" result="console" html="true"
+import omnipy as om
+from textwrap import dedent
 
->>> code = dedent("""\
-...     import omnipy as om
-...     from typing import Literal
-...
-...     class NormalizedConcentrationRecord(pyd.BaseModel):
-...         type: Literal['ammonium', 'nitrate', 'phosphorus']
-...         value: float
-...         unit: Literal['mg/L']
-...
-...     @om.mimics(NormalizedConcentrationRecord)
-...     class MicrogramsToMilligramsMapper(
-...         om.ConverterModel[RiverUgConcMeasurementRecord, NormalizedConcentrationRecord]
-...     ):
-...         @classmethod
-...         def _convert(cls, data: RiverUgConcMeasurementRecord) -> NormalizedConcentrationRecord:
-...             return NormalizedConcentrationRecord(
-...                 type=data.name.lower(),
-...                 value=data.value_ug_l / 1000,
-...                 unit='mg/L',
-...             )""")
+code = dedent("""\
+    import omnipy as om
+    from typing import Literal
 
->>> om.StrModel(code).full(
-...     width=None,
-...     syntax='python',
-...     style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
-... )
+    class NormalizedConcentrationRecord(pyd.BaseModel):
+        type: Literal['ammonium', 'nitrate', 'phosphorus']
+        value: float
+        unit: Literal['mg/L']
+
+    @om.mimics(NormalizedConcentrationRecord)
+    class MicrogramsToMilligramsMapper(
+        om.ConverterModel[RiverUgConcMeasurementRecord, NormalizedConcentrationRecord]
+    ):
+        @classmethod
+        def _convert(cls, data: RiverUgConcMeasurementRecord) -> NormalizedConcentrationRecord:
+            return NormalizedConcentrationRecord(
+                type=data.name.lower(),
+                value=data.value_ug_l / 1000,
+                unit='mg/L',
+            )""")
+
+exec(code, globals(), locals())
+print(
+    om.StrModel(code)._docs(
+        method='full',
+        width=None,
+        syntax='python',
+        style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
+    )
+)
 ```
 
 ```pycon exec="1" session="water-samples" source="console"
