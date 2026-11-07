@@ -123,7 +123,7 @@ page with `JsonListOfDictsModel`:
 >>> import omnipy as om
 --8<-- "_includes/pycon_hidden_runtime_setup.md"
 >>> ui_config = om.runtime.config.data.ui.browser
->>> ui_config.color.style = om.DarkHighContrastColorStyles.TERRACOTTA_DARK_T16
+>>> ui_config.color.style = om.DarkHighContrastColorStyles.MEASURED_DARK_T16
 >>> ui_config.color.solid_background = True
 >>> from runpy import run_path  # markdown-exec: hide
 >>> _fixture_path = 'docs/examples/water_sample_service.py'  # markdown-exec: hide
@@ -207,8 +207,7 @@ exec(code, globals(), locals())
 print(
     om.StrModel(code)._docs(
         inner_titles=[
-            'Models #1: structured typing of the data as a Pydantic record, '
-            'wrapped by an Omnipy Model.'
+            '
         ],
         title_at_top=False,
         method='full',
@@ -218,6 +217,8 @@ print(
     )
 )
 ```
+_Models #1: structured typing of the data as a Pydantic record, wrapped by
+an Omnipy Model._
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> phosphorus = RiverUgConcMeasurementModel(raw_measurement)
@@ -303,11 +304,7 @@ code = dedent("""\
 exec(code, globals(), locals())
 print(
     om.StrModel(code)._docs(
-        inner_titles=[
-            'Models #2: mormalized measurement record, with a mimicking '
-            'ConverterModel to convert from the original measurement record.'
-        ],
-        title_at_top=False,
+        max_title_height=0,
         method='full',
         width=None,
         syntax='python',
@@ -315,6 +312,8 @@ print(
     )
 )
 ```
+_Models #2: mormalized measurement record, with a mimicking ConverterModel
+to convert from the original measurement record._
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> normalized = MicrogramsToMilligramsMapper(phosphorus)
