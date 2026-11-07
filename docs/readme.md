@@ -210,6 +210,7 @@ print(
             'Models #1: structured typing of the data as a Pydantic record, '
             'wrapped by an Omnipy Model.'
         ],
+        title_at_top=False,
         method='full',
         width=None,
         syntax='python',
@@ -306,6 +307,7 @@ print(
             'Models #2: mormalized measurement record, with a mimicking '
             'ConverterModel to convert from the original measurement record.'
         ],
+        title_at_top=False,
         method='full',
         width=None,
         syntax='python',
