@@ -123,7 +123,7 @@ page with `JsonListOfDictsModel`:
 >>> import omnipy as om
 --8<-- "_includes/pycon_hidden_runtime_setup.md"
 >>> ui_config = om.runtime.config.data.ui.browser
->>> ui_config.color.style = om.DarkHighContrastColorStyles.MEASURED_DARK_T16
+>>> ui_config.color.style = om.DarkHighContrastColorStyles.TERRACOTTA_DARK_T16
 >>> ui_config.color.solid_background = True
 >>> from runpy import run_path  # markdown-exec: hide
 >>> _fixture_path = 'docs/examples/water_sample_service.py'  # markdown-exec: hide
@@ -196,11 +196,9 @@ code = dedent("""\
     import omnipy as om
     import omnipy.util.pydantic as pyd
 
-
     class RiverUgConcMeasurementRecord(pyd.BaseModel):
         name: str
         value_ug_l: float
-
 
     @om.mimics(RiverUgConcMeasurementRecord)
     class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...""")
@@ -208,6 +206,10 @@ code = dedent("""\
 exec(code, globals(), locals())
 print(
     om.StrModel(code)._docs(
+        inner_titles=[
+            'Models #1: structured typing of the data as a Pydantic record, '
+            'wrapped by an Omnipy Model.'
+        ],
         method='full',
         width=None,
         syntax='python',
@@ -300,6 +302,10 @@ code = dedent("""\
 exec(code, globals(), locals())
 print(
     om.StrModel(code)._docs(
+        inner_titles=[
+            'Models #2: mormalized measurement record, with a mimicking '
+            'ConverterModel to convert from the original measurement record.'
+        ],
         method='full',
         width=None,
         syntax='python',
