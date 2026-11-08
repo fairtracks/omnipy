@@ -206,10 +206,7 @@ code = dedent("""\
 exec(code, globals(), locals())
 print(
     om.StrModel(code)._docs(
-        inner_titles=[
-            '
-        ],
-        title_at_top=False,
+        max_title_height=0,
         method='full',
         width=None,
         syntax='python',
