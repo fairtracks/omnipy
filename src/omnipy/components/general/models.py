@@ -66,40 +66,6 @@ if is_package_editable('omnipy'):
     """)
 
 
-class NotIterableExceptStrOrBytesModel(Model[object | None]):
-    """Represent a non-iterable value while still allowing ``str`` and ``bytes``.
-
-    Strings and bytes are accepted even though they are technically iterable because they are often
-    used as scalar values.
-
-    Examples:
-        >>> from omnipy import NotIterableExceptStrOrBytesModel, print_exception
-        >>>
-        >>> NotIterableExceptStrOrBytesModel(1234)
-        NotIterableExceptStrOrBytesModel(1234)
-        >>> NotIterableExceptStrOrBytesModel('1234')
-        NotIterableExceptStrOrBytesModel('1234')
-        >>> with print_exception:
-        ...     NotIterableExceptStrOrBytesModel((1, 2, 3, 4))
-        ValidationError: 1 validation error for NotIterableExceptStrOrBytesModel
-
-    Note:
-        ``JsonScalarModel`` is a strict submodel because every JSON scalar also satisfies this
-        model.
-    """
-
-    @classmethod
-    def _parse_data(cls, data: object) -> object:
-        if isinstance(data, NotIterableExceptStrOrBytesModel):
-            return data
-
-        assert isinstance(data, str) or isinstance(data, bytes) or not is_iterable(data), (
-            f'Data of type {type(data)} is iterable'
-        )
-
-        return data
-
-
 #
 # Exportable models
 #
@@ -715,6 +681,40 @@ class GroupByTypeModel(Chain2[Model[list], Model[dict[type | GenericAlias, list]
             full_type = _deduce_full_type(item)
             grouped[full_type].append(item)  # pyright: ignore [reportArgumentType]
         return Model[dict[type | GenericAlias, list]](grouped)
+
+
+class NotIterableExceptStrOrBytesModel(Model[object | None]):
+    """Represent a non-iterable value while still allowing ``str`` and ``bytes``.
+
+    Strings and bytes are accepted even though they are technically iterable because they are often
+    used as scalar values.
+
+    Examples:
+        >>> from omnipy import NotIterableExceptStrOrBytesModel, print_exception
+        >>>
+        >>> NotIterableExceptStrOrBytesModel(1234)
+        NotIterableExceptStrOrBytesModel(1234)
+        >>> NotIterableExceptStrOrBytesModel('1234')
+        NotIterableExceptStrOrBytesModel('1234')
+        >>> with print_exception:
+        ...     NotIterableExceptStrOrBytesModel((1, 2, 3, 4))
+        ValidationError: 1 validation error for NotIterableExceptStrOrBytesModel
+
+    Note:
+        ``JsonScalarModel`` is a strict submodel because every JSON scalar also satisfies this
+        model.
+    """
+
+    @classmethod
+    def _parse_data(cls, data: object) -> object:
+        if isinstance(data, NotIterableExceptStrOrBytesModel):
+            return data
+
+        assert isinstance(data, str) or isinstance(data, bytes) or not is_iterable(data), (
+            f'Data of type {type(data)} is iterable'
+        )
+
+        return data
 
 
 if TYPE_CHECKING:
