@@ -950,3 +950,17 @@ class PrimaryKeyDatasetModel(
             keyed_records[key] = record
 
         return Dataset[Model[record_type]](keyed_records)  # type: ignore[valid-type]
+
+
+class MergeListsOfRecordsIntoDatasetByPrimaryKeyModel(
+    Chain2[AddAllValuesModel[list[_RecordT]], PrimaryKeyDatasetModel[_PrimaryKeyT, _RecordT]],
+    Generic[_PrimaryKeyT, _RecordT],
+):
+    """Merge record-list pages into a Dataset with unique serialized primary keys."""
+
+
+class MergeListsOfRecordsIntoDatasetByIndexModel(
+    Chain2[AddAllValuesModel[list[_RecordT]], EnumeratedDatasetModel[_RecordT]],
+    Generic[_RecordT],
+):
+    """Merge record-list pages into a Dataset with consecutive positional keys."""

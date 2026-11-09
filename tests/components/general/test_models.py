@@ -17,10 +17,13 @@ from omnipy.components.general.models import (
     EnumeratedDatasetModel,
     EnumeratedListModel,
     EnumeratedListOfTuplesModel,
+    MergeListsOfRecordsIntoDatasetByIndexModel,
+    MergeListsOfRecordsIntoDatasetByPrimaryKeyModel,
     NotIterableExceptStrOrBytesModel,
     PrimaryKeyDatasetModel,
 )
 from omnipy.data.dataset import Dataset
+from omnipy.data.helpers import FailedData, PendingData
 from omnipy.data.model import Model
 from omnipy.data.primary_key import PrimaryKey
 from omnipy.util.pydantic import ValidationError
@@ -613,3 +616,71 @@ def test_primary_key_dataset_recomputes_input_keys() -> None:
     result = PrimaryKeyDatasetModel[PrimaryKey[Literal['identity']], Record](source)
     assert list(result.to_data()) == ['right']
     assert list(source) == ['wrong']
+
+
+@pytest.mark.parametrize('as_dataset', [False, True])
+def test_merge_lists_of_records(as_dataset: bool) -> None:
+    pages = [[Record(identity='b')], [], [Record(identity='a')]]
+    data = EnumeratedDatasetModel[list[Record]](pages) if as_dataset else pages
+    keyed = MergeListsOfRecordsIntoDatasetByPrimaryKeyModel[
+        PrimaryKey[Literal['identity']], Record
+    ](data)
+    indexed = MergeListsOfRecordsIntoDatasetByIndexModel[Record](data)
+    assert list(keyed.to_data()) == ['b', 'a']
+    assert list(indexed.to_data()) == ['0', '1']
+    assert list(keyed.to_data().values()) == list(indexed.to_data().values())
+    assert [record.identity for page in pages for record in page] == ['b', 'a']
+
+
+@pytest.mark.parametrize('lists', [[], {}])
+def test_merge_empty_lists_of_records(lists: list[Record]) -> None:
+    assert MergeListsOfRecordsIntoDatasetByIndexModel[Record](lists).to_data() == {}
+    assert (
+        MergeListsOfRecordsIntoDatasetByPrimaryKeyModel[PrimaryKey[Literal['identity']], Record](
+            lists
+        ).to_data()
+        == {}
+    )
+
+
+# TODO: Recheck with native Pydantic v2, which rejects [] as a dict or
+#     record. The v1 compatibility API still coerces each empty page to a
+#     default-valued Record. See
+#     test_mimic_first_level_operations_on_nested_dict in
+#     tests/data/test_model.py.
+@pytest.mark.skip(reason='Known Pydantic v1 issue: empty lists parse as default-valued records')
+@pytest.mark.parametrize('lists', [[[]], [[], []]])
+def test_merge_empty_pages_with_default_records_known_issue(lists: list[Record]) -> None:
+    assert MergeListsOfRecordsIntoDatasetByIndexModel[Record](lists).to_data() == {}
+    assert (
+        MergeListsOfRecordsIntoDatasetByPrimaryKeyModel[PrimaryKey[Literal['identity']], Record](
+            lists
+        ).to_data()
+        == {}
+    )
+
+
+def test_merge_record_pages_rejects_cross_page_collisions() -> None:
+    pages = [[Record(identity=1)], [Record(identity='1')]]
+    with pytest.raises(ValueError, match='Duplicate serialized primary key'):
+        MergeListsOfRecordsIntoDatasetByPrimaryKeyModel[PrimaryKey[Literal['identity']], Record](
+            pages
+        )
+    assert len(MergeListsOfRecordsIntoDatasetByIndexModel[Record](pages).to_data()) == 2
+
+
+@pytest.mark.parametrize('failed', [False, True])
+def test_merge_record_pages_does_not_drop_unavailable_pages(failed: bool) -> None:
+    pages = Dataset[Model[list[Record]]](available=[Record(identity='available')])
+    details = dict(job_name='request', job_unique_name='request-1')
+    if failed:
+        pages['missing'] = FailedData(**details, exception=ValueError('bad response'))
+        expected_message = 'failed to return data'
+        expected_error_type = 'value_error.faileddata'
+    else:
+        pages['missing'] = PendingData(**details)
+        expected_message = 'still awaiting data'
+        expected_error_type = 'value_error.pendingdata'
+    with pytest.raises(ValidationError, match=expected_message) as error:
+        MergeListsOfRecordsIntoDatasetByIndexModel[Record](pages)
+    assert error.value.errors()[0]['type'] == expected_error_type
