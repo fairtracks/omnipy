@@ -14,7 +14,7 @@ id = "expand-docstr-macros"
 name = "Expand docstring macros"
 description = "Expand docstring macros in Python files."
 # Run with the project environment, as the script imports omnipy and its dependencies
-entry = "uv run python .pre-commit-hooks/expand_docstr_macros.py"
+entry = "uv run --offline python .pre-commit-hooks/expand_docstr_macros.py"
 args = ["--verbose", "v"]
 language = "system"
 types = ["python"]
@@ -27,7 +27,7 @@ groups = ["watch", "commit"]
 id = "ruff-check"
 name = "ruff check"
 description = "Lint, sort imports and apply safe fixes."
-entry = "uv run ruff check --fix"
+entry = "uv run --offline ruff check --fix"
 language = "system"
 types_or = ["python", "jupyter"]
 groups = ["watch", "commit"]
@@ -35,7 +35,7 @@ groups = ["watch", "commit"]
 [[repos.hooks]]
 id = "ruff-format"
 name = "ruff format"
-entry = "uv run ruff format"
+entry = "uv run --offline ruff format"
 language = "system"
 types_or = ["python", "jupyter", "markdown"]
 groups = ["watch", "commit"]
@@ -43,7 +43,7 @@ groups = ["watch", "commit"]
 [[repos.hooks]]
 id = "tombi"
 name = "tombi format"
-entry = "uv run tombi format"
+entry = "uv run --offline tombi format"
 language = "system"
 types = ["toml"]
 groups = ["watch", "commit"]
