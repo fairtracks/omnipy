@@ -214,8 +214,7 @@ print(
     )
 )
 ```
-_Models #1: structured typing of the data as a Pydantic record, wrapped by
-an Omnipy Model._
+**_Models #1: typing the measurements as a Pydantic record (wrapped in an Omnipy Model)._**
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> phosphorus = RiverUgConcMeasurementModel(raw_measurement)
@@ -307,8 +306,8 @@ print(
     )
 )
 ```
-_Models #2: mormalized measurement record, with a mimicking ConverterModel
-to convert from the original measurement record._
+**_Models #2: ConverterModel subclass, converting from the original to a normalized measurement
+record (mimicking the latter)._**
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> normalized = MicrogramsToMilligramsMapper(phosphorus)
