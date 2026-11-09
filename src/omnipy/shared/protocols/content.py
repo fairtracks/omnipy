@@ -7,11 +7,6 @@ from typing_extensions import override, TypeVar
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
 from omnipy.shared.protocols.stdlib_ext import IsItemSequenceLike
-from omnipy.shared.protocols.vendored._typeshed import (
-    ConvertibleToFloat,
-    ConvertibleToInt,
-    SupportsKeysAndGetItem,
-)
 from omnipy.shared.protocols.vendored.builtins import (
     _NegativeInteger,
     _PositiveInteger,
@@ -24,6 +19,11 @@ from omnipy.shared.protocols.vendored.builtins import (
     IsSet,
     IsStr,
     IsTuple,
+)
+from omnipy.shared.protocols.vendored.typeshed import (
+    ConvertibleToFloat,
+    ConvertibleToInt,
+    SupportsKeysAndGetItem,
 )
 from omnipy.shared.protocols.vendored.typing import (
     IsAbstractSet,

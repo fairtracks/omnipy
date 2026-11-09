@@ -89,8 +89,8 @@ from typing_extensions import Literal, LiteralString, Self, deprecated, TypeVar,
 #     from _typeshed import AnnotateFunc
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
-from omnipy.shared.protocols.vendored._collections_abc import IsDictItems, IsDictKeys, IsDictValues
-from omnipy.shared.protocols.vendored._typeshed import (ReadableBuffer, SupportsKeysAndGetItem, SupportsRichComparison, SupportsRichComparisonT)
+from omnipy.shared.protocols.vendored.collections_abc import IsDictItems, IsDictKeys, IsDictValues
+from omnipy.shared.protocols.vendored.typeshed import (ReadableBuffer, SupportsKeysAndGetItem, SupportsRichComparison, SupportsRichComparisonT)
 from omnipy.shared.protocols.vendored.typing import (IsAbstractSet, IsMutableMapping, IsMapping, IsMutableSequence, IsMutableSet, IsItemSequence)
 
 _T = TypeVar("_T")

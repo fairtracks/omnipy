@@ -48,7 +48,7 @@ from cachebox import cached, LRUCache
 from typing_extensions import NoDefault, TypeIs, TypeVar
 
 from omnipy.shared.protocols.util import IsDataclass
-from omnipy.shared.protocols.vendored._typeshed import SupportsItems
+from omnipy.shared.protocols.vendored.typeshed import SupportsItems
 from omnipy.shared.typedefs import LocaleType, TypeForm
 import omnipy.util.pydantic as pyd
 

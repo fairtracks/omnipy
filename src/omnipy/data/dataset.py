@@ -45,7 +45,7 @@ from omnipy.shared.protocols.data import (
     IsHttpUrlDataset,
     IsMultiModelDataset,
 )
-from omnipy.shared.protocols.vendored._typeshed import SupportsItems
+from omnipy.shared.protocols.vendored.typeshed import SupportsItems
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util._placeholder import F

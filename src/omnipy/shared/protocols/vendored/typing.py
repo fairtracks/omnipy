@@ -46,7 +46,7 @@ from typing_extensions import Self, TypeVar
 
 
 from omnipy.shared.exceptions import AssumedToBeImplementedException
-from omnipy.shared.protocols.vendored._typeshed import (ReadableBuffer,
+from omnipy.shared.protocols.vendored.typeshed import (ReadableBuffer,
                                                SupportsGetItem,
                                                SupportsKeysAndGetItem)
 
