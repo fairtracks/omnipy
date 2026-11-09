@@ -236,11 +236,9 @@ validation error:
 >>> phosphorus.value_ug_l = 'not a number'
 ```
 
-```pycon exec="1" session="water-samples" result="console"
->>> try:
+```pycon exec="1" session="water-samples"
+>>> with catch_and_format_error():
 ...     phosphorus.value_ug_l = 'not a number'
-... except pyd.ValidationError as err:
-...     print(err)
 ```
 
 In interactive mode, the failed edit is rolled back to the last valid snapshot.
