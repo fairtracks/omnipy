@@ -9,6 +9,8 @@ from omnipy.components.raw.datasets import StrictBytesDataset, StrictStrDataset
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 
+from ..helpers.models import MergeObservations
+
 
 class SaveCase(NamedTuple):
     value: Model | Dataset
@@ -77,3 +79,10 @@ def case_json_dataset_strings() -> SaveCase:
 
 def case_empty_dataset() -> SaveCase:
     return SaveCase(value=JsonDataset(), member_names=set())
+
+
+def case_merged_records() -> SaveCase:
+    return SaveCase(
+        value=MergeObservations([[{'project': 'north', 'identity': 'a|b', 'value': 1}]]),
+        member_names={'__merge_observations__'},
+    )

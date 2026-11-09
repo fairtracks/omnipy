@@ -1,5 +1,6 @@
 """Local services and runtime configurations for public I/O integration tests."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
@@ -10,6 +11,8 @@ from pytest_aiohttp import AiohttpServer
 import pytest_cases as pc
 
 from omnipy.shared.protocols.hub.runtime import IsRuntime
+
+from .helpers.classes import PagedObservationService
 
 
 @pytest.fixture(autouse=True)
@@ -44,3 +47,38 @@ async def load_content_server(aiohttp_server: AiohttpServer) -> AsyncGenerator[T
     app = web.Application()
     app.router.add_get('/{kind}', content)
     yield await aiohttp_server(app)
+
+
+@pc.fixture(scope='function')
+async def paged_observation_service(
+    aiohttp_server,
+) -> AsyncGenerator[PagedObservationService, None]:
+    """Serve finite record pages and allow response failures to be injected."""
+    service = PagedObservationService(
+        records=[
+            {'project': 'north', 'identity': 'a|b', 'value': 1},
+            {'project': 'north', 'identity': 'c%', 'value': 2},
+            {'project': 'south', 'identity': 'a|b', 'value': 3},
+            {'project': 'south', 'identity': 'd', 'value': 4},
+            {'project': 'south', 'identity': 'e', 'value': 5},
+        ]
+    )
+
+    async def observations(request: web.Request) -> web.Response:
+        page = int(request.query['page'])
+        limit = int(request.query['limit'])
+        service.requests.append((page, limit))
+        if page == 0:
+            await asyncio.sleep(0.02)
+        if page in service.responses:
+            response = service.responses[page]
+            if isinstance(response, int):
+                return web.Response(status=response)
+            return web.json_response(response)
+        return web.json_response(service.records[page * limit : (page + 1) * limit])
+
+    app = web.Application()
+    app.router.add_get('/api/observations', observations)
+    server = await aiohttp_server(app)
+    service.base_url = str(server.make_url('/'))
+    yield service
