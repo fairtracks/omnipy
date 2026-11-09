@@ -1,14 +1,17 @@
 """Models for HTTP URLs, URL parts, query strings, and automatic response decoding."""
 
 from pathlib import PurePosixPath
-from typing import Any, cast, Self, TypeGuard
+from typing import Any, cast, Generic, Self, TypeGuard
 from urllib.parse import quote, unquote
+
+from typing_extensions import TypeVar
 
 from omnipy.data.model import is_model_instance, Model
 from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
 from omnipy.util.contexts import hold_and_reset_prev_attrib_value
 import omnipy.util.pydantic as pyd
 
+from ..general.models import Chain2, ConverterModel, EnumeratedDatasetModel
 from ..json.models import AnyJsonListOrDictModel, JsonListOrDictModel
 from ..raw.models import (
     NestedJoinItemsModel,
@@ -22,6 +25,9 @@ __all__ = [
     'UrlPathModel',
     'UrlDataclassModel',
     'HttpUrlModel',
+    'PagesInfo',
+    'PagesInfoRangeModel',
+    'GeneratePagedUrlsModel',
 ]
 
 from omnipy.data._typing.helpers import mimics
@@ -585,3 +591,121 @@ class AutoResponseContentModel(
                     return StrictBytesModel(data.response)
         else:
             return data
+
+
+class PagesInfo(pyd.BaseModel):
+    """Describe a finite page range and the expected size of an individual page.
+
+    Page numbers may start at zero or one. ``num_items`` and ``items_per_page``
+    determine ``num_pages`` when supplied; otherwise one page is assumed. A zero
+    item or page count represents an empty range. ``items_on_page`` describes the
+    response size, while ``items_per_page`` remains the request capacity, including
+    on the last page. Subclasses and extra fields can carry endpoint information.
+    """
+
+    start_from_one: bool = False
+    step: pyd.PositiveInt = 1
+    num_items: pyd.NonNegativeInt | None = None
+    items_per_page: pyd.PositiveInt | None = None
+    num_pages: pyd.NonNegativeInt = pyd.Field(default=None)
+    page: pyd.NonNegativeInt = pyd.Field(default=None)
+    items_on_page: pyd.NonNegativeInt | None = None
+
+    class Config:
+        extra = pyd.Extra.allow
+
+    @classmethod
+    def from_zero_page(cls, page: int, start_from_one: bool) -> int:
+        """Convert a page number to a zero-based position."""
+        return page - int(start_from_one)
+
+    @classmethod
+    def range_stop(cls, num_pages: int, start_from_one: bool) -> int:
+        """Return the exclusive upper bound for the page-number range."""
+        return num_pages + int(start_from_one)
+
+    def extract_general_field_values(self) -> dict[str, Any]:
+        """Retain pagination settings and endpoint fields, excluding page-specific values."""
+        return self.dict(exclude={'page', 'items_on_page'})
+
+    @pyd.validator('num_pages', pre=True, always=True)
+    def default_num_pages(cls, value: object, values: dict[str, Any]) -> object:
+        if value is not None:
+            return value
+        num_items = values.get('num_items')
+        items_per_page = values.get('items_per_page')
+        if num_items is not None and items_per_page is not None:
+            return (num_items + items_per_page - 1) // items_per_page
+        return 1
+
+    @pyd.validator('page', pre=True, always=True)
+    def default_page(cls, value: object, values: dict[str, Any]) -> object:
+        return int(values.get('start_from_one', False)) if value is None else value
+
+    @pyd.root_validator(skip_on_failure=True)
+    def validate_page_range(cls, values: dict[str, Any]) -> dict[str, Any]:
+        num_items = values['num_items']
+        capacity = values['items_per_page']
+        num_pages = values['num_pages']
+        if num_items is not None:
+            if capacity is None:
+                raise ValueError("Cannot specify 'num_items' without 'items_per_page'")
+            expected_pages = (num_items + capacity - 1) // capacity
+            if num_pages != expected_pages:
+                raise ValueError(
+                    f'Conflicting num_pages: expected {expected_pages}, got {num_pages}'
+                )
+
+        page_index = cls.from_zero_page(values['page'], values['start_from_one'])
+        if page_index < 0 or page_index >= max(num_pages, 1):
+            raise ValueError(f'Page number {values["page"]} is outside the page range')
+        return values
+
+    @pyd.root_validator(skip_on_failure=True)
+    def validate_items_on_page(cls, values: dict[str, Any]) -> dict[str, Any]:
+        num_items = values['num_items']
+        capacity = values['items_per_page']
+        num_pages = values['num_pages']
+        page_index = cls.from_zero_page(values['page'], values['start_from_one'])
+        expected_items = None
+        if num_pages == 0:
+            expected_items = 0
+        elif capacity is not None:
+            if page_index < num_pages - 1:
+                expected_items = capacity
+            elif num_items is not None:
+                expected_items = num_items - page_index * capacity
+
+        items_on_page = values['items_on_page']
+        if items_on_page is not None:
+            if capacity is not None and items_on_page > capacity:
+                raise ValueError('items_on_page cannot exceed items_per_page')
+            if expected_items is not None and items_on_page != expected_items:
+                raise ValueError(f'Conflicting items_on_page: expected {expected_items}')
+        if expected_items is not None:
+            values['items_on_page'] = expected_items
+        return values
+
+
+_PagesInfoT = TypeVar('_PagesInfoT', bound=PagesInfo, default=PagesInfo)
+_PagesInfoToUrlMapperT = TypeVar('_PagesInfoToUrlMapperT', bound=ConverterModel)
+
+
+class PagesInfoRangeModel(ConverterModel[_PagesInfoT, list[_PagesInfoT]], Generic[_PagesInfoT]):
+    """Expand pagination settings into page descriptions, preserving their subclass."""
+
+    @classmethod
+    def _convert(cls, data: _PagesInfoT) -> list[_PagesInfoT]:
+        general_values = data.extract_general_field_values()
+        stop = data.range_stop(data.num_pages, data.start_from_one)
+        return [
+            type(data).parse_obj(general_values | {'page': page})
+            for page in range(data.page, stop, data.step)
+        ]
+
+
+class GeneratePagedUrlsModel(
+    Chain2[PagesInfoRangeModel[_PagesInfoT], EnumeratedDatasetModel[_PagesInfoToUrlMapperT]],
+    Generic[_PagesInfoToUrlMapperT, _PagesInfoT],
+):
+    """Expand page settings and convert each page into a position-keyed URL."""

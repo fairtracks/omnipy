@@ -1,7 +1,7 @@
 """Tests for remote URL and response content models."""
 
 from pathlib import PurePosixPath
-from typing import Annotated
+from typing import Annotated, Any
 
 import pytest
 import pytest_cases as pc
@@ -10,8 +10,11 @@ from omnipy.components.json.models import JsonListOrDictModel
 from omnipy.components.raw.models import StrictBytesModel, StrictStrModel
 from omnipy.components.remote.models import (
     AutoResponseContentModel,
+    GeneratePagedUrlsModel,
     HostUrlModel,
     HttpUrlModel,
+    PagesInfo,
+    PagesInfoRangeModel,
     QueryParamsModel,
     ResponseContentPydModel,
     UrlDataclassModel,
@@ -22,6 +25,98 @@ from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.util.pydantic import ValidationError
 
 from ...helpers.protocols import AssertModelOrValFunc
+from .helpers.models import ObservationPagesInfo, ObservationPageUrl
+
+
+@pytest.mark.parametrize('start_from_one', [False, True])
+def test_pages_info_range(start_from_one: bool) -> None:
+    pages = PagesInfoRangeModel[PagesInfo](
+        start_from_one=start_from_one, num_items=80, items_per_page=25
+    )
+    first = int(start_from_one)
+    assert [page.page for page in pages.content] == list(range(first, first + 4))
+    assert [page.items_on_page for page in pages.content] == [25, 25, 25, 5]
+    assert [page.items_per_page for page in pages.content] == [25] * 4
+
+
+def test_pages_info_defaults_steps_and_exact_multiple() -> None:
+    assert PagesInfo().num_pages == 1
+    assert PagesInfo().page == 0
+    assert PagesInfo(start_from_one=True).page == 1
+    assert PagesInfo(num_items=50, items_per_page=25, page=1).items_on_page == 25
+    pages = PagesInfoRangeModel[PagesInfo](num_pages=7, page=2, step=2)
+    assert [page.page for page in pages.content] == [2, 4, 6]
+    assert PagesInfo(num_pages=2, items_per_page=25, page=1).items_on_page is None
+
+
+@pytest.mark.parametrize('start_from_one', [False, True])
+def test_empty_pages_info_range(start_from_one: bool) -> None:
+    assert (
+        PagesInfoRangeModel[PagesInfo](
+            start_from_one=start_from_one, num_items=0, items_per_page=25
+        ).content
+        == []
+    )
+    assert PagesInfoRangeModel[PagesInfo](start_from_one=start_from_one, num_pages=0).content == []
+
+
+@pytest.mark.parametrize(
+    'kwargs',
+    [
+        {'step': 0},
+        {'step': -1},
+        {'num_pages': -1},
+        {'num_items': -1, 'items_per_page': 25},
+        {'num_items': 10},
+        {'num_items': 10, 'items_per_page': 0},
+        {'num_items': 10, 'items_per_page': 'bad'},
+        {'num_items': 10, 'items_per_page': 5, 'num_pages': 3},
+        {'start_from_one': True, 'page': 0},
+        {'num_pages': 2, 'page': 2},
+        {'num_pages': 0, 'page': 1},
+        {'page': -1},
+        {'page': 'bad'},
+        {'num_pages': 'bad'},
+        {'items_per_page': 25, 'items_on_page': 26},
+        {'num_pages': 2, 'items_per_page': 25, 'items_on_page': 24},
+        {'num_items': 30, 'items_per_page': 25, 'page': 1, 'items_on_page': 6},
+        {'num_pages': 0, 'items_on_page': 1},
+    ],
+)
+def test_pages_info_rejects_invalid_settings(kwargs: dict[str, Any]) -> None:
+    with pytest.raises(ValidationError):
+        PagesInfo(**kwargs)
+
+
+def test_page_range_preserves_subclass_extra_fields_and_explicit_page_list() -> None:
+    settings = ObservationPagesInfo.parse_obj(
+        dict(base_url='https://example.com/root?token=keep#fragment', num_pages=2, custom='kept')
+    )
+    pages = PagesInfoRangeModel[ObservationPagesInfo](settings)
+    assert all(type(page) is ObservationPagesInfo for page in pages.content)
+    assert all(page.dict()['custom'] == 'kept' for page in pages.content)
+    assert PagesInfoRangeModel[ObservationPagesInfo](pages.content).to_data() == pages.to_data()
+    assert settings.page == 0
+
+
+def test_generate_paged_urls_uses_constant_request_capacity() -> None:
+    urls = GeneratePagedUrlsModel[ObservationPageUrl, ObservationPagesInfo](
+        base_url='https://example.com/root?token=keep#fragment',
+        num_items=80,
+        items_per_page=25,
+    )
+    assert urls.to_data() == {
+        str(
+            page
+        ): f'https://example.com/root/api/observations?token=keep&page={page}&limit=25#fragment'
+        for page in range(4)
+    }
+    assert (
+        GeneratePagedUrlsModel[ObservationPageUrl, ObservationPagesInfo](
+            base_url='https://example.com', num_items=0, items_per_page=25
+        ).to_data()
+        == {}
+    )
 
 
 def test_query_params_model():
