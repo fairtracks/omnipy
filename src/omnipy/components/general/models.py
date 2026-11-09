@@ -10,15 +10,19 @@ from omnipy.data.dataset import Dataset
 from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, TypeVarStore4
 from omnipy.data.model import Model
 from omnipy.shared.protocols.data import IsModel
+from omnipy.shared.protocols.vendored.typeshed import SupportsItems
 from omnipy.shared.typedefs import TypeForm
 from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import (
     all_type_variants,
+    has_items_method,
     is_iterable,
     is_non_str_byte_iterable,
     is_package_editable,
     is_union,
 )
+
+from .protocols import SupportsAdd
 
 if TYPE_CHECKING:
     from omnipy.data._typing.mimic_models import PlainModel
@@ -800,3 +804,43 @@ else:
         ) -> Iterator[tuple[_KeyT, _ToT]]:
             for key, val in mapping_data.items():
                 yield key, cls(val).content
+
+
+_AddT = TypeVar('_AddT', bound=SupportsAdd, default=SupportsAdd)
+
+
+class AddAllValuesModel(
+    ConverterModel[Model[SupportsItems[str, _AddT] | Iterable[_AddT]], _AddT],
+    Generic[_AddT],
+):
+    """Add mapping values or iterable elements in their original order.
+
+    The first value supplies the initial accumulator, so no numeric zero or other
+    identity is assumed. Aggregation requires at least one value. Input already
+    accepted as the output type passes through under ``ConverterModel`` semantics.
+    Addition uses ``+`` rather than in-place addition to preserve input lists and
+    other mutable values. The content is the added value itself.
+    """
+
+    @classmethod
+    def _convert(cls, data: Model[SupportsItems[str, _AddT] | Iterable[_AddT]]) -> _AddT:
+        result = None
+
+        def _add_to_result(result: _AddT | None, item: _AddT) -> _AddT:
+            if result is None:
+                result = item
+            else:
+                result = result + item
+            return result
+
+        if has_items_method(data):
+            for _key, value in data.items():
+                result = _add_to_result(result, value)
+        else:
+            for item in cast(Iterable[_AddT], data):
+                result = _add_to_result(result, item)
+
+        if result is None:
+            raise ValueError('Cannot add an empty iterable')
+
+        return result

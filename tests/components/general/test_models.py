@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from omnipy.components.general.models import (
+    AddAllValuesModel,
     Chain2,
     Chain3,
     Chain4,
@@ -14,11 +15,52 @@ from omnipy.components.general.models import (
     ConverterModel,
     NotIterableExceptStrOrBytesModel,
 )
+from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.util.pydantic import ValidationError
 
 from ...helpers.functions import assert_model
 from .helpers.models import MyList, MyListModel, RotateOneCharModel, SplitCharsModel
+
+
+@pytest.mark.parametrize('data', [[1, 2, 3], (1, 2, 3), {'a': 1, 'b': 2, 'c': 3}])
+def test_add_all_values(data) -> None:
+    model = AddAllValuesModel[int](data)
+    assert type(model.content) is int
+    assert model.content == 6
+    assert model.to_data() == 6
+    converted = AddAllValuesModel[int].convert(data)
+    assert type(converted) is int
+    assert converted == 6
+
+
+def test_add_all_values_preserves_order_and_inputs() -> None:
+    pages = [[1, 2], [], [3]]
+    model = AddAllValuesModel[list[int]](pages)
+    assert type(model.content) is list
+    assert model.content == [1, 2, 3]
+    assert model.to_data() == [1, 2, 3]
+    assert pages == [[1, 2], [], [3]]
+    assert AddAllValuesModel[str]({'b': 'first', 'a': 'second'}).to_data() == 'firstsecond'
+    assert AddAllValuesModel[int](iter([1, 2, 3])).to_data() == 6
+
+
+def test_add_all_values_accepts_already_converted_output() -> None:
+    assert AddAllValuesModel[int](6).content == 6
+    assert AddAllValuesModel[list[int]]([]).content == []
+
+
+def test_add_all_values_from_mimicking_dataset() -> None:
+    pages = Model[Model[Dataset[Model[list[int]]]]]({'first': [1, 2], 'second': [3]})
+    assert AddAllValuesModel[list[int]](pages).to_data() == [1, 2, 3]
+    assert pages.to_data() == {'first': [1, 2], 'second': [3]}
+
+
+@pytest.mark.parametrize('data', [[], {}, iter(())])
+def test_add_all_values_rejects_empty_input(data) -> None:
+    with pytest.raises(ValueError, match='empty iterable'):
+        AddAllValuesModel[int](data)
+
 
 if TYPE_CHECKING:
     from omnipy.data._typing.mimic_models import PlainModel
