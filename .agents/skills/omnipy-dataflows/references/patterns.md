@@ -267,7 +267,7 @@ Until then, `PrimaryKeyDatasetModel` in
 [`omnipy.components.nested.models`](../../../../src/omnipy/components/nested/models.py) supplies intermediate
 conversion from a Dataset or list Model of Pydantic records to a Dataset keyed
 by record fields. Declare ordered fields with `PrimaryKey[Literal['field'], ...]`
-from [`omnipy.data.primary_keys`](../../../../src/omnipy/data/primary_keys.py).
+from [`omnipy.data.primary_key`](../../../../src/omnipy/data/primary_key.py).
 The converter supports composite keys and rejects serialized-key collisions
 before constructing the result. It recomputes input Dataset keys without changing
 the source mapping; it does not continuously maintain keys after conversion.

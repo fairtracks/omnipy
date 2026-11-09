@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING
 
 import pytest
 
@@ -18,12 +18,15 @@ from omnipy.components.general.models import (
     EnumeratedListModel,
     EnumeratedListOfTuplesModel,
     NotIterableExceptStrOrBytesModel,
+    PrimaryKeyDatasetModel,
 )
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
+from omnipy.data.primary_key import PrimaryKey
 from omnipy.util.pydantic import ValidationError
 
 from ...helpers.functions import assert_model
+from ..helpers.models import Record
 from .helpers.models import MyList, MyListModel, RotateOneCharModel, SplitCharsModel
 
 
@@ -535,3 +538,78 @@ def test_enumerated_dataset_preserves_duplicates_and_order() -> None:
     assert EnumeratedDatasetModel(['b', 'a', 0]).to_data() == {'0': 'b', '1': 'a', '2': 0}
     assert EnumeratedDatasetModel[tuple[int, str]]([(7, 'x')]).to_data() == {'0': (7, 'x')}
     assert EnumeratedDatasetModel[int]([]).to_data() == {}
+
+
+def test_primary_key_cache_is_specific_to_each_model_class() -> None:
+    class ByIdentity(PrimaryKeyDatasetModel[PrimaryKey[Literal['identity']], Record]): ...
+
+    identity_key = ByIdentity.primary_key
+    assert identity_key == ('identity',)
+    assert ByIdentity.primary_key is identity_key
+
+    class InheritedByIdentity(ByIdentity): ...
+
+    class ByProjectAndIdentity(
+        PrimaryKeyDatasetModel[PrimaryKey[Literal['project'], Literal['identity']], Record]
+    ): ...
+
+    inherited_key = InheritedByIdentity.primary_key
+    assert inherited_key == identity_key
+    assert inherited_key is not identity_key
+    assert InheritedByIdentity.primary_key is inherited_key
+
+    composite_key = ByProjectAndIdentity.primary_key
+    assert composite_key == ('project', 'identity')
+    assert ByProjectAndIdentity.primary_key is composite_key
+    assert ByIdentity.primary_key is identity_key
+
+
+@pytest.mark.parametrize('as_dataset', [False, True])
+def test_primary_key_dataset_composite_keys(as_dataset: bool) -> None:
+    records = [Record(identity='a|b', project='p%1'), Record(identity=None, project='p2')]
+    data = Dataset[Model[Record]](first=records[0], second=records[1]) if as_dataset else records
+    model = PrimaryKeyDatasetModel[PrimaryKey[Literal['project'], Literal['identity']], Record](
+        data
+    )
+    assert model.to_data() == {
+        'p%251|a%7Cb': records[0].dict(),
+        'p2|None': records[1].dict(),
+    }
+    assert list(model.to_data()) == ['p%251|a%7Cb', 'p2|None']
+
+
+@pytest.mark.parametrize('identities', [['same', 'same'], [1, '1'], [None, 'None']])
+def test_primary_key_dataset_rejects_serialization_collisions(identities) -> None:
+    records = [Record(identity=identity) for identity in identities]
+    with pytest.raises(ValueError, match='Duplicate serialized primary key'):
+        PrimaryKeyDatasetModel[PrimaryKey[Literal['identity']], Record](records)
+
+
+def test_primary_key_dataset_accepts_container_keys_and_defaults() -> None:
+    records = [Record(identity=[1, 2]), Record(identity={'a': 1})]
+    model = PrimaryKeyDatasetModel[PrimaryKey[Literal['identity']], Record](records)
+    assert list(model.to_data()) == ['[1, 2]', "{'a': 1}"]
+    default_key = PrimaryKeyDatasetModel[PrimaryKey[Literal['project']], Record]([records[0]])
+    assert list(default_key.to_data()) == ['north']
+
+
+def test_primary_key_dataset_rejects_unknown_field_even_when_empty() -> None:
+    with pytest.raises(ValueError, match='Unknown primary-key field'):
+        PrimaryKeyDatasetModel[PrimaryKey[Literal['missing']], Record]([])
+
+
+def test_composite_key_serialization_prevents_delimiter_ambiguity() -> None:
+    records = [Record(project='a|b', identity='c'), Record(project='a', identity='b|c')]
+    model_cls = PrimaryKeyDatasetModel[PrimaryKey[Literal['project'], Literal['identity']], Record]
+    model = model_cls(records)
+    assert list(model.to_data()) == ['a%7Cb|c', 'a|b%7Cc']
+    with pytest.raises(ValueError, match='Duplicate serialized primary key'):
+        model.from_data([Record(identity=1), Record(identity='1')])
+    assert list(model.to_data()) == ['a%7Cb|c', 'a|b%7Cc']
+
+
+def test_primary_key_dataset_recomputes_input_keys() -> None:
+    source = Dataset[Model[Record]](wrong=Record(identity='right'))
+    result = PrimaryKeyDatasetModel[PrimaryKey[Literal['identity']], Record](source)
+    assert list(result.to_data()) == ['right']
+    assert list(source) == ['wrong']

@@ -216,7 +216,7 @@ duplicate occurrences. Rekeying and continuous key maintenance are now in scope,
 not a deferred extension. The implemented
 [`PrimaryKeyDatasetModel`](../../../../src/omnipy/components/nested/models.py)
 supplies the intermediate conversion approach, using shared declarations and
-serialization from [`data.primary_keys`](../../../../src/omnipy/data/primary_keys.py).
+serialization from [`data.primary_key`](../../../../src/omnipy/data/primary_key.py).
 It supersedes the example-local prototype's first-field-only conversion and
 overwrite behavior: composite keys and serialized-key collision rejection are
 implemented and covered by

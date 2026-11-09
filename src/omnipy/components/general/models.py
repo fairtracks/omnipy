@@ -6,9 +6,16 @@ from typing import Any, cast, Generic, get_args, Protocol, Union
 
 from typing_extensions import override, TypeVar
 
-from omnipy.data.dataset import Dataset
-from omnipy.data.helpers import TypeVarStore1, TypeVarStore2, TypeVarStore3, TypeVarStore4
+from omnipy.data.dataset import Dataset, is_dataset_instance
+from omnipy.data.helpers import (
+    TypeVarStore,
+    TypeVarStore1,
+    TypeVarStore2,
+    TypeVarStore3,
+    TypeVarStore4,
+)
 from omnipy.data.model import Model
+from omnipy.data.primary_key import PrimaryKey, PrimaryKeyModelMetaclass, serialize_primary_key
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.vendored.typeshed import SupportsItems
 from omnipy.shared.typedefs import TypeForm
@@ -21,6 +28,7 @@ from omnipy.util.helpers import (
     is_package_editable,
     is_union,
 )
+import omnipy.util.pydantic as pyd
 
 from .protocols import SupportsAdd
 
@@ -83,6 +91,8 @@ _FromT = TypeVar('_FromT', bound=object | UnionType)
 _ToT = TypeVar('_ToT')
 _KeyT = TypeVar('_KeyT')
 _ItemT = TypeVar('_ItemT', default=object)
+_PrimaryKeyT = TypeVar('_PrimaryKeyT', bound=PrimaryKey)
+_RecordT = TypeVar('_RecordT', bound=pyd.BaseModel)
 
 
 class HasOuterType(Protocol):
@@ -898,3 +908,45 @@ class EnumeratedDatasetModel(
     positions in an ``Dataset[Model[_ItemT]]``. Input that is already
     an ``Dataset[Model[_ItemT]]`` is retained as such.
     """
+
+
+class PrimaryKeyDatasetModel(
+    ConverterModel[
+        Dataset[Model[_RecordT]] | Model[list[_RecordT]],
+        TypeVarStore[_PrimaryKeyT] | Dataset[Model[_RecordT]],
+    ],
+    Generic[_PrimaryKeyT, _RecordT],
+    metaclass=PrimaryKeyModelMetaclass,
+):
+    """Key validated Pydantic records by their declared primary-key fields.
+
+    Keys are recomputed from visible record fields in declaration order. Duplicate
+    serialized keys are rejected before a Dataset is constructed, including keys
+    with different Python values that stringify identically.
+    """
+
+    @classmethod
+    def _convert(
+        cls, data: Dataset[Model[_RecordT]] | Model[list[_RecordT]]
+    ) -> Dataset[Model[_RecordT]]:
+        if is_dataset_instance(data):
+            record_type = cast(type[_RecordT], data.get_type().inner_type())
+            records = data.values()
+        else:
+            record_type = cast(type[_RecordT], data.inner_type())
+            records = data
+
+        key_fields = cls.primary_key
+
+        for field in key_fields:
+            if field not in record_type.__fields__:
+                raise ValueError(f'Unknown primary-key field: {field!r}')
+
+        keyed_records = {}
+        for record in records:
+            key = serialize_primary_key(getattr(record, field) for field in key_fields)
+            if key in keyed_records:
+                raise ValueError(f'Duplicate serialized primary key: {key!r}')
+            keyed_records[key] = record
+
+        return Dataset[Model[record_type]](keyed_records)  # type: ignore[valid-type]

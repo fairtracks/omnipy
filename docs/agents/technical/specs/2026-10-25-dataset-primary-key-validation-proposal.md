@@ -19,7 +19,7 @@ provides the intermediate conversion approach until Dataset-native support lands
 It accepts a Dataset of wrapped Pydantic records or a list Model of Pydantic
 records and constructs a Dataset keyed from record fields. Import it from
 `omnipy.components.nested.models`, and `PrimaryKey` from
-`omnipy.data.primary_keys`; these are available in the current checkout, not
+`omnipy.data.primary_key`; these are available in the current checkout, not
 top-level `omnipy` exports.
 
 The converter handles all declared key fields in order, validates field names,
@@ -80,7 +80,7 @@ silently overriding caller identities.
 ## Shared key serialization and errors
 
 Reuse the implemented `serialize_primary_key(components) -> str` in
-[`omnipy.data.primary_keys`](../../../../src/omnipy/data/primary_keys.py), shared
+[`omnipy.data.primary_key`](../../../../src/omnipy/data/primary_key.py), shared
 with the interim converter, for Dataset and the planned table architecture. Model
 components use `to_data()` here because this is a serialization boundary. Follow
 the [table key-serialization contract](2026-10-16-table-model-architecture-and-conversions.md#key-serialization):
