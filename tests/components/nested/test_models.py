@@ -1,73 +1,14 @@
 """Tests for nested models and datasets."""
 
-from dataclasses import dataclass
-
 import pytest
 
 from omnipy.components.json.models import JsonScalarModel
 from omnipy.components.nested.datasets import NestedDataset, StructuredNestedDataset
 from omnipy.components.nested.models import (
-    EnumeratedListModel,
-    EnumeratedListOfTuplesModel,
     ListAsStructuredNestedDatasetModel,
 )
 from omnipy.data.dataset import Dataset
 from omnipy.util.pydantic import ValidationError
-
-
-def test_enumerated_list_of_tuples_model() -> None:
-    """Normalize enumerated tuple lists with sequential indexes."""
-    data = [(0, 'a'), ('1', 'b'), (2, 'c')]
-    expected = [(0, 'a'), (1, 'b'), (2, 'c')]
-    enumerated = EnumeratedListOfTuplesModel(data)
-    assert enumerated.content == expected
-    assert enumerated.to_data() == expected
-
-    data_empty: list[str] = []
-    expected_empty: list[str] = []
-    enumerated = EnumeratedListOfTuplesModel(data_empty)
-    assert enumerated.content == expected_empty
-    assert enumerated.to_data() == expected_empty
-
-
-def test_enumerated_list_of_tuples_model_failures() -> None:
-    """Reject enumerated tuple lists with invalid indexes."""
-    data_not_sequential = [(3, 'a'), (5, 'b'), (1, 'c')]
-    with pytest.raises(ValidationError):
-        EnumeratedListOfTuplesModel(data_not_sequential)
-
-    data_not_from_zero = [(1, 'a'), (2, 'b'), (3, 'c')]
-    with pytest.raises(ValidationError):
-        EnumeratedListOfTuplesModel(data_not_from_zero)
-
-
-def test_enumerated_list_model() -> None:
-    """Enumerate plain lists into indexed tuple pairs."""
-    data = ['a', 'b', 'c']
-    expected = [(0, 'a'), (1, 'b'), (2, 'c')]
-
-    with pytest.raises(ValidationError):
-        EnumeratedListModel[int](data)
-
-    enumerated = EnumeratedListModel[str](data)
-    assert enumerated.content == EnumeratedListOfTuplesModel(expected)
-    assert enumerated.to_data() == expected
-
-    @dataclass
-    class MyClass:
-        val: str
-
-    data_complex = [(10, 'x'), {'abc': (20, 'y')}, (30, MyClass('something'))]
-    expected_complex = [(0, (10, 'x')), (1, {'abc': (20, 'y')}), (2, (30, MyClass('something')))]
-    enumerated_complex = EnumeratedListModel(data_complex)
-    assert enumerated_complex.content == EnumeratedListOfTuplesModel(expected_complex)
-    assert enumerated_complex.to_data() == expected_complex
-
-    data_empty: list[str] = []
-    expected_empty: list[str] = []
-    enumerated = EnumeratedListModel(data_empty)
-    assert enumerated.content == EnumeratedListOfTuplesModel(expected_empty)
-    assert enumerated.to_data() == expected_empty
 
 
 def test_generic_nested_dataset_with_json_scalar_leaves() -> None:

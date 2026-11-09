@@ -116,6 +116,7 @@ _Z = TypeVar('_Z', bound=Model | Dataset, default=Model[object])
 _FromT = TypeVar('_FromT', bound=object | UnionType)
 _ToT = TypeVar('_ToT')
 _KeyT = TypeVar('_KeyT')
+_ItemT = TypeVar('_ItemT', default=object)
 
 
 class HasOuterType(Protocol):
@@ -844,3 +845,56 @@ class AddAllValuesModel(
             raise ValueError('Cannot add an empty iterable')
 
         return result
+
+
+class EnumeratedListOfTuplesModel(Model[list[tuple[int, _ItemT]]], Generic[_ItemT]):
+    """A Model for explicit list positions.
+
+    Its data consists of ordered ``(index, value)`` pairs. The indices must
+    form the contiguous sequence ``0, 1, ...``; validation rejects gaps,
+    reordering, and a non-zero first index.
+
+    This Model marks list data whose positions have already been made explicit.
+    """
+
+    @classmethod
+    def _parse_data(cls, data: list[tuple[int, _ItemT]]) -> list[tuple[int, _ItemT]]:
+        for expected_index, (actual_index, _) in enumerate(data):
+            if expected_index != actual_index:
+                raise ValueError(
+                    f'Indices are not sequential starting from 0: '
+                    f'expected {expected_index}, got {actual_index}'
+                )
+        return data
+
+
+class EnumeratedListModel(
+    Model[EnumeratedListOfTuplesModel | Model[list[_ItemT]] | list[dict[str, _ItemT]]],
+    Generic[_ItemT],
+):
+    """A Model converting list or dict data items into a list of enumerated tuples
+
+    Ordinary list and dict input items are given explicit zero-based
+    positions in an ``EnumeratedListOfTuplesModel``. Input that is already
+    an ``EnumeratedListOfTuplesModel`` is retained as such.
+    """
+
+    @classmethod
+    def _parse_data(
+        cls, data: EnumeratedListOfTuplesModel | Model[list[_ItemT]] | list[dict[str, _ItemT]]
+    ) -> EnumeratedListOfTuplesModel:
+        if not isinstance(data, EnumeratedListOfTuplesModel):
+            return EnumeratedListOfTuplesModel(list(enumerate(data)))  # pyright: ignore
+        else:
+            return data
+
+
+class EnumeratedDatasetModel(
+    Chain2[EnumeratedListModel[_ItemT], Dataset[Model[_ItemT]]], Generic[_ItemT]
+):
+    """A Model convert list or dict data items into an enurmater Dataset.
+
+    Ordinary list and dict input items are given explicit zero-based
+    positions in an ``Dataset[Model[_ItemT]]``. Input that is already
+    an ``Dataset[Model[_ItemT]]`` is retained as such.
+    """

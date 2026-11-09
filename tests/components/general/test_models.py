@@ -1,5 +1,6 @@
 """Tests for general-purpose model helpers."""
 
+from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -13,6 +14,9 @@ from omnipy.components.general.models import (
     Chain5,
     Chain6,
     ConverterModel,
+    EnumeratedDatasetModel,
+    EnumeratedListModel,
+    EnumeratedListOfTuplesModel,
     NotIterableExceptStrOrBytesModel,
 )
 from omnipy.data.dataset import Dataset
@@ -448,3 +452,74 @@ def test_converter_model_rejects_union_from_type_with_target_overlap():
             @classmethod
             def _convert(cls, data: int | str) -> str:
                 return str(data)
+
+
+def test_enumerated_list_of_tuples_model() -> None:
+    """Normalize enumerated tuple lists with sequential indexes."""
+    data = [(0, 'a'), ('1', 'b'), (2, 0)]
+    expected_str = [(0, 'a'), (1, 'b'), (2, '0')]
+    expected_object = [(0, 'a'), (1, 'b'), (2, 0)]
+
+    with pytest.raises(ValidationError):
+        EnumeratedListOfTuplesModel[int](data)
+
+    enumerated = EnumeratedListOfTuplesModel[str](data)
+    assert enumerated.content == expected_str
+    assert enumerated.to_data() == expected_str
+
+    enumerated = EnumeratedListOfTuplesModel(data)
+    assert enumerated.content == expected_object
+    assert enumerated.to_data() == expected_object
+
+    data_empty: list[str] = []
+    expected_empty: list[str] = []
+    enumerated = EnumeratedListOfTuplesModel(data_empty)
+    assert enumerated.content == expected_empty
+    assert enumerated.to_data() == expected_empty
+
+
+def test_enumerated_list_of_tuples_model_failures() -> None:
+    """Reject enumerated tuple lists with invalid indexes."""
+    data_not_sequential = [(3, 'a'), (5, 'b'), (1, 'c')]
+    with pytest.raises(ValidationError):
+        EnumeratedListOfTuplesModel(data_not_sequential)
+
+    data_not_from_zero = [(1, 'a'), (2, 'b'), (3, 'c')]
+    with pytest.raises(ValidationError):
+        EnumeratedListOfTuplesModel(data_not_from_zero)
+
+
+def test_enumerated_list_model() -> None:
+    """Enumerate plain lists into indexed tuple pairs."""
+    data = ['a', 'b', 'c']
+    expected = [(0, 'a'), (1, 'b'), (2, 'c')]
+
+    with pytest.raises(ValidationError):
+        EnumeratedListModel[int](data)
+
+    enumerated = EnumeratedListModel[str](data)
+    assert enumerated.content == EnumeratedListOfTuplesModel(expected)
+    assert enumerated.to_data() == expected
+
+    @dataclass
+    class MyClass:
+        val: str
+
+    data_complex = [(10, 'x'), {'abc': (20, 'y')}, (30, MyClass('something'))]
+    expected_complex = [(0, (10, 'x')), (1, {'abc': (20, 'y')}), (2, (30, MyClass('something')))]
+    enumerated_complex = EnumeratedListModel(data_complex)
+    assert enumerated_complex.content == EnumeratedListOfTuplesModel(expected_complex)
+    assert enumerated_complex.to_data() == expected_complex
+
+    data_empty: list[str] = []
+    expected_empty: list[str] = []
+    enumerated = EnumeratedListModel(data_empty)
+    assert enumerated.content == EnumeratedListOfTuplesModel(expected_empty)
+    assert enumerated.to_data() == expected_empty
+
+
+def test_enumerated_dataset_preserves_duplicates_and_order() -> None:
+    assert EnumeratedDatasetModel[str](['b', 'a', 0]).to_data() == {'0': 'b', '1': 'a', '2': '0'}
+    assert EnumeratedDatasetModel(['b', 'a', 0]).to_data() == {'0': 'b', '1': 'a', '2': 0}
+    assert EnumeratedDatasetModel[tuple[int, str]]([(7, 'x')]).to_data() == {'0': (7, 'x')}
+    assert EnumeratedDatasetModel[int]([]).to_data() == {}
