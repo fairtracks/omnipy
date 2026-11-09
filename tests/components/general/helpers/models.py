@@ -1,7 +1,7 @@
 """Helper models for components general tests."""
 
 from types import NotImplementedType
-from typing import Any, Generic
+from typing import Any, Generic, TYPE_CHECKING
 
 from typing_extensions import TypeVar
 
@@ -38,14 +38,23 @@ class RotateOneCharModel(Model[str]):
         return data[1:] + data[0]
 
 
-class SplitCharsModel(Model[list[str] | str]):
-    """Define SplitCharsModel."""
+if TYPE_CHECKING:
+    from omnipy.data._typing.mimic_models import PlainModel
+    from omnipy.shared.protocols.content import IsListContent
 
-    @classmethod
-    def _parse_data(cls, data: list[str] | str) -> list[str]:
-        if isinstance(data, str):
-            return list(data)
-        return data
+    class SplitCharsModel(PlainModel[list[str] | str], IsListContent[str]):
+        """Define SplitCharsModel."""
+
+else:
+
+    class SplitCharsModel(Model[list[str] | str]):
+        """Define SplitCharsModel."""
+
+        @classmethod
+        def _parse_data(cls, data: list[str] | str) -> list[str]:
+            if isinstance(data, str):
+                return list(data)
+            return data
 
 
 class MyListModel(Model[MyList[str] | list[str]]):

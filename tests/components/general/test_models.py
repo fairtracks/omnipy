@@ -113,12 +113,24 @@ def test_chain2_model():
 def test_concat_chain2_model_with_to_data_conversion():
     """Concatenate Chain2 models while preserving data conversion."""
 
-    class SplitCharsToMyListModel(
-        Chain2[
-            SplitCharsModel,
-            MyListModel,
-        ]
-    ): ...
+    if TYPE_CHECKING:
+        from omnipy.shared.protocols.content import IsStrContent
+
+        class SplitCharsToMyListModel(
+            IsStrContent,
+            Chain2[
+                SplitCharsModel,
+                MyListModel,
+            ],
+        ): ...
+    else:
+
+        class SplitCharsToMyListModel(
+            Chain2[
+                SplitCharsModel,
+                MyListModel,
+            ],
+        ): ...
 
     stream = SplitCharsModel('abc') + SplitCharsToMyListModel('def')
     assert stream.to_data() == ['a', 'b', 'c', 'd', 'e', 'f']
