@@ -127,8 +127,8 @@ casts when a checker cannot express a valid runtime operation.
 
 The user emphasized that the BioSampleVault submission type is the external API
 contract itself, currently named `BioSampleVaultSampleSubmissionSchema`. The
-coroutine in `services.py` is its present implementation; mocked API endpoints
-are a likely replacement. The mapper mimics this request schema and can be passed
+client function in `services.py` calls it over HTTP, and the tests implement the
+service as a mocked API endpoint, replacing an earlier coroutine stand-in. The mapper mimics this request schema and can be passed
 in its place without redefining the service contract. See the
 [external-contract example](patterns.md#external-api-contracts).
 

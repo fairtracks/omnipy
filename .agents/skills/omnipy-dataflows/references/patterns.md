@@ -748,7 +748,7 @@ place of the request model:
 
 ```python
 request = SampleAndMetadataToBioSampleVaultSubmissionMapper((sample, metadata))
-response = await register_sample_with_biosamplevault(request)
+response = await register_sample_with_biosamplevault(biosample_vault_url, request)
 sample.biosample_vault_sample_id = response.biosample_vault_sample_id
 ```
 
@@ -757,15 +757,15 @@ contract; do not change it to require the dataflow's mapper type, sample/metadat
 tuple, or enclosing submission Model. Runtime mimicking lets the wrapper provide
 the target interface, and `@mimics` exposes that interface to supported static
 checkers. Passing the mapper directly does not require `.convert()`, `.content`,
-or `.to_data()` solely to reach this coroutine boundary.
+or `.to_data()` solely to reach this service boundary.
 
-The coroutine in `services.py` implements the simulated API operation. A mocked
-HTTP endpoint can implement the same declared contract. When changing transport,
-preserve the external schema and the mapper's role. A client/transport adapter can
-encode the request and parse the response as required by that transport. Direct
-use of a Model by the coroutine does not imply that an HTTP client accepts that Python
-object without encoding. Use the returned response rather than depending on the
-current stand-in mutating and returning the same request object.
+The client function in `services.py` posts the request as JSON to the service
+endpoint through Omnipy's remote component and parses the response with the same
+schema. In the tests, a mocked HTTP endpoint implements the service. The service
+URL is a keyword-only flow input, available to every task that accepts it. The
+client owns the transport: it serializes the request at the HTTP boundary, so the
+task still passes the mapper unchanged. Use the returned response rather than
+depending on the service mutating and returning the same request object.
 
 Tests and mocks should exercise the external contract, including relevant request
 fields and returned outcomes, while the internal dataflow remains free to use its
