@@ -34,7 +34,6 @@ from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import ModelDisplayMixin
 from omnipy.data._mixins.load import LoadMixin
 from omnipy.data._mixins.save import SaveMixin
-from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
 from omnipy.data.dataset import Dataset, is_dataset_instance
 from omnipy.data.helpers import (
     build_own_module_and_global_namespace_for_forward_refs,
@@ -45,6 +44,7 @@ from omnipy.data.helpers import (
     validate_cls_counts,
     YesNoMaybe,
 )
+from omnipy.data.typing.typedefs import _KeyT, _ValT, _ValT2
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared.constants import ROOT_KEY
 from omnipy.shared.exceptions import OmnipyNoneIsNotAllowedError
@@ -327,7 +327,7 @@ class Model(  # type: ignore[misc]
                 methods.
 
         """
-        from omnipy.data._typing.helpers import all_model_type_variants
+        from omnipy.data.typing.helpers import all_model_type_variants
 
         # TODO: Consider generating ordinary-method proxies too, so Python 3.12+
         #       runtime protocol checks using getattr_static() can see mimicked methods.
@@ -489,7 +489,7 @@ class Model(  # type: ignore[misc]
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
         # mypy currently does not support overloads of __new__()
 
-        from omnipy.data._typing.mimic_models import (
+        from omnipy.data.typing._mimic_models import (
             Model_bool,
             Model_bytes,
             Model_Dataset,
@@ -2334,7 +2334,7 @@ class Model(  # type: ignore[misc]
             Model[_ReturnT] | Model[_RootT] | _ReturnT: Wrapped model when a
             reasonable conversion exists, otherwise the original value.
         """
-        from omnipy.data._typing.helpers import all_model_type_variants
+        from omnipy.data.typing.helpers import all_model_type_variants
 
         if level_up and not self.config.model.dynamically_convert_elements_to_models:
             ...

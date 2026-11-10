@@ -8,7 +8,7 @@ Type Aliases:
 import os
 from textwrap import dedent
 
-from omnipy.shared.typing import TYPE_CHECKER, TYPE_CHECKING
+from omnipy.shared.typing import TYPE_CHECKING
 from omnipy.util.helpers import is_package_editable
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
@@ -16,13 +16,11 @@ if is_package_editable('omnipy'):  # Only define environment variables when deve
         Typed stand-in for a concrete ``Model[...]`` subclass.""")
 
 if TYPE_CHECKING:
-    from typing import Any, Generic, Self
+    from typing import Generic
 
-    from typing_extensions import TypeVar
-
-    from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
     from omnipy.data.dataset import _ModelOrDatasetT, Dataset
-    from omnipy.data.model import Model
+    from omnipy.data.typing.model import PlainModel
+    from omnipy.data.typing.typedefs import _KeyT, _ValT, _ValT2
     from omnipy.shared.protocols.content import (
         IsBoolContent,
         IsBytesContent,
@@ -36,18 +34,6 @@ if TYPE_CHECKING:
         IsStrContent,
     )
     from omnipy.shared.protocols.data import IsDataset, IsModel
-
-    _RootT = TypeVar('_RootT')
-
-    class PlainModel(
-        Model[_RootT],
-        Generic[_RootT],
-    ):
-        """Minimal generic stand-in for ``Model[_RootT]`` during type checking."""
-
-        if TYPE_CHECKER != 'mypy':
-
-            def __new__(cls, *args: Any, **kwargs: Any) -> Self: ...
 
     class Model_int(PlainModel[int], IsIntContent):
         # %% Original docstring (managed by expand_docstr_macros.py) %%

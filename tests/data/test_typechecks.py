@@ -91,7 +91,7 @@ def test_obj_or_model_content_isinstance_for_models() -> None:
 
 
 def test_all_model_type_variants() -> None:
-    from omnipy.data._typing.helpers import all_model_type_variants
+    from omnipy.data.typing.helpers import all_model_type_variants
 
     class MyModel(Model[list[int] | float | Model[list[str] | list[int]]]): ...
 
@@ -100,8 +100,8 @@ def test_all_model_type_variants() -> None:
 
 
 def test_all_dataset_type_variants() -> None:
-    from omnipy.data._typing.helpers import all_dataset_type_variants
     from omnipy.data.dataset import Dataset
+    from omnipy.data.typing.helpers import all_dataset_type_variants
 
     class MyDataset(Dataset[Model[list[int] | float | Model[str] | Dataset[Model[list[int]]]]]): ...
 

@@ -92,7 +92,6 @@ if not __all__:
     )
     from omnipy.compute.helpers import Void
     from omnipy.compute.task import Task, TaskTemplate
-    from omnipy.data._typing.helpers import mimics
     from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
     from omnipy.data.model import (
         is_model_instance,
@@ -109,6 +108,7 @@ if not __all__:
         ParamsBase,
     )
     from omnipy.data.primary_key import PrimaryKey
+    from omnipy.data.typing.helpers import mimics
     from omnipy.hub.runtime import runtime
     from omnipy.hub.ui import setup_jupyter_ui
     from omnipy.shared.enums.data import BackoffStrategy, SelectSerializerBy
@@ -128,7 +128,7 @@ if not __all__:
     from omnipy.util.literal_enum_generator import generate_literal_enum_code
 
     if TYPE_CHECKING:
-        from omnipy.data._typing.mimic_models import PlainModel
+        from omnipy.data.typing.model import PlainModel
 
     __all__ = [
         'DagFlow',

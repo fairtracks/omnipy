@@ -2,8 +2,8 @@ from omnipy.components.tables.models import (
     JsonScalarColumnWiseTableWithColNamesModel,
     PrintableTable,
 )
-from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import Model
+from omnipy.data.typing.helpers import mimics
 import omnipy.util.pydantic as pyd
 
 from ..models.investigation_schema import IsaInvestigationModel, IsaInvestigationSchema

@@ -8,9 +8,9 @@ from typing import Any, cast, Generic, overload, Protocol, TypeAlias
 
 from typing_extensions import TypeVar
 
-from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
+from omnipy.data.typing.helpers import mimics
 from omnipy.shared.protocols.content import (
     IsBytesContent,
     IsListContent,
@@ -24,7 +24,7 @@ import omnipy.util.pydantic as pyd
 from .enums import NewLine
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import PlainModel
+    from omnipy.data.typing.model import PlainModel
 
 if is_package_editable('omnipy'):  # Only define environment variables when developing
     os.environ['OMNIPY_MACRO_SPLIT_PARAMS_ATTRIBUTES'] = dedent("""\

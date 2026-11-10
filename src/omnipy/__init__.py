@@ -191,6 +191,7 @@ from omnipy.components.remote.datasets import (
 from omnipy.components.remote.models import (
     AutoResponseContentModel,
     GeneratePagedUrlsModel,
+    HostUrlModel,
     HttpUrlModel,
     PagesInfo,
     PagesInfoRangeModel,
@@ -262,7 +263,6 @@ from omnipy.compute.flow import (
 from omnipy.compute.helpers import Void
 from omnipy.compute.task import Task, TaskTemplate
 from omnipy.data._display.panel.helpers import ForceAutodetect
-from omnipy.data._typing.helpers import mimics
 from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
 from omnipy.data.model import (
     is_model_instance,
@@ -279,6 +279,7 @@ from omnipy.data.param import (
     ParamsBase,
 )
 from omnipy.data.primary_key import PrimaryKey
+from omnipy.data.typing.helpers import mimics
 from omnipy.hub.runtime import runtime
 from omnipy.hub.ui import setup_jupyter_ui
 from omnipy.shared.enums.colorstyles import (
@@ -362,7 +363,7 @@ __version__ = _package_version('omnipy')
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import PlainModel
+    from omnipy.data.typing.model import PlainModel
 
 __all__ = [
     'runtime',
@@ -625,6 +626,7 @@ __all__ = [
     'HttpUrlDataset',
     'AutoResponseContentModel',
     'QueryParamsModel',
+    'HostUrlModel',
     'HttpUrlModel',
     'UrlPathModel',
     'get_bytes_from_api_endpoint',

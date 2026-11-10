@@ -30,8 +30,8 @@ from omnipy.components.tables.models import (
     TableOfPydanticRecordsModel,
     TsvTableModel,
 )
-from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import is_model_instance, Model
+from omnipy.data.typing.helpers import mimics
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 import omnipy.util.pydantic as pyd
 from omnipy.util.pydantic import ValidationError

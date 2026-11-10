@@ -76,7 +76,7 @@ def mimics(cls_or_protocol):
             respective Pydantic BaseModel model.
     """
     if TYPE_CHECKING and TYPE_CHECKER != 'mypy':
-        from omnipy.data._typing.mimic_models import PlainModel
+        from omnipy.data.typing.model import PlainModel
 
         def _decorate(model_cls):
             assert issubclass(model_cls, PlainModel) and issubclass(model_cls, cls_or_protocol)

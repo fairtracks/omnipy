@@ -33,7 +33,7 @@ import omnipy.util.pydantic as pyd
 from .protocols import SupportsAdd
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import PlainModel
+    from omnipy.data.typing.model import PlainModel
 
 if is_package_editable('omnipy'):
     import os

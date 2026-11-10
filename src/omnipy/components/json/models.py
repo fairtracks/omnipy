@@ -29,13 +29,13 @@ from .helpers import parse_str_as_json
 from .typedefs import JsonScalar
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import (
+    from omnipy.data.typing._mimic_models import (
         Model_bool,
         Model_float,
         Model_int,
         Model_str,
-        PlainModel,
     )
+    from omnipy.data.typing.model import PlainModel
 
 #
 # Private models

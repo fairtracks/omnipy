@@ -42,7 +42,7 @@ from ..json.typedefs import JsonDictOfScalars, JsonListOfScalars, JsonScalar
 from ..raw.models import SplitLinesToColumnsModel, SplitToLinesModel, SplitToLinesNoStripModel
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import PlainModel
+    from omnipy.data.typing.model import PlainModel
 
 _ColumnT = TypeVar('_ColumnT', bound=IsItemSequenceLike)
 _ItemT = TypeVar('_ItemT')

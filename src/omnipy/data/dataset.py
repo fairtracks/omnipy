@@ -72,7 +72,8 @@ from omnipy.util.pydantic import (
 )
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import (
+    from omnipy.data.model import Model
+    from omnipy.data.typing._mimic_models import (
         Model_bool,
         Model_bytes,
         Model_Dataset,
@@ -85,8 +86,7 @@ if TYPE_CHECKING:
         Model_tuple_pair,
         Model_tuple_same_type,
     )
-    from omnipy.data._typing.typedefs import _KeyT, _ValT, _ValT2
-    from omnipy.data.model import Model
+    from omnipy.data.typing.typedefs import _KeyT, _ValT, _ValT2
 
 _ModelOrDatasetT = TypeVar('_ModelOrDatasetT', bound='Model | Dataset')
 _OtherModelOrDatasetT = TypeVar('_OtherModelOrDatasetT', bound='Model | Dataset')

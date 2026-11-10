@@ -30,9 +30,9 @@ import pytest_cases as pc
 from typing_extensions import TypeForm, TypeVar
 
 from omnipy import is_model_subclass
-from omnipy.data._typing.helpers import mimics
 from omnipy.data.helpers import TypeVarStore
 from omnipy.data.model import create_pydantic_model_subclass_with_wrappers, Model
+from omnipy.data.typing.helpers import mimics
 from omnipy.shared.protocols.data import IsModel
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 from omnipy.shared.protocols.vendored.typing import IsMapping

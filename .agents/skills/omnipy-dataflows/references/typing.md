@@ -119,9 +119,8 @@ from typing import TYPE_CHECKING, Protocol
 
 from omnipy.shared.protocols.content import IsListContent
 
-
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import PlainModel
+    from omnipy.data.typing.model import PlainModel
 
     class StationListModel(  # type: ignore[misc]
         PlainModel[list[StationModel]], IsListContent[StationModel]

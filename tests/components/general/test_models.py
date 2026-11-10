@@ -73,7 +73,7 @@ def test_add_all_values_rejects_empty_input(data) -> None:
 
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import PlainModel
+    from omnipy.data.typing.model import PlainModel
 
 
 def test_not_iterable_except_str_model():

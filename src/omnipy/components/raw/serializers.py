@@ -2,10 +2,10 @@
 
 from typing import Any, cast, IO
 
-from omnipy.data._typing.helpers import all_dataset_type_variants
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.serializer import TarFileSerializer
+from omnipy.data.typing.helpers import all_dataset_type_variants
 from omnipy.shared.protocols.data import IsDataset
 from omnipy.util.pydantic import lenient_issubclass
 

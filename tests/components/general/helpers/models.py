@@ -39,7 +39,7 @@ class RotateOneCharModel(Model[str]):
 
 
 if TYPE_CHECKING:
-    from omnipy.data._typing.mimic_models import PlainModel
+    from omnipy.data.typing.model import PlainModel
     from omnipy.shared.protocols.content import IsListContent
 
     class SplitCharsModel(PlainModel[list[str] | str], IsListContent[str]):

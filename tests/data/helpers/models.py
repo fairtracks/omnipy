@@ -5,9 +5,9 @@ from typing import Any, Generic, Literal, Optional, TypeAlias
 
 from typing_extensions import TypeVar
 
-from omnipy.data._typing.helpers import mimics
 from omnipy.data.model import Model
 from omnipy.data.param import bind_adjust_model_func, params_dataclass, ParamsBase
+from omnipy.data.typing.helpers import mimics
 import omnipy.util.pydantic as pyd
 
 from .classes import MyFloatObject

@@ -4,9 +4,9 @@ from typing import Literal, TypeAlias, TypedDict
 from omnipy.components.general.models import ConverterModel
 from omnipy.components.raw.models import DateModel
 from omnipy.components.remote.models import HostUrlModel
-from omnipy.data._typing.helpers import mimics
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
+from omnipy.data.typing.helpers import mimics
 import omnipy.util.pydantic as pyd
 
 StrippedUpperStr: TypeAlias = pyd.constr(  # type: ignore[valid-type]

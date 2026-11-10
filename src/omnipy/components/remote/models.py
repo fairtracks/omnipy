@@ -30,7 +30,7 @@ __all__ = [
     'GeneratePagedUrlsModel',
 ]
 
-from omnipy.data._typing.helpers import mimics
+from omnipy.data.typing.helpers import mimics
 
 QueryParamsSplitterModel = NestedSplitToItemsModel.adjust(
     'QueryParamsSplitterModel', delimiters=('&', '=')
