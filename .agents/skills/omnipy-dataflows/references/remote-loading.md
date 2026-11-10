@@ -1,178 +1,197 @@
 # Paging URLs and Dataset loading
 
-Use `HttpUrlModel` for URL construction and `HttpUrlDataset` for named request
-sources. Edit structured components (`path`, `query`, `port`) through their
-mimicked interfaces. This preserves unrelated URL parts and delegates URL
-validation and encoding to the existing Models.
+Use `HttpUrlModel` for URL construction and typed Models for generating finite
+page ranges and merging response records. The runnable declarations are in
+[remote_loading_example.py](remote_loading_example.py); the reusable implementations
+live in the general, nested, and remote components.
 
-## Construct a known set of page URLs
+## Generate a known range of page URLs
+
+`PagesInfo` describes pagination. `PagesInfoRangeModel` expands it into individual
+page descriptions, and `GeneratePagedUrlsModel` applies a URL converter and gives
+the resulting Dataset explicit positional keys.
 
 ```python
+from typing import Literal
+
 import omnipy as om
+import omnipy.util.pydantic as pyd
 
 
-@om.mimics(int)
-class PageNumberModel(om.Model[int]): ...
+class ObservationPagesInfo(om.PagesInfo):
+    base_url: pyd.HttpUrl
+    endpoint: str = 'observations'
 
 
-@om.TaskTemplate(iterate_over_data_files=True, output_dataset_cls=om.HttpUrlDataset)
-def page_url(page: PageNumberModel, *, endpoint: om.HttpUrlModel) -> om.HttpUrlModel:
-    url = endpoint.copy(deep=True)
-    url.query['page'] = str(int(page))
-    return url
+class ObservationPageUrl(om.ConverterModel[ObservationPagesInfo, om.HttpUrlModel]):
+    @classmethod
+    def _convert(cls, data: ObservationPagesInfo) -> om.HttpUrlModel:
+        url = om.HttpUrlModel(data.base_url)
+        url.path // 'api' // data.endpoint
+        url.query['page'] = data.page
+        if data.items_per_page is not None:
+            url.query['limit'] = data.items_per_page
+        return url
 
 
-endpoint = om.HttpUrlModel('https://example.com/api?limit=100')
-endpoint.path /= 'observations'
-page_numbers = om.Dataset[PageNumberModel]({f'page-{page}': page for page in range(1, 4)})
-urls = page_url.run(page_numbers, endpoint=endpoint)
-```
-
-`PageNumberModel` exposes integer operations statically on the task parameter
-as well as at runtime; see [typing examples](typing.md). `str(int(page))` produces
-the query value; `str(page)` alone produces the general Model representation.
-The copy isolates each page's edits from the shared endpoint. The comprehension
-constructs known inputs; the iterated task performs the batch transformation.
-The service defines whether page numbers begin at zero or one and how page count
-is obtained. A cursor or next-link API needs response-dependent traversal; do not
-invent page numbers or request all pages speculatively for that API.
-
-The URL Dataset's keys identify request/response slots such as `page-2`. Loading
-retains those keys. They do not become the primary keys of every record inside
-the response. If a later stage schedules work per domain record, construct that
-stage's Dataset using the records' primary keys and reject collisions. A page
-containing a list of observations remains one response item at the loading stage.
-
-## Load into the intended response type
-
-For an ordinary synchronous entry point without a running event loop:
-
-```python
-pages = om.JsonListOfDictsDataset.load(urls)
-```
-
-For HTTP URLs inside a running event loop, `load` returns an `asyncio.Task` that
-must be awaited. Its annotation covers both sync and async outcomes; the existing
-`resolve` helper is useful when a boundary accepts either form:
-
-```python
-from omnipy.util.helpers import resolve
+@om.mimics(om.HttpUrlDataset)
+class ObservationUrls(om.GeneratePagedUrlsModel[ObservationPageUrl, ObservationPagesInfo]): ...
 
 
-async def load_page_urls(urls: om.HttpUrlDataset) -> om.JsonListOfDictsDataset:
-    return await resolve(om.JsonListOfDictsDataset.load(urls))
-```
-
-This is the documented dual-mode loader contract, not a reason to inspect whether
-every job result is awaitable. `load(...)` creates a new Dataset; `load_into(...)`
-loads into an existing instance. Select the target Dataset for the response
-shape, such as a JSON list of objects per URL. A custom response Dataset can
-validate more specific schemas. Loading does not automatically flatten pages or
-map an external response schema into the dataflow's domain schema.
-
-HTTP loading uses the remote component's sessions, host configuration, retry
-configuration, and rate limiting. Reuse that behavior before writing a second
-HTTP client or manual gathering loop. Plain `iterate_over_data_files=True` alone
-does not imply those HTTP policies. `as_mime_type` is an available decoding hint
-when the service's content type needs an explicit override. More advanced client
-and recovery requirements require inspecting the current component API.
-
-## Compose the existing loading tasks
-
-When loading is a flow stage, first consider the reusable
-`load_urls` and `async_load_urls` templates. Bind
-the response Dataset class with a modifier:
-
-```python
-fetch_pages = om.async_load_urls.refine(
-    name='fetch_pages',
-    fixed_params={'data_cls': om.JsonListOfDictsDataset},
+urls = ObservationUrls(
+    base_url='https://example.com',
+    num_items=80,
+    items_per_page=25,
 )
-
-
-@om.LinearFlowTemplate(page_url, fetch_pages)
-async def load_pages(
-    page_numbers: om.Dataset[PageNumberModel],
-    *,
-    endpoint: om.HttpUrlModel,
-) -> om.JsonListOfDictsDataset: ...
 ```
 
-Use the async template in async composition and the sync template at a synchronous
-boundary. The first stage creates the URL batch, and the second loads it using
-the existing component. Add a wrapper task when it contributes a meaningful
-contract or operation beyond renaming the loader.
+This creates four requests, numbered zero through three, with `limit=25` on every
+request. The final page has `items_on_page=5`: that is its expected response size,
+not a smaller request limit. Keeping request capacity constant matters for APIs
+that calculate offsets as `page * limit`. URL construction preserves unrelated
+query parameters, fragments, and the base path.
 
-Check failed/pending results before assuming every page loaded; see
-[current failure inspection](patterns.md#inspect-current-failure-and-pending-results).
-Partial pagination must not silently become a supposedly complete source.
+Use `start_from_one=True` for one-based page numbers, `page` for a later start,
+and `step` to select every nth page. Supply `num_pages` when the page count is
+known directly. Conflicting counts and invalid bounds fail validation.
+`num_items=0` or `num_pages=0` produces an empty URL Dataset. Subclass fields and
+extra pagination metadata survive expansion.
 
-## From response pages to domain records
+The API defines its numbering and page-count semantics. Cursor and next-link APIs
+need response-dependent traversal; this finite-range helper does not invent a
+page count for them. `mimics` supplies static typing for the concrete wrapper;
+its runtime behavior comes from the Model itself.
 
-Pagination describes fetching; page boundaries need not become part of the domain
-contract. For a finite collection whose records are processed together, prefer:
+## Merge response pages into a typed Dataset
 
-1. Fetch pages into a response Dataset, validating the response shape and checking
-   that the required pages are available.
-2. Extract and concatenate their record sequences into one container that preserves
-   every occurrence. Flatten the page level, preserving each record's own nested
-   structure. Reuse collection tasks such as `concat_all_vals_in_datasets_as_args`
-   for list-valued page Models; response envelopes need their record member extracted
-   first.
-3. Parse the combined records through their domain Models to normalize fields and
-   validate record contents. Validate collection-wide rules on the resulting
-   container, including uniqueness of normalized references when required.
-4. If downstream work is per record, construct a Dataset keyed by those validated
-   references. Enforce key/content agreement on that Dataset as described under
-   [Dataset-level validation](patterns.md#dataset-level-validation).
+Declare the record schema and the desired Dataset identity:
 
-A list or list Model preserves duplicate references even when they came from
-different pages. Detect collisions before creating a keyed mapping: once a dict
-comprehension has overwritten an earlier occurrence, a Dataset validator cannot
-recover it. Keep the uniqueness rule in the combined container's data contract.
-If the source permits overlapping pages, define how repeated records are reconciled
-and how conflicting contents are handled before constructing the keyed Dataset.
+```python
+class Observation(pyd.BaseModel):
+    project: str
+    identity: str
+    value: int
 
-Record validation may already happen during loading when the response type
-includes those Models. Combining pages still supplies the boundary for checks
-spanning all records. Preserve page provenance when diagnostics or the output
-contract need it. For streaming or response-dependent pagination, adapt collection
-to the service's traversal contract and retain the state needed for cross-page
-checks; materializing all pages is not a prerequisite for streaming.
 
-## Test the real loader against a mocked service
+@om.mimics(om.Dataset[om.Model[Observation]])
+class ObservationsByPrimaryKey(
+    om.MergePagesOfRecordsIntoDatasetByPrimaryKeyModel[
+        om.PrimaryKey[Literal['project'], Literal['identity']], Observation
+    ]
+): ...
 
-For an integration test or tutorial test, mock the external service and exercise
-Omnipy itself. Use pytest and the repository's existing runtime, engine, and HTTP
-server fixtures. Do not replace `Dataset.load()` or the remote loading templates
-with a custom fixture loader, and do not replace Omnipy's scheduling or validation
-to manufacture the expected result.
 
-Use this arrangement:
+@om.mimics(om.Dataset[om.Model[Observation]])
+class ObservationsByPosition(om.MergePagesOfRecordsIntoDatasetByIndexModel[Observation]): ...
+```
 
-1. A service fixture exposes the API's actual routes, query parameters, response
-   payloads, content types, and relevant error responses through a local HTTP
-   test server. Keep fixture data and service state in `conftest.py` or fixture
-   and `pytest_cases` case modules suited to the scenarios.
-2. Construct `HttpUrlModel` endpoints using that server's host/port and pass them
-   into the actual flow. Its normal URL construction and Dataset loading run
-   against those endpoints.
-3. Assert observed service requests and the resulting typed data. Select failure
-   cases that support the scenario's contract; a success case alone does not
-   verify every retry, rate-limiting, or recovery policy.
+Both Models accept a sequence of record-list pages or a Dataset containing those
+pages. They preserve page and record order and flatten only the page level.
+Empty pages contribute no records. The positional variant preserves every
+occurrence under keys `'0'`, `'1'`, and so on. The primary-key variant rejects
+serialized key collisions, including duplicates from different pages.
 
-The water-sample example's
-[service fixtures](../../../../tests/integration/novel/full/water_sample_harmonization/conftest.py)
-use an `aiohttp.web.Application` and the `aiohttp_server` pytest fixture to serve
-JSON pages. Follow that arrangement to exercise real request handling, response
-decoding, and Dataset population without depending on a live external service.
-For a service represented by a typed callable, replace that external callable
-with a faithful stand-in while retaining the real Omnipy task and flow.
+A known Pydantic v1 limitation affects record schemas with no required fields:
+empty page lists can be interpreted as empty dictionaries and then default-valued
+records. The affected cases are marked as a skipped known-issue test, with a TODO
+to recheck them when Omnipy migrates to native Pydantic v2.
 
-The existing tutorial example is
-[water-sample harmonization](../../../../tests/integration/novel/full/water_sample_harmonization/test_water_sample_harmonization.py),
-with a loader in its [tasks module](../../../../tests/integration/novel/full/water_sample_harmonization/tasks.py).
-API sources are `src/omnipy/components/remote/models.py`,
-`src/omnipy/components/remote/tasks.py`, and `Dataset.load` / `Dataset.load_into`
-in `src/omnipy/data/dataset.py`. Component-specific skills beyond these common
-patterns remain future work.
+The reusable pieces are `AddAllValuesModel`, which adds iterable elements or
+mapping values without in-place addition; `EnumeratedDatasetModel`, which makes
+list positions explicit; and `PrimaryKeyDatasetModel`, which keys validated
+Pydantic records. `AddAllValuesModel` returns the added value as its content.
+Aggregation requires at least one value, while input already accepted as its
+output type passes through under `ConverterModel` semantics. The page-merging
+Models accept an empty collection.
+
+Primary-key fields stay visible in each record. Single-field keys are stringified
+without escaping. Composite keys escape `%` as `%25` and `|` as `%7C`, then join
+the components with `|`. A component's `to_data()` is used when available.
+`None`, list values, and dictionary values are supported; dictionary insertion
+order affects its string representation. Values with default address-based object
+representations and all serialized collisions are rejected. These rules follow
+the approved [table architecture spec](../../../../docs/agents/technical/specs/2026-10-16-table-model-architecture-and-conversions.md#primary-keys).
+
+## Load directly into the merge Model
+
+```python
+async def load_observations(urls: ObservationUrls) -> ObservationsByPrimaryKey:
+    return await om.async_load_urls_into_new_dataset.run(urls, dataset_cls=ObservationsByPrimaryKey)
+```
+
+The helper creates an empty instance, calls the shared Model/Dataset
+`load_into()`, and returns that same instance. `ObservationsByPrimaryKey.load(urls)`
+also creates and loads a new Model. The equivalent instance API is:
+
+```python
+async def populate_observations(urls: ObservationUrls) -> ObservationsByPrimaryKey:
+    observations = ObservationsByPrimaryKey()
+    await observations.load_into(urls)
+    return observations
+```
+
+The shared loader collects decoded responses in a temporary Dataset, then calls
+`from_data()` on the outer Model after loading completes. A single `HttpUrlModel`
+(or URL string) supplies the response contents. An `HttpUrlDataset`, including a
+mimicking Model, supplies the keyed response collection even when it has zero or
+one URL. Mappings, iterables, and keyword URL arguments also supply a collection.
+For the merge Models, that collection is parsed through the declared conversion
+chain; no page-specific loading implementation is needed.
+
+HTTP failures raise `FailedDataError`; invalid records or duplicate keys raise
+validation errors. Existing target contents are retained on these failures.
+There is no separate `require_all_items` task in this pipeline. Model/Dataset
+wrappers for explicit completion checks and available-data selection remain a
+separate extension.
+
+At a synchronous entry point without a running event loop, use
+`load_urls_into_new_dataset.run(urls, dataset_cls=ObservationsByPrimaryKey)` or
+`observations.load_into(urls)`. Inside an event loop, await the returned task.
+Loading uses the existing remote sessions, host configuration, retries, and rate
+limits. `as_mime_type` can override response decoding.
+
+An ordinary response Dataset still supports `Dataset.load(urls)` and
+`dataset.load_into(urls)`. Its keys identify requests; a list-valued response
+remains one Dataset item. The merge Models provide the explicit conversion from
+that response shape into per-record Dataset items.
+
+## Save and load local files
+
+`Model` and `Dataset` share `load()`, `load_into()`, and `save()` entry points.
+`load()` creates a new instance; `load_into()` updates an existing instance.
+Local loading supports files, directories, `.tar.gz` archives, and `.zip`
+archives. Pass a string or `Path`, or an iterable of paths for several sources.
+Model file loading chooses serializers by file suffix automatically.
+
+A Model receives the contents directly when local loading produces one file.
+When it produces several files, including several members of one archive, the
+Model receives their keyed collection. An empty archive supplies an empty
+collection. Datasets always retain file names as keys and merge loaded entries.
+Keyed local paths remain unsupported; keyword arguments and mappings are for URLs.
+
+`Dataset.save()` writes a file for each entry. `Model.save()` writes its complete
+contents as one member named `data`, with the serializer's suffix. This preserves
+the Model's own dictionary keys and allows a direct round trip:
+
+```python
+record = om.Model[dict[str, int]]({'first': 1, 'second': 2})
+record.save('record')
+restored = om.Model[dict[str, int]].load('record.tar.gz')
+```
+
+Saving accepts paths with or without `.tar.gz` and also extracts a directory
+copy beside the archive, following the existing Dataset API.
+
+## Test against a local service
+
+Exercise the real URL Models, loading tasks, Dataset loader, and merge conversion
+against an `aiohttp` test service. Keep endpoint fixtures and response data in the
+test fixture/helper modules. Do not substitute a custom loader for Omnipy's own
+loading path.
+
+The [paged-loading tests](../../../../tests/integration/novel/io/test_paged_loading.py)
+cover direct instance loading, both loading tasks, out-of-order responses, empty
+ranges, malformed records, HTTP failures, composite keys, and collisions. Their
+[declarations](../../../../tests/components/remote/helpers/models.py) and
+[service fixture](../../../../tests/components/remote/conftest.py) provide a complete
+example without contacting a live API.
