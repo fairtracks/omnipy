@@ -1,8 +1,35 @@
-"""Datasets for HTTP URLs and automatically decoded HTTP response content."""
+"""Datasets for host URLs and automatically decoded HTTP response content."""
 
 from omnipy.data.dataset import Dataset
 
-from .models import AutoResponseContentModel, HttpUrlModel
+from .models import AutoResponseContentModel, HostUrlModel, HttpUrlModel
+
+
+class HostUrlDataset(Dataset[HostUrlModel]):
+    """Store named URLs using ``HostUrlModel`` without restricting their scheme.
+
+    As with ``HostUrlModel``, URLs parsed without a host default to ``localhost``.
+    The caller is responsible for choosing schemes appropriate for a host-based
+    representation; scheme-specific semantics are not validated.
+
+    Args:
+        *args: Positional data forwarded to :class:`~omnipy.data.dataset.Dataset`.
+        **kwargs: Keyword arguments forwarded to
+            :class:`~omnipy.data.dataset.Dataset`.
+
+    Returns:
+        HostUrlDataset: Dataset containing ``HostUrlModel`` entries.
+
+    Raises:
+        pyd.ValidationError: If URL parsing fails.
+
+    Examples:
+        >>> urls = HostUrlDataset({'files': 'ftp://example.com/data'})
+        >>> str(urls['files'])
+        'ftp://example.com/data'
+    """
+
+    ...
 
 
 class HttpUrlDataset(Dataset[HttpUrlModel]):
