@@ -294,6 +294,8 @@ class IsHttpRequestsConfig(IsConfigBase, Protocol):
         burst_ratio: Share of ``requests_per_time_period`` that may start at once (the burst),
             strictly between 0 and 1.
         retry_http_statuses: HTTP status codes that should trigger retries.
+        retry_http_statuses_for_post: HTTP status codes that should trigger retries of POST
+            requests, which are not idempotent.
         retry_attempts: Maximum number of retry attempts.
         retry_backoff_strategy: Backoff strategy used between retries.
     """
@@ -302,6 +304,7 @@ class IsHttpRequestsConfig(IsConfigBase, Protocol):
     time_period_in_secs: pyd.PositiveFloat
     burst_ratio: ZeroToOneFloat
     retry_http_statuses: tuple[int, ...]
+    retry_http_statuses_for_post: tuple[int, ...]
     retry_attempts: int
     retry_backoff_strategy: BackoffStrategy.Literals
 

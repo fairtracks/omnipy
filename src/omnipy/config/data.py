@@ -514,8 +514,11 @@ class HttpRequestsConfig(ConfigBase):
     time_period_in_secs: pyd.PositiveFloat = 60
     burst_ratio: ZeroToOneFloat = 0.5
 
-    # For get_*_from_api_endpoint tasks
+    # For the *_from_api_endpoint and *_to_api_endpoint tasks
     retry_http_statuses: tuple[int, ...] = (408, 425, 429, 500, 502, 503, 504)
+    # POST requests are not idempotent. Only retry them on statuses where the server has normally
+    # not processed the request, so that a retry does not repeat a completed operation
+    retry_http_statuses_for_post: tuple[int, ...] = (408, 425, 429, 503)
     retry_attempts: int = 5
     retry_backoff_strategy: BackoffStrategy.Literals = BackoffStrategy.EXPONENTIAL
 

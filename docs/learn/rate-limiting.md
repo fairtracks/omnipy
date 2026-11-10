@@ -73,7 +73,9 @@ host_config.burst_ratio = 0.3
   after a burst have to be spread over very little room, so the pace after a burst becomes slow.
 
 The same configuration holds the settings for retries: `retry_http_statuses`, `retry_attempts` and
-`retry_backoff_strategy`.
+`retry_backoff_strategy`. POST requests are retried on the separate `retry_http_statuses_for_post`
+(default 408, 425, 429 and 503). As a POST request is not idempotent, it is by default only
+retried on statuses where the server has normally not processed the request.
 
 ## Current limitations
 
