@@ -1,7 +1,8 @@
 """Tasks for fetching remote resources and building URL datasets."""
 
 import asyncio
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
@@ -19,11 +20,18 @@ from ..json.datasets import JsonDataset, JsonListOfDictsDataset
 from ..json.models import JsonModel
 from ..raw.datasets import BytesDataset, StrDataset
 from ..raw.models import BytesModel, StrModel
-from .constants import DEFAULT_BACKOFF_STRATEGY, DEFAULT_RETRIES, DEFAULT_RETRY_STATUSES
+from .constants import (
+    DEFAULT_BACKOFF_STRATEGY,
+    DEFAULT_POST_RETRY_STATUSES,
+    DEFAULT_RETRIES,
+    DEFAULT_RETRY_STATUSES,
+)
 from .datasets import AutoResponseContentDataset, HttpUrlDataset
 from .models import AutoResponseContentModel, HttpUrlModel, ResponseContentPydModel
 
 if TYPE_CHECKING:
+    from omnipy.shared.protocols.config import IsHttpRequestsConfig
+
     from .helpers import RateLimitingClientSession
     from .lazy_import import ClientResponse, ClientSession, RetryClient
 
@@ -78,6 +86,13 @@ def _check_response_status(response: 'ClientResponse') -> None:
         )
 
 
+def _check_post_response_status(response: 'ClientResponse') -> None:
+    if not 200 <= response.status < 300:
+        raise ConnectionError(
+            f'Failed to post data. HTTP status: {response.status}. URL: {response.url}'
+        )
+
+
 def get_retry_client(
     client_session: 'ClientSession | RateLimitingClientSession | None' = None,
     retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
@@ -120,8 +135,45 @@ def get_retry_client(
     )
 
 
+@asynccontextmanager
+async def open_host_retry_client(
+    host_config: 'IsHttpRequestsConfig',
+    for_post: bool = False,
+) -> 'AsyncIterator[RetryClient]':
+    """Open a rate-limited, retry-enabled HTTP client configured for one host.
+
+    Args:
+        host_config: HTTP request configuration for the host, e.g.
+            ``config.http.for_host[host]``.
+        for_post: Whether the client sends POST requests, which are retried on
+            ``host_config.retry_http_statuses_for_post`` instead of
+            ``host_config.retry_http_statuses``.
+
+    Returns:
+        AsyncIterator[RetryClient]: Context manager yielding the open retry client.
+    """
+    from .helpers import RateLimitingClientSession
+
+    retry_http_statuses = (
+        host_config.retry_http_statuses_for_post if for_post else host_config.retry_http_statuses
+    )
+    async with RateLimitingClientSession(
+        host_config.requests_per_time_period,
+        host_config.time_period_in_secs,
+        burst_ratio=host_config.burst_ratio,
+    ) as client_session:
+        async with get_retry_client(
+            client_session=client_session,
+            retry_http_statuses=retry_http_statuses,
+            retry_attempts=host_config.retry_attempts,
+            retry_backoff_strategy=host_config.retry_backoff_strategy,
+        ) as retry_client:
+            yield retry_client
+
+
 async def _ensure_retry_session(
     retry_client: 'RetryClient | None',
+    retry_http_statuses: tuple[int, ...] = DEFAULT_RETRY_STATUSES,
 ) -> 'AsyncGenerator[RetryClient, None]':
     from .lazy_import import ClientSession
 
@@ -131,6 +183,7 @@ async def _ensure_retry_session(
         async with ClientSession() as tmp_session:
             yield get_retry_client(
                 tmp_session,
+                retry_http_statuses=retry_http_statuses,
             )
 
 
@@ -174,37 +227,46 @@ async def get_json_from_api_endpoint(
 
 @TaskTemplate(iterate_over_data_files=True, output_dataset_cls=JsonDataset)
 async def post_json_to_api_endpoint(
-    url: HttpUrlModel,
     data: JsonModel,
+    *,
+    url: HttpUrlModel,
     retry_client: 'RetryClient | None' = None,
 ) -> JsonModel:
-    """Send JSON to an API endpoint and decode its JSON response.
+    """Post each JSON data item to an API endpoint and decode the JSON responses.
+
+    The task iterates over a Dataset of JSON request bodies and posts each of them to the same
+    URL. The responses are collected under the keys of the request bodies.
 
     Args:
-        url: HTTP URL to request.
-        data: JSON-serializable request body.
-        retry_client: Optional shared retry-enabled aiohttp client.
+        data: JSON request body.
+        url: HTTP URL to post to.
+        retry_client: Optional shared retry-enabled aiohttp client. Without one, requests are
+            retried on the default status codes for POST requests.
 
     Returns:
         The decoded JSON response for the POST request.
 
     Raises:
-        ConnectionError: If the endpoint response status is not ``200``.
+        ConnectionError: If the endpoint response status is not a 2xx status.
         ValueError: If the response body cannot be decoded as JSON.
 
     Examples:
-        >>> # result = await post_json_to_api_endpoint(
-        >>> #     HttpUrlModel('https://api.example.com'),
-        >>> #     JsonModel({'message': 'Hello'}),
+        >>> # responses = await post_json_to_api_endpoint.run(
+        >>> #     JsonDataset({'greeting': {'message': 'Hello'}}),
+        >>> #     url=HttpUrlModel('https://api.example.com'),
         >>> # )
-        >>> # isinstance(result, JsonModel)
+        >>> # isinstance(responses, JsonDataset)
         >>> True
     """
     from .lazy_import import ClientSession
 
-    async for retry_session in _ensure_retry_session(retry_client):
+    # TODO: Support posting each data item to the URL with the same key in an HttpUrlDataset
+    async for retry_session in _ensure_retry_session(
+        retry_client,
+        retry_http_statuses=DEFAULT_POST_RETRY_STATUSES,
+    ):
         async for response in _call_post(url, data, cast(ClientSession, retry_session)):
-            _check_response_status(response)
+            _check_post_response_status(response)
             return JsonModel(await response.json(content_type=None))
 
     raise ShouldNotOccurException('Other exception should have been raised before this point.')

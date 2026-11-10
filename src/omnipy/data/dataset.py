@@ -1640,8 +1640,10 @@ class Dataset(
         Returns:
             This dataset instance after loading, or an ``asyncio.Task`` in an active event loop.
         """
-        from omnipy.components.remote.helpers import RateLimitingClientSession
-        from omnipy.components.remote.tasks import get_auto_from_api_endpoint, get_retry_client
+        from omnipy.components.remote.tasks import (
+            get_auto_from_api_endpoint,
+            open_host_retry_client,
+        )
 
         hosts: defaultdict[str, list[int]] = defaultdict(list)
         for i, url in enumerate(http_url_dataset.values()):
@@ -1696,48 +1698,38 @@ class Dataset(
             #         hiccups?
             for host in hosts:
                 host_config = self.config.http.for_host[host]
-                async with RateLimitingClientSession(
-                    host_config.requests_per_time_period,
-                    host_config.time_period_in_secs,
-                    burst_ratio=host_config.burst_ratio,
-                ) as client_session:
-                    async with get_retry_client(
-                        client_session=client_session,
-                        retry_http_statuses=host_config.retry_http_statuses,
-                        retry_attempts=host_config.retry_attempts,
-                        retry_backoff_strategy=host_config.retry_backoff_strategy,
-                    ) as retry_client:
-                        indices = hosts[host]
-                        # fetch_task = get_auto_from_api_endpoint
-                        # if as_mime_type:
-                        #     match as_mime_type:
-                        #         case 'application/json':
-                        #             fetch_task = get_json_from_api_endpoint
-                        #         case 'text/plain':
-                        #             fetch_task = get_str_from_api_endpoint
-                        #         case 'application/octet-stream' | _:
-                        #             fetch_task = get_bytes_from_api_endpoint
+                async with open_host_retry_client(host_config) as retry_client:
+                    indices = hosts[host]
+                    # fetch_task = get_auto_from_api_endpoint
+                    # if as_mime_type:
+                    #     match as_mime_type:
+                    #         case 'application/json':
+                    #             fetch_task = get_json_from_api_endpoint
+                    #         case 'text/plain':
+                    #             fetch_task = get_str_from_api_endpoint
+                    #         case 'application/octet-stream' | _:
+                    #             fetch_task = get_bytes_from_api_endpoint
 
-                        get_auto_from_api_endpoint_task = get_auto_from_api_endpoint.refine(
-                            output_dataset_param='output_dataset'
-                        ).apply()
-                        ret = get_auto_from_api_endpoint_task(
-                            http_url_dataset[indices],
-                            retry_client=retry_client,
-                            output_dataset=self,
-                            as_mime_type=as_mime_type,
-                        )
+                    get_auto_from_api_endpoint_task = get_auto_from_api_endpoint.refine(
+                        output_dataset_param='output_dataset'
+                    ).apply()
+                    ret = get_auto_from_api_endpoint_task(
+                        http_url_dataset[indices],
+                        retry_client=retry_client,
+                        output_dataset=self,
+                        as_mime_type=as_mime_type,
+                    )
 
-                        if not isinstance(ret, asyncio.Task):
-                            assert inspect.iscoroutine(ret)
-                            task = asyncio.create_task(ret)
-                        else:
-                            task = ret
+                    if not isinstance(ret, asyncio.Task):
+                        assert inspect.iscoroutine(ret)
+                        task = asyncio.create_task(ret)
+                    else:
+                        task = ret
 
-                        tasks.append(task)
+                    tasks.append(task)
 
-                        while not task.done():
-                            await asyncio.sleep(ASYNC_LOAD_SLEEP_TIME)
+                    while not task.done():
+                        await asyncio.sleep(ASYNC_LOAD_SLEEP_TIME)
 
             await asyncio.gather(*tasks)
             return self

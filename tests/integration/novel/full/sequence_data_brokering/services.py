@@ -48,8 +48,8 @@ async def _post_to_service(
 ) -> _ResponseSchemaT:
     # The static signature of the refined template still declares the dataset-iterating form
     response = await _post_json_to_service_endpoint(  # pyright: ignore[reportGeneralTypeIssues]
-        endpoint_url,  # pyright: ignore[reportArgumentType]
-        JsonModel(request.to_data()),
+        JsonModel(request.to_data()),  # pyright: ignore[reportArgumentType]
+        url=endpoint_url,
     )
     return response_schema.parse_obj(response.to_data())
 

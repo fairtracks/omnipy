@@ -7,9 +7,10 @@ from typing import Annotated, Any, cast
 import aiohttp
 from aiohttp import web
 import pytest
+from pytest_aiohttp import AiohttpServer
 import pytest_cases as pc
 
-from omnipy.components.json.datasets import JsonDictOfListsDataset
+from omnipy.components.json.datasets import JsonDataset, JsonDictOfListsDataset
 from omnipy.components.json.models import JsonDictModel, JsonModel
 from omnipy.components.raw.datasets import StrictBytesDataset, StrictStrDataset
 from omnipy.components.raw.models import BytesModel, StrictBytesModel, StrictStrModel, StrModel
@@ -102,24 +103,62 @@ async def test_get_retry_client_with_second_attempt_recovers_after_initial_503(
     assert_model_or_val(output_any['flaky']['author'], str, 'Recovered Artist')
 
 
-async def test_post_json_to_api_endpoint_sends_json_request_body_and_decodes_json_response(
-    aiohttp_server,
+async def test_post_json_to_api_endpoint_posts_each_data_item_to_the_url(
+    aiohttp_server: AiohttpServer,
 ) -> None:
     async def post_endpoint(request: web.Request) -> web.Response:
-        assert request.method == 'POST'
-        assert await request.json() == {'message': 'Hello, server!'}
-        return web.json_response({'message': 'Hello, client!'})
+        greeting = await request.json()
+        return web.json_response({'reply': f'Hello, {greeting["name"]}!'}, status=201)
 
     app = web.Application()
-    app.router.add_post('/echo', post_endpoint)
+    app.router.add_post('/greetings', post_endpoint)
     server = await aiohttp_server(app)
 
-    response = await cast(Any, post_json_to_api_endpoint).run(
-        HttpUrlDataset({'echo': str(server.make_url('/echo'))}),
-        cast(Any, JsonModel({'message': 'Hello, server!'})),
+    responses = await post_json_to_api_endpoint.run(  # pyright: ignore[reportGeneralTypeIssues]
+        JsonDataset({'first': {'name': 'Ada'}, 'second': {'name': 'Alan'}}),  # pyright: ignore[reportArgumentType]
+        url=HttpUrlModel(str(server.make_url('/greetings'))),
     )
 
-    assert response['echo'].to_data() == {'message': 'Hello, client!'}
+    assert responses.to_data() == {
+        'first': {'reply': 'Hello, Ada!'},
+        'second': {'reply': 'Hello, Alan!'},
+    }
+
+
+@pytest.mark.parametrize(
+    'failure_status, retried',
+    [(503, True), (500, False)],
+    ids=['retries_unprocessed_request', 'does_not_retry_possibly_processed_request'],
+)
+async def test_post_json_to_api_endpoint_retries_only_on_post_retry_statuses(
+    aiohttp_server: AiohttpServer,
+    failure_status: int,
+    retried: bool,
+) -> None:
+    received_requests: list[object] = []
+
+    async def fails_once_endpoint(request: web.Request) -> web.Response:
+        received_requests.append(await request.json())
+        if len(received_requests) == 1:
+            return web.json_response({}, status=failure_status)
+        return web.json_response({'accepted': True})
+
+    app = web.Application()
+    app.router.add_post('/submissions', fails_once_endpoint)
+    server = await aiohttp_server(app)
+
+    responses = await post_json_to_api_endpoint.run(  # pyright: ignore[reportGeneralTypeIssues]
+        JsonDataset({'submission': {'id': 1}}),  # pyright: ignore[reportArgumentType]
+        url=HttpUrlModel(str(server.make_url('/submissions'))),
+    )
+
+    if retried:
+        assert responses['submission'].to_data() == {'accepted': True}
+        assert received_requests == [{'id': 1}, {'id': 1}]
+    else:
+        with pytest.raises(FailedDataError, match=f'HTTP status: {failure_status}'):
+            _ = responses['submission']
+        assert received_requests == [{'id': 1}]
 
 
 @pytest.mark.parametrize(
