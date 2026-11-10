@@ -5,13 +5,9 @@ parses the JSON response according to the service's own request/response schemas
 In the tests, the services are simulated by local mock HTTP endpoints.
 """
 
-from typing import TypeVar
-
-from omnipy.components.json.models import JsonModel
 from omnipy.components.remote.models import HttpUrlModel
-from omnipy.components.remote.tasks import post_json_to_api_endpoint
 from omnipy.data.model import Model
-import omnipy.util.pydantic as pyd
+from omnipy.util.helpers import resolve
 
 from .models import (
     BioSampleVaultSampleSubmissionSchema,
@@ -25,15 +21,6 @@ from .models import (
     Status,
 )
 
-_RequestSchemaT = TypeVar('_RequestSchemaT', bound=pyd.BaseModel)
-_ResponseSchemaT = TypeVar('_ResponseSchemaT', bound=pyd.BaseModel)
-
-_post_json_to_service_endpoint = post_json_to_api_endpoint.refine(
-    name='post_json_to_service_endpoint',
-    iterate_over_data_files=False,
-    output_dataset_cls=None,
-)
-
 
 def _endpoint_url(service_url: HttpUrlModel, endpoint: str) -> HttpUrlModel:
     endpoint_url = HttpUrlModel(service_url)
@@ -41,28 +28,17 @@ def _endpoint_url(service_url: HttpUrlModel, endpoint: str) -> HttpUrlModel:
     return endpoint_url
 
 
-async def _post_to_service(
-    endpoint_url: HttpUrlModel,
-    request: Model[_RequestSchemaT],
-    response_schema: type[_ResponseSchemaT],
-) -> _ResponseSchemaT:
-    # The static signature of the refined template still declares the dataset-iterating form
-    response = await _post_json_to_service_endpoint(  # pyright: ignore[reportGeneralTypeIssues]
-        JsonModel(request.to_data()),  # pyright: ignore[reportArgumentType]
-        url=endpoint_url,
-    )
-    return response_schema.parse_obj(response.to_data())
-
-
 async def request_sequence_depot_submission_id(
     sequence_depot_url: HttpUrlModel,
     request: SequenceDepotSubmissionIdRequest,
 ) -> SequenceDepotSubmissionIdRequest:
-    return await _post_to_service(
-        _endpoint_url(sequence_depot_url, 'submission-ids'),
-        Model[SequenceDepotSubmissionIdRequest](request),
-        SequenceDepotSubmissionIdRequest,
+    response = await resolve(
+        Model[SequenceDepotSubmissionIdRequest](request).post(
+            _endpoint_url(sequence_depot_url, 'submission-ids'),
+            response_cls=Model[SequenceDepotSubmissionIdRequest],
+        )
     )
+    return response.content
 
 
 async def transfer_file(
@@ -71,12 +47,12 @@ async def transfer_file(
     source_uri: S3UrlModel,
     target_uri: FtpUrlModel,
 ) -> tuple[Status, str | None]:
-    response = await _post_to_service(
-        _endpoint_url(file_transfer_url, 'transfers'),
-        Model[FileTransferRequest](
-            FileTransferRequest(username=username, source_uri=source_uri, target_uri=target_uri)
-        ),
-        FileTransferResponse,
+    request = FileTransferRequest(username=username, source_uri=source_uri, target_uri=target_uri)
+    response = await resolve(
+        Model[FileTransferRequest](request).post(
+            _endpoint_url(file_transfer_url, 'transfers'),
+            response_cls=Model[FileTransferResponse],
+        )
     )
     return response.status, response.error
 
@@ -85,20 +61,23 @@ async def register_sample_with_biosamplevault(
     biosample_vault_url: HttpUrlModel,
     request: BioSampleVaultSampleSubmissionSchema,
 ) -> BioSampleVaultSampleSubmissionSchema:
-    return await _post_to_service(
-        _endpoint_url(biosample_vault_url, 'samples'),
-        Model[BioSampleVaultSampleSubmissionSchema](request),
-        BioSampleVaultSampleSubmissionSchema,
+    response = await resolve(
+        Model[BioSampleVaultSampleSubmissionSchema](request).post(
+            _endpoint_url(biosample_vault_url, 'samples'),
+            response_cls=Model[BioSampleVaultSampleSubmissionSchema],
+        )
     )
+    return response.content
 
 
 async def submit_final_submission_to_sequence_depot(
     sequence_depot_url: HttpUrlModel,
     submission: FinalSubmissionModel,
 ) -> bool:
-    receipt = await _post_to_service(
-        _endpoint_url(sequence_depot_url, 'submissions'),
-        submission,
-        SequenceDepotSubmissionReceipt,
+    receipt = await resolve(
+        submission.post(
+            _endpoint_url(sequence_depot_url, 'submissions'),
+            response_cls=Model[SequenceDepotSubmissionReceipt],
+        )
     )
     return receipt.accepted
