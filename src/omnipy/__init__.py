@@ -7,14 +7,19 @@ from typing import TYPE_CHECKING
 from omnipy.components.files.datasets import GeneralFileDataset
 from omnipy.components.files.models import ZipFileModel
 from omnipy.components.general.models import (
+    AddAllValuesModel,
     Chain2,
     Chain3,
     Chain4,
     Chain5,
     Chain6,
     ConverterModel,
+    EnumeratedDatasetModel,
     GroupByTypeModel,
+    MergeListsOfRecordsIntoDatasetByIndexModel,
+    MergeListsOfRecordsIntoDatasetByPrimaryKeyModel,
     NotIterableExceptStrOrBytesModel,
+    PrimaryKeyDatasetModel,
 )
 from omnipy.components.general.tasks import (
     concat_all_vals_in_datasets_as_args,
@@ -158,6 +163,7 @@ from omnipy.components.raw.models import (
     MatchItemsModel,
     NestedJoinItemsModel,
     NestedSplitToItemsModel,
+    NewLine,
     SplitLinesToColumnsByCommaModel,
     SplitLinesToColumnsModel,
     SplitToItemsByTabModel,
@@ -177,10 +183,17 @@ from omnipy.components.raw.tasks import (
     modify_each_line,
 )
 from omnipy.components.raw.utils import RegexMatch
-from omnipy.components.remote.datasets import AutoResponseContentDataset, HttpUrlDataset
+from omnipy.components.remote.datasets import (
+    AutoResponseContentDataset,
+    HostUrlDataset,
+    HttpUrlDataset,
+)
 from omnipy.components.remote.models import (
     AutoResponseContentModel,
+    GeneratePagedUrlsModel,
     HttpUrlModel,
+    PagesInfo,
+    PagesInfoRangeModel,
     QueryParamsModel,
     UrlPathModel,
 )
@@ -192,6 +205,7 @@ from omnipy.components.remote.tasks import (
     get_json_from_api_endpoint,
     get_str_from_api_endpoint,
     load_urls,
+    post_json_to_api_endpoint,
 )
 from omnipy.components.tables.datasets import (
     CsvTableDataset,
@@ -264,6 +278,7 @@ from omnipy.data.param import (
     params_dataclass,
     ParamsBase,
 )
+from omnipy.data.primary_key import PrimaryKey
 from omnipy.hub.runtime import runtime
 from omnipy.hub.ui import setup_jupyter_ui
 from omnipy.shared.enums.colorstyles import (
@@ -292,6 +307,7 @@ from omnipy.shared.enums.display import (
     DarkBackground,
     DisplayColorSystem,
     DisplayDimensionsUpdateMode,
+    DocsDisplayMethod,
     HexdumpSyntaxLanguage,
     HorizontalOverflowMode,
     JsonSyntaxLanguage,
@@ -360,6 +376,7 @@ __all__ = [
     'DarkBackground',
     'DisplayColorSystem',
     'DisplayDimensionsUpdateMode',
+    'DocsDisplayMethod',
     'DarkColorStyles',
     'DarkHighContrastColorStyles',
     'DarkHighContrastPygmentsColorStyles',
@@ -516,6 +533,7 @@ __all__ = [
     'JoinColumnsByCommaToLinesModel',
     'NestedJoinItemsModel',
     'NestedSplitToItemsModel',
+    'NewLine',
     'MatchItemsModel',
     'StrModel',
     'TimeDeltaModel',
@@ -555,6 +573,15 @@ __all__ = [
     'params_dataclass',
     'ParamsBase',
     'NotIterableExceptStrOrBytesModel',
+    'AddAllValuesModel',
+    'EnumeratedDatasetModel',
+    'PrimaryKey',
+    'PrimaryKeyDatasetModel',
+    'MergeListsOfRecordsIntoDatasetByIndexModel',
+    'MergeListsOfRecordsIntoDatasetByPrimaryKeyModel',
+    'PagesInfo',
+    'PagesInfoRangeModel',
+    'GeneratePagedUrlsModel',
     'Chain2',
     'Chain3',
     'Chain4',
@@ -594,6 +621,7 @@ __all__ = [
     'modify_each_line',
     'RegexMatch',
     'AutoResponseContentDataset',
+    'HostUrlDataset',
     'HttpUrlDataset',
     'AutoResponseContentModel',
     'QueryParamsModel',
@@ -602,6 +630,7 @@ __all__ = [
     'get_bytes_from_api_endpoint',
     'get_json_from_api_endpoint',
     'get_str_from_api_endpoint',
+    'post_json_to_api_endpoint',
     'async_load_urls',
     'load_urls',
     'get_github_repo_urls',
