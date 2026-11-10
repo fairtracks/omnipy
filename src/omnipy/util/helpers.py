@@ -13,11 +13,9 @@ from collections import UserDict
 from collections.abc import Callable, Hashable, Iterable, Mapping
 from dataclasses import asdict
 import functools
-from importlib.abc import Loader
-from importlib.machinery import FileFinder, ModuleSpec
+from importlib import import_module
 from importlib.metadata import distribution
 import inspect
-from inspect import getmodule, isclass
 from keyword import iskeyword, issoftkeyword
 import locale as pkg_locale
 import operator
@@ -718,21 +716,7 @@ def format_classname_with_params(cls_name: str, params_str: str) -> str:
     return f'{cls_name}[{params_str}]'
 
 
-def _is_internal_module(module: ModuleType, imported_modules: list[ModuleType]):
-    """Return whether ``module`` is an Omnipy internal module not yet visited.
-
-    Args:
-        module: Module candidate discovered during recursive import traversal.
-        imported_modules: Modules already processed in the current traversal.
-
-    Returns:
-        ``True`` when the module name starts with ``omnipy`` and the module is
-        not already present in ``imported_modules``.
-    """
-    return module not in imported_modules and module.__name__.startswith('omnipy')
-
-
-def recursive_module_import_new(
+def recursive_module_import(
     root_path: list[str], imported_modules: dict[str, ModuleType], excluded_set: set[str]
 ):
     """Import modules discovered under ``root_path`` into ``imported_modules``.
@@ -743,18 +727,18 @@ def recursive_module_import_new(
         excluded_set: Module names whose entire subtrees should be skipped.
 
     Notes:
+        Module names must be importable through the normal Python import path.
         Importing modules executes their import-time side effects.
     """
 
     import pkgutil
 
-    module_finder: FileFinder
     module_name: str
     _is_pkg: bool
 
     cur_excluded_prefix = ''
 
-    for module_finder, module_name, _is_pkg in pkgutil.walk_packages(root_path):  # type: ignore
+    for _module_finder, module_name, _is_pkg in pkgutil.walk_packages(root_path):
         # print(f'{module_name}: {_is_pkg}')
         if cur_excluded_prefix and module_name.startswith(cur_excluded_prefix):
             continue
@@ -765,39 +749,7 @@ def recursive_module_import_new(
             cur_excluded_prefix = f'{module_name}.'
             continue
 
-        module_spec: ModuleSpec | None = module_finder.find_spec(module_name)
-        if module_spec:
-            loader: Loader | None = module_spec.loader
-            if loader:
-                imported_modules[module_name] = loader.load_module(module_name)
-
-
-def recursive_module_import(
-    module: ModuleType, imported_modules: list[ModuleType] = []
-) -> dict[str, object]:
-    """Recursively merge attributes from Omnipy base-class modules.
-
-    Args:
-        module: Module whose class hierarchy should be inspected.
-        imported_modules: Visited modules used to avoid repeated imports.
-
-    Returns:
-        A merged module namespace including relevant internal base-class modules.
-    """
-    module_vars = vars(module)
-    imported_modules.append(module)
-
-    for obj in module_vars.values():
-        if isclass(obj):
-            for base_cls in obj.__bases__:
-                base_cls_module = getmodule(base_cls)
-                if base_cls_module and _is_internal_module(base_cls_module, imported_modules):
-                    module_vars = create_merged_dict(
-                        recursive_module_import(base_cls_module, imported_modules),
-                        module_vars,
-                    )
-
-    return module_vars
+        imported_modules[module_name] = import_module(module_name)
 
 
 def get_calling_module_name() -> str | None:

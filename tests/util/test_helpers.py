@@ -1,7 +1,11 @@
 """Tests for utility helper functions."""
 
 from collections.abc import Iterable, Iterator
-from types import MethodType, NoneType, UnionType
+from importlib import import_module
+from importlib.machinery import SourceFileLoader
+from pathlib import Path
+import sys
+from types import MethodType, ModuleType, NoneType, UnionType
 from typing import (
     Annotated,
     Any,
@@ -35,6 +39,7 @@ from omnipy.util.helpers import (
     is_type_specialization,
     is_union,
     is_unreserved_identifier,
+    recursive_module_import,
     sorted_dict_hash,
     split_to_union_variants,
     transfer_generic_args_to_cls,
@@ -44,6 +49,45 @@ from .helpers.classes import UnavailableIterable
 
 T = TypeVar('T')
 U = TypeVar('U')
+
+
+def test_recursive_module_import(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    package = tmp_path / 'test_recursive_import_package'
+    package.mkdir()
+    (package / '__init__.py').write_text('')
+    (package / 'included.py').write_text('value = 42\n')
+    (package / 'excluded.py').write_text('raise RuntimeError("excluded module was imported")\n')
+    monkeypatch.syspath_prepend(str(tmp_path))
+
+    def reject_load_module(loader: SourceFileLoader, fullname: str) -> ModuleType:
+        raise AssertionError('The legacy load_module API must not be used')
+
+    monkeypatch.setattr(SourceFileLoader, 'load_module', reject_load_module, raising=False)
+    included = import_module('test_recursive_import_package.included')
+    imported_modules: dict[str, ModuleType] = {}
+
+    recursive_module_import(
+        [str(tmp_path)], imported_modules, {'test_recursive_import_package.excluded'}
+    )
+
+    assert set(imported_modules) == {
+        'test_recursive_import_package',
+        'test_recursive_import_package.included',
+    }
+    assert imported_modules['test_recursive_import_package.included'] is included
+    assert 'test_recursive_import_package.excluded' not in sys.modules
+
+
+def test_recursive_module_import_propagates_import_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / 'test_recursive_import_failure.py').write_text(
+        'raise RuntimeError("module import failed")\n'
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+
+    with pytest.raises(RuntimeError, match='module import failed'):
+        recursive_module_import([str(tmp_path)], {}, set())
 
 
 def test_key_sorted_dict_hash() -> None:

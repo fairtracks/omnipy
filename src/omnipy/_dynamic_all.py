@@ -119,7 +119,7 @@ if not __all__:
     )
     from omnipy.util._placeholder import F, m, x
     from omnipy.util.contexts import print_exception
-    from omnipy.util.helpers import recursive_module_import_new
+    from omnipy.util.helpers import recursive_module_import
     from omnipy.util.literal_enum_generator import generate_literal_enum_code
 
     if TYPE_CHECKING:
@@ -173,7 +173,7 @@ if not __all__:
 
     _omnipy_all = set(omnipy.__all__)
 
-    recursive_module_import_new([ROOT_DIR], _all_modules, _exclude_modules)
+    recursive_module_import([ROOT_DIR], _all_modules, _exclude_modules)
 
     for module_name, module in _all_modules.items():
         for attr in dir(module):
