@@ -33,6 +33,7 @@ from typing_extensions import get_original_bases, override, TypeIs, TypeVar
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import ModelDisplayMixin
 from omnipy.data._mixins.load import LoadMixin
+from omnipy.data._mixins.post import PostMixin
 from omnipy.data._mixins.save import SaveMixin
 from omnipy.data.dataset import Dataset, is_dataset_instance
 from omnipy.data.helpers import (
@@ -183,6 +184,7 @@ undefined_default_factory: Callable[[], Any] = lambda: Undefined
 class Model(  # type: ignore[misc]
     ModelDisplayMixin,
     LoadMixin,
+    PostMixin,
     SaveMixin,
     LogMixin,
     DataClassBase[_RootT],

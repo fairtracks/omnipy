@@ -12,7 +12,7 @@ import pytest_cases as pc
 
 from omnipy.shared.protocols.hub.runtime import IsRuntime
 
-from .helpers.classes import PagedObservationService
+from .helpers.classes import PagedObservationService, PostService
 
 
 @pytest.fixture(autouse=True)
@@ -81,4 +81,33 @@ async def paged_observation_service(
     app.router.add_get('/api/observations', observations)
     server = await aiohttp_server(app)
     service.base_url = str(server.make_url('/'))
+    yield service
+
+
+@pc.fixture(scope='function')
+async def post_service(aiohttp_server: AiohttpServer) -> AsyncGenerator[PostService, None]:
+    """Serve POST endpoints for the shared Model/Dataset posting entry point."""
+    service = PostService()
+
+    async def double(request: web.Request) -> web.Response:
+        body = await request.json()
+        service.requests.append(body)
+        return web.json_response({'doubled': body['value'] * 2}, status=201)
+
+    async def reject(request: web.Request) -> web.Response:
+        service.requests.append(await request.json())
+        return web.json_response({'error': 'rejected'}, status=400)
+
+    async def fails_once(request: web.Request) -> web.Response:
+        service.requests.append(await request.json())
+        if len(service.requests) == 1:
+            return web.json_response({}, status=service.first_status)
+        return web.json_response({'accepted': True})
+
+    app = web.Application()
+    app.router.add_post('/double', double)
+    app.router.add_post('/reject', reject)
+    app.router.add_post('/fails-once', fails_once)
+    server = await aiohttp_server(app)
+    service.base_url = str(server.make_url('')).rstrip('/')
     yield service

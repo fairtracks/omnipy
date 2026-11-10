@@ -201,12 +201,14 @@ from omnipy.components.remote.models import (
 from omnipy.components.remote.tasks import (
     async_get_github_repo_urls,
     async_load_urls,
+    async_post_to_url,
     get_bytes_from_api_endpoint,
     get_github_repo_urls,
     get_json_from_api_endpoint,
     get_str_from_api_endpoint,
     load_urls,
     post_json_to_api_endpoint,
+    post_to_url,
 )
 from omnipy.components.tables.datasets import (
     CsvTableDataset,
@@ -635,6 +637,8 @@ __all__ = [
     'post_json_to_api_endpoint',
     'async_load_urls',
     'load_urls',
+    'async_post_to_url',
+    'post_to_url',
     'get_github_repo_urls',
     'async_get_github_repo_urls',
     'create_row_index_from_column',

@@ -24,6 +24,7 @@ from typing_extensions import override, TypeIs, TypeVar
 from omnipy.data._data_class_creator import DataClassBase, DataClassBaseMeta
 from omnipy.data._mixins.display import DatasetDisplayMixin
 from omnipy.data._mixins.load import LoadMixin
+from omnipy.data._mixins.post import PostMixin
 from omnipy.data._mixins.save import SaveMixin
 from omnipy.data._mixins.task import TaskDatasetMixin
 from omnipy.data._selector import (
@@ -132,6 +133,7 @@ class _DatasetMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
 class Dataset(
     DatasetDisplayMixin,
     LoadMixin,
+    PostMixin,
     SaveMixin,
     LogMixin,
     TaskDatasetMixin,

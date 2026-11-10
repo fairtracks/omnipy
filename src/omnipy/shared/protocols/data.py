@@ -103,6 +103,33 @@ class SupportsLoadInto(Protocol):
     ) -> Self | asyncio.Task[Self]: ...
 
 
+_PostResponseT = TypeVar('_PostResponseT', bound='IsDataset | IsModel')
+
+
+class SupportsPost(Protocol):
+    """An instance that can post its contents as JSON to an HTTP URL."""
+
+    @overload
+    def post(
+        self,
+        url: 'str | IsHttpUrlModel',
+        response_cls: type[_PostResponseT],
+    ) -> _PostResponseT | asyncio.Task[_PostResponseT]: ...
+
+    @overload
+    def post(
+        self,
+        url: 'str | IsHttpUrlModel',
+        response_cls: None = None,
+    ) -> 'IsDataset | IsModel | asyncio.Task[IsDataset] | asyncio.Task[IsModel]': ...
+
+    def post(
+        self,
+        url: 'str | IsHttpUrlModel',
+        response_cls: 'type[IsDataset | IsModel] | None' = None,
+    ) -> object: ...
+
+
 @runtime_checkable
 @dataclass(frozen=True, kw_only=True)
 class IsPendingData(Protocol):
@@ -156,7 +183,9 @@ class HasContent(Protocol[ContentT]):
 
 
 @runtime_checkable
-class IsModel(HasContent[_RootT], IsBaseDisplayMixin, SupportsLoadInto, Protocol[_RootT]):
+class IsModel(
+    HasContent[_RootT], IsBaseDisplayMixin, SupportsLoadInto, SupportsPost, Protocol[_RootT]
+):
     """Single-value data wrapper with typed content and conversion support."""
 
     @overload
@@ -204,7 +233,10 @@ class IsModel(HasContent[_RootT], IsBaseDisplayMixin, SupportsLoadInto, Protocol
 
 @runtime_checkable
 class IsDataset(
-    IsMutableMapping[str, _ModelOrDatasetT], IsDatasetDisplayMixin, Protocol[_ModelOrDatasetT]
+    IsMutableMapping[str, _ModelOrDatasetT],
+    IsDatasetDisplayMixin,
+    SupportsPost,
+    Protocol[_ModelOrDatasetT],
 ):
     """Dictionary-like collection of named models or nested datasets.
 

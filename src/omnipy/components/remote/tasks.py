@@ -459,6 +459,66 @@ async def async_load_urls(
     return await data_cls.load(urls, as_mime_type=as_mime_type)  # type: ignore[misc]
 
 
+@TaskTemplate()
+def post_to_url(
+    data: IsDataset | IsModel,
+    url: HttpUrlModel | str,
+    response_cls: type[_LoadableT] | None = None,
+) -> IsDataset | IsModel:
+    """Post data as JSON to a URL, and return the responses in a new dataset or model instance.
+
+    Args:
+        data: Dataset to post each data item of, or Model to post the contents of. See
+            ``post()`` of Model and Dataset.
+        url: HTTP URL to post to.
+        response_cls: Dataset or Model type to parse the decoded JSON responses into. Defaults
+            to ``JsonDataset`` for the responses to the items of a Dataset and ``JsonModel`` for
+            the response to a Model.
+
+    Returns:
+        A new instance of ``response_cls`` with the responses.
+
+    Examples:
+        >>> # responses = post_to_url(
+        >>> #     JsonDataset({'greeting': {'message': 'Hello'}}),
+        >>> #     'https://api.example.com/greetings',
+        >>> # )
+        >>> # isinstance(responses, JsonDataset)
+        >>> True
+    """
+    return data.post(url, response_cls=response_cls)  # type: ignore[return-value]
+
+
+@TaskTemplate()
+async def async_post_to_url(
+    data: IsDataset | IsModel,
+    url: HttpUrlModel | str,
+    response_cls: type[_LoadableT] | None = None,
+) -> IsDataset | IsModel:
+    """Asynchronously post data as JSON to a URL, and return the responses in a new instance.
+
+    Args:
+        data: Dataset to post each data item of, or Model to post the contents of. See
+            ``post()`` of Model and Dataset.
+        url: HTTP URL to post to.
+        response_cls: Dataset or Model type to parse the decoded JSON responses into. Defaults
+            to ``JsonDataset`` for the responses to the items of a Dataset and ``JsonModel`` for
+            the response to a Model.
+
+    Returns:
+        A new instance of ``response_cls`` with the responses.
+
+    Examples:
+        >>> # responses = await async_post_to_url(
+        >>> #     JsonDataset({'greeting': {'message': 'Hello'}}),
+        >>> #     'https://api.example.com/greetings',
+        >>> # )
+        >>> # isinstance(responses, JsonDataset)
+        >>> # True
+    """
+    return await data.post(url, response_cls=response_cls)  # type: ignore[misc]
+
+
 @dataclass
 class GithubRepoContext:
     """Describe a GitHub repository location used for URL generation.
