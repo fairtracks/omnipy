@@ -759,13 +759,26 @@ the target interface, and `@mimics` exposes that interface to supported static
 checkers. Passing the mapper directly does not require `.convert()`, `.content`,
 or `.to_data()` solely to reach this service boundary.
 
-The client function in `services.py` posts the request as JSON to the service
-endpoint through Omnipy's remote component and parses the response with the same
-schema. In the tests, a mocked HTTP endpoint implements the service. The service
-URL is a keyword-only flow input, available to every task that accepts it. The
-client owns the transport: it serializes the request at the HTTP boundary, so the
-task still passes the mapper unchanged. Use the returned response rather than
-depending on the service mutating and returning the same request object.
+The client function in `services.py` wraps the request in a Model of the service's
+request schema and posts it with `.post()`, parsing the response with the service's
+response schema:
+
+```python
+response = await resolve(
+    Model[BioSampleVaultSampleSubmissionSchema](request).post(
+        _endpoint_url(biosample_vault_url, 'samples'),
+        response_cls=Model[BioSampleVaultSampleSubmissionSchema],
+    )
+)
+return response.content
+```
+
+Wrapping the request accepts both the mapper and a plain schema instance. In the
+tests, a mocked HTTP endpoint implements the service. The service URL is a
+keyword-only flow input, available to every task that accepts it. The client owns
+the transport, so the task still passes the mapper unchanged. Use the returned
+response rather than depending on the service mutating and returning the same
+request object. See [posting requests](remote-loading.md#post-requests-to-a-service).
 
 Tests and mocks should exercise the external contract, including relevant request
 fields and returned outcomes, while the internal dataflow remains free to use its
@@ -1473,4 +1486,8 @@ allocation order. Stateless stubs need no context machinery.
   `src/omnipy/compute/helpers.py`, `Void`.
 - Iteration and per-item failure: `src/omnipy/compute/_mixins/iterate.py`;
   dataset failure accessors in `src/omnipy/data/dataset.py`.
+- HTTP posting: `src/omnipy/data/_mixins/post.py`, `PostMixin.post`;
+  `src/omnipy/components/remote/tasks.py`, `post_json_to_api_endpoint`,
+  `open_host_retry_client`, `post_to_url`; coverage in
+  `tests/integration/novel/io/test_posting.py`.
 - Pydantic compatibility: `src/omnipy/util/pydantic.py`.

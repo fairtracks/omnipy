@@ -255,6 +255,20 @@ to be first. One pair-valued modifier versus two modifiers is an open design
 decision. This is not an implemented API or authorization to change the runtime
 as part of the guidance work.
 
+Replacing the brokering coroutine stand-ins with mocked HTTP endpoints produced
+several decisions. Service clients that call job templates are not a reuse problem
+just because direct template calls require a flow context: calling templates inside
+flows and using `.run()` outside them is Omnipy's API. In an integration test, a
+plain HTTP client would bypass the Omnipy functionality the test should exercise.
+The user chose `Model.post()` and `Dataset.post()` as the request counterpart of
+`load()`: a single URL for all Dataset items, a `response_cls` for the service's
+response contract, JSON only for now, and `post_to_url`/`async_post_to_url` tasks
+next to `load_urls`. POST requests got separate retry statuses in the host
+configuration, as they are not idempotent. `post_json_to_api_endpoint` previously
+posted one body to many URLs; it now posts each data item to one URL. Posting each
+item to the URL with the same key in an `HttpUrlDataset` will be needed, but the user
+postponed its design; it is future work, not an available API.
+
 ## Water-sample terminology and introductory scope
 
 `tests/integration/novel/full/water_sample_harmonization/models.py` defines

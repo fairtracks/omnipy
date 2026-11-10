@@ -224,6 +224,15 @@ items. See [paging URLs and Dataset loading](references/remote-loading.md) for
 sync/async usage, a composed example, and combining pages into validated records
 before constructing a Dataset keyed by record identity.
 
+To send JSON requests, use `.post(url, response_cls=...)` on the request Model or
+Dataset, or the `post_to_url`/`async_post_to_url` tasks. A Model posts its contents
+as one request; a Dataset posts each item to the same URL and keeps the responses
+under the item keys. `response_cls` parses responses with the service's response
+schema. POST requests share the host's rate limits but retry only on
+`retry_http_statuses_for_post`, as they are not idempotent. Posting each item to the
+URL with the same key in an `HttpUrlDataset` is future work. See
+[posting requests](references/remote-loading.md#post-requests-to-a-service).
+
 Treat external API contracts as requirements in their own right: request and
 response schemas, field meanings, and operation outcomes. Adapt internal data to
 the service's contract. A convenient local stand-in must not silently redefine

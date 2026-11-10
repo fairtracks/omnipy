@@ -155,6 +155,53 @@ An ordinary response Dataset still supports `Dataset.load(urls)` and
 remains one Dataset item. The merge Models provide the explicit conversion from
 that response shape into per-record Dataset items.
 
+## Post requests to a service
+
+`Model.post()` and `Dataset.post()` send JSON requests through the same remote
+sessions, host configuration, and rate limits as loading. A Model posts its complete
+contents as one request; a Dataset, or a Model wrapping one, posts each item as a
+separate request to the same URL. Name the service's response contract with
+`response_cls`:
+
+```python
+class RegistrationRequest(pyd.BaseModel):
+    sample_alias: str
+
+
+class RegistrationResponse(pyd.BaseModel):
+    sample_alias: str
+    sample_id: str
+
+
+async def register_samples(
+    requests: om.Dataset[om.Model[RegistrationRequest]],
+    url: om.HttpUrlModel,
+) -> om.Dataset[om.Model[RegistrationResponse]]:
+    return await requests.post(url, response_cls=om.Dataset[om.Model[RegistrationResponse]])
+```
+
+The responses keep the request keys. Without `response_cls`, a Dataset returns a
+`JsonDataset` and a Model returns a `JsonModel`. A response Dataset holds each failed
+request, or response that does not parse, as a failed item; a response Model raises
+the error instead. The URL can be a string or an `HttpUrlModel`. Any 2xx status is a
+success. JSON is currently the only supported request and response format.
+
+Like `load()`, `post()` returns the result at a synchronous entry point and an
+`asyncio.Task` inside a running event loop, so async code, including task bodies, can
+await it directly. `resolve()` from `omnipy.util.helpers` awaits a value only when
+needed, for code that may run in either context. The `post_to_url` and
+`async_post_to_url` tasks wrap the same entry point.
+
+POST requests are not idempotent: retrying one that the server has already processed
+can repeat the operation, e.g. registering a sample twice. They are therefore retried
+on the separate `retry_http_statuses_for_post` of the host configuration, which by
+default lists only statuses where the server has normally not processed the request
+(408, 425, 429 and 503).
+
+Posting each item to the URL with the same key in an `HttpUrlDataset` is planned,
+but its design is not settled. Until then, all items of one `post()` call go to the
+same URL.
+
 ## Save and load local files
 
 `Model` and `Dataset` share `load()`, `load_into()`, and `save()` entry points.
@@ -194,4 +241,6 @@ cover direct instance loading, both loading tasks, out-of-order responses, empty
 ranges, malformed records, HTTP failures, composite keys, and collisions. Their
 [declarations](../../../../tests/components/remote/helpers/models.py) and
 [service fixture](../../../../tests/components/remote/conftest.py) provide a complete
-example without contacting a live API.
+example without contacting a live API. The
+[posting tests](../../../../tests/integration/novel/io/test_posting.py) cover the
+`post()` entry point the same way, including failed requests and POST retries.
