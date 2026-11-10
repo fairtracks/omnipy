@@ -275,6 +275,21 @@ class SequenceDepotSubmissionIdRequest(pyd.BaseModel):
     sequence_depot_submission_id: str | None = None
 
 
+class SequenceDepotSubmissionReceipt(pyd.BaseModel):
+    accepted: bool
+
+
+class FileTransferRequest(pyd.BaseModel):
+    username: str
+    source_uri: S3UrlModel
+    target_uri: FtpUrlModel
+
+
+class FileTransferResponse(pyd.BaseModel):
+    status: Status
+    error: str | None = None
+
+
 @mimics(SequenceDepotSubmissionIdRequest)
 class SubmissionToSequenceDepotRequestMapper(
     ConverterModel[

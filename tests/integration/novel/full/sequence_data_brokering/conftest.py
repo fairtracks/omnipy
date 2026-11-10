@@ -1,8 +1,22 @@
-from collections.abc import Iterator
+import asyncio
+from collections.abc import Awaitable, Callable, Mapping
+from typing import Annotated
 
+from aiohttp import web
+from aiohttp.test_utils import TestServer
 import pytest
+from pytest_aiohttp import AiohttpServer
 
-from .services import biosample_vault_ids_mapping
+from omnipy.components.remote.models import HttpUrlModel
+
+JsonRequest = dict[str, object]
+
+# Request bodies received by a mock service, per endpoint path
+ReceivedRequests = dict[str, list[JsonRequest]]
+
+Handler = Callable[[web.Request], Awaitable[web.Response]]
+
+_received_requests_key = web.AppKey('received_requests', ReceivedRequests)
 
 
 @pytest.fixture(scope='function')
@@ -154,11 +168,206 @@ def expected_sequence_depot_submission_payload() -> dict[str, object]:
 
 
 @pytest.fixture(scope='function')
-def preconfigured_biosample_vault_ids() -> Iterator[None]:
-    token = biosample_vault_ids_mapping.set(
-        {'sample-a': 'BSV:80907461', 'sample-b': 'BSV:80907462'}
+def expected_sequence_depot_requests(
+    expected_sequence_depot_submission_payload: Annotated[dict[str, object], pytest.fixture],
+) -> ReceivedRequests:
+    final_submission = {
+        key: value
+        for key, value in expected_sequence_depot_submission_payload.items()
+        if key != 'status'
+    }
+    return {
+        '/submission-ids': [
+            {
+                'local_submission_alias': 'sub-2026-alpha',
+                'project_code': 'norw-path-42',
+                'sequence_depot_submission_id': None,
+            },
+        ],
+        '/submissions': [final_submission],
+    }
+
+
+@pytest.fixture(scope='function')
+def expected_biosample_vault_requests() -> ReceivedRequests:
+    return {
+        '/samples': [
+            {
+                'broker_id': 'omnipy-broker',
+                'project_code': 'norw-path-42',
+                'study_title': 'Northern waterways genomic surveillance pilot',
+                'local_sample_alias': 'sample-a',
+                'specimen_type': 'wastewater solids',
+                'geolocation': 'North Works',
+                'sampling_date': '2026-05-03',
+                'biosample_vault_sample_id': None,
+            },
+            {
+                'broker_id': 'omnipy-broker',
+                'project_code': 'norw-path-42',
+                'study_title': 'Northern waterways genomic surveillance pilot',
+                'local_sample_alias': 'sample-b',
+                'specimen_type': 'river grab',
+                'geolocation': 'River Mouth',
+                'sampling_date': '2026-05-10',
+                'biosample_vault_sample_id': None,
+            },
+        ],
+    }
+
+
+@pytest.fixture(scope='function')
+def expected_file_transfer_requests() -> ReceivedRequests:
+    return {
+        '/transfers': [
+            {
+                'username': 'omnipy-broker',
+                'source_uri': f's3://lab-sequences/sub-2026-alpha/{file_name}',
+                'target_uri': f'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/{file_name}',
+            }
+            for file_name in (
+                'sample-a_R1.fastq.gz',
+                'sample-a_R2.fastq.gz',
+                'sample-b_R1.fastq.gz',
+                'sample-b_R2.fastq.gz',
+            )
+        ],
+    }
+
+
+# Mock HTTP endpoints simulating the external services. Each service records the request
+# bodies it receives. Small response delays simulate service latency, keeping test run
+# times low.
+
+
+@web.middleware
+async def _record_request(
+    request: web.Request,
+    handler: Callable[[web.Request], Awaitable[web.StreamResponse]],
+) -> web.StreamResponse:
+    request.app[_received_requests_key].setdefault(request.path, []).append(await request.json())
+    return await handler(request)
+
+
+def _create_service_app(routes: Mapping[str, Handler]) -> web.Application:
+    app = web.Application(middlewares=[_record_request])
+    app[_received_requests_key] = {}
+    for path, handler in routes.items():
+        app.router.add_post(path, handler)
+    return app
+
+
+def _create_sequence_depot_app(
+    submission_id: str,
+    response_delay_secs: float,
+) -> web.Application:
+    async def _allocate_submission_id(request: web.Request) -> web.Response:
+        submission_id_request = await request.json()
+        await asyncio.sleep(response_delay_secs)
+        return web.json_response(
+            {**submission_id_request, 'sequence_depot_submission_id': submission_id}
+        )
+
+    async def _receive_submission(request: web.Request) -> web.Response:
+        await asyncio.sleep(response_delay_secs)
+        return web.json_response({'accepted': True})
+
+    return _create_service_app(
+        {
+            '/submission-ids': _allocate_submission_id,
+            '/submissions': _receive_submission,
+        }
     )
-    try:
-        yield
-    finally:
-        biosample_vault_ids_mapping.reset(token)
+
+
+def _create_biosample_vault_app(
+    sample_ids: Mapping[str, str],
+    response_delay_secs: float,
+) -> web.Application:
+    async def _register_sample(request: web.Request) -> web.Response:
+        sample_submission = await request.json()
+        sample_id = sample_ids[sample_submission['local_sample_alias']]
+        await asyncio.sleep(response_delay_secs)
+        return web.json_response({**sample_submission, 'biosample_vault_sample_id': sample_id})
+
+    return _create_service_app({'/samples': _register_sample})
+
+
+def _create_file_transfer_app(response_delay_secs: float) -> web.Application:
+    async def _transfer_file(request: web.Request) -> web.Response:
+        await asyncio.sleep(response_delay_secs)
+        return web.json_response({'status': 'completed', 'error': None})
+
+    return _create_service_app({'/transfers': _transfer_file})
+
+
+def _service_url(service: TestServer) -> HttpUrlModel:
+    return HttpUrlModel(str(service.make_url('/')))
+
+
+def _received_requests(service: TestServer) -> ReceivedRequests:
+    return service.app[_received_requests_key]
+
+
+@pytest.fixture(scope='function')
+async def sequence_depot_service(aiohttp_server: AiohttpServer) -> TestServer:
+    return await aiohttp_server(
+        _create_sequence_depot_app(submission_id='SQD:4021372983', response_delay_secs=0.01)
+    )
+
+
+@pytest.fixture(scope='function')
+async def biosample_vault_service(aiohttp_server: AiohttpServer) -> TestServer:
+    return await aiohttp_server(
+        _create_biosample_vault_app(
+            sample_ids={'sample-a': 'BSV:80907461', 'sample-b': 'BSV:80907462'},
+            response_delay_secs=0.01,
+        )
+    )
+
+
+@pytest.fixture(scope='function')
+async def file_transfer_service(aiohttp_server: AiohttpServer) -> TestServer:
+    return await aiohttp_server(_create_file_transfer_app(response_delay_secs=0.05))
+
+
+@pytest.fixture(scope='function')
+def sequence_depot_url(
+    sequence_depot_service: Annotated[TestServer, pytest.fixture],
+) -> HttpUrlModel:
+    return _service_url(sequence_depot_service)
+
+
+@pytest.fixture(scope='function')
+def biosample_vault_url(
+    biosample_vault_service: Annotated[TestServer, pytest.fixture],
+) -> HttpUrlModel:
+    return _service_url(biosample_vault_service)
+
+
+@pytest.fixture(scope='function')
+def file_transfer_url(
+    file_transfer_service: Annotated[TestServer, pytest.fixture],
+) -> HttpUrlModel:
+    return _service_url(file_transfer_service)
+
+
+@pytest.fixture(scope='function')
+def sequence_depot_requests(
+    sequence_depot_service: Annotated[TestServer, pytest.fixture],
+) -> ReceivedRequests:
+    return _received_requests(sequence_depot_service)
+
+
+@pytest.fixture(scope='function')
+def biosample_vault_requests(
+    biosample_vault_service: Annotated[TestServer, pytest.fixture],
+) -> ReceivedRequests:
+    return _received_requests(biosample_vault_service)
+
+
+@pytest.fixture(scope='function')
+def file_transfer_requests(
+    file_transfer_service: Annotated[TestServer, pytest.fixture],
+) -> ReceivedRequests:
+    return _received_requests(file_transfer_service)

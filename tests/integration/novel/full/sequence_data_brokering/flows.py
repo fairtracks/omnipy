@@ -1,3 +1,4 @@
+from omnipy.components.remote.models import HttpUrlModel
 from omnipy.compute.flow import DagFlowTemplate, LinearFlowTemplate
 
 from .models import SubmissionModel
@@ -22,6 +23,8 @@ from .tasks import (
 )
 async def coordinate_biosamplevault_registration(
     submission: SubmissionModel,
+    *,
+    biosample_vault_url: HttpUrlModel,
 ) -> SubmissionModel: ...
 
 
@@ -34,7 +37,11 @@ async def coordinate_biosamplevault_registration(
     collect_submission_model,
     consume_kwargs_from_results=False,
 )
-async def coordinate_external_file_transfer(submission: SubmissionModel) -> SubmissionModel: ...
+async def coordinate_external_file_transfer(
+    submission: SubmissionModel,
+    *,
+    file_transfer_url: HttpUrlModel,
+) -> SubmissionModel: ...
 
 
 @LinearFlowTemplate(
@@ -43,4 +50,10 @@ async def coordinate_external_file_transfer(submission: SubmissionModel) -> Subm
     coordinate_external_file_transfer,
     finalize_sequence_depot_submission,
 )
-async def broker_sequence_submission_flow(submission: SubmissionModel) -> SubmissionModel: ...
+async def broker_sequence_submission_flow(
+    submission: SubmissionModel,
+    *,
+    sequence_depot_url: HttpUrlModel,
+    biosample_vault_url: HttpUrlModel,
+    file_transfer_url: HttpUrlModel,
+) -> SubmissionModel: ...
