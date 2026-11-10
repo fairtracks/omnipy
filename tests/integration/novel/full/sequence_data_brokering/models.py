@@ -121,14 +121,12 @@ class _SubmissionRecordDict(TypedDict):
     samples: SubmissionSamplesDataset
     files: SubmissionFilesDataset
     metadata: SubmissionMetadataModel
-    status: SubmissionStatusModel
 
 
 class SubmissionRecord(pyd.BaseModel):
     samples: SubmissionSamplesDataset
     files: SubmissionFilesDataset
     metadata: SubmissionMetadataModel
-    status: SubmissionStatusModel = pyd.Field(default_factory=SubmissionStatusModel)
 
     # TODO: Generalize Dataset primary-key validation for Models of Pydantic records.
     @pyd.validator('samples')
