@@ -233,14 +233,17 @@ if TYPE_CHECKING:
         ...
 
 
-DEFAULT_PORTS = {80, 443}
+DEFAULT_PORTS = {'ftp': 21, 'http': 80, 'https': 443, 'ws': 80, 'wss': 443}
 
 
 class UrlDataclassModel(pyd.BaseModel):
     """Store mutable URL components used by :class:`HttpUrlModel`.
 
+    Changing the scheme also changes the port when it matches the previous
+    scheme's default. Defaults are recognized for FTP, HTTP(S), and WS(S).
+
     Args:
-        scheme: URL scheme, currently expected to be ``http`` or ``https``.
+        scheme: URL scheme.
         username: Optional username part of the URL authority.
         password: Optional password part of the URL authority.
         host: Hostname or IP address.
@@ -278,16 +281,27 @@ class UrlDataclassModel(pyd.BaseModel):
 
     fragment: str | None = None
 
+    def __setattr__(self, name: str, value: object) -> None:
+        # Parsed URLs store their effective port, including scheme defaults. Update it before
+        # revalidation so changing schemes does not turn an old default into an explicit port.
+        if (
+            name == 'scheme'
+            and isinstance(value, str)
+            and value.lower() != self.scheme.lower()
+            and self.port is not None
+            and self.port == DEFAULT_PORTS.get(self.scheme.lower())
+        ):
+            super().__setattr__(name, value)
+            super().__setattr__('port', DEFAULT_PORTS.get(value.lower()))
+        else:
+            super().__setattr__(name, value)
+
     def __str__(self) -> str:
         kwargs: dict[str, str | int] = {}
         for key, val in self.dict().items():
             if val is None:
                 continue
             match key:
-                case 'port':
-                    if val in DEFAULT_PORTS:
-                        continue
-                    kwargs[key] = val
                 case 'path':
                     # Fix for second problem described in
                     # https://github.com/pydantic/pydantic/issues/7186#issuecomment-1912791497
@@ -305,6 +319,10 @@ class UrlDataclassModel(pyd.BaseModel):
 @mimics(UrlDataclassModel)
 class HostUrlModel(Model[UrlDataclassModel | str]):
     """Represent a validated URL with a defined host as a structured model.
+
+    The caller is responsible for choosing a scheme for which a host-based
+    representation is appropriate. Scheme-specific semantics are not validated;
+    hostless URLs are rewritten with a ``localhost`` host.
 
     Args:
         *args: Positional data forwarded to :class:`~omnipy.data.model.Model`.

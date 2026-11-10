@@ -207,6 +207,83 @@ def test_http_url_model_validation_errors():
         HttpUrlModel('file:///abc/def')
 
 
+@pytest.mark.parametrize(
+    ('input_url', 'expected_url', 'expected_port'),
+    [
+        ('http://example.com:80/path', 'http://example.com/path', 80),
+        ('https://example.com:443/path', 'https://example.com/path', 443),
+        ('ftp://example.com:21/path', 'ftp://example.com/path', 21),
+        ('ws://example.com:80/path', 'ws://example.com/path', 80),
+        ('wss://example.com:443/path', 'wss://example.com/path', 443),
+        ('http://example.com:443/path', 'http://example.com:443/path', 443),
+        ('https://example.com:80/path', 'https://example.com:80/path', 80),
+        ('ftp://example.com:80/path', 'ftp://example.com:80/path', 80),
+        ('ftp://example.com:443/path', 'ftp://example.com:443/path', 443),
+        ('s3://bucket:443/path', 's3://bucket:443/path', 443),
+    ],
+)
+def test_host_url_model_ports(input_url: str, expected_url: str, expected_port: int) -> None:
+    url = HostUrlModel(input_url)
+
+    assert url.port == expected_port
+    assert str(url) == url.to_data() == expected_url
+    assert str(HostUrlModel(str(url))) == expected_url
+
+
+@pytest.mark.parametrize(
+    ('input_url', 'scheme', 'expected_port', 'expected_url'),
+    [
+        ('http://example.com/path', 'https', 443, 'https://example.com/path'),
+        ('https://example.com/path', 'ftp', 21, 'ftp://example.com/path'),
+        ('ftp://example.com/path', 'ws', 80, 'ws://example.com/path'),
+        ('ws://example.com/path', 'wss', 443, 'wss://example.com/path'),
+        ('wss://example.com/path', 's3', None, 's3://example.com/path'),
+        ('s3://example.com/path', 'http', 80, 'http://example.com/path'),
+        ('http://example.com:443/path', 'ftp', 443, 'ftp://example.com:443/path'),
+        ('s3://example.com:80/path', 'https', 80, 'https://example.com:80/path'),
+    ],
+)
+def test_host_url_model_port_on_scheme_change(
+    input_url: str, scheme: str, expected_port: int | None, expected_url: str
+) -> None:
+    url = HostUrlModel(input_url)
+    url.scheme = scheme
+
+    assert url.port == expected_port
+    assert str(url) == url.to_data() == expected_url
+
+
+@pytest.mark.parametrize(
+    ('input_url', 'expected_port'),
+    [('http://example.com:443/path', 443), ('https://example.com:80/path', 80)],
+)
+def test_http_url_model_preserves_non_default_ports(input_url: str, expected_port: int) -> None:
+    url = HttpUrlModel(input_url)
+
+    assert url.port == expected_port
+    assert str(url) == input_url
+
+
+@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
+def test_http_url_model_invalid_scheme_change_restores_port() -> None:
+    url = HttpUrlModel('http://example.com/path')
+
+    with pytest.raises(ValidationError):
+        url.scheme = 'ftp'
+
+    assert url.scheme == 'http'
+    assert url.port == 80
+    assert str(url) == 'http://example.com/path'
+
+
+def test_url_dataclass_model_port_on_scheme_change() -> None:
+    url = UrlDataclassModel(scheme='http', host='example.com', port=80)
+    url.scheme = 'HTTPS'
+
+    assert url.port == 443
+    assert str(url) == 'https://example.com/'
+
+
 @pytest.mark.usefixtures('host_url_model_cls')
 def test_host_url_model_default_localhost():
     url = HttpUrlModel()
