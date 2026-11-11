@@ -1,5 +1,5 @@
 import asyncio
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable, Collection, Mapping
 from dataclasses import dataclass
 from typing import Annotated, cast
 
@@ -329,10 +329,24 @@ def _create_biosamplevault_app(
     return _create_service_app({'/': _register_sample})
 
 
-def _create_file_transfer_app(response_delay_secs: float) -> web.Application:
+def _create_file_transfer_app(
+    failing_source_uris: Collection[str],
+    response_delay_secs: float,
+) -> web.Application:
     async def _transfer_file(request: web.Request) -> web.Response:
+        transfer_request = await request.json()
         await asyncio.sleep(response_delay_secs)
-        return web.json_response({'status': 'completed', 'error': None})
+        if transfer_request['source_uri'] in failing_source_uris:
+            return web.json_response(
+                {
+                    'status': 'failed',
+                    'target_uri': transfer_request['target_uri'],
+                    'error': 'Source file not found',
+                }
+            )
+        return web.json_response(
+            {'status': 'completed', 'target_uri': transfer_request['target_uri'], 'error': None}
+        )
 
     return _create_service_app({'/': _transfer_file})
 
@@ -373,5 +387,21 @@ async def biosamplevault(aiohttp_server: AiohttpServer) -> MockService:
 
 
 @pytest.fixture(scope='function')
-async def file_transfer(aiohttp_server: AiohttpServer) -> MockService:
-    return MockService(await aiohttp_server(_create_file_transfer_app(response_delay_secs=0.05)))
+def failing_source_uris() -> Collection[str]:
+    """Source URIs of the files that the mock file-transfer service fails to transfer."""
+    return ()
+
+
+@pytest.fixture(scope='function')
+async def file_transfer(
+    aiohttp_server: AiohttpServer,
+    failing_source_uris: Annotated[Collection[str], pytest.fixture],
+) -> MockService:
+    return MockService(
+        await aiohttp_server(
+            _create_file_transfer_app(
+                failing_source_uris=failing_source_uris,
+                response_delay_secs=0.05,
+            )
+        )
+    )

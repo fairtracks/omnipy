@@ -384,6 +384,7 @@ class FileTransferRequestSchema(pyd.BaseModel):
 
 class FileTransferResponseSchema(pyd.BaseModel):
     status: Literal['completed', 'failed']
+    target_uri: FtpUrlModel | None = None
     error: str | None = None
 
 
@@ -433,4 +434,33 @@ class SampleAndMetadataToBioSampleVaultSubmissionMapper(
             specimen_type=sample.specimen_type,
             geolocation=sample.collection_site,
             sampling_date=sample.sampled_at,
+        )
+
+
+@mimics(FileTransferRequestSchema)
+class FileAndMetadataToFileTransferRequestMapper(
+    ConverterModel[
+        Model[tuple[SubmissionFileModel, SubmissionMetadataModel, HostUrlModel]],
+        FileTransferRequestSchema,
+    ]
+):
+    """Converts a file, the metadata and the staging URL into a file transfer request."""
+
+    @classmethod
+    def _convert(
+        cls, data: Model[tuple[SubmissionFileModel, SubmissionMetadataModel, HostUrlModel]]
+    ) -> FileTransferRequestSchema:
+        file, metadata, staging_url = data
+        target_uri = FtpUrlModel(staging_url)
+        (
+            target_uri.path
+            // metadata.broker_id
+            // metadata.local_submission_id
+            // file.local_sample_id
+            // file.file_name
+        )
+        return FileTransferRequestSchema(
+            username=metadata.broker_id,
+            source_uri=file.source_storage_uri,
+            target_uri=target_uri,
         )

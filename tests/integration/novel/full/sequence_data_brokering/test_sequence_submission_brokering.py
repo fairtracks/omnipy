@@ -6,7 +6,7 @@ from omnipy.shared.enums.job import RunState
 
 from .....engine.helpers.functions import assert_job_state
 from .conftest import JsonRequest, MockService, ReceivedRequests
-from .flows import broker_sequence_submission_flow
+from .flows import broker_sequence_submission_flow, coordinate_external_file_transfer
 from .models import SubmissionModel
 
 
@@ -116,3 +116,39 @@ async def test_sequence_submission_brokering(
     print()
     print('Completed submission:')
     completed_submission.full(width=160)
+
+
+_FAILING_SOURCE_URI = 's3://lab-sequences/sub-2026-alpha/sample-b_R2.fastq.gz'
+
+
+@pytest.mark.usefixtures('runtime_all_engines')
+@pytest.mark.parametrize('failing_source_uris', [(_FAILING_SOURCE_URI,)])
+async def test_failed_file_transfer_is_recorded_without_staging_uri(
+    samples: Annotated[list[dict[str, str]], pytest.fixture],
+    files: Annotated[list[dict[str, str]], pytest.fixture],
+    metadata: Annotated[dict[str, str], pytest.fixture],
+    services: Annotated[dict[str, dict[str, dict[str, str]]], pytest.fixture],
+) -> None:
+    submission = SubmissionModel(
+        samples=samples,
+        files=files,
+        metadata=metadata,
+        logistics={'services': services},
+    )
+
+    transfer_flow = coordinate_external_file_transfer.apply()
+    transferred_submission = await transfer_flow(submission)
+
+    for file in transferred_submission.files.values():
+        if str(file.source_storage_uri) == _FAILING_SOURCE_URI:
+            assert file.transfer_status == 'failed'
+            assert file.error == 'Source file not found'
+            assert file.staging_storage_uri is None
+        else:
+            assert file.transfer_status == 'completed'
+            assert file.error is None
+            assert file.staging_storage_uri is not None
+
+    assert transferred_submission.logistics.status.file_transfer_status == 'failed'
+
+    assert_job_state(transfer_flow, [RunState.FINISHED])

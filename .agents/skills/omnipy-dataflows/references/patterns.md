@@ -813,8 +813,9 @@ settings in the submission's `logistics` member, which keeps the broker's settin
 and state apart from the content sent to the Sequence Depot. Each service has a
 `HostUrlDataset` of its URLs by name, so the tasks post to complete URLs instead of
 building them from a base URL. The Sequence Depot URLs also include the FTPS
-`staging` area, below which the per-file target URLs are derived from the
-submission data. The defaults are the URLs in
+`staging` area. `FileAndMetadataToFileTransferRequestMapper` derives the per-file
+target URI below it, and the task records the URI returned by the transfer service as
+`staging_storage_uri` only when the transfer has completed. The defaults are the URLs in
 production, and the test replaces them with those of the mock services. The explode
 task passes `services` on to the per-item tasks, like the shared `metadata`. Use the
 returned response rather than depending on the service mutating and returning the same

@@ -4,9 +4,8 @@ from omnipy.util.helpers import resolve
 
 from .models import (
     BioSampleVaultSampleSubmissionSchema,
-    FileTransferRequestSchema,
+    FileAndMetadataToFileTransferRequestMapper,
     FileTransferResponseSchema,
-    FtpUrlModel,
     SampleAndMetadataToBioSampleVaultSubmissionMapper,
     SeqDepotPresubmitSchema,
     SeqDepotSubmissionPayloadModel,
@@ -85,23 +84,6 @@ async def register_all_samples_with_biosamplevault(
     return sample
 
 
-def _create_staging_uri(
-    file: SubmissionFileModel,
-    metadata: SubmissionMetadataModel,
-    services: ServicesModel,
-) -> FtpUrlModel:
-    staging_uri = FtpUrlModel(services.seq_depot.urls['staging'])
-    # The local sample id keeps files with the same name from different samples apart
-    (
-        staging_uri.path
-        // metadata.broker_id
-        // metadata.local_submission_id
-        // file.local_sample_id
-        // file.file_name
-    )
-    return staging_uri
-
-
 @TaskTemplate(iterate_over_data_files=True)
 async def transfer_all_files(
     dataset: SubmissionFileModel,
@@ -110,20 +92,17 @@ async def transfer_all_files(
     services: ServicesModel,
 ) -> SubmissionFileModel:
     file = dataset
-    file.staging_storage_uri = _create_staging_uri(file, metadata, services)
-    request = FileTransferRequestSchema(
-        username=metadata.broker_id,
-        source_uri=file.source_storage_uri,
-        target_uri=file.staging_storage_uri,
-    )
+    staging_url = services.seq_depot.urls['staging']
     response = await resolve(
-        Model[FileTransferRequestSchema](request).post(
+        FileAndMetadataToFileTransferRequestMapper((file, metadata, staging_url)).post(
             services.file_transfer.urls['transfers'],
             response_cls=Model[FileTransferResponseSchema],
         )
     )
     file.transfer_status = response.status
     file.error = response.error
+    if response.status == 'completed':
+        file.staging_storage_uri = response.target_uri
 
     return file
 
