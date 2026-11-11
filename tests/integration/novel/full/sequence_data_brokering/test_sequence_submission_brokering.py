@@ -2,11 +2,10 @@ from typing import Annotated
 
 import pytest
 
-from omnipy.components.remote.models import HttpUrlModel
 from omnipy.shared.enums.job import RunState
 
 from .....engine.helpers.functions import assert_job_state
-from .conftest import JsonRequest, ReceivedRequests
+from .conftest import JsonRequest, MockService, ReceivedRequests
 from .flows import broker_sequence_submission_flow
 from .models import (
     SubmissionFilesDataset,
@@ -76,12 +75,9 @@ async def test_sequence_submission_brokering(
     samples: Annotated[dict[str, dict[str, str]], pytest.fixture],
     files: Annotated[dict[str, dict[str, str]], pytest.fixture],
     metadata: Annotated[dict[str, str], pytest.fixture],
-    sequence_depot_url: Annotated[HttpUrlModel, pytest.fixture],
-    biosample_vault_url: Annotated[HttpUrlModel, pytest.fixture],
-    file_transfer_url: Annotated[HttpUrlModel, pytest.fixture],
-    sequence_depot_requests: Annotated[ReceivedRequests, pytest.fixture],
-    biosample_vault_requests: Annotated[ReceivedRequests, pytest.fixture],
-    file_transfer_requests: Annotated[ReceivedRequests, pytest.fixture],
+    sequence_depot: Annotated[MockService, pytest.fixture],
+    biosample_vault: Annotated[MockService, pytest.fixture],
+    file_transfer: Annotated[MockService, pytest.fixture],
     expected_sequence_depot_submission_payload: Annotated[dict[str, object], pytest.fixture],
     expected_sequence_depot_requests: Annotated[ReceivedRequests, pytest.fixture],
     expected_biosample_vault_requests: Annotated[ReceivedRequests, pytest.fixture],
@@ -96,18 +92,18 @@ async def test_sequence_submission_brokering(
     brokering_flow = broker_sequence_submission_flow.apply()
     completed_submission = await brokering_flow(
         submission,
-        sequence_depot_url=sequence_depot_url,
-        biosample_vault_url=biosample_vault_url,
-        file_transfer_url=file_transfer_url,
+        sequence_depot_url=sequence_depot.url,
+        biosample_vault_url=biosample_vault.url,
+        file_transfer_url=file_transfer.url,
     )
 
     assert completed_submission.to_data() == expected_sequence_depot_submission_payload
 
-    assert sequence_depot_requests == expected_sequence_depot_requests
-    assert _sorted_by(biosample_vault_requests, 'local_sample_alias') == (
+    assert sequence_depot.requests == expected_sequence_depot_requests
+    assert _sorted_by(biosample_vault.requests, 'local_sample_alias') == (
         expected_biosample_vault_requests
     )
-    assert _sorted_by(file_transfer_requests, 'source_uri') == expected_file_transfer_requests
+    assert _sorted_by(file_transfer.requests, 'source_uri') == expected_file_transfer_requests
 
     assert_job_state(brokering_flow, [RunState.FINISHED])
 

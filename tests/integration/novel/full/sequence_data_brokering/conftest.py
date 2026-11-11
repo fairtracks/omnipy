@@ -1,5 +1,6 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Mapping
+from dataclasses import dataclass
 from typing import Annotated
 
 from aiohttp import web
@@ -301,73 +302,42 @@ def _create_file_transfer_app(response_delay_secs: float) -> web.Application:
     return _create_service_app({'/transfers': _transfer_file})
 
 
-def _service_url(service: TestServer) -> HttpUrlModel:
-    return HttpUrlModel(str(service.make_url('/')))
+@dataclass(frozen=True)
+class MockService:
+    """A running mock service, with the request bodies it has received so far."""
 
+    server: TestServer
 
-def _received_requests(service: TestServer) -> ReceivedRequests:
-    return service.app[_received_requests_key]
+    @property
+    def url(self) -> HttpUrlModel:
+        return HttpUrlModel(str(self.server.make_url('/')))
+
+    @property
+    def requests(self) -> ReceivedRequests:
+        return self.server.app[_received_requests_key]
 
 
 @pytest.fixture(scope='function')
-async def sequence_depot_service(aiohttp_server: AiohttpServer) -> TestServer:
-    return await aiohttp_server(
-        _create_sequence_depot_app(submission_id='SQD:4021372983', response_delay_secs=0.01)
-    )
-
-
-@pytest.fixture(scope='function')
-async def biosample_vault_service(aiohttp_server: AiohttpServer) -> TestServer:
-    return await aiohttp_server(
-        _create_biosample_vault_app(
-            sample_ids={'sample-a': 'BSV:80907461', 'sample-b': 'BSV:80907462'},
-            response_delay_secs=0.01,
+async def sequence_depot(aiohttp_server: AiohttpServer) -> MockService:
+    return MockService(
+        await aiohttp_server(
+            _create_sequence_depot_app(submission_id='SQD:4021372983', response_delay_secs=0.01)
         )
     )
 
 
 @pytest.fixture(scope='function')
-async def file_transfer_service(aiohttp_server: AiohttpServer) -> TestServer:
-    return await aiohttp_server(_create_file_transfer_app(response_delay_secs=0.05))
+async def biosample_vault(aiohttp_server: AiohttpServer) -> MockService:
+    return MockService(
+        await aiohttp_server(
+            _create_biosample_vault_app(
+                sample_ids={'sample-a': 'BSV:80907461', 'sample-b': 'BSV:80907462'},
+                response_delay_secs=0.01,
+            )
+        )
+    )
 
 
 @pytest.fixture(scope='function')
-def sequence_depot_url(
-    sequence_depot_service: Annotated[TestServer, pytest.fixture],
-) -> HttpUrlModel:
-    return _service_url(sequence_depot_service)
-
-
-@pytest.fixture(scope='function')
-def biosample_vault_url(
-    biosample_vault_service: Annotated[TestServer, pytest.fixture],
-) -> HttpUrlModel:
-    return _service_url(biosample_vault_service)
-
-
-@pytest.fixture(scope='function')
-def file_transfer_url(
-    file_transfer_service: Annotated[TestServer, pytest.fixture],
-) -> HttpUrlModel:
-    return _service_url(file_transfer_service)
-
-
-@pytest.fixture(scope='function')
-def sequence_depot_requests(
-    sequence_depot_service: Annotated[TestServer, pytest.fixture],
-) -> ReceivedRequests:
-    return _received_requests(sequence_depot_service)
-
-
-@pytest.fixture(scope='function')
-def biosample_vault_requests(
-    biosample_vault_service: Annotated[TestServer, pytest.fixture],
-) -> ReceivedRequests:
-    return _received_requests(biosample_vault_service)
-
-
-@pytest.fixture(scope='function')
-def file_transfer_requests(
-    file_transfer_service: Annotated[TestServer, pytest.fixture],
-) -> ReceivedRequests:
-    return _received_requests(file_transfer_service)
+async def file_transfer(aiohttp_server: AiohttpServer) -> MockService:
+    return MockService(await aiohttp_server(_create_file_transfer_app(response_delay_secs=0.05)))
