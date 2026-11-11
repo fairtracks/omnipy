@@ -56,8 +56,8 @@ tutorial without a separate text:
 - A task names the URL and the mapped request in variables, then makes the call,
   then applies the response, each group separated by a blank line.
 - A derived value, such as a staging path built from several fields, is one
-  expression, with a comment on the design choice (e.g. why the sample id is part
-  of the path) rather than on what the code does.
+  expression, e.g. a chain of `//` on the URL path, rather than a sequence of
+  statements.
 - Comments explain a non-obvious reason, such as why a guard is needed, and are
   omitted where the names already say what happens.
 
