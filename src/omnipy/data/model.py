@@ -1253,6 +1253,9 @@ class Model(  # type: ignore[misc]
             ...     sample = submission.samples.pop('sample-a')
             ...     sample.local_sample_alias = 'sample-c'
             ...     submission.samples['sample-c'] = sample
+            ...     for file in submission.files.values():
+            ...         if file.local_sample_alias == 'sample-a':
+            ...             file.local_sample_alias = 'sample-c'
 
         Yields:
             The model itself.

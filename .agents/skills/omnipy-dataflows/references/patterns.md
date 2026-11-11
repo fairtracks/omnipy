@@ -453,7 +453,8 @@ submission.metadata = metadata
 
 For changes in several steps, `with model.updating():` reruns the validators of the
 Model once when the block ends. Changes inside the block can pass through states
-breaking its rules, as when renaming a Dataset key together with the matching field.
+breaking its rules. Renaming a sample changes its Dataset key, its alias and the
+references from its files, and the submission is only valid again after all three.
 In interactive mode, the Model is reverted to its state at the start of the block if
 validation fails or the block raises:
 
@@ -462,6 +463,9 @@ with submission.updating():
     sample = submission.samples.pop('sample-a')
     sample.local_sample_alias = 'sample-c'
     submission.samples['sample-c'] = sample
+    for file in submission.files.values():
+        if file.local_sample_alias == 'sample-a':
+            file.local_sample_alias = 'sample-c'
 ```
 
 `validate_content()` reruns the validators of a parent Model directly. Datasets have
