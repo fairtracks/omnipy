@@ -57,11 +57,8 @@ async def allocate_seq_depot_submission_id(
             response_cls=Model[SeqDepotPresubmitSchema],
         )
     )
-    metadata = submission.metadata
-    metadata.seq_depot_submission_id = response.seq_depot_submission_id
-
-    # Assigning through the submission reruns its validators, deriving the status
-    submission.metadata = metadata
+    with submission.updating():
+        submission.metadata.seq_depot_submission_id = response.seq_depot_submission_id
 
     return submission
 

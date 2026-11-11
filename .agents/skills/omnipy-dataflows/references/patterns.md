@@ -443,19 +443,18 @@ assert inner[1].a == 4
 Validation runs at the Model receiving a change. Changing a nested Model in place
 validates that Model, but does not rerun the validators of its parents: neither the
 rules of a parent Model or Dataset, nor the fields a parent derives with validators.
-When those depend on the changed data, make the change through the parent, for
-example by assigning the changed member back. This is how the brokering example's
-allocation task lets the submission derive its status:
+When those depend on the changed data, make the change through the parent: assign
+the changed member back, or make the change inside `with model.updating():`, which
+reruns the validators of the Model when the block ends. This is how the brokering
+example's allocation task lets the submission derive its status:
 
 ```python
-metadata = submission.metadata
-metadata.seq_depot_submission_id = request_return.seq_depot_submission_id
-submission.metadata = metadata
+with submission.updating():
+    submission.metadata.seq_depot_submission_id = response.seq_depot_submission_id
 ```
 
-For changes in several steps, `with model.updating():` reruns the validators of the
-Model once when the block ends. Changes inside the block can pass through states
-breaking its rules. Renaming a sample changes its local id and the references from
+The block can also group changes in several steps, validating the Model once when it
+ends. Changes inside the block can pass through states breaking its rules. Renaming a sample changes its local id and the references from
 its files, and the submission is only valid again after both. The Dataset key
 follows the local id when the block ends.
 In interactive mode, the Model is reverted to its state at the start of the block if

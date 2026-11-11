@@ -167,7 +167,8 @@ into design rules.
 - Tasks record authoritative operation results. When deriving domain status from
   those results, put the validator on the Model that contains its inputs.
   Changes through that Model's interface rerun its validators, maintaining the
-  derived status; assign nested inputs changed in place back through it. Readiness to
+  derived status; change nested inputs in place inside `with model.updating():` or
+  assign them back through it. Readiness to
   submit does not establish service acceptance: record that outcome only after
   acknowledgement. See the
   [status examples](references/patterns.md#status-from-facts-and-acknowledgements).
