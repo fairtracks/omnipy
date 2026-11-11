@@ -172,6 +172,9 @@ plugins:
           show_symbol_type_toc: true
           filters:
             - "!^_"
+            # Model imports type-only facades such as Model_str, which inherit PlainModel.
+            # Exclude them to prevent recursive inherited-member rendering in PlainModel.
+            - "!^Model_"
             - "__init__"
             - "!^__all__"
             - "!^pyd"
