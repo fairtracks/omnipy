@@ -280,6 +280,31 @@ settings have an obvious place. Secrets handling is a missing Omnipy feature, to
 be designed separately: until then, do not store credentials in dataflow data,
 which is printed, compared and possibly persisted with job outputs.
 
+Moving the status into `logistics` exposed that Models of Pydantic models revalidated
+their whole content on every attribute read, converting it to raw data and parsing
+it again. Every read thus replaced all nested objects, disconnecting references to
+nested Models taken earlier, and cost time proportional to the content (about 0.1 ms
+per Dataset item per read). The revalidation predates the wrapping of nested
+Pydantic models in Omnipy Models, which now validate their own changes. Its
+remaining effect was to rerun the validators of the parent after nested in-place
+changes, which no other Model or Dataset does. The user chose to remove it, so that
+Models of Pydantic models behave like other Models: a change validates the Model
+receiving it, and the validators of parents rerun only on changes through the parent
+or explicit validation.
+
+Rerunning the validators of the parents is instead planned at job boundaries, as a
+job modifier. It must rerun the parents' own validators rather than only accept
+already validated nested Models, and it must validate inputs as well as outputs, to
+also catch changes made outside of jobs. Derived fields are planned as
+`@computed_field`s with Pydantic v2, computed on access. Pydantic v2 does not itself
+rerun parent validators after nested changes, so it does not remove the need for the
+modifier. Propagating validation from changed nested Models to their parents was
+considered and set aside: it requires links from nested Models to possibly several
+parents, revalidates all ancestors on every change (quadratic in loops over large
+Datasets), and interacts with the snapshot machinery. Its remaining benefit, errors
+at the line of the change rather than at the job boundary, mainly matters in
+interactive use. Datasets currently have no `validate_content()` method.
+
 ## Water-sample terminology and introductory scope
 
 `tests/integration/novel/full/water_sample_harmonization/models.py` defines

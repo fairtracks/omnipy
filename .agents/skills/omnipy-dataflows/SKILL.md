@@ -125,7 +125,10 @@ into design rules.
 - Rely on Model validation when changing data through its mimicked interface.
   Normal updates maintain valid data automatically, while reuse of already
   validated Models avoids unnecessary work. Agents generally do not need to track
-  validation timing or add manual revalidation. Declare stored Models between
+  validation timing or add manual revalidation. One exception: a change validates
+  the Model receiving it, not its parents. When a rule or derived field of a parent
+  depends on nested data changed in place, assign the changed member back through
+  the parent. Declare stored Models between
   nested mutable containers; Pydantic-record wrapping supplies them recursively.
   See the
   [mutation examples](references/patterns.md#validation-through-model-boundaries).
@@ -162,8 +165,8 @@ into design rules.
   the reference for defining-module imports and supported inputs.
 - Tasks record authoritative operation results. When deriving domain status from
   those results, put the validator on the Model that contains its inputs.
-  Changes to wrapped data through the Model interface trigger
-  validation, maintaining derived status at that Model boundary. Readiness to
+  Changes through that Model's interface rerun its validators, maintaining the
+  derived status; assign nested inputs changed in place back through it. Readiness to
   submit does not establish service acceptance: record that outcome only after
   acknowledgement. See the
   [status examples](references/patterns.md#status-from-facts-and-acknowledgements).

@@ -372,7 +372,8 @@ Rely on Model validation in normal dataflow code. Supported methods, item
 assignment, and attribute assignment through the Model interface maintain valid
 data automatically. The design avoids unnecessary validation by reusing already
 validated Models. Agents generally do not need to track when validation runs or
-add manual revalidation steps.
+add manual revalidation steps, except for the validators of parents after in-place
+changes to nested Models, described at the end of this section.
 
 For example, appending through a list Model validates and coerces the new element:
 
@@ -436,6 +437,31 @@ assert isinstance(inner, om.Model)
 inner.append({'a': '4', 'b': 123})
 assert inner[1].a == 4
 ```
+
+Validation runs at the Model receiving a change. Changing a nested Model in place
+validates that Model, but does not rerun the validators of its parents: neither the
+rules of a parent Model or Dataset, nor the fields a parent derives with validators.
+When those depend on the changed data, make the change through the parent, for
+example by assigning the changed member back. This is how the brokering example's
+allocation task lets the submission derive its status:
+
+```python
+metadata = submission.metadata
+metadata.sequence_depot_submission_id = request_return.sequence_depot_submission_id
+submission.metadata = metadata
+```
+
+`validate_content()` reruns the validators of a parent Model; Datasets have no such
+method, so assign the changed item. The behavior is pinned by
+`test_parent_validators_rerun_only_on_validation_of_or_changes_through_the_parent`
+and `test_derived_fields_of_pydantic_model_update_only_on_changes_through_the_parent`
+in `tests/data/test_model.py`, and
+`test_dataset_validators_rerun_only_on_changes_through_the_dataset` in
+`tests/data/test_dataset.py`. Validation at job boundaries, rerunning the validators
+of the parents of job inputs and outputs, is planned as a job modifier; see the
+known-issue test `test_job_boundaries_validate_parents_of_changed_nested_models_known_issue`
+in `tests/compute/test_task.py`. With Pydantic v2, `@computed_field` is planned for
+derived fields, which removes the need to rerun validators to update them.
 
 These patterns are sufficient for ordinary dataflow development. The details in
 [Troubleshooting unexpected validation behavior](#troubleshooting-unexpected-validation-behavior)
@@ -1383,10 +1409,12 @@ with no access to them. Iterated tasks update and return individual items; the
 collector assigns the returned Dataset to the aggregate. This separates per-item
 outcomes from the aggregate summary without a shared status counter in async tasks.
 
-Use normal Model operations for these updates. Changing wrapped data through its
-Model interface triggers validation at that boundary, maintaining computed status;
-no routine `validate_content()` call, serialization/reconstruction, or separate
-"refresh status" task is needed. Keep mutable nested containers within the
+Use normal Model operations for these updates. Changing wrapped data through the
+interface of the Model holding the status validators reruns them, maintaining
+computed status. Changing a nested member in place does not; assign it back through
+that Model, as described under
+[Validation through Model boundaries](#validation-through-model-boundaries).
+No serialization/reconstruction or separate "refresh status" task is needed. Keep mutable nested containers within the
 [Model boundaries](#validation-through-model-boundaries) already described.
 Derivation should be repeatable and depend on the current facts, including when
 an identifier is absent or an outcome changes. Validators must not perform service
