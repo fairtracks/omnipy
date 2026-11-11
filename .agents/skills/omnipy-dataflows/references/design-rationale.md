@@ -303,7 +303,9 @@ considered and set aside: it requires links from nested Models to possibly sever
 parents, revalidates all ancestors on every change (quadratic in loops over large
 Datasets), and interacts with the snapshot machinery. Its remaining benefit, errors
 at the line of the change rather than at the job boundary, mainly matters in
-interactive use. Datasets currently have no `validate_content()` method.
+interactive use. Datasets currently have no `validate_content()` method. The
+[investigation summary](../../../../docs/agents/technical/explorations/2026-11-11-nested-model-validation-and-parent-validators.md)
+records the findings, alternatives, decisions and possible future improvements.
 
 ## Water-sample terminology and introductory scope
 
