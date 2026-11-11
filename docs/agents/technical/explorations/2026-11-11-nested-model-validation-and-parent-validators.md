@@ -108,8 +108,8 @@ It does not remove the copies made by Omnipy's own validation either.
   need the parent links of B. References taken before a real change still go stale.
 - **Grouped update (`with model.updating(): ...`).** The parent validates once when the block ends
   and rolls back on failure. Gives errors close to the change and atomic changes passing through
-  invalid intermediate states (e.g. renaming a sample changes both its Dataset key and alias), at
-  the cost of one validation of the parent. Explicit, so code not using it gets no earlier checking.
+  invalid intermediate states (e.g. renaming a sample changes both its local id and the references
+  from its files), at the cost of one validation of the parent. Explicit, so code not using it gets no earlier checking.
 
 ## Decisions
 

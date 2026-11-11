@@ -235,14 +235,16 @@ can remain a separate attribute; receiving it does not change the chosen primary
 key of the internal record.
 
 In the submission example, `local_sample_id` is the sample's primary key. The
-[input and expected-output fixtures](../../../../tests/integration/novel/full/sequence_data_brokering/conftest.py)
-use the lowercase Dataset key `sample-a` while retaining raw input
-`local_sample_id='Sample-A'`. Normalization occurs in the item schema, and
-validators on `SubmissionSchema` require Dataset keys to match the normalized
-primary-key fields. This makes agreement part of the input contract. The
+[input fixtures](../../../../tests/integration/novel/full/sequence_data_brokering/conftest.py)
+are lists of records with raw ids such as `local_sample_id='Sample-A'`. The
+`samples` and `files` fields of `SubmissionSchema` are `PrimaryKeyDatasetModel`
+subclasses (see below), so the item schema normalizes each id and the Dataset is
+keyed by the result, e.g. `sample-a`. Keys are derived rather than written twice
+in the input. The
 [integration test](../../../../tests/integration/novel/full/sequence_data_brokering/test_sequence_submission_brokering.py)
-constructs the Model through that validation and compares the full enriched output.
-Retain mixed-case raw ids so the scenario exercises normalization.
+constructs the Model through that validation and compares the full enriched output,
+keyed by the normalized ids. Retain mixed-case raw ids so the scenario exercises
+normalization.
 
 The [table primary-key specification](../../../../docs/superpowers/specs/2026-10-16-table-model-architecture-and-conversions.md#primary-keys)
 extends this concept to tables. It defines deterministic serialization, retained
@@ -271,7 +273,10 @@ from [`omnipy.data.primary_key`](../../../../src/omnipy/data/primary_key.py).
 The converter supports composite keys and rejects serialized-key collisions
 before constructing the result. It recomputes input Dataset keys without changing
 the source mapping; it does not continuously maintain keys after conversion.
-Dict-valued item Models and direct iterator input are part of the planned
+As a field of a containing Model, keys are recomputed whenever that Model
+validates, e.g. on assignment or at the end of `updating()`. Decorate a subclass
+with `@mimics(...)` of the corresponding Dataset class for static typing, as
+`SubmissionSamplesByIdModel` does. Dict-valued item Models and direct iterator input are part of the planned
 Dataset-native feature, not guarantees of this converter. See the
 [component tests](../../../../tests/components/general/test_models.py) for current behavior.
 
@@ -283,13 +288,10 @@ include:
   the local primary key. `SubmissionFileSchema` constrains file roles, checksum
   format, and URL types; `_extract_file_name_from_source_storage_uri` derives the
   filename within that record.
-- `SubmissionSchema._sample_dataset_keys_match_local_sample_ids` and
-  `_file_dataset_keys_match_local_file_ids` validate key/content agreement for samples
-  and files. These top-level validators stand in for future general Dataset
-  primary-key support; keep that TODO separate from remote-key validation. Their
-  validation boundary is the aggregate. For reusable Dataset-local invariants,
-  prefer validators on the Dataset subclass; see
-  [Dataset-level validation](#dataset-level-validation).
+- `SubmissionSamplesByIdModel` and `SubmissionFilesByIdModel` key samples and
+  files by their normalized local ids, keeping keys and contents in agreement.
+  For other reusable Dataset-local invariants, prefer validators on the Dataset
+  subclass; see [Dataset-level validation](#dataset-level-validation).
 - `SubmissionSchema._file_sample_ids_exist` has access to both sample and file
   Datasets and checks that each file's normalized reference identifies a sample.
 - `SubmissionSchema._samples_have_one_read1_and_one_read2` checks the paired-file
@@ -453,16 +455,15 @@ submission.metadata = metadata
 
 For changes in several steps, `with model.updating():` reruns the validators of the
 Model once when the block ends. Changes inside the block can pass through states
-breaking its rules. Renaming a sample changes its Dataset key, its local id and the
-references from its files, and the submission is only valid again after all three.
+breaking its rules. Renaming a sample changes its local id and the references from
+its files, and the submission is only valid again after both. The Dataset key
+follows the local id when the block ends.
 In interactive mode, the Model is reverted to its state at the start of the block if
 validation fails or the block raises:
 
 ```python
 with submission.updating():
-    sample = submission.samples.pop('sample-a')
-    sample.local_sample_id = 'sample-c'
-    submission.samples['sample-c'] = sample
+    submission.samples['sample-a'].local_sample_id = 'sample-c'
     for file in submission.files.values():
         if file.local_sample_id == 'sample-a':
             file.local_sample_id = 'sample-c'

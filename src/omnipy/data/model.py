@@ -1250,9 +1250,7 @@ class Model(  # type: ignore[misc]
 
         Example:
             >>> with submission.updating():  # doctest: +SKIP
-            ...     sample = submission.samples.pop('sample-a')
-            ...     sample.local_sample_id = 'sample-c'
-            ...     submission.samples['sample-c'] = sample
+            ...     submission.samples['sample-a'].local_sample_id = 'sample-c'
             ...     for file in submission.files.values():
             ...         if file.local_sample_id == 'sample-a':
             ...             file.local_sample_id = 'sample-c'
