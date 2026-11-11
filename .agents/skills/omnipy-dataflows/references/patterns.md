@@ -791,12 +791,16 @@ place of the request model. The task posts it directly with `.post()`, parsing t
 response with the service's response schema:
 
 ```python
+samples_api_url = services.biosamplevault.urls['samples']
+sample_submission = SampleAndMetadataToBioSampleVaultSubmissionMapper((sample, metadata))
+
 response = await resolve(
-    SampleAndMetadataToBioSampleVaultSubmissionMapper((sample, metadata)).post(
-        services.biosamplevault.urls['samples'],
+    sample_submission.post(
+        samples_api_url,
         response_cls=Model[BioSampleVaultSampleSubmissionSchema],
     )
 )
+
 sample.biosamplevault_sample_id = response.biosamplevault_sample_id
 ```
 
