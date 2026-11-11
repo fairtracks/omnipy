@@ -8,13 +8,13 @@ Read the sections relevant to the current design decision:
 
 | Decision | Sections |
 | --- | --- |
-| Data shape and identity | [Structures and batches](#choose-data-structures-by-their-role), [constrained fields](#constrained-field-contracts), [primary keys and relationships](#identity-and-relationship-contracts), [Dataset validators](#dataset-level-validation), [mutation validation](#validation-through-model-boundaries) |
+| Data shape and identity | [Structures and batches](#choose-data-structures-by-their-role), [constrained fields](#constrained-field-contracts), [primary keys and relationships](#identity-and-relationship-contracts), [validators reading other fields](#validators-depending-on-other-fields), [Dataset validators](#dataset-level-validation), [mutation validation](#validation-through-model-boundaries) |
 | Data reuse and boundaries | [Generic Models/Datasets](#reusable-models-and-datasets), [conversions](#model-transformations), [external APIs](#external-api-contracts) |
 | Static interfaces and HTTP ingestion | [Runtime mimicking and typing](typing.md), [paging URLs and Dataset loading](remote-loading.md) |
 | Execution and composition | [Templates and modifiers](#reusable-jobs-templates-and-modifiers), [routing](#routing-rules-that-matter), [callable types](#callable-types-and-composed-flows), [iteration and ownership](#dataset-iteration-and-ownership) |
 | State and completion | [Failure inspection](#inspect-current-failure-and-pending-results), [status from facts and acknowledgements](#status-from-facts-and-acknowledgements) |
 | Implementation | [Catalog example](#example-publish-a-catalog), [component structure and naming](structure-and-naming.md) |
-| Review and verification | [Readability](#readable-contracts-and-documentation-reuse), [narrative tests](#validation-and-narrative-tests), [source map](#source-map) |
+| Review and verification | [Readability](#readable-contracts-and-documentation-reuse), [narrative tests](#validation-and-narrative-tests), [mock services](#mock-services-and-failure-scenarios), [source map](#source-map) |
 
 ## Readable contracts and documentation reuse
 
@@ -37,6 +37,29 @@ extracting it into a function, fixture, task, or child flow appropriate to its
 role. Keep the main scenario readable at one level of abstraction. Do not split
 every assertion into a helper or hide the contract in an opaque `check_everything`
 function; the reader should still see what is executed and what is verified.
+
+Conventions from the brokering example, which make the modules readable as a
+tutorial without a separate text:
+
+- The module docstring of `models.py` explains abbreviations used in names, such
+  as `SeqDepot` for the Sequence Depot. Introduce an abbreviation only for a long
+  name used in many places, and use it consistently.
+- Schemas and reusable classes carry a one-line docstring saying what they hold
+  and where their contents come from, e.g. "Samples keyed by their local id, from
+  a list of samples or a Dataset."
+- Fields with different roles are separated by blank lines and a comment, e.g.
+  "Settings, provided as input and only read by the dataflow" and "State, derived
+  from the submission content as the dataflow proceeds" in `LogisticsSchema`.
+- `tasks.py` groups its task templates under comment headings, e.g. "Helper task
+  templates" for extraction and collection and "Core task templates" for the
+  operations.
+- A task names the URL and the mapped request in variables, then makes the call,
+  then applies the response, each group separated by a blank line.
+- A derived value, such as a staging path built from several fields, is one
+  expression, with a comment on the design choice (e.g. why the sample id is part
+  of the path) rather than on what the code does.
+- Comments explain a non-obvious reason, such as why a guard is needed, and are
+  omitted where the names already say what happens.
 
 Integration scenarios also serve as tutorials. Their readability should reveal
 the characteristic Omnipy mechanisms rather than bury them inside general Python
@@ -159,10 +182,14 @@ iteration and callable combinations for the chosen execution mode.
 
 Use existing domain primitives before inventing regex checks in tasks, for example
 `DateModel` and `HostUrlModel` subclasses, and Pydantic types such as `PositiveInt`,
-`NonNegativeFloat`, and `AnyHttpUrl`. A validator can fill a missing value from
+`NonNegativeFloat`, and `AnyHttpUrl`. A `HostUrlModel` subclass restricts a URL
+field to the schemes of its storage or service by overriding `_get_scheme_filter()`,
+as `S3UrlModel` and `FtpUrlModel` do in the brokering models; `HostUrlDataset` holds
+named URLs of mixed schemes. A validator can fill a missing value from
 another field, such as a filename from a source URL. Do not duplicate those rules
 in a normalization task. Honor field order, missing earlier fields, and default
-validation behavior in the repository's Pydantic API.
+validation behavior in the repository's Pydantic API; see
+[validators depending on other fields](#validators-depending-on-other-fields).
 
 Repository implementation schemas currently use `import omnipy.util.pydantic as
 pyd`, which exposes the v1-shaped compatibility API, including `validator`. Do not
@@ -313,7 +340,53 @@ Check coverage over all required parent records, including those with no childre
 Check duplicate occurrences before reducing children to a set of roles. These
 cases are enforced by the submission example's paired-file validator. Generalize
 the relationship and coverage principles, not this domain's exact number of files
-or role names. Focused tests cover duplicate roles and a sample without files.
+or role names. Focused tests cover duplicate roles, a sample without files and a
+BioSample Vault id assigned to two samples.
+
+### Validators depending on other fields
+
+With the repository's Pydantic v1 API, a field validator receives the fields
+declared before it in `values`. A field that failed validation is left out of
+`values`, and the later validators still run, so a validator reading an earlier
+field must allow for its absence. Put the guard around the dependent block, and
+say in a comment why the field can be missing, so that the guard is not mistaken
+for an optional field:
+
+```python
+class _SubmissionDict(TypedDict):
+    samples: SubmissionSamplesDataset
+    files: SubmissionFilesDataset
+    metadata: SubmissionMetadataModel
+
+
+class SubmissionSchema(SeqDepotSubmissionPayloadSchema):
+    ...
+
+    @pyd.validator('logistics')
+    def _update_biosamplevault_status(
+        cls,
+        logistics: LogisticsModel,
+        values: _SubmissionDict,
+    ) -> LogisticsModel:
+        # Missing if the samples failed validation, which is reported separately
+        if 'samples' in values:
+            status = logistics.status
+            samples = values['samples'].values()
+            if len(samples) == 0:
+                status.biosamplevault_status = 'N/A'
+            elif all(sample.biosamplevault_sample_id is not None for sample in samples):
+                status.biosamplevault_status = 'completed'
+            else:
+                status.biosamplevault_status = 'pending'
+
+        return logistics
+```
+
+A `TypedDict` of the earlier fields types `values`, giving typed access to
+the Models in it instead of `dict`. Declare the dependent field after the fields
+it reads, and give it a default or `always=True` when the validator must also run
+without an input value. A `root_validator(skip_on_failure=True)` is the alternative
+when the rule concerns the record as a whole rather than one field.
 
 ## Dataset-level validation
 
@@ -1332,13 +1405,10 @@ def create_receipt(publication: PublicationModel) -> PublicationModel:
 @om.DagFlowTemplate(
     extract_publication,
     publish_records.refine(
-        name='publish_catalog_items',
         param_key_map={'dataset': 'records'},
+        result_key='records',
     ),
-    collect_publication.refine(
-        name='collect_published_catalog',
-        param_key_map={'records': 'publish_catalog_items'},
-    ),
+    collect_publication,
     consume_kwargs_from_results=False,
 )
 async def publish_catalog_records(publication: PublicationModel) -> PublicationModel: ...
@@ -1356,11 +1426,18 @@ need explicit failure reporting, insert `require_all_items` before the collector
 as described in [failure inspection](#inspect-current-failure-and-pending-results).
 
 The `publication` input must survive `extract_publication` for `collect_publication`
-to use it. The publisher's Dataset result is stored under its refined job name,
-`publish_catalog_items`. The collector maps its `records` parameter to that key;
-the publisher does not need `result_key`. The synchronous last task in
-`publish_catalog` does not make the parent synchronous. An empty catalog produces
+to use it. The publisher reads the extracted `records` and stores its Dataset result
+under the same key with `result_key`, replacing the extracted Dataset, so the
+collector takes `records` without a mapping of its own. The alternative is to leave
+the result under the publisher's job name and map the collector's parameter to it
+with `param_key_map`; the brokering flows use `result_key`. The synchronous last task
+in `publish_catalog` does not make the parent synchronous. An empty catalog produces
 a zero-item receipt here; decide whether that is appropriate in the actual domain.
+
+For a service reached over HTTP, `publish_records` would instead name the URL and
+the request, post the mapper with `.post(url, response_cls=...)`, and store the
+identifier from the parsed response, as in the
+[external-contract example](#external-api-contracts).
 
 The repository-test shape is `completed = await publish_catalog.apply()(publication)`
 under the existing runtime fixture, followed by a comparison with the expected
@@ -1433,9 +1510,9 @@ outcomes from the aggregate summary without a shared status counter in async tas
 
 Use normal Model operations for these updates. Changing wrapped data through the
 interface of the Model holding the status validators reruns them, maintaining
-computed status. Changing a nested member in place does not; assign it back through
-that Model, as described under
-[Validation through Model boundaries](#validation-through-model-boundaries).
+computed status. Changing a nested member in place does not; make the change inside
+`with model.updating():` or assign the member back through that Model, as described
+under [Validation through Model boundaries](#validation-through-model-boundaries).
 No serialization/reconstruction or separate "refresh status" task is needed. Keep mutable nested containers within the
 [Model boundaries](#validation-through-model-boundaries) already described.
 Derivation should be repeatable and depend on the current facts, including when
@@ -1504,22 +1581,53 @@ Keep fixture-specific assertions outside tasks and flows. Choose focused failure
 cases for the behavior being introduced instead of expanding every narrative
 example into a comprehensive validation suite.
 
-Isolate service-stub configuration per test. The brokering reference sets and
-resets a `ContextVar` containing a mapping from normalized local sample id to
-BioSample Vault id. Its service looks up IDs by request identity, so the expected
-payload remains stable when registration order changes.
+### Mock services and failure scenarios
 
-When exact fixture IDs matter, use such a deterministic mapping. Sequential ID
+A coroutine stand-in in `services.py`, typed with the service's request and
+response schemas, is enough when the lesson is the dataflow itself; the catalog
+example below uses one. Mock the service as an HTTP endpoint when the dataflow's
+HTTP behavior is part of the lesson: concurrent requests from iterated tasks,
+posting with `.post()`, response parsing, or failures reported by the service.
+Omnipy's remote functionality then runs for real, as for loading; see
+[HTTP test boundaries](remote-loading.md#test-against-a-local-service).
+
+The brokering [conftest](../../../../tests/integration/novel/full/sequence_data_brokering/conftest.py)
+shows the shape, built on the `aiohttp_server` fixture:
+
+- One app factory per service, e.g. `_create_biosamplevault_app(sample_ids,
+  response_delay_secs)`, whose parameters are the behavior the tests control.
+  The handlers implement the declared contract and nothing more; a small response
+  delay simulates latency while keeping the run short.
+- A shared middleware records the request bodies per endpoint path, so a test can
+  compare the requests a service received with the expected ones.
+- A `MockService` dataclass per running server, with `endpoint_url(path)` for the
+  settings passed to the dataflow and `requests` for the recorded bodies.
+- A `services` fixture building the dataflow's service settings from the mock
+  services. The expected output fixture reuses it, since the settings are part of
+  the output.
+- Behavior a scenario varies is a fixture of its own with a default, e.g.
+  `failing_source_uris` returning an empty collection. A test overrides it with
+  `pytest.mark.parametrize('failing_source_uris', [...])`, and the service fixture
+  takes it as a parameter. No global or context state is needed.
+
+When exact fixture IDs matter, let the mock service assign them from a mapping
+keyed by request identity, such as the normalized local sample id. Sequential ID
 allocation can assign different IDs to requests when waits before allocation or
 HTTP arrival order change, even though each response still belongs to the correct
-input. Waiting only after allocation changes completion order without changing
-assigned IDs. If IDs are intentionally allocated dynamically, capture
-request/response associations and check the required relationships without assuming
-allocation order. Stateless stubs need no context machinery.
+input. If IDs are intentionally allocated dynamically, capture request/response
+associations and check the required relationships without assuming allocation
+order. Compare concurrently sent requests in a stable order by identity.
+
+Test a failure scenario on the child flow that handles it, when the scenario
+concerns one stage. The brokering test of a failed file transfer runs
+`coordinate_external_file_transfer.apply()` on its own and checks the per-file
+outcome and the derived aggregate status, rather than running the complete
+brokering flow up to the stage that would reject the submission.
 
 ## Source map
 
-- Complete composition: `tests/integration/novel/full/sequence_data_brokering/`.
+- Complete composition: `tests/integration/novel/full/sequence_data_brokering/`;
+  mocked HTTP services and per-test configuration in its `conftest.py`.
 - Another domain, with model classes as children and refined source pipelines:
   `tests/integration/novel/full/water_sample_harmonization/flows.py`.
 - Conversion: `src/omnipy/components/general/models.py`, `ConverterModel`.

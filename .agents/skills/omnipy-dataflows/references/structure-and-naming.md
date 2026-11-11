@@ -21,8 +21,10 @@ The JSON component demonstrates most of this structure. Smaller components need
 only the relevant modules. Keep a small helper beside its caller; move shared
 support into an appropriately scoped module. Additional files should improve
 navigation and ownership. An application or integration example can additionally
-use `services.py` for its external-service boundary, following the existing
-[external-contract guidance](patterns.md#external-api-contracts).
+use `services.py` for typed service clients or coroutine stand-ins, following the
+existing [external-contract guidance](patterns.md#external-api-contracts). Mocked
+HTTP services belong with the fixtures in `conftest.py`; see
+[mock services](patterns.md#mock-services-and-failure-scenarios).
 
 When a module becomes difficult to navigate, turn it into a same-named package
 and split it by meaningful responsibility. The ISA component demonstrates this
@@ -113,4 +115,5 @@ the [test guidance](patterns.md#validation-and-narrative-tests).
 - Table-row schema specialization: `src/omnipy/components/tables/datasets.py`.
 - Relative imports within and between components:
   `src/omnipy/components/remote/tasks.py`.
-- Application/service split: `tests/integration/novel/full/sequence_data_brokering/`.
+- Implementation modules with the test fixtures and mock services apart:
+  `tests/integration/novel/full/sequence_data_brokering/`.

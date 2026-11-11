@@ -17,6 +17,13 @@ fixtures, and assertions. Extract a cohesive block into a small, clearly named
 function when it has a distinct responsibility, is repeated, or obscures its
 caller. Keep the flow declaration and the test's input → execution → verification
 story visible; helper extraction should improve understanding at both levels.
+Explain abbreviations used in names once, in the module docstring. Give schemas
+and reusable classes a one-line docstring saying what they hold and where their
+contents come from. Comment groups of fields or jobs by their role, such as
+settings provided as input against state derived by the dataflow, or helper
+tasks against the core operations. In a task, name the inputs of a service call
+in variables before the call. See
+[readability](references/patterns.md#readable-contracts-and-documentation-reuse).
 
 Reuse is a core selling point. "Omnipy" comes from "omnify": to make universal.
 At each design step, ask: **Is there general functionality here that could be
@@ -94,8 +101,13 @@ into design rules.
   non-empty identifiers, and regex constraints when the identifier has a defined
   format. Derive constraints from the domain and external contracts, not just the
   fixture values. See [constrained fields](references/patterns.md#constrained-field-contracts).
+  Restrict URL fields to their schemes with a `HostUrlModel` subclass.
   Put a relationship validator on the smallest data type containing both sides.
   Validation should occur through the data contract, not only in a preparatory task.
+  A validator reading other fields from `values` runs even when one of them failed
+  validation: guard the dependent block with `if 'field' in values:`, and type
+  `values` with a `TypedDict` of the earlier fields. See
+  [validators depending on other fields](references/patterns.md#validators-depending-on-other-fields).
 - Prefer validators on the Dataset subclass for invariants within that Dataset,
   such as uniqueness across items or key/content agreement. Use the current
   `@pyd.validator('data')` hook; avoid adding a `Model[SomeDataset]` solely to gain
@@ -248,19 +260,25 @@ response schemas, field meanings, and operation outcomes. Adapt internal data to
 the service's contract. A convenient local stand-in must not silently redefine
 that contract to accept the dataflow's internal records or mapper classes.
 
-A task maps the request, calls the service through a typed function or suitable
-existing client/loader, and applies the response to the relevant record. A mapper
-that mimics the external request schema can be passed directly in place of that
-request; the service contract remains expressed in its own schema. Serialize at
-the transport boundary when required. See the
-[external-contract example](references/patterns.md#external-api-contracts).
+A task maps the request, calls the service through `.post()`, a typed function or
+a suitable existing client/loader, and applies the response to the relevant
+record. Name the URL and the mapped request in variables before the call. Wrap
+`.post()` and `.load()` in `resolve()` in a task body, as they return a result
+or a task depending on the context. A mapper that mimics the external request
+schema can be passed directly in place of that request; the service contract
+remains expressed in its own schema. Serialize at the transport boundary when
+required. See the [external-contract example](references/patterns.md#external-api-contracts).
 
 In a narrative integration test, declare the example's external contract through
 its request/response types and service behavior, and verify that contract in the
-test. A coroutine stand-in in `services.py` or a mocked HTTP endpoint can implement
-it. Replacing one with the other should preserve the declared field meanings and
-operation outcomes. Keep fixture-specific expected values out of tasks and flows,
-and identify simulated I/O as such.
+test. A coroutine stand-in in `services.py` is enough for many examples, and the
+tasks then call it like any service client. Use mocked HTTP endpoints when the
+dataflow's own HTTP behavior is part of the lesson, such as concurrent requests
+from iterated tasks, posting through Omnipy, or failures reported by the service;
+the brokering example does this. Replacing one with the other should preserve the
+declared field meanings and operation outcomes. Keep fixture-specific expected
+values out of tasks and flows, and identify simulated I/O as such. See
+[mock services](references/patterns.md#mock-services-and-failure-scenarios).
 
 For independent asynchronous items, each task owns its result; aggregate at
 collection. Choose Dataset task markers or explicit domain status updates to
@@ -311,11 +329,15 @@ Use these four principles for narrative integration tests and their tutorial reu
    according to its declared callable contract, and compare the meaningful output.
    Check run state when it matters to the scenario. Keep declarations readable and
    reusable in documentation without depending on pytest. Show the actual tested
-   implementation, using repository documentation conventions.
+   implementation, using repository documentation conventions. Print the input
+   and the result with `.full()` in the main scenario, so that the test output
+   doubles as tutorial output.
 2. **Keep expectations independent and setup isolated.** Put scenario inputs,
-   independently specified expected results, and scoped service-state resets in
+   independently specified expected results, and the mock services in
    `conftest.py` or `pytest_cases` case modules. Create new case modules when they
-   help organize the scenarios. Compare complete outputs or service requests using
+   help organize the scenarios. Configure a mock service through fixtures that a
+   test can override with `pytest.mark.parametrize`, instead of global state.
+   Compare complete outputs or service requests using
    Model equality or `to_data()`-serialized values, whichever expresses the test's
    contract. Add separate checks only for relevant behavior not already covered.
    Do not generate expected output with the mapper being tested. Keep fixture-specific
@@ -334,7 +356,8 @@ Use these four principles for narrative integration tests and their tutorial reu
    of models, datasets, jobs, and callable types through a coherent scenario.
    Straightforward Model validations already act as executable assertions; do not
    restate them as field checks in every test. Test complex validators and relevant
-   failure policies with focused cases. Check wrapper structure only when it is
+   failure policies with focused cases. Run a child flow on its own when a failure
+   scenario concerns one stage. Check wrapper structure only when it is
    the behavior under test. Reuse existing engine fixtures; keep exhaustive
    engine/callable combinations in the framework harness.
 
