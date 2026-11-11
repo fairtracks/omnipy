@@ -237,7 +237,7 @@ key of the internal record.
 In the submission example, `local_sample_id` is the sample's primary key. The
 [input fixtures](../../../../tests/integration/novel/full/sequence_data_brokering/conftest.py)
 are lists of records with raw ids such as `local_sample_id='Sample-A'`. The
-`samples` and `files` fields of `SubmissionSchema` are `PrimaryKeyDatasetModel`
+`samples` and `files` fields of `SeqDepotSubmissionPayloadSchema` are `PrimaryKeyDatasetModel`
 subclasses (see below), so the item schema normalizes each id and the Dataset is
 keyed by the result, e.g. `sample-a`. Keys are derived rather than written twice
 in the input. The
@@ -276,7 +276,7 @@ the source mapping; it does not continuously maintain keys after conversion.
 As a field of a containing Model, keys are recomputed whenever that Model
 validates, e.g. on assignment or at the end of `updating()`. Decorate a subclass
 with `@mimics(...)` of the corresponding Dataset class for static typing, as
-`SubmissionSamplesByIdModel` does. Dict-valued item Models and direct iterator input are part of the planned
+`SubmissionSamplesDataset` does. Dict-valued item Models and direct iterator input are part of the planned
 Dataset-native feature, not guarantees of this converter. See the
 [component tests](../../../../tests/components/general/test_models.py) for current behavior.
 
@@ -285,16 +285,16 @@ in the [submission models](../../../../tests/integration/novel/full/sequence_dat
 include:
 
 - `SubmissionSampleSchema.local_sample_id` uses `StrippedLowerStr` to normalize
-  the local primary key. `SubmissionFileSchema` constrains file roles, checksum
+  the local primary key. `SeqDepotSubmissionFileSchema` constrains file roles, checksum
   format, and URL types; `_extract_file_name_from_source_storage_uri` derives the
   filename within that record.
-- `SubmissionSamplesByIdModel` and `SubmissionFilesByIdModel` key samples and
+- `SubmissionSamplesDataset` and `SubmissionFilesDataset` key samples and
   files by their normalized local ids, keeping keys and contents in agreement.
   For other reusable Dataset-local invariants, prefer validators on the Dataset
   subclass; see [Dataset-level validation](#dataset-level-validation).
-- `SubmissionSchema._file_sample_ids_exist` has access to both sample and file
+- `SeqDepotSubmissionPayloadSchema._file_sample_ids_exist` has access to both sample and file
   Datasets and checks that each file's normalized reference identifies a sample.
-- `SubmissionSchema._samples_have_one_read1_and_one_read2` checks the paired-file
+- `SeqDepotSubmissionPayloadSchema._samples_have_one_read1_and_one_read2` checks the paired-file
   rule at the same aggregate boundary: it rejects duplicate roles while reading
   files, then checks every declared sample, including samples with no files.
 
@@ -449,7 +449,7 @@ allocation task lets the submission derive its status:
 
 ```python
 metadata = submission.metadata
-metadata.sequence_depot_submission_id = request_return.sequence_depot_submission_id
+metadata.seq_depot_submission_id = request_return.seq_depot_submission_id
 submission.metadata = metadata
 ```
 
@@ -788,43 +788,36 @@ combines the sample with the shared submission metadata.
 `SampleAndMetadataToBioSampleVaultSubmissionMapper` targets this external schema
 and is decorated with `@mimics(BioSampleVaultSampleSubmissionSchema)`. Constructing
 the mapper produces a Model wrapping the converted request, which can be used in
-place of the request model:
-
-```python
-request = SampleAndMetadataToBioSampleVaultSubmissionMapper((sample, metadata))
-response = await register_sample_with_biosamplevault(services.biosample_vault.url, request)
-sample.biosample_vault_sample_id = response.biosample_vault_sample_id
-```
-
-The service function's parameter is annotated with the external schema. Keep that
-contract; do not change it to require the dataflow's mapper type, sample/metadata
-tuple, or enclosing submission Model. Runtime mimicking lets the wrapper provide
-the target interface, and `@mimics` exposes that interface to supported static
-checkers. Passing the mapper directly does not require `.convert()`, `.content`,
-or `.to_data()` solely to reach this service boundary.
-
-The client function in `services.py` wraps the request in a Model of the service's
-request schema and posts it with `.post()`, parsing the response with the service's
-response schema:
+place of the request model. The task posts it directly with `.post()`, parsing the
+response with the service's response schema:
 
 ```python
 response = await resolve(
-    Model[BioSampleVaultSampleSubmissionSchema](request).post(
-        _endpoint_url(biosample_vault_url, 'samples'),
+    SampleAndMetadataToBioSampleVaultSubmissionMapper((sample, metadata)).post(
+        services.biosamplevault.urls['samples'],
         response_cls=Model[BioSampleVaultSampleSubmissionSchema],
     )
 )
-return response.content
+sample.biosamplevault_sample_id = response.biosamplevault_sample_id
 ```
 
-Wrapping the request accepts both the mapper and a plain schema instance. In the
-tests, a mocked HTTP endpoint implements the service. The service URLs are settings
-in the submission's `logistics` member, which keeps the broker's settings and state
-apart from the content sent to the Sequence Depot. Their defaults are the services in
-production, and the test replaces them with the mock services. The explode task passes
-`services` on to the per-item tasks, like the shared `metadata`. The client owns
-the transport, so the task still passes the mapper unchanged. Use the returned
-response rather than depending on the service mutating and returning the same
+Posting the mapper sends the converted request; it does not require `.convert()`,
+`.content`, or `.to_data()` to reach the service boundary. Keep the external schema
+as the request contract; do not reshape it around the dataflow's mapper type,
+sample/metadata tuple, or enclosing submission Model. Runtime mimicking lets the
+wrapper provide the target interface, and `@mimics` exposes that interface to
+supported static checkers.
+
+In the tests, a mocked HTTP endpoint implements the service. The service URLs are
+settings in the submission's `logistics` member, which keeps the broker's settings
+and state apart from the content sent to the Sequence Depot. Each service has a
+`HostUrlDataset` of its URLs by name, so the tasks post to complete URLs instead of
+building them from a base URL. The Sequence Depot URLs also include the FTPS
+`staging` area, below which the per-file target URLs are derived from the
+submission data. The defaults are the URLs in
+production, and the test replaces them with those of the mock services. The explode
+task passes `services` on to the per-item tasks, like the shared `metadata`. Use the
+returned response rather than depending on the service mutating and returning the same
 request object. See [posting requests](remote-loading.md#post-requests-to-a-service).
 
 Tests and mocks should exercise the external contract, including relevant request
@@ -1401,24 +1394,31 @@ The submission example groups its aggregate `status` with the service settings i
 sent to the Sequence Depot. Its validators stay on the submission schema, which
 contains the samples, files and metadata they derive the status from.
 
+The per-file transfer outcome is broker state as well. `SubmissionFileSchema` extends
+the payload's `SeqDepotSubmissionFileSchema` with `transfer_status` and `error`, in the
+same way as `SubmissionSchema` extends `SeqDepotSubmissionPayloadSchema` with
+`logistics`, overriding its `files` field. Constructing the payload Model from the
+submission's files validates them against the payload schema, leaving the broker's
+fields out of the request.
+
 The submission example uses explicit domain fields. Its registration task stores
 the returned identifier:
 
 ```python
-sample.biosample_vault_sample_id = bsv_submission.biosample_vault_sample_id
+sample.biosamplevault_sample_id = response.biosamplevault_sample_id
 ```
 
 The enclosing model derives registration readiness from the sample identifiers.
 The task does not also set an aggregate registration flag. Similarly, the
-allocation task records `metadata.sequence_depot_submission_id`; the enclosing
-model derives `sequence_depot_submission_id_status` from its presence.
+allocation task records `metadata.seq_depot_submission_id`; the enclosing
+model derives `seq_depot_submission_id_status` from its presence.
 
 A transfer outcome cannot be inferred merely from a prepared destination URL.
 The transfer task records the service's result on its own file:
 
 ```python
-file.transfer_status = status
-file.error = error
+file.transfer_status = response.status
+file.error = response.error
 ```
 
 The aggregate's transfer status is then derived from its files' outcomes. Put
@@ -1446,7 +1446,7 @@ service failures before declaring readiness.
 
 Readiness and confirmed completion are separate. Having the required identifiers
 and completed transfers makes a submission ready for its final service call.
-`sequence_depot_submission_status` becomes `completed` only after that service
+`seq_depot_submission_status` becomes `completed` only after that service
 confirms acceptance. Preserve such non-inferable outcomes as explicit state, or
 derive their display status from a recorded acknowledgement when one is stored.
 A finished job alone does not prove domain success.

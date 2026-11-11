@@ -16,7 +16,7 @@ After the move, the final task lost an update made through a local reference:
 ```python
 status = submission.logistics.status
 ...  # reads other fields of the submission
-status.sequence_depot_submission_status = 'completed'  # not kept in the submission
+status.seq_depot_submission_status = 'completed'  # not kept in the submission
 ```
 
 ## Findings

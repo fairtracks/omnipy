@@ -20,16 +20,16 @@ lesson. Current framework capabilities, including subsequent fixes, are availabl
 | Agent design | Preferred design | Transferable principle |
 | --- | --- | --- |
 | A union-valued `SubmissionPackage` dataset stores tables and a metadata record under fixed string keys. | `SubmissionModel` wraps a record with typed sample/file datasets, metadata, and logistics (service settings and status). | Model a fixed heterogeneous aggregate as a record; use datasets for collections of independently addressable items. |
-| Helpers repeatedly call `.to_data()`, cast dictionaries, clone the package, and rebuild it after updates. | Tasks access fields such as `submission.metadata.sequence_depot_submission_id` and return enriched models. | Keep typed data intact between processing boundaries; serialization is not the default mutation API. |
+| Helpers repeatedly call `.to_data()`, cast dictionaries, clone the package, and rebuild it after updates. | Tasks access fields such as `submission.metadata.seq_depot_submission_id` and return enriched models. | Keep typed data intact between processing boundaries; serialization is not the default mutation API. |
 | Link checks occur in a helper called by a normalization task; storage checks inspect string prefixes. | Models contain constrained strings, date/URL types, derived filenames, and relationship validators. | Make intrinsic data validity part of the data contract. |
 | The submission alias is repeated on every row and sample aliases are separately listed in metadata. | Shared submission context lives on the aggregate; files refer to samples by local alias. | Place metadata at its natural scope and avoid redundant relationships without a contract requiring them. |
-| Request dictionaries are built by untyped helper functions. | `SubmissionToSequenceDepotRequestMapper` and `SampleAndMetadataToBioSampleVaultSubmissionMapper` convert typed inputs to service schemas. | Give schema mapping an explicit reusable model boundary, including multi-input mappings. |
+| Request dictionaries are built by untyped helper functions. | `SubmissionToSeqDepotPresubmitMapper` and `SampleAndMetadataToBioSampleVaultSubmissionMapper` convert typed inputs to service schemas. | Give schema mapping an explicit reusable model boundary, including multi-input mappings. |
 | An imperative `FuncFlowTemplate` manually calls and awaits six steps. | A `LinearFlowTemplate` declares four meaningful stages, including two DAG child flows. | Expose fixed topology through composition; reserve authored control flow for algorithms that need it. |
 | Whole-package tasks loop through rows and manufacture all their enriched data. | Iterated async tasks process a single sample or file with shared metadata. | Choose the smallest independently processable unit and use framework iteration. |
-| Tasks contain simulated service work and fixture-specific payload assertions. | Typed service stand-ins live in `services.py`; tasks map, call, and apply results. | Separate external behavior, orchestration, and test expectations. |
+| Tasks contain simulated service work and fixture-specific payload assertions. | Tasks map, post to the endpoint URLs in `logistics.services`, and apply results; mocked HTTP endpoints in `conftest.py` implement the services. | Separate external behavior, orchestration, and test expectations. |
 | Step labels, transfer tickets, and archive states are updated manually throughout. | Item results support derived readiness states; final submission records explicit acceptance. | Derive state from authoritative facts, and record outcomes that cannot be inferred. |
 | No child flows expose the internal coordination. | Extract/process/collect DAGs route models with `param_key_map`, `result_key`, and retained kwargs. | Make subflows meaningful reusable stages, and preserve values needed downstream. |
-| The test file contains flow/task definitions plus large literal expectations. | `models.py`, `tasks.py`, `flows.py`, `services.py`, and `conftest.py` leave a short execution/assertion narrative. | Organize by responsibility so the implementation can stand outside the test. |
+| The test file contains flow/task definitions plus large literal expectations. | `models.py`, `tasks.py`, `flows.py`, and `conftest.py` leave a short execution/assertion narrative. | Organize by responsibility so the implementation can stand outside the test. |
 | The test conditionally awaits a result of uncertain shape. | The test directly awaits the declared async flow and checks output plus `RunState.FINISHED`. | Make the callable contract deliberate and verify it through the appropriate harness. |
 
 ## The historical spec was also revised in practice
@@ -127,8 +127,9 @@ casts when a checker cannot express a valid runtime operation.
 
 The user emphasized that the BioSampleVault submission type is the external API
 contract itself, currently named `BioSampleVaultSampleSubmissionSchema`. The
-client function in `services.py` calls it over HTTP, and the tests implement the
-service as a mocked API endpoint, replacing an earlier coroutine stand-in. The mapper mimics this request schema and can be passed
+task posts it over HTTP to an endpoint URL from `logistics.services`, and the tests
+implement the service as a mocked API endpoint, replacing an earlier coroutine
+stand-in and later client functions in `services.py`. The mapper mimics this request schema and can be passed
 in its place without redefining the service contract. See the
 [external-contract example](patterns.md#external-api-contracts).
 
@@ -274,7 +275,7 @@ by settings in the submission. The user chose to group the service settings with
 the status in a `logistics` member, separate from the content sent to the Sequence
 Depot, as the place for other broker-side settings such as authentication. The
 name was chosen over `brokering`, `handling`, `control` and `admin` because it
-reads well in paths such as `submission.logistics.services.biosample_vault.url`
+reads well in paths such as `submission.logistics.services.biosamplevault.urls['samples']`
 and is understandable in a tutorial. Each service has its own schema, so per-service
 settings have an obvious place. Secrets handling is a missing Omnipy feature, to
 be designed separately: until then, do not store credentials in dataflow data,
