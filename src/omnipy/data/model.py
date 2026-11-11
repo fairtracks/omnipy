@@ -1238,6 +1238,35 @@ class Model(  # type: ignore[misc]
         """
         self._validate_and_set_value(self.content)
 
+    @contextmanager
+    def updating(self) -> Iterator[Self]:
+        """Change the model in several steps, validating it once when the block ends.
+
+        Changing a nested Model in place validates the nested Model only, not its parents. Inside
+        the block, changes can pass through states that break rules of the model, as long as the
+        result is valid. Validators of the model rerun when the block ends, which also updates
+        fields they derive. In interactive mode, the model is reverted to its state at the start of
+        the block if validation fails or the block raises an exception.
+
+        Example:
+            >>> with submission.updating():  # doctest: +SKIP
+            ...     sample = submission.samples.pop('sample-a')
+            ...     sample.local_sample_alias = 'sample-c'
+            ...     submission.samples['sample-c'] = sample
+
+        Yields:
+            The model itself.
+
+        Raises:
+            ValidationError: If the model is not valid when the block ends.
+        """
+        # Prepares the rollback point as for other state-changing operations: in interactive mode,
+        # the model is only validated if it changed since its last snapshot
+        reset_solution = self._prepare_reset_solution_take_snapshot_if_needed().reset_solution
+        with reset_solution:
+            yield self
+            self.validate_content()
+
     def _validate_and_set_value(
         self,
         new_content: object,

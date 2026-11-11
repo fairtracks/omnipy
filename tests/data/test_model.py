@@ -2403,6 +2403,58 @@ def test_parent_validators_rerun_only_on_validation_of_or_changes_through_the_pa
         model[0] = [1, 2, 3]  # pyright: ignore[reportCallIssue, reportArgumentType]
 
 
+class _ShortListsModel(Model[list[Model[list[int]]]]):
+    @classmethod
+    def _parse_data(cls, data: list[Model[list[int]]]) -> list[Model[list[int]]]:
+        if any(len(inner) > 2 for inner in data):  # pyright: ignore[reportArgumentType]
+            raise ValueError('Inner lists can have at most two elements')
+        return data
+
+
+def test_updating_allows_invalid_states_inside_the_block() -> None:
+    model = _ShortListsModel([[1, 2]])
+
+    # Changes inside the block can pass through states breaking the rules of the model
+    with model.updating() as updated_model:
+        assert updated_model is model
+        model[0].append(3)  # pyright: ignore[reportAttributeAccessIssue]
+        model[0].pop(0)  # pyright: ignore[reportAttributeAccessIssue]
+
+    assert model.to_data() == [[2, 3]]
+
+
+def test_updating_raises_if_invalid_when_the_block_ends(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
+    model = _ShortListsModel([[1, 2]])
+
+    with pytest.raises(ValidationError):
+        with model.updating():
+            model[0].append(3)  # pyright: ignore[reportAttributeAccessIssue]
+
+    # In interactive mode, the model is reverted to its state at the start of the block
+    if runtime.config.data.model.interactive:
+        assert model.to_data() == [[1, 2]]
+    else:
+        assert model.to_data() == [[1, 2, 3]]
+
+
+def test_updating_reverts_on_exceptions_in_the_block(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+) -> None:
+    model = _ShortListsModel([[1, 2]])
+
+    with pytest.raises(RuntimeError):
+        with model.updating():
+            model[0].pop()  # pyright: ignore[reportAttributeAccessIssue]
+            raise RuntimeError('Stopped halfway')
+
+    if runtime.config.data.model.interactive:
+        assert model.to_data() == [[1, 2]]
+    else:
+        assert model.to_data() == [[1]]
+
+
 def test_derived_fields_of_pydantic_model_update_only_on_changes_through_the_parent() -> None:
     class TotalSchema(pyd.BaseModel):
         numbers: list[int] = pyd.Field(default_factory=list)
@@ -2423,6 +2475,10 @@ def test_derived_fields_of_pydantic_model_update_only_on_changes_through_the_par
 
     model.numbers = [1, 2]
     assert model.total == 3
+
+    with model.updating():
+        model.numbers.append(3)
+    assert model.total == 6
 
 
 @pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
