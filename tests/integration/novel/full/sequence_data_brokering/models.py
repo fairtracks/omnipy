@@ -190,6 +190,26 @@ class SubmissionSchema(pyd.BaseModel):
     files: SubmissionFilesByIdModel
     metadata: SubmissionMetadataModel
 
+    @pyd.validator('samples')
+    def _biosample_vault_sample_ids_are_unique(
+        cls,
+        samples: SubmissionSamplesByIdModel,
+    ) -> SubmissionSamplesByIdModel:
+        # Samples are keyed by their local ids, so ids assigned by the BioSample Vault are
+        # checked here
+        local_sample_ids_per_vault_id: dict[str, str] = {}
+        for sample in samples.values():
+            vault_id = sample.biosample_vault_sample_id
+            if vault_id is None:
+                continue
+            if vault_id in local_sample_ids_per_vault_id:
+                raise ValueError(
+                    f"BioSample Vault sample id '{vault_id}' is assigned to both sample "
+                    f"'{local_sample_ids_per_vault_id[vault_id]}' and '{sample.local_sample_id}'"
+                )
+            local_sample_ids_per_vault_id[vault_id] = sample.local_sample_id
+        return samples
+
     @pyd.validator('files')
     def _samples_have_one_read1_and_one_read2(
         cls,
@@ -289,21 +309,18 @@ class SubmissionWithLogisticsSchema(SubmissionSchema):
     def _update_biosample_vault_status(
         cls,
         logistics: LogisticsModel,
-        values: dict,
+        values: _SubmissionDict,
     ) -> LogisticsModel:
-        status = logistics.status
-        samples = values.get('samples', {})
-        all_samples_biosample_vault_ids: set[StrippedUpperStr] = {
-            sample.biosample_vault_sample_id
-            for sample in samples.values()
-            if sample.biosample_vault_sample_id is not None
-        }
-        if len(samples) == 0:
-            status.biosample_vault_status = 'N/A'
-        elif len(all_samples_biosample_vault_ids) == len(samples):
-            status.biosample_vault_status = 'completed'
-        else:
-            status.biosample_vault_status = 'pending'
+        # Missing if the samples failed validation, which is reported separately
+        if 'samples' in values:
+            status = logistics.status
+            samples = values['samples'].values()
+            if len(samples) == 0:
+                status.biosample_vault_status = 'N/A'
+            elif all(sample.biosample_vault_sample_id is not None for sample in samples):
+                status.biosample_vault_status = 'completed'
+            else:
+                status.biosample_vault_status = 'pending'
 
         return logistics
 

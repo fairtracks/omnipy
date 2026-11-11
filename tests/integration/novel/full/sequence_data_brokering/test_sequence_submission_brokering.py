@@ -36,6 +36,27 @@ def test_submission_rejects_duplicate_file_role(
         )
 
 
+def test_submission_rejects_duplicate_biosample_vault_sample_id(
+    samples: Annotated[list[dict[str, str]], pytest.fixture],
+    files: Annotated[list[dict[str, str]], pytest.fixture],
+    metadata: Annotated[dict[str, str], pytest.fixture],
+) -> None:
+    samples_with_same_vault_id = [
+        {**sample, 'biosample_vault_sample_id': 'BSV:80907461'} for sample in samples
+    ]
+
+    with pytest.raises(
+        ValueError,
+        match="BioSample Vault sample id 'BSV:80907461' is assigned to both sample 'sample-a' "
+        "and 'sample-b'",
+    ):
+        SubmissionModel(
+            samples=samples_with_same_vault_id,
+            files=files,
+            metadata=metadata,
+        )
+
+
 def test_submission_requires_file_pair_for_every_sample(
     samples: Annotated[list[dict[str, str]], pytest.fixture],
     files: Annotated[list[dict[str, str]], pytest.fixture],
