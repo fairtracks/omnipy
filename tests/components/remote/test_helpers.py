@@ -290,10 +290,18 @@ async def test_rate_limiter_starts_waiting_requests_in_order() -> None:
     await asyncio.gather(*[wait_and_record(i) for i in range(21)])
 
     assert order == list(range(21))
-    expected = [0.0] * 5 + [0.5 / 6 * k for k in range(1, 6)] + [0.5 + 0.05 * k for k in range(11)]
-    assert start_times == pytest.approx(expected, abs=0.05)
-    # Timers never fire early
-    assert all(t >= e - 0.002 for t, e in zip(start_times, expected))
+
+    # A burst of 5, then spacings of 0.5/6 s until the burst leaves the time period, then 0.05 s.
+    # Each start is spaced from the actual previous start, so the small delays of the event loop
+    # add up over the run. Check the spacings, not the start times
+    expected_spacings = [0.0] * 4 + [0.5 / 6] * 6 + [0.05] * 10
+    spacings = [later - earlier for earlier, later in zip(start_times, start_times[1:])]
+    assert all(
+        expected - 0.002 <= spacing <= expected + 0.02
+        for spacing, expected in zip(spacings, expected_spacings, strict=True)
+    ), spacings
+
+    assert max_starts_in_any_period(start_times, 0.5) <= 10
 
 
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
