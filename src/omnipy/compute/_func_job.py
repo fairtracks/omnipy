@@ -199,6 +199,13 @@ class FuncArgJobBase(
 
 # Note: listed order dependencies might have incorrect info - not fully tested!
 
+# TODO: Add a job modifier validating the Models and Datasets of job inputs and outputs. Changing a
+#       nested Model in place does not rerun the validators of its parents, so the modifier needs to
+#       rerun the validators of the parents, not only accept already validated nested Models. It
+#       should validate inputs as well as outputs, to also catch changes made outside of jobs. See
+#       test_job_boundaries_validate_parents_of_changed_nested_models_known_issue in
+#       tests/compute/test_task.py
+
 FuncArgJobBase.accept_mixin(SignatureFuncJobBaseMixin)  # Must be before IterateFuncJobBaseMixin
 FuncArgJobBase.accept_mixin(ResultKeyFuncJobBaseMixin)  # Must be before SerializerFuncJobBaseMixin
 FuncArgJobBase.accept_mixin(SerializerFuncJobBaseMixin)  # Must be before AutoAsyncJobBaseMixin

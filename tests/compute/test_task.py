@@ -1,12 +1,15 @@
 """Test compute task template and task behavior."""
 
+import os
 from typing import Annotated
 
 import pytest
 import pytest_cases as pc
 
 from omnipy.compute.task import Task, TaskTemplate, TaskTemplateCore
+from omnipy.data.model import Model
 from omnipy.shared.exceptions import JobStateException
+from omnipy.util.pydantic import ValidationError
 
 from ..helpers.functions import assert_func_wrapper
 from .cases.raw.functions import format_to_string_func, power_m1_func
@@ -88,3 +91,42 @@ def test_error_missing_task_run_parameters() -> None:
 
     with pytest.raises(TypeError):
         power_m1(4, minus_one=False)  # type: ignore[call-arg]
+
+
+# TODO: Remove the skip of test_job_boundaries_validate_parents_of_changed_nested_models_known_issue
+#       when job boundary validation is implemented as a job modifier
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Known issue: jobs do not yet validate their input and output data. Changing a nested Model in place
+does not rerun the validators of its parents (see
+test_parent_validators_rerun_only_on_validation_of_or_changes_through_the_parent in
+tests/data/test_model.py). A job can thus receive or return data that breaks a rule of a parent.
+Validation at job boundaries is planned as a job modifier, rerunning the validators of the parents.
+""",
+)
+@pytest.mark.usefixtures('mock_local_runner')
+def test_job_boundaries_validate_parents_of_changed_nested_models_known_issue() -> None:
+    class ShortListsModel(Model[list[Model[list[int]]]]):
+        @classmethod
+        def _parse_data(cls, data: list[Model[list[int]]]) -> list[Model[list[int]]]:
+            if any(len(inner) > 2 for inner in data):  # pyright: ignore[reportArgumentType]
+                raise ValueError('Inner lists can have at most two elements')
+            return data
+
+    @TaskTemplate()
+    def extend_first_list(model: ShortListsModel) -> ShortListsModel:
+        model[0].append(3)  # pyright: ignore[reportIndexIssue]
+        return model
+
+    @TaskTemplate()
+    def return_unchanged(model: ShortListsModel) -> ShortListsModel:
+        return model
+
+    with pytest.raises(ValidationError):
+        extend_first_list.run(ShortListsModel([[1, 2]]))  # pyright: ignore[reportArgumentType]
+
+    broken_input = ShortListsModel([[1, 2]])
+    broken_input[0].append(3)  # pyright: ignore[reportAttributeAccessIssue]
+    with pytest.raises(ValidationError):
+        return_unchanged.run(broken_input)  # pyright: ignore[reportArgumentType]
