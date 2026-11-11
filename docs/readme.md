@@ -11,6 +11,14 @@ Omnipy is a type-driven Python library for:
 
 ## Why use Omnipy?
 
+**A Readable Contract Between You and Your AI Agent**
+
+AI agents are good at the time-consuming parts of working with research data: reformatting,
+cleaning, and integrating. Omnipy gives that work a structure a human can inspect. The agent turns
+exploratory code into data models, conversions, and dataflows declared in Python; the data is
+validated at every step; and you review the declarations and the data at each junction rather than
+the agent's code paths. The declarations are the contract between you and your agent.
+
 **Dataflows, Not Workflows**
 
 Traditional workflows rely on command-line tools and intermediate files, adding complexity to data
@@ -43,14 +51,16 @@ rolling back invalid operations automatically.
 Omnipy invites you to ["omnify"](https://www.websters1913.com/words/Omnify) pipelines — break them
 into reusable, universal components. By defining dataflows and tasks with structured input and
 output models, Omnipy simplifies reuse and promotes good coding practices, improving maintainability
-as projects grow.
+as projects grow. Small, typed, reviewable components are also what an agent should produce.
 
 **Catalog of Components for Interoperability**
 
-Omnipy includes components for tasks like asynchronous API requests with rate limiting, parsing JSON
-or tabular data, and flattening nested data into relational tables. Integration with REST APIs and
-data wrangling/analysis tools like [Pandas](https://pandas.pydata.org/) simplifies interoperability
-across diverse systems. Expect the catalog to grow as the community expands!
+Omnipy includes components for tasks like asynchronous API requests with rate limiting and retries,
+posting JSON to web services, building paged URLs, keying Datasets by the primary keys of their
+records, parsing JSON or tabular data, and flattening nested data into relational tables.
+Integration with REST APIs and data wrangling/analysis tools like
+[Pandas](https://pandas.pydata.org/) simplifies interoperability across diverse systems. Expect the
+catalog to grow as the community expands!
 
 **Built to Scale**
 
@@ -84,12 +94,17 @@ to distributed deployment, meeting the demands of projects large and small.
     > - If you are using Omnipy in a [Jupyter notebook](https://jupyter.org/), you can most likely
     >   skip this step.
 
-2. Install Omnipy using:
+3. Install Omnipy using:
     ```bash
     $ pip install omnipy
     ```
 
+Omnipy works with both Pydantic 1 and 2. With Pydantic 2 installed, it runs through Pydantic's v1
+compatibility layer; Pydantic 2 models are not supported yet.
+
 ## Getting started
+
+### Parse data into a model
 
 To define an Omnipy data model, simply concretize the generic `Model` class by specifying a
 data type in brackets, e.g. `Model[list[int]]`.
@@ -107,17 +122,16 @@ The following creates a data model of a list of integers, and parses some data i
 >>> print(data_as_list_of_ints._docs())
 ```
 
-### Load some water-sample data
+### Build the URLs of a web API
 
 Let's work with river samples from the
 [water-sample harmonization example](https://github.com/fairtracks/omnipy/tree/main/tests/integration/novel/full/water_sample_harmonization).
-The URLs below are illustrative: the documentation serves its example JSON from a
-local mock HTTP service. Substitute your own endpoint when trying this in a
-Python console.
+The API returns the samples in pages at `/samples?page=N`. The URLs below are illustrative: the
+documentation serves its example JSON from a local mock HTTP service. Substitute your own endpoint
+when trying this in a Python console.
 
-A Model can load the response from a single URL. The API returns the samples
-in pages. Each response is a JSON list of sample records, so we load the first
-page with `JsonListOfDictsModel`:
+An `HttpUrlModel` holds a URL as structured fields, so the path and the query parameters are
+edited in place instead of by string formatting:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> import omnipy as om
@@ -128,27 +142,50 @@ page with `JsonListOfDictsModel`:
 >>> from runpy import run_path  # markdown-exec: hide
 >>> _fixture_path = 'docs/examples/water_sample_service.py'  # markdown-exec: hide
 >>> _service = run_path(_fixture_path)['water_sample_service']()  # markdown-exec: hide
+>>> _local_api = om.HttpUrlModel(_service.__enter__())  # markdown-exec: hide
 
 >>> water_api = 'https://water.example'
->>> water_api = _service.__enter__()  # markdown-exec: hide
->>> river_url_0 = f'{water_api}/samples?page=0'
 
->>> page = om.JsonListOfDictsModel.load(river_url_0)
->>> page
+>>> river_page_0 = om.HttpUrlModel(water_api)
+>>> river_page_0.path // 'samples'
+>>> river_page_0.query['page'] = 0
+>>> river_page_0
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(page._docs())
+>>> print(river_page_0._docs())
 ```
 
-For a batch of responses, use a Dataset instead. Its keys name the responses;
-each item is still a Model containing a list of samples. Let's load both pages
-of river samples:
+A second page differs only in its query parameter. An `HttpUrlDataset` collects the URLs under
+names that will also name the responses:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> river_url_1 = f'{water_api}/samples?page=1'
+>>> river_page_1 = om.HttpUrlModel(river_page_0)
+>>> river_page_1.query['page'] = 1
 
->>> pages = om.JsonListOfDictsDataset.load(river_page_0=river_url_0, river_page_1=river_url_1)
+>>> page_urls = om.HttpUrlDataset(river_page_0=river_page_0, river_page_1=river_page_1)
+>>> page_urls
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(page_urls._docs())
+```
+
+For APIs with many pages, `GeneratePagedUrlsModel` builds such a Dataset from a page or item count.
+
+### Load the pages
+
+A Dataset loads all its URLs, keeping the responses under the URL names. Each response is a JSON
+list of sample records, so we load the pages into a `JsonListOfDictsDataset`:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> for _page_url in page_urls.values():  # markdown-exec: hide
+...     _page_url.scheme, _page_url.host, _page_url.port = (
+...         _local_api.scheme,
+...         _local_api.host,
+...         _local_api.port,
+...     )  # markdown-exec: hide
+>>> pages = om.JsonListOfDictsDataset.load(page_urls)
 >>> pages
 ```
 
@@ -169,7 +206,7 @@ A dataset's `peek()` shows the contents of its items side by side:
 These are synchronous console calls. In a notebook or other running event loop,
 use `await` with `.load()`.
 
-### Give a measurement a type
+### Give the samples a type
 
 Models mimic their wrapped values, so we can index the loaded JSON directly.
 The second measurement in the first sample is phosphorus, reported in µg/L:
@@ -183,25 +220,53 @@ The second measurement in the first sample is phosphorus, reported in µg/L:
 >>> print(raw_measurement._docs())
 ```
 
-JSON types alone do not describe what a measurement means. A Pydantic record
-gives its fields a contract, and an Omnipy Model keeps that contract active while
-we work. `mimics` also makes the wrapped record's interface visible to supported editors
-and type checkers; runtime field access works through the Model itself.
+JSON types alone do not describe what a measurement means. Pydantic records give the fields a
+contract, and Omnipy Models keep that contract active while we work. The measurements come in three
+shapes, which a union of records tells apart by their fields. A Dataset keyed by the sample id is
+declared on top of the records: it merges the pages and rejects duplicate ids. `mimics` makes the
+wrapped interfaces visible to editors and type checkers; at runtime, field access works through
+the Models themselves.
 
 ```python exec="1" session="water-samples" result="console" html="true"
 import omnipy as om
 from textwrap import dedent
 
 code = dedent("""\
+    from typing import Literal
+
     import omnipy as om
     import omnipy.util.pydantic as pyd
 
-    class RiverUgConcMeasurementRecord(pyd.BaseModel):
+    class RiverMeasurementRecord(pyd.BaseModel):
         name: str
+
+    class RiverTempMeasurementRecord(RiverMeasurementRecord):
+        value_celsius: float
+
+    class RiverMgConcMeasurementRecord(RiverMeasurementRecord):
+        value_mg_l: float
+
+    class RiverUgConcMeasurementRecord(RiverMeasurementRecord):
         value_ug_l: float
 
-    @om.mimics(RiverUgConcMeasurementRecord)
-    class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...""")
+    RiverMeasurementRecordType = (
+        RiverTempMeasurementRecord | RiverMgConcMeasurementRecord | RiverUgConcMeasurementRecord
+    )
+
+    class RiverSampleRecord(pyd.BaseModel):
+        river_sample_id: str
+        catchment: str
+        sampled_at: om.DateModel
+        station: str
+        sample_alias: str
+        measurements: list[RiverMeasurementRecordType]
+
+    @om.mimics(om.Dataset[om.Model[RiverSampleRecord]])
+    class RiverSamplesById(
+        om.MergeListsOfRecordsIntoDatasetByPrimaryKeyModel[
+            om.PrimaryKey[Literal['river_sample_id']], RiverSampleRecord
+        ]
+    ): ...""")
 
 exec(code, globals(), locals())
 print(
@@ -214,15 +279,47 @@ print(
     )
 )
 ```
-**_Models #1: typing the measurements as a Pydantic record (wrapped in an Omnipy Model)._**
+**_Models #1: the sample and measurement records, and a Dataset of samples keyed by their id._**
+
+Loading the same URLs into the new Dataset parses the pages into typed samples:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> phosphorus = RiverUgConcMeasurementModel(raw_measurement)
->>> phosphorus
+>>> samples = RiverSamplesById.load(page_urls)
+>>> samples
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(phosphorus._docs())
+>>> print(samples._docs())
+```
+
+```pycon exec="1" session="water-samples" source="console"
+>>> samples['river-sample-1']
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(samples['river-sample-1']._docs())
+```
+
+### Work with the Dataset
+
+A Dataset is a mapping of Models. Items are read through their record fields, and several items
+are selected by a list of keys or a slice:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> print(samples['river-sample-3'].station)
+```
+
+```pycon exec="1" session="water-samples" source="console"
+>>> print({key: sample.station for key, sample in samples.items()})
+```
+
+```pycon exec="1" session="water-samples" source="console"
+>>> river_mouth_samples = samples[['river-sample-1', 'river-sample-2']]
+>>> river_mouth_samples
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(river_mouth_samples._docs())
 ```
 
 ### Edit safely, without unpacking
@@ -230,6 +327,15 @@ print(
 Omnipy Models are self-constraining: assigning through the mimicked interface
 parses the new value against its field type. An invalid concentration raises a
 validation error:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> phosphorus = samples['river-sample-1'].measurements[1]
+>>> phosphorus
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(phosphorus._docs())
+```
 
 ```pycon
 >>> phosphorus.value_ug_l = 'not a number'
@@ -241,59 +347,80 @@ validation error:
 ```
 
 In interactive mode, the failed edit is rolled back to the last valid snapshot.
-The measurement is still `120.0 µg/L`; we do not need to reload the response:
-
-```pycon exec="1" session="water-samples" source="console"
->>> phosphorus
-```
-
-```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(phosphorus._docs())
-```
-
+The measurement is still `120.0 µg/L`; we do not need to reload the response.
 A numeric string, on the other hand, can be parsed as a float. Let's correct the
-reading to `150.0 µg/L`:
+reading to `150.0 µg/L`. The measurement is part of the sample, so the correction
+is visible there too:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> phosphorus.value_ug_l = '150.0'
 
->>> phosphorus
+>>> samples['river-sample-1'].measurements[1]
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(phosphorus._docs())
+>>> print(samples['river-sample-1'].measurements[1]._docs())
 ```
 
 ### Convert to a common representation
 
 Other sources use different field names and units. A `ConverterModel` makes a
-conversion reusable and validates its output. For this concentration measurement,
-let's normalize the name and convert µg/L to mg/L:
+conversion reusable and validates its output. One mapper normalizes a measurement, matching on
+its record type to convert µg/L to mg/L; another normalizes a sample, converting all its
+measurements. A Dataset of the sample mapper converts whole batches of samples:
 
 ```python exec="1" session="water-samples" result="console" html="true"
 import omnipy as om
 from textwrap import dedent
 
 code = dedent("""\
-    import omnipy as om
-    from typing import Literal
-
-    class NormalizedConcentrationRecord(pyd.BaseModel):
-        type: Literal['ammonium', 'nitrate', 'phosphorus']
+    class NormalizedMeasurementRecord(pyd.BaseModel):
+        type: Literal['nitrate', 'phosphorus', 'temperature']
         value: float
-        unit: Literal['mg/L']
+        unit: Literal['mg/L', 'deg_C']
 
-    @om.mimics(NormalizedConcentrationRecord)
-    class MicrogramsToMilligramsMapper(
-        om.ConverterModel[RiverUgConcMeasurementRecord, NormalizedConcentrationRecord]
+    @om.mimics(NormalizedMeasurementRecord)
+    class NormalizedRiverMeasurementMapper(
+        om.ConverterModel[RiverMeasurementRecordType, NormalizedMeasurementRecord]
     ):
         @classmethod
-        def _convert(cls, data: RiverUgConcMeasurementRecord) -> NormalizedConcentrationRecord:
-            return NormalizedConcentrationRecord(
-                type=data.name.lower(),
-                value=data.value_ug_l / 1000,
-                unit='mg/L',
-            )""")
+        def _convert(cls, data: RiverMeasurementRecordType) -> NormalizedMeasurementRecord:
+            match data:
+                case RiverTempMeasurementRecord():
+                    return NormalizedMeasurementRecord(
+                        type=data.name.lower(), value=data.value_celsius, unit='deg_C'
+                    )
+                case RiverMgConcMeasurementRecord():
+                    return NormalizedMeasurementRecord(
+                        type=data.name.lower(), value=data.value_mg_l, unit='mg/L'
+                    )
+                case RiverUgConcMeasurementRecord():
+                    return NormalizedMeasurementRecord(
+                        type=data.name.lower(), value=data.value_ug_l / 1000, unit='mg/L'
+                    )
+
+    class NormalizedSampleRecord(pyd.BaseModel):
+        sample_key: str
+        monitoring_date: om.DateModel
+        location_name: str
+        measurements: list[NormalizedMeasurementRecord]
+
+    @om.mimics(NormalizedSampleRecord)
+    class NormalizedRiverSampleMapper(
+        om.ConverterModel[RiverSampleRecord, NormalizedSampleRecord]
+    ):
+        @classmethod
+        def _convert(cls, data: RiverSampleRecord) -> NormalizedSampleRecord:
+            return NormalizedSampleRecord(
+                sample_key=data.sample_alias.lower(),
+                monitoring_date=data.sampled_at,
+                location_name=data.station,
+                measurements=list(
+                    NormalizedRiverMeasurementMapper.convert_all(data.measurements)
+                ),
+            )
+
+    class NormalizedRiverSamples(om.Dataset[NormalizedRiverSampleMapper]): ...""")
 
 exec(code, globals(), locals())
 print(
@@ -306,11 +433,11 @@ print(
     )
 )
 ```
-**_Models #2: ConverterModel subclass, converting from the original to a normalized measurement
-record (mimicking the latter)._**
+**_Models #2: ConverterModel subclasses normalizing a measurement and a sample, and a Dataset
+of normalized samples._**
 
 ```pycon exec="1" session="water-samples" source="console"
->>> normalized = MicrogramsToMilligramsMapper(phosphorus)
+>>> normalized = NormalizedRiverMeasurementMapper(phosphorus)
 >>> normalized
 ```
 
@@ -318,59 +445,109 @@ record (mimicking the latter)._**
 >>> print(normalized._docs())
 ```
 
-The corrected reading is now `0.15 mg/L`. The same mapper can be the item type
-of a Dataset, so conversion applies to each named measurement without a manual
-processing loop:
+The corrected reading is now `0.15 mg/L`. Conversion follows the types: `.to()` converts a
+Dataset into another Dataset or Model class, here all the samples at once, and then into Pandas
+tables:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> concentrations = om.Dataset[MicrogramsToMilligramsMapper]({'river-r1': phosphorus})
->>> concentrations
+>>> normalized_samples = samples.to(NormalizedRiverSamples)
+>>> normalized_samples['river-sample-1']
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(concentrations._docs())
+>>> print(normalized_samples['river-sample-1']._docs())
 ```
+
+```pycon exec="1" session="water-samples" source="console"
+>>> tables = normalized_samples.to(om.PandasDataset)
+>>> tables['river-sample-1']
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(tables['river-sample-1']._docs())
+```
+
+### Compose tasks and flows
+
+The steps so far form a dataflow: fetch the pages, key the samples, normalize them, and tabulate.
+Omnipy composes dataflows from tasks and from the data classes themselves. A task wraps a
+function. A linear flow declares its stages in order, and Model and Dataset classes are stages in
+their own right, as constructing them is the conversion:
+
+```python exec="1" session="water-samples" result="console" html="true"
+import omnipy as om
+from textwrap import dedent
+
+code = dedent("""\
+    from omnipy.util.helpers import resolve
+
+    @om.TaskTemplate()
+    async def fetch_sample_pages(page_urls: om.HttpUrlDataset) -> om.JsonListOfDictsDataset:
+        return await resolve(om.JsonListOfDictsDataset.load(page_urls))
+
+    @om.LinearFlowTemplate(
+        fetch_sample_pages,
+        RiverSamplesById,
+        NormalizedRiverSamples,
+        om.PandasDataset,
+    )
+    async def harmonize_river_samples(page_urls: om.HttpUrlDataset) -> om.PandasDataset: ...""")
+
+exec(code, globals(), locals())
+print(
+    om.StrModel(code)._docs(
+        max_title_height=0,
+        method='full',
+        width=None,
+        syntax='python',
+        style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
+    )
+)
+```
+**_Dataflow #1: a task fetching the pages, and a linear flow from URLs to Pandas tables._**
+
+```pycon exec="1" session="water-samples" source="console"
+>>> tables = harmonize_river_samples.run(page_urls)
+>>> tables
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(tables._docs())
+```
+
+The flow declaration is what a reviewer reads, and what an AI agent working on the pipeline
+produces and is held to: the stages, their order, and the types passing between them, with every
+Model and Dataset validating its data at its stage. The same flow runs on
+[Prefect](https://www.prefect.io/) by setting `om.runtime.config.engine.choice = 'prefect'`;
+see [Tutorial 8: Prefect orchestration](tutorials/08-prefect-orchestration.md).
 
 ```pycon exec="1" session="water-samples" result="console"
 >>> _service.__exit__(None, None, None)
 ```
 
-This is a small slice of the full example. The
-[integration scenario](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/test_water_sample_harmonization.py)
-extends it to paginated river and wastewater data, reusable child flows, and
-Pandas tables of samples and measurements. Its
-[models](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/models.py)
-also handle temperature readings and source-specific measurement names.
+## Where next
 
-## Running example scripts
-- Install `omnipy-examples`:
-  - `pip install omnipy-examples`
-- Example script:
-  - `omnipy-examples isajson`
-- For help on the command line interface:
-  - `omnipy-examples --help`
-- For help on a particular example:
-  - `omnipy-examples isajson --help`
-
-### Output of flow runs
-
-The output will by default appear in the `data` directory, with a timestamp.
-
-- It is recommended to install a file viewer that are capable of browsing tar.gz files.
-  For instance, the "File Expander" plugin in PyCharm is excellent for this.
-- To unpack the compressed files of a run on the command line
-  (just make sure to replace the datetime string from this example):
-  ```
-  for f in $(ls data/2023_02_03-12_51_51/*.tar.gz); do mkdir ${f%.tar.gz}; tar xfzv $f -C ${f%.tar.gz}; done
-  ```
-
-### Run with the Prefect engine
-
-Omnipy is integrated with the powerful [Prefect](https://prefect.io) dataflow orchestration library.
-
-- To run an example using the `prefect` engine, e.g.:
-  - `omnipy-examples --engine prefect isajson`
-- After completion of some runs, you can check the flow logs and orchestration options in the Prefect UI:
-  - `prefect server start`
-
-More info on Prefect configuration will come soon.
+- The full
+  [water-sample harmonization scenario](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/test_water_sample_harmonization.py)
+  extends this walkthrough to river and wastewater sources, reusable child flows, and Pandas tables
+  of samples and measurements.
+- The
+  [sequence data brokering scenario](https://github.com/fairtracks/omnipy/tree/main/tests/integration/novel/full/sequence_data_brokering)
+  shows a larger dataflow: a typed submission with Datasets of samples and files, mapped requests
+  posted to mock web services, derived status, and DAG child flows. A tutorial based on it is in
+  preparation.
+- Jupyter notebooks with real-world Omnipy code:
+  [ihec_encode](https://github.com/fairtracks/omnipy/blob/main/docs/notebooks/ihec_encode.ipynb),
+  [isa_json_data_wrangling_example](https://github.com/fairtracks/omnipy/blob/main/docs/notebooks/isa_json_data_wrangling_example.ipynb),
+  and [nobel_idw2025](https://github.com/fairtracks/omnipy/blob/main/docs/notebooks/nobel_idw2025.ipynb).
+- [Tutorial 8: Prefect orchestration](tutorials/08-prefect-orchestration.md) runs a flow on the
+  Prefect engine.
+- The [omnipy-dataflows skill](https://github.com/fairtracks/omnipy/blob/main/.agents/skills/omnipy-dataflows/SKILL.md)
+  is what a coding agent reads to design Omnipy dataflows: typed contracts first, reusable tasks
+  and flows, and narrative tests that double as tutorials. Point your agent at it.
+- The workshop
+  [Structure your AI-powered research data pipelines with Omnipy](https://www.ub.uio.no/english/courses-events/courses/dsdays/2027/structure-your-ai-powered-research-data-pipelines-wi.html)
+  at Digital Scholarship Days 2027, University of Oslo, is where this direction is taken further.
+- The [omnipy-examples](https://pypi.org/project/omnipy-examples/) package has stand-alone
+  example scripts (`pip install omnipy-examples`, then `omnipy-examples --help`). It is updated
+  separately and may lag behind the Omnipy release.
