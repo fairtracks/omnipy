@@ -128,7 +128,8 @@ into design rules.
   validation timing or add manual revalidation. One exception: a change validates
   the Model receiving it, not its parents. When a rule or derived field of a parent
   depends on nested data changed in place, assign the changed member back through
-  the parent. Declare stored Models between
+  the parent, or make the changes inside `with parent.updating():`. Declare stored
+  Models between
   nested mutable containers; Pydantic-record wrapping supplies them recursively.
   See the
   [mutation examples](references/patterns.md#validation-through-model-boundaries).

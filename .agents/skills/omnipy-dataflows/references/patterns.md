@@ -451,8 +451,21 @@ metadata.sequence_depot_submission_id = request_return.sequence_depot_submission
 submission.metadata = metadata
 ```
 
-`validate_content()` reruns the validators of a parent Model; Datasets have no such
-method, so assign the changed item. The behavior is pinned by
+For changes in several steps, `with model.updating():` reruns the validators of the
+Model once when the block ends. Changes inside the block can pass through states
+breaking its rules, as when renaming a Dataset key together with the matching field.
+In interactive mode, the Model is reverted to its state at the start of the block if
+validation fails or the block raises:
+
+```python
+with submission.updating():
+    sample = submission.samples.pop('sample-a')
+    sample.local_sample_alias = 'sample-c'
+    submission.samples['sample-c'] = sample
+```
+
+`validate_content()` reruns the validators of a parent Model directly. Datasets have
+neither method yet, so assign the changed item. The behavior is pinned by
 `test_parent_validators_rerun_only_on_validation_of_or_changes_through_the_parent`
 and `test_derived_fields_of_pydantic_model_update_only_on_changes_through_the_parent`
 in `tests/data/test_model.py`, and

@@ -126,10 +126,17 @@ It does not remove the copies made by Omnipy's own validation either.
 - **B was set aside.** With validation at job boundaries and computed fields, its remaining benefit is
   errors at the line of the change rather than at the job boundary, mainly in interactive use. The
   grouped update covers that need explicitly, without parent links.
-- **The grouped update** was judged worth implementing.
+- **The grouped update** was implemented as `Model.updating()` (`7581493e`), for Models only.
+  - **Rollback:** it follows the existing snapshots, rolling back only in interactive mode, like
+    other Model operations.
+  - **Start of the block:** an explicit validation there was rejected as counter to the lazy
+    snapshots. The rollback point is instead prepared as for other state-changing operations. In
+    interactive mode, the model is validated only if it changed since its last snapshot.
+  - **Exceptions:** any exception raised in the block also triggers the rollback.
 - **Until then, the rule for all Models and Datasets:** after changing nested data in place that a
   rule or derived field of a parent depends on, assign the changed member back through the parent,
-  or call `validate_content()` on a parent Model. The brokering allocation task now assigns the
+  make the changes inside `with parent.updating():`, or call `validate_content()` on a parent
+  Model. The brokering allocation task now assigns the
   metadata back for this reason (`e89bae47`).
 
 Tests pinning the current behaviour (`3672ce4b`):
@@ -143,9 +150,12 @@ in `tests/data/test_dataset.py`. The omnipy-dataflows skill documents the rule (
 - The job modifier validating at job boundaries (see Decisions).
 - `@computed_field`s for derived fields with Pydantic v2, including how computed keys in saved job
   outputs are treated when loaded again (ignored or rejected, depending on `extra`).
-- The grouped update, `with model.updating(): ...`, possibly sharing design with the planned atomic
-  rollback of jobs.
-- `validate_content()` for Datasets, so that Dataset-level validators can be rerun explicitly.
+- `validate_content()` and `updating()` for Datasets, so that Dataset-level validators can be rerun
+  explicitly. Datasets have no snapshots, so rollback needs its own design, possibly shared with the
+  planned atomic rollback of jobs.
+- A "dirty" flag for snapshots (TODO in `Model._prepare_reset_solution_take_snapshot_if_needed`).
+  Checking whether a model changed since its snapshot compares the content with the snapshot, which
+  costs time proportional to the content, also when `updating()` prepares its rollback point.
 - The cost of validation in general: `validate_content()` and assignments through a parent convert
   the whole content to raw data and parse it again. Validating without the round trip through raw
   data would make parent-level validation cheaper and keep nested objects.
