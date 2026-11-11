@@ -19,7 +19,7 @@ lesson. Current framework capabilities, including subsequent fixes, are availabl
 
 | Agent design | Preferred design | Transferable principle |
 | --- | --- | --- |
-| A union-valued `SubmissionPackage` dataset stores tables and a metadata record under fixed string keys. | `SubmissionModel` wraps a record with typed sample/file datasets, metadata, and status. | Model a fixed heterogeneous aggregate as a record; use datasets for collections of independently addressable items. |
+| A union-valued `SubmissionPackage` dataset stores tables and a metadata record under fixed string keys. | `SubmissionModel` wraps a record with typed sample/file datasets, metadata, and logistics (service settings and status). | Model a fixed heterogeneous aggregate as a record; use datasets for collections of independently addressable items. |
 | Helpers repeatedly call `.to_data()`, cast dictionaries, clone the package, and rebuild it after updates. | Tasks access fields such as `submission.metadata.sequence_depot_submission_id` and return enriched models. | Keep typed data intact between processing boundaries; serialization is not the default mutation API. |
 | Link checks occur in a helper called by a normalization task; storage checks inspect string prefixes. | Models contain constrained strings, date/URL types, derived filenames, and relationship validators. | Make intrinsic data validity part of the data contract. |
 | The submission alias is repeated on every row and sample aliases are separately listed in metadata. | Shared submission context lives on the aggregate; files refer to samples by local alias. | Place metadata at its natural scope and avoid redundant relationships without a contract requiring them. |
@@ -268,6 +268,17 @@ configuration, as they are not idempotent. `post_json_to_api_endpoint` previousl
 posted one body to many URLs; it now posts each data item to one URL. Posting each
 item to the URL with the same key in an `HttpUrlDataset` will be needed, but the user
 postponed its design; it is future work, not an available API.
+
+Passing each service URL to the brokering flow as a separate keyword was replaced
+by settings in the submission. The user chose to group the service settings with
+the status in a `logistics` member, separate from the content sent to the Sequence
+Depot, as the place for other broker-side settings such as authentication. The
+name was chosen over `brokering`, `handling`, `control` and `admin` because it
+reads well in paths such as `submission.logistics.services.biosample_vault.url`
+and is understandable in a tutorial. Each service has its own schema, so per-service
+settings have an obvious place. Secrets handling is a missing Omnipy feature, to
+be designed separately: until then, do not store credentials in dataflow data,
+which is printed, compared and possibly persisted with job outputs.
 
 ## Water-sample terminology and introductory scope
 

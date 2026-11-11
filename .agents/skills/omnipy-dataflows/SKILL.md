@@ -233,6 +233,11 @@ schema. POST requests share the host's rate limits but retry only on
 URL with the same key in an `HttpUrlDataset` is future work. See
 [posting requests](references/remote-loading.md#post-requests-to-a-service).
 
+Service settings such as URLs can be part of the data, with defaults, instead of
+separate flow inputs. The submission example groups them with the status in a
+`logistics` member that is not part of the content sent to the Sequence Depot.
+Handling of secrets is future work; do not store credentials in dataflow data.
+
 Treat external API contracts as requirements in their own right: request and
 response schemas, field meanings, and operation outcomes. Adapt internal data to
 the service's contract. A convenient local stand-in must not silently redefine

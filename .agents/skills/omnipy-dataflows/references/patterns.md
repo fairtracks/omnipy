@@ -238,7 +238,7 @@ In the submission example, `local_sample_alias` is the sample's primary key. The
 [input and expected-output fixtures](../../../../tests/integration/novel/full/sequence_data_brokering/conftest.py)
 use the lowercase Dataset key `sample-a` while retaining raw input
 `local_sample_alias='Sample-A'`. Normalization occurs in the item schema, and
-validators on `SubmissionRecord` require Dataset keys to match the normalized
+validators on `SubmissionSchema` require Dataset keys to match the normalized
 primary-key fields. This makes agreement part of the input contract. The
 [integration test](../../../../tests/integration/novel/full/sequence_data_brokering/test_sequence_submission_brokering.py)
 constructs the Model through that validation and compares the full enriched output.
@@ -283,16 +283,16 @@ include:
   the local primary key. `SubmissionFileSchema` constrains file roles, checksum
   format, and URL types; `_extract_file_name_from_source_storage_uri` derives the
   filename within that record.
-- `SubmissionRecord._sample_dataset_keys_match_local_sample_aliases` and
+- `SubmissionSchema._sample_dataset_keys_match_local_sample_aliases` and
   `_file_dataset_keys_match_file_ids` validate key/content agreement for samples
   and files. These top-level validators stand in for future general Dataset
   primary-key support; keep that TODO separate from remote-key validation. Their
   validation boundary is the aggregate. For reusable Dataset-local invariants,
   prefer validators on the Dataset subclass; see
   [Dataset-level validation](#dataset-level-validation).
-- `SubmissionRecord._file_sample_aliases_exist` has access to both sample and file
+- `SubmissionSchema._file_sample_aliases_exist` has access to both sample and file
   Datasets and checks that each file's normalized reference identifies a sample.
-- `SubmissionRecord._samples_have_one_read1_and_one_read2` checks the paired-file
+- `SubmissionSchema._samples_have_one_read1_and_one_read2` checks the paired-file
   rule at the same aggregate boundary: it rejects duplicate roles while reading
   files, then checks every declared sample, including samples with no files.
 
@@ -748,7 +748,7 @@ place of the request model:
 
 ```python
 request = SampleAndMetadataToBioSampleVaultSubmissionMapper((sample, metadata))
-response = await register_sample_with_biosamplevault(biosample_vault_url, request)
+response = await register_sample_with_biosamplevault(services.biosample_vault.url, request)
 sample.biosample_vault_sample_id = response.biosample_vault_sample_id
 ```
 
@@ -774,8 +774,11 @@ return response.content
 ```
 
 Wrapping the request accepts both the mapper and a plain schema instance. In the
-tests, a mocked HTTP endpoint implements the service. The service URL is a
-keyword-only flow input, available to every task that accepts it. The client owns
+tests, a mocked HTTP endpoint implements the service. The service URLs are settings
+in the submission's `logistics` member, which keeps the broker's settings and state
+apart from the content sent to the Sequence Depot. Their defaults are the services in
+production, and the test replaces them with the mock services. The explode task passes
+`services` on to the per-item tasks, like the shared `metadata`. The client owns
 the transport, so the task still passes the mapper unchanged. Use the returned
 response rather than depending on the service mutating and returning the same
 request object. See [posting requests](remote-loading.md#post-requests-to-a-service).
@@ -1348,6 +1351,11 @@ not a rule that item status must be inline or aggregate status must be separate.
 Choose the simplest layout that serves the data's consumers and contracts. Wherever
 the resulting status is stored, its derivation needs access to the authoritative
 inputs; storage placement and validator placement are related but distinct choices.
+
+The submission example groups its aggregate `status` with the service settings in a
+`logistics` member: the broker's handling of the submission, not part of the content
+sent to the Sequence Depot. Its validators stay on the submission schema, which
+contains the samples, files and metadata they derive the status from.
 
 The submission example uses explicit domain fields. Its registration task stores
 the returned identifier:
