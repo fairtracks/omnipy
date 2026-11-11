@@ -21,55 +21,55 @@ _received_requests_key = web.AppKey('received_requests', ReceivedRequests)
 
 
 @pytest.fixture(scope='function')
-def samples() -> dict[str, dict[str, str]]:
-    return {
-        'sample-a': {
+def samples() -> list[dict[str, str]]:
+    return [
+        {
             'local_sample_id': 'Sample-A',
             'specimen_type': 'wastewater solids',
             'collection_site': 'North Works',
             'sampled_at': '2026-05-03',
         },
-        'sample-b': {
+        {
             'local_sample_id': 'Sample-B',
             'specimen_type': 'river grab',
             'collection_site': 'River Mouth',
             'sampled_at': '2026-05-10',
         },
-    }
+    ]
 
 
 @pytest.fixture(scope='function')
-def files() -> dict[str, dict[str, str]]:
-    return {
-        'file-id-1': {
+def files() -> list[dict[str, str]]:
+    return [
+        {
             'local_file_id': 'file-id-1',
             'local_sample_id': 'Sample-A',
             'file_role': 'read1',
             'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-a_R1.fastq.gz',
             'md5': 'd2fc58de0e46e6a1a036bf323f7b501f',
         },
-        'file-id-2': {
+        {
             'local_file_id': 'file-id-2',
             'local_sample_id': 'Sample-A',
             'file_role': 'read2',
             'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-a_R2.fastq.gz',
             'md5': '61c4828d7d8e13f8872d1185b28ac492',
         },
-        'file-id-3': {
+        {
             'local_file_id': 'file-id-3',
             'local_sample_id': 'Sample-B',
             'file_role': 'read1',
             'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-b_R1.fastq.gz',
             'md5': '525821c178b6b23320fa56bfaa66e4e4',
         },
-        'file-id-4': {
+        {
             'local_file_id': 'file-id-4',
             'local_sample_id': 'Sample-B',
             'file_role': 'read2',
             'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-b_R2.fastq.gz',
             'md5': 'c0c488a07871ca1c742ce848ce905741',
         },
-    }
+    ]
 
 
 @pytest.fixture(scope='function')

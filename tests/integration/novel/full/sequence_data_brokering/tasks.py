@@ -5,12 +5,12 @@ from .models import (
     FtpUrlModel,
     SampleAndMetadataToBioSampleVaultSubmissionMapper,
     ServicesModel,
+    SubmissionFilesByIdModel,
     SubmissionFileSchemaModel,
-    SubmissionFilesDataset,
     SubmissionMetadataModel,
     SubmissionModel,
     SubmissionSampleModel,
-    SubmissionSamplesDataset,
+    SubmissionSamplesByIdModel,
     SubmissionToSequenceDepotRequestMapper,
 )
 from .services import (
@@ -35,8 +35,8 @@ def explode_submission_model(submission: SubmissionModel) -> dict[str, object]:
 
 @TaskTemplate()
 def collect_submission_model(
-    samples: SubmissionSamplesDataset,
-    files: SubmissionFilesDataset,
+    samples: SubmissionSamplesByIdModel,
+    files: SubmissionFilesByIdModel,
     submission: SubmissionModel,
 ) -> SubmissionModel:
     submission.files = files

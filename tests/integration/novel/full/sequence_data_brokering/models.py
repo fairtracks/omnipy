@@ -1,11 +1,12 @@
 from collections import defaultdict
 from typing import Literal, TypeAlias, TypedDict
 
-from omnipy.components.general.models import ConverterModel
+from omnipy.components.general.models import ConverterModel, PrimaryKeyDatasetModel
 from omnipy.components.raw.models import DateModel
 from omnipy.components.remote.models import HostUrlModel, HttpUrlModel
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
+from omnipy.data.primary_key import PrimaryKey
 from omnipy.data.typing.helpers import mimics
 import omnipy.util.pydantic as pyd
 
@@ -67,6 +68,13 @@ class SubmissionSampleModel(Model[SubmissionSampleSchema]): ...
 class SubmissionSamplesDataset(Dataset[SubmissionSampleModel]): ...
 
 
+@mimics(SubmissionSamplesDataset)
+class SubmissionSamplesByIdModel(
+    PrimaryKeyDatasetModel[PrimaryKey[Literal['local_sample_id']], SubmissionSampleSchema]
+):
+    """Samples keyed by their local id, from a list of samples or a Dataset."""
+
+
 class SubmissionFileSchema(pyd.BaseModel):
     local_file_id: StrippedLowerStr
     local_sample_id: StrippedLowerStr
@@ -90,6 +98,13 @@ class SubmissionFileSchemaModel(Model[SubmissionFileSchema]): ...
 
 
 class SubmissionFilesDataset(Dataset[SubmissionFileSchemaModel]): ...
+
+
+@mimics(SubmissionFilesDataset)
+class SubmissionFilesByIdModel(
+    PrimaryKeyDatasetModel[PrimaryKey[Literal['local_file_id']], SubmissionFileSchema]
+):
+    """Files keyed by their local id, from a list of files or a Dataset."""
 
 
 class SubmissionMetadataSchema(pyd.BaseModel):
@@ -163,51 +178,24 @@ class LogisticsModel(Model[LogisticsSchema]): ...
 
 
 class _SubmissionDict(TypedDict):
-    samples: SubmissionSamplesDataset
-    files: SubmissionFilesDataset
+    samples: SubmissionSamplesByIdModel
+    files: SubmissionFilesByIdModel
     metadata: SubmissionMetadataModel
 
 
 class SubmissionSchema(pyd.BaseModel):
     """The content of a submission, as sent to the Sequence Depot."""
 
-    samples: SubmissionSamplesDataset
-    files: SubmissionFilesDataset
+    samples: SubmissionSamplesByIdModel
+    files: SubmissionFilesByIdModel
     metadata: SubmissionMetadataModel
-
-    # TODO: Generalize Dataset primary-key validation for Models of Pydantic records.
-    @pyd.validator('samples')
-    def _sample_dataset_keys_match_local_sample_ids(
-        cls,
-        samples: SubmissionSamplesDataset,
-    ) -> SubmissionSamplesDataset:
-        for dataset_key, sample in samples.items():
-            if dataset_key != sample.local_sample_id:
-                raise ValueError(
-                    f"Sample Dataset key '{dataset_key}' must match local_sample_id "
-                    f"'{sample.local_sample_id}'"
-                )
-        return samples
-
-    @pyd.validator('files')
-    def _file_dataset_keys_match_local_file_ids(
-        cls,
-        files: SubmissionFilesDataset,
-    ) -> SubmissionFilesDataset:
-        for dataset_key, file in files.items():
-            if dataset_key != file.local_file_id:
-                raise ValueError(
-                    f"File Dataset key '{dataset_key}' must match local_file_id "
-                    f"'{file.local_file_id}'"
-                )
-        return files
 
     @pyd.validator('files')
     def _samples_have_one_read1_and_one_read2(
         cls,
-        files: SubmissionFilesDataset,
+        files: SubmissionFilesByIdModel,
         values: _SubmissionDict,
-    ) -> SubmissionFilesDataset:
+    ) -> SubmissionFilesByIdModel:
         file_roles_per_sample: defaultdict[str, set[FileRole]] = defaultdict(set)
 
         for file in files.values():
@@ -236,9 +224,9 @@ class SubmissionSchema(pyd.BaseModel):
     @pyd.validator('files')
     def _file_sample_ids_exist(
         cls,
-        files: SubmissionFilesDataset,
+        files: SubmissionFilesByIdModel,
         values: _SubmissionDict,
-    ) -> SubmissionFilesDataset:
+    ) -> SubmissionFilesByIdModel:
         # Missing if the samples failed validation, which is reported separately
         if 'samples' in values:
             sample_ids = {sample.local_sample_id for sample in values['samples'].values()}
@@ -304,10 +292,10 @@ class SubmissionWithLogisticsSchema(SubmissionSchema):
         values: dict,
     ) -> LogisticsModel:
         status = logistics.status
-        samples = values.get('samples', {}).values()
+        samples = values.get('samples', {})
         all_samples_biosample_vault_ids: set[StrippedUpperStr] = {
             sample.biosample_vault_sample_id
-            for sample in samples
+            for sample in samples.values()
             if sample.biosample_vault_sample_id is not None
         }
         if len(samples) == 0:

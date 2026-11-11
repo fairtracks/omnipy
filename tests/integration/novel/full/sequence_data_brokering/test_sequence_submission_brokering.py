@@ -7,13 +7,7 @@ from omnipy.shared.enums.job import RunState
 from .....engine.helpers.functions import assert_job_state
 from .conftest import JsonRequest, MockService, ReceivedRequests
 from .flows import broker_sequence_submission_flow
-from .models import (
-    SubmissionFilesDataset,
-    SubmissionMetadataModel,
-    SubmissionModel,
-    SubmissionSamplesDataset,
-    SubmissionSchema,
-)
+from .models import SubmissionModel
 
 
 def _sorted_by(received_requests: ReceivedRequests, field: str) -> ReceivedRequests:
@@ -28,52 +22,42 @@ def _sorted_by(received_requests: ReceivedRequests, field: str) -> ReceivedReque
 
 
 def test_submission_rejects_duplicate_file_role(
-    samples: Annotated[dict[str, dict[str, str]], pytest.fixture],
-    files: Annotated[dict[str, dict[str, str]], pytest.fixture],
+    samples: Annotated[list[dict[str, str]], pytest.fixture],
+    files: Annotated[list[dict[str, str]], pytest.fixture],
     metadata: Annotated[dict[str, str], pytest.fixture],
 ) -> None:
-    duplicate_read1_files = {
-        **files,
-        'file-id-5': {
-            **files['file-id-1'],
-            'local_file_id': 'file-id-5',
-        },
-    }
+    duplicate_read1_files = [*files, {**files[0], 'local_file_id': 'file-id-5'}]
 
     with pytest.raises(ValueError, match="Duplicate file role 'read1' for sample 'sample-a'"):
-        SubmissionSchema(
-            samples=SubmissionSamplesDataset(samples),
-            files=SubmissionFilesDataset(duplicate_read1_files),
-            metadata=SubmissionMetadataModel(metadata),
+        SubmissionModel(
+            samples=samples,
+            files=duplicate_read1_files,
+            metadata=metadata,
         )
 
 
 def test_submission_requires_file_pair_for_every_sample(
-    samples: Annotated[dict[str, dict[str, str]], pytest.fixture],
-    files: Annotated[dict[str, dict[str, str]], pytest.fixture],
+    samples: Annotated[list[dict[str, str]], pytest.fixture],
+    files: Annotated[list[dict[str, str]], pytest.fixture],
     metadata: Annotated[dict[str, str], pytest.fixture],
 ) -> None:
-    files_for_first_sample = {
-        dataset_key: file
-        for dataset_key, file in files.items()
-        if file['local_sample_id'] == 'Sample-A'
-    }
+    files_for_first_sample = [file for file in files if file['local_sample_id'] == 'Sample-A']
 
     with pytest.raises(
         ValueError,
         match="Sample 'sample-b' must have exactly two files \\(read1 and read2\\).",
     ):
-        SubmissionSchema(
-            samples=SubmissionSamplesDataset(samples),
-            files=SubmissionFilesDataset(files_for_first_sample),
-            metadata=SubmissionMetadataModel(metadata),
+        SubmissionModel(
+            samples=samples,
+            files=files_for_first_sample,
+            metadata=metadata,
         )
 
 
 @pytest.mark.usefixtures('runtime_all_engines')
 async def test_sequence_submission_brokering(
-    samples: Annotated[dict[str, dict[str, str]], pytest.fixture],
-    files: Annotated[dict[str, dict[str, str]], pytest.fixture],
+    samples: Annotated[list[dict[str, str]], pytest.fixture],
+    files: Annotated[list[dict[str, str]], pytest.fixture],
     metadata: Annotated[dict[str, str], pytest.fixture],
     sequence_depot: Annotated[MockService, pytest.fixture],
     biosample_vault: Annotated[MockService, pytest.fixture],
