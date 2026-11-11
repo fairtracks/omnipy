@@ -1,9 +1,9 @@
 # Paging URLs and Dataset loading
 
 Use `HttpUrlModel` for URL construction and typed Models for generating finite
-page ranges and merging response records. The runnable declarations are in
-[remote_loading_example.py](remote_loading_example.py); the reusable implementations
-live in the general, nested, and remote components.
+page ranges and merging response records. See the tested
+[integration declarations](../../../../tests/integration/novel/io/helpers/models.py).
+The reusable implementations live in the general and remote components.
 
 ## Generate a known range of page URLs
 
@@ -75,14 +75,14 @@ class Observation(pyd.BaseModel):
 
 @om.mimics(om.Dataset[om.Model[Observation]])
 class ObservationsByPrimaryKey(
-    om.MergePagesOfRecordsIntoDatasetByPrimaryKeyModel[
+    om.MergeListsOfRecordsIntoDatasetByPrimaryKeyModel[
         om.PrimaryKey[Literal['project'], Literal['identity']], Observation
     ]
 ): ...
 
 
 @om.mimics(om.Dataset[om.Model[Observation]])
-class ObservationsByPosition(om.MergePagesOfRecordsIntoDatasetByIndexModel[Observation]): ...
+class ObservationsByPosition(om.MergeListsOfRecordsIntoDatasetByIndexModel[Observation]): ...
 ```
 
 Both Models accept a sequence of record-list pages or a Dataset containing those
@@ -116,12 +116,12 @@ the approved [table architecture spec](../../../../docs/agents/technical/specs/2
 
 ```python
 async def load_observations(urls: ObservationUrls) -> ObservationsByPrimaryKey:
-    return await om.async_load_urls_into_new_dataset.run(urls, dataset_cls=ObservationsByPrimaryKey)
+    return await om.async_load_urls.run(urls, data_cls=ObservationsByPrimaryKey)
 ```
 
-The helper creates an empty instance, calls the shared Model/Dataset
-`load_into()`, and returns that same instance. `ObservationsByPrimaryKey.load(urls)`
-also creates and loads a new Model. The equivalent instance API is:
+The task calls the shared Model/Dataset `load()` to create and load a new
+instance. `ObservationsByPrimaryKey.load(urls)` does the same without the task.
+The equivalent instance API is:
 
 ```python
 async def populate_observations(urls: ObservationUrls) -> ObservationsByPrimaryKey:
@@ -145,7 +145,7 @@ wrappers for explicit completion checks and available-data selection remain a
 separate extension.
 
 At a synchronous entry point without a running event loop, use
-`load_urls_into_new_dataset.run(urls, dataset_cls=ObservationsByPrimaryKey)` or
+`om.load_urls.run(urls, data_cls=ObservationsByPrimaryKey)` or
 `observations.load_into(urls)`. Inside an event loop, await the returned task.
 Loading uses the existing remote sessions, host configuration, retries, and rate
 limits. `as_mime_type` can override response decoding.
@@ -240,7 +240,7 @@ The [paged-loading tests](../../../../tests/integration/novel/io/test_paged_load
 cover direct instance loading, both loading tasks, out-of-order responses, empty
 ranges, malformed records, HTTP failures, composite keys, and collisions. Their
 [declarations](../../../../tests/components/remote/helpers/models.py) and
-[service fixture](../../../../tests/components/remote/conftest.py) provide a complete
+[service fixture](../../../../tests/integration/novel/io/conftest.py) provide a complete
 example without contacting a live API. The
 [posting tests](../../../../tests/integration/novel/io/test_posting.py) cover the
 `post()` entry point the same way, including failed requests and POST retries.

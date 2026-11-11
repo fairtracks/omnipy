@@ -159,7 +159,7 @@ into design rules.
   for examples and the future table design. Do not assume automatic key derivation
   or re-keying is implemented by an ordinary Dataset. Dataset-native primary-key
   typing, rekeying, and continuous key maintenance are planned together. The
-  implemented `PrimaryKeyDatasetModel` in `omnipy.components.nested.models`
+  implemented `PrimaryKeyDatasetModel` in `omnipy.components.general.models`
   supplies interim conversion of Pydantic records, including composite keys and
   collision rejection. It recomputes keys at conversion, not continuously; see
   the reference for defining-module imports and supported inputs.
@@ -325,7 +325,7 @@ Use these four principles for narrative integration tests and their tutorial reu
    serve fixture responses from a local test endpoint so `Dataset.load()`, remote
    tasks, decoding, and model validation run normally. Do not replace Omnipy's
    loader, tasks, or orchestration with fixture implementations. See
-   [HTTP test boundaries](references/remote-loading.md#test-the-real-loader-against-a-mocked-service).
+   [HTTP test boundaries](references/remote-loading.md#test-against-a-local-service).
    An event label or a task-written completion flag alone does not prove the
    operation happened. Keep fixture-specific assertions out of tasks and flows.
 4. **Choose coverage that supports the lesson.** Demonstrate useful combinations

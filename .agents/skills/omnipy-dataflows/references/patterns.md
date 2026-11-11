@@ -264,7 +264,7 @@ explicit rekeying, and continuous maintenance through supported mutations. This
 is planned functionality, not a current Dataset API.
 
 Until then, `PrimaryKeyDatasetModel` in
-[`omnipy.components.nested.models`](../../../../src/omnipy/components/nested/models.py) supplies intermediate
+[`omnipy.components.general.models`](../../../../src/omnipy/components/general/models.py) supplies intermediate
 conversion from a Dataset or list Model of Pydantic records to a Dataset keyed
 by record fields. Declare ordered fields with `PrimaryKey[Literal['field'], ...]`
 from [`omnipy.data.primary_key`](../../../../src/omnipy/data/primary_key.py).
@@ -273,7 +273,7 @@ before constructing the result. It recomputes input Dataset keys without changin
 the source mapping; it does not continuously maintain keys after conversion.
 Dict-valued item Models and direct iterator input are part of the planned
 Dataset-native feature, not guarantees of this converter. See the
-[component tests](../../../../tests/components/nested/test_models.py) for current behavior.
+[component tests](../../../../tests/components/general/test_models.py) for current behavior.
 
 Place relationship validation where its inputs are available. Concrete examples
 in the [submission models](../../../../tests/integration/novel/full/sequence_data_brokering/models.py)
@@ -347,7 +347,7 @@ The flow can use `LoanDataset` directly as its validating constructor, and
 downstream operations can accept that Dataset type. The loop expresses the
 invariant; it does not schedule per-item work. Fetching, combining pages, and
 detecting duplicate records before keying belong to the
-[page-to-record stages](remote-loading.md#from-response-pages-to-domain-records).
+[page-to-record stages](remote-loading.md#merge-response-pages-into-a-typed-dataset).
 
 Avoid adding a separate `Model[LoanDataset]` solely to use `_parse_data()`.
 An outer Model should have an independent contract or conversion purpose that
@@ -1477,7 +1477,7 @@ Call the actual flow and use the existing runtime/engine fixtures. Mock external
 services while exercising real Omnipy functionality. Check transmitted requests
 when they are part of the scenario's contract; a spy is not required for every
 service call. For HTTP ingestion, use a local fixture endpoint and the actual
-loader; see [HTTP test boundaries](remote-loading.md#test-the-real-loader-against-a-mocked-service).
+loader; see [HTTP test boundaries](remote-loading.md#test-against-a-local-service).
 Keep fixture-specific assertions outside tasks and flows. Choose focused failure
 cases for the behavior being introduced instead of expanding every narrative
 example into a comprehensive validation suite.

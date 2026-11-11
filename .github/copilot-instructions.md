@@ -1,6 +1,6 @@
 # Copilot Instructions
 
-Use `/workspaces/github-com-fairtracks-omnipy/AGENTS.md` as the canonical repository instructions.
+Use `AGENTS.md` as the canonical repository instructions.
 
 Apply the repo-specific guidance there for:
 - `uv` setup and command execution

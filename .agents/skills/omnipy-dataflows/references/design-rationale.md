@@ -214,13 +214,13 @@ covers Datasets of dicts or Pydantic records, iterators of key/value pairs or
 Pydantic records, and key checks/derivation after item parsing without losing
 duplicate occurrences. Rekeying and continuous key maintenance are now in scope,
 not a deferred extension. The implemented
-[`PrimaryKeyDatasetModel`](../../../../src/omnipy/components/nested/models.py)
+[`PrimaryKeyDatasetModel`](../../../../src/omnipy/components/general/models.py)
 supplies the intermediate conversion approach, using shared declarations and
 serialization from [`data.primary_key`](../../../../src/omnipy/data/primary_key.py).
 It supersedes the example-local prototype's first-field-only conversion and
 overwrite behavior: composite keys and serialized-key collision rejection are
 implemented and covered by
-[component tests](../../../../tests/components/nested/test_models.py). Key
+[component tests](../../../../tests/components/general/test_models.py). Key
 recomputation occurs during conversion; continuous maintenance and the broader
 Dataset-native input contract remain planned.
 
@@ -244,7 +244,7 @@ The Dataset-validator example previously checked duplicate loan references acros
 pages. The user identified pagination as a separate fetching concern: combine
 pages into one container, then validate domain records and collection-wide rules.
 The example now demonstrates key/content agreement on a record Dataset. The
-[fetching guidance](remote-loading.md#from-response-pages-to-domain-records)
+[fetching guidance](remote-loading.md#merge-response-pages-into-a-typed-dataset)
 explains preserving duplicate occurrences through concatenation and detecting
 collisions before constructing a mapping keyed by normalized record identity.
 Response validation can still happen during loading.
