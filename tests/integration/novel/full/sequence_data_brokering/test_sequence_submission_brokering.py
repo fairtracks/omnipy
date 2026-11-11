@@ -36,13 +36,13 @@ def test_submission_rejects_duplicate_file_role(
         )
 
 
-def test_submission_rejects_duplicate_biosample_vault_sample_id(
+def test_submission_rejects_duplicate_biosamplevault_sample_id(
     samples: Annotated[list[dict[str, str]], pytest.fixture],
     files: Annotated[list[dict[str, str]], pytest.fixture],
     metadata: Annotated[dict[str, str], pytest.fixture],
 ) -> None:
     samples_with_same_vault_id = [
-        {**sample, 'biosample_vault_sample_id': 'BSV:80907461'} for sample in samples
+        {**sample, 'biosamplevault_sample_id': 'BSV:80907461'} for sample in samples
     ]
 
     with pytest.raises(
@@ -80,20 +80,15 @@ async def test_sequence_submission_brokering(
     samples: Annotated[list[dict[str, str]], pytest.fixture],
     files: Annotated[list[dict[str, str]], pytest.fixture],
     metadata: Annotated[dict[str, str], pytest.fixture],
-    sequence_depot: Annotated[MockService, pytest.fixture],
-    biosample_vault: Annotated[MockService, pytest.fixture],
+    services: Annotated[dict[str, dict[str, dict[str, str]]], pytest.fixture],
+    seq_depot: Annotated[MockService, pytest.fixture],
+    biosamplevault: Annotated[MockService, pytest.fixture],
     file_transfer: Annotated[MockService, pytest.fixture],
     expected_completed_submission: Annotated[dict[str, object], pytest.fixture],
-    expected_sequence_depot_requests: Annotated[ReceivedRequests, pytest.fixture],
-    expected_biosample_vault_requests: Annotated[ReceivedRequests, pytest.fixture],
+    expected_seq_depot_requests: Annotated[ReceivedRequests, pytest.fixture],
+    expected_biosamplevault_requests: Annotated[ReceivedRequests, pytest.fixture],
     expected_file_transfer_requests: Annotated[ReceivedRequests, pytest.fixture],
 ) -> None:
-    # The mock services replace the services in production
-    services = {
-        'sequence_depot': {'url': sequence_depot.url},
-        'biosample_vault': {'url': biosample_vault.url},
-        'file_transfer': {'url': file_transfer.url},
-    }
     submission = SubmissionModel(
         samples=samples,
         files=files,
@@ -110,9 +105,9 @@ async def test_sequence_submission_brokering(
 
     assert completed_submission.to_data() == expected_completed_submission
 
-    assert sequence_depot.requests == expected_sequence_depot_requests
-    assert _sorted_by(biosample_vault.requests, 'local_sample_id') == (
-        expected_biosample_vault_requests
+    assert seq_depot.requests == expected_seq_depot_requests
+    assert _sorted_by(biosamplevault.requests, 'local_sample_id') == (
+        expected_biosamplevault_requests
     )
     assert _sorted_by(file_transfer.requests, 'source_uri') == expected_file_transfer_requests
 

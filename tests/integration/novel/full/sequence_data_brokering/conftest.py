@@ -1,14 +1,12 @@
 import asyncio
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, cast
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer
 import pytest
 from pytest_aiohttp import AiohttpServer
-
-from omnipy.components.remote.models import HttpUrlModel
 
 JsonRequest = dict[str, object]
 
@@ -73,7 +71,7 @@ def files() -> list[dict[str, str]]:
 
 
 @pytest.fixture(scope='function')
-def metadata() -> dict[str, str | list[str]]:
+def metadata() -> dict[str, str]:
     return {
         'broker_id': 'omnipy-broker',
         'project_code': 'NORW-PATH-42',
@@ -85,10 +83,28 @@ def metadata() -> dict[str, str | list[str]]:
 
 
 @pytest.fixture(scope='function')
-def expected_completed_submission(
-    sequence_depot: Annotated['MockService', pytest.fixture],
-    biosample_vault: Annotated['MockService', pytest.fixture],
+def services(
+    seq_depot: Annotated['MockService', pytest.fixture],
+    biosamplevault: Annotated['MockService', pytest.fixture],
     file_transfer: Annotated['MockService', pytest.fixture],
+) -> dict[str, dict[str, dict[str, str]]]:
+    """The settings for the mock services, replacing the services in production."""
+    return {
+        'seq_depot': {
+            'urls': {
+                'presubmit': seq_depot.endpoint_url('/presubmit'),
+                'submissions': seq_depot.endpoint_url('/submissions'),
+                'staging': 'ftps://ftp.sequence-depot.example/staging',
+            },
+        },
+        'biosamplevault': {'urls': {'samples': biosamplevault.endpoint_url('/')}},
+        'file_transfer': {'urls': {'transfers': file_transfer.endpoint_url('/')}},
+    }
+
+
+@pytest.fixture(scope='function')
+def expected_completed_submission(
+    services: Annotated[dict[str, dict[str, dict[str, str]]], pytest.fixture],
 ) -> dict[str, object]:
     return {
         'files': {
@@ -99,7 +115,7 @@ def expected_completed_submission(
                 'file_name': 'sample-a_R1.fastq.gz',
                 'md5': 'd2fc58de0e46e6a1a036bf323f7b501f',
                 'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-a_R1.fastq.gz',
-                'staging_storage_uri': 'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/'
+                'staging_storage_uri': 'ftps://ftp.sequence-depot.example/staging/omnipy-broker/sub-2026-alpha/'
                 'sample-a/sample-a_R1.fastq.gz',
                 'transfer_status': 'completed',
                 'error': None,
@@ -111,7 +127,7 @@ def expected_completed_submission(
                 'file_name': 'sample-a_R2.fastq.gz',
                 'md5': '61c4828d7d8e13f8872d1185b28ac492',
                 'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-a_R2.fastq.gz',
-                'staging_storage_uri': 'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/'
+                'staging_storage_uri': 'ftps://ftp.sequence-depot.example/staging/omnipy-broker/sub-2026-alpha/'
                 'sample-a/sample-a_R2.fastq.gz',
                 'transfer_status': 'completed',
                 'error': None,
@@ -123,7 +139,7 @@ def expected_completed_submission(
                 'file_name': 'sample-b_R1.fastq.gz',
                 'md5': '525821c178b6b23320fa56bfaa66e4e4',
                 'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-b_R1.fastq.gz',
-                'staging_storage_uri': 'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/'
+                'staging_storage_uri': 'ftps://ftp.sequence-depot.example/staging/omnipy-broker/sub-2026-alpha/'
                 'sample-b/sample-b_R1.fastq.gz',
                 'transfer_status': 'completed',
                 'error': None,
@@ -135,7 +151,7 @@ def expected_completed_submission(
                 'file_name': 'sample-b_R2.fastq.gz',
                 'md5': 'c0c488a07871ca1c742ce848ce905741',
                 'source_storage_uri': 's3://lab-sequences/sub-2026-alpha/sample-b_R2.fastq.gz',
-                'staging_storage_uri': 'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/'
+                'staging_storage_uri': 'ftps://ftp.sequence-depot.example/staging/omnipy-broker/sub-2026-alpha/'
                 'sample-b/sample-b_R2.fastq.gz',
                 'transfer_status': 'completed',
                 'error': None,
@@ -146,20 +162,20 @@ def expected_completed_submission(
             'local_submission_id': 'sub-2026-alpha',
             'project_code': 'norw-path-42',
             'release_date': '2026-06-15',
-            'sequence_depot_submission_id': 'SQD:4021372983',
+            'seq_depot_submission_id': 'SQD:4021372983',
             'study_title': 'Northern waterways genomic surveillance pilot',
             'submission_checklist_version': 'SQD-paired-reads-checklist-1.2',
         },
         'samples': {
             'sample-a': {
-                'biosample_vault_sample_id': 'BSV:80907461',
+                'biosamplevault_sample_id': 'BSV:80907461',
                 'collection_site': 'North Works',
                 'local_sample_id': 'sample-a',
                 'sampled_at': '2026-05-03',
                 'specimen_type': 'wastewater solids',
             },
             'sample-b': {
-                'biosample_vault_sample_id': 'BSV:80907462',
+                'biosamplevault_sample_id': 'BSV:80907462',
                 'collection_site': 'River Mouth',
                 'local_sample_id': 'sample-b',
                 'sampled_at': '2026-05-10',
@@ -167,44 +183,49 @@ def expected_completed_submission(
             },
         },
         'logistics': {
-            'services': {
-                'sequence_depot': {'url': str(sequence_depot.url)},
-                'biosample_vault': {'url': str(biosample_vault.url)},
-                'file_transfer': {'url': str(file_transfer.url)},
-            },
+            'services': services,
             'status': {
-                'biosample_vault_status': 'completed',
-                'sequence_depot_submission_id_status': 'completed',
-                'sequence_depot_submission_status': 'completed',
-                'transfer_status': 'completed',
+                'biosamplevault_status': 'completed',
+                'seq_depot_submission_id_status': 'completed',
+                'seq_depot_submission_status': 'completed',
+                'file_transfer_status': 'completed',
             },
         },
     }
 
 
 @pytest.fixture(scope='function')
-def expected_sequence_depot_requests(
+def expected_seq_depot_requests(
     expected_completed_submission: Annotated[dict[str, object], pytest.fixture],
 ) -> ReceivedRequests:
-    final_submission = {
-        key: value for key, value in expected_completed_submission.items() if key != 'logistics'
+    # The broker's state is left out of the payload
+    submission = cast(dict[str, dict[str, dict[str, object]]], expected_completed_submission)
+    submission_payload: JsonRequest = {
+        'samples': submission['samples'],
+        'files': {
+            file_id: {
+                key: value for key, value in file.items() if key not in ('transfer_status', 'error')
+            }
+            for file_id, file in submission['files'].items()
+        },
+        'metadata': submission['metadata'],
     }
     return {
-        '/submission-ids': [
+        '/presubmit': [
             {
                 'local_submission_id': 'sub-2026-alpha',
                 'project_code': 'norw-path-42',
-                'sequence_depot_submission_id': None,
+                'seq_depot_submission_id': None,
             },
         ],
-        '/submissions': [final_submission],
+        '/submissions': [submission_payload],
     }
 
 
 @pytest.fixture(scope='function')
-def expected_biosample_vault_requests() -> ReceivedRequests:
+def expected_biosamplevault_requests() -> ReceivedRequests:
     return {
-        '/samples': [
+        '/': [
             {
                 'broker_id': 'omnipy-broker',
                 'project_code': 'norw-path-42',
@@ -213,7 +234,7 @@ def expected_biosample_vault_requests() -> ReceivedRequests:
                 'specimen_type': 'wastewater solids',
                 'geolocation': 'North Works',
                 'sampling_date': '2026-05-03',
-                'biosample_vault_sample_id': None,
+                'biosamplevault_sample_id': None,
             },
             {
                 'broker_id': 'omnipy-broker',
@@ -223,7 +244,7 @@ def expected_biosample_vault_requests() -> ReceivedRequests:
                 'specimen_type': 'river grab',
                 'geolocation': 'River Mouth',
                 'sampling_date': '2026-05-10',
-                'biosample_vault_sample_id': None,
+                'biosamplevault_sample_id': None,
             },
         ],
     }
@@ -232,12 +253,12 @@ def expected_biosample_vault_requests() -> ReceivedRequests:
 @pytest.fixture(scope='function')
 def expected_file_transfer_requests() -> ReceivedRequests:
     return {
-        '/transfers': [
+        '/': [
             {
                 'username': 'omnipy-broker',
                 'source_uri': f's3://lab-sequences/sub-2026-alpha/{file_name}',
                 'target_uri': (
-                    f'ftps://seq-depot-staging/omnipy-broker/sub-2026-alpha/{sample_id}/{file_name}'
+                    f'ftps://ftp.sequence-depot.example/staging/omnipy-broker/sub-2026-alpha/{sample_id}/{file_name}'
                 ),
             }
             for sample_id, file_name in (
@@ -272,15 +293,15 @@ def _create_service_app(routes: Mapping[str, Handler]) -> web.Application:
     return app
 
 
-def _create_sequence_depot_app(
+def _create_seq_depot_app(
     submission_id: str,
     response_delay_secs: float,
 ) -> web.Application:
-    async def _allocate_submission_id(request: web.Request) -> web.Response:
+    async def _presubmit(request: web.Request) -> web.Response:
         submission_id_request = await request.json()
         await asyncio.sleep(response_delay_secs)
         return web.json_response(
-            {**submission_id_request, 'sequence_depot_submission_id': submission_id}
+            {**submission_id_request, 'seq_depot_submission_id': submission_id}
         )
 
     async def _receive_submission(request: web.Request) -> web.Response:
@@ -289,13 +310,13 @@ def _create_sequence_depot_app(
 
     return _create_service_app(
         {
-            '/submission-ids': _allocate_submission_id,
+            '/presubmit': _presubmit,
             '/submissions': _receive_submission,
         }
     )
 
 
-def _create_biosample_vault_app(
+def _create_biosamplevault_app(
     sample_ids: Mapping[str, str],
     response_delay_secs: float,
 ) -> web.Application:
@@ -303,9 +324,9 @@ def _create_biosample_vault_app(
         sample_submission = await request.json()
         sample_id = sample_ids[sample_submission['local_sample_id']]
         await asyncio.sleep(response_delay_secs)
-        return web.json_response({**sample_submission, 'biosample_vault_sample_id': sample_id})
+        return web.json_response({**sample_submission, 'biosamplevault_sample_id': sample_id})
 
-    return _create_service_app({'/samples': _register_sample})
+    return _create_service_app({'/': _register_sample})
 
 
 def _create_file_transfer_app(response_delay_secs: float) -> web.Application:
@@ -313,7 +334,7 @@ def _create_file_transfer_app(response_delay_secs: float) -> web.Application:
         await asyncio.sleep(response_delay_secs)
         return web.json_response({'status': 'completed', 'error': None})
 
-    return _create_service_app({'/transfers': _transfer_file})
+    return _create_service_app({'/': _transfer_file})
 
 
 @dataclass(frozen=True)
@@ -322,9 +343,8 @@ class MockService:
 
     server: TestServer
 
-    @property
-    def url(self) -> HttpUrlModel:
-        return HttpUrlModel(str(self.server.make_url('/')))
+    def endpoint_url(self, path: str) -> str:
+        return str(self.server.make_url(path))
 
     @property
     def requests(self) -> ReceivedRequests:
@@ -332,19 +352,19 @@ class MockService:
 
 
 @pytest.fixture(scope='function')
-async def sequence_depot(aiohttp_server: AiohttpServer) -> MockService:
+async def seq_depot(aiohttp_server: AiohttpServer) -> MockService:
     return MockService(
         await aiohttp_server(
-            _create_sequence_depot_app(submission_id='SQD:4021372983', response_delay_secs=0.01)
+            _create_seq_depot_app(submission_id='SQD:4021372983', response_delay_secs=0.01)
         )
     )
 
 
 @pytest.fixture(scope='function')
-async def biosample_vault(aiohttp_server: AiohttpServer) -> MockService:
+async def biosamplevault(aiohttp_server: AiohttpServer) -> MockService:
     return MockService(
         await aiohttp_server(
-            _create_biosample_vault_app(
+            _create_biosamplevault_app(
                 sample_ids={'sample-a': 'BSV:80907461', 'sample-b': 'BSV:80907462'},
                 response_delay_secs=0.01,
             )

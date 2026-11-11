@@ -1,9 +1,16 @@
+"""Models of the sequence submission dataflow.
+
+`SeqDepot` and `seq_depot` are short for the Sequence Depot, the repository receiving the
+sequence submissions.
+"""
+
 from collections import defaultdict
 from typing import Literal, TypeAlias, TypedDict
 
 from omnipy.components.general.models import ConverterModel, PrimaryKeyDatasetModel
 from omnipy.components.raw.models import DateModel
-from omnipy.components.remote.models import HostUrlModel, HttpUrlModel
+from omnipy.components.remote.datasets import HostUrlDataset
+from omnipy.components.remote.models import HostUrlModel
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.primary_key import PrimaryKey
@@ -58,24 +65,21 @@ class SubmissionSampleSchema(pyd.BaseModel):
     specimen_type: str
     collection_site: str
     sampled_at: DateModel
-    biosample_vault_sample_id: StrippedUpperStr | None = None
+    biosamplevault_sample_id: StrippedUpperStr | None = None
 
 
 @mimics(SubmissionSampleSchema)
 class SubmissionSampleModel(Model[SubmissionSampleSchema]): ...
 
 
-class SubmissionSamplesDataset(Dataset[SubmissionSampleModel]): ...
-
-
-@mimics(SubmissionSamplesDataset)
-class SubmissionSamplesByIdModel(
+@mimics(Dataset[SubmissionSampleModel])
+class SubmissionSamplesDataset(
     PrimaryKeyDatasetModel[PrimaryKey[Literal['local_sample_id']], SubmissionSampleSchema]
 ):
     """Samples keyed by their local id, from a list of samples or a Dataset."""
 
 
-class SubmissionFileSchema(pyd.BaseModel):
+class SeqDepotSubmissionFileSchema(pyd.BaseModel):
     local_file_id: StrippedLowerStr
     local_sample_id: StrippedLowerStr
     file_role: FileRole
@@ -83,8 +87,6 @@ class SubmissionFileSchema(pyd.BaseModel):
     source_storage_uri: S3UrlModel
     staging_storage_uri: FtpUrlModel | None = None
     file_name: FileName = pyd.Field(default='')
-    transfer_status: Status = 'pending'
-    error: str | None = None
 
     @pyd.validator('file_name')
     def _extract_file_name_from_source_storage_uri(cls, file_name: str, values: dict) -> str:
@@ -93,15 +95,30 @@ class SubmissionFileSchema(pyd.BaseModel):
         return file_name
 
 
+@mimics(SeqDepotSubmissionFileSchema)
+class SeqDepotSubmissionFileModel(Model[SeqDepotSubmissionFileSchema]): ...
+
+
+@mimics(Dataset[SeqDepotSubmissionFileModel])
+class SeqDepotSubmissionFilesDataset(
+    PrimaryKeyDatasetModel[PrimaryKey[Literal['local_file_id']], SeqDepotSubmissionFileSchema]
+):
+    """Files keyed by their local id, from a list of files or a Dataset."""
+
+
+class SubmissionFileSchema(SeqDepotSubmissionFileSchema):
+    """A file of the submission, with the outcome of its transfer to the staging area."""
+
+    transfer_status: Status = 'pending'
+    error: str | None = None
+
+
 @mimics(SubmissionFileSchema)
-class SubmissionFileSchemaModel(Model[SubmissionFileSchema]): ...
+class SubmissionFileModel(Model[SubmissionFileSchema]): ...
 
 
-class SubmissionFilesDataset(Dataset[SubmissionFileSchemaModel]): ...
-
-
-@mimics(SubmissionFilesDataset)
-class SubmissionFilesByIdModel(
+@mimics(Dataset[SubmissionFileModel])
+class SubmissionFilesDataset(
     PrimaryKeyDatasetModel[PrimaryKey[Literal['local_file_id']], SubmissionFileSchema]
 ):
     """Files keyed by their local id, from a list of files or a Dataset."""
@@ -114,28 +131,28 @@ class SubmissionMetadataSchema(pyd.BaseModel):
     study_title: str
     release_date: DateModel
     submission_checklist_version: str
-    sequence_depot_submission_id: str | None = None
+    seq_depot_submission_id: str | None = None
 
 
 @mimics(SubmissionMetadataSchema)
 class SubmissionMetadataModel(Model[SubmissionMetadataSchema]): ...
 
 
-class SubmissionStatusSchema(pyd.BaseModel):
-    sequence_depot_submission_id_status: Status = 'pending'
-    biosample_vault_status: Status = 'pending'
-    transfer_status: Status = 'pending'
-    sequence_depot_submission_status: Status = 'pending'
+class BrokeringStatusSchema(pyd.BaseModel):
+    seq_depot_submission_id_status: Status = 'pending'
+    biosamplevault_status: Status = 'pending'
+    file_transfer_status: Status = 'pending'
+    seq_depot_submission_status: Status = 'pending'
 
 
-@mimics(SubmissionStatusSchema)
-class SubmissionStatusModel(Model[SubmissionStatusSchema]): ...
+@mimics(BrokeringStatusSchema)
+class BrokeringStatusModel(Model[BrokeringStatusSchema]): ...
 
 
 class ServiceSchema(pyd.BaseModel):
-    """Settings for using an external service."""
+    """Settings for an external service, with the URLs of its endpoints and storage areas."""
 
-    url: HttpUrlModel
+    urls: HostUrlDataset
 
     # TODO: Add authentication with the service when Omnipy supports handling secrets. Secrets
     #       should then be referenced from here, not stored in the data.
@@ -144,14 +161,20 @@ class ServiceSchema(pyd.BaseModel):
 class ServicesSchema(pyd.BaseModel):
     """The external services used by the broker, by default those in production."""
 
-    sequence_depot: ServiceSchema = ServiceSchema(
-        url=HttpUrlModel('https://api.sequence-depot.example/')
+    seq_depot: ServiceSchema = ServiceSchema(
+        urls=HostUrlDataset(
+            {
+                'presubmit': 'https://api.sequence-depot.example/presubmit',
+                'submissions': 'https://api.sequence-depot.example/submissions',
+                'staging': 'ftps://ftp.sequence-depot.example/staging',
+            }
+        )
     )
-    biosample_vault: ServiceSchema = ServiceSchema(
-        url=HttpUrlModel('https://api.biosample-vault.example/')
+    biosamplevault: ServiceSchema = ServiceSchema(
+        urls=HostUrlDataset({'samples': 'https://samples.biosamplevault.example/'})
     )
     file_transfer: ServiceSchema = ServiceSchema(
-        url=HttpUrlModel('https://transfers.sequence-depot.example/')
+        urls=HostUrlDataset({'transfers': 'https://api.file-transfer.example/'})
     )
 
 
@@ -170,36 +193,39 @@ class LogisticsSchema(pyd.BaseModel):
     services: ServicesModel = pyd.Field(default_factory=ServicesModel)
 
     # State, derived from the submission content as the dataflow proceeds
-    status: SubmissionStatusModel = pyd.Field(default_factory=SubmissionStatusModel)
+    status: BrokeringStatusModel = pyd.Field(default_factory=BrokeringStatusModel)
 
 
 @mimics(LogisticsSchema)
 class LogisticsModel(Model[LogisticsSchema]): ...
 
 
-class _SubmissionDict(TypedDict):
-    samples: SubmissionSamplesByIdModel
-    files: SubmissionFilesByIdModel
+class _SeqDepotSubmissionPayloadDict(TypedDict):
+    samples: SubmissionSamplesDataset
+    files: SeqDepotSubmissionFilesDataset
     metadata: SubmissionMetadataModel
 
 
-class SubmissionSchema(pyd.BaseModel):
+class SeqDepotSubmissionPayloadSchema(pyd.BaseModel):
     """The content of a submission, as sent to the Sequence Depot."""
 
-    samples: SubmissionSamplesByIdModel
-    files: SubmissionFilesByIdModel
+    samples: SubmissionSamplesDataset
+    files: SeqDepotSubmissionFilesDataset
     metadata: SubmissionMetadataModel
 
+    # TODO: Consider general support for checking if field values
+    #       of Model-wrapped Pydantic records are unique.
+
     @pyd.validator('samples')
-    def _biosample_vault_sample_ids_are_unique(
+    def _biosamplevault_sample_ids_are_unique(
         cls,
-        samples: SubmissionSamplesByIdModel,
-    ) -> SubmissionSamplesByIdModel:
+        samples: SubmissionSamplesDataset,
+    ) -> SubmissionSamplesDataset:
         # Samples are keyed by their local ids, so ids assigned by the BioSample Vault are
         # checked here
         local_sample_ids_per_vault_id: dict[str, str] = {}
         for sample in samples.values():
-            vault_id = sample.biosample_vault_sample_id
+            vault_id = sample.biosamplevault_sample_id
             if vault_id is None:
                 continue
             if vault_id in local_sample_ids_per_vault_id:
@@ -213,9 +239,9 @@ class SubmissionSchema(pyd.BaseModel):
     @pyd.validator('files')
     def _samples_have_one_read1_and_one_read2(
         cls,
-        files: SubmissionFilesByIdModel,
-        values: _SubmissionDict,
-    ) -> SubmissionFilesByIdModel:
+        files: SeqDepotSubmissionFilesDataset,
+        values: _SeqDepotSubmissionPayloadDict,
+    ) -> SeqDepotSubmissionFilesDataset:
         file_roles_per_sample: defaultdict[str, set[FileRole]] = defaultdict(set)
 
         for file in files.values():
@@ -244,9 +270,9 @@ class SubmissionSchema(pyd.BaseModel):
     @pyd.validator('files')
     def _file_sample_ids_exist(
         cls,
-        files: SubmissionFilesByIdModel,
-        values: _SubmissionDict,
-    ) -> SubmissionFilesByIdModel:
+        files: SeqDepotSubmissionFilesDataset,
+        values: _SeqDepotSubmissionPayloadDict,
+    ) -> SeqDepotSubmissionFilesDataset:
         # Missing if the samples failed validation, which is reported separately
         if 'samples' in values:
             sample_ids = {sample.local_sample_id for sample in values['samples'].values()}
@@ -260,14 +286,21 @@ class SubmissionSchema(pyd.BaseModel):
         return files
 
 
-class SubmissionWithLogisticsSchema(SubmissionSchema):
+class _SubmissionDict(TypedDict):
+    samples: SubmissionSamplesDataset
+    files: SubmissionFilesDataset
+    metadata: SubmissionMetadataModel
+
+
+class SubmissionSchema(SeqDepotSubmissionPayloadSchema):
+    files: SubmissionFilesDataset
     logistics: LogisticsModel = pyd.Field(default_factory=LogisticsModel)
 
-    # TODO: Redesign _update_sequence_depot_submission_id_status,
-    #       _update_transfer_status and _update_biosample_vault_status as
+    # TODO: Redesign _update_seq_depot_submission_id_status,
+    #       _update_file_transfer_status and _update_biosamplevault_status as
     #       @computed_fields in Pydantic v2
     @pyd.validator('logistics')
-    def _update_sequence_depot_submission_id_status(
+    def _update_seq_depot_submission_id_status(
         cls,
         logistics: LogisticsModel,
         values: _SubmissionDict,
@@ -275,15 +308,15 @@ class SubmissionWithLogisticsSchema(SubmissionSchema):
         # Missing if the metadata failed validation, which is reported separately
         if 'metadata' in values:
             status = logistics.status
-            if values['metadata'].sequence_depot_submission_id is not None:
-                status.sequence_depot_submission_id_status = 'completed'
+            if values['metadata'].seq_depot_submission_id is not None:
+                status.seq_depot_submission_id_status = 'completed'
             else:
-                status.sequence_depot_submission_id_status = 'pending'
+                status.seq_depot_submission_id_status = 'pending'
 
         return logistics
 
     @pyd.validator('logistics')
-    def _update_transfer_status(
+    def _update_file_transfer_status(
         cls,
         logistics: LogisticsModel,
         values: _SubmissionDict,
@@ -295,18 +328,18 @@ class SubmissionWithLogisticsSchema(SubmissionSchema):
                 file.transfer_status for file in values['files'].values()
             }
             if len(all_files_transfer_status) == 0:
-                status.transfer_status = 'N/A'
+                status.file_transfer_status = 'N/A'
             elif 'failed' in all_files_transfer_status:
-                status.transfer_status = 'failed'
+                status.file_transfer_status = 'failed'
             elif 'pending' in all_files_transfer_status:
-                status.transfer_status = 'pending'
+                status.file_transfer_status = 'pending'
             else:
-                status.transfer_status = 'completed'
+                status.file_transfer_status = 'completed'
 
         return logistics
 
     @pyd.validator('logistics')
-    def _update_biosample_vault_status(
+    def _update_biosamplevault_status(
         cls,
         logistics: LogisticsModel,
         values: _SubmissionDict,
@@ -316,54 +349,54 @@ class SubmissionWithLogisticsSchema(SubmissionSchema):
             status = logistics.status
             samples = values['samples'].values()
             if len(samples) == 0:
-                status.biosample_vault_status = 'N/A'
-            elif all(sample.biosample_vault_sample_id is not None for sample in samples):
-                status.biosample_vault_status = 'completed'
+                status.biosamplevault_status = 'N/A'
+            elif all(sample.biosamplevault_sample_id is not None for sample in samples):
+                status.biosamplevault_status = 'completed'
             else:
-                status.biosample_vault_status = 'pending'
+                status.biosamplevault_status = 'pending'
 
         return logistics
 
 
-@mimics(SubmissionWithLogisticsSchema)
-class SubmissionModel(Model[SubmissionWithLogisticsSchema]): ...
-
-
 @mimics(SubmissionSchema)
-class FinalSubmissionModel(Model[SubmissionSchema]): ...
+class SubmissionModel(Model[SubmissionSchema]): ...
 
 
-class SequenceDepotSubmissionIdRequest(pyd.BaseModel):
+@mimics(SeqDepotSubmissionPayloadSchema)
+class SeqDepotSubmissionPayloadModel(Model[SeqDepotSubmissionPayloadSchema]): ...
+
+
+class SeqDepotPresubmitSchema(pyd.BaseModel):
     local_submission_id: str
     project_code: str
-    sequence_depot_submission_id: str | None = None
+    seq_depot_submission_id: str | None = None
 
 
-class SequenceDepotSubmissionReceipt(pyd.BaseModel):
+class SeqDepotSubmissionReceiptSchema(pyd.BaseModel):
     accepted: bool
 
 
-class FileTransferRequest(pyd.BaseModel):
+class FileTransferRequestSchema(pyd.BaseModel):
     username: str
     source_uri: S3UrlModel
     target_uri: FtpUrlModel
 
 
-class FileTransferResponse(pyd.BaseModel):
-    status: Status
+class FileTransferResponseSchema(pyd.BaseModel):
+    status: Literal['completed', 'failed']
     error: str | None = None
 
 
-@mimics(SequenceDepotSubmissionIdRequest)
-class SubmissionToSequenceDepotRequestMapper(
+@mimics(SeqDepotPresubmitSchema)
+class SubmissionToSeqDepotPresubmitMapper(
     ConverterModel[
         SubmissionModel,
-        SequenceDepotSubmissionIdRequest,
+        SeqDepotPresubmitSchema,
     ]
 ):
     @classmethod
-    def _convert(cls, data: SubmissionModel) -> SequenceDepotSubmissionIdRequest:
-        return SequenceDepotSubmissionIdRequest(
+    def _convert(cls, data: SubmissionModel) -> SeqDepotPresubmitSchema:
+        return SeqDepotPresubmitSchema(
             local_submission_id=data.metadata.local_submission_id,
             project_code=data.metadata.project_code,
         )
@@ -377,7 +410,7 @@ class BioSampleVaultSampleSubmissionSchema(pyd.BaseModel):
     specimen_type: str
     geolocation: str
     sampling_date: DateModel
-    biosample_vault_sample_id: StrippedUpperStr | None = None
+    biosamplevault_sample_id: StrippedUpperStr | None = None
 
 
 @mimics(BioSampleVaultSampleSubmissionSchema)
