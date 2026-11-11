@@ -121,7 +121,7 @@ For example: "Cleanup ConfigBase display methods. Misc fixes in BaseDisplayMixin
 
 ## Docs
 
-- User-facing README content is `docs/readme.md`, not a root `README.md`.
+- User-facing README content is written in `docs/readme.md`, the MkDocs home page, whose examples run when the docs are built. The root `README.md` (shown by GitHub and PyPI) and `docs/images/readme/*.svg` are generated from it: after editing `docs/readme.md`, run `uv run python docs/gen_readme.py` and commit the results. `hatch_build.py` rewrites the image links to raw GitHub URLs of the release tag when the package is built, so PyPI shows the images of the released version.
 - Docs use MkDocs Material. `mkdocs.yml` runs `docs/gen_ref_pages.py` via `mkdocs-gen-files` to generate API reference pages.
 - Docs dev server: `uv run mkdocs serve`
 
