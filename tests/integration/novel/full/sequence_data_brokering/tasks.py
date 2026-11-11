@@ -55,7 +55,11 @@ async def allocate_sequence_depot_submission_id(
         submission.logistics.services.sequence_depot.url,
         SubmissionToSequenceDepotRequestMapper(submission),
     )
-    submission.metadata.sequence_depot_submission_id = request_return.sequence_depot_submission_id
+    metadata = submission.metadata
+    metadata.sequence_depot_submission_id = request_return.sequence_depot_submission_id
+
+    # Assigning through the submission reruns its validators, deriving the status
+    submission.metadata = metadata
 
     return submission
 
