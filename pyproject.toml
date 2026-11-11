@@ -1,8 +1,7 @@
 [project]
 name = "omnipy"
-dynamic = ["version"]
+dynamic = ["version", "readme"]
 description = "Omnipy is a type-driven Python library for data conversion, parsing and wrangling; tool and web service interoperability; and scalable dataflow orchestration"
-readme = "docs/readme.md"
 requires-python = ">=3.11.4,<3.16"
 license = { file = "LICENSE" }
 authors = [
@@ -130,6 +129,9 @@ source = "vcs"
 tag-pattern = "^omnipy_v(?P<version>.+)$"
 # Only release tags count (the repo has other tags, e.g. "run_docs_42")
 raw-options = { scm = { git = { describe_command = "git describe --dirty --tags --long --match 'omnipy_v*'" } } }
+
+# The readme is README.md with its image links made absolute for PyPI, see hatch_build.py
+[tool.hatch.metadata.hooks.custom]
 
 [tool.uv]
 # Rebuild the editable install when the commit or the tags change, to update the version
