@@ -53,7 +53,7 @@ Status = Literal['N/A', 'pending', 'failed', 'completed']
 
 
 class SubmissionSampleSchema(pyd.BaseModel):
-    local_sample_alias: StrippedLowerStr
+    local_sample_id: StrippedLowerStr
     specimen_type: str
     collection_site: str
     sampled_at: DateModel
@@ -68,8 +68,8 @@ class SubmissionSamplesDataset(Dataset[SubmissionSampleModel]): ...
 
 
 class SubmissionFileSchema(pyd.BaseModel):
-    file_id: StrippedLowerStr
-    local_sample_alias: StrippedLowerStr
+    local_file_id: StrippedLowerStr
+    local_sample_id: StrippedLowerStr
     file_role: FileRole
     md5: Md5Str
     source_storage_uri: S3UrlModel
@@ -94,7 +94,7 @@ class SubmissionFilesDataset(Dataset[SubmissionFileSchemaModel]): ...
 
 class SubmissionMetadataSchema(pyd.BaseModel):
     broker_id: StrippedLowerStr
-    local_submission_alias: StrippedLowerStr
+    local_submission_id: StrippedLowerStr
     project_code: StrippedLowerStr
     study_title: str
     release_date: DateModel
@@ -177,27 +177,28 @@ class SubmissionSchema(pyd.BaseModel):
 
     # TODO: Generalize Dataset primary-key validation for Models of Pydantic records.
     @pyd.validator('samples')
-    def _sample_dataset_keys_match_local_sample_aliases(
+    def _sample_dataset_keys_match_local_sample_ids(
         cls,
         samples: SubmissionSamplesDataset,
     ) -> SubmissionSamplesDataset:
         for dataset_key, sample in samples.items():
-            if dataset_key != sample.local_sample_alias:
+            if dataset_key != sample.local_sample_id:
                 raise ValueError(
-                    f"Sample Dataset key '{dataset_key}' must match local_sample_alias "
-                    f"'{sample.local_sample_alias}'"
+                    f"Sample Dataset key '{dataset_key}' must match local_sample_id "
+                    f"'{sample.local_sample_id}'"
                 )
         return samples
 
     @pyd.validator('files')
-    def _file_dataset_keys_match_file_ids(
+    def _file_dataset_keys_match_local_file_ids(
         cls,
         files: SubmissionFilesDataset,
     ) -> SubmissionFilesDataset:
         for dataset_key, file in files.items():
-            if dataset_key != file.file_id:
+            if dataset_key != file.local_file_id:
                 raise ValueError(
-                    f"File Dataset key '{dataset_key}' must match file_id '{file.file_id}'"
+                    f"File Dataset key '{dataset_key}' must match local_file_id "
+                    f"'{file.local_file_id}'"
                 )
         return files
 
@@ -210,20 +211,20 @@ class SubmissionSchema(pyd.BaseModel):
         file_roles_per_sample: defaultdict[str, set[FileRole]] = defaultdict(set)
 
         for file in files.values():
-            file_roles = file_roles_per_sample[file.local_sample_alias]
+            file_roles = file_roles_per_sample[file.local_sample_id]
             if file.file_role in file_roles:
                 raise ValueError(
-                    f"Duplicate file role '{file.file_role}' for sample '{file.local_sample_alias}'"
+                    f"Duplicate file role '{file.file_role}' for sample '{file.local_sample_id}'"
                 )
             file_roles.add(file.file_role)
 
         # Missing if the samples failed validation, which is reported separately
         if 'samples' in values:
             for sample in values['samples'].values():
-                file_roles = file_roles_per_sample[sample.local_sample_alias]
+                file_roles = file_roles_per_sample[sample.local_sample_id]
                 if file_roles != {'read1', 'read2'}:
                     raise ValueError(
-                        f"Sample '{sample.local_sample_alias}' must have exactly two files "
+                        f"Sample '{sample.local_sample_id}' must have exactly two files "
                         '(read1 and read2).'
                     )
 
@@ -233,19 +234,19 @@ class SubmissionSchema(pyd.BaseModel):
     #       Pydantic models containing datasets.
 
     @pyd.validator('files')
-    def _file_sample_aliases_exist(
+    def _file_sample_ids_exist(
         cls,
         files: SubmissionFilesDataset,
         values: _SubmissionDict,
     ) -> SubmissionFilesDataset:
         # Missing if the samples failed validation, which is reported separately
         if 'samples' in values:
-            sample_aliases = {sample.local_sample_alias for sample in values['samples'].values()}
+            sample_ids = {sample.local_sample_id for sample in values['samples'].values()}
             for file in files.values():
-                if file.local_sample_alias not in sample_aliases:
+                if file.local_sample_id not in sample_ids:
                     raise ValueError(
-                        f'File "{file.file_id}" has local_sample_alias '
-                        f'"{file.local_sample_alias}" which does not match any '
+                        f'File "{file.local_file_id}" has local_sample_id '
+                        f'"{file.local_sample_id}" which does not match any '
                         f'sample in the submission.'
                     )
         return files
@@ -328,7 +329,7 @@ class FinalSubmissionModel(Model[SubmissionSchema]): ...
 
 
 class SequenceDepotSubmissionIdRequest(pyd.BaseModel):
-    local_submission_alias: str
+    local_submission_id: str
     project_code: str
     sequence_depot_submission_id: str | None = None
 
@@ -358,7 +359,7 @@ class SubmissionToSequenceDepotRequestMapper(
     @classmethod
     def _convert(cls, data: SubmissionModel) -> SequenceDepotSubmissionIdRequest:
         return SequenceDepotSubmissionIdRequest(
-            local_submission_alias=data.metadata.local_submission_alias,
+            local_submission_id=data.metadata.local_submission_id,
             project_code=data.metadata.project_code,
         )
 
@@ -367,7 +368,7 @@ class BioSampleVaultSampleSubmissionSchema(pyd.BaseModel):
     broker_id: StrippedLowerStr
     project_code: StrippedLowerStr
     study_title: str
-    local_sample_alias: StrippedLowerStr
+    local_sample_id: StrippedLowerStr
     specimen_type: str
     geolocation: str
     sampling_date: DateModel
@@ -390,7 +391,7 @@ class SampleAndMetadataToBioSampleVaultSubmissionMapper(
             broker_id=metadata.broker_id,
             project_code=metadata.project_code,
             study_title=metadata.study_title,
-            local_sample_alias=sample.local_sample_alias,
+            local_sample_id=sample.local_sample_id,
             specimen_type=sample.specimen_type,
             geolocation=sample.collection_site,
             sampling_date=sample.sampled_at,

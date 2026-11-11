@@ -86,7 +86,7 @@ def _create_staging_url(
     metadata: SubmissionMetadataModel,
 ) -> FtpUrlModel:
     staging_uri = FtpUrlModel('ftps://seq-depot-staging')
-    staging_uri.path // metadata.broker_id // metadata.local_submission_alias // file.file_name
+    staging_uri.path // metadata.broker_id // metadata.local_submission_id // file.file_name
     return staging_uri
 
 

@@ -36,7 +36,7 @@ def test_submission_rejects_duplicate_file_role(
         **files,
         'file-id-5': {
             **files['file-id-1'],
-            'file_id': 'file-id-5',
+            'local_file_id': 'file-id-5',
         },
     }
 
@@ -56,7 +56,7 @@ def test_submission_requires_file_pair_for_every_sample(
     files_for_first_sample = {
         dataset_key: file
         for dataset_key, file in files.items()
-        if file['local_sample_alias'] == 'Sample-A'
+        if file['local_sample_id'] == 'Sample-A'
     }
 
     with pytest.raises(
@@ -106,7 +106,7 @@ async def test_sequence_submission_brokering(
     assert completed_submission.to_data() == expected_completed_submission
 
     assert sequence_depot.requests == expected_sequence_depot_requests
-    assert _sorted_by(biosample_vault.requests, 'local_sample_alias') == (
+    assert _sorted_by(biosample_vault.requests, 'local_sample_id') == (
         expected_biosample_vault_requests
     )
     assert _sorted_by(file_transfer.requests, 'source_uri') == expected_file_transfer_requests
