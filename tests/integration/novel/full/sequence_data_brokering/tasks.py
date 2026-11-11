@@ -51,11 +51,16 @@ def collect_submission_model(
 async def allocate_seq_depot_submission_id(
     submission: SubmissionModel,
 ) -> SubmissionModel:
-    presubmit_url = submission.logistics.services.seq_depot.urls['presubmit']
+    presubmit_api_url = submission.logistics.services.seq_depot.urls['presubmit']
     presubmit_request = SubmissionToSeqDepotPresubmitMapper(submission)
+
     response = await resolve(
-        presubmit_request.post(presubmit_url, response_cls=Model[SeqDepotPresubmitSchema])
+        presubmit_request.post(
+            presubmit_api_url,
+            response_cls=Model[SeqDepotPresubmitSchema],
+        )
     )
+
     with submission.updating():
         submission.metadata.seq_depot_submission_id = response.seq_depot_submission_id
 
