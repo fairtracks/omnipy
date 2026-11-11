@@ -1,10 +1,10 @@
-from omnipy.components.remote.models import HttpUrlModel
 from omnipy.compute.task import TaskTemplate
 
 from .models import (
     FinalSubmissionModel,
     FtpUrlModel,
     SampleAndMetadataToBioSampleVaultSubmissionMapper,
+    ServicesModel,
     SubmissionFileSchemaModel,
     SubmissionFilesDataset,
     SubmissionMetadataModel,
@@ -29,6 +29,7 @@ def explode_submission_model(submission: SubmissionModel) -> dict[str, object]:
         'samples': submission.samples,
         'files': submission.files,
         'metadata': submission.metadata,
+        'services': submission.logistics.services,
     }
 
 
@@ -49,11 +50,9 @@ def collect_submission_model(
 @TaskTemplate()
 async def allocate_sequence_depot_submission_id(
     submission: SubmissionModel,
-    *,
-    sequence_depot_url: HttpUrlModel,
 ) -> SubmissionModel:
     request_return = await request_sequence_depot_submission_id(
-        sequence_depot_url,
+        submission.logistics.services.sequence_depot.url,
         SubmissionToSequenceDepotRequestMapper(submission),
     )
     submission.metadata.sequence_depot_submission_id = request_return.sequence_depot_submission_id
@@ -66,11 +65,14 @@ async def register_all_samples_with_biosamplevault(
     dataset: SubmissionSampleModel,
     *,
     metadata: SubmissionMetadataModel,
-    biosample_vault_url: HttpUrlModel,
+    services: ServicesModel,
 ) -> SubmissionSampleModel:
     sample = dataset
     bsv_submission = SampleAndMetadataToBioSampleVaultSubmissionMapper((sample, metadata))
-    bsv_submission = await register_sample_with_biosamplevault(biosample_vault_url, bsv_submission)
+    bsv_submission = await register_sample_with_biosamplevault(
+        services.biosample_vault.url,
+        bsv_submission,
+    )
     sample.biosample_vault_sample_id = bsv_submission.biosample_vault_sample_id
     return sample
 
@@ -89,12 +91,12 @@ async def transfer_all_files(
     dataset: SubmissionFileSchemaModel,
     *,
     metadata: SubmissionMetadataModel,
-    file_transfer_url: HttpUrlModel,
+    services: ServicesModel,
 ) -> SubmissionFileSchemaModel:
     file = dataset
     file.staging_storage_uri = _create_staging_url(file, metadata)
     status, error = await transfer_file(
-        file_transfer_url,
+        services.file_transfer.url,
         username=metadata.broker_id,
         source_uri=file.source_storage_uri,
         target_uri=file.staging_storage_uri,
@@ -108,20 +110,21 @@ async def transfer_all_files(
 @TaskTemplate()
 async def finalize_sequence_depot_submission(
     submission: SubmissionModel,
-    *,
-    sequence_depot_url: HttpUrlModel,
 ) -> SubmissionModel:
-    assert submission.status.sequence_depot_submission_id_status == 'completed'
-    assert submission.status.biosample_vault_status == 'completed'
-    assert submission.status.transfer_status == 'completed'
+    assert submission.logistics.status.sequence_depot_submission_id_status == 'completed'
+    assert submission.logistics.status.biosample_vault_status == 'completed'
+    assert submission.logistics.status.transfer_status == 'completed'
 
     final_submission = FinalSubmissionModel(
         samples=submission.samples,
         files=submission.files,
         metadata=submission.metadata,
     )
-    ok = await submit_final_submission_to_sequence_depot(sequence_depot_url, final_submission)
+    ok = await submit_final_submission_to_sequence_depot(
+        submission.logistics.services.sequence_depot.url,
+        final_submission,
+    )
     assert ok
-    submission.status.sequence_depot_submission_status = 'completed'
+    submission.logistics.status.sequence_depot_submission_status = 'completed'
 
     return submission

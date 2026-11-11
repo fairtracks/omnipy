@@ -85,7 +85,11 @@ def metadata() -> dict[str, str | list[str]]:
 
 
 @pytest.fixture(scope='function')
-def expected_sequence_depot_submission_payload() -> dict[str, object]:
+def expected_completed_submission(
+    sequence_depot: Annotated['MockService', pytest.fixture],
+    biosample_vault: Annotated['MockService', pytest.fixture],
+    file_transfer: Annotated['MockService', pytest.fixture],
+) -> dict[str, object]:
     return {
         'files': {
             'file-id-1': {
@@ -159,23 +163,28 @@ def expected_sequence_depot_submission_payload() -> dict[str, object]:
                 'specimen_type': 'river grab',
             },
         },
-        'status': {
-            'biosample_vault_status': 'completed',
-            'sequence_depot_submission_id_status': 'completed',
-            'sequence_depot_submission_status': 'completed',
-            'transfer_status': 'completed',
+        'logistics': {
+            'services': {
+                'sequence_depot': {'url': str(sequence_depot.url)},
+                'biosample_vault': {'url': str(biosample_vault.url)},
+                'file_transfer': {'url': str(file_transfer.url)},
+            },
+            'status': {
+                'biosample_vault_status': 'completed',
+                'sequence_depot_submission_id_status': 'completed',
+                'sequence_depot_submission_status': 'completed',
+                'transfer_status': 'completed',
+            },
         },
     }
 
 
 @pytest.fixture(scope='function')
 def expected_sequence_depot_requests(
-    expected_sequence_depot_submission_payload: Annotated[dict[str, object], pytest.fixture],
+    expected_completed_submission: Annotated[dict[str, object], pytest.fixture],
 ) -> ReceivedRequests:
     final_submission = {
-        key: value
-        for key, value in expected_sequence_depot_submission_payload.items()
-        if key != 'status'
+        key: value for key, value in expected_completed_submission.items() if key != 'logistics'
     }
     return {
         '/submission-ids': [

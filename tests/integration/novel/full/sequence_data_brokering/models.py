@@ -3,7 +3,7 @@ from typing import Literal, TypeAlias, TypedDict
 
 from omnipy.components.general.models import ConverterModel
 from omnipy.components.raw.models import DateModel
-from omnipy.components.remote.models import HostUrlModel
+from omnipy.components.remote.models import HostUrlModel, HttpUrlModel
 from omnipy.data.dataset import Dataset
 from omnipy.data.model import Model
 from omnipy.data.typing.helpers import mimics
@@ -117,13 +117,60 @@ class SubmissionStatusSchema(pyd.BaseModel):
 class SubmissionStatusModel(Model[SubmissionStatusSchema]): ...
 
 
-class _SubmissionRecordDict(TypedDict):
+class ServiceSchema(pyd.BaseModel):
+    """Settings for using an external service."""
+
+    url: HttpUrlModel
+
+    # TODO: Add authentication with the service when Omnipy supports handling secrets. Secrets
+    #       should then be referenced from here, not stored in the data.
+
+
+class ServicesSchema(pyd.BaseModel):
+    """The external services used by the broker, by default those in production."""
+
+    sequence_depot: ServiceSchema = ServiceSchema(
+        url=HttpUrlModel('https://api.sequence-depot.example/')
+    )
+    biosample_vault: ServiceSchema = ServiceSchema(
+        url=HttpUrlModel('https://api.biosample-vault.example/')
+    )
+    file_transfer: ServiceSchema = ServiceSchema(
+        url=HttpUrlModel('https://transfers.sequence-depot.example/')
+    )
+
+
+@mimics(ServicesSchema)
+class ServicesModel(Model[ServicesSchema]): ...
+
+
+class LogisticsSchema(pyd.BaseModel):
+    """The broker's handling of a submission: the services to use and how far it has got.
+
+    Logistics are not part of the submission sent to the Sequence Depot. Other broker-side
+    settings for a submission belong here as well.
+    """
+
+    # Settings, provided as input and only read by the dataflow
+    services: ServicesModel = pyd.Field(default_factory=ServicesModel)
+
+    # State, derived from the submission content as the dataflow proceeds
+    status: SubmissionStatusModel = pyd.Field(default_factory=SubmissionStatusModel)
+
+
+@mimics(LogisticsSchema)
+class LogisticsModel(Model[LogisticsSchema]): ...
+
+
+class _SubmissionDict(TypedDict):
     samples: SubmissionSamplesDataset
     files: SubmissionFilesDataset
     metadata: SubmissionMetadataModel
 
 
-class SubmissionRecord(pyd.BaseModel):
+class SubmissionSchema(pyd.BaseModel):
+    """The content of a submission, as sent to the Sequence Depot."""
+
     samples: SubmissionSamplesDataset
     files: SubmissionFilesDataset
     metadata: SubmissionMetadataModel
@@ -158,7 +205,7 @@ class SubmissionRecord(pyd.BaseModel):
     def _samples_have_one_read1_and_one_read2(
         cls,
         files: SubmissionFilesDataset,
-        values: _SubmissionRecordDict,
+        values: _SubmissionDict,
     ) -> SubmissionFilesDataset:
         file_roles_per_sample: defaultdict[str, set[FileRole]] = defaultdict(set)
 
@@ -187,7 +234,7 @@ class SubmissionRecord(pyd.BaseModel):
     def _file_sample_aliases_exist(
         cls,
         files: SubmissionFilesDataset,
-        values: _SubmissionRecordDict,
+        values: _SubmissionDict,
     ) -> SubmissionFilesDataset:
         sample_aliases = {sample.local_sample_alias for sample in values['samples'].values()}
         for file in files.values():
@@ -200,31 +247,33 @@ class SubmissionRecord(pyd.BaseModel):
         return files
 
 
-class SubmissionRecordWithStatus(SubmissionRecord):
-    status: SubmissionStatusModel = pyd.Field(default_factory=SubmissionStatusModel)
+class SubmissionWithLogisticsSchema(SubmissionSchema):
+    logistics: LogisticsModel = pyd.Field(default_factory=LogisticsModel)
 
     # TODO: Redesign _update_sequence_depot_submission_id_status,
     #       _update_transfer_status and _update_biosample_vault_status as
     #       @computed_fields in Pydantic v2
-    @pyd.validator('status')
+    @pyd.validator('logistics')
     def _update_sequence_depot_submission_id_status(
         cls,
-        status: SubmissionStatusModel,
-        values: _SubmissionRecordDict,
-    ) -> SubmissionStatusModel:
+        logistics: LogisticsModel,
+        values: _SubmissionDict,
+    ) -> LogisticsModel:
+        status = logistics.status
         if values['metadata'].sequence_depot_submission_id is not None:
             status.sequence_depot_submission_id_status = 'completed'
         else:
             status.sequence_depot_submission_id_status = 'pending'
 
-        return status
+        return logistics
 
-    @pyd.validator('status')
+    @pyd.validator('logistics')
     def _update_transfer_status(
         cls,
-        status: SubmissionStatusModel,
-        values: _SubmissionRecordDict,
-    ) -> SubmissionStatusModel:
+        logistics: LogisticsModel,
+        values: _SubmissionDict,
+    ) -> LogisticsModel:
+        status = logistics.status
         all_files_transfer_status: set[Status] = {
             file.transfer_status for file in values['files'].values()
         }
@@ -237,14 +286,15 @@ class SubmissionRecordWithStatus(SubmissionRecord):
         else:
             status.transfer_status = 'completed'
 
-        return status
+        return logistics
 
-    @pyd.validator('status')
+    @pyd.validator('logistics')
     def _update_biosample_vault_status(
         cls,
-        status: SubmissionStatusModel,
+        logistics: LogisticsModel,
         values: dict,
-    ) -> SubmissionStatusModel:
+    ) -> LogisticsModel:
+        status = logistics.status
         samples = values.get('samples', {}).values()
         all_samples_biosample_vault_ids: set[StrippedUpperStr] = {
             sample.biosample_vault_sample_id
@@ -258,15 +308,15 @@ class SubmissionRecordWithStatus(SubmissionRecord):
         else:
             status.biosample_vault_status = 'pending'
 
-        return status
+        return logistics
 
 
-@mimics(SubmissionRecordWithStatus)
-class SubmissionModel(Model[SubmissionRecordWithStatus]): ...
+@mimics(SubmissionWithLogisticsSchema)
+class SubmissionModel(Model[SubmissionWithLogisticsSchema]): ...
 
 
-@mimics(SubmissionRecord)
-class FinalSubmissionModel(Model[SubmissionRecord]): ...
+@mimics(SubmissionSchema)
+class FinalSubmissionModel(Model[SubmissionSchema]): ...
 
 
 class SequenceDepotSubmissionIdRequest(pyd.BaseModel):
