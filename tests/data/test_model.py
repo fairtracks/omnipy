@@ -1,6 +1,6 @@
 """Tests for data models."""
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, ItemsView, Sequence, ValuesView
 from copy import copy, deepcopy
 from dataclasses import dataclass
 from datetime import datetime
@@ -3810,6 +3810,71 @@ def test_mimic_list_and_dict_iterators(
     else:
         assert tuple(dict_model.values()) == ('abc', 'bcd', 'cde')
         assert tuple(dict_model.items()) == ((0, 'abc'), (1, 'bcd'), (2, 'cde'))
+
+
+def test_mimic_dict_values_and_items_views(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    assert_model_if_dyn_conv_else_val: Annotated[AssertModelOrValFunc, pytest.fixture],
+) -> None:
+    model = Model[dict[str, int]]({'a': 1, 'b': 2})
+    values = model.values()
+    items = model.items()
+
+    assert isinstance(values, ValuesView)
+    assert isinstance(items, ItemsView)
+    assert len(values) == len(items) == 2
+
+    # Like the views of dict, they can be iterated more than once, also in reverse
+    for _ in range(2):
+        for value, (key, item_value), expected_key, expected_value in zip(
+            values, items, ['a', 'b'], [1, 2], strict=True
+        ):
+            assert key == expected_key
+            assert_model_if_dyn_conv_else_val(value, int, expected_value)
+            assert_model_if_dyn_conv_else_val(item_value, int, expected_value)
+    assert [key for key, _ in reversed(items)] == ['b', 'a']
+
+    # Raw elements are found, also when the elements are converted to Models
+    assert 1 in values
+    assert ('a', 1) in items
+    assert 3 not in values
+    assert ('a', 2) not in items
+
+    # The views reflect later changes to the model
+    model['c'] = 3
+    assert len(values) == len(items) == 3
+    assert 3 in values
+    assert ('c', 3) in items
+
+    # Set operations of ItemsView. For dynamic conversion of elements, see
+    # test_set_operations_of_items_view_with_dynamically_converted_elements_known_issue
+    if not runtime.config.data.model.dynamically_convert_elements_to_models:
+        assert items & {('a', 1), ('x', 0)} == {('a', 1)}
+        assert items | {('x', 0)} == {('a', 1), ('b', 2), ('c', 3), ('x', 0)}
+        assert items - {('a', 1)} == {('b', 2), ('c', 3)}
+        assert items == {('a', 1), ('b', 2), ('c', 3)}
+
+
+@pytest.mark.usefixtures('skip_test_if_not_dynamically_convert_elements_to_models')
+@pytest.mark.skipif(
+    os.getenv('OMNIPY_FORCE_SKIPPED_TEST') != '1',
+    reason="""
+Known issue: with dynamic conversion of elements to Models, the values of items views are Models.
+These hash like the raw values, but never compare equal to them. Set operations of the views with
+raw items therefore differ from those of dict.items(), and are not consistent with each other: `&`
+finds a raw item (through the `in` of the view, which also checks the raw values), while `-` does
+not remove it and `==` is False. Fixing the equality of Models with raw values would fix this.
+""",
+)
+def test_set_operations_of_items_view_with_dynamically_converted_elements_known_issue() -> None:
+    model = Model[dict[str, int]]({'a': 1, 'b': 2})
+    raw = {'a': 1, 'b': 2}
+    others = {('a', 1), ('x', 0)}
+
+    assert model.items() & others == raw.items() & others
+    assert model.items() | others == raw.items() | others
+    assert model.items() - others == raw.items() - others
+    assert model.items() == raw.items()
 
 
 @pytest.mark.usefixtures('runtime')

@@ -5,7 +5,17 @@ validated root value, together with helper predicates for recognizing Omnipy
 models, plain pydantic models, and related class relationships.
 """
 
-from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, MutableSequence
+from collections.abc import (
+    Callable,
+    Collection,
+    Generator,
+    ItemsView,
+    Iterable,
+    Iterator,
+    Mapping,
+    MutableSequence,
+    ValuesView,
+)
 from contextlib import AbstractContextManager, contextmanager
 from copy import copy, deepcopy
 import functools
@@ -179,6 +189,51 @@ class ModelMetaclass(DataClassBaseMeta, pyd.ModelMetaclass):
 
 
 undefined_default_factory: Callable[[], Any] = lambda: Undefined
+
+
+class _ConvertingViewMixin:
+    """Shared implementation of the views of the values and items of the content of a Model.
+
+    Elements are converted when iterated, e.g. to Models with dynamic conversion of elements. Like
+    the views returned by ``dict.values()`` and ``dict.items()``, the views support ``len()``,
+    reflect later changes to the content and can be iterated more than once. Set operations on
+    items views are those of ``collections.abc.ItemsView``.
+    """
+
+    def __init__(
+        self,
+        get_content_view: Callable[[], Collection],
+        convert_elements: Callable[[Iterable], Iterator],
+    ) -> None:
+        # The content view is fetched for each use, as validation may replace the content
+        self._get_content_view = get_content_view
+        self._convert_elements = convert_elements
+
+    def __len__(self) -> int:
+        return len(self._get_content_view())
+
+    def __iter__(self) -> Iterator:
+        return self._convert_elements(self._get_content_view())
+
+    def __reversed__(self) -> Iterator:
+        return self._convert_elements(reversed(cast(Any, self._get_content_view())))
+
+    def __contains__(self, element: object) -> bool:
+        # Converted elements, e.g. Models, do not compare equal to the raw ones
+        return element in self._get_content_view() or any(
+            element == own_element for own_element in self
+        )
+
+    def __repr__(self) -> str:
+        return f'{type(self._get_content_view()).__name__}({list(self)!r})'
+
+
+class _ConvertingValuesView(_ConvertingViewMixin, ValuesView):
+    """View of the values of the content of a Model, converting them when iterated."""
+
+
+class _ConvertingItemsView(_ConvertingViewMixin, ItemsView):
+    """View of the items of the content of a Model, converting their values when iterated."""
 
 
 class Model(  # type: ignore[misc]
@@ -2523,15 +2578,24 @@ class Model(  # type: ignore[misc]
                     )
 
             if attr in ('values', 'items'):
+                view_cls: type[_ConvertingViewMixin]
                 match attr:
                     case 'values':
                         _model_generator = self._get_convert_full_element_model_generator(())
+                        view_cls = _ConvertingValuesView
                     case 'items':
                         _model_generator = self._get_convert_element_value_model_generator(())
+                        view_cls = _ConvertingItemsView
+
+                def _create_view(_content_view: Collection) -> _ConvertingViewMixin:
+                    def _get_content_view() -> Collection:
+                        return cast(Callable, self._getattr_from_content_obj(attr))()
+
+                    return view_cls(_get_content_view, _model_generator)
 
                 content_attr = add_callback_after_call(
                     cast(Callable, content_attr),
-                    _model_generator,
+                    _create_view,
                     no_context,
                 )
 
