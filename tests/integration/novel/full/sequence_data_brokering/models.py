@@ -217,13 +217,15 @@ class SubmissionSchema(pyd.BaseModel):
                 )
             file_roles.add(file.file_role)
 
-        for sample in values['samples'].values():
-            file_roles = file_roles_per_sample[sample.local_sample_alias]
-            if file_roles != {'read1', 'read2'}:
-                raise ValueError(
-                    f"Sample '{sample.local_sample_alias}' must have exactly two files "
-                    '(read1 and read2).'
-                )
+        # Missing if the samples failed validation, which is reported separately
+        if 'samples' in values:
+            for sample in values['samples'].values():
+                file_roles = file_roles_per_sample[sample.local_sample_alias]
+                if file_roles != {'read1', 'read2'}:
+                    raise ValueError(
+                        f"Sample '{sample.local_sample_alias}' must have exactly two files "
+                        '(read1 and read2).'
+                    )
 
         return files
 
@@ -236,14 +238,16 @@ class SubmissionSchema(pyd.BaseModel):
         files: SubmissionFilesDataset,
         values: _SubmissionDict,
     ) -> SubmissionFilesDataset:
-        sample_aliases = {sample.local_sample_alias for sample in values['samples'].values()}
-        for file in files.values():
-            if file.local_sample_alias not in sample_aliases:
-                raise ValueError(
-                    f'File "{file.file_id}" has local_sample_alias '
-                    f'"{file.local_sample_alias}" which does not match any '
-                    f'sample in the submission.'
-                )
+        # Missing if the samples failed validation, which is reported separately
+        if 'samples' in values:
+            sample_aliases = {sample.local_sample_alias for sample in values['samples'].values()}
+            for file in files.values():
+                if file.local_sample_alias not in sample_aliases:
+                    raise ValueError(
+                        f'File "{file.file_id}" has local_sample_alias '
+                        f'"{file.local_sample_alias}" which does not match any '
+                        f'sample in the submission.'
+                    )
         return files
 
 
@@ -259,11 +263,13 @@ class SubmissionWithLogisticsSchema(SubmissionSchema):
         logistics: LogisticsModel,
         values: _SubmissionDict,
     ) -> LogisticsModel:
-        status = logistics.status
-        if values['metadata'].sequence_depot_submission_id is not None:
-            status.sequence_depot_submission_id_status = 'completed'
-        else:
-            status.sequence_depot_submission_id_status = 'pending'
+        # Missing if the metadata failed validation, which is reported separately
+        if 'metadata' in values:
+            status = logistics.status
+            if values['metadata'].sequence_depot_submission_id is not None:
+                status.sequence_depot_submission_id_status = 'completed'
+            else:
+                status.sequence_depot_submission_id_status = 'pending'
 
         return logistics
 
@@ -273,18 +279,20 @@ class SubmissionWithLogisticsSchema(SubmissionSchema):
         logistics: LogisticsModel,
         values: _SubmissionDict,
     ) -> LogisticsModel:
-        status = logistics.status
-        all_files_transfer_status: set[Status] = {
-            file.transfer_status for file in values['files'].values()
-        }
-        if len(all_files_transfer_status) == 0:
-            status.transfer_status = 'N/A'
-        elif 'failed' in all_files_transfer_status:
-            status.transfer_status = 'failed'
-        elif 'pending' in all_files_transfer_status:
-            status.transfer_status = 'pending'
-        else:
-            status.transfer_status = 'completed'
+        # Missing if the files failed validation, which is reported separately
+        if 'files' in values:
+            status = logistics.status
+            all_files_transfer_status: set[Status] = {
+                file.transfer_status for file in values['files'].values()
+            }
+            if len(all_files_transfer_status) == 0:
+                status.transfer_status = 'N/A'
+            elif 'failed' in all_files_transfer_status:
+                status.transfer_status = 'failed'
+            elif 'pending' in all_files_transfer_status:
+                status.transfer_status = 'pending'
+            else:
+                status.transfer_status = 'completed'
 
         return logistics
 
