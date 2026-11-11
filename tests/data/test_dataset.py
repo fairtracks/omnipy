@@ -1746,3 +1746,27 @@ def test_parametrized_dataset_with_none() -> None:
     )
 
     assert DefaultOtherStrDataset(dict(x=None))['x'].content == 'other'
+
+
+def test_dataset_validators_rerun_only_on_changes_through_the_dataset() -> None:
+    class UniqueIdsDataset(Dataset[Model[dict[str, str]]]):
+        @pyd.validator('data', allow_reuse=True)
+        def _ids_are_unique(
+            cls,
+            data: dict[str, Model[dict[str, str]]],
+        ) -> dict[str, Model[dict[str, str]]]:
+            ids = [item['id'] for item in data.values()]  # pyright: ignore[reportIndexIssue]
+            if len(ids) != len(set(ids)):
+                raise ValueError('Ids must be unique')
+            return data
+
+    dataset = UniqueIdsDataset({'a': {'id': '1'}, 'b': {'id': '2'}})
+
+    # Changing an item in place validates the item, but not the Dataset. See
+    # test_job_boundaries_validate_parents_of_changed_nested_models_known_issue
+    dataset['b']['id'] = '1'
+    assert dataset.to_data() == {'a': {'id': '1'}, 'b': {'id': '1'}}
+
+    dataset = UniqueIdsDataset({'a': {'id': '1'}, 'b': {'id': '2'}})
+    with pytest.raises(ValidationError):
+        dataset['b'] = {'id': '1'}

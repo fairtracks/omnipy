@@ -2379,6 +2379,52 @@ def test_reading_fields_of_non_omnipy_pydantic_model_keeps_nested_models() -> No
     assert model.inner.x == 4
 
 
+def test_parent_validators_rerun_only_on_validation_of_or_changes_through_the_parent() -> None:
+    class ShortListsModel(Model[list[Model[list[int]]]]):
+        @classmethod
+        def _parse_data(cls, data: list[Model[list[int]]]) -> list[Model[list[int]]]:
+            if any(len(inner) > 2 for inner in data):  # pyright: ignore[reportArgumentType]
+                raise ValueError('Inner lists can have at most two elements')
+            return data
+
+    model = ShortListsModel([[1, 2]])
+
+    # Changing a nested Model in place validates the nested Model, but not the parent. The rule of
+    # the parent is thus not checked. See
+    # test_job_boundaries_validate_parents_of_changed_nested_models_known_issue
+    model[0].append(3)  # pyright: ignore[reportAttributeAccessIssue]
+    assert model.to_data() == [[1, 2, 3]]
+
+    with pytest.raises(ValidationError):
+        model.validate_content()
+
+    model = ShortListsModel([[1, 2]])
+    with pytest.raises(ValidationError):
+        model[0] = [1, 2, 3]  # pyright: ignore[reportCallIssue, reportArgumentType]
+
+
+def test_derived_fields_of_pydantic_model_update_only_on_changes_through_the_parent() -> None:
+    class TotalSchema(pyd.BaseModel):
+        numbers: list[int] = pyd.Field(default_factory=list)
+        total: int = 0
+
+        @pyd.validator('total', always=True, allow_reuse=True)
+        def _sum_numbers(cls, total: int, values: dict[str, list[int]]) -> int:
+            return sum(values['numbers'])
+
+    @mimics(TotalSchema)
+    class TotalModel(Model[TotalSchema]): ...
+
+    model = TotalModel(numbers=[1])
+
+    # Changing the nested list in place does not rerun the validator of the derived field
+    model.numbers.append(2)
+    assert model.total == 1
+
+    model.numbers = [1, 2]
+    assert model.total == 3
+
+
 @pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
 @pytest.mark.parametrize(
     'simple_pydantic_model_cls',
