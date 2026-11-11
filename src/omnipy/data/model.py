@@ -2449,9 +2449,6 @@ class Model(  # type: ignore[misc]
                 AttributeError: If the wrapped content object does not define
                     ``attr``.
             """
-            if self._is_non_omnipy_pydantic_model() and self._content_obj_hasattr(attr):
-                self._validate_and_set_value(self.content)
-
             content_attr = self._getattr_from_content_obj(attr)
 
             if inspect.isroutine(content_attr):

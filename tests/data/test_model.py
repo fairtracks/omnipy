@@ -2355,31 +2355,28 @@ def test_lazy_snapshot_triggered_by_state_changing_mimicked_methods() -> None:
     assert model.snapshot == model.content == [123, 234]
 
 
-@pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
-@pytest.mark.parametrize(
-    'simple_pydantic_model_cls',
-    [SimplePydanticModel, SimplePydanticModelWitWrappedField],
-)
-def test_lazy_snapshot_on_non_omnipy_pydantic_model_triggered_by_state_keeping_value_access(
-    simple_pydantic_model_cls: Annotated[type[pyd.BaseModel], pc.fixture],
-) -> None:
-    # class SimplePydanticModel(pyd.BaseModel):
-    #     value: Model[list[int]] = pyd.Field(default_factory=list)
+def test_reading_fields_of_non_omnipy_pydantic_model_keeps_nested_models() -> None:
+    class InnerSchema(pyd.BaseModel):
+        x: int = 0
 
-    @mimics(SimplePydanticModelWitWrappedField)
-    class ModelOfSimplePydanticModel(Model[simple_pydantic_model_cls]): ...
+    class OuterSchema(pyd.BaseModel):
+        inner: InnerSchema = pyd.Field(default_factory=InnerSchema)
+        numbers: list[int] = pyd.Field(default_factory=list)
 
-    model = ModelOfSimplePydanticModel(simple_pydantic_model_cls(value=[123]))
-    _assert_no_snapshot(model)
-    _assert_no_snapshot(model.content.value)
+    @mimics(OuterSchema)
+    class OuterModel(Model[OuterSchema]): ...
 
-    # Just accessing a field of a pydantic model through __getattr__ is enough to trigger a snapshot
-    # of the parent
-    res_model = model.value
-    assert model.snapshot == model.content == simple_pydantic_model_cls(value=[123])
+    model = OuterModel()
+    content = model.content
+    inner = model.inner
 
-    _assert_no_snapshot(res_model)
-    assert res_model.content == [123]
+    # Reading a field neither revalidates nor replaces the content, so references to nested
+    # Models stay connected to the parent
+    _ = model.numbers
+    assert model.content is content
+
+    inner.x = 4
+    assert model.inner.x == 4
 
 
 @pytest.mark.usefixtures('skip_test_if_not_interactive_mode')
