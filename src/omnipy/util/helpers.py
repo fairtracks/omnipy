@@ -43,7 +43,7 @@ from typing import (
 )
 
 from cachebox import cached, LRUCache
-from typing_extensions import NoDefault, TypeIs, TypeVar
+from typing_extensions import evaluate_forward_ref, NoDefault, TypeIs, TypeVar
 
 from omnipy.shared.protocols.util import IsDataclass
 from omnipy.shared.protocols.vendored.typeshed import SupportsItems
@@ -342,27 +342,6 @@ def ensure_plain_type(in_type: TypeForm) -> ForwardRef | TypeVar | type | _Speci
         return cast(type | ForwardRef | TypeVar, origin if get_args(in_type) else in_type)
 
 
-if sys.version_info >= (3, 14):
-    from typing import evaluate_forward_ref
-
-    def _evaluate_forward_ref(ref: ForwardRef, globalns: dict, localns: Mapping) -> object:
-        return evaluate_forward_ref(ref, globals=globalns, locals=localns, type_params=())
-
-else:
-    # ForwardRef._evaluate() is the only way before Python 3.14. From Python 3.12.4 it takes the
-    # type parameters in scope and warns when they are left out; Python 3.11 lacks the parameter.
-    _FORWARD_REF_TYPE_PARAMS: dict[str, tuple[()]] = (
-        {'type_params': ()}
-        if 'type_params' in inspect.signature(ForwardRef._evaluate).parameters
-        else {}
-    )
-
-    def _evaluate_forward_ref(ref: ForwardRef, globalns: dict, localns: Mapping) -> object:
-        return ref._evaluate(
-            globalns, localns, recursive_guard=frozenset(), **_FORWARD_REF_TYPE_PARAMS
-        )
-
-
 def evaluate_any_forward_refs_if_possible(
     in_type: TypeForm, calling_module: str | None = None, **localns
 ) -> TypeForm:
@@ -389,9 +368,16 @@ def evaluate_any_forward_refs_if_possible(
         else:
             globalns = {}
         try:
+            # The typing_extensions backport of the Python 3.14 function. The private
+            # ForwardRef._evaluate() it replaces warns on 3.12.4+ and is removed in 3.16
             return cast(
                 type | GenericAlias,
-                _evaluate_forward_ref(in_type, globalns, localns if localns else locals()),
+                evaluate_forward_ref(
+                    in_type,
+                    globals=globalns,
+                    locals=localns if localns else locals(),
+                    type_params=(),
+                ),
             )
         except NameError:
             pass
