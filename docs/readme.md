@@ -183,7 +183,7 @@ for APIs with many pages, and the `get_github_repo_urls` task from a directory l
 ### Load the pages
 
 A Dataset loads all its URLs, keeping the responses under the URL names. A `JsonDataset` parses
-the responses as JSON, including when the server sends them as plain text:
+the responses as JSON, including when the server sends them as plain text, as GitHub does here:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> pages = om.JsonDataset.load(page_urls)
