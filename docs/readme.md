@@ -13,11 +13,13 @@ Omnipy is a type-driven Python library for:
 
 **A Readable Contract Between You and Your AI Agent**
 
-AI agents are good at the time-consuming parts of working with research data: reformatting,
-cleaning, and integrating. Omnipy gives that work a structure a human can inspect. The agent turns
-exploratory code into data models, conversions, and dataflows declared in Python; the data is
-validated at every step; and you review the declarations and the data at each junction rather than
-the agent's code paths. The declarations are the contract between you and your agent.
+AI agents are good at the time-consuming parts of working with data:
+reformatting, cleaning, and integrating. Omnipy gives that work a
+structure a human can inspect. The agent turns exploratory code into data
+models, conversions, and dataflows declared in Python; the data is
+validated at every step; and you review the declarations and the data at
+each junction. The declarations are the contract between you and your
+agent.
 
 **Dataflows, Not Workflows**
 
@@ -138,7 +140,7 @@ The following creates a data model of a list of integers, and parses some data i
 ### Style the displays
 
 Omnipy's [display settings](reference/omnipy/config/data.md#omnipy.config.data.UserInterfaceConfig)
-configure the terminal, notebook, and browser separately. The displays below use the browser's
+configure the terminal, notebook, and browser separately. The displays below use the
 dark [`MEASURED_DARK_T16`](reference/omnipy/shared/enums/colorstyles.md#omnipy.shared.enums.colorstyles.DarkHighContrastColorStyles)
 theme with a solid background. Use `ui.terminal` or `ui.jupyter` in place
 of `ui.browser` to style your own console or notebook:
@@ -161,10 +163,11 @@ The list of integers from above now displays in the new theme:
 
 ### Build the URLs of a web API
 
-Let's work with river samples from the
-[water-sample harmonization example](https://github.com/fairtracks/omnipy/tree/main/tests/integration/novel/full/water_sample_harmonization).
-A water quality API would return such samples in pages. Here the two pages are JSON files in the
-Omnipy repository, so the walkthrough runs as it stands from any Python console.
+Let's work with river samples from the [water-sample harmonization
+example](https://github.com/fairtracks/omnipy/tree/main/tests/integration/novel/full/water_sample_harmonization).
+A water quality API would return such samples in pages. Here the two pages
+for this tutorial are provided JSON files in the Omnipy repository, so the
+walkthrough runs as it stands from any Python console.
 
 An [`HttpUrlModel`](reference/omnipy/components/remote/models.md#omnipy.components.remote.models.HttpUrlModel)
 holds a URL as structured fields, so the path is edited in place instead of by
