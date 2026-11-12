@@ -22,7 +22,7 @@ Use a typed model at the boundary where untrusted model output enters your syste
 ```pycon exec="1" session="ai-safe" source="console"
 >>> import omnipy as om
 >>> import omnipy.util.pydantic as pyd
->>> class LlmAnswer(pyd.v1.BaseModel):
+>>> class LlmAnswer(pyd.BaseModel):
 ...     title: str
 ...     score: int
 >>> answer = om.Model[LlmAnswer]({'title': 'Candidate A', 'score': '7'})
@@ -40,7 +40,7 @@ This gives explicit, typed data before any business logic continues.
 When your downstream contract is strict, reject unknown fields instead of silently accepting them.
 
 ```pycon exec="1" session="ai-safe" source="console"
->>> class StrictLlmAnswer(pyd.v1.BaseModel):
+>>> class StrictLlmAnswer(pyd.BaseModel):
 ...     title: str
 ...     score: int
 ...
@@ -66,7 +66,7 @@ When input quality varies, start permissive and normalize first.
 ```pycon exec="1" session="ai-safe" source="console"
 >>> import omnipy as om
 >>> import omnipy.util.pydantic as pyd
->>> class ParsedAnswer(pyd.v1.BaseModel):
+>>> class ParsedAnswer(pyd.BaseModel):
 ...     score: int
 ...     approved: bool
 >>> parsed_answer = om.Model[ParsedAnswer]({'score': '7', 'approved': 'true'})
@@ -110,7 +110,7 @@ Switch specific fields to strict types to reject coercion and force explicit rep
 ```pycon exec="1" session="ai-safe" source="console"
 >>> import omnipy as om
 >>> import omnipy.util.pydantic as pyd
->>> class StrictAnswer(pyd.v1.BaseModel):
+>>> class StrictAnswer(pyd.BaseModel):
 ...     score: pyd.StrictInt
 >>> try:
 ...     om.Model[StrictAnswer]({'score': '7'})
@@ -163,7 +163,7 @@ Use this as a copy/paste starter for new AI-boundary pipelines.
 
 ```python
 # 1) schema
-class YourSchema(pyd.v1.BaseModel):
+class YourSchema(pyd.BaseModel):
     ...
 
     class Config:

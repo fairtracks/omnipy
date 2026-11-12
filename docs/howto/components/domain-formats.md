@@ -20,7 +20,7 @@ Model-based tabular parsing for domain formats follows a stable three-step patte
 ```pycon exec="1" source="console"
 >>> import omnipy as om
 >>> import omnipy.util.pydantic as pyd
->>> class Row(pyd.v1.BaseModel):
+>>> class Row(pyd.BaseModel):
 ...     a: int
 ...     b: int
 >>> om.Model[list[Row]](om.TsvTableModel('a\tb\n1\t2\n'))

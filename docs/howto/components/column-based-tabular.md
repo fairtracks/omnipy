@@ -31,7 +31,7 @@ validation in the flow.
 ```pycon exec="1" source="console"
 >>> import omnipy as om
 >>> import omnipy.util.pydantic as pyd
->>> class Row(pyd.v1.BaseModel):
+>>> class Row(pyd.BaseModel):
 ...     sample: str
 ...     count: int
 >>> om.runtime.config.data.model.interactive = True

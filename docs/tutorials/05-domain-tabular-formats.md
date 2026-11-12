@@ -22,7 +22,7 @@ This tutorial shows BED/GFF-style row parsing using typed model specs.
 
 ```pycon exec="1" source="console"
 >>> import omnipy.util.pydantic as pyd
->>> class BedRow(pyd.v1.BaseModel):
+>>> class BedRow(pyd.BaseModel):
 ...     chrom: str
 ...     start: int
 ...     end: int
@@ -34,7 +34,7 @@ This tutorial shows BED/GFF-style row parsing using typed model specs.
 ```pycon exec="1" source="console"
 >>> import omnipy as om
 >>> import omnipy.util.pydantic as pyd
->>> class BedRow(pyd.v1.BaseModel):
+>>> class BedRow(pyd.BaseModel):
 ...     chrom: str
 ...     start: int
 ...     end: int
@@ -49,7 +49,7 @@ This tutorial shows BED/GFF-style row parsing using typed model specs.
 ```pycon exec="1" source="console"
 >>> import omnipy as om
 >>> import omnipy.util.pydantic as pyd
->>> class BedRow(pyd.v1.BaseModel):
+>>> class BedRow(pyd.BaseModel):
 ...     chrom: str
 ...     start: int
 ...     end: int
