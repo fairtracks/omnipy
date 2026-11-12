@@ -523,11 +523,11 @@ The Dataset constructor applies the mapper to every sample, keeping the sample i
 ```
 
 ```pycon
->>> normalized_samples.peek()
+>>> normalized_samples.json()
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(normalized_samples._docs(method='peek'))
+>>> print(normalized_samples._docs(method='json'))
 ```
 
 For a one-line conversion and display,
@@ -553,20 +553,24 @@ nested Datasets with their fields as items:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> nested_samples = om.StructuredNestedDataset(normalized_samples)
->>> nested_samples[0]
+>>> nested_samples
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(nested_samples[0]._docs())
+>>> print(nested_samples._docs())
 ```
 
-```pycon
->>> nested_samples[0]['measurements'].json()
+Calling `peek()` on a StructuredNestedDataset shows a hierarchical view of the structure, with
+tables nested within tables:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> nested_samples[0].peek()
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(nested_samples[0]['measurements']._docs(method='json'))
+>>> print(nested_samples[0]._docs(method='peek'))
 ```
+
 
 ### Turn the measurements into tables
 
