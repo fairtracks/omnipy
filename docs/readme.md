@@ -182,11 +182,11 @@ for APIs with many pages, and the `get_github_repo_urls` task from a directory l
 
 ### Load the pages
 
-A Dataset loads all its URLs, keeping the responses under the URL names. Each response is a JSON
-list of sample records, so we load the pages into a `JsonListOfDictsDataset`:
+A Dataset loads all its URLs, keeping the responses under the URL names. A `JsonDataset` parses
+the responses as JSON, including when the server sends them as plain text:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> pages = om.JsonListOfDictsDataset.load(page_urls)
+>>> pages = om.JsonDataset.load(page_urls)
 >>> pages
 ```
 
@@ -282,10 +282,10 @@ print(
 ```
 **_Models #1: the sample and measurement records, and a Dataset of samples keyed by their id._**
 
-Loading the same URLs into the new Dataset parses the pages into typed samples:
+Converting the loaded pages to the new Dataset parses them into typed samples:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> samples = RiverSamplesById.load(page_urls)
+>>> samples = pages.to(RiverSamplesById)
 >>> samples
 ```
 
@@ -481,8 +481,8 @@ from textwrap import dedent
 
 code = dedent("""\
     @om.TaskTemplate()
-    async def fetch_sample_pages(page_urls: om.HttpUrlDataset) -> om.JsonListOfDictsDataset:
-        return await om.resolve(om.JsonListOfDictsDataset.load(page_urls))
+    async def fetch_sample_pages(page_urls: om.HttpUrlDataset) -> om.JsonDataset:
+        return await om.resolve(om.JsonDataset.load(page_urls))
 
     @om.LinearFlowTemplate(
         fetch_sample_pages,
