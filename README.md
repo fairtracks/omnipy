@@ -595,7 +595,7 @@ see [Tutorial 8: Prefect orchestration](https://omnipy.readthedocs.io/en/latest/
 - Meet the [comics roster](https://omnipy.readthedocs.io/en/latest/comics/): the Omnificients and the Un-FAIR Alliance turn
   parsing, validation, batch processing, API retrieval, and visualization into stories.
 - The full
-  [water-sample harmonization scenario](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization/test_water_sample_harmonization.py)
+  [water-sample harmonization scenario](https://github.com/fairtracks/omnipy/blob/main/tests/integration/novel/full/water_sample_harmonization)
   extends this walkthrough to river and wastewater sources, reusable child flows, and Pandas tables
   of samples and measurements.
 - The
