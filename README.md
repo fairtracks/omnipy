@@ -142,11 +142,18 @@ theme with a solid background. Use `ui.terminal` or `ui.jupyter` in place
 of `ui.browser` to style your own console or notebook:
 
 ```pycon
->>> import omnipy as om
 >>> ui_config = om.runtime.config.data.ui.browser
 >>> ui_config.color.style = om.DarkHighContrastColorStyles.MEASURED_DARK_T16
 >>> ui_config.color.solid_background = True
 ```
+
+The list of integers from above now displays in the new theme:
+
+```pycon
+>>> data_as_list_of_ints
+```
+
+![Display of data_as_list_of_ints](docs/images/readme/02-data_as_list_of_ints.svg)
 
 ### Build the URLs of a web API
 
@@ -160,29 +167,27 @@ holds a URL as structured fields, so the path is edited in place instead of by
 string formatting:
 
 ```pycon
->>> river_data = om.HttpUrlModel('https://raw.githubusercontent.com/fairtracks/omnipy/main')
->>> river_data.path // 'docs' // 'examples' // 'river_samples'
-
->>> river_page_0 = om.HttpUrlModel(river_data)
->>> river_page_0.path // 'page_0.json'
->>> river_page_0
+>>> data_base_url = om.HttpUrlModel('https://raw.githubusercontent.com/fairtracks/omnipy/main')
+>>> data_base_url.path // 'docs' // 'examples' // 'river_samples'
+>>> page_0_url = om.HttpUrlModel(data_base_url)
+>>> page_0_url.path // 'page_0.json'
+>>> page_0_url
 ```
 
-![Display of river_page_0](docs/images/readme/02-river_page_0.svg)
+![Display of page_0_url](docs/images/readme/03-page_0_url.svg)
 
 A second page differs only in its file name. An
 [`HttpUrlDataset`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/components/remote/datasets/#omnipy.components.remote.datasets.HttpUrlDataset)
 collects the URLs under names that will also name the responses:
 
 ```pycon
->>> river_page_1 = om.HttpUrlModel(river_data)
->>> river_page_1.path // 'page_1.json'
-
->>> page_urls = om.HttpUrlDataset(river_page_0=river_page_0, river_page_1=river_page_1)
+>>> page_1_url = om.HttpUrlModel(data_base_url)
+>>> page_1_url.path // 'page_1.json'
+>>> page_urls = om.HttpUrlDataset(page_0=page_0_url, page_1=page_1_url)
 >>> page_urls
 ```
 
-![Display of page_urls](docs/images/readme/03-page_urls.svg)
+![Display of page_urls](docs/images/readme/04-page_urls.svg)
 
 Such Datasets are also built by the catalog:
 [`GeneratePagedUrlsModel`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/components/remote/models/#omnipy.components.remote.models.GeneratePagedUrlsModel)
@@ -202,7 +207,7 @@ the responses as JSON, including when the server sends them as plain text, as Gi
 >>> pages
 ```
 
-![Display of pages](docs/images/readme/04-pages.svg)
+![Display of pages](docs/images/readme/05-pages.svg)
 
 A Dataset's [`peek()`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/data/dataset/#omnipy.data.dataset.Dataset.peek)
 shows the contents of its items side by side:
@@ -211,7 +216,7 @@ shows the contents of its items side by side:
 >>> pages.peek()
 ```
 
-![Display of pages](docs/images/readme/05-pages.svg)
+![Display of pages](docs/images/readme/06-pages.svg)
 
 These are synchronous console calls. In a notebook or other running event loop,
 use `await` with `.load()`.
@@ -222,11 +227,11 @@ Models mimic their wrapped values, so we can index the loaded JSON directly.
 The second measurement in the first sample is phosphorus, reported in µg/L:
 
 ```pycon
->>> raw_measurement = pages['river_page_0'][0]['measurements'][1]
+>>> raw_measurement = pages['page_0'][0]['measurements'][1]
 >>> raw_measurement
 ```
 
-![Display of raw_measurement](docs/images/readme/06-raw_measurement.svg)
+![Display of raw_measurement](docs/images/readme/07-raw_measurement.svg)
 
 JSON types alone do not describe what a measurement means. Start with one
 [Pydantic record](https://omnipy.readthedocs.io/en/latest/howto/models/pydantic-compatibility/) for
@@ -252,7 +257,7 @@ Constructing the Model parses the JSON measurement into the record:
 >>> measurement
 ```
 
-![Display of measurement](docs/images/readme/07-measurement.svg)
+![Display of measurement](docs/images/readme/08-measurement.svg)
 
 ### Give the samples a type
 
@@ -300,19 +305,22 @@ Constructing the Dataset from the loaded pages parses them into typed samples:
 
 ```pycon
 >>> samples = RiverSamplesDataset(pages)
->>> samples
 ```
-
-![Display of samples](docs/images/readme/08-samples.svg)
-
-For larger records, [`json()`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/data/model/#omnipy.data.model.Model.json)
-displays the data with JSON syntax highlighting:
 
 ```pycon
->>> samples['river-sample-1'].json()
+>>> samples.peek()
 ```
 
-![Display of samples['river-sample-1']](docs/images/readme/09-samples-river-sample-1.svg)
+![Display of samples](docs/images/readme/09-samples.svg)
+
+[`json()`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/data/dataset/#omnipy.data.dataset.Dataset.json) displays the data
+with JSON syntax highlighting. The display methods also take a color style of their own:
+
+```pycon
+>>> samples.json(style='gotham-t16')
+```
+
+![Display of samples](docs/images/readme/10-samples.svg)
 
 ### Work with the Dataset
 
@@ -338,7 +346,7 @@ A list of keys selects several items and returns a Dataset:
 >>> samples[['river-sample-1', 'river-sample-2']].peek()
 ```
 
-![Display of samples[['river-sample-1', 'river-sample-2']]](docs/images/readme/10-samples-river-sample-1-river-sample-2.svg)
+![Display of samples[['river-sample-1', 'river-sample-2']]](docs/images/readme/11-samples-river-sample-1-river-sample-2.svg)
 
 A slice selects by position. Here it returns the same two items:
 
@@ -346,7 +354,7 @@ A slice selects by position. Here it returns the same two items:
 >>> samples[:2]
 ```
 
-![Display of samples[:2]](docs/images/readme/11-samples-2.svg)
+![Display of samples[:2]](docs/images/readme/12-samples-2.svg)
 
 ### Edit safely, without unpacking
 
@@ -359,7 +367,7 @@ validation error:
 >>> phosphorus
 ```
 
-![Display of phosphorus](docs/images/readme/12-phosphorus.svg)
+![Display of phosphorus](docs/images/readme/13-phosphorus.svg)
 
 ```pycon
 >>> phosphorus.value_ug_l = 'not a number'
@@ -377,7 +385,7 @@ last valid snapshot. Displaying the measurement again shows the original `120.0 
 >>> phosphorus
 ```
 
-![Display of phosphorus](docs/images/readme/13-phosphorus.svg)
+![Display of phosphorus](docs/images/readme/14-phosphorus.svg)
 
 A numeric string can be parsed as a float. Let's correct the
 reading to `150.0 µg/L`. The measurement is part of the sample, so the correction
@@ -385,11 +393,10 @@ is visible there too:
 
 ```pycon
 >>> phosphorus.value_ug_l = '150.0'
-
 >>> samples['river-sample-1'].measurements[1]
 ```
 
-![Display of samples['river-sample-1'].measurements[1]](docs/images/readme/14-samples-river-sample-1-measurements-1.svg)
+![Display of samples['river-sample-1'].measurements[1]](docs/images/readme/15-samples-river-sample-1-measurements-1.svg)
 
 ### Convert to a common representation
 
@@ -432,7 +439,7 @@ Constructing the mapper converts the corrected measurement to `0.15 mg/L`:
 >>> normalized
 ```
 
-![Display of normalized](docs/images/readme/15-normalized.svg)
+![Display of normalized](docs/images/readme/16-normalized.svg)
 
 Next, a sample mapper renames the sample fields and reuses the measurement mapper's
 [`convert_all()`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/components/general/models/#omnipy.components.general.models.ConverterModel.convert_all)
@@ -474,7 +481,7 @@ The Dataset constructor applies the mapper to every sample, keeping the sample i
 >>> normalized_samples.peek()
 ```
 
-![Display of normalized_samples](docs/images/readme/16-normalized_samples.svg)
+![Display of normalized_samples](docs/images/readme/17-normalized_samples.svg)
 
 For a one-line conversion and display,
 [`to()`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/data/model/#omnipy.data.model.Model.to) is convenient too:
@@ -483,39 +490,42 @@ For a one-line conversion and display,
 >>> samples[0].to(NormalizedRiverSampleMapper).json()
 ```
 
-![Display of samples[0].to(NormalizedRiverSampleMapper)](docs/images/readme/17-samples-0-to-NormalizedRiverSampleMapper.svg)
+![Display of samples[0].to(NormalizedRiverSampleMapper)](docs/images/readme/18-samples-0-to-NormalizedRiverSampleMapper.svg)
 
 ### Explore the hierarchy as nested Datasets
 
-[`NestedDataset`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/components/nested/datasets/#omnipy.components.nested.datasets.NestedDataset)
-represents mappings recursively as Datasets, with a chosen Model type for the leaves. Here
-[`JsonModel`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/components/json/models/#omnipy.components.json.models.JsonModel)
-holds scalar fields and measurement lists. The conversion preserves the sample ids and field
-names, while making the sample's fields selectable as Dataset items:
+[`StructuredNestedDataset`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/components/nested/datasets/#omnipy.components.nested.datasets.StructuredNestedDataset)
+represents mappings recursively as Datasets and recognizes the structure of the leaves: scalar
+fields become
+[`JsonScalarModel`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/components/json/models/#omnipy.components.json.models.JsonScalarModel)
+items, and each measurement list, a list of records with the same fields, becomes a column-wise
+table Model. The conversion preserves the sample ids and field names, while making the samples
+nested Datasets with their fields as items:
 
 ```pycon
->>> nested_samples = om.NestedDataset[om.JsonModel](normalized_samples)
+>>> nested_samples = om.StructuredNestedDataset(normalized_samples)
 >>> nested_samples[0]
 ```
 
-![Display of nested_samples[0]](docs/images/readme/18-nested_samples-0.svg)
+![Display of nested_samples[0]](docs/images/readme/19-nested_samples-0.svg)
 
 ```pycon
 >>> nested_samples[0]['measurements'].json()
 ```
 
-![Display of nested_samples[0]['measurements']](docs/images/readme/19-nested_samples-0-measurements.svg)
+![Display of nested_samples[0]['measurements']](docs/images/readme/20-nested_samples-0-measurements.svg)
 
 ### Turn the measurements into tables
 
-Each measurement has the same `type`, `value`, and `unit` fields, so those records make natural
-table rows. [`do()`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/data/dataset/#omnipy.data.dataset.Dataset.do) selects the
-measurements from each sample, keeping the sample ids as keys. A
+The measurement tables have `type`, `value`, and `unit` columns.
+[`do()`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/data/dataset/#omnipy.data.dataset.Dataset.do) applies a
+placeholder expression to each item, here selecting the measurements from each sample, keeping
+the sample ids as keys. A
 [`PandasDataset`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/components/pandas/datasets/#omnipy.components.pandas.datasets.PandasDataset)
-then converts each measurement list to a table:
+then converts each measurement table to a pandas DataFrame:
 
 ```pycon
->>> measurements = nested_samples.do(lambda sample: sample['measurements'])
+>>> measurements = nested_samples.do(om.x['measurements'])
 >>> tables = om.PandasDataset(measurements)
 ```
 
@@ -523,7 +533,7 @@ then converts each measurement list to a table:
 >>> tables.peek(width=132)
 ```
 
-![Display of tables](docs/images/readme/20-tables.svg)
+![Display of tables](docs/images/readme/21-tables.svg)
 
 ### Compose tasks and flows
 
@@ -541,16 +551,14 @@ async def fetch_sample_pages(page_urls: om.HttpUrlDataset) -> om.JsonDataset:
     return await om.resolve(om.JsonDataset.load(page_urls))
 
 @om.TaskTemplate()
-def select_measurements(
-    samples: om.NestedDataset[om.JsonModel],
-) -> om.NestedDataset[om.JsonModel]:
-    return samples.do(lambda sample: sample['measurements'])
+def select_measurements(samples: om.StructuredNestedDataset) -> om.StructuredNestedDataset:
+    return samples.do(om.x['measurements'])
 
 @om.LinearFlowTemplate(
     fetch_sample_pages,
     RiverSamplesDataset,
     NormalizedRiverSamplesDataset,
-    om.NestedDataset[om.JsonModel],
+    om.StructuredNestedDataset,
     select_measurements,
     om.PandasDataset,
 )
@@ -568,7 +576,7 @@ The manual correction above belongs to the earlier in-memory Dataset:
 >>> tables.peek(width=132)
 ```
 
-![Display of tables](docs/images/readme/21-tables.svg)
+![Display of tables](docs/images/readme/22-tables.svg)
 
 The flow declaration is what a reviewer reads, and what an AI agent working on the pipeline
 produces and is held to: the stages, their order, and the types passing between them, with every

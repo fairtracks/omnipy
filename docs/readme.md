@@ -123,14 +123,15 @@ data type in brackets, e.g. `Model[list[int]]`.
 
 The following creates a data model of a list of integers, and parses some data into that model:
 
-```pycon exec="1" session="greet" source="console"
+```pycon exec="1" session="water-samples" source="console"
 >>> import omnipy as om
+--8<-- "_includes/pycon_hidden_runtime_setup.md"
 >>> data = (123, '234', 345.0)  # Note that the input data is a tuple of mixed types
 >>> data_as_list_of_ints = om.Model[list[int]](data)
 >>> data_as_list_of_ints  # The data is now parsed into a list of integers
 ```
 
-```pycon exec="1" session="greet" result="console" html="true"
+```pycon exec="1" session="water-samples" result="console" html="true"
 >>> print(data_as_list_of_ints._docs())
 ```
 
@@ -143,11 +144,19 @@ theme with a solid background. Use `ui.terminal` or `ui.jupyter` in place
 of `ui.browser` to style your own console or notebook:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> import omnipy as om
---8<-- "_includes/pycon_hidden_runtime_setup.md"
 >>> ui_config = om.runtime.config.data.ui.browser
 >>> ui_config.color.style = om.DarkHighContrastColorStyles.MEASURED_DARK_T16
 >>> ui_config.color.solid_background = True
+```
+
+The list of integers from above now displays in the new theme:
+
+```pycon exec="1" session="water-samples" source="console"
+>>> data_as_list_of_ints
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(data_as_list_of_ints._docs())
 ```
 
 ### Build the URLs of a web API
@@ -162,16 +171,15 @@ holds a URL as structured fields, so the path is edited in place instead of by
 string formatting:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> river_data = om.HttpUrlModel('https://raw.githubusercontent.com/fairtracks/omnipy/main')
->>> river_data.path // 'docs' // 'examples' // 'river_samples'
-
->>> river_page_0 = om.HttpUrlModel(river_data)
->>> river_page_0.path // 'page_0.json'
->>> river_page_0
+>>> data_base_url = om.HttpUrlModel('https://raw.githubusercontent.com/fairtracks/omnipy/main')
+>>> data_base_url.path // 'docs' // 'examples' // 'river_samples'
+>>> page_0_url = om.HttpUrlModel(data_base_url)
+>>> page_0_url.path // 'page_0.json'
+>>> page_0_url
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(river_page_0._docs())
+>>> print(page_0_url._docs())
 ```
 
 A second page differs only in its file name. An
@@ -179,10 +187,9 @@ A second page differs only in its file name. An
 collects the URLs under names that will also name the responses:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> river_page_1 = om.HttpUrlModel(river_data)
->>> river_page_1.path // 'page_1.json'
-
->>> page_urls = om.HttpUrlDataset(river_page_0=river_page_0, river_page_1=river_page_1)
+>>> page_1_url = om.HttpUrlModel(data_base_url)
+>>> page_1_url.path // 'page_1.json'
+>>> page_urls = om.HttpUrlDataset(page_0=page_0_url, page_1=page_1_url)
 >>> page_urls
 ```
 
@@ -232,7 +239,7 @@ Models mimic their wrapped values, so we can index the loaded JSON directly.
 The second measurement in the first sample is phosphorus, reported in µg/L:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> raw_measurement = pages['river_page_0'][0]['measurements'][1]
+>>> raw_measurement = pages['page_0'][0]['measurements'][1]
 >>> raw_measurement
 ```
 
@@ -316,22 +323,25 @@ Constructing the Dataset from the loaded pages parses them into typed samples:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> samples = RiverSamplesDataset(pages)
->>> samples
 ```
-
-```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(samples._docs())
-```
-
-For larger records, [`json()`](reference/omnipy/data/model.md#omnipy.data.model.Model.json)
-displays the data with JSON syntax highlighting:
 
 ```pycon
->>> samples['river-sample-1'].json()
+>>> samples.peek()
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
->>> print(samples['river-sample-1']._docs(method='json'))
+>>> print(samples._docs(method='peek'))
+```
+
+[`json()`](reference/omnipy/data/dataset.md#omnipy.data.dataset.Dataset.json) displays the data
+with JSON syntax highlighting. The display methods also take a color style of their own:
+
+```pycon
+>>> samples.json(style='gotham-t16')
+```
+
+```pycon exec="1" session="water-samples" result="console" html="true"
+>>> print(samples._docs(method='json', style='gotham-t16'))
 ```
 
 ### Work with the Dataset
@@ -419,7 +429,6 @@ is visible there too:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> phosphorus.value_ug_l = '150.0'
-
 >>> samples['river-sample-1'].measurements[1]
 ```
 
@@ -531,14 +540,16 @@ For a one-line conversion and display,
 
 ### Explore the hierarchy as nested Datasets
 
-[`NestedDataset`](reference/omnipy/components/nested/datasets.md#omnipy.components.nested.datasets.NestedDataset)
-represents mappings recursively as Datasets, with a chosen Model type for the leaves. Here
-[`JsonModel`](reference/omnipy/components/json/models.md#omnipy.components.json.models.JsonModel)
-holds scalar fields and measurement lists. The conversion preserves the sample ids and field
-names, while making the sample's fields selectable as Dataset items:
+[`StructuredNestedDataset`](reference/omnipy/components/nested/datasets.md#omnipy.components.nested.datasets.StructuredNestedDataset)
+represents mappings recursively as Datasets and recognizes the structure of the leaves: scalar
+fields become
+[`JsonScalarModel`](reference/omnipy/components/json/models.md#omnipy.components.json.models.JsonScalarModel)
+items, and each measurement list, a list of records with the same fields, becomes a column-wise
+table Model. The conversion preserves the sample ids and field names, while making the samples
+nested Datasets with their fields as items:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> nested_samples = om.NestedDataset[om.JsonModel](normalized_samples)
+>>> nested_samples = om.StructuredNestedDataset(normalized_samples)
 >>> nested_samples[0]
 ```
 
@@ -556,14 +567,15 @@ names, while making the sample's fields selectable as Dataset items:
 
 ### Turn the measurements into tables
 
-Each measurement has the same `type`, `value`, and `unit` fields, so those records make natural
-table rows. [`do()`](reference/omnipy/data/dataset.md#omnipy.data.dataset.Dataset.do) selects the
-measurements from each sample, keeping the sample ids as keys. A
+The measurement tables have `type`, `value`, and `unit` columns.
+[`do()`](reference/omnipy/data/dataset.md#omnipy.data.dataset.Dataset.do) applies a
+placeholder expression to each item, here selecting the measurements from each sample, keeping
+the sample ids as keys. A
 [`PandasDataset`](reference/omnipy/components/pandas/datasets.md#omnipy.components.pandas.datasets.PandasDataset)
-then converts each measurement list to a table:
+then converts each measurement table to a pandas DataFrame:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> measurements = nested_samples.do(lambda sample: sample['measurements'])
+>>> measurements = nested_samples.do(om.x['measurements'])
 >>> tables = om.PandasDataset(measurements)
 ```
 
@@ -592,16 +604,14 @@ exec_and_display_code("""\
         return await om.resolve(om.JsonDataset.load(page_urls))
 
     @om.TaskTemplate()
-    def select_measurements(
-        samples: om.NestedDataset[om.JsonModel],
-    ) -> om.NestedDataset[om.JsonModel]:
-        return samples.do(lambda sample: sample['measurements'])
+    def select_measurements(samples: om.StructuredNestedDataset) -> om.StructuredNestedDataset:
+        return samples.do(om.x['measurements'])
 
     @om.LinearFlowTemplate(
         fetch_sample_pages,
         RiverSamplesDataset,
         NormalizedRiverSamplesDataset,
-        om.NestedDataset[om.JsonModel],
+        om.StructuredNestedDataset,
         select_measurements,
         om.PandasDataset,
     )
