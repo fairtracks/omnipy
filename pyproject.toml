@@ -140,6 +140,11 @@ cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true 
 [tool.hatch.build.targets.wheel]
 packages = ["src/omnipy"]
 
+# The agent skills are kept in .agents/skills, where agents find them in a checkout, and shipped
+# in the wheel as omnipy/skills/<name>/, where omnipy.skills finds them in an installation
+[tool.hatch.build.targets.wheel.force-include]
+".agents/skills" = "omnipy/skills"
+
 # The sdist holds what is needed to build and test the package, plus what an agent working with
 # the source needs: the instruction files, the skills (hatchling copies the files behind the
 # .claude symlink) and the technical specs and plans. Without this list, hatchling packs every file
