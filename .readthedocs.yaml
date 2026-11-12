@@ -14,13 +14,11 @@ build:
     post_checkout:
       # The package version is derived from the release tags, which a shallow clone lacks
       - git fetch --unshallow --tags || true
-    install:
-      # Keep Read the Docs' inactivity watchdog informed while uv resolves dependencies.
-      - uv sync --group docs & uv_sync_pid=$!; while kill -0 "$uv_sync_pid" 2>/dev/null; do echo 'Waiting for uv sync to finish...'; sleep 20; done; wait "$uv_sync_pid"
 
 python:
   install:
-    # Read the Docs provides uv and creates its environment before running this command.
+    # Runs `uv sync --group docs` into the Read the Docs environment (uv.lock is not committed,
+    # so dependencies are resolved fresh on each build)
     - method: uv
       command: sync
       groups:
