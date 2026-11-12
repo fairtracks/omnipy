@@ -1,5 +1,39 @@
 # AGENTS.md
 
+## General Coding Guidelines
+
+Apply these guidelines together with the project-specific rules below. They favor caution over
+speed; use judgment for trivial tasks.
+
+### Think Before Coding
+
+- State assumptions explicitly. When an ambiguity would materially change the result, ask rather
+  than choosing silently.
+- Surface meaningful tradeoffs and simpler alternatives. Get confirmation before substantially
+  departing from the discussed approach.
+
+### Simplicity and Scope
+
+- Implement the minimum code that solves the requested problem. Do not add speculative features,
+  abstractions, flexibility, configuration, or impossible-scenario handling.
+- Make surgical changes: every changed line should trace directly to the request. Do not improve,
+  reformat, or remove unrelated adjacent code.
+- Remove only imports, variables, and functions made unused by the current change. Report
+  pre-existing issues instead of changing them unless asked.
+
+### Goal-Driven Execution
+
+- Turn work into verifiable success criteria. For a multi-step task, state a concise plan with the
+  check that verifies each step.
+- For bug fixes and validation, add or update focused tests that demonstrate the requested
+  behavior, then run appropriate verification.
+
+### Communication
+
+- Be clear, direct, and concise. Do not repeat information unnecessarily.
+- State recommendations and pushback plainly and respectfully rather than implying them through
+  leading questions.
+
 ## Tooling
 
 - Use `uv`, not raw `pip`, for normal repo commands.
