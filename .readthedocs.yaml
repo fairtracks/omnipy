@@ -14,16 +14,14 @@ build:
     post_checkout:
       # The package version is derived from the release tags, which a shallow clone lacks
       - git fetch --unshallow --tags || true
-    pre_create_environment:
-      - asdf plugin add uv
-      - asdf install uv latest
-      - asdf global uv latest
-    create_environment:
-      - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
-    install:
-      # Install dependencies with 'docs' dependency group
-      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --group docs
-      # Generate code documentation skeleton
-      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv run python docs/gen_ref_pages.py
+
+python:
+  install:
+    # Read the Docs provides uv and creates its environment before running this command.
+    - method: uv
+      command: sync
+      groups:
+        - docs
+
 mkdocs:
   configuration: mkdocs.yml
