@@ -507,6 +507,16 @@ class Dataset(
         """
         return cast(pyd.ModelField, cls.__fields__.get(DATA_KEY))
 
+    @property
+    def dataset(self) -> Self:
+        """Expose this Dataset through Model attribute mimicking.
+
+        Consumers can identify current Dataset content without inspecting the enclosing
+        Model types or traversing their contents. Reading the property preserves identity
+        and does not trigger the validation associated with forwarded method calls.
+        """
+        return self
+
     @classmethod
     @functools.cache
     def get_type(cls) -> type[_ModelOrDatasetT]:

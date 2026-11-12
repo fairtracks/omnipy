@@ -114,6 +114,14 @@ def test_init_empty() -> None:
         Dataset[Model[int]]('')
 
 
+def test_dataset_property_returns_same_instance() -> None:
+    dataset = Dataset[Model[int]](first=1)
+
+    assert dataset.dataset is dataset
+    assert 'dataset' not in dataset.__fields__
+    assert dataset.to_data() == {'first': 1}
+
+
 def test_init_iterables_as_input() -> None:
     assert Dataset[Model[int]]((('x', 4.5),)).to_data() == {'x': 4}
     assert Dataset[Model[str]]([[1, 'y'], [2, 'b']]).to_data() == {'1': 'y', '2': 'b'}

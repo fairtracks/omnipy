@@ -45,7 +45,7 @@ from omnipy.data._mixins.display import ModelDisplayMixin
 from omnipy.data._mixins.load import LoadMixin
 from omnipy.data._mixins.post import PostMixin
 from omnipy.data._mixins.save import SaveMixin
-from omnipy.data.dataset import Dataset, is_dataset_instance
+from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
 from omnipy.data.helpers import (
     build_own_module_and_global_namespace_for_forward_refs,
     cleanup_name_qualname_and_module,
@@ -2793,6 +2793,35 @@ def is_model_subclass(__cls: TypeForm) -> 'TypeIs[type[Model]]':
     """
     # Consequence of _ModelMetaclass hack
     return lenient_issubclass(__cls, Model) and not is_none_type(__cls)
+
+
+def is_model_of_dataset_instance(__obj: object) -> bool:
+    """Check whether a Model currently exposes a Dataset through mimicking.
+
+    Reads ``Dataset.dataset`` through nested Models and their current union branch,
+    without conversion or validation. Empty Datasets are recognized. A Dataset itself
+    is not a Model; use ``is_dataset_instance()`` to detect it directly.
+    """
+    return is_model_instance(__obj) and is_dataset_instance(getattr(__obj, 'dataset', None))
+
+
+def is_model_of_dataset_subclass(__cls: TypeForm) -> bool:
+    """Check whether a Model subclass exposes Dataset content by default construction.
+
+    Successful construction checks only the default instance's current content. If
+    construction fails, use the original direct ``Model[Dataset]`` type check without
+    recursively inspecting types or constructing a replacement container. Use
+    ``is_dataset_subclass()`` to detect Dataset subclasses themselves.
+    """
+    if not is_model_subclass(__cls):
+        return False
+
+    try:
+        instance = __cls()
+    except Exception:
+        return is_dataset_subclass(__cls.outer_type())
+    else:
+        return is_model_of_dataset_instance(instance)
 
 
 def obj_or_model_content_isinstance(

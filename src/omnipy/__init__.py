@@ -268,6 +268,8 @@ from omnipy.data._display.panel.helpers import ForceAutodetect
 from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
 from omnipy.data.model import (
     is_model_instance,
+    is_model_of_dataset_instance,
+    is_model_of_dataset_subclass,
     is_model_subclass,
     is_non_omnipy_pydantic_model_instance,
     is_pure_pydantic_model_instance,
@@ -430,6 +432,8 @@ __all__ = [
     'mimics',
     'is_model_instance',
     'is_model_subclass',
+    'is_model_of_dataset_instance',
+    'is_model_of_dataset_subclass',
     'is_non_omnipy_pydantic_model_instance',
     'is_pure_pydantic_model_instance',
     'GeneralFileDataset',

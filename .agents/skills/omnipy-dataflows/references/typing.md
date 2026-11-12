@@ -49,6 +49,14 @@ for readability, unless mypy compatibility is part of their purpose.
 
 ## Methods hidden by Model
 
+`om.is_model_of_dataset_instance(value)` detects Models currently containing a Dataset
+through mimicking; `value.dataset` then returns that existing Dataset without validation
+or conversion. `om.is_model_of_dataset_subclass(type_form)` probes default construction
+of Model subclasses; only construction failure falls back to the original direct
+`Model[Dataset]` type check. Successful construction with non-Dataset content returns
+`False`. For Datasets themselves, use `om.is_dataset_instance()` or
+`om.is_dataset_subclass()`. These helpers do not authorize changes to caller behavior.
+
 Mimicking forwards attributes that `Model` does not define itself. Methods that
 `Model` defines, such as `load()`, `load_into()`, `save()`, `to_data()` and the
 display methods (`peek()`, `full()`, ...), take precedence over methods with the

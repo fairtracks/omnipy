@@ -2645,7 +2645,7 @@ class BaseDisplayMixin(metaclass=ABCMeta):
             A draft panel containing the nested layout.
         """
         from omnipy.data.dataset import Dataset, is_dataset_instance
-        from omnipy.data.model import is_model_instance
+        from omnipy.data.model import is_model_of_dataset_instance
 
         inner_titles = cast(list[str], kwargs.pop('inner_titles', []))
         self._validate_inner_title_count(inner_titles, len(nested_content))
@@ -2671,9 +2671,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 # horizontally, we stop adding more panels.
                 break
 
-            is_dataset = is_dataset_instance(model_or_dataset) or (
-                is_model_instance(model_or_dataset)
-                and is_dataset_instance(model_or_dataset.content)
+            is_dataset = is_dataset_instance(model_or_dataset) or is_model_of_dataset_instance(
+                model_or_dataset
             )
             is_ellipsis_panel = config.max_panels_hor is not None and i == config.max_panels_hor
             not_too_deep = config.max_nesting_depth and level < config.max_nesting_depth - 1
@@ -2688,7 +2687,8 @@ class BaseDisplayMixin(metaclass=ABCMeta):
                 )
 
             elif is_dataset and not is_ellipsis_panel and not_too_deep:
-                layout[cur_inner_title] = cast(Dataset, model_or_dataset)._peek_dataset_models(
+                dataset = cast(Dataset, model_or_dataset).dataset
+                layout[cur_inner_title] = dataset._peek_dataset_models(
                     display_title,
                     empty_frame(),
                     level + 1,
@@ -3262,11 +3262,10 @@ def _call_dataset_method_if_applicable(model_method: Callable[..., _RetT]):
             >>> # Called transparently by decorated model display helpers.
             >>> _ = wrapper(model_instance, ui=UserInterfaceType.AUTO)
         """
-        from omnipy.data.dataset import is_dataset_instance
+        from omnipy.data.model import is_model_of_dataset_instance
 
-        self_as_model = cast('Model', self)
-        if is_dataset_instance(self_as_model.content):
-            self_as_dataset = self_as_model.content
+        if is_model_of_dataset_instance(self):
+            self_as_dataset = cast('Dataset', self).dataset
             dataset_method = getattr(self_as_dataset, model_method.__name__)
             return dataset_method(**kwargs)
         else:
