@@ -36,11 +36,11 @@ lesson. Current framework capabilities, including subsequent fixes, are availabl
 
 The requested source documents are:
 
-- `docs/superpowers/specs/2026-07-09-async-and-sub-flow-testing-schema-design.md`
-- `docs/superpowers/plans/2026-07-10-async-and-sub-flow-testing-plan.md`
+- `docs/agents/technical/specs/2026-07-09-async-and-sub-flow-testing-schema-design.md`
+- `docs/agents/technical/plans/2026-07-10-async-and-sub-flow-testing-plan.md`
 
 Task 9 in the July 10 plan redirects the integration slice to
-`docs/superpowers/plans/2026-07-11-async-and-sub-flow-integration-test-slice-plan.md`.
+`docs/agents/technical/plans/2026-07-11-async-and-sub-flow-integration-test-slice-plan.md`.
 The documents called for a top-level dataset with `submission_samples`,
 `submission_files`, and `submission_metadata`, and for process state to be combined
 with metadata. The preferred code instead uses a composite model, shorter member
@@ -202,7 +202,7 @@ aliases, so normalization remains visible and tested. At the user's request,
 top-level validators now enforce key/content agreement for both samples and files,
 replacing the proposed test-only alias assertions.
 
-The [table model specification](../../../../docs/superpowers/specs/2026-10-16-table-model-architecture-and-conversions.md#primary-keys)
+The [table model specification](../../../../docs/agents/technical/specs/2026-10-16-table-model-architecture-and-conversions.md#primary-keys)
 extends this identity invariant to keyed tables and Dataset conversion. Its APIs
 and automatic re-keying remain planned functionality. The
 [identity and relationship examples](patterns.md#identity-and-relationship-contracts)

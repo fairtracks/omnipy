@@ -273,12 +273,12 @@ constructs the Model through that validation and compares the full enriched outp
 keyed by the normalized ids. Retain mixed-case raw ids so the scenario exercises
 normalization.
 
-The [table primary-key specification](../../../../docs/superpowers/specs/2026-10-16-table-model-architecture-and-conversions.md#primary-keys)
+The [table primary-key specification](../../../../docs/agents/technical/specs/2026-10-16-table-model-architecture-and-conversions.md#primary-keys)
 extends this concept to tables. It defines deterministic serialization, retained
 visible key fields, and rejection of serialized-key collisions. Single string
 keys serialize to themselves; composite keys use the specified escaping and
 delimiter rules. Its
-[Dataset interoperability section](../../../../docs/superpowers/specs/2026-10-16-table-model-architecture-and-conversions.md#dataset-interoperability)
+[Dataset interoperability section](../../../../docs/agents/technical/specs/2026-10-16-table-model-architecture-and-conversions.md#dataset-interoperability)
 describes how keyed rows become Dataset items. These table APIs and automatic
 re-keying are planned functionality, not capabilities to assume in generated code.
 Use the identity invariant now while constructing keys explicitly with current
