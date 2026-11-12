@@ -14,6 +14,9 @@ build:
     post_checkout:
       # The package version is derived from the release tags, which a shallow clone lacks
       - git fetch --unshallow --tags || true
+    install:
+      # Keep Read the Docs' inactivity watchdog informed while uv resolves dependencies.
+      - uv sync --group docs --verbose
 
 python:
   install:
