@@ -6,6 +6,24 @@
 - Install dev + docs deps with `uv sync --all-groups`.
 - Run repo commands through `uv run ...`.
 
+## Scope Control
+
+- Implement the requested outcome and respect the user's constraints. Distinguish routine
+  implementation choices from changes to established behavior, contracts, or policies.
+- If completing the task appears to require broader changes, explain the concrete impact
+  and ask for explicit approval before expanding scope. Continue independent authorized
+  work; do not treat silence or elapsed time as approval.
+- Treat unexpected failures, compatibility conflicts, and adjacent improvement opportunities
+  as findings to report, not implicit permission to redesign surrounding systems.
+- Preserve existing behavior and test expectations outside the requested change. Do not
+  change tests or documentation to legitimize an unapproved behavior change. Passing
+  tests and architectural benefits do not substitute for user authorization.
+- Do not substitute an inferred goal or preferred design for an explicit requirement.
+  Surface consequential ambiguities before making decisions that change the task's meaning.
+- Keep diffs and commits focused on the requested change. Report unresolved questions
+  and behavioral consequences explicitly so the user can review them without reconstructing
+  implementation history.
+
 ## Verification
 
 - Full test command: `uv run pytest -v --mypy-pyproject-toml-file=pyproject.toml`

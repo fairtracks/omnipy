@@ -12,6 +12,14 @@ understand the promised data shapes, constraints, operations, and composition by
 reading their declarations and relevant validators.
 Use "dataflow" consistently in explanations and documentation.
 
+Keep improvements within the user's requested scope and constraints. Distinguish routine
+implementation choices from changes to established behavior, contracts, or policies.
+Unexpected failures and adjacent improvement opportunities do not authorize broader work.
+If broader changes appear necessary, explain their concrete impact and obtain explicit
+approval before proceeding with them; silence is not approval. Preserve behavior and test
+expectations outside the authorized scope. Surface consequential ambiguities instead of
+substituting a preferred design for the user's requirement, and keep changes easy to review.
+
 Use blank lines to separate groups with distinct purposes in implementations,
 fixtures, and assertions. Extract a cohesive block into a small, clearly named
 function when it has a distinct responsibility, is repeated, or obscures its
