@@ -544,7 +544,9 @@ see [Tutorial 8: Prefect orchestration](tutorials/08-prefect-orchestration.md).
   Prefect engine.
 - The [omnipy-dataflows skill](https://github.com/fairtracks/omnipy/blob/main/.agents/skills/omnipy-dataflows/SKILL.md)
   is what a coding agent reads to design Omnipy dataflows: typed contracts first, reusable tasks
-  and flows, and narrative tests that double as tutorials. Point your agent at it.
+  and flows, and narrative tests that double as tutorials. It ships with Omnipy:
+  `python -m omnipy.skills install omnipy-dataflows` links it into `.agents/skills/` of your
+  project (add `--claude` for Claude Code), where it follows Omnipy through upgrades.
 - The workshop
   [Structure your AI-powered research data pipelines with Omnipy](https://www.ub.uio.no/english/courses-events/courses/dsdays/2027/structure-your-ai-powered-research-data-pipelines-wi.html)
   at Digital Scholarship Days 2027, University of Oslo, is where this direction is taken further.
