@@ -16,7 +16,14 @@ build:
       - git fetch --unshallow --tags || true
     install:
       # Keep Read the Docs' inactivity watchdog informed while uv resolves dependencies.
-      - uv sync --group docs --verbose
+      - |
+        uv sync --group docs &
+        uv_sync_pid=$!
+        while kill -0 "$uv_sync_pid" 2>/dev/null; do
+          echo 'Waiting for uv sync to finish...'
+          sleep 20
+        done
+        wait "$uv_sync_pid"
 
 python:
   install:
