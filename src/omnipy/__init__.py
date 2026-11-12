@@ -128,17 +128,6 @@ from omnipy.components.json.models import (
 )
 from omnipy.components.json.tasks import convert_dataset_string_to_json, transpose_dicts_2_lists
 from omnipy.components.nested.datasets import NestedDataset, StructuredNestedDataset
-from omnipy.components.pandas.datasets import PandasDataset
-from omnipy.components.pandas.models import PandasModel
-from omnipy.components.pandas.tasks import (
-    cartesian_product,
-    concat_dataframes_across_datasets,
-    convert_dataset_csv_to_pandas,
-    convert_dataset_list_of_dicts_to_pandas,
-    convert_dataset_pandas_to_csv,
-    extract_columns_as_files,
-    join_tables,
-)
 from omnipy.components.raw.datasets import (
     BytesDataset,
     JoinColumnsToLinesDataset,
@@ -359,6 +348,7 @@ from omnipy.shared.enums.ui import (
 from omnipy.util._placeholder import F, m, x
 from omnipy.util.contexts import print_exception
 from omnipy.util.helpers import resolve
+from omnipy.util.lazy_import import resolve_lazy_export as _resolve_lazy_export
 from omnipy.util.literal_enum import LiteralEnum
 from omnipy.util.literal_enum_generator import generate_literal_enum_code
 
@@ -368,7 +358,39 @@ __version__ = _package_version('omnipy')
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 if TYPE_CHECKING:
+    from omnipy.components.pandas.datasets import PandasDataset
+    from omnipy.components.pandas.models import PandasModel
+    from omnipy.components.pandas.tasks import (
+        cartesian_product,
+        concat_dataframes_across_datasets,
+        convert_dataset_csv_to_pandas,
+        convert_dataset_list_of_dicts_to_pandas,
+        convert_dataset_pandas_to_csv,
+        extract_columns_as_files,
+        join_tables,
+    )
     from omnipy.data.typing.model import PlainModel
+
+_LAZY_EXPORTS = {
+    'PandasDataset': '.components.pandas.datasets',
+    'PandasModel': '.components.pandas.models',
+    'cartesian_product': '.components.pandas.tasks',
+    'concat_dataframes_across_datasets': '.components.pandas.tasks',
+    'convert_dataset_csv_to_pandas': '.components.pandas.tasks',
+    'convert_dataset_list_of_dicts_to_pandas': '.components.pandas.tasks',
+    'convert_dataset_pandas_to_csv': '.components.pandas.tasks',
+    'extract_columns_as_files': '.components.pandas.tasks',
+    'join_tables': '.components.pandas.tasks',
+}
+
+
+def __getattr__(name: str) -> object:
+    return _resolve_lazy_export(name, __name__, __package__, globals(), _LAZY_EXPORTS)
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | _LAZY_EXPORTS.keys())
+
 
 __all__ = [
     'runtime',

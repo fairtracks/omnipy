@@ -759,14 +759,16 @@ def recursive_module_import(
 
 def get_calling_module_name() -> str | None:
     """Return the first caller module name found above the helper frame."""
-    stack = inspect.stack()
-    start_frame_index = 2
-    while len(stack) > start_frame_index:
-        grandparent_frame = stack[start_frame_index][0]
-        module = inspect.getmodule(grandparent_frame)
-        if module is not None:
-            return module.__name__
-        start_frame_index += 1
+    frame = inspect.currentframe()
+    try:
+        frame = frame.f_back.f_back if frame is not None and frame.f_back is not None else None
+        while frame is not None:
+            module = inspect.getmodule(frame)
+            if module is not None:
+                return module.__name__
+            frame = frame.f_back
+    finally:
+        del frame
 
 
 @functools.cache
