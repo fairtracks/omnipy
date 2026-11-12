@@ -2,17 +2,22 @@
 
 ## General Coding Guidelines
 
+### Karpathy Guidelines
+
+Adapted from [karpathy-guidelines](https://github.com/multica-ai/andrej-karpathy-skills/blob/main/skills/karpathy-guidelines/SKILL.md),
+licensed under MIT; see [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+
 Apply these guidelines together with the project-specific rules below. They favor caution over
 speed; use judgment for trivial tasks.
 
-### Think Before Coding
+#### Think Before Coding
 
 - State assumptions explicitly. When an ambiguity would materially change the result, ask rather
   than choosing silently.
 - Surface meaningful tradeoffs and simpler alternatives. Get confirmation before substantially
   departing from the discussed approach.
 
-### Simplicity and Scope
+#### Simplicity and Scope
 
 - Implement the minimum code that solves the requested problem. Do not add speculative features,
   abstractions, flexibility, configuration, or impossible-scenario handling.
@@ -21,7 +26,7 @@ speed; use judgment for trivial tasks.
 - Remove only imports, variables, and functions made unused by the current change. Report
   pre-existing issues instead of changing them unless asked.
 
-### Goal-Driven Execution
+#### Goal-Driven Execution
 
 - Turn work into verifiable success criteria. For a multi-step task, state a concise plan with the
   check that verifies each step.

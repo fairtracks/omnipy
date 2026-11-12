@@ -158,6 +158,7 @@ only-include = [
     "hatch_build.py",
     "README.md",
     "AGENTS.md",
+    "THIRD_PARTY_LICENSES.md",
     "CLAUDE.md",
     ".agents/skills",
     ".claude",
