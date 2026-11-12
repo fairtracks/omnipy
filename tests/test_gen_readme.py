@@ -30,6 +30,32 @@ def test_generation_failure_preserves_existing_outputs(
     assert image.read_text() == 'existing image'
 
 
+def test_formatted_error_is_separate_from_copyable_code(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = tmp_path / 'source.md'
+    source.write_text(
+        '```pycon\n'
+        '>>> value = 1\n'
+        '>>> value / 0\n'
+        '```\n\n'
+        '```pycon exec="1"\n'
+        '>>> print(\'!!! error "ZeroDivisionError"\\n\\n    ```\\n'
+        "    division by zero\\n    ```')\n"
+        '```\n'
+    )
+    target = tmp_path / 'README.md'
+    monkeypatch.setattr(gen_readme, 'SOURCE', source)
+    monkeypatch.setattr(om, 'runtime', MagicMock())
+
+    gen_readme.ReadmeGenerator().generate(target, tmp_path / 'images')
+
+    assert (
+        '```pycon\n>>> value = 1\n>>> value / 0\n```\n\n'
+        '```text\nZeroDivisionError: division by zero\n```'
+    ) in target.read_text()
+
+
 @pytest.mark.parametrize(
     ('readme', 'image_name', 'expected'),
     [

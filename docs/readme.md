@@ -340,12 +340,13 @@ exec_and_display_code("""\
 
 Constructing the Dataset from the loaded pages parses them into typed samples:
 
-```pycon exec="1" session="water-samples" source="console"
+```pycon
 >>> samples = RiverSamplesDataset(pages)
+>>> samples.peek()
 ```
 
-```pycon
->>> samples.peek()
+```pycon exec="1" session="water-samples"
+>>> samples = RiverSamplesDataset(pages)  # markdown-exec: hide
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"
@@ -532,14 +533,15 @@ exec_and_display_code("""\
 ```
 
 The Dataset constructor applies the mapper to every sample, keeping the sample ids as keys.
-`peek()` displays the converted samples side by side:
-
-```pycon exec="1" session="water-samples" source="console"
->>> normalized_samples = NormalizedRiverSamplesDataset(samples)
-```
+`json()` displays the converted samples:
 
 ```pycon
+>>> normalized_samples = NormalizedRiverSamplesDataset(samples)
 >>> normalized_samples.json()
+```
+
+```pycon exec="1" session="water-samples"
+>>> normalized_samples = NormalizedRiverSamplesDataset(samples)  # markdown-exec: hide
 ```
 
 ```pycon exec="1" session="water-samples" result="console" html="true"

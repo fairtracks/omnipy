@@ -324,9 +324,6 @@ Constructing the Dataset from the loaded pages parses them into typed samples:
 
 ```pycon
 >>> samples = RiverSamplesDataset(pages)
-```
-
-```pycon
 >>> samples.peek()
 ```
 
@@ -390,6 +387,9 @@ validation error:
 
 ```pycon
 >>> phosphorus.value_ug_l = 'not a number'
+```
+
+```text
 ValidationError: 2 validation errors for Model[RiverUgConcMeasurementRecord]
 __root__ -> value_ug_l
   value is not a valid float (type=type_error.float)
@@ -490,13 +490,10 @@ class NormalizedRiverSamplesDataset(om.Dataset[NormalizedRiverSampleMapper]): ..
 ```
 
 The Dataset constructor applies the mapper to every sample, keeping the sample ids as keys.
-`peek()` displays the converted samples side by side:
+`json()` displays the converted samples:
 
 ```pycon
 >>> normalized_samples = NormalizedRiverSamplesDataset(samples)
-```
-
-```pycon
 >>> normalized_samples.json()
 ```
 

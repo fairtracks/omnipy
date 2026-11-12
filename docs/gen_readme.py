@@ -261,6 +261,8 @@ class ReadmeGenerator:
         if 'source' in fence.attrs:
             self._close_pending_fence()
             self._emit_fence('pycon', _visible_lines(lines) + output.splitlines())
+        elif ADMONITION_RE.match(output):
+            self._emit_fence('text', _convert_admonition(output).splitlines())
         elif output:
             self._append_output(_convert_admonition(output).splitlines())
 
