@@ -1,6 +1,6 @@
 from typing import Any, Generic, Self, TypeVar
 
-from omnipy import Model
+from omnipy.data.model import Model
 from omnipy.shared.typing import TYPE_CHECKER
 
 _RootT = TypeVar('_RootT')
