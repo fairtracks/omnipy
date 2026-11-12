@@ -1,0 +1,15 @@
+[
+  {
+    "river_sample_id": "river-sample-3",
+    "catchment": "glomma-upper",
+    "sampled_at": "2026-05-17",
+    "station": "Upstream Bend",
+    "sample_alias": "River-R3",
+    "measurements": [
+      {
+        "name": "Temperature",
+        "value_celsius": 9.8
+      }
+    ]
+  }
+]

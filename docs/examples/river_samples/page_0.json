@@ -1,0 +1,32 @@
+[
+  {
+    "river_sample_id": "river-sample-1",
+    "catchment": "glomma-upper",
+    "sampled_at": "2026-05-03",
+    "station": "River Mouth",
+    "sample_alias": "River-R1",
+    "measurements": [
+      {
+        "name": "Nitrate",
+        "value_mg_l": 1.2
+      },
+      {
+        "name": "Phosphorus",
+        "value_ug_l": 120.0
+      }
+    ]
+  },
+  {
+    "river_sample_id": "river-sample-2",
+    "catchment": "glomma-upper",
+    "sampled_at": "2026-05-10",
+    "station": "River Mouth",
+    "sample_alias": "River-R2",
+    "measurements": [
+      {
+        "name": "nitrate",
+        "value_mg_l": 1.4
+      }
+    ]
+  }
+]
