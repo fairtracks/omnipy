@@ -98,6 +98,16 @@ to distributed deployment, meeting the demands of projects large and small.
     $ pip install omnipy
     ```
 
+4. If you work with a coding agent, install the Omnipy skills into your project:
+    ```bash
+    $ python -m omnipy.skills install
+    ```
+
+    This links the skills shipped with Omnipy into `.agents/skills/`, where most agents read them,
+    so that they follow Omnipy through upgrades. Add `--claude` for Claude Code, which reads
+    `.claude/skills/`, and see `python -m omnipy.skills --help` for listing the skills and other
+    options.
+
 Omnipy works with both Pydantic 1 and 2. With Pydantic 2 installed, it runs through Pydantic's v1
 compatibility layer; Pydantic 2 models are not supported yet.
 
@@ -468,11 +478,12 @@ see [Tutorial 8: Prefect orchestration](https://omnipy.readthedocs.io/en/latest/
   and [nobel_idw2025](https://github.com/fairtracks/omnipy/blob/main/docs/notebooks/nobel_idw2025.ipynb).
 - [Tutorial 8: Prefect orchestration](https://omnipy.readthedocs.io/en/latest/tutorials/08-prefect-orchestration/) runs a flow on the
   Prefect engine.
-- The [omnipy-dataflows skill](https://github.com/fairtracks/omnipy/blob/main/.agents/skills/omnipy-dataflows/SKILL.md)
-  is what a coding agent reads to design Omnipy dataflows: typed contracts first, reusable tasks
-  and flows, and narrative tests that double as tutorials. It ships with Omnipy:
-  `python -m omnipy.skills install omnipy-dataflows` links it into `.agents/skills/` of your
-  project (add `--claude` for Claude Code), where it follows Omnipy through upgrades.
+- The [Omnipy skills](https://github.com/fairtracks/omnipy/tree/main/.agents/skills) are what a
+  coding agent reads to work with Omnipy. The first,
+  [omnipy-dataflows](https://github.com/fairtracks/omnipy/blob/main/.agents/skills/omnipy-dataflows/SKILL.md),
+  covers designing dataflows: typed contracts first, reusable tasks and flows, and narrative tests
+  that double as tutorials. The skills ship with Omnipy, see
+  [Installing Omnipy](#installing-omnipy).
 - The workshop
   [Structure your AI-powered research data pipelines with Omnipy](https://www.ub.uio.no/english/courses-events/courses/dsdays/2027/structure-your-ai-powered-research-data-pipelines-wi.html)
   at Digital Scholarship Days 2027, University of Oslo, is where this direction is taken further.
