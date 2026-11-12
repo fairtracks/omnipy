@@ -114,6 +114,7 @@ nav:
 - Contributing: contributing.md
 - Release notes: https://github.com/fairtracks/omnipy/releases
 - Comics:
+  - Roster: comics/index.md
   - The Omnificients:
     - Optimus Parse (The Data Transformer): comics/optimus-parse.md
     - The Schema (The Silent Keeper): comics/schema.md

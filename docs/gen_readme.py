@@ -37,7 +37,7 @@ ATTR_RE = re.compile(r'(\w+)="([^"]*)"')
 INCLUDE_RE = re.compile(r'^--8<-- "([^"]+)"$')
 DOCS_CALL_RE = re.compile(r'^print\((?P<obj>.+?)\._docs\((?P<args>.*)\)\)$', re.S)
 ADMONITION_RE = re.compile(r'^!!! \w+ "(?P<title>[^"]+)"\n\n    ```\n(?P<body>.*?)    ```', re.S)
-MD_LINK_RE = re.compile(r'\]\(([\w./-]+\.md)\)')
+MD_LINK_RE = re.compile(r'\]\((?P<path>[\w./-]+\.md)(?P<fragment>#[^)]*)?\)')
 IMAGE_LINK_RE = re.compile(r'\]\(images/')
 VIEWBOX_RE = re.compile(r'viewBox="[\d. ]+"')
 MATRIX_OFFSET_RE = re.compile(r'<g transform="translate\(([\d.]+), ([\d.]+)\)"')
@@ -48,8 +48,9 @@ GENERATED_NOTE = (
 )
 GETTING_STARTED_NOTE = (
     'The examples below run when the documentation is built, and their output is shown here as '
-    'images. The [documentation site](https://omnipy.readthedocs.io/) shows the same page with '
-    'live output, and is the place to copy from.'
+    'images. The code blocks remain selectable and copyable. The '
+    '[documentation site](https://omnipy.readthedocs.io/) shows the same page with selectable '
+    'output too.'
 )
 
 
@@ -152,7 +153,13 @@ def _slug(text: str) -> str:
 
 
 def _convert_text_line(line: str) -> str:
-    line = MD_LINK_RE.sub(lambda m: f']({DOCS_SITE_URL}{m.group(1)[:-3]}/)', line)
+    def docs_link(match: re.Match[str]) -> str:
+        path = Path(match['path'])
+        page = path.parent if path.name == 'index.md' else path.with_suffix('')
+        url_path = '' if page == Path('.') else f'{page.as_posix()}/'
+        return f']({DOCS_SITE_URL}{url_path}{match["fragment"] or ""})'
+
+    line = MD_LINK_RE.sub(docs_link, line)
     return IMAGE_LINK_RE.sub('](docs/images/', line)
 
 
