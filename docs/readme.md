@@ -563,7 +563,7 @@ nested Datasets with their fields as items:
 Calling `peek()` on a StructuredNestedDataset shows a hierarchical view of the structure, with
 tables nested within tables:
 
-```pycon exec="1" session="water-samples" source="console"
+```pycon
 >>> nested_samples[0].peek()
 ```
 

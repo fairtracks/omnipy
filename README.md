@@ -517,12 +517,6 @@ tables nested within tables:
 
 ```pycon
 >>> nested_samples[0].peek()
-╭────────────┬─────────────────┬───────────────┬───╮
-│     0.     │       1.        │      2.       │ … │
-│ sample_key │ monitoring_date │ location_name │   │
-│            │                 │               │   │
-│ "river-r1" │ "2026-05-03"    │ "River Mouth" │   │
-╰────────────┴─────────────────┴───────────────┴───╯
 ```
 
 ![Display of nested_samples[0]](docs/images/readme/20-nested_samples-0.svg)
