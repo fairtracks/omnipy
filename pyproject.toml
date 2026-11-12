@@ -140,6 +140,13 @@ cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true 
 [tool.hatch.build.targets.wheel]
 packages = ["src/omnipy"]
 
+# The sdist holds what is needed to build and test the package. Without this list, hatchling packs
+# every file not ignored by the root .gitignore, including docs images, notebooks and local
+# directories such as .opencode/node_modules (ignored only by a nested .gitignore).
+# pyproject.toml and LICENSE are always included.
+[tool.hatch.build.targets.sdist]
+only-include = ["src/omnipy", "tests", "hatch_build.py", "README.md"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
