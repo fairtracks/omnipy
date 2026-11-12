@@ -99,7 +99,8 @@ to distributed deployment, meeting the demands of projects large and small.
     $ pip install omnipy
     ```
 
-4. If you work with a coding agent, install the Omnipy skills into your project:
+4. If you work with a coding agent, install the Omnipy skills into your project, running in the
+   project directory:
     ```bash
     $ python -m omnipy.skills install
     ```
@@ -203,7 +204,7 @@ list of sample records, so we load the pages into a `JsonListOfDictsDataset`:
 >>> print(pages._docs())
 ```
 
-A dataset's `peek()` shows the contents of its items side by side:
+A Dataset's `peek()` shows the contents of its items side by side:
 
 ```pycon
 >>> pages.peek()
@@ -489,11 +490,9 @@ import omnipy as om
 from textwrap import dedent
 
 code = dedent("""\
-    from omnipy.util.helpers import resolve
-
     @om.TaskTemplate()
     async def fetch_sample_pages(page_urls: om.HttpUrlDataset) -> om.JsonListOfDictsDataset:
-        return await resolve(om.JsonListOfDictsDataset.load(page_urls))
+        return await om.resolve(om.JsonListOfDictsDataset.load(page_urls))
 
     @om.LinearFlowTemplate(
         fetch_sample_pages,
@@ -556,8 +555,8 @@ see [Tutorial 8: Prefect orchestration](tutorials/08-prefect-orchestration.md).
   coding agent reads to work with Omnipy. The first,
   [omnipy-dataflows](https://github.com/fairtracks/omnipy/blob/main/.agents/skills/omnipy-dataflows/SKILL.md),
   covers designing dataflows: typed contracts first, reusable tasks and flows, and narrative tests
-  that double as tutorials. The skills ship with Omnipy, see
-  [Installing Omnipy](#installing-omnipy).
+  that double as tutorials. The skills ship with Omnipy, see step 4 of
+  [Installing Omnipy](#installing-omnipy) above.
 - The workshop
   [Structure your AI-powered research data pipelines with Omnipy](https://www.ub.uio.no/english/courses-events/courses/dsdays/2027/structure-your-ai-powered-research-data-pipelines-wi.html)
   at Digital Scholarship Days 2027, University of Oslo, is where this direction is taken further.

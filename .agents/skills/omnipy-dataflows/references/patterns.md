@@ -867,7 +867,7 @@ response with the service's response schema:
 samples_api_url = services.biosamplevault.urls['samples']
 sample_submission = SampleAndMetadataToBioSampleVaultSubmissionMapper((sample, metadata))
 
-response = await resolve(
+response = await om.resolve(
     sample_submission.post(
         samples_api_url,
         response_cls=Model[BioSampleVaultSampleSubmissionSchema],

@@ -263,7 +263,7 @@ that contract to accept the dataflow's internal records or mapper classes.
 A task maps the request, calls the service through `.post()`, a typed function or
 a suitable existing client/loader, and applies the response to the relevant
 record. Name the URL and the mapped request in variables before the call. Wrap
-`.post()` and `.load()` in `resolve()` in a task body, as they return a result
+`.post()` and `.load()` in `om.resolve()` in a task body, as they return a result
 or a task depending on the context. A mapper that mimics the external request
 schema can be passed directly in place of that request; the service contract
 remains expressed in its own schema. Serialize at the transport boundary when

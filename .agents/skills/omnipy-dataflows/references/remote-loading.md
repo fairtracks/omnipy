@@ -188,7 +188,7 @@ success. JSON is currently the only supported request and response format.
 
 Like `load()`, `post()` returns the result at a synchronous entry point and an
 `asyncio.Task` inside a running event loop, so async code, including task bodies, can
-await it directly. `resolve()` from `omnipy.util.helpers` awaits a value only when
+await it directly. `om.resolve()` awaits a value only when
 needed, for code that may run in either context. The `post_to_url` and
 `async_post_to_url` tasks wrap the same entry point.
 
