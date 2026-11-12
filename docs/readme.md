@@ -137,12 +137,11 @@ The following creates a data model of a list of integers, and parses some data i
 
 Let's work with river samples from the
 [water-sample harmonization example](https://github.com/fairtracks/omnipy/tree/main/tests/integration/novel/full/water_sample_harmonization).
-The API returns the samples in pages at `/samples?page=N`. The URLs below are illustrative: the
-documentation serves its example JSON from a local mock HTTP service. Substitute your own endpoint
-when trying this in a Python console.
+A water quality API would return such samples in pages. Here the two pages are JSON files in the
+Omnipy repository, so the walkthrough runs as it stands from any Python console.
 
-An `HttpUrlModel` holds a URL as structured fields, so the path and the query parameters are
-edited in place instead of by string formatting:
+An `HttpUrlModel` holds a URL as structured fields, so the path is edited in place instead of by
+string formatting:
 
 ```pycon exec="1" session="water-samples" source="console"
 >>> import omnipy as om
@@ -150,16 +149,12 @@ edited in place instead of by string formatting:
 >>> ui_config = om.runtime.config.data.ui.browser
 >>> ui_config.color.style = om.DarkHighContrastColorStyles.MEASURED_DARK_T16
 >>> ui_config.color.solid_background = True
->>> from runpy import run_path  # markdown-exec: hide
->>> _fixture_path = 'docs/examples/water_sample_service.py'  # markdown-exec: hide
->>> _service = run_path(_fixture_path)['water_sample_service']()  # markdown-exec: hide
->>> _local_api = om.HttpUrlModel(_service.__enter__())  # markdown-exec: hide
 
->>> water_api = 'https://water.example'
+>>> river_data = om.HttpUrlModel('https://raw.githubusercontent.com/fairtracks/omnipy/main')
+>>> river_data.path // 'docs' // 'examples' // 'river_samples'
 
->>> river_page_0 = om.HttpUrlModel(water_api)
->>> river_page_0.path // 'samples'
->>> river_page_0.query['page'] = 0
+>>> river_page_0 = om.HttpUrlModel(river_data)
+>>> river_page_0.path // 'page_0.json'
 >>> river_page_0
 ```
 
@@ -167,12 +162,12 @@ edited in place instead of by string formatting:
 >>> print(river_page_0._docs())
 ```
 
-A second page differs only in its query parameter. An `HttpUrlDataset` collects the URLs under
-names that will also name the responses:
+A second page differs only in its file name. An `HttpUrlDataset` collects the URLs under names
+that will also name the responses:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> river_page_1 = om.HttpUrlModel(river_page_0)
->>> river_page_1.query['page'] = 1
+>>> river_page_1 = om.HttpUrlModel(river_data)
+>>> river_page_1.path // 'page_1.json'
 
 >>> page_urls = om.HttpUrlDataset(river_page_0=river_page_0, river_page_1=river_page_1)
 >>> page_urls
@@ -182,7 +177,8 @@ names that will also name the responses:
 >>> print(page_urls._docs())
 ```
 
-For APIs with many pages, `GeneratePagedUrlsModel` builds such a Dataset from a page or item count.
+Such Datasets are also built by the catalog: `GeneratePagedUrlsModel` from a page or item count
+for APIs with many pages, and the `get_github_repo_urls` task from a directory listing on GitHub.
 
 ### Load the pages
 
@@ -190,12 +186,6 @@ A Dataset loads all its URLs, keeping the responses under the URL names. Each re
 list of sample records, so we load the pages into a `JsonListOfDictsDataset`:
 
 ```pycon exec="1" session="water-samples" source="console"
->>> for _page_url in page_urls.values():  # markdown-exec: hide
-...     _page_url.scheme, _page_url.host, _page_url.port = (
-...         _local_api.scheme,
-...         _local_api.host,
-...         _local_api.port,
-...     )  # markdown-exec: hide
 >>> pages = om.JsonListOfDictsDataset.load(page_urls)
 >>> pages
 ```
@@ -529,10 +519,6 @@ produces and is held to: the stages, their order, and the types passing between 
 Model and Dataset validating its data at its stage. The same flow runs on
 [Prefect](https://www.prefect.io/) by setting `om.runtime.config.engine.choice = 'prefect'`;
 see [Tutorial 8: Prefect orchestration](tutorials/08-prefect-orchestration.md).
-
-```pycon exec="1" session="water-samples" result="console"
->>> _service.__exit__(None, None, None)
-```
 
 ## Where next
 
