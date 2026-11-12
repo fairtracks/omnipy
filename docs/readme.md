@@ -102,6 +102,20 @@ to distributed deployment, meeting the demands of projects large and small.
     $ pip install omnipy
     ```
 
+    On Python 3.15, install with:
+
+    ```bash
+    $ pip install --ignore-requires-python omnipy
+    ```
+
+    > NOTE:
+    > Omnipy uses Pydantic v1 models and requires FastAPI `>=0.119.0,<0.126.0`. Prefect 3.7.2,
+    > tested with FastAPI 0.125.0, declares Python `<3.15`. Prefect 3.9.0 supports Python 3.15 but
+    > requires FastAPI `>=0.139.0`, which no longer supports Pydantic v1 models. Omnipy's tests pass
+    > on Python 3.15 with Prefect 3.7.2 and FastAPI 0.125.0. The option ignores declared Python
+    > version requirements for all packages being installed. This workaround is needed until
+    > Omnipy moves to Pydantic v2.
+
 4. If you work with a coding agent, install the Omnipy skills into your project, running in the
    project directory:
     ```bash
