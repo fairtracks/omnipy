@@ -72,7 +72,7 @@ jobs:
         env:
           TAG: ${{ inputs.tag }}
         run: |
-          printf '## Commits\n\n' > release-notes.md
+          printf '## Commits\n\n' > commits.md
           PREVIOUS_TAG="$(git describe --tags --abbrev=0 --match 'omnipy_v*' "$TAG^" 2>/dev/null || true)"
           if [ -n "$PREVIOUS_TAG" ]; then
             RANGE="$PREVIOUS_TAG..$TAG"
@@ -80,13 +80,20 @@ jobs:
             RANGE="$TAG"
           fi
           git log --format="- %s ([%h](https://github.com/$GITHUB_REPOSITORY/commit/%H))" "$RANGE" \
-            >> release-notes.md
+            >> commits.md
       - name: Create draft release
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ inputs.tag }}
         run: |
-          if ! gh release create "$TAG" dist/* --draft --generate-notes --notes-file release-notes.md --title "Omnipy v${TAG#omnipy_v}" --verify-tag; then
+          if ! {
+            gh release create "$TAG" dist/* commits.md --draft --generate-notes --title "Omnipy v${TAG#omnipy_v}" --verify-tag &&
+            gh release view "$TAG" --json assets,body --jq '
+              (.assets[] | select(.name == "commits.md") | .url) as $url |
+              "## Commits\n\n[Complete commit list](" + $url + ")\n\n" + .body
+            ' > release-notes.md &&
+            gh release edit "$TAG" --notes-file release-notes.md
+          }; then
             gh release delete "$TAG" --yes || true
             git push origin ":refs/tags/$TAG"
             exit 1
