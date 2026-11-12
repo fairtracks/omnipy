@@ -4,6 +4,10 @@
 revision being viewed. PyPI shows the readme from the package metadata and needs absolute URLs
 that keep showing the images of the released version, so the links are rewritten when the package
 is built: to the raw GitHub URLs of the release tag, or of the commit for a build without one.
+
+The hook runs when building from a git checkout. A wheel built from an sdist takes the readme and
+the version from the sdist's `PKG-INFO` instead, as hatchling skips the metadata hooks when no
+dynamic field is left to resolve.
 """
 
 from pathlib import Path
@@ -14,7 +18,6 @@ from hatchling.metadata.plugin.interface import MetadataHookInterface
 
 REPO_RAW_URL = 'https://raw.githubusercontent.com/fairtracks/omnipy/{ref}/'
 RELEASE_TAG_PATTERN = 'omnipy_v*'
-RELEASE_VERSION_RE = re.compile(r'^\d+\.\d+\.\d+((a|b|rc)\d+)?(\.post\d+)?$')
 REPO_LINK_RE = re.compile(r'\]\((docs/[^)\s]+)\)')
 
 
@@ -30,7 +33,7 @@ class ReadmeMetadataHook(MetadataHookInterface):
 
 
 def _git_ref(root: Path) -> str:
-    """The release tag of the checkout, else its commit, else the version of the sdist."""
+    """The release tag of the checkout, else its commit, else `main` outside a git checkout."""
 
     def git(*args: str) -> str | None:
         try:
@@ -40,22 +43,14 @@ def _git_ref(root: Path) -> str:
         except (subprocess.CalledProcessError, FileNotFoundError):
             return None
 
+    # Git searches the parent directories for a repository, which for a source tree unpacked
+    # inside some other repository would give the commit of that repository
+    toplevel = git('rev-parse', '--show-toplevel')
+    if toplevel is None or Path(toplevel).resolve() != root.resolve():
+        return 'main'
+
     release_tag = git('describe', '--tags', '--exact-match', '--match', RELEASE_TAG_PATTERN)
     if release_tag:
         return release_tag
 
-    commit = git('rev-parse', 'HEAD')
-    if commit:
-        return commit
-
-    # Building a wheel from an sdist: no git checkout, but the version is in PKG-INFO
-    pkg_info = root / 'PKG-INFO'
-    if pkg_info.exists():
-        for line in pkg_info.read_text(encoding='utf-8').splitlines():
-            if line.startswith('Version: '):
-                version = line.removeprefix('Version: ').strip()
-                if RELEASE_VERSION_RE.match(version):
-                    return f'omnipy_v{version}'
-                break
-
-    return 'main'
+    return git('rev-parse', 'HEAD') or 'main'
