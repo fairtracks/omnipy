@@ -118,6 +118,7 @@ For example: "Cleanup ConfigBase display methods. Misc fixes in BaseDisplayMixin
 - Plans, specs, reviews and other working documents written by agents go under `docs/agents/`, filed as described in `docs/agents/README.md` (e.g. `docs/agents/technical/plans/` and `docs/agents/technical/specs/`, with a date prefix in the filename).
 - This location overrides the ones that skills or plugins define for such documents, such as `docs/superpowers/plans/` and `docs/superpowers/specs/` from the superpowers skills.
 - `docs/agents/` is excluded from the MkDocs site, and the plans and specs under `docs/agents/technical/` are excluded from `ruff format`, so they are kept as written.
+- Verify every concrete claim about code (identifiers, quoted comments, behaviour) against the current file before writing it into documentation, a skill or a working document. Conversation context and its summaries go stale while files are edited by hand: after a context reset, re-read such files before building on them.
 
 ## Docs
 
