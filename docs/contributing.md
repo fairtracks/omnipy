@@ -291,12 +291,12 @@ before v0.18.0 are archived in `archive/release_notes_before_v0.18.0.md`.
 2. Enter the new tag as `omnipy_vX.Y.Z` (for example, `omnipy_v0.24.0`) and run the workflow.
 3. The workflow runs CI, creates the tag locally, builds the tagged version, then pushes the tag and
    creates a draft GitHub Release with GitHub-generated pull request and contributor notes. The
-   complete commit list is always attached as `commits.md`, alongside the wheel and source
-   distribution, to keep it outside the release description's size limit.
-4. Download `commits.md` from the draft's attachments or the **Complete commit list** link in the
-   notes. The link is also available in the release editor's **Preview** tab. For a long commit
-   list, optionally use an LLM manually to draft a concise summary of the main changes; review its
-   output before adding it to the notes.
+   complete commit list is always attached as `commits-X.Y.Z.md` (for example, `commits-0.24.0.md`),
+   alongside the wheel and source distribution, to keep it outside the release description's size
+   limit.
+4. Download the versioned commit list from the draft's attached assets. For a long commit list,
+   optionally use an LLM manually to draft a concise summary of the main changes; review its output
+   before adding it to the notes.
 5. Open the draft under **Releases**, review and edit its notes, then click **Publish release**.
 6. Publishing the GitHub Release runs `.github/workflows/release.yml`, which uploads the previously
    validated release assets to PyPI. It then builds the Jupyter Docker image for the release and
