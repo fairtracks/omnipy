@@ -356,6 +356,7 @@ from omnipy.shared.enums.ui import (
 )
 from omnipy.util._placeholder import F, m, x
 from omnipy.util.contexts import print_exception
+from omnipy.util.helpers import resolve
 from omnipy.util.literal_enum import LiteralEnum
 from omnipy.util.literal_enum_generator import generate_literal_enum_code
 
@@ -646,6 +647,7 @@ __all__ = [
     'rename_col_names',
     'transpose_columns_with_data_files',
     'print_exception',
+    'resolve',
     'LiteralEnum',
     'generate_literal_enum_code',
     'TerminalUserInterfaceType',
