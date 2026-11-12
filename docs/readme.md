@@ -84,8 +84,9 @@ to distributed deployment, meeting the demands of projects large and small.
 2. Create and activate a virtual environment for your project, e.g.:
 
     ```bash
-    $ python -m venv myproject
-    $ source myproject/bin/activate
+    $ cd myproject
+    $ python -m venv .venv
+    $ source .venv/bin/activate
     ```
 
     > TIP:
