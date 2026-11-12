@@ -46,7 +46,6 @@ _exclude_attrs: set[str] = {
     'generate_literal_enum_code',
     'EnumeratedListModel',
     'EnumeratedListOfTuplesModel',
-    'ListAsNestedDatasetModel',
     'ColumnWiseTableWithColNamesNoConvertModel',
     'RowWiseTableWithColNamesNoConvertModel',
     'PydanticRecordModelBase',
@@ -56,12 +55,9 @@ _exclude_attrs: set[str] = {
     'ListOfPandasDatasetsWithSameNumberOfFiles',
     'get_auto_from_api_endpoint',
     'Proportionally',
-    'ListAsNestedDatasetModel',
     'get_auto_from_api_endpoint',
     'RowWiseTableWithColNamesNoConvertModel',
     'ColumnWiseTableWithColNamesNoConvertModel',
-    'EnumeratedListOfTuplesModel',
-    'EnumeratedListModel',
     'RunStateLogMessages',
     'OutputMode',
     'SyntaxLanguage',
@@ -95,6 +91,8 @@ if not __all__:
     from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
     from omnipy.data.model import (
         is_model_instance,
+        is_model_of_dataset_instance,
+        is_model_of_dataset_subclass,
         is_model_subclass,
         is_non_omnipy_pydantic_model_instance,
         is_pure_pydantic_model_instance,
@@ -124,7 +122,7 @@ if not __all__:
     )
     from omnipy.util._placeholder import F, m, x
     from omnipy.util.contexts import print_exception
-    from omnipy.util.helpers import recursive_module_import
+    from omnipy.util.helpers import recursive_module_import, resolve
     from omnipy.util.literal_enum_generator import generate_literal_enum_code
 
     if TYPE_CHECKING:
@@ -170,6 +168,9 @@ if not __all__:
         'is_dataset_instance',
         'is_dataset_subclass',
         'is_model_subclass',
+        'is_model_of_dataset_instance',
+        'is_model_of_dataset_subclass',
+        'resolve',
         'x',
         'm',
         'F',
