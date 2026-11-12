@@ -16,6 +16,7 @@ import io
 from pathlib import Path
 import re
 import sys
+import tempfile
 import textwrap
 from typing import NamedTuple
 
@@ -180,20 +181,23 @@ class ReadmeGenerator:
         # Images need a background of their own, as the page behind them may be dark or light
         om.runtime.config.data.ui.browser.color.solid_background = True
 
-        IMAGE_DIR.mkdir(parents=True, exist_ok=True)
-        for old_image in IMAGE_DIR.glob('*.svg'):
-            old_image.unlink()
+        with tempfile.TemporaryDirectory() as directory:
+            self._image_dir = Path(directory)
+            self._output.append(GENERATED_NOTE)
+            for block in _iter_blocks(SOURCE.read_text().splitlines()):
+                if isinstance(block, Fence):
+                    self._handle_fence(block)
+                else:
+                    self._handle_text(block)
+            self._close_pending_fence()
 
-        self._output.append(GENERATED_NOTE)
-        for block in _iter_blocks(SOURCE.read_text().splitlines()):
-            if isinstance(block, Fence):
-                self._handle_fence(block)
-            else:
-                self._handle_text(block)
-        self._close_pending_fence()
-
-        text = re.sub(r'\n{3,}', '\n\n', '\n'.join(self._output)).rstrip() + '\n'
-        TARGET.write_text(text)
+            text = re.sub(r'\n{3,}', '\n\n', '\n'.join(self._output)).rstrip() + '\n'
+            IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+            for old_image in IMAGE_DIR.glob('*.svg'):
+                old_image.unlink()
+            for image in self._image_dir.glob('*.svg'):
+                (IMAGE_DIR / image.name).write_bytes(image.read_bytes())
+            TARGET.write_text(text)
 
     # Text
 
@@ -263,7 +267,7 @@ class ReadmeGenerator:
         self._close_pending_fence()
         self._image_count += 1
         name = f'{self._image_count:02d}-{_slug(obj_expr)}.svg'
-        _render_svg(obj_expr, args, namespace, IMAGE_DIR / name)
+        _render_svg(obj_expr, args, namespace, self._image_dir / name)
         self._output.extend(['', f'![Display of {obj_expr}](docs/images/readme/{name})', ''])
 
     def _emit_fence(self, lang: str, lines: list[str]) -> None:

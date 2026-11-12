@@ -50,16 +50,6 @@ types = ["toml"]
 groups = ["watch", "commit"]
 
 [[repos.hooks]]
-id = "generate-readme"
-name = "Generate README"
-description = "Regenerate the README and its display images."
-entry = "sh .pre-commit-hooks/generate_readme.sh"
-language = "system"
-files = '^(docs/readme\.md|docs/_includes/pycon_hidden_runtime_setup\.md|docs/gen_readme\.py|README\.md|docs/images/readme/.*\.svg)$'
-pass_filenames = false
-groups = ["commit"]
-
-[[repos.hooks]]
 id = "install-local-package"
 name = "Install Local Package"
 entry = "uv pip install -e . --offline"
@@ -107,4 +97,17 @@ id = "validate-pyproject"
 name = "Validate pyproject.toml"
 args = ["-D", "mypy"]
 additional_dependencies = ["validate-pyproject-schema-store[all]"]
+groups = ["commit"]
+
+[[repos]]
+repo = "local"
+
+[[repos.hooks]]
+id = "generate-readme"
+name = "Generate README"
+description = "Regenerate the README and its display images."
+entry = "sh .pre-commit-hooks/generate_readme.sh"
+language = "system"
+files = '^(docs/readme\.md|docs/_includes/pycon_hidden_runtime_setup\.md|docs/gen_readme\.py|README\.md|docs/images/readme/.*\.svg)$'
+pass_filenames = false
 groups = ["commit"]
