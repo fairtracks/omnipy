@@ -88,7 +88,7 @@ to distributed deployment, meeting the demands of projects large and small.
     $ source .venv/bin/activate
     ```
 
-    > TIP:
+    > **Tip:**
     > - If you need help with setting up a virtual environment, check out the relevant section in
     >   the [FastAPI documentation](https://fastapi.tiangolo.com/virtual-environments/).
     >   _(Please note that Omnipy does not depend on FastAPI, it is just that their documentation is
@@ -107,13 +107,14 @@ to distributed deployment, meeting the demands of projects large and small.
     $ pip install --ignore-requires-python omnipy
     ```
 
-    > NOTE:
-    > Omnipy uses Pydantic v1 models and requires FastAPI `>=0.119.0,<0.126.0`. Prefect 3.7.2,
-    > tested with FastAPI 0.125.0, declares Python `<3.15`. Prefect 3.9.0 supports Python 3.15 but
-    > requires FastAPI `>=0.139.0`, which no longer supports Pydantic v1 models. Omnipy's tests pass
-    > on Python 3.15 with Prefect 3.7.2 and FastAPI 0.125.0. The option ignores declared Python
-    > version requirements for all packages being installed. This workaround is needed until
-    > Omnipy moves to Pydantic v2.
+    > **Note on Python 3.15:**
+    > - Omnipy uses Pydantic v1 models and requires FastAPI `>=0.119.0,<0.126.0`. Prefect 3.7.2,
+    >   tested with FastAPI 0.125.0, declares Python `<3.15`. Prefect 3.9.0 supports Python 3.15 but
+    >   requires FastAPI `>=0.139.0`, which no longer supports Pydantic v1 models. Omnipy's tests
+    >   pass on Python 3.15 with Prefect 3.7.2 and FastAPI 0.125.0.
+    > - The `--ignore-requires-python` option ignores declared Python version requirements for all
+    >   packages being installed.
+    > - This workaround is needed until Omnipy moves to Pydantic v2.
 
 4. If you work with a coding agent, install the Omnipy skills into your project, running in the
    project directory:
