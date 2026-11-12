@@ -19,7 +19,7 @@ Model-based tabular parsing for domain formats follows a stable three-step patte
 
 ```pycon exec="1" source="console"
 >>> import omnipy as om
->>> import pydantic as pyd
+>>> import omnipy.util.pydantic as pyd
 >>> class Row(pyd.v1.BaseModel):
 ...     a: int
 ...     b: int

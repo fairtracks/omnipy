@@ -30,7 +30,7 @@ validation in the flow.
 
 ```pycon exec="1" source="console"
 >>> import omnipy as om
->>> import pydantic as pyd
+>>> import omnipy.util.pydantic as pyd
 >>> class Row(pyd.v1.BaseModel):
 ...     sample: str
 ...     count: int

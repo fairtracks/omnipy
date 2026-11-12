@@ -21,7 +21,7 @@ Use a typed model at the boundary where untrusted model output enters your syste
 
 ```pycon exec="1" session="ai-safe" source="console"
 >>> import omnipy as om
->>> import pydantic as pyd
+>>> import omnipy.util.pydantic as pyd
 >>> class LlmAnswer(pyd.v1.BaseModel):
 ...     title: str
 ...     score: int
@@ -65,7 +65,7 @@ When input quality varies, start permissive and normalize first.
 
 ```pycon exec="1" session="ai-safe" source="console"
 >>> import omnipy as om
->>> import pydantic as pyd
+>>> import omnipy.util.pydantic as pyd
 >>> class ParsedAnswer(pyd.v1.BaseModel):
 ...     score: int
 ...     approved: bool
@@ -109,7 +109,7 @@ Switch specific fields to strict types to reject coercion and force explicit rep
 
 ```pycon exec="1" session="ai-safe" source="console"
 >>> import omnipy as om
->>> import pydantic as pyd
+>>> import omnipy.util.pydantic as pyd
 >>> class StrictAnswer(pyd.v1.BaseModel):
 ...     score: pyd.StrictInt
 >>> try:

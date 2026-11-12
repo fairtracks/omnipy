@@ -131,7 +131,7 @@ For example: "Cleanup ConfigBase display methods. Misc fixes in BaseDisplayMixin
 
 Code examples in docs/ pages follow these rules:
 
-- **Imports**: Use `import omnipy as om` and `import pydantic as pyd` as the default.
+- **Imports**: Use `import omnipy as om` and `import omnipy.util.pydantic as pyd` as the default. `omnipy.util.pydantic` is Pydantic 1 whichever Pydantic is installed, which plain `pydantic` is not under Pydantic 2.
   Reference types as `om.Model`, `pyd.BaseModel`, etc.
   When the `om.` prefix creates visual clutter (e.g. using both Model and Dataset
   repeatedly in one block), add `from omnipy import Dataset, Model` — limit
