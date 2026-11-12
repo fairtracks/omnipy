@@ -38,6 +38,7 @@ name = "ruff format"
 entry = "uv run --offline ruff format"
 language = "system"
 types_or = ["python", "jupyter", "markdown"]
+exclude = '^README\.md$'
 groups = ["watch", "commit"]
 
 [[repos.hooks]]
@@ -47,6 +48,16 @@ entry = "uv run --offline tombi format"
 language = "system"
 types = ["toml"]
 groups = ["watch", "commit"]
+
+[[repos.hooks]]
+id = "generate-readme"
+name = "Generate README"
+description = "Regenerate the README and its display images."
+entry = "sh .pre-commit-hooks/generate_readme.sh"
+language = "system"
+files = '^(docs/readme\.md|docs/_includes/pycon_hidden_runtime_setup\.md|docs/gen_readme\.py|README\.md|docs/images/readme/.*\.svg)$'
+pass_filenames = false
+groups = ["commit"]
 
 [[repos.hooks]]
 id = "install-local-package"

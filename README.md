@@ -13,11 +13,13 @@ Omnipy is a type-driven Python library for:
 
 **A Readable Contract Between You and Your AI Agent**
 
-AI agents are good at the time-consuming parts of working with research data: reformatting,
-cleaning, and integrating. Omnipy gives that work a structure a human can inspect. The agent turns
-exploratory code into data models, conversions, and dataflows declared in Python; the data is
-validated at every step; and you review the declarations and the data at each junction rather than
-the agent's code paths. The declarations are the contract between you and your agent.
+AI agents are good at the time-consuming parts of working with data:
+reformatting, cleaning, and integrating. Omnipy gives that work a
+structure a human can inspect. The agent turns exploratory code into data
+models, conversions, and dataflows declared in Python; the data is
+validated at every step; and you review the declarations and the data at
+each junction. The declarations are the contract between you and your
+agent.
 
 **Dataflows, Not Workflows**
 
@@ -136,7 +138,7 @@ The following creates a data model of a list of integers, and parses some data i
 ### Style the displays
 
 Omnipy's [display settings](https://omnipy.readthedocs.io/en/latest/reference/omnipy/config/data/#omnipy.config.data.UserInterfaceConfig)
-configure the terminal, notebook, and browser separately. The displays below use the browser's
+configure the terminal, notebook, and browser separately. The displays below use the
 dark [`MEASURED_DARK_T16`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/shared/enums/colorstyles/#omnipy.shared.enums.colorstyles.DarkHighContrastColorStyles)
 theme with a solid background. Use `ui.terminal` or `ui.jupyter` in place
 of `ui.browser` to style your own console or notebook:
@@ -157,10 +159,11 @@ The list of integers from above now displays in the new theme:
 
 ### Build the URLs of a web API
 
-Let's work with river samples from the
-[water-sample harmonization example](https://github.com/fairtracks/omnipy/tree/main/tests/integration/novel/full/water_sample_harmonization).
-A water quality API would return such samples in pages. Here the two pages are JSON files in the
-Omnipy repository, so the walkthrough runs as it stands from any Python console.
+Let's work with river samples from the [water-sample harmonization
+example](https://github.com/fairtracks/omnipy/tree/main/tests/integration/novel/full/water_sample_harmonization).
+A water quality API would return such samples in pages. Here the two pages
+for this tutorial are provided JSON files in the Omnipy repository, so the
+walkthrough runs as it stands from any Python console.
 
 An [`HttpUrlModel`](https://omnipy.readthedocs.io/en/latest/reference/omnipy/components/remote/models/#omnipy.components.remote.models.HttpUrlModel)
 holds a URL as structured fields, so the path is edited in place instead of by
@@ -242,11 +245,9 @@ record's fields to editors and type checkers; the Model supplies field access at
 ```python
 import omnipy.util.pydantic as pyd
 
-
 class RiverUgConcMeasurementRecord(pyd.BaseModel):
     name: str
     value_ug_l: float
-
 
 @om.mimics(RiverUgConcMeasurementRecord)
 class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...
@@ -275,21 +276,17 @@ duplicates. Its contents are a Dataset, so we name the specialization `RiverSamp
 ```python
 from typing import Literal
 
-
 class RiverTempMeasurementRecord(pyd.BaseModel):
     name: str
     value_celsius: float
-
 
 class RiverMgConcMeasurementRecord(pyd.BaseModel):
     name: str
     value_mg_l: float
 
-
 RiverMeasurementRecordType = (
     RiverTempMeasurementRecord | RiverMgConcMeasurementRecord | RiverUgConcMeasurementRecord
 )
-
 
 class RiverSampleRecord(pyd.BaseModel):
     river_sample_id: str
@@ -298,7 +295,6 @@ class RiverSampleRecord(pyd.BaseModel):
     station: str
     sample_alias: str
     measurements: list[RiverMeasurementRecordType]
-
 
 @om.mimics(om.Dataset[om.Model[RiverSampleRecord]])
 class RiverSamplesDataset(
@@ -418,7 +414,6 @@ class NormalizedMeasurementRecord(pyd.BaseModel):
     value: float
     unit: Literal['mg/L', 'deg_C']
 
-
 @om.mimics(NormalizedMeasurementRecord)
 class NormalizedRiverMeasurementMapper(
     om.ConverterModel[RiverMeasurementRecordType, NormalizedMeasurementRecord]
@@ -460,18 +455,20 @@ class NormalizedSampleRecord(pyd.BaseModel):
     location_name: str
     measurements: list[NormalizedMeasurementRecord]
 
-
 @om.mimics(NormalizedSampleRecord)
-class NormalizedRiverSampleMapper(om.ConverterModel[RiverSampleRecord, NormalizedSampleRecord]):
+class NormalizedRiverSampleMapper(
+    om.ConverterModel[RiverSampleRecord, NormalizedSampleRecord]
+):
     @classmethod
     def _convert(cls, data: RiverSampleRecord) -> NormalizedSampleRecord:
         return NormalizedSampleRecord(
             sample_key=data.sample_alias.lower(),
             monitoring_date=data.sampled_at,
             location_name=data.station,
-            measurements=list(NormalizedRiverMeasurementMapper.convert_all(data.measurements)),
+            measurements=list(
+                NormalizedRiverMeasurementMapper.convert_all(data.measurements)
+            ),
         )
-
 
 class NormalizedRiverSamplesDataset(om.Dataset[NormalizedRiverSampleMapper]): ...
 ```
@@ -484,7 +481,7 @@ The Dataset constructor applies the mapper to every sample, keeping the sample i
 ```
 
 ```pycon
->>> normalized_samples.peek()
+>>> normalized_samples.json()
 ```
 
 ![Display of normalized_samples](docs/images/readme/17-normalized_samples.svg)
@@ -510,16 +507,25 @@ nested Datasets with their fields as items:
 
 ```pycon
 >>> nested_samples = om.StructuredNestedDataset(normalized_samples)
->>> nested_samples[0]
+>>> nested_samples
 ```
 
-![Display of nested_samples[0]](docs/images/readme/19-nested_samples-0.svg)
+![Display of nested_samples](docs/images/readme/19-nested_samples.svg)
+
+Calling `peek()` on a StructuredNestedDataset shows a hierarchical view of the structure, with
+tables nested within tables:
 
 ```pycon
->>> nested_samples[0]['measurements'].json()
+>>> nested_samples[0].peek()
+╭────────────┬─────────────────┬───────────────┬───╮
+│     0.     │       1.        │      2.       │ … │
+│ sample_key │ monitoring_date │ location_name │   │
+│            │                 │               │   │
+│ "river-r1" │ "2026-05-03"    │ "River Mouth" │   │
+╰────────────┴─────────────────┴───────────────┴───╯
 ```
 
-![Display of nested_samples[0]['measurements']](docs/images/readme/20-nested_samples-0-measurements.svg)
+![Display of nested_samples[0]](docs/images/readme/20-nested_samples-0.svg)
 
 ### Turn the measurements into tables
 
@@ -556,11 +562,9 @@ result whether it is already available or still awaiting completion:
 async def fetch_sample_pages(page_urls: om.HttpUrlDataset) -> om.JsonDataset:
     return await om.resolve(om.JsonDataset.load(page_urls))
 
-
 @om.TaskTemplate()
 def select_measurements(samples: om.StructuredNestedDataset) -> om.StructuredNestedDataset:
     return samples.do(om.x['measurements'])
-
 
 @om.LinearFlowTemplate(
     fetch_sample_pages,
