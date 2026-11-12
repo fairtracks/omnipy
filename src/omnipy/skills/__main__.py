@@ -43,13 +43,15 @@ def _build_parser() -> argparse.ArgumentParser:
         'install',
         help='Install skills for the coding agents of a project.',
         description=(
-            'Install skills into the skills directory of the current project, by default as '
-            'symlinks to the skills of the installed Omnipy, so that they follow Omnipy through '
-            'upgrades. Into the home directory the skills are copied, as the home directory is '
-            'not tied to one Python environment.'
+            'Install the skills into the skills directory of the current project, by default '
+            'as symlinks to the skills of the installed Omnipy, so that they follow Omnipy '
+            'through upgrades. Into the home directory the skills are copied, as the home '
+            'directory is not tied to one Python environment.'
         ),
     )
-    install_command.add_argument('names', nargs='+', metavar='name', help='Skills to install.')
+    install_command.add_argument(
+        'names', nargs='*', metavar='name', help='Skills to install. By default, all of them.'
+    )
     install_command.add_argument(
         '--claude',
         action='store_true',
@@ -80,7 +82,7 @@ def _install(args: argparse.Namespace) -> int:
     copy = args.mode == 'copy' if args.mode else args.home
 
     try:
-        for name in args.names:
+        for name in args.names or skill_names():
             installed = install(name, target_dir, copy=copy, force=args.force)
             how = 'linked' if installed.linked else 'copied'
             print(f'{how} {name} -> {installed.path}')

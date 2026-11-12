@@ -2,7 +2,7 @@
 
 A skill is a directory with a `SKILL.md` file that an agent reads when the task calls for it, in
 the format of the Agent Skills specification (https://agentskills.io). Omnipy ships the skills
-written for its users, such as `omnipy-dataflows` on designing Omnipy dataflows.
+written for its users, one directory per skill, e.g. `omnipy-dataflows` on designing dataflows.
 
 In the repository the skills live in `.agents/skills/`, the project directory that coding agents
 read. An installed Omnipy carries a copy next to this module. `install()` makes a skill available
@@ -10,7 +10,7 @@ to the agents of another project, by default as a symlink to the copy of the ins
 that the skill follows Omnipy through upgrades:
 
     python -m omnipy.skills list
-    python -m omnipy.skills install omnipy-dataflows
+    python -m omnipy.skills install
 """
 
 from dataclasses import dataclass

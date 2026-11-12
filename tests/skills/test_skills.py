@@ -99,6 +99,17 @@ def test_cli_install_into_home(
     assert (tmp_path / '.claude' / 'skills' / DATAFLOWS_SKILL).is_symlink()
 
 
+def test_cli_install_all(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    assert main(['install']) == 0
+    installed = sorted(path.name for path in (tmp_path / '.agents' / 'skills').iterdir())
+    assert installed == skill_names()
+    assert len(capsys.readouterr().out.splitlines()) == len(skill_names())
+
+
 def test_cli_install_unknown(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
     assert main(['install', '--dir', str(tmp_path), 'no-such-skill']) == 1
     assert 'No skill named' in capsys.readouterr().err
