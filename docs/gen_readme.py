@@ -10,6 +10,7 @@ Run from the repository root, after editing `docs/readme.md`:
     uv run python docs/gen_readme.py
 """
 
+import argparse
 from collections.abc import Iterator
 import contextlib
 import io
@@ -175,9 +176,11 @@ class ReadmeGenerator:
         self._pending_fence_has_output = False
         self._image_count = 0
 
-    def generate(self) -> None:
+    def generate(self, target: Path | None = None, image_dir: Path | None = None) -> None:
         import omnipy as om
 
+        target = target or TARGET
+        image_dir = image_dir or IMAGE_DIR
         # Images need a background of their own, as the page behind them may be dark or light
         om.runtime.config.data.ui.browser.color.solid_background = True
 
@@ -192,12 +195,12 @@ class ReadmeGenerator:
             self._close_pending_fence()
 
             text = re.sub(r'\n{3,}', '\n\n', '\n'.join(self._output)).rstrip() + '\n'
-            IMAGE_DIR.mkdir(parents=True, exist_ok=True)
-            for old_image in IMAGE_DIR.glob('*.svg'):
+            image_dir.mkdir(parents=True, exist_ok=True)
+            for old_image in image_dir.glob('*.svg'):
                 old_image.unlink()
             for image in self._image_dir.glob('*.svg'):
-                (IMAGE_DIR / image.name).write_bytes(image.read_bytes())
-            TARGET.write_text(text)
+                (image_dir / image.name).write_bytes(image.read_bytes())
+            target.write_text(text)
 
     # Text
 
@@ -300,7 +303,30 @@ def _convert_admonition(output: str) -> str:
     return '\n'.join([f'{match["title"]}: {body[0]}', *body[1:]])
 
 
+def check_generated_readme(target: Path, image_dir: Path) -> bool:
+    """Check README content and image filenames, ignoring environment-dependent image content."""
+    with tempfile.TemporaryDirectory() as directory:
+        generated_target = Path(directory) / 'README.md'
+        generated_images = Path(directory) / 'images'
+        ReadmeGenerator().generate(generated_target, generated_images)
+        readme_matches = target.exists() and target.read_bytes() == generated_target.read_bytes()
+        image_names_match = {p.name for p in image_dir.glob('*.svg')} == {
+            p.name for p in generated_images.glob('*.svg')
+        }
+        if not readme_matches:
+            print('README.md is out of date.', file=sys.stderr)
+        if not image_names_match:
+            print('README image filenames are out of date.', file=sys.stderr)
+        return readme_matches and image_names_match
+
+
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--check', action='store_true', help='Check README and image filenames')
+    args = parser.parse_args()
     sys.path.insert(0, str(ROOT))
-    ReadmeGenerator().generate()
-    print(f'Wrote {TARGET.relative_to(ROOT)} and {len(list(IMAGE_DIR.glob("*.svg")))} images')
+    if args.check:
+        sys.exit(0 if check_generated_readme(TARGET, IMAGE_DIR) else 1)
+    else:
+        ReadmeGenerator().generate()
+        print(f'Wrote {TARGET.relative_to(ROOT)} and {len(list(IMAGE_DIR.glob("*.svg")))} images')

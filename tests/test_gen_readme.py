@@ -28,3 +28,34 @@ def test_generation_failure_preserves_existing_outputs(
 
     assert target.read_text() == 'existing readme'
     assert image.read_text() == 'existing image'
+
+
+@pytest.mark.parametrize(
+    ('readme', 'image_name', 'expected'),
+    [
+        ('generated readme', 'image.svg', True),
+        ('old readme', 'image.svg', False),
+        ('generated readme', 'old.svg', False),
+    ],
+)
+def test_check_compares_readme_and_image_names(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    readme: str,
+    image_name: str,
+    expected: bool,
+) -> None:
+    target = tmp_path / 'README.md'
+    target.write_text(readme)
+    images = tmp_path / 'images'
+    images.mkdir()
+    (images / image_name).write_text('different image content')
+
+    def generate(self: gen_readme.ReadmeGenerator, target: Path, image_dir: Path) -> None:
+        target.write_text('generated readme')
+        image_dir.mkdir()
+        (image_dir / 'image.svg').write_text('generated image content')
+
+    monkeypatch.setattr(gen_readme.ReadmeGenerator, 'generate', generate)
+    assert gen_readme.check_generated_readme(target, images) is expected
+    assert (images / image_name).read_text() == 'different image content'

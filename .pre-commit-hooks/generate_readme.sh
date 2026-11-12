@@ -1,6 +1,10 @@
 #!/bin/sh
 set -eu
 
+if [ "${OMNIPY_README_CHECK_NAMES_ONLY:-}" = 1 ]; then
+    exec uv run --offline python docs/gen_readme.py --check
+fi
+
 untracked_images() {
     git ls-files --others -- 'docs/images/readme/*.svg'
 }

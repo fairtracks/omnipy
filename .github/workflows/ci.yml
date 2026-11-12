@@ -21,6 +21,8 @@ jobs:
           python-version: "3.11"
       - run: uv sync --all-groups
       - run: uv run prek run --all-files
+        env:
+          OMNIPY_README_CHECK_NAMES_ONLY: '1'
 
   docs:
     runs-on: ubuntu-latest
