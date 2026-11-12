@@ -124,7 +124,7 @@ For example: "Cleanup ConfigBase display methods. Misc fixes in BaseDisplayMixin
 - User-facing README content is written in `docs/readme.md`, the MkDocs home page, whose examples run when the docs are built. The root `README.md` (shown by GitHub and PyPI) and `docs/images/readme/*.svg` are generated from it: after editing `docs/readme.md`, run `uv run python docs/gen_readme.py` and commit the results. `hatch_build.py` rewrites the image links to raw GitHub URLs of the release tag when the package is built, so PyPI shows the images of the released version.
 - The agent skills for users of Omnipy are kept in `.agents/skills/<name>/` (`.claude/skills/` links there) and shipped in the wheel as `omnipy/skills/<name>/` through `force-include` in `pyproject.toml`. A new skill needs only its directory there. `omnipy.skills` finds the skills in either place and installs them for a project (`python -m omnipy.skills install`).
 - Docs use MkDocs Material. `mkdocs.yml` runs `docs/gen_ref_pages.py` via `mkdocs-gen-files` to generate API reference pages.
-- Docs dev server: `uv run mkdocs serve`
+- Docs dev server: `uv run mkdocs serve`. The docs tools are in the `docs` dependency group, which `uv run` does not sync by itself: run `uv sync --all-groups` first, or an old mkdocstrings left in the environment is used.
 
 ## Documentation examples conventions
 
