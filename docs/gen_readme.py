@@ -16,6 +16,7 @@ import io
 from pathlib import Path
 import re
 import sys
+import textwrap
 from typing import NamedTuple
 
 import rich.console
@@ -28,6 +29,7 @@ INCLUDES_DIR = ROOT / 'docs' / '_includes'
 DOCS_SITE_URL = 'https://omnipy.readthedocs.io/en/latest/'
 
 HIDE_MARKER = '# markdown-exec: hide'
+CODE_LISTING_HELPER = 'exec_and_display_code'
 PROMPTS = ('>>> ', '... ')
 # Rich exports SVGs for a 20px font; the readme shows them at 15px
 SVG_SCALE = 0.75
@@ -223,9 +225,19 @@ class ReadmeGenerator:
             raise ValueError(f'Unsupported executable fence: {fence.lang} {fence.attrs}')
 
     def _handle_python_listing(self, fence: Fence, namespace: dict) -> None:
-        # The block defines `code`, executes it and displays it. The code is shown as is.
+        # The block passes its code to the docs' helper, which runs and displays it. Here the
+        # helper is replaced by one that runs the code and keeps it for a plain code block.
+        listings: list[str] = []
+
+        def exec_and_record_code(code: str) -> None:
+            code = textwrap.dedent(code)
+            _run(code, namespace)
+            listings.append(code)
+
+        namespace[CODE_LISTING_HELPER] = exec_and_record_code
         _run('\n'.join(fence.lines), namespace)
-        self._emit_fence('python', str(namespace['code']).rstrip().splitlines())
+        (code,) = listings
+        self._emit_fence('python', code.rstrip().splitlines())
 
     def _handle_pycon(self, fence: Fence, namespace: dict) -> None:
         lines = _expand_includes(fence.lines)

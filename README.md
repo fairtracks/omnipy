@@ -237,11 +237,9 @@ record's fields to editors and type checkers; the Model supplies field access at
 ```python
 import omnipy.util.pydantic as pyd
 
-
 class RiverUgConcMeasurementRecord(pyd.BaseModel):
     name: str
     value_ug_l: float
-
 
 @om.mimics(RiverUgConcMeasurementRecord)
 class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...
@@ -270,21 +268,17 @@ duplicates. Its contents are a Dataset, so we name the specialization `RiverSamp
 ```python
 from typing import Literal
 
-
 class RiverTempMeasurementRecord(pyd.BaseModel):
     name: str
     value_celsius: float
-
 
 class RiverMgConcMeasurementRecord(pyd.BaseModel):
     name: str
     value_mg_l: float
 
-
 RiverMeasurementRecordType = (
     RiverTempMeasurementRecord | RiverMgConcMeasurementRecord | RiverUgConcMeasurementRecord
 )
-
 
 class RiverSampleRecord(pyd.BaseModel):
     river_sample_id: str
@@ -293,7 +287,6 @@ class RiverSampleRecord(pyd.BaseModel):
     station: str
     sample_alias: str
     measurements: list[RiverMeasurementRecordType]
-
 
 @om.mimics(om.Dataset[om.Model[RiverSampleRecord]])
 class RiverSamplesDataset(
@@ -411,7 +404,6 @@ class NormalizedMeasurementRecord(pyd.BaseModel):
     value: float
     unit: Literal['mg/L', 'deg_C']
 
-
 @om.mimics(NormalizedMeasurementRecord)
 class NormalizedRiverMeasurementMapper(
     om.ConverterModel[RiverMeasurementRecordType, NormalizedMeasurementRecord]
@@ -453,18 +445,20 @@ class NormalizedSampleRecord(pyd.BaseModel):
     location_name: str
     measurements: list[NormalizedMeasurementRecord]
 
-
 @om.mimics(NormalizedSampleRecord)
-class NormalizedRiverSampleMapper(om.ConverterModel[RiverSampleRecord, NormalizedSampleRecord]):
+class NormalizedRiverSampleMapper(
+    om.ConverterModel[RiverSampleRecord, NormalizedSampleRecord]
+):
     @classmethod
     def _convert(cls, data: RiverSampleRecord) -> NormalizedSampleRecord:
         return NormalizedSampleRecord(
             sample_key=data.sample_alias.lower(),
             monitoring_date=data.sampled_at,
             location_name=data.station,
-            measurements=list(NormalizedRiverMeasurementMapper.convert_all(data.measurements)),
+            measurements=list(
+                NormalizedRiverMeasurementMapper.convert_all(data.measurements)
+            ),
         )
-
 
 class NormalizedRiverSamplesDataset(om.Dataset[NormalizedRiverSampleMapper]): ...
 ```
@@ -546,13 +540,11 @@ result whether it is already available or still awaiting completion:
 async def fetch_sample_pages(page_urls: om.HttpUrlDataset) -> om.JsonDataset:
     return await om.resolve(om.JsonDataset.load(page_urls))
 
-
 @om.TaskTemplate()
 def select_measurements(
     samples: om.NestedDataset[om.JsonModel],
 ) -> om.NestedDataset[om.JsonModel]:
     return samples.do(lambda sample: sample['measurements'])
-
 
 @om.LinearFlowTemplate(
     fetch_sample_pages,

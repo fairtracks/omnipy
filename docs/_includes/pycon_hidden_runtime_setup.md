@@ -22,3 +22,16 @@
 ...         for line in str(e).splitlines():  # markdown-exec: hide
 ...             print(f"    {line}")  # markdown-exec: hide
 ...         print("    ```")  # markdown-exec: hide
+>>> from textwrap import dedent  # markdown-exec: hide
+>>> def exec_and_display_code(code):  # markdown-exec: hide
+...     code = dedent(code)  # markdown-exec: hide
+...     exec(code, globals())  # markdown-exec: hide
+...     print(  # markdown-exec: hide
+...         om.StrModel(code)._docs(  # markdown-exec: hide
+...             max_title_height=0,  # markdown-exec: hide
+...             method='full',  # markdown-exec: hide
+...             width=None,  # markdown-exec: hide
+...             syntax='python',  # markdown-exec: hide
+...             style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,  # markdown-exec: hide
+...         )  # markdown-exec: hide
+...     )  # markdown-exec: hide

@@ -247,10 +247,7 @@ a concentration in µg/L, wrapped in an Omnipy Model to keep its field types act
 record's fields to editors and type checkers; the Model supplies field access at runtime.
 
 ```python exec="1" session="water-samples" result="console" html="true"
-import omnipy as om
-from textwrap import dedent
-
-code = dedent("""\
+exec_and_display_code("""\
     import omnipy.util.pydantic as pyd
 
     class RiverUgConcMeasurementRecord(pyd.BaseModel):
@@ -259,17 +256,6 @@ code = dedent("""\
 
     @om.mimics(RiverUgConcMeasurementRecord)
     class RiverUgConcMeasurementModel(om.Model[RiverUgConcMeasurementRecord]): ...""")
-
-exec(code, globals(), locals())
-print(
-    om.StrModel(code)._docs(
-        max_title_height=0,
-        method='full',
-        width=None,
-        syntax='python',
-        style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
-    )
-)
 ```
 
 Constructing the Model parses the JSON measurement into the record:
@@ -295,10 +281,7 @@ merges the pages and keys the samples by their
 duplicates. Its contents are a Dataset, so we name the specialization `RiverSamplesDataset`.
 
 ```python exec="1" session="water-samples" result="console" html="true"
-import omnipy as om
-from textwrap import dedent
-
-code = dedent("""\
+exec_and_display_code("""\
     from typing import Literal
 
     class RiverTempMeasurementRecord(pyd.BaseModel):
@@ -327,17 +310,6 @@ code = dedent("""\
             om.PrimaryKey[Literal['river_sample_id']], RiverSampleRecord
         ]
     ): ...""")
-
-exec(code, globals(), locals())
-print(
-    om.StrModel(code)._docs(
-        max_title_height=0,
-        method='full',
-        width=None,
-        syntax='python',
-        style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
-    )
-)
 ```
 
 Constructing the Dataset from the loaded pages parses them into typed samples:
@@ -463,10 +435,7 @@ makes a conversion reusable and validates its output. First, a measurement mappe
 type to choose the conversion, including µg/L to mg/L:
 
 ```python exec="1" session="water-samples" result="console" html="true"
-import omnipy as om
-from textwrap import dedent
-
-code = dedent("""\
+exec_and_display_code("""\
     class NormalizedMeasurementRecord(pyd.BaseModel):
         type: Literal['nitrate', 'phosphorus', 'temperature']
         value: float
@@ -491,17 +460,6 @@ code = dedent("""\
                     return NormalizedMeasurementRecord(
                         type=data.name.lower(), value=data.value_ug_l / 1000, unit='mg/L'
                     )""")
-
-exec(code, globals(), locals())
-print(
-    om.StrModel(code)._docs(
-        max_title_height=0,
-        method='full',
-        width=None,
-        syntax='python',
-        style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
-    )
-)
 ```
 
 Constructing the mapper converts the corrected measurement to `0.15 mg/L`:
@@ -520,10 +478,7 @@ Next, a sample mapper renames the sample fields and reuses the measurement mappe
 for its measurements. A Dataset of that mapper converts all the samples:
 
 ```python exec="1" session="water-samples" result="console" html="true"
-import omnipy as om
-from textwrap import dedent
-
-code = dedent("""\
+exec_and_display_code("""\
     class NormalizedSampleRecord(pyd.BaseModel):
         sample_key: str
         monitoring_date: om.DateModel
@@ -546,17 +501,6 @@ code = dedent("""\
             )
 
     class NormalizedRiverSamplesDataset(om.Dataset[NormalizedRiverSampleMapper]): ...""")
-
-exec(code, globals(), locals())
-print(
-    om.StrModel(code)._docs(
-        max_title_height=0,
-        method='full',
-        width=None,
-        syntax='python',
-        style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
-    )
-)
 ```
 
 The Dataset constructor applies the mapper to every sample, keeping the sample ids as keys.
@@ -642,10 +586,7 @@ declares its stages in order. Model and Dataset constructors can be stages direc
 result whether it is already available or still awaiting completion:
 
 ```python exec="1" session="water-samples" result="console" html="true"
-import omnipy as om
-from textwrap import dedent
-
-code = dedent("""\
+exec_and_display_code("""\
     @om.TaskTemplate()
     async def fetch_sample_pages(page_urls: om.HttpUrlDataset) -> om.JsonDataset:
         return await om.resolve(om.JsonDataset.load(page_urls))
@@ -665,17 +606,6 @@ code = dedent("""\
         om.PandasDataset,
     )
     async def harmonize_river_samples(page_urls: om.HttpUrlDataset) -> om.PandasDataset: ...""")
-
-exec(code, globals(), locals())
-print(
-    om.StrModel(code)._docs(
-        max_title_height=0,
-        method='full',
-        width=None,
-        syntax='python',
-        style=om.DarkHighContrastColorStyles.CHINOISERIE_MORANDI_T16,
-    )
-)
 ```
 
 The flow reloads the original pages, so its phosphorus reading starts at `0.12 mg/L`.
