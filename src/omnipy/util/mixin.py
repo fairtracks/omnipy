@@ -6,6 +6,7 @@ subclasses that combine the original class with the requested mixin bases.
 """
 
 from collections import defaultdict
+from collections.abc import Callable, Mapping
 import inspect
 import types
 from typing import Self
@@ -33,19 +34,32 @@ def strip_mixins_suffix(cls_name: str) -> str:
     return cls_name
 
 
+RECEIVES_UNCLAIMED_KWARGS_ATTR = '_receives_unclaimed_kwargs'
+"""Class attribute marking a mixin whose ``__init__`` receives the unclaimed keyword arguments.
+
+Such a mixin declares ``__init__(self, **kwargs)`` and gets the keyword arguments that neither the
+original class nor any other mixin declares. Without such a mixin, they are ignored.
+"""
+
+
 class DynamicMixinAcceptor:
     """Base class for classes that accept mixins dynamically.
 
     Subclasses register mixin classes through :meth:`accept_mixin`, after which
     instance creation returns a generated subclass inheriting from both the
     original class and its accepted mixins.
+
+    A mixin can be accepted as optional. An optional mixin is only added to an instance when
+    one of its keyword arguments is given with a value other than its default, or when its
+    activation function returns ``True`` at instance creation.
     """
 
     # Declarations needed by mypy
     _orig_class: type
     _orig_init_signature: inspect.Signature
     _mixin_classes: list[type]
-    _init_params_per_mixin_cls: defaultdict[str, defaultdict[str, inspect.Parameter]]
+    _optional_mixins: dict[type, Callable[[], bool] | None]
+    _init_params_per_mixin_cls: defaultdict[type, defaultdict[str, inspect.Parameter]]
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -57,6 +71,7 @@ class DynamicMixinAcceptor:
 
         cls._orig_init_signature = inspect.signature(cls.__init__)
         cls._mixin_classes = []
+        cls._optional_mixins = {}
         cls._init_params_per_mixin_cls = defaultdict(defaultdict)
 
     @classmethod
@@ -97,14 +112,37 @@ class DynamicMixinAcceptor:
     def _mixin_init_kwarg_params_including_bases(self) -> dict[str, inspect.Parameter]:
         return self._get_mixin_init_kwarg_params_including_bases()
 
+    @property
+    def _optional_mixin_init_kwarg_params_including_bases(self) -> dict[str, inspect.Parameter]:
+        """Keyword parameters of the optional mixins of this object, by name."""
+        optional_params: dict[str, inspect.Parameter] = {}
+        for base in type(self).__mro__:
+            if issubclass(base, DynamicMixinAcceptor) and '_optional_mixins' in base.__dict__:
+                for mixin_cls in base._optional_mixins:
+                    optional_params |= base._init_params_per_mixin_cls.get(mixin_cls, {})
+        return optional_params
+
     @classmethod
-    def accept_mixin(cls, mixin_cls: type) -> None:
+    def accept_mixin(
+        cls,
+        mixin_cls: type,
+        *,
+        optional: bool = False,
+        activate_if: Callable[[], bool] | None = None,
+    ) -> None:
         """Register a mixin class for dynamic composition.
 
         Args:
             mixin_cls: Mixin class whose ``__init__`` keyword-only parameters
                 should be merged into the acceptor signature.
+            optional: If ``True``, the mixin is only added to instances created with one of its
+                keyword arguments set to a value other than its default, or when
+                ``activate_if`` returns ``True``.
+            activate_if: For optional mixins, a function called at instance creation that
+                activates the mixin when it returns ``True``.
         """
+        if optional:
+            cls._optional_mixins[mixin_cls] = activate_if
         cls._accept_mixin(mixin_cls, update=True)
 
     @classmethod
@@ -128,7 +166,7 @@ class DynamicMixinAcceptor:
                         f'(except for the "self" param). Failing param: {param.name}'
                     )
                 if param.kind == param.KEYWORD_ONLY:
-                    cls._init_params_per_mixin_cls[mixin_cls.__name__][key] = param
+                    cls._init_params_per_mixin_cls[mixin_cls][key] = param
 
     @classmethod
     def _update_cls_init_signature_with_kwargs_all_mixin_kwargs(cls):
@@ -161,12 +199,13 @@ class DynamicMixinAcceptor:
     def reset_mixins(cls):
         """Clear all accepted mixins and restore the original init signature."""
         cls._mixin_classes.clear()
+        cls._optional_mixins.clear()
         cls._init_params_per_mixin_cls.clear()
         cls.__init__.__signature__ = cls._orig_init_signature
 
     def __new__(cls, *args, **kwargs) -> Self:
         if not cls.__name__.endswith(WITH_MIXINS_CLS_SUFFIX):
-            cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls()
+            cls_with_mixins = cls._create_subcls_inheriting_from_mixins_and_orig_cls(kwargs)
             obj = super(cls, cls_with_mixins).__new__(cls_with_mixins, *args, **kwargs)
 
         else:
@@ -176,14 +215,46 @@ class DynamicMixinAcceptor:
         return obj
 
     @classmethod
-    def _create_subcls_inheriting_from_mixins_and_orig_cls(cls) -> type[Self]:  # noqa: C901
+    def _is_mixin_active(cls, mixin_cls: type, kwargs: Mapping[str, object]) -> bool:
+        if mixin_cls not in cls._optional_mixins:
+            return True
+
+        activate_if = cls._optional_mixins[mixin_cls]
+        if activate_if is not None and activate_if():
+            return True
+
+        for key, param in cls._init_params_per_mixin_cls.get(mixin_cls, {}).items():
+            if key in kwargs and (param.default is param.empty or kwargs[key] != param.default):
+                return True
+        return False
+
+    @classmethod
+    def _create_subcls_inheriting_from_mixins_and_orig_cls(  # noqa: C901
+        cls, kwargs: Mapping[str, object] | None = None
+    ) -> type[Self]:
 
         # TODO: Refactor this, and possibly elsewhere in class
 
-        def __init__(self, *args, **kwargs):
+        if kwargs is None:
+            kwargs = {}
+
+        active_mixin_classes = [
+            mixin_cls for mixin_cls in cls._mixin_classes if cls._is_mixin_active(mixin_cls, kwargs)
+        ]
+
+        def __init__(self, *args, **kwargs):  # noqa: C901
             # print(f'__init__ for obj of class: {self.__class__.__name__}')
             cls.__init__(self, *args, **kwargs)
             mixin_kwargs_defaults = {}
+
+            # Keyword arguments declared by the original class or by any accepted mixin, active or
+            # not. The rest is passed to a mixin marked to receive unclaimed keyword arguments.
+            claimed_keys = {
+                key
+                for key, param in inspect.signature(cls.__init__).parameters.items()
+                if param.kind not in (param.VAR_KEYWORD, param.VAR_POSITIONAL)
+            }
+            unclaimed_kwargs = {key: val for key, val in kwargs.items() if key not in claimed_keys}
 
             for base in cls_with_mixins.__mro__:
                 if (
@@ -191,6 +262,10 @@ class DynamicMixinAcceptor:
                     or base.__name__.endswith(WITH_MIXINS_CLS_SUFFIX)
                     or base.__init__ is object.__init__
                 ):
+                    continue
+
+                if base.__dict__.get(RECEIVES_UNCLAIMED_KWARGS_ATTR, False):
+                    base.__init__(self, **unclaimed_kwargs)
                     continue
 
                 mixin_kwargs = {}
@@ -221,13 +296,13 @@ class DynamicMixinAcceptor:
 
         cls_bases = list(get_original_bases(cls))
         if not cls.__name__.endswith(WITH_MIXINS_CLS_SUFFIX):
-            cls_bases = list(cls._mixin_classes) + cls_bases
+            cls_bases = active_mixin_classes + cls_bases
 
         cls_bases_with_mixins = []
 
         for cls_base in cls_bases:
             if cls._is_true_acceptor_subclass(cls_base):
-                cls_new_base = cls_base._create_subcls_inheriting_from_mixins_and_orig_cls()
+                cls_new_base = cls_base._create_subcls_inheriting_from_mixins_and_orig_cls(kwargs)
                 cls_base = transfer_generic_args_to_cls(cls_new_base, cls_base)
 
             cls_bases_with_mixins.append(cls_base)
@@ -247,8 +322,10 @@ class DynamicMixinAcceptor:
         cls_with_mixins._orig_class = cls
         cls_with_mixins._orig_init_signature = inspect.signature(cls.__init__)
 
-        for mixin_cls in cls._mixin_classes:
+        for mixin_cls in active_mixin_classes:
             cls_with_mixins._accept_mixin(mixin_cls, update=False)
+            if mixin_cls in cls._optional_mixins:
+                cls_with_mixins._optional_mixins[mixin_cls] = cls._optional_mixins[mixin_cls]
 
         return cls_with_mixins
 
