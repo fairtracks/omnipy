@@ -98,6 +98,12 @@ async def post_service(aiohttp_server: AiohttpServer) -> AsyncGenerator[PostServ
         service.requests.append(await request.json())
         return web.json_response({'error': 'rejected'}, status=400)
 
+    async def json_only(request: web.Request) -> web.Response:
+        service.requests.append(await request.json())
+        if request.headers.get('Accept') != 'application/json':
+            return web.json_response({'error': 'Content type not supported'}, status=400)
+        return web.json_response({'accepted': True})
+
     async def fails_once(request: web.Request) -> web.Response:
         service.requests.append(await request.json())
         if len(service.requests) == 1:
@@ -107,6 +113,7 @@ async def post_service(aiohttp_server: AiohttpServer) -> AsyncGenerator[PostServ
     app = web.Application()
     app.router.add_post('/double', double)
     app.router.add_post('/reject', reject)
+    app.router.add_post('/json-only', json_only)
     app.router.add_post('/fails-once', fails_once)
     server = await aiohttp_server(app)
     service.base_url = str(server.make_url('')).rstrip('/')

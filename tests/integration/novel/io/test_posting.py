@@ -110,6 +110,14 @@ async def test_model_post_raises_for_failed_request(post_service: PostService) -
         await resolve(Model[dict[str, int]]({'value': 1}).post(post_service.url('/reject')))
 
 
+async def test_post_accepts_only_json_responses(post_service: PostService) -> None:
+    response = await resolve(
+        Model[dict[str, int]]({'value': 1}).post(post_service.url('/json-only'))
+    )
+
+    assert response.to_data() == {'accepted': True}
+
+
 @pytest.mark.usefixtures('skip_test_if_not_default_data_config_values')
 @pytest.mark.parametrize(
     'first_status, retry_http_statuses_for_post, retried',

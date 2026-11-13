@@ -67,6 +67,9 @@ async def _call_post(
 ) -> 'AsyncGenerator[ClientResponse, None]':
     """Perform a JSON POST request and yield the validated successful response.
 
+    The request accepts only a JSON response, as some services refuse requests without that
+    content type in the ``Accept`` header.
+
     Args:
         url: URL to request.
         data: JSON-serializable request body.
@@ -75,7 +78,10 @@ async def _call_post(
     Returns:
         AsyncGenerator[ClientResponse, None]: Async generator yielding one successful response.
     """
-    async with session.post(str(url), json=data.to_data()) as response:
+    from .lazy_import import ACCEPT
+
+    headers = {ACCEPT: 'application/json'}
+    async with session.post(str(url), json=data.to_data(), headers=headers) as response:
         yield response
 
 
