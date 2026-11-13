@@ -116,6 +116,15 @@ def test_version_mismatch_is_rejected(
         run_job_bundle(_ref('add'), tmp_path, runtime=runtime)
 
 
+def test_bundle_states_given_omnipy_version(
+    runtime: Annotated[IsRuntime, pytest.fixture], tmp_path: Path
+) -> None:
+    write_job_bundle(tmp_path, _ref('add'), config=runtime.config, omnipy_version='1.2.3.dev4')
+    manifest = json.loads((tmp_path / BUNDLE_MANIFEST_FILE).read_text())
+
+    assert manifest['omnipy_version'] == '1.2.3.dev4'
+
+
 def test_other_job_is_rejected(
     runtime: Annotated[IsRuntime, pytest.fixture], tmp_path: Path
 ) -> None:

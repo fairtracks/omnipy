@@ -88,6 +88,7 @@ def write_job_bundle(
     params: Mapping[str, object] | None = None,
     inputs: Mapping[str, object] | None = None,
     config: Any | None = None,
+    omnipy_version: str | None = None,
 ) -> Path:
     """Write a job bundle for running a job on another machine.
 
@@ -98,6 +99,9 @@ def write_job_bundle(
         inputs: Keyword arguments that are Omnipy models or datasets, stored as gzipped tars.
         config: Runtime config to send along, by default the config of the global runtime.
             Secrets and machine-local values are left out.
+        omnipy_version: Omnipy version the job must run with, by default the version of this
+            Omnipy. Engines that ship a development build of Omnipy with the job pass the version
+            of the shipped wheel, which differs from the installed version after new commits.
 
     Returns:
         Path: The bundle directory.
@@ -116,7 +120,7 @@ def write_job_bundle(
         config = runtime.config
 
     manifest = {
-        'omnipy_version': _omnipy_version(),
+        'omnipy_version': omnipy_version or _omnipy_version(),
         'python_version': _python_version(),
         'job': job_ref,
     }
