@@ -70,3 +70,23 @@ keeps the unknown keyword arguments on the template and tries them again when th
 applied. If no loaded mixin uses a keyword argument at that point, for example when running a job
 with TES options on the local engine, or after a typo, Omnipy logs a warning. Setting the
 environment variable `OMNIPY_SILENCE_UNUSED_JOB_KEYWORDS=1` silences it.
+
+## Running a job on another machine
+
+Engines that run jobs elsewhere, such as a TES engine, send each job as a job bundle: a
+directory with the job's parameters, its dataset and model arguments as gzipped tars, and the
+portable runtime config. The other machine runs it with:
+
+```console
+$ python -m omnipy run my_package.tasks:align /path/to/bundle
+```
+
+The worker checks that both sides use the same Omnipy version, applies the submitting side's
+config except the engine choice, and runs the job on the local engine. The result and the
+Omnipy log are written to the bundle's `outputs/` directory through output persistence, and
+read back on the submitting side by the same logic that restores persisted outputs.
+`omnipy.hub.job_bundle` has the functions for writing, running and reading bundles.
+
+Output persistence also stores results that are neither models nor datasets, if they are
+JSON-compatible, and fails with an error when the final output of a run cannot be persisted.
+Results of steps inside a flow that cannot be persisted are only logged, as before.

@@ -5,6 +5,7 @@ from collections.abc import Sequence
 import sys
 
 COMMANDS = {
+    'run': 'Run a job from a job bundle.',
     'skills': 'List and install the agent skills shipped with Omnipy.',
 }
 
@@ -27,9 +28,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument('args', nargs=argparse.REMAINDER, help='Arguments of the command.')
     args = parser.parse_args(argv)
 
-    from omnipy.skills.cli import main as skills_main
+    if args.command == 'skills':
+        from omnipy.skills.cli import main as skills_main
 
-    return skills_main(args.args)
+        return skills_main(args.args)
+
+    from omnipy.hub.job_bundle import main as run_main
+
+    return run_main(args.args)
 
 
 if __name__ == '__main__':
