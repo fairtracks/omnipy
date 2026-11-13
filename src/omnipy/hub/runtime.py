@@ -11,6 +11,7 @@ Attributes:
         UI integration outside the test environment.
 """
 
+from functools import partial
 from typing import Any, cast
 
 from omnipy.components.prefect.engine.prefect import PrefectEngine
@@ -22,11 +23,12 @@ from omnipy.config.job import JobConfig
 from omnipy.config.root_log import RootLogConfig
 from omnipy.data._data_class_creator import DataClassBase
 from omnipy.data.serializer import SerializerRegistry
+from omnipy.engine._engine_attrs import EngineAttrsMixin
 from omnipy.engine.local import LocalRunner
+from omnipy.engine.registry import BUILTIN_ENGINE_NAMES, engine_registry
 from omnipy.hub._registry import RunStateRegistry
 from omnipy.hub.log._root_log import RootLogObjects
 from omnipy.hub.ui import detect_and_setup_user_interface
-from omnipy.shared.enums.job import EngineChoice
 from omnipy.shared.enums.ui import UserInterfaceType
 from omnipy.shared.protocols.compute.job_creator import IsJobConfigHolder, IsJobCreator
 from omnipy.shared.protocols.config import (
@@ -130,8 +132,11 @@ class RuntimeConfig(RuntimeEntryPublisher, ConfigBase):
             self._back.reset_subscriptions()
 
 
-class RuntimeObjects(RuntimeEntryPublisher, DataPublisher):
+class RuntimeObjects(RuntimeEntryPublisher, EngineAttrsMixin):
     """Concrete services and registries owned by a ``Runtime`` instance.
+
+    Plugin engines are extra attributes named after the engine, such as ``tes``, added when the
+    runtime loads the engine.
 
     Attributes:
         job_creator: Shared job creator configured by ``RuntimeConfig.job``.
@@ -249,58 +254,109 @@ class Runtime(DataPublisher):
             self.config.data.ui.subscribe_attr('text', self.objects.reactive.text_config.set)
             self.config.data.ui.subscribe_attr('layout', self.objects.reactive.layout_config.set)
 
-        self.config.engine.subscribe_attr('local', self.objects.local.set_config)
-        self.config.engine.subscribe_attr('prefect', self.objects.prefect.set_config)
-
         self.objects.subscribe_attr(
             'reactive',
             self.objects.data_class_creator.set_reactive_objects,
         )
 
-        # Makes sure that the registry references in the job runners always refer to the registry
-        # object in runtime, even when one or both of the objects are replaced with new objects.
-        self.objects.subscribe_attr('registry', self.objects.local.set_registry)
-        self.objects.subscribe_attr('registry', self.objects.prefect.set_registry)
+        for engine_name in self._loaded_engine_names():
+            self._subscribe_engine(engine_name)
 
         # Makes sure that the engine used by the job creator is always the one specified in the
-        # 'engine' config item in runtime
-        self.config.engine.subscribe_attr('local', self._update_job_creator_engine)
-        self.config.engine.subscribe_attr('prefect', self._update_job_creator_engine)
+        # 'engine' config item in runtime. Loads the chosen engine if it is not loaded yet.
         self.config.engine.subscribe_attr('choice', self._update_job_creator_engine)
-
-        # Makes sure that the local and prefect engine configs are always reloaded when the local
-        # or prefect engine objects are replaced with new engine objects. This is necessary because
-        # the `get_config_cls()` method of the engine objects define the classes of the respective
-        # engine config objects to be used. If an engine object is replaced with a new engine that
-        # require a different engine config class than is currently used, the config object will be
-        # replaced with a new default config object of the correct type.
-        self.objects.subscribe_attr('local', self._update_local_runner_config)
-        self.objects.subscribe_attr('prefect', self._update_prefect_engine_config)
 
     def reset_backlinks(self) -> None:
         """Set parent backlinks from runtime sub-objects to this runtime."""
 
         self.config._back = self  # type: ignore[attr-defined]
+        self.config.engine._back = self  # type: ignore[attr-defined]
         self.objects._back = self  # type: ignore[attr-defined]
 
-    def _get_engine_config(self, choice: EngineChoice.Literals) -> IsEngineConfig:
-        """Return the engine configuration object for a selected engine.
+    def load_engine(self, name: str) -> IsEngine:
+        """Load a registered engine into this runtime and return the engine object.
+
+        A plugin engine is imported, instantiated and added as ``objects.<name>``, with a default
+        config as ``config.engine.<name>``, and wired up like the built-in engines. Loading an
+        engine that is already loaded only returns it. Choosing an engine or reading its
+        attribute loads it automatically, so calling this method is rarely needed.
 
         Args:
-            choice: Engine identifier whose configuration should be returned.
+            name: Name of a registered engine.
 
         Returns:
-            IsEngineConfig: Configuration object for the selected engine.
+            IsEngine: The engine object owned by this runtime.
 
         Raises:
-            AttributeError: If ``choice`` does not exist on ``config.engine``.
+            ValueError: If no engine with this name is registered, or if the name clashes with
+                another attribute of the runtime objects or the engine config.
         """
 
-        return getattr(self.config.engine, choice)
+        engine_registry.check_name(name)
+
+        field_names = set(RuntimeObjects.__fields__) | set(EngineConfig.__fields__)
+        if name in field_names - set(BUILTIN_ENGINE_NAMES):
+            raise ValueError(
+                f'Engine name "{name}" clashes with an attribute of the runtime objects or the '
+                'engine config'
+            )
+
+        if name in self.objects.__dict__:
+            return getattr(self.objects, name)
+
+        engine = engine_registry.get_engine_cls(name)()
+
+        # Adds the engine without triggering a full reset of the runtime subscriptions, which
+        # might be in the middle of being called. The new engine is subscribed below instead.
+        prev_back = self.objects._back  # type: ignore[attr-defined]
+        self.objects._back = None  # type: ignore[attr-defined]
+        try:
+            setattr(self.objects, name, engine)
+        finally:
+            self.objects._back = prev_back  # type: ignore[attr-defined]
+
+        self._subscribe_engine(name)
+        return engine
+
+    def _loaded_engine_names(self) -> list[str]:
+        """Return the names of the registered engines that are loaded into this runtime."""
+
+        return [name for name in engine_registry.names() if name in self.objects.__dict__]
+
+    def _subscribe_engine(self, name: str) -> None:
+        """Subscribe one loaded engine to its config, the run-state registry and the job creator.
+
+        Args:
+            name: Name of a loaded engine.
+        """
+
+        engine = self._get_engine(name)
+
+        # Makes sure that the engine config is of the class required by the engine object, also
+        # after the engine config section has been reset to defaults
+        self._new_engine_config_if_new_cls(engine, name)
+
+        self.config.engine.subscribe_attr(name, engine.set_config)
+
+        # Makes sure that the registry reference in the engine always refers to the registry
+        # object in runtime, even when one or both of the objects are replaced with new objects.
+        self.objects.subscribe_attr('registry', engine.set_registry)
+
+        # Makes sure that the job creator gets the selected engine again when the config of an
+        # engine is replaced
+        self.config.engine.subscribe_attr(name, self._update_job_creator_engine)
+
+        # Makes sure that the engine config is always reloaded when the engine object is replaced
+        # with a new engine object. This is necessary because the `get_config_cls()` method of the
+        # engine object defines the class of the engine config object to be used. If an engine
+        # object is replaced with a new engine that require a different engine config class than
+        # is currently used, the config object will be replaced with a new default config object
+        # of the correct type.
+        self.objects.subscribe_attr(name, partial(self._new_engine_config_if_new_cls, choice=name))
 
     def _set_engine_config(
         self,
-        choice: EngineChoice.Literals,
+        choice: str,
         engine_config: IsJobRunnerConfig,
     ) -> None:
         """Set the configuration object for a selected engine.
@@ -315,7 +371,7 @@ class Runtime(DataPublisher):
 
         setattr(self.config.engine, choice, engine_config)
 
-    def _get_engine(self, choice: EngineChoice.Literals) -> IsEngine:
+    def _get_engine(self, choice: str) -> IsEngine:
         """Return the engine object for a selected engine choice.
 
         Args:
@@ -333,7 +389,7 @@ class Runtime(DataPublisher):
     def _new_engine_config_if_new_cls(
         self,
         engine: IsEngine,
-        choice: EngineChoice.Literals,
+        choice: str,
     ) -> None:
         """Replace engine config when an engine requires a new config class.
 
@@ -345,26 +401,9 @@ class Runtime(DataPublisher):
         # TODO: when parsing config from file is implemented, make sure that the new engine
         #       config classes here reparse the config files
         engine_config_cls = engine.get_config_cls()
-        if self._get_engine_config(choice).__class__ is not engine_config_cls:
+        engine_config = self.config.engine.__dict__.get(choice)
+        if engine_config is None or engine_config.__class__ is not engine_config_cls:
             self._set_engine_config(choice, engine_config_cls())
-
-    def _update_local_runner_config(self, local_runner: IsEngine) -> None:
-        """Refresh local engine config when the local engine object changes.
-
-        Args:
-            local_runner: New local engine instance.
-        """
-
-        self._new_engine_config_if_new_cls(local_runner, EngineChoice.LOCAL)
-
-    def _update_prefect_engine_config(self, prefect_engine: IsEngine) -> None:
-        """Refresh Prefect engine config when the Prefect engine changes.
-
-        Args:
-            prefect_engine: New Prefect engine instance.
-        """
-
-        self._new_engine_config_if_new_cls(prefect_engine, EngineChoice.PREFECT)
 
     def _update_job_creator_engine(self, _item_changed: Any) -> None:
         """Sync the job creator with the currently selected runtime engine.
@@ -377,7 +416,7 @@ class Runtime(DataPublisher):
                 runtime engine object.
         """
 
-        self.objects.job_creator.set_engine(self._get_engine(self.config.engine.choice))
+        self.objects.job_creator.set_engine(self.load_engine(self.config.engine.choice))
 
 
 runtime: 'IsRuntime' = Runtime()

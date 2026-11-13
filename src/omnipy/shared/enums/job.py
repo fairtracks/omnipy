@@ -65,7 +65,11 @@ class ConfigOutputStorageProtocolOptions(LiteralEnum[str]):
 
 
 class EngineChoice(LiteralEnum[str]):
-    """Execution engine enum values for running jobs."""
+    """Names of the built-in execution engines.
+
+    Plugin engines add further names through the ``omnipy.engines`` entry point group, so
+    ``runtime.config.engine.choice`` accepts any registered engine name.
+    """
 
     Literals = Literal['local', 'prefect']
 

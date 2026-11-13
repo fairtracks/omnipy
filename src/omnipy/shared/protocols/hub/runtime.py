@@ -174,3 +174,23 @@ class IsRuntime(Protocol):
                 missing.
         """
         ...
+
+    def load_engine(self, name: str) -> IsEngine:
+        """Load a registered engine into this runtime and return the engine object.
+
+        A plugin engine is imported, instantiated and added as ``objects.<name>``, with a default
+        config as ``config.engine.<name>``, and wired up like the built-in engines. Loading an
+        engine that is already loaded only returns it. Choosing an engine or reading its
+        attribute loads it automatically, so calling this method is rarely needed.
+
+        Args:
+            name: Name of a registered engine.
+
+        Returns:
+            IsEngine: The engine object owned by this runtime.
+
+        Raises:
+            ValueError: If no engine with this name is registered, or if the name clashes with
+                another attribute of the runtime objects or the engine config.
+        """
+        ...

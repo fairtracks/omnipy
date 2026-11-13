@@ -20,7 +20,6 @@ from omnipy.shared.enums.job import (
     ConfigOutputStorageProtocolOptions,
     ConfigPersistOutputsOptions,
     ConfigRestoreOutputsOptions,
-    EngineChoice,
 )
 from omnipy.shared.enums.ui import SpecifiedUserInterfaceType, TerminalOutputUserInterfaceType
 from omnipy.shared.protocols.util import IsDataPublisher
@@ -369,13 +368,16 @@ class IsPrefectEngineConfig(IsJobRunnerConfig, Protocol):
 class IsEngineConfig(IsConfigBase, Protocol):
     """Top-level engine selection and per-engine configuration bundle.
 
+    Plugin engine configs are extra attributes named after the engine. They are not part of this
+    protocol, so type checkers only know the built-in engines.
+
     Attributes:
-        choice: Engine backend currently selected for execution.
+        choice: Name of the registered engine currently selected for execution.
         local: Configuration for the local backend.
         prefect: Configuration for the Prefect backend.
     """
 
-    choice: EngineChoice.Literals
+    choice: str
     local: IsLocalRunnerConfig
     prefect: IsPrefectEngineConfig
     ...
