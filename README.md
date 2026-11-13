@@ -119,12 +119,12 @@ to distributed deployment, meeting the demands of projects large and small.
 4. If you work with a coding agent, install the Omnipy skills into your project, running in the
    project directory:
     ```bash
-    $ python -m omnipy.skills install
+    $ python -m omnipy skills install
     ```
 
     This links the skills shipped with Omnipy into `.agents/skills/`, where most agents read them,
     so that they follow Omnipy through upgrades. Add `--claude` for Claude Code, which reads
-    `.claude/skills/`, and see `python -m omnipy.skills --help` for listing the skills and other
+    `.claude/skills/`, and see `python -m omnipy skills --help` for listing the skills and other
     options.
 
 Omnipy works with both Pydantic 1 and 2. With Pydantic 2 installed, it runs through Pydantic's v1

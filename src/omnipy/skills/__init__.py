@@ -10,7 +10,7 @@ to the agents of another project, by default as a symlink to the copy of the ins
 that the skill follows Omnipy through upgrades:
 
     python -m omnipy.skills list
-    python -m omnipy.skills install
+    python -m omnipy skills install
 """
 
 from dataclasses import dataclass

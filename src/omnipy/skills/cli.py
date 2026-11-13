@@ -1,4 +1,4 @@
-"""Command line for the skills shipped with Omnipy: `python -m omnipy.skills --help`."""
+"""Command line for the skills shipped with Omnipy: `python -m omnipy skills --help`."""
 
 import argparse
 from collections.abc import Sequence
@@ -29,7 +29,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog='python -m omnipy.skills',
+        prog='python -m omnipy skills',
         description='The agent skills shipped with Omnipy.',
     )
     commands = parser.add_subparsers(dest='command', required=True)
@@ -102,7 +102,3 @@ def _target_dir(args: argparse.Namespace) -> Path:
         return args.dir
     skills_dir = CLAUDE_SKILLS_DIR if args.claude else PROJECT_SKILLS_DIR
     return Path.home() / skills_dir if args.home else skills_dir
-
-
-if __name__ == '__main__':
-    sys.exit(main())

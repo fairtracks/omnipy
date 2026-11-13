@@ -24,7 +24,7 @@ only; a readme built around it is future work.
   water-sample harmonization test already is the basis of the readme walkthrough.
 - **Skills as documentation for agents.** The omnipy-dataflows skill is the first of several
   Omnipy skills. They ship with the package (`.agents/skills/`, copied into the wheel) and are
-  installed into a project with `python -m omnipy.skills install`; see `AGENTS.md`.
+  installed into a project with `python -m omnipy skills install`; see `AGENTS.md`.
 - **Readme.** `docs/readme.md` is the source, run by MkDocs; the root `README.md` and the SVG
   images are generated from it with `uv run python docs/gen_readme.py`, and `hatch_build.py`
   rewrites the image links for PyPI. No hook enforces regeneration yet. Readme changes stay

@@ -6,7 +6,7 @@ import re
 import pytest
 
 from omnipy.skills import install, SKILL_FILE, skill_names, skill_path, skills_dir
-from omnipy.skills.__main__ import main
+from omnipy.skills.cli import main
 
 DATAFLOWS_SKILL = 'omnipy-dataflows'
 FRONTMATTER_NAME_RE = re.compile(r'^---\nname: (?P<name>\S+)\n', re.M)
