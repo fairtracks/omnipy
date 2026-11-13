@@ -211,8 +211,8 @@ def _assert_runtime_config_default(config: IsRuntimeConfig, dir_path: Path):
     assert config.job.output_storage.s3.persist_data_dir_path == os.path.join('omnipy', 'outputs')
     assert config.job.output_storage.s3.endpoint_url == ''
     assert config.job.output_storage.s3.bucket_name == ''
-    assert config.job.output_storage.s3.access_key == ''
-    assert config.job.output_storage.s3.secret_key == ''
+    assert config.job.output_storage.s3.access_key.get_secret_value() == ''
+    assert config.job.output_storage.s3.secret_key.get_secret_value() == ''
 
     # root_log
     assert isinstance(config.root_log, RootLogConfig)

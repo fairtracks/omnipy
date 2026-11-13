@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 from typing import Any
 
-from omnipy.config import ConfigBase
+from omnipy.config import ConfigBase, MACHINE_LOCAL
 from omnipy.shared.typedefs import LocaleType
 import omnipy.util.pydantic as pyd
 
@@ -21,16 +21,16 @@ class RootLogConfig(ConfigBase):
     """Root logging configuration for console and file handlers."""
 
     log_format_str: str = '[{engine}] {asctime} - {levelname}: {message} ({name})'
-    locale: LocaleType = pkg_locale.getlocale()
+    locale: LocaleType = pyd.Field(default=pkg_locale.getlocale(), **MACHINE_LOCAL)
     log_to_stdout: bool = True
     log_to_stderr: bool = True
     log_to_file: bool = True
-    stdout: TextIOBase = pyd.Field(default_factory=lambda: sys.stdout)
-    stderr: TextIOBase = pyd.Field(default_factory=lambda: sys.stderr)
+    stdout: TextIOBase = pyd.Field(default_factory=lambda: sys.stdout, **MACHINE_LOCAL)
+    stderr: TextIOBase = pyd.Field(default_factory=lambda: sys.stderr, **MACHINE_LOCAL)
     stdout_log_min_level: int = logging.INFO
     stderr_log_min_level: int = logging.ERROR
     file_log_min_level: int = logging.WARNING
-    file_log_path: str = pyd.Field(default_factory=_get_log_path)
+    file_log_path: str = pyd.Field(default_factory=_get_log_path, **MACHINE_LOCAL)
 
     def _iter(self, **kwargs) -> Generator[tuple[str, Any], None, None]:  # type: ignore[override]
         for key, val in super()._iter(**kwargs):

@@ -1,6 +1,7 @@
 """Protocols for Omnipy configuration objects and config sections."""
 
 from collections import defaultdict
+from collections.abc import Mapping
 from io import TextIOBase
 from typing import Any, Protocol, runtime_checkable, TYPE_CHECKING
 
@@ -56,6 +57,22 @@ class IsConfigBase(IsDataPublisher, Protocol):
         ...
 
     def __str__(self) -> str: ...
+
+    def to_portable_dict(self) -> dict[str, object]:
+        """Return the config as JSON-compatible data, without secrets and machine-local values.
+
+        Returns:
+            dict[str, object]: Nested dict of config values. Tuples become lists.
+        """
+        ...
+
+    def update_from_portable_dict(self, data: Mapping[str, object]) -> None:
+        """Update this config in place from data made by ``to_portable_dict``.
+
+        Args:
+            data: Portable config data, typically parsed from JSON.
+        """
+        ...
 
 
 # data
@@ -408,14 +425,16 @@ class IsS3OutputStorageConfig(IsOutputStorageConfigBase, Protocol):
 
     Attributes:
         endpoint_url: S3 API endpoint URL.
-        access_key: Access key used for authentication.
-        secret_key: Secret key used for authentication.
+        access_key: Access key used for authentication. Masked when displayed, and left out
+            of the portable config export.
+        secret_key: Secret key used for authentication. Masked when displayed, and left out
+            of the portable config export.
         bucket_name: Bucket that stores persisted outputs.
     """
 
     endpoint_url: str
-    access_key: str
-    secret_key: str
+    access_key: pyd.SecretStr
+    secret_key: pyd.SecretStr
     bucket_name: str
 
 

@@ -8,7 +8,7 @@ from typing import Any, TypedDict
 
 from typing_extensions import override
 
-from omnipy.config import ConfigBase
+from omnipy.config import ConfigBase, MACHINE_LOCAL
 from omnipy.hub.ui import detect_display_color_system
 from omnipy.shared.constants import (
     BROWSER_DEFAULT_HEIGHT,
@@ -584,6 +584,10 @@ class DataConfig(ConfigBase):
     Configuration for data module.
     """
 
-    ui: IsUserInterfaceConfig = pyd.Field(default_factory=lambda: UserInterfaceConfig())
+    # The UI config holds detected values (the user interface type, terminal size) and the cache
+    # directory path, all of which belong to the current machine
+    ui: IsUserInterfaceConfig = pyd.Field(
+        default_factory=lambda: UserInterfaceConfig(), **MACHINE_LOCAL
+    )
     model: IsModelConfig = pyd.Field(default_factory=lambda: ModelConfig())
     http: IsHttpConfig = pyd.Field(default_factory=HttpConfig)

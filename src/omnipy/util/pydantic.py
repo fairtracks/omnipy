@@ -56,6 +56,7 @@ NonNegativeInt = pyd.NonNegativeInt
 PositiveFloat = pyd.PositiveFloat
 PositiveInt = pyd.PositiveInt
 PrivateAttr = pyd.PrivateAttr
+SecretStr = pyd.SecretStr
 Protocol = pyd.Protocol
 root_validator = pyd.root_validator
 StrictBytes = pyd.StrictBytes
@@ -136,6 +137,7 @@ __all__ = [
     'PositiveFloat',
     'PositiveInt',
     'PrivateAttr',
+    'SecretStr',
     'Protocol',
     'root_validator',
     'StrictBytes',

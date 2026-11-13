@@ -3,7 +3,7 @@
 import os
 from pathlib import Path
 
-from omnipy.config import ConfigBase
+from omnipy.config import ConfigBase, MACHINE_LOCAL
 from omnipy.shared.enums.job import (
     ConfigOutputStorageProtocolOptions,
     ConfigPersistOutputsOptions,
@@ -24,7 +24,9 @@ def _get_persist_data_dir_path() -> str:
 class LocalOutputStorageConfig(ConfigBase):
     """Filesystem-backed output storage settings."""
 
-    persist_data_dir_path: str = pyd.Field(default_factory=_get_persist_data_dir_path)
+    persist_data_dir_path: str = pyd.Field(
+        default_factory=_get_persist_data_dir_path, **MACHINE_LOCAL
+    )
 
 
 class S3OutputStorageConfig(ConfigBase):
@@ -33,8 +35,8 @@ class S3OutputStorageConfig(ConfigBase):
     persist_data_dir_path: str = os.path.join('omnipy', 'outputs')
     endpoint_url: str = ''
     bucket_name: str = ''
-    access_key: str = ''
-    secret_key: str = ''
+    access_key: pyd.SecretStr = pyd.SecretStr('')
+    secret_key: pyd.SecretStr = pyd.SecretStr('')
 
 
 class OutputStorageConfig(ConfigBase):
