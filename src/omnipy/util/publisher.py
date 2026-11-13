@@ -86,13 +86,10 @@ class DataPublisher(pyd.BaseModel):
 
             return _attr_callback_for_publisher_child
 
-        for attr_name in self.__class__.__fields__.keys():
-            if not attr_name.startswith('_'):
-                attr = getattr(self, attr_name)
-                if isinstance(attr, DataPublisher):
-                    attr.subscribe(
-                        _get_attr_callback_for_publisher_child(attr_name), do_callback=False
-                    )
+        for attr_name in self._public_attr_names():
+            attr = getattr(self, attr_name)
+            if isinstance(attr, DataPublisher):
+                attr.subscribe(_get_attr_callback_for_publisher_child(attr_name), do_callback=False)
 
         if do_callback:
             callback_fun(self)
@@ -102,11 +99,20 @@ class DataPublisher(pyd.BaseModel):
         self._self_subscriptions.clear()
         self._attr_subscriptions.clear()
 
-        for attr_name in self.__class__.__fields__.keys():
-            if not attr_name.startswith('_'):
-                attr = getattr(self, attr_name)
-                if isinstance(attr, DataPublisher):
-                    attr.unsubscribe_all()
+        for attr_name in self._public_attr_names():
+            attr = getattr(self, attr_name)
+            if isinstance(attr, DataPublisher):
+                attr.unsubscribe_all()
+
+    def _public_attr_names(self) -> list[str]:
+        """Return the names of public fields, followed by any public extra attributes.
+
+        Extra attributes exist only on models that allow them, such as the engine config, which
+        holds plugin engine configs as extra attributes.
+        """
+        field_names = list(self.__class__.__fields__.keys())
+        extra_names = [name for name in self.__dict__ if name not in self.__class__.__fields__]
+        return [name for name in field_names + extra_names if not name.startswith('_')]
 
     def _call_subscribers(self, attr_name: str, value: object) -> None:
         if attr_name in self._attr_subscriptions:
