@@ -26,8 +26,8 @@ from typing import cast
 from omnipy.components import get_serializer_registry
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
 from omnipy.compute._mixins.name import NameJobBaseMixin
-from omnipy.data.dataset import Dataset, is_dataset_subclass
-from omnipy.data.model import is_model_instance, is_model_subclass, Model
+from omnipy.data.dataset import Dataset, is_dataset_instance, is_dataset_subclass
+from omnipy.data.model import is_model_instance, is_model_subclass
 from omnipy.shared.enums.job import ConfigPersistOutputsOptions as ConfigPersistOpts
 from omnipy.shared.enums.job import (
     OutputStorageProtocolOptions,
@@ -36,7 +36,7 @@ from omnipy.shared.enums.job import (
 )
 from omnipy.shared.protocols.compute.job import IsFlow, IsJob, IsJobBase
 from omnipy.shared.protocols.config import IsJobConfig
-from omnipy.shared.protocols.data import IsDataset, IsSerializerRegistry
+from omnipy.shared.protocols.data import IsSerializerRegistry
 from omnipy.util.helpers import get_job_name_slug, is_package_editable
 from omnipy.util.mixin import strip_mixins_suffix
 
@@ -53,6 +53,18 @@ RestoreOpts = RestoreOutputsOptions
 
 ProtocolOpts = OutputStorageProtocolOptions
 """Options enum for selecting the output storage and serialization protocol."""
+
+PERSISTED_VALUE_KEY = 'value'
+"""Key under which results that are neither models nor datasets are persisted.
+
+Such results are stored as a JSON dataset with one item, ``{"value": <result>}``. The value is
+wrapped because JSON models parse top-level strings as JSON, which would turn a string result
+such as ``'1'`` into a number.
+"""
+
+
+def _is_unpersistable_result(results: object) -> bool:
+    return results is None or inspect.isgenerator(results) or inspect.isasyncgen(results)
 
 
 class SerializerFuncJobBaseMixin:
@@ -201,9 +213,7 @@ class SerializerFuncJobBaseMixin:
         else:
             return self._output_storage_protocol
 
-    def _call_job(self, *args: object, **kwargs: object) -> object:  # noqa: C901
-        self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
-
+    def _call_job(self, *args: object, **kwargs: object) -> object:
         if self._serializer_registry is None:
             self._serializer_registry = get_serializer_registry()
 
@@ -221,39 +231,59 @@ class SerializerFuncJobBaseMixin:
         results = super_as_job_base._call_job(*args, **kwargs)
 
         if self.will_persist_outputs is PersistOpts.ENABLED:
-            if is_model_subclass(self._return_type) or is_dataset_subclass(self._return_type):
-                if isinstance(results, asyncio.Task):
+            if isinstance(results, asyncio.Task):
 
-                    def _persist_task_outputs(task: asyncio.Task) -> None:
-                        self._serialize_and_persist_outputs(task.result())
+                def _persist_task_outputs(task: asyncio.Task) -> None:
+                    self._serialize_and_persist_outputs(task.result())
 
-                    results.add_done_callback(_persist_task_outputs)
-                elif inspect.isawaitable(results):
+                results.add_done_callback(_persist_task_outputs)
+            elif inspect.isawaitable(results):
 
-                    async def _async_persist_outputs(results: Awaitable) -> object:
-                        awaited_results = await results
-                        self._serialize_and_persist_outputs(awaited_results)
-                        return awaited_results
+                async def _async_persist_outputs(results: Awaitable) -> object:
+                    awaited_results = await results
+                    self._serialize_and_persist_outputs(awaited_results)
+                    return awaited_results
 
-                    return _async_persist_outputs(results)
-                else:
-                    self._serialize_and_persist_outputs(results)
+                return _async_persist_outputs(results)
             else:
-                self._log(
-                    f'Results of {self_as_name_job_base_mixin.unique_name} '
-                    f'is not a Model or Dataset and cannot be '
-                    f'automatically serialized and persisted!'
-                )
+                self._serialize_and_persist_outputs(results)
 
         return results
 
-    def _serialize_and_persist_outputs(self, results: Model | Dataset):
+    def _is_final_output(self) -> bool:
+        """Return whether this job's results are the final output of a run, not of a flow step."""
+        return not cast(IsJobBase, self).in_flow_context
+
+    def _persist_failed(self, msg: str) -> None:
+        if self._is_final_output():
+            raise RuntimeError(msg)
+        self._log(msg)
+
+    def _serialize_and_persist_outputs(self, results: object) -> None:
+        self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
+
+        if _is_unpersistable_result(results):
+            self._log(
+                f'Results of {self_as_name_job_base_mixin.unique_name} are empty or a generator, '
+                'and are not persisted'
+            )
+            return
+
         if is_model_instance(results):
             results = Dataset[results.__class__]({self._job_name(): results})
+        elif not is_dataset_instance(results):
+            from omnipy.components.json.datasets import JsonDataset
+
+            try:
+                results = JsonDataset({self._job_name(): {PERSISTED_VALUE_KEY: results}})
+            except Exception as exc:
+                self._persist_failed(
+                    f'Results of {self_as_name_job_base_mixin.unique_name} are neither a Model, '
+                    f'a Dataset nor JSON-compatible, and cannot be persisted: {exc}'
+                )
+                return
 
         assert self._serializer_registry is not None
-
-        self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
 
         datetime_str = self._generate_datetime_str()
         output_path = Path(self._job_config.output_storage.local.persist_data_dir_path).joinpath(
@@ -272,7 +302,7 @@ class SerializerFuncJobBaseMixin:
         )
 
         if serializer is None:
-            self._log(
+            self._persist_failed(
                 'Unable to find a serializer for results of job '
                 f'"{self_as_name_job_base_mixin.name}", with data type "{type(results)}". '
                 f'Will abort persisting results...'
@@ -311,7 +341,13 @@ class SerializerFuncJobBaseMixin:
         persist_data_dir_path: Path, job_name: str
     ) -> Generator[Path, None, None]:
 
-        sorted_date_dirs = iter(reversed(sorted(os.listdir(persist_data_dir_path))))
+        # Only run folders count; other entries, such as a log file, are skipped
+        run_dir_names = [
+            name
+            for name in os.listdir(persist_data_dir_path)
+            if (persist_data_dir_path / name).is_dir()
+        ]
+        sorted_date_dirs = iter(reversed(sorted(run_dir_names)))
 
         try:
             last_dir = next(sorted_date_dirs)
@@ -325,22 +361,58 @@ class SerializerFuncJobBaseMixin:
                 yield last_dir_path / job_output_name
 
     # TODO: Further refactor _deserialize_and_restore_outputs
-    def _deserialize_and_restore_outputs(self) -> IsDataset | None:
-        assert self._serializer_registry is not None
+    def _deserialize_and_restore_outputs(
+        self, persist_data_dir_path: str | Path | None = None
+    ) -> object:
+        """Load the newest persisted output of this job from the last run folder.
+
+        Args:
+            persist_data_dir_path: Directory holding the run folders. Defaults to the configured
+                local output directory. A client loading the outputs of a remote run passes the
+                downloaded output directory.
+
+        Returns:
+            object: The restored dataset, or for jobs whose return type is neither a Model nor a
+                Dataset, the restored JSON value.
+
+        Raises:
+            RuntimeError: If no persisted output of this job is found.
+        """
+        if self._serializer_registry is None:
+            self._serializer_registry = get_serializer_registry()
 
         self_as_job_base = cast(IsJobBase, self)
 
-        persist_data_dir_path = Path(self._job_config.output_storage.local.persist_data_dir_path)
+        if persist_data_dir_path is None:
+            persist_data_dir_path = self._job_config.output_storage.local.persist_data_dir_path
+        persist_data_dir_path = Path(persist_data_dir_path)
+
         if os.path.exists(persist_data_dir_path):
             for tar_file_path in self._all_job_output_file_paths_in_reverse_order_for_last_run(
                 persist_data_dir_path, self._job_name()
             ):
-                to_dataset = cast(type[Dataset], self._return_type)
-                return self._serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                    self_as_job_base, str(tar_file_path), to_dataset()
-                )
+                if is_model_subclass(self._return_type) or is_dataset_subclass(self._return_type):
+                    to_dataset = cast(type[Dataset], self._return_type)
+                    return self._serializer_registry.load_from_tar_file_path_based_on_file_suffix(
+                        self_as_job_base, str(tar_file_path), to_dataset()
+                    )
+                return self._load_persisted_value(str(tar_file_path))
 
         raise RuntimeError('No persisted output')
+
+    def _load_persisted_value(self, tar_file_path: str) -> object:
+        from omnipy.components.json.datasets import JsonDataset
+
+        assert self._serializer_registry is not None
+        dataset = self._serializer_registry.load_from_tar_file_path_based_on_file_suffix(
+            cast(IsJobBase, self), tar_file_path, JsonDataset()
+        )
+        assert dataset is not None
+        data = dataset.to_data()
+        item = data.get(self._job_name()) if isinstance(data, dict) else None
+        if isinstance(item, dict) and set(item) == {PERSISTED_VALUE_KEY}:
+            return item[PERSISTED_VALUE_KEY]
+        return dataset
 
 
 # TODO: Add configuration option for serialize mixin to specify per flow to not preserve
