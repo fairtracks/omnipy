@@ -21,7 +21,7 @@ import inspect
 import os
 from pathlib import Path
 from textwrap import dedent
-from typing import cast
+from typing import cast, TYPE_CHECKING
 
 from omnipy.components import get_serializer_registry
 from omnipy.compute._mixins.func_signature import SignatureFuncJobBaseMixin
@@ -39,6 +39,9 @@ from omnipy.shared.protocols.config import IsJobConfig
 from omnipy.shared.protocols.data import IsSerializerRegistry
 from omnipy.util.helpers import get_job_name_slug, is_package_editable
 from omnipy.util.mixin import strip_mixins_suffix
+
+if TYPE_CHECKING:
+    from omnipy.hub.output_storage import IsOutputStorage
 
 if is_package_editable('omnipy'):
     os.environ['OMNIPY_MACRO_JOB_TEMPLATE_SERIALIZE_ARG_DOC'] = dedent("""\
@@ -285,17 +288,15 @@ class SerializerFuncJobBaseMixin:
 
         assert self._serializer_registry is not None
 
+        from omnipy.hub.output_storage import get_output_storage
+
+        storage = get_output_storage(self._job_config, self.output_storage_protocol_to_use)
         datetime_str = self._generate_datetime_str()
-        output_path = Path(self._job_config.output_storage.local.persist_data_dir_path).joinpath(
-            datetime_str
-        )
 
-        os.makedirs(output_path, exist_ok=True)
-
-        num_cur_files = len(os.listdir(output_path))
+        num_cur_files = len(storage.list_files(datetime_str))
         job_name = self._job_name()
 
-        file_path = output_path.joinpath(f'{num_cur_files:02}_{job_name}.tar.gz')
+        file_rel_path = f'{datetime_str}/{num_cur_files:02}_{job_name}.tar.gz'
 
         parsed_dataset, serializer = self._serializer_registry.auto_detect_tar_file_serializer(
             results
@@ -309,10 +310,8 @@ class SerializerFuncJobBaseMixin:
             )
         else:
             assert parsed_dataset is not None
-            self._log(f'Writing dataset as a gzipped tarpack to "{os.path.abspath(file_path)}"')
-
-            with open(file_path, 'wb') as tarfile:
-                tarfile.write(serializer.serialize(parsed_dataset))
+            self._log(f'Writing dataset as a gzipped tarpack to "{storage.root}/{file_rel_path}"')
+            storage.write_bytes(file_rel_path, serializer.serialize(parsed_dataset))
 
     def _job_name(self):
         self_as_name_job_base_mixin = cast(NameJobBaseMixin, self)
@@ -336,29 +335,20 @@ class SerializerFuncJobBaseMixin:
         datetime_str = run_time.strftime('%Y_%m_%d-%H_%M_%S')
         return datetime_str
 
-    @staticmethod
-    def _all_job_output_file_paths_in_reverse_order_for_last_run(
-        persist_data_dir_path: Path, job_name: str
-    ) -> Generator[Path, None, None]:
-
+    def _all_job_output_file_rel_paths_in_reverse_order_for_last_run(
+        self, storage: 'IsOutputStorage'
+    ) -> Generator[str, None, None]:
         # Only run folders count; other entries, such as a log file, are skipped
-        run_dir_names = [
-            name
-            for name in os.listdir(persist_data_dir_path)
-            if (persist_data_dir_path / name).is_dir()
-        ]
-        sorted_date_dirs = iter(reversed(sorted(run_dir_names)))
+        run_dir_names = storage.list_dirs()
+        if not run_dir_names:
+            return
 
-        try:
-            last_dir = next(sorted_date_dirs)
-        except StopIteration:
-            raise
-
-        last_dir_path = persist_data_dir_path / last_dir
-        for job_output_name in reversed(sorted(os.listdir(last_dir_path))):
+        last_dir = run_dir_names[-1]
+        job_name = self._job_name()
+        for job_output_name in reversed(storage.list_files(last_dir)):
             name_part_of_filename = job_output_name[3:-7]
             if name_part_of_filename == job_name:
-                yield last_dir_path / job_output_name
+                yield f'{last_dir}/{job_output_name}'
 
     # TODO: Further refactor _deserialize_and_restore_outputs
     def _deserialize_and_restore_outputs(
@@ -367,9 +357,9 @@ class SerializerFuncJobBaseMixin:
         """Load the newest persisted output of this job from the last run folder.
 
         Args:
-            persist_data_dir_path: Directory holding the run folders. Defaults to the configured
-                local output directory. A client loading the outputs of a remote run passes the
-                downloaded output directory.
+            persist_data_dir_path: Local directory holding the run folders. Defaults to the
+                configured output storage, local or S3. A client loading the outputs of a remote
+                run passes the downloaded output directory.
 
         Returns:
             object: The restored dataset, or for jobs whose return type is neither a Model nor a
@@ -383,20 +373,24 @@ class SerializerFuncJobBaseMixin:
 
         self_as_job_base = cast(IsJobBase, self)
 
-        if persist_data_dir_path is None:
-            persist_data_dir_path = self._job_config.output_storage.local.persist_data_dir_path
-        persist_data_dir_path = Path(persist_data_dir_path)
+        from omnipy.hub.output_storage import get_output_storage, LocalOutputStorage
 
-        if os.path.exists(persist_data_dir_path):
-            for tar_file_path in self._all_job_output_file_paths_in_reverse_order_for_last_run(
-                persist_data_dir_path, self._job_name()
-            ):
+        storage: IsOutputStorage
+        if persist_data_dir_path is None:
+            storage = get_output_storage(self._job_config, self.output_storage_protocol_to_use)
+        else:
+            storage = LocalOutputStorage(persist_data_dir_path)
+
+        for file_rel_path in self._all_job_output_file_rel_paths_in_reverse_order_for_last_run(
+            storage
+        ):
+            with storage.local_copy(file_rel_path) as tar_file_path:
                 if is_model_subclass(self._return_type) or is_dataset_subclass(self._return_type):
                     to_dataset = cast(type[Dataset], self._return_type)
                     return self._serializer_registry.load_from_tar_file_path_based_on_file_suffix(
-                        self_as_job_base, str(tar_file_path), to_dataset()
+                        self_as_job_base, tar_file_path, to_dataset()
                     )
-                return self._load_persisted_value(str(tar_file_path))
+                return self._load_persisted_value(tar_file_path)
 
         raise RuntimeError('No persisted output')
 

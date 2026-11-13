@@ -36,3 +36,28 @@ om.runtime.config.update_from_portable_dict(json.loads(portable))
 ```
 
 Jobs that run remotely use this to run with the same settings as on the submitting machine.
+
+## S3 output storage
+
+Persisted outputs can be written to S3-compatible storage instead of a local directory. This
+needs the `s3` extra:
+
+```console
+$ pip install "omnipy[s3]"
+```
+
+```python
+import omnipy as om
+
+s3 = om.runtime.config.job.output_storage.s3
+s3.endpoint_url = 'https://s3.example.org'  # leave empty for AWS
+s3.bucket_name = 'my-bucket'
+s3.access_key = '...'
+s3.secret_key = '...'
+om.runtime.config.job.output_storage.protocol = 's3'
+```
+
+Outputs are then written under `s3://<bucket>/<persist_data_dir_path>/`, in the same run folders
+as locally, and restored from there. Without keys, the usual AWS credential sources apply, such
+as environment variables. `omnipy.hub.output_storage` also has functions for uploading,
+downloading and listing files in the same storage.

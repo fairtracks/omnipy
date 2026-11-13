@@ -80,6 +80,13 @@ dependencies = [
     "coolname>=2.2.0",  # Kept behind to align with Prefect dependencies
 ]
 
+[project.optional-dependencies]
+# S3-compatible output storage (omnipy.hub.output_storage)
+s3 = [
+    "fsspec (>=2024.6.0)",
+    "s3fs (>=2024.6.0)",
+]
+
 [dependency-groups]
 dev = [
     "deepdiff>=8.0.0,<10.0.0",
