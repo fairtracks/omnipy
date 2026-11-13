@@ -94,6 +94,27 @@ def teardown_reset_job_creator() -> Iterator[None]:
 
 
 @pytest.fixture(scope='function')
+def restore_job_base_mixins() -> Iterator[None]:
+    """Restore the mixins accepted by JobBase after a test that registers more of them."""
+    from omnipy.compute._job import JobBase
+
+    mixin_classes = list(JobBase._mixin_classes)
+    optional_mixins = dict(JobBase._optional_mixins)
+    init_params_per_mixin_cls = {
+        mixin_cls: params.copy() for mixin_cls, params in JobBase._init_params_per_mixin_cls.items()
+    }
+
+    yield None
+
+    JobBase._mixin_classes[:] = mixin_classes
+    JobBase._optional_mixins.clear()
+    JobBase._optional_mixins.update(optional_mixins)
+    JobBase._init_params_per_mixin_cls.clear()
+    JobBase._init_params_per_mixin_cls.update(init_params_per_mixin_cls)
+    JobBase._update_cls_init_signature_with_kwargs_all_mixin_kwargs()
+
+
+@pytest.fixture(scope='function')
 def teardown_reset_data_class_creator() -> Iterator[None]:
     """Reset the shared data class creator after a test."""
     yield None

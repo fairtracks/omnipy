@@ -19,6 +19,7 @@ from typing import Any, cast, Generic, ParamSpec, TypeVar
 
 from omnipy.compute._job_creator import JobBaseMeta
 from omnipy.compute._mixins.name import NameJobBaseMixin, NameJobMixin
+from omnipy.compute._mixins.unclaimed_kwargs import UnclaimedKwargsJobBaseMixin
 from omnipy.hub.log.mixin import LogMixin
 from omnipy.shared._typedefs import _JobT, _JobTemplateT
 from omnipy.shared.exceptions import JobStateException, ShouldNotOccurException
@@ -186,7 +187,14 @@ class JobBase(
         return ()
 
     def _get_init_kwargs(self) -> dict[str, object]:
+        """Return the keyword arguments needed to recreate this job or template.
+
+        Keyword arguments of optional mixins are left out when at their default value, so that
+        recreating the object does not activate those mixins. Keyword arguments that no loaded
+        mixin declares are included, so that mixins loaded later can claim them.
+        """
         kwarg_keys = list(self._mixin_init_kwarg_params_including_bases.keys())
+        optional_params = self._optional_mixin_init_kwarg_params_including_bases
         for key in kwarg_keys:
             attribute = getattr(self.__class__, key)
 
@@ -200,7 +208,13 @@ class JobBase(
             if not isinstance(value, Hashable) and not isinstance(value, MappingProxyType):
                 raise TypeError(f'Value of {self.__class__.__name__} attribute "{key}" is mutable')
 
-        return {key: getattr(self, key) for key in kwarg_keys}
+        init_kwargs = {
+            key: getattr(self, key)
+            for key in kwarg_keys
+            if key not in optional_params or getattr(self, key) != optional_params[key].default
+        }
+        init_kwargs |= getattr(self, 'unclaimed_kwargs', {})
+        return init_kwargs
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, JobBase):
@@ -418,4 +432,5 @@ class JobMixin(DynamicMixinAcceptor, Generic[_JobTemplateT, _JobT, _CallP, _RetT
 
 
 JobBase.accept_mixin(NameJobBaseMixin)
+JobBase.accept_mixin(UnclaimedKwargsJobBaseMixin)
 JobMixin.accept_mixin(NameJobMixin)
