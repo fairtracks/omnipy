@@ -213,3 +213,24 @@ def test_plugin_engine_config_shows_in_config_dict(
     runtime.load_engine(PLUGIN)
 
     assert runtime.config.engine.dict()[PLUGIN] == {'server_url': ''}
+
+
+def test_engine_declared_job_mixins_are_added_while_engine_is_selected(
+    runtime: Annotated[IsRuntime, pytest.fixture],
+    plugin_entry_point: Annotated[None, pytest.fixture],
+    restore_job_base_mixins: Annotated[None, pytest.fixture],
+) -> None:
+    from omnipy import TaskTemplate
+
+    def _task(a: int) -> int:
+        return a
+
+    assert not hasattr(TaskTemplate()(_task), 'plugin_option')
+
+    runtime.config.engine.choice = PLUGIN
+    assert TaskTemplate()(_task).plugin_option is None  # type: ignore[attr-defined]
+
+    runtime.config.engine.choice = 'local'
+    assert not hasattr(TaskTemplate()(_task), 'plugin_option')
+    assert TaskTemplate(plugin_option='x')(_task).plugin_option == 'x'  # type: ignore[attr-defined]
+    assert TaskTemplate(plugin_option='x')(_task).run(4) == 4

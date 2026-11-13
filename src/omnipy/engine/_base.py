@@ -1,13 +1,22 @@
 """Base engine contracts for runtime execution backends."""
 
 from abc import ABC, abstractmethod
+from typing import ClassVar
 
 from omnipy.shared.protocols.config import IsJobRunnerConfig
 from omnipy.shared.protocols.hub.registry import IsRunStateRegistry
 
 
 class Engine(ABC):
-    """Base class for runtime engine implementations."""
+    """Base class for runtime engine implementations.
+
+    Attributes:
+        job_mixins: Job mixins that the runtime adds to every job applied while this engine is
+            the selected engine. They are registered as optional mixins when the engine is
+            loaded, so they are also added to jobs that give one of their keyword arguments.
+    """
+
+    job_mixins: ClassVar[tuple[type, ...]] = ()
 
     def __init__(self) -> None:
         """Initialize engine config, registry holder, and subclass state."""

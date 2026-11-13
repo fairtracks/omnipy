@@ -51,3 +51,22 @@ Choosing a name that no installed engine has raises an error listing the registe
 
 Type checkers only know the built-in engines, so they flag attributes such as
 `om.runtime.config.engine.tes`. A plugin can offer typed helpers for its config and engine.
+
+### Per-job options from plugins
+
+A plugin can add keyword arguments to job templates, for settings that vary per job:
+
+```python
+@om.TaskTemplate(tes_image='ghcr.io/me/omnipy-bio:1.2')
+def align(...): ...
+```
+
+The plugin provides them through a job mixin, listed in its engine class as `job_mixins`. The
+mixin is added to every job applied while that engine is selected, and to any job that gives one
+of its keyword arguments.
+
+Plugins are loaded lazily, so a template may be created before the plugin is loaded. Omnipy then
+keeps the unknown keyword arguments on the template and tries them again when the template is
+applied. If no loaded mixin uses a keyword argument at that point, for example when running a job
+with TES options on the local engine, or after a typo, Omnipy logs a warning. Setting the
+environment variable `OMNIPY_SILENCE_UNUSED_JOB_KEYWORDS=1` silences it.

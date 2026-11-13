@@ -27,8 +27,21 @@ class IsMockPluginEngineConfig(IsJobRunnerConfig, Protocol):
     server_url: str
 
 
+class MockPluginJobMixin:
+    """Job mixin declared by the mock plugin engine."""
+
+    def __init__(self, *, plugin_option: str | None = None):
+        self._plugin_option = plugin_option
+
+    @property
+    def plugin_option(self) -> str | None:
+        return self._plugin_option
+
+
 class MockPluginEngine(MockEngine[IsMockPluginEngineConfig]):
     """Mock plugin engine that records the configs it receives."""
+
+    job_mixins = (MockPluginJobMixin,)
 
     def __init__(self) -> None:
         self.received_configs: list[IsJobRunnerConfig] = []

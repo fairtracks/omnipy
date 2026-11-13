@@ -331,6 +331,7 @@ class Runtime(DataPublisher):
         """
 
         engine = self._get_engine(name)
+        self._accept_engine_job_mixins(type(engine))
 
         # Makes sure that the engine config is of the class required by the engine object, also
         # after the engine config section has been reset to defaults
@@ -370,6 +371,24 @@ class Runtime(DataPublisher):
         """
 
         setattr(self.config.engine, choice, engine_config)
+
+    @staticmethod
+    def _accept_engine_job_mixins(engine_cls: type[IsEngine]) -> None:
+        """Register the job mixins declared by an engine class as optional job mixins.
+
+        Each mixin is added to jobs created while an engine of this class is the selected engine,
+        and to jobs that give one of the mixin's keyword arguments.
+
+        Args:
+            engine_cls: Engine class whose ``job_mixins`` should be registered.
+        """
+
+        def _engine_is_selected() -> bool:
+            return isinstance(JobBase.job_creator.engine, engine_cls)
+
+        for mixin_cls in getattr(engine_cls, 'job_mixins', ()):
+            if mixin_cls not in JobBase._mixin_classes:
+                JobBase.accept_mixin(mixin_cls, optional=True, activate_if=_engine_is_selected)
 
     def _get_engine(self, choice: str) -> IsEngine:
         """Return the engine object for a selected engine choice.
